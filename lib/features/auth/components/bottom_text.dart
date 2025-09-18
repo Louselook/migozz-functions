@@ -1,0 +1,31 @@
+import 'package:flutter/material.dart';
+import 'package:migozz_app/core/components/atomics/text.dart';
+import 'package:migozz_app/features/register/register_screen.dart';
+
+Widget bottomText({required BuildContext context}) {
+  return RichText(
+    textAlign: TextAlign.center,
+    text: TextSpan(
+      style: const TextStyle(fontSize: 13, color: Colors.grey),
+      children: [
+        const TextSpan(text: "Don't have an account? "),
+        gradientTextSpan(
+          "Register Now\n",
+          onTap: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const RegisterScreen()),
+            );
+          },
+        ),
+        const TextSpan(text: " By registering you agree to our\n"),
+        gradientTextSpan(
+          "Terms and conditions",
+          onTap: () {
+            debugPrint("Términos y condiciones presionados");
+          },
+        ),
+      ],
+    ),
+  );
+}
