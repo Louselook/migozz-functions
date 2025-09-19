@@ -1,0 +1,91 @@
+{
+  "project_info": {
+    "project_number": "895592952324",
+    "firebase_url": "https://migozz-e2a21-default-rtdb.firebaseio.com",
+    "project_id": "migozz-e2a21",
+    "storage_bucket": "migozz-e2a21.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:895592952324:android:5da231d882586ecd727b51",
+        "android_client_info": {
+          "package_name": "com.example.migozz_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "895592952324-4iu9ob4bo0ppn2hta6oi4qvfat3892p5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBm2ySPBZ6BiF-LvRE2_W1AgxYVpAmGgWQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "895592952324-4iu9ob4bo0ppn2hta6oi4qvfat3892p5.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "895592952324-vr0tpmsclhjjq1pbj60g7ob86chdkta4.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.migozz.migozz"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:895592952324:android:09ba6c515eb0872a727b51",
+        "android_client_info": {
+          "package_name": "com.migozz.migozzflutter"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "895592952324-acochpgr4ch4o97669jjpafeosgv7khg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.migozz.migozzflutter",
+            "certificate_hash": "9d9d6ad0ca6b6c647578b16e54a0e27abfbaa2b6"
+          }
+        },
+        {
+          "client_id": "895592952324-4iu9ob4bo0ppn2hta6oi4qvfat3892p5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBm2ySPBZ6BiF-LvRE2_W1AgxYVpAmGgWQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "895592952324-4iu9ob4bo0ppn2hta6oi4qvfat3892p5.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "895592952324-vr0tpmsclhjjq1pbj60g7ob86chdkta4.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.migozz.migozz"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

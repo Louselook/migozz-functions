@@ -5,6 +5,7 @@ import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/features/auth/components/bottom_text.dart';
 import 'package:migozz_app/features/auth/components/google_button.dart';
+import 'package:migozz_app/features/auth/otp_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -79,12 +80,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   // onPressed: authProvider.isLoading ? null : _handleLogin,
                   onPressed: () {
                     // Modificar avegacion
-                    // Navigator.push(
-                    //   context,
-                    //   MaterialPageRoute(
-                    //     builder: (context) => const OtpScreen(),
-                    //   ),
-                    // );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const OtpScreen(),
+                      ),
+                    );
                   },
                   child: SecondaryText('Login', fontSize: 20),
                 ),
