@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 
-Widget googleButton() {
+Widget googleButton({required VoidCallback onPressed, String text = 'Google'}) {
   return Container(
     width: 163,
     height: 41,
@@ -11,7 +11,7 @@ Widget googleButton() {
       borderRadius: BorderRadius.circular(19),
     ),
     child: ElevatedButton.icon(
-      onPressed: () {},
+      onPressed: onPressed,
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.transparent,
         shadowColor: Colors.transparent,
@@ -25,7 +25,7 @@ Widget googleButton() {
           return const Icon(Icons.g_mobiledata, color: AppColors.textLight);
         },
       ),
-      label: const SecondaryText('Google', color: AppColors.grey),
+      label: SecondaryText(text, color: AppColors.grey),
     ),
   );
 }

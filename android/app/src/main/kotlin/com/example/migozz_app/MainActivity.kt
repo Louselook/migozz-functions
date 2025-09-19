@@ -1,4 +1,4 @@
-package com.example.migozz_app
+package com.migozz.migozzApp
 
 import io.flutter.embedding.android.FlutterActivity
 

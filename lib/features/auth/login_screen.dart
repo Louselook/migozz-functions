@@ -97,7 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 30),
 
                 // Google login button
-                googleButton(),
+                googleButton(onPressed: () {}),
 
                 const SizedBox(height: 30),
 

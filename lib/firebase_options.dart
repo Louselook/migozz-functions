@@ -73,8 +73,10 @@ class DefaultFirebaseOptions {
     projectId: 'migozz-e2a21',
     databaseURL: 'https://migozz-e2a21-default-rtdb.firebaseio.com',
     storageBucket: 'migozz-e2a21.firebasestorage.app',
-    androidClientId: '895592952324-acochpgr4ch4o97669jjpafeosgv7khg.apps.googleusercontent.com',
-    iosClientId: '895592952324-as49khg1fbfm3jllms7nskqd06ht7jto.apps.googleusercontent.com',
-    iosBundleId: 'com.example.migozzApp',
+    androidClientId:
+        '895592952324-acochpgr4ch4o97669jjpafeosgv7khg.apps.googleusercontent.com',
+    iosClientId:
+        '895592952324-as49khg1fbfm3jllms7nskqd06ht7jto.apps.googleusercontent.com',
+    iosBundleId: 'com.migozz.migozzApp',
   );
 }

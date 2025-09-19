@@ -9,7 +9,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.migozz_app"
+    namespace = "com.migozz.migozzApp"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973" //flutter.ndkVersion
 
@@ -24,7 +24,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.migozz_app"
+        applicationId = "com.migozz.migozzApp"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 24 //flutter.minSdkVersion
