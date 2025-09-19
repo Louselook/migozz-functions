@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:migozz_app/core/config/firebase_config.dart';
 import 'package:migozz_app/features/onboarding/onboarding_screen.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await FirebaseConfig.initialize(); // inicialización
   runApp(const MyApp());
 }
 
