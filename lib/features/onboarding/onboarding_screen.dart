@@ -4,7 +4,7 @@ import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/core/components/compuestos/progress_indicator.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/features/auth/login_screen.dart';
-import 'package:migozz_app/features/onboarding/components/constant.dart';
+import 'package:migozz_app/core/components/atomics/constant.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -17,18 +17,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
+  @override // poner en el widget que inicie todo para cargar imagens
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    AppConstants.precacheOnboardingImages(context); //cargar imagenes
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
       body: Column(
         children: [
-          // Progress indicators
-          Container(
+          // Indicadores de progreso
+          Padding(
             padding: const EdgeInsets.only(top: 30, left: 20, right: 20),
             child: Row(
               children: List.generate(
-                3,
+                AppConstants.onboardingPages.length,
                 (index) => CustomProgressIndicator(
                   index,
                   currentIndex: _currentPage,
@@ -38,7 +44,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
           ),
 
-          // Page content - Ahora ocupa el resto del espacio disponible
+          // Contenido de páginas
           Expanded(
             child: PageView.builder(
               controller: _pageController,
@@ -61,11 +67,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget _buildOnboardingPage(OnboardingData data) {
+    final double screenHeight = MediaQuery.of(context).size.height;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(
-          height: 230,
+        // Parte superior → 40%
+        Expanded(
+          flex: screenHeight < 800 ? 4 : 3, // para no chocar componetes
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -87,7 +95,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         width: double.infinity,
                         child: GradientButton(
                           onPressed: () {
-                            // Modificar avegacion
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
@@ -107,7 +114,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           ButtonText(
                             text: 'Skip',
                             onPressed: () {
-                              // Modificar avegacion
                               Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(
@@ -135,7 +141,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
           ),
         ),
+
+        // Parte inferior → 60%
         Expanded(
+          flex: 6,
           child: Container(
             width: double.infinity,
             decoration: const BoxDecoration(
@@ -152,12 +161,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
               child: Stack(
                 children: [
-                  // Imagen principal
+                  // Imagen principal siempre abajo y centrada
                   Positioned.fill(
                     child: Align(
-                      alignment: _currentPage == 1
-                          ? Alignment.centerRight
-                          : Alignment.center,
+                      alignment: Alignment.bottomCenter,
                       child: Image.asset(
                         'assets/images/onboarding_${_currentPage + 1}.png',
                         fit: BoxFit.contain,
@@ -165,17 +172,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                   ),
 
-                  // Efecto de brillo radial
+                  // Efecto radial
                   Positioned.fill(
                     child: Container(
                       decoration: const BoxDecoration(
                         gradient: RadialGradient(
                           center: Alignment.bottomRight,
                           radius: 0.6,
-                          colors: [
-                            AppColors.radialEffect, // Rojo con opacidad
-                            Colors.transparent,
-                          ],
+                          colors: [AppColors.radialEffect, Colors.transparent],
                           stops: [0, 1],
                         ),
                       ),

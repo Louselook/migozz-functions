@@ -24,15 +24,17 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20.0),
-          child: Form(
-            key: _formKey,
+        child: Form(
+          key: _formKey,
+          child: Padding(
+            padding: const EdgeInsets.only(
+              right: 20.0,
+              left: 20.0,
+              bottom: 40.0,
+            ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 20),
-
                 // Logo
                 Image.asset(
                   'assets/icons/Migozz@300x.png',
@@ -99,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 // Google login button
                 googleButton(onPressed: () {}),
 
-                const SizedBox(height: 30),
+                const SizedBox(height: 50),
 
                 // Register
                 bottomText(context: context),

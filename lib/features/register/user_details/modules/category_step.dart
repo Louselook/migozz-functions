@@ -4,6 +4,8 @@ import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/features/register/user_details/components/down_buttons.dart';
 
+// Cambiar
+
 class CategoryStep extends StatefulWidget {
   final PageController controller;
   const CategoryStep({super.key, required this.controller});

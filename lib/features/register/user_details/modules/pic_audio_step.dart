@@ -3,6 +3,7 @@ import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/features/register/user_details/components/down_buttons.dart';
 
+// va en eel chat
 class PicAudioStep extends StatelessWidget {
   final PageController controller;
   const PicAudioStep({super.key, required this.controller});

@@ -4,6 +4,7 @@ import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/features/register/user_details/components/down_buttons.dart';
 import 'package:migozz_app/features/register/user_details/components/interest_section_model.dart';
 
+// Cambia, va para chat
 class InterestsStep extends StatefulWidget {
   final PageController controller;
   const InterestsStep({super.key, required this.controller});

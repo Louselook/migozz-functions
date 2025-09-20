@@ -27,9 +27,9 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
   @override
   Widget build(BuildContext context) {
     final steps = [
+      SocialEcosystemStep(controller: pageController),
       CategoryStep(controller: pageController),
       InterestsStep(controller: pageController),
-      SocialEcosystemStep(controller: pageController),
       PicAudioStep(controller: pageController),
       LayoutStep(controller: pageController),
     ];
@@ -37,15 +37,18 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
       backgroundColor: AppColors.backgroundDark,
       body: Stack(
         children: [
-          PageView.builder(
-            controller: pageController,
-            itemCount: steps.length,
-            onPageChanged: (index) {
-              setState(() {
-                _currentPage = index;
-              });
-            },
-            itemBuilder: (_, index) => steps[index],
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 40.0),
+            child: PageView.builder(
+              controller: pageController,
+              itemCount: steps.length,
+              onPageChanged: (index) {
+                setState(() {
+                  _currentPage = index;
+                });
+              },
+              itemBuilder: (_, index) => steps[index],
+            ),
           ),
 
           // Indicadores de progreso

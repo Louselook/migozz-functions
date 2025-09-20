@@ -17,6 +17,7 @@ dependencies:
   cloud_firestore: ^6.0.1 # necesaria para firestore
   google_sign_in: ^6.1.6 # necesario para el inicio con google
   firebase_auth: ^6.0.2 # para auth
+  flutter_screenutil: ^5.9.3
 
 dev_dependencies:
   flutter_test:
