@@ -60,7 +60,7 @@ class _OtpScreenState extends State<OtpScreen> {
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 30.0),
+          padding: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 20.0),
           child: Column(
             children: [
               _titleSection(email: 'correo@gmail.com'),

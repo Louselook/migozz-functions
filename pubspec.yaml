@@ -13,11 +13,15 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.8
-  firebase_core: ^4.1.0 # necesaria para firebase
-  cloud_firestore: ^6.0.1 # necesaria para firestore
-  google_sign_in: ^6.1.6 # necesario para el inicio con google
-  firebase_auth: ^6.0.2 # para auth
-  flutter_screenutil: ^5.9.3
+
+  firebase_core: ^3.4.0 # necesaria para firebase
+  cloud_firestore: ^5.6.0 # necesaria para firestore
+  google_sign_in: ^6.2.1 # necesario para el inicio con google
+  firebase_auth: ^5.1.4 # para auth
+
+  cloud_functions: ^5.6.2
+  firebase_dynamic_links: ^6.1.10
+  flutter_appauth: ^10.0.0
 
 dev_dependencies:
   flutter_test:
