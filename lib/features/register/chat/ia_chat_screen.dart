@@ -5,6 +5,8 @@ import 'package:migozz_app/core/components/compuestos/chat/other_message.dart';
 import 'package:migozz_app/core/components/compuestos/chat/user_message.dart';
 import 'package:migozz_app/core/components/compuestos/custom_textfield.dart';
 import 'package:migozz_app/features/register/chat/components/response_ia_chat.dart';
+import 'package:migozz_app/features/register/chat/components/social_card.dart';
+import 'package:migozz_app/features/register/chat/components/suggestion_chips.dart';
 import 'package:migozz_app/features/register/user_details/more_user_details.dart';
 
 class IaChatScreen extends StatefulWidget {
@@ -42,15 +44,57 @@ class _IaChatScreenState extends State<IaChatScreen> {
       });
       _scrollToBottom();
 
-      // 🚨 Si ya no hay opciones, significa que terminó el flujo
-      if ((botResponse["options"] as List).isEmpty &&
-          (botResponse["text"].toString().contains("🎉"))) {
-        Future.delayed(const Duration(seconds: 2), () {
-          Navigator.pushReplacement(
+      if (botResponse["action"] != null) {
+        // 🚨 Si hay acción -> abrimos pantalla extra
+        Future.delayed(const Duration(milliseconds: 1200), () {
+          Navigator.push(
             // ignore: use_build_context_synchronously
             context,
-            MaterialPageRoute(builder: (_) => const MoreUserDetails()),
-          );
+            MaterialPageRoute(
+              builder: (_) =>
+                  MoreUserDetails(pageIndicator: botResponse["action"]),
+            ),
+          ).then((result) {
+            if (result == "done") {
+              Future.delayed(const Duration(milliseconds: 600), () {
+                final postSocialResponse = _chatService.getNextBotResponse();
+                if (postSocialResponse != null) {
+                  if (postSocialResponse["dinamicResponse"] ==
+                      "SocialEcosystemStep") {
+                    // 👉 Mostrar mensaje introductorio
+                    setState(() {
+                      _messages.add({
+                        "isBot": true,
+                        "text": postSocialResponse["text"],
+                        "time": _getTimeNow(),
+                      });
+                    });
+                    _scrollToBottom();
+
+                    // 👉 Después de los cards, lanzamos el siguiente mensaje
+                    _addSocialCards().then((_) {
+                      Future.delayed(const Duration(milliseconds: 800), () {
+                        _showNextBotMessage();
+                      });
+                    });
+                  } else {
+                    // flujo normal
+                    setState(() {
+                      _messages.add({
+                        "isBot": true,
+                        "text": postSocialResponse["text"],
+                        "time": _getTimeNow(),
+                      });
+                    });
+                    _scrollToBottom();
+                    Future.delayed(const Duration(milliseconds: 600), () {
+                      _showNextBotMessage();
+                    });
+                  }
+                }
+              });
+            }
+          });
         });
       }
     }
@@ -60,18 +104,47 @@ class _IaChatScreenState extends State<IaChatScreen> {
     if (text.trim().isEmpty) return;
 
     setState(() {
-      _messages.add({"isBot": false, "text": text});
-      _currentSuggestions = []; // limpiar sugerencias al responder
+      _messages.add({"isBot": false, "text": text, "time": _getTimeNow()});
+      _currentSuggestions = [];
     });
     _scrollToBottom();
     _controller.clear();
 
-    // Si es selección de idioma
     if (_messages.length == 2) {
       _chatService.setLanguage(text);
     }
 
     Future.delayed(const Duration(milliseconds: 600), _showNextBotMessage);
+  }
+
+  Future<void> _addSocialCards() async {
+    final socialCards = [
+      {
+        "platform": "Instagram",
+        "stats": "12.5K followers • 248 posts",
+        "emoji": "📸",
+      },
+      {
+        "platform": "TikTok",
+        "stats": "8.2K followers • 156 videos",
+        "emoji": "📱",
+      },
+    ];
+
+    for (var card in socialCards) {
+      await Future.delayed(const Duration(milliseconds: 800));
+      setState(() {
+        _messages.add({
+          "isBot": true,
+          "social": true,
+          "platform": card["platform"],
+          "stats": card["stats"],
+          "emoji": card["emoji"],
+          "time": _getTimeNow(),
+        });
+      });
+      _scrollToBottom();
+    }
   }
 
   void _scrollToBottom() {
@@ -111,6 +184,14 @@ class _IaChatScreenState extends State<IaChatScreen> {
                 itemBuilder: (context, index) {
                   final msg = _messages[index];
                   if (msg["isBot"]) {
+                    if (msg["social"] == true) {
+                      return buildSocialCard(
+                        msg["platform"],
+                        msg["stats"],
+                        msg["emoji"],
+                        msg["time"],
+                      );
+                    }
                     return OtherMessage(
                       text: msg["text"],
                       time: msg["time"] ?? "",
@@ -162,59 +243,6 @@ class _IaChatScreenState extends State<IaChatScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class SuggestionChips extends StatelessWidget {
-  final List<String> suggestions;
-  final void Function(String) onSelected;
-
-  const SuggestionChips({
-    super.key,
-    required this.suggestions,
-    required this.onSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (suggestions.isEmpty) return const SizedBox.shrink();
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: suggestions.map((s) {
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: GestureDetector(
-              onTap: () => onSelected(s),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 6,
-                  horizontal: 15,
-                ),
-                decoration: BoxDecoration(
-                  gradient: AppColors.verticalPinkPurple.withOpacity(0.8),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(10),
-                    topRight: Radius.circular(5),
-                    bottomLeft: Radius.circular(0),
-                    bottomRight: Radius.circular(10),
-                  ),
-                ),
-                child: Text(
-                  s,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    // fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          );
-        }).toList(),
       ),
     );
   }

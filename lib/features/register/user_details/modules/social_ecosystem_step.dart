@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
-import 'package:migozz_app/features/register/user_details/components/down_buttons.dart';
+import 'package:migozz_app/features/register/user_details/components/button_social.dart';
+// import 'package:migozz_app/features/register/user_details/components/down_buttons.dart';
 import 'package:migozz_app/features/register/user_details/components/social_icon_card.dart';
 
 class SocialEcosystemStep extends StatelessWidget {
@@ -58,7 +59,7 @@ class SocialEcosystemStep extends StatelessWidget {
             ),
 
             // Botones
-            downButtons(controller: controller),
+            newButtonBack(controller: controller, context: context),
           ],
         ),
       ),

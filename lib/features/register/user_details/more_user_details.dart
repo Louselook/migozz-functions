@@ -8,15 +8,29 @@ import 'package:migozz_app/features/register/user_details/modules/pic_audio_step
 import 'package:migozz_app/features/register/user_details/modules/social_ecosystem_step.dart';
 
 class MoreUserDetails extends StatefulWidget {
-  const MoreUserDetails({super.key});
+  final int pageIndicator; // Añadimos este parámetro
+
+  const MoreUserDetails({
+    super.key,
+    this.pageIndicator = 0,
+  }); // Valor por defecto es la primera página
 
   @override
   State<MoreUserDetails> createState() => _MoreUserDetailsState();
 }
 
 class _MoreUserDetailsState extends State<MoreUserDetails> {
-  final pageController = PageController();
+  late PageController pageController;
   int _currentPage = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    pageController = PageController(
+      initialPage: widget.pageIndicator,
+    ); // Inicializamos el PageController
+    _currentPage = widget.pageIndicator;
+  }
 
   @override
   void dispose() {
@@ -33,6 +47,7 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
       PicAudioStep(controller: pageController),
       LayoutStep(controller: pageController),
     ];
+
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
       body: Stack(
@@ -40,7 +55,8 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 40.0),
             child: PageView.builder(
-              controller: pageController,
+              controller:
+                  pageController, // Aseguramos que el controlador se pase correctamente
               itemCount: steps.length,
               onPageChanged: (index) {
                 setState(() {
@@ -50,13 +66,11 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
               itemBuilder: (_, index) => steps[index],
             ),
           ),
-
           // Indicadores de progreso
           Container(
             padding: const EdgeInsets.only(top: 30, left: 20, right: 20),
             child: Row(
-              mainAxisAlignment:
-                  MainAxisAlignment.center, // Centrar los círculos
+              mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
                 steps.length,
                 (index) => CustomProgressIndicator(

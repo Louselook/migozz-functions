@@ -24,8 +24,19 @@ class IaChatService {
     {
       "text": "Let's add your social platforms!",
       "options": [],
-      "action": "openSocialStep",
-    }, // Navegar
+      "action": 0,
+    }, // Navegar social abajo
+    {
+      "text":
+          "Awesome! I can see you've connected TikTok, Instagram, YouTube, and X. 📱",
+      "options": [],
+      "dinamicResponse": "SocialEcosystemStep", // 👈 flag especial
+    },
+    {
+      "text":
+          "Perfect! Now, let me confirm your location. I detected you're in Bogotá, Colombia 🇨🇴. Is this correct?",
+      "options": [],
+    },
     // {
     //   "text":
     //       "We have detected that you are in this country, the United States, is that correct?",
@@ -60,8 +71,19 @@ class IaChatService {
     {
       "text": "¡Agreguemos tus plataformas sociales!",
       "options": [],
-      "action": "openSocialStep",
-    }, // Navegar
+      "action": 0,
+    }, // Navegar social abajo
+
+    {
+      "text": "¡Genial! Veo que conectaste TikTok, Instagram, YouTube y X. 📱",
+      "options": [],
+      "dinamicResponse": "SocialEcosystemStep", // 👈 flag especial
+    },
+    {
+      "text":
+          "¡Perfecto! Ahora, déjame confirmar tu ubicación. Detecté que estás en Bogotá, Colombia 🇨🇴. ¿Es correcto?",
+      "options": [],
+    },
     // {
     //   "text":
     //       "Hemos detectado que estás en este país, Estados Unidos, ¿es correcto?",
