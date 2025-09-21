@@ -49,7 +49,8 @@ class _GetFirestoreState extends State<GetFirestore> {
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
       body: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        // crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
         children: [
           // Login button
           GradientButton(
