@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/config/firebase_config.dart';
+import 'package:migozz_app/features/auth/presentation/register/test.dart';
 import 'package:migozz_app/features/onboarding/onboarding_screen.dart';
 
 Future<void> main() async {
@@ -19,7 +20,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const OnboardingScreen(),
+      home: const RegisterScreenTest(),
     );
   }
 }

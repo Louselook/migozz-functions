@@ -24,7 +24,7 @@ class IaChatService {
     {
       "text": "Let's add your social platforms!",
       "options": [],
-      "action": 0,
+      "action": 2,
     }, // Navegar social abajo
     {
       "text":
@@ -108,7 +108,7 @@ class IaChatService {
       "text": _isEnglish
           ? "Thanks for completing the form! 🎉"
           : "¡Gracias por completar el formulario! 🎉",
-      "options": [],
+      "dinamicResponse": 'doneChat',
     };
   }
 

@@ -1,19 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/color.dart';
+import 'package:migozz_app/core/components/compuestos/custom_snackbar.dart';
 import 'package:migozz_app/core/components/compuestos/custom_textfield.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
-import 'package:migozz_app/features/auth/login_screen.dart';
-import 'package:migozz_app/features/register/chat/ia_chat_screen.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/login/login_screen.dart';
+import 'package:migozz_app/features/auth/presentation/register/chat/ia_chat_screen.dart';
 
-class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+// Wrapper widget que proporciona el BlocProvider
+class RegisterScreenTest extends StatelessWidget {
+  const RegisterScreenTest({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => RegisterCubit(),
+      child: const _RegisterScreenContent(),
+    );
+  }
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+// Widget de contenido que puede acceder al cubit
+class _RegisterScreenContent extends StatefulWidget {
+  const _RegisterScreenContent();
+
+  @override
+  State<_RegisterScreenContent> createState() => _RegisterScreenContentState();
+}
+
+class _RegisterScreenContentState extends State<_RegisterScreenContent> {
   final TextEditingController _emailController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
@@ -81,14 +98,34 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         width: double.infinity,
                         radius: 19,
                         onPressed: () {
+                          final email = _emailController.text.trim();
+
+                          if (email.isEmpty) {
+                            CustomSnackbar.show(
+                              context: context,
+                              message: "Please enter an email",
+                              type: SnackbarType.error,
+                              duration: const Duration(seconds: 4),
+                            );
+                            return;
+                          }
+
+                          // Ahora sí puedes acceder al cubit
+                          final cubit = context.read<RegisterCubit>();
+                          cubit.setEmail(email);
+
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const IaChatScreen(),
+                              builder: (context) => BlocProvider(
+                                create: (context) => RegisterCubit()
+                                  ..setEmail(email), // Inicializas con el email
+                                child: const IaChatScreen(),
+                              ),
                             ),
                           );
                         },
-                        child: SecondaryText("Create Account"),
+                        child: const SecondaryText("Create Account"),
                       ),
                     ],
                   ),

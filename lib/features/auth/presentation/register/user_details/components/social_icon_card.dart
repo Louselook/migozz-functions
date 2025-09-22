@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:migozz_app/core/color.dart';
+// import 'package:migozz_app/core/color.dart';
 
 class SocialIconCard extends StatelessWidget {
   final String label;
@@ -16,12 +16,13 @@ class SocialIconCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque, // asegura que capture taps
       onTap: onTap,
       child: Container(
         width: 80,
         height: 80,
         decoration: BoxDecoration(
-          color: AppColors.backgroundGoole.withValues(alpha: 0.3),
+          // color: Colors.red, // prueba con color sólido primero
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(

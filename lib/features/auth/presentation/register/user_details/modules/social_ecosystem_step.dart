@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
-import 'package:migozz_app/features/register/user_details/components/button_social.dart';
-// import 'package:migozz_app/features/register/user_details/components/down_buttons.dart';
-import 'package:migozz_app/features/register/user_details/components/social_icon_card.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/components/button_social.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/components/social_icon_card.dart';
 
 class SocialEcosystemStep extends StatelessWidget {
   final PageController controller;
@@ -12,7 +13,7 @@ class SocialEcosystemStep extends StatelessWidget {
   Widget build(BuildContext context) {
     // lista de redes sociales
     final List<String> socials = [
-      "Tiktok",
+      "assets/icon/social_networks/Tiktok.svg",
       "Instagram",
       "Facebook",
       "Youtube",
@@ -51,7 +52,21 @@ class SocialEcosystemStep extends StatelessWidget {
                     label: label,
                     // sin assets todavía, solo el texto
                     onTap: () {
-                      debugPrint("Clicked on $label");
+                      final cubit = context.read<RegisterCubit>();
+                      debugPrint('meelo');
+                      final current = List<String>.from(
+                        cubit.state.socialEcosystem ?? [],
+                      );
+                      if (!current.contains(label)) {
+                        current.add(label);
+                      } else {
+                        current.remove(label); // toggle
+                      }
+                      cubit.setSocialEcosystem(current);
+
+                      debugPrint(
+                        "🌐 Ecosistema social: ${cubit.state.socialEcosystem}",
+                      );
                     },
                   );
                 },

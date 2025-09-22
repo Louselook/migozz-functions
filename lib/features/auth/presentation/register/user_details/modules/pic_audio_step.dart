@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
-import 'package:migozz_app/features/register/user_details/components/down_buttons.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/components/down_buttons.dart';
 
 // va en eel chat
 class PicAudioStep extends StatelessWidget {

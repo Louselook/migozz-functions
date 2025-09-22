@@ -14,6 +14,9 @@ dependencies:
 
   cupertino_icons: ^1.0.8
 
+  flutter_bloc: ^9.1.1
+  equatable: ^2.0.7
+
   firebase_core: ^3.4.0 # necesaria para firebase
   cloud_firestore: ^5.6.0 # necesaria para firestore
   google_sign_in: ^6.2.1 # necesario para el inicio con google
@@ -35,6 +38,7 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/
+    - assets/icons/social_networks/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

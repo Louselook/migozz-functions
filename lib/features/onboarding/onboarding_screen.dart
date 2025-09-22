@@ -3,7 +3,7 @@ import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/core/components/compuestos/progress_indicator.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
-import 'package:migozz_app/features/auth/login_screen.dart';
+import 'package:migozz_app/features/auth/presentation/login/login_screen.dart';
 import 'package:migozz_app/core/components/atomics/constant.dart';
 
 class OnboardingScreen extends StatefulWidget {

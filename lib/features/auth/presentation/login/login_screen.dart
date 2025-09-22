@@ -5,7 +5,7 @@ import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/features/auth/components/bottom_text.dart';
 import 'package:migozz_app/features/auth/components/google_button.dart';
-import 'package:migozz_app/features/auth/otp_screen.dart';
+import 'package:migozz_app/features/auth/presentation/login/otp_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
