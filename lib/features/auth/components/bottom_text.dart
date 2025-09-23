@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/features/auth/presentation/register/register_screen.dart';
-import 'package:migozz_app/features/auth/presentation/register/test.dart';
 
 Widget bottomText({required BuildContext context}) {
   return RichText(
@@ -15,9 +14,7 @@ Widget bottomText({required BuildContext context}) {
           onTap: () {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(
-                builder: (context) => const RegisterScreenTest(),
-              ),
+              MaterialPageRoute(builder: (context) => const RegisterScreen()),
             );
           },
         ),

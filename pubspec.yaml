@@ -17,6 +17,9 @@ dependencies:
   flutter_bloc: ^9.1.1
   equatable: ^2.0.7
 
+  # http: ^1.5.0 # validar email con OTP
+  flutter_svg: ^2.0.9
+
   firebase_core: ^3.4.0 # necesaria para firebase
   cloud_firestore: ^5.6.0 # necesaria para firestore
   google_sign_in: ^6.2.1 # necesario para el inicio con google
