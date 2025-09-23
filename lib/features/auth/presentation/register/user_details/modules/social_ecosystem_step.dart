@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
-import 'package:migozz_app/features/auth/presentation/register/user_details/components/button_social.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/social_icon_card.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/components/user_details_button.dart';
 
 class SocialEcosystemStep extends StatelessWidget {
   final PageController controller;
@@ -110,7 +110,11 @@ class SocialEcosystemStep extends StatelessWidget {
             ),
 
             // Botones
-            newButtonBack(controller: controller, context: context),
+            userDetailsButton(
+              controller: controller,
+              context: context,
+              action: UserDetailsAction.back,
+            ),
           ],
         ),
       ),

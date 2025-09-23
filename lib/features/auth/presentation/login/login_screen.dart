@@ -73,7 +73,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   controller: _emailController,
                 ),
 
-                const SizedBox(height: 45),
+                const SizedBox(height: 35),
 
                 // Login button
                 GradientButton(
@@ -92,11 +92,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: SecondaryText('Login', fontSize: 20),
                 ),
 
-                const SizedBox(height: 15),
+                const SizedBox(height: 40),
 
                 const SecondaryText('Or login with', fontSize: 16),
 
-                const SizedBox(height: 30),
+                const SizedBox(height: 5),
 
                 // Google login button
                 googleButton(onPressed: () {}),

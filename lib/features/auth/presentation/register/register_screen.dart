@@ -1,209 +1,170 @@
-// import 'package:flutter/material.dart';
-// import 'package:migozz_app/core/color.dart';
-// import 'package:migozz_app/core/components/compuestos/custom_textfield.dart';
-// import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
-// import 'package:migozz_app/core/components/atomics/text.dart';
-// import 'package:migozz_app/features/auth/models/location_dto.dart';
-// import 'package:migozz_app/features/auth/models/user_dto.dart';
-// import 'package:migozz_app/features/auth/presentation/login/login_screen.dart';
-// import 'package:migozz_app/features/auth/presentation/register/chat/ia_chat_screen.dart';
-// // import 'package:migozz_app/features/auth/services/auth_service.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:migozz_app/core/color.dart';
+import 'package:migozz_app/core/components/compuestos/custom_snackbar.dart';
+import 'package:migozz_app/core/components/compuestos/custom_textfield.dart';
+import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
+import 'package:migozz_app/core/components/atomics/text.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/login/login_screen.dart';
+import 'package:migozz_app/features/auth/presentation/register/chat/ia_chat_screen.dart';
 
-// class RegisterScreen extends StatefulWidget {
-//   const RegisterScreen({super.key});
+// Wrapper widget que proporciona el BlocProvider
+class RegisterScreen extends StatelessWidget {
+  const RegisterScreen({super.key});
 
-//   @override
-//   State<RegisterScreen> createState() => _RegisterScreenState();
-// }
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => RegisterCubit(),
+      child: const _RegisterScreenContent(),
+    );
+  }
+}
 
-// class _RegisterScreenState extends State<RegisterScreen> {
-//   final TextEditingController _emailController = TextEditingController();
-//   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+// Widget de contenido que puede acceder al cubit
+class _RegisterScreenContent extends StatefulWidget {
+  const _RegisterScreenContent();
 
-//   UserDTO generateTestUser(String email) {
-//     return UserDTO(
-//       email: email,
-//       displayName: "Juan Pérez",
-//       username: "juanperez",
-//       birthday: "1990-05-15",
-//       gender: "male",
-//       location: LocationDTO(
-//         country: "Colombia",
-//         state: "Antioquia",
-//         city: "Medellín",
-//         lat: 6.2442,
-//         lng: -75.5812,
-//       ),
-//       lang: "es-CO",
-//       category: "Influencer",
-//       interests: {
-//         "interests": ["Moda", "Música"],
-//       },
-//       avatarUrl: null,
-//       voiceNoteUrl: null,
-//       totalFollowers: 0,
-//       linksCount: 0,
-//       // share: ShareDTO(), // inicializa según tu DTO
-//       // onboarding: OnboardingDTO(),
-//       // privacy: PrivacyDTO(),
-//     );
-//   }
+  @override
+  State<_RegisterScreenContent> createState() => _RegisterScreenContentState();
+}
 
-//   @override
-//   Widget build(BuildContext context) {
-//     final double screenHeight = MediaQuery.of(context).size.height;
+class _RegisterScreenContentState extends State<_RegisterScreenContent> {
+  final TextEditingController _emailController = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-//     return Scaffold(
-//       backgroundColor: AppColors.backgroundDark,
-//       body: SafeArea(
-//         child: Stack(
-//           children: [
-//             // Contenido principal centrado
-//             Align(
-//               alignment: Alignment.center,
-//               child: SingleChildScrollView(
-//                 padding: const EdgeInsets.only(
-//                   right: 20,
-//                   left: 20,
-//                   bottom: 200,
-//                 ),
-//                 child: Form(
-//                   key: _formKey,
-//                   child: Column(
-//                     mainAxisSize: MainAxisSize.min,
-//                     children: [
-//                       // Logo
-//                       Container(
-//                         width: 80,
-//                         height: 80,
-//                         decoration: BoxDecoration(
-//                           gradient: AppColors.primaryGradient,
-//                           borderRadius: BorderRadius.circular(20),
-//                         ),
-//                         child: const Icon(
-//                           Icons.link,
-//                           color: Colors.white,
-//                           size: 40,
-//                         ),
-//                       ),
+  @override
+  Widget build(BuildContext context) {
+    final double screenHeight = MediaQuery.of(context).size.height;
 
-//                       const SizedBox(height: 20),
+    return Scaffold(
+      backgroundColor: AppColors.backgroundDark,
+      body: SafeArea(
+        child: Stack(
+          children: [
+            // Contenido principal centrado
+            Align(
+              alignment: Alignment.center,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.only(
+                  right: 20,
+                  left: 20,
+                  bottom: 200,
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Logo
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          gradient: AppColors.primaryGradient,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Icon(
+                          Icons.link,
+                          color: Colors.white,
+                          size: 40,
+                        ),
+                      ),
 
-//                       // Welcome text
-//                       const PrimaryText('Register Now!'),
-//                       const SizedBox(height: 3),
-//                       const SecondaryText('Enter your information below'),
+                      const SizedBox(height: 20),
 
-//                       const SizedBox(height: 30),
+                      // Welcome text
+                      const PrimaryText('Register Now!'),
+                      const SizedBox(height: 3),
+                      const SecondaryText('Enter your information below'),
 
-//                       // Email input
-//                       CustomTextField(
-//                         hintText: "Enter Email",
-//                         prefixIcon: const Icon(
-//                           Icons.email_outlined,
-//                           color: AppColors.secondaryText,
-//                         ),
-//                         controller: _emailController,
-//                       ),
+                      const SizedBox(height: 30),
 
-//                       const SizedBox(height: 30),
+                      // Email input
+                      CustomTextField(
+                        hintText: "Enter Email",
+                        prefixIcon: const Icon(
+                          Icons.email_outlined,
+                          color: AppColors.secondaryText,
+                        ),
+                        controller: _emailController,
+                      ),
 
-//                       // Register button
-//                       // GradientButton(
-//                       //   width: double.infinity,
-//                       //   radius: 19,
-//                       //   onPressed: () async {
-//                       //     final email = _emailController.text.trim();
+                      const SizedBox(height: 30),
 
-//                       //     if (email.isEmpty) {
-//                       //       ScaffoldMessenger.of(context).showSnackBar(
-//                       //         const SnackBar(
-//                       //           content: Text("Please enter an email"),
-//                       //         ),
-//                       //       );
-//                       //       return;
-//                       //     }
+                      // Register button
+                      GradientButton(
+                        width: double.infinity,
+                        radius: 19,
+                        onPressed: () {
+                          final email = _emailController.text.trim();
 
-//                       //     final testUser = generateTestUser(email);
+                          if (email.isEmpty) {
+                            CustomSnackbar.show(
+                              context: context,
+                              message: "Please enter an email",
+                              type: SnackbarType.error,
+                              duration: const Duration(seconds: 4),
+                            );
+                            return;
+                          }
 
-//                       //     try {
-//                       //       // Registrar usuario de prueba
-//                       //       await AuthService().signUpRegister(
-//                       //         email: testUser.email,
-//                       //         otp: "123456", // contraseña temporal o OTP
-//                       //         userData: testUser,
-//                       //       );
+                          // Ahora sí puedes acceder al cubit
+                          final cubit = context.read<RegisterCubit>();
+                          cubit.setEmail(email);
 
-//                       //       // Navegar a IaChatScreen
-//                       //       Navigator.pushReplacement(
-//                       //         // ignore: use_build_context_synchronously
-//                       //         context,
-//                       //         MaterialPageRoute(
-//                       //           builder: (context) => const IaChatScreen(),
-//                       //         ),
-//                       //       );
-//                       //     } catch (e) {
-//                       //       // ignore: use_build_context_synchronously
-//                       //       ScaffoldMessenger.of(context).showSnackBar(
-//                       //         SnackBar(
-//                       //           content: Text("Error al crear usuario: $e"),
-//                       //         ),
-//                       //       );
-//                       //     }
-//                       //   },
-//                       //   child: SecondaryText("Create Account"),
-//                       // ),
-//                       GradientButton(
-//                         width: double.infinity,
-//                         radius: 19,
-//                         onPressed: () {
-//                           Navigator.pushReplacement(
-//                             context,
-//                             MaterialPageRoute(
-//                               builder: (context) => const IaChatScreen(),
-//                             ),
-//                           );
-//                         },
-//                         child: SecondaryText("Create Account"),
-//                       ),
-//                     ],
-//                   ),
-//                 ),
-//               ),
-//             ),
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => BlocProvider(
+                                create: (context) => RegisterCubit()
+                                  ..setEmail(email), // Inicializas con el email
+                                child: const IaChatScreen(),
+                              ),
+                            ),
+                          );
+                        },
+                        child: const SecondaryText("Create Account"),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
 
-//             // Link abajo fijo
-//             Align(
-//               alignment: Alignment.bottomCenter,
-//               child: Padding(
-//                 padding: EdgeInsets.only(
-//                   bottom: screenHeight < 800 ? 130 : 220,
-//                 ),
-//                 child: RichText(
-//                   textAlign: TextAlign.center,
-//                   text: TextSpan(
-//                     style: const TextStyle(fontSize: 13, color: Colors.grey),
-//                     children: [
-//                       const TextSpan(text: "Already a member? "),
-//                       gradientTextSpan(
-//                         "Login",
-//                         onTap: () {
-//                           Navigator.pushReplacement(
-//                             context,
-//                             MaterialPageRoute(
-//                               builder: (context) => const LoginScreen(),
-//                             ),
-//                           );
-//                         },
-//                       ),
-//                     ],
-//                   ),
-//                 ),
-//               ),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
+            // Link abajo fijo
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: screenHeight < 800 ? 130 : 220,
+                ),
+                child: RichText(
+                  textAlign: TextAlign.center,
+                  text: TextSpan(
+                    style: const TextStyle(fontSize: 13, color: Colors.grey),
+                    children: [
+                      const TextSpan(text: "Already a member? "),
+                      gradientTextSpan(
+                        "Login",
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LoginScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

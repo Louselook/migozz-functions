@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
-import 'package:migozz_app/features/auth/presentation/register/user_details/components/down_buttons.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/components/const_sctions.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/interest_section_model.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/components/user_details_button.dart';
 
 // Cambia, va para chat
 class InterestsStep extends StatefulWidget {
@@ -14,53 +15,6 @@ class InterestsStep extends StatefulWidget {
 }
 
 class _InterestsStepState extends State<InterestsStep> {
-  final List<InterestSectionModel> sections = [
-    InterestSectionModel(
-      title: "Going Out",
-      options: [
-        "Concerts",
-        "Museum & Galleries",
-        "Yoga",
-        "Comedy",
-        "Theater",
-        "Clubs",
-        "Bars",
-        "Karaoke",
-        "Film Festivals",
-        "Lounging",
-      ],
-    ),
-    InterestSectionModel(
-      title: "Sports",
-      options: [
-        "Football",
-        "Soccer",
-        "Hockey",
-        "Sports News",
-        "Fishing",
-        "Basquetball",
-        "Cricket",
-        "Pickleball",
-        "Gymnastia",
-        "Horse Riding",
-        "MMA",
-        "Tennis",
-        "Swimming",
-        "Snowboarding",
-        "Gym",
-        "Surfing",
-        "Skiing",
-        "Baseball",
-        "Golf",
-        "Boxing",
-      ],
-    ),
-    InterestSectionModel(
-      title: "Film & Tv",
-      options: ["Drama", "Thriller", "Crime"],
-    ),
-  ];
-
   Set<String> selectedInterests = {};
 
   @override
@@ -87,7 +41,11 @@ class _InterestsStepState extends State<InterestsStep> {
 
             const SizedBox(height: 40),
             // Botones
-            downButtons(controller: widget.controller),
+            userDetailsButton(
+              controller: widget.controller,
+              context: context,
+              action: UserDetailsAction.finalRegister,
+            ),
           ],
         ),
       ),
@@ -169,7 +127,7 @@ class _InterestsStepState extends State<InterestsStep> {
         borderRadius: BorderRadius.circular(12),
       ),
       child: TextButton(
-        onPressed: onTap, // 👈 ahora sí usa el callback
+        onPressed: onTap, // ahora sí usa el callback
         child: SecondaryText(
           label,
           color: AppColors.backgroundDark,

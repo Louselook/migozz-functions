@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
-import 'package:migozz_app/features/auth/presentation/register/user_details/components/down_buttons.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/components/user_details_button.dart';
 
 // Cambiar
 
@@ -60,7 +60,11 @@ class _CategoryStepState extends State<CategoryStep> {
             const SizedBox(height: 20),
 
             // Botones
-            downButtons(controller: widget.controller),
+            userDetailsButton(
+              controller: widget.controller,
+              context: context,
+              action: UserDetailsAction.next,
+            ),
           ],
         ),
       ),

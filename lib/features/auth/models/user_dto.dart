@@ -11,13 +11,15 @@ class UserDTO {
   final List<String>? socialEcosystem;
   final LocationDTO location;
 
+  // new add
+  final String? avatarUrl;
+  final String? phone;
+  final String? voiceNoteUrl;
+  final String? category;
+  final Map<String, List<String>> interests;
+
   // Parte 2
   // final String birthday;
-  // final String? phone;
-  // final String? category;
-  // final Map<String, List<String>> interests;
-  // final String? avatarUrl;
-  // final String? voiceNoteUrl;
   // final int totalFollowers;
   // final int linksCount;
   // final ShareDTO? share;
@@ -37,13 +39,15 @@ class UserDTO {
     this.socialEcosystem,
     required this.location,
 
+    // new add
+    this.avatarUrl,
+    this.phone,
+    this.voiceNoteUrl,
+    this.category,
+    required this.interests,
+
     // Parte 2
     // required this.birthday,
-    // this.phone,
-    // this.category,
-    // required this.interests,
-    // this.avatarUrl,
-    // this.voiceNoteUrl,
     // this.totalFollowers = 0,
     // this.linksCount = 0,
     // this.share,
@@ -65,13 +69,15 @@ class UserDTO {
     List<String>? socialEcosystem,
     LocationDTO? location,
 
+    // new add
+    String? avatarUrl,
+    String? phone,
+    String? voiceNoteUrl,
+    String? category,
+    Map<String, List<String>>? interests,
+
     // Parte 2
     // String? birthday,
-    // String? phone,
-    // String? category,
-    // Map<String, List<String>>? interests,
-    // String? avatarUrl,
-    // String? voiceNoteUrl,
     // int? totalFollowers,
     // int? linksCount,
     // ShareDTO? share,
@@ -90,13 +96,15 @@ class UserDTO {
       socialEcosystem: socialEcosystem ?? this.socialEcosystem,
       location: location ?? this.location,
 
+      // add new
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      phone: phone ?? this.phone,
+      voiceNoteUrl: voiceNoteUrl ?? this.voiceNoteUrl,
+      category: category ?? this.category,
+      interests: interests ?? this.interests,
+
       // Parte 2
       // birthday: birthday ?? this.birthday,
-      // phone: phone ?? this.phone,
-      // category: category ?? this.category,
-      // interests: interests ?? this.interests,
-      // avatarUrl: avatarUrl ?? this.avatarUrl,
-      // voiceNoteUrl: voiceNoteUrl ?? this.voiceNoteUrl,
       // totalFollowers: totalFollowers ?? this.totalFollowers,
       // linksCount: linksCount ?? this.linksCount,
       // share: share ?? this.share,
@@ -118,13 +126,16 @@ class UserDTO {
       'socialEcosystem': socialEcosystem,
       'location': location.toMap(),
 
+      // add new
+      'avatarUrl': avatarUrl,
+      'phone': phone,
+      'voiceNoteUrl': voiceNoteUrl,
+      'category': category,
+      'interests': interests,
+
       // Parte 2
       // 'birthday': birthday,
-      // 'phone': phone,
-      // 'category': category,
-      // 'interests': interests,
-      // 'avatarUrl': avatarUrl,
-      // 'voiceNoteUrl': voiceNoteUrl,
+
       // 'totalFollowers': totalFollowers,
       // 'linksCount': linksCount,
       // 'share': share?.toMap(),

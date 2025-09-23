@@ -10,6 +10,10 @@ class ChatNavigationHandler {
     required Map<String, dynamic> botResponse,
     required ChatController chatController,
   }) {
+    if (botResponse["dinamicResponse"] == "FollowedMessages") {
+      _handlePostNavigationFlowPicture(chatController);
+    }
+
     if (botResponse["action"] != null) {
       Future.delayed(const Duration(milliseconds: 1200), () {
         // Obtener el cubit actual antes de navegar
@@ -27,14 +31,14 @@ class ChatNavigationHandler {
           ),
         ).then((result) {
           if (result == "done") {
-            _handlePostNavigationFlow(chatController);
+            _handlePostNavigationFlowSocial(chatController);
           }
         });
       });
     }
   }
 
-  static void _handlePostNavigationFlow(ChatController chatController) {
+  static void _handlePostNavigationFlowSocial(ChatController chatController) {
     chatController.handlePostActionResponse(
       onSocialEcosystem: () {
         // 👉 Después de mostrar mensaje introductorio, agregamos cards
@@ -51,5 +55,22 @@ class ChatNavigationHandler {
         });
       },
     );
+  }
+
+  // pictures
+  static void _handlePostNavigationFlowPicture(ChatController chatController) {
+    Future.delayed(const Duration(milliseconds: 1200), () {
+      chatController.showNextBotMessage(); // 1er mensaje
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        chatController.showNextBotMessage(); // 2do mensaje
+
+        // 👇 Aquí inyectamos las picture cards
+        chatController.addPictureCards().then((_) {
+          Future.delayed(const Duration(milliseconds: 800), () {
+            chatController.showNextBotMessage(); // Continuar flujo
+          });
+        });
+      });
+    });
   }
 }

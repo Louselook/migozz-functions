@@ -3,8 +3,8 @@ import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/progress_indicator.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/category_step.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/interests_step.dart';
-import 'package:migozz_app/features/auth/presentation/register/user_details/modules/layout_step.dart';
-import 'package:migozz_app/features/auth/presentation/register/user_details/modules/pic_audio_step.dart';
+// import 'package:migozz_app/features/auth/presentation/register/user_details/modules/layout_step.dart';
+// import 'package:migozz_app/features/auth/presentation/register/user_details/modules/pic_audio_step.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem_step.dart';
 
 class MoreUserDetails extends StatefulWidget {
@@ -44,8 +44,8 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
       SocialEcosystemStep(controller: pageController),
       CategoryStep(controller: pageController),
       InterestsStep(controller: pageController),
-      PicAudioStep(controller: pageController),
-      LayoutStep(controller: pageController),
+      // PicAudioStep(controller: pageController),
+      // LayoutStep(controller: pageController),
     ];
 
     return Scaffold(
