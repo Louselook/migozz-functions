@@ -32,6 +32,9 @@ class ChatController extends ChangeNotifier {
       if (botResponse["action"] != null) {
         onActionRequired?.call(botResponse);
       }
+      if (botResponse["dinamicResponse"] == "FollowedMessages") {
+        onActionRequired?.call(botResponse);
+      }
     }
   }
 
@@ -42,7 +45,7 @@ class ChatController extends ChangeNotifier {
     if (text.trim().isEmpty) return;
 
     _messages.add({"isBot": false, "text": text, "time": _getTimeNow()});
-    _currentSuggestions = [];
+    _currentSuggestions = []; // limpiar sugeerencias
     notifyListeners();
     scrollToBottom();
 
@@ -112,6 +115,24 @@ class ChatController extends ChangeNotifier {
       notifyListeners();
       scrollToBottom();
     }
+  }
+
+  Future<void> addPictureCards() async {
+    final pictureCards = [
+      {"imageUrl": "https://picsum.photos/200", "label": "Camera"},
+      {"imageUrl": "https://picsum.photos/201", "label": "Gallery"},
+      {"imageUrl": "https://picsum.photos/202", "label": "Custom"},
+    ];
+
+    await Future.delayed(const Duration(milliseconds: 800));
+    _messages.add({
+      "isBot": true,
+      "picture": true, // para que ChatMessageBuilder use PictureOptions
+      "pictures": pictureCards, // lista completa
+      "time": _getTimeNow(),
+    });
+    notifyListeners();
+    scrollToBottom();
   }
 
   void scrollToBottom() {

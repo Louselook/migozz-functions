@@ -1,7 +1,7 @@
-// lib/features/auth/presentation/register/chat/builders/chat_message_builder.dart
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/components/compuestos/chat/other_message.dart';
 import 'package:migozz_app/core/components/compuestos/chat/user_message.dart';
+import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/picture_options.dart';
 import '../social_card.dart';
 
 class ChatMessageBuilder {
@@ -15,9 +15,20 @@ class ChatMessageBuilder {
           message["time"],
         );
       }
-      return OtherMessage(text: message["text"], time: message["time"] ?? "");
+
+      if (message["picture"] == true) {
+        return PictureOptions(
+          pictures: message["pictures"] ?? [],
+          time: message["time"] ?? "",
+        );
+      }
+
+      return OtherMessage(
+        text: message["text"] ?? "",
+        time: message["time"] ?? "",
+      );
     } else {
-      return UserMessage(text: message["text"]);
+      return UserMessage(text: message["text"] ?? "");
     }
   }
 }

@@ -24,7 +24,7 @@ class IaChatService {
     {
       "text": "Let's add your social platforms!",
       "options": [],
-      "action": 2,
+      "action": 0,
     }, // Navegar social abajo
     {
       "text":
@@ -37,16 +37,50 @@ class IaChatService {
           "Perfect! Now, let me confirm your location. I detected you're in Bogotá, Colombia 🇨🇴. Is this correct?",
       "options": [],
     },
-    // {
-    //   "text":
-    //       "We have detected that you are in this country, the United States, is that correct?",
-    //   "options": ["Yes, correct", "No"],
-    // },
-    // {
-    //   "text":
-    //       "Please review your information and confirm it: - Language: English - Name: Taylor - Date of birth: 1997 - Gender: Female - Country: United States. Is this information correct?",
-    //   "options": ["Yes, that's correct", "No, isn't correct"],
-    // },
+    {
+      "text": "Great! Your email is john.doe@email.com. Is this correct?",
+      "options": [],
+    },
+    {
+      "text":
+          "Perfect! Please check your email for a confirmation link to activate your profile! 📧",
+      "options": [],
+    },
+    // AI ASSISTANT- PART 2
+    // mensajes seguidos
+    {
+      "text": "Congratulations! Your profile is now activated! 🎉",
+      "options": [],
+      "dinamicResponse": "FollowedMessages",
+    },
+    {
+      "text":
+          "Now let's personalize your profile. First, let's add a profile picture! 📸",
+      "options": [],
+    },
+    {
+      "text":
+          "I can suggest some options from your connected social media, or you can upload a new one.",
+      "options": [],
+    },
+    // dspus iconos o la opcion en el menu
+    {
+      "text":
+          "Which one would you like to use? Or would you prefer to upload a custom photo?",
+      "options": [],
+    },
+    // seguidos hasta aqui, aqui respondeemos
+    {"text": "Perfect! Now, what's your phone number? 📞", "options": []},
+    {
+      "text":
+          "Great! Now let's add a personal touch. Please record a short voice note (5-10 seconds) introducing yourself! 🎤",
+      "options": [],
+    }, // audio
+    // por ultimo
+    // Choose Your Category
+    // Choose Your Interests
+    // My Profile - Resultado Final
+    // Profile (Other Users)
   ];
 
   final List<Map<String, dynamic>> _questionsEs = [
@@ -84,16 +118,49 @@ class IaChatService {
           "¡Perfecto! Ahora, déjame confirmar tu ubicación. Detecté que estás en Bogotá, Colombia 🇨🇴. ¿Es correcto?",
       "options": [],
     },
-    // {
-    //   "text":
-    //       "Hemos detectado que estás en este país, Estados Unidos, ¿es correcto?",
-    //   "options": ["Sí, correcto", "No"],
-    // },
-    // {
-    //   "text":
-    //       "Por favor revisa tu información y confírmala: - Idioma: Español - Nombre: Taylor - Fecha de nacimiento: 1997 - Género: Mujer - País: Estados Unidos. ¿Es correcto?",
-    //   "options": ["Sí, es correcto", "No, no es correcto"],
-    // },
+    {
+      "text":
+          "¡Perfecto! Revisa tu correo electrónico para ver el enlace de confirmación para activar tu perfil. 📧",
+      "options": [],
+    },
+    // AI ASSISTANT- PARTE 2
+    // mensajes seguidos
+    {
+      "text": "¡Felicidades! ¡Tu perfil ya está activado! 🎉",
+      "options": [],
+      "dinamicResponse": "FollowedMessages",
+    },
+    {
+      "text":
+          "Ahora personalicemos tu perfil. ¡Primero, vamos a añadir una foto de perfil! 📸",
+      "options": [],
+    },
+    {
+      "text":
+          "Puedo sugerirte algunas opciones de tus redes sociales conectadas, o puedes subir una nueva.",
+      "options": [],
+    },
+    // después iconos o la opción en el menú
+    {
+      "text":
+          "¿Cuál te gustaría usar? ¿O prefieres subir una foto personalizada?",
+      "options": [],
+    },
+    // seguidos hasta aquí, aquí respondemos
+    {
+      "text": "¡Perfecto! Ahora, ¿cuál es tu número de teléfono? 📞",
+      "options": [],
+    },
+    {
+      "text":
+          "¡Genial! Ahora añadamos un toque personal. Por favor, graba una nota de voz corta (5-10 segundos) presentándote 🎤",
+      "options": [],
+    }, // audio
+    // por ultimo
+    // Choose Your Category
+    // Choose Your Interests
+    // My Profile - Resultado Final
+    // Profile (Other Users)
   ];
 
   /// Devuelve la siguiente pregunta
@@ -106,9 +173,10 @@ class IaChatService {
     }
     return {
       "text": _isEnglish
-          ? "Thanks for completing the form! 🎉"
-          : "¡Gracias por completar el formulario! 🎉",
-      "dinamicResponse": 'doneChat',
+          ? "Perfect recording! Now, what best describes you professionally?"
+          : "¡Grabación perfecta! Ahora, ¿qué te describe mejor profesionalmente?",
+      // "dinamicResponse": 'doneChat',
+      "action": 1,
     };
   }
 

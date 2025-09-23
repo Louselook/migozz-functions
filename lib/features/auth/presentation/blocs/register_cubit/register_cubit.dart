@@ -5,12 +5,10 @@ import 'register_state.dart';
 class RegisterCubit extends Cubit<RegisterState> {
   RegisterCubit() : super(const RegisterState());
 
-  // ========== PASO 1: EMAIL ==========
   void setEmail(String email) {
-    emit(state.copyWith(email: email, currentStep: RegisterStep.chatQuestions));
+    emit(state.copyWith(email: email));
   }
 
-  // ========== PASO 2: CHAT RESPUESTAS ==========
   void setLanguage(String language) {
     emit(state.copyWith(language: language));
   }
@@ -27,99 +25,52 @@ class RegisterCubit extends Cubit<RegisterState> {
     emit(state.copyWith(gender: gender));
   }
 
-  // ========== PASO 4: UBICACIÓN ==========
-  void setLocation(LocationDTO location) {
-    final updatedState = state.copyWith(location: location);
-
-    if (updatedState.fullName != null &&
-        updatedState.username != null &&
-        updatedState.language != null &&
-        updatedState.gender != null &&
-        updatedState.location != null) {
-      emit(updatedState.copyWith(currentStep: RegisterStep.finalReview));
-    } else {
-      emit(updatedState);
-    }
-  }
-
-  // ========== PASO 3: REDES SOCIALES ==========
   void setSocialEcosystem(List<String> platforms) {
     emit(state.copyWith(socialEcosystem: platforms));
   }
 
-  // ========== UTILIDADES ==========
-  void reset() {
-    emit(const RegisterState());
+  void setLocation(LocationDTO location) {
+    emit(state.copyWith(location: location));
   }
 
-  // Método para obtener el progreso del registro (0.0 - 1.0)
-  double get registrationProgress {
-    final totalSteps = RegisterStep.values.length;
-    final currentStepIndex = RegisterStep.values.indexOf(state.currentStep);
-    return (currentStepIndex + 1) / totalSteps;
+  void setAvatarUrl(String avatarUrl) {
+    emit(state.copyWith(avatarUrl: avatarUrl));
   }
 
-  // Método para verificar si se puede avanzar al siguiente paso
-  bool canProceedToNextStep() {
-    switch (state.currentStep) {
-      case RegisterStep.email:
-        return state.email != null && state.email!.isNotEmpty;
-      case RegisterStep.chatQuestions:
-        return state.fullName != null &&
-            state.username != null &&
-            state.gender != null &&
-            state.language != null;
-      case RegisterStep.socialPlatforms:
-        return true; // Las redes sociales pueden ser opcionales
-      case RegisterStep.locationConfirm:
-        return true; // La ubicación puede usar valores por defecto
-      case RegisterStep.finalReview:
-        return state.isReadyToRegister;
+  void setPhone(String phone) {
+    emit(state.copyWith(phone: phone));
+  }
+
+  void setVoiceNoteUrl(String voiceNoteUrl) {
+    emit(state.copyWith(voiceNoteUrl: voiceNoteUrl));
+  }
+
+  void setCategory(String category) {
+    emit(state.copyWith(category: category));
+  }
+
+  void setInterests(Map<String, List<String>> interests) {
+    emit(state.copyWith(interests: interests));
+    // checkCompletion();
+  }
+
+  // Validador - Podria validar en cada metodo
+  void checkCompletion() {
+    final complete =
+        state.email != null &&
+        state.language != null &&
+        state.fullName != null &&
+        state.username != null &&
+        state.gender != null &&
+        state.location != null &&
+        state.avatarUrl != null &&
+        state.phone != null &&
+        state.voiceNoteUrl != null &&
+        state.category != null &&
+        state.interests != null;
+
+    if (state.isComplete != complete) {
+      emit(state.copyWith(isComplete: complete));
     }
   }
 }
-
-
-// import 'package:flutter_bloc/flutter_bloc.dart';
-// import 'package:migozz_app/features/auth/services/auth_service.dart';
-// import 'register_state.dart';
-
-// class RegisterCubit extends Cubit<RegisterState> {
-//   final AuthService _authService;
-
-//   RegisterCubit(this._authService) : super(const RegisterState());
-
-
-  // // ========== REGISTRO FINAL ==========
-  // Future<void> completeRegistration() async {
-  //   if (!state.isReadyToRegister) {
-  //     emit(
-  //       state.copyWith(
-  //         status: RegisterStatus.failure,
-  //         errorMessage: "Faltan datos requeridos para completar el registro",
-  //       ),
-  //     );
-  //     return;
-  //   }
-
-  //   emit(state.copyWith(status: RegisterStatus.loading));
-
-  //   try {
-  //     final userDTO = state.buildUserDTO();
-
-  //     await _authService.signUpRegister(
-  //       email: state.email!,
-  //       otp: "123456", // O el método que uses para la verificación
-  //       userData: userDTO,
-  //     );
-
-  //     emit(state.copyWith(status: RegisterStatus.success, user: userDTO));
-  //   } catch (e) {
-  //     emit(
-  //       state.copyWith(
-  //         status: RegisterStatus.failure,
-  //         errorMessage: e.toString(),
-  //       ),
-  //     );
-  //   }
-  // }
