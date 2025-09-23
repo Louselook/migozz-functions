@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/components/compuestos/chat/other_message.dart';
 import 'package:migozz_app/core/components/compuestos/chat/user_message.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/picture_options.dart';
-import '../social_card.dart';
+import 'package:migozz_app/core/components/compuestos/chat/picture_options.dart';
+import '../../../../features/auth/presentation/register/chat/components/social_card.dart';
 
 class ChatMessageBuilder {
   static Widget buildMessage(Map<String, dynamic> message) {

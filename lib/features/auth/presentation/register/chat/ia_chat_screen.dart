@@ -8,7 +8,7 @@ import 'package:migozz_app/features/auth/models/location_dto.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/chat_controller.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/chat_input_widget.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/chat_message_builder.dart';
+import 'package:migozz_app/core/components/compuestos/chat/chat_message_builder.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/chat_navigation_handler.dart';
 import 'package:migozz_app/features/auth/services/auth_service.dart';
 import 'components/suggestion_chips.dart';
@@ -68,8 +68,10 @@ class _IaChatScreenState extends State<IaChatScreen> {
       debugPrint(" Usuario final (mockeado): $filledState");
       final testUser = filledState.buildUserDTO();
 
+      /// Toda eesta logica pasarla al cubit
       // datos reales
       // final testUser = cubit.state.buildUserDTO();
+
       final authService = AuthService();
 
       final userCredential = await authService.signUpRegister(
