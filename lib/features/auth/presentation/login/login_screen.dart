@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/color.dart';
+import 'package:migozz_app/core/components/atomics/loading_overlay.dart';
+import 'package:migozz_app/core/components/compuestos/custom_snackbar.dart';
 import 'package:migozz_app/core/components/compuestos/custom_textfield.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
+import 'package:migozz_app/email_otp_custom.dart';
 import 'package:migozz_app/features/auth/components/bottom_text.dart';
 import 'package:migozz_app/features/auth/components/google_button.dart';
-import 'package:migozz_app/features/auth/presentation/login/otp_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,7 +20,15 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  // bool _obscureText = true;
+  String? myOTP;
+
+  Future<bool> sendOTP({required String email}) async {
+    bool sent = await EmailOTP.sendOTP(email: email);
+    if (sent) {
+      myOTP = EmailOTP.getOTP();
+    }
+    return sent;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -79,15 +90,33 @@ class _LoginScreenState extends State<LoginScreen> {
                 GradientButton(
                   width: double.infinity,
                   radius: 19,
-                  // onPressed: authProvider.isLoading ? null : _handleLogin,
-                  onPressed: () {
-                    // Modificar avegacion
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const OtpScreen(),
-                      ),
-                    );
+                  onPressed: () async {
+                    // Mostrar loader
+                    LoadingOverlay.show(context);
+
+                    bool sent = await sendOTP(email: _emailController.text);
+
+                    // Ocultar loader
+                    // ignore: use_build_context_synchronously
+                    LoadingOverlay.hide(context);
+
+                    if (sent) {
+                      // ignore: use_build_context_synchronously
+                      context.push(
+                        '/otp',
+                        extra: {
+                          'email': _emailController.text,
+                          'userOTP': myOTP,
+                        },
+                      );
+                    } else {
+                      CustomSnackbar.show(
+                        // ignore: use_build_context_synchronously
+                        context: context,
+                        message: 'Error al enviar OTP',
+                        type: SnackbarType.error,
+                      );
+                    }
                   },
                   child: SecondaryText('Login', fontSize: 20),
                 ),

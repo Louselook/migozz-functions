@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/features/profile/pages/profile_screen.dart';
@@ -23,15 +24,11 @@ Widget userDetailsButton({
           break;
 
         case UserDetailsAction.finalRegister:
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => ProfileScreen()),
-            (route) => false,
-          );
+          context.go('/profile');
           break;
 
         case UserDetailsAction.back:
-          Navigator.pop(context, 'done');
+          context.pop('done');
           break;
       }
     },

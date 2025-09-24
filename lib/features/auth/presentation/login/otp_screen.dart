@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
-import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
+// import 'package:migozz_app/pruebas/otp_validator.dart';
+import 'package:migozz_app/core/components/compuestos/custom_snackbar.dart';
 
 class OtpScreen extends StatefulWidget {
-  const OtpScreen({super.key});
+  final String email;
+  final String userOTP;
+  const OtpScreen({super.key, required this.email, required this.userOTP});
+
+  factory OtpScreen.fromExtra(BuildContext context) {
+    final data = GoRouterState.of(context).extra as Map<String, dynamic>;
+    return OtpScreen(email: data['email'], userOTP: data['userOTP']);
+  }
 
   @override
   State<OtpScreen> createState() => _OtpScreenState();
@@ -16,32 +25,22 @@ class _OtpScreenState extends State<OtpScreen> {
     (_) => TextEditingController(),
   );
 
-  @override
-  void initState() {
-    super.initState();
-    for (var controller in _controllers) {
-      controller.addListener(_validateCode);
+  void validateOTP({required String otp}) {
+    if (widget.userOTP == otp) {
+      CustomSnackbar.show(
+        context: context,
+        message: "OTP correcto",
+        type: SnackbarType.success,
+      );
+      // changePassword(email: widget.email, newPassword: otp);
+    } else {
+      debugPrint('user:$otp server: ${widget.userOTP}');
+      CustomSnackbar.show(
+        context: context,
+        message: "OTP incorrecto",
+        type: SnackbarType.error,
+      );
     }
-  }
-
-  void _validateCode() {
-    String code = _controllers.map((c) => c.text).join();
-
-    if (code.contains('') && code.length < 6) {
-      debugPrint("el codigo esta vacio");
-    }
-
-    if (code.length == 6 && !_controllers.any((c) => c.text.isEmpty)) {
-      debugPrint("datos completos: $code");
-    }
-  }
-
-  @override
-  void dispose() {
-    for (var controller in _controllers) {
-      controller.dispose();
-    }
-    super.dispose();
   }
 
   @override
@@ -53,9 +52,7 @@ class _OtpScreenState extends State<OtpScreen> {
             Icons.arrow_back_ios,
             color: AppColors.backgroundDark,
           ),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => context.pop(),
         ),
       ),
       body: SafeArea(
@@ -63,27 +60,25 @@ class _OtpScreenState extends State<OtpScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 20.0),
           child: Column(
             children: [
-              _titleSection(email: 'correo@gmail.com'),
+              _titleSection(email: widget.email),
               const SizedBox(height: 40),
-              _OtpFields(controllers: _controllers),
+              _OtpFields(
+                controllers: _controllers,
+                onCompleted: (otp) => validateOTP(otp: otp),
+              ),
               const _ResendButton(),
               const Spacer(),
               const _ImageSection(),
               const SizedBox(height: 40),
 
-              // button
-              GradientButton(
-                width: double.infinity,
-                radius: 19,
-                height: 50,
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const OtpScreen()),
-                  );
-                },
-                child: const SecondaryText('Verify', fontSize: 20),
-              ),
+              // botón comentado ya que el OTP se valida automáticamente
+              // GradientButton(
+              //   width: double.infinity,
+              //   radius: 19,
+              //   height: 50,
+              //   onPressed: () => validateOTP(otp: _otpController.text),
+              //   child: const SecondaryText('Verify', fontSize: 20),
+              // ),
             ],
           ),
         ),
@@ -108,9 +103,36 @@ Widget _titleSection({required String email}) {
   );
 }
 
-class _OtpFields extends StatelessWidget {
+class _OtpFields extends StatefulWidget {
   final List<TextEditingController> controllers;
-  const _OtpFields({required this.controllers});
+  final void Function(String otp) onCompleted;
+  const _OtpFields({required this.controllers, required this.onCompleted});
+
+  @override
+  State<_OtpFields> createState() => _OtpFieldsState();
+}
+
+class _OtpFieldsState extends State<_OtpFields> {
+  @override
+  void initState() {
+    super.initState();
+    for (var i = 0; i < widget.controllers.length; i++) {
+      widget.controllers[i].addListener(() => _onChange(i));
+    }
+  }
+
+  void _onChange(int index) {
+    if (widget.controllers[index].text.length == 1 && index < 5) {
+      FocusScope.of(context).nextFocus();
+    } else if (widget.controllers[index].text.isEmpty && index > 0) {
+      FocusScope.of(context).previousFocus();
+    }
+
+    String otp = widget.controllers.map((c) => c.text).join();
+    if (otp.length == 6) {
+      widget.onCompleted(otp);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -118,12 +140,11 @@ class _OtpFields extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(6, (index) {
         return Container(
-          color: Colors.transparent,
           margin: const EdgeInsets.symmetric(horizontal: 3),
           width: 44,
           height: 44,
           child: TextField(
-            controller: controllers[index],
+            controller: widget.controllers[index],
             maxLength: 1,
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,

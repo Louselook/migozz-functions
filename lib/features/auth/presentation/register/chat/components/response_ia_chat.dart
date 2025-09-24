@@ -45,6 +45,7 @@ class IaChatService {
       "text":
           "Perfect! Please check your email for a confirmation link to activate your profile! 📧",
       "options": [],
+      "dinamicResponse": "CheckEmail",
     },
     // AI ASSISTANT- PART 2
     // mensajes seguidos
@@ -122,6 +123,7 @@ class IaChatService {
       "text":
           "¡Perfecto! Revisa tu correo electrónico para ver el enlace de confirmación para activar tu perfil. 📧",
       "options": [],
+      "dinamicResponse": "CheckEmail",
     },
     // AI ASSISTANT- PARTE 2
     // mensajes seguidos

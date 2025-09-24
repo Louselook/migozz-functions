@@ -4,6 +4,8 @@ import 'package:migozz_app/features/auth/models/location_dto.dart';
 
 enum RegisterStatus { initial, loading, success, failure }
 
+enum EmailVerification { pending, inProgress, success }
+
 class RegisterState extends Equatable {
   // final RegisterStatus status;
   final bool isComplete;
@@ -23,6 +25,9 @@ class RegisterState extends Equatable {
   final String? voiceNoteUrl;
   final String? category;
   final Map<String, List<String>>? interests;
+
+  final EmailVerification emailVerification;
+  final bool confirmEmail;
 
   // final String? birthday;
 
@@ -46,6 +51,8 @@ class RegisterState extends Equatable {
     this.category,
     this.interests,
 
+    this.emailVerification = EmailVerification.pending,
+    this.confirmEmail = false,
     // this.birthday,
   });
 
@@ -68,6 +75,8 @@ class RegisterState extends Equatable {
     String? category,
     Map<String, List<String>>? interests,
 
+    EmailVerification? emailVerification,
+    bool? confirmEmail,
     // String? birthday,
   }) {
     return RegisterState(
@@ -89,6 +98,8 @@ class RegisterState extends Equatable {
       category: category ?? this.category,
       interests: interests ?? this.interests,
 
+      emailVerification: emailVerification ?? this.emailVerification,
+      confirmEmail: confirmEmail ?? this.confirmEmail,
       // birthday: birthday ?? this.birthday,
     );
   }
@@ -142,6 +153,9 @@ class RegisterState extends Equatable {
     voiceNoteUrl,
     category,
     interests,
+
+    confirmEmail,
+    emailVerification,
     // birthday,
   ];
 }

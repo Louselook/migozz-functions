@@ -4,8 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/core/components/compuestos/custom_snackbar.dart';
+import 'package:migozz_app/email_otp_custom.dart';
 import 'package:migozz_app/features/auth/models/location_dto.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_state.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/chat_controller.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/chat_input_widget.dart';
 import 'package:migozz_app/core/components/compuestos/chat/chat_message_builder.dart';
@@ -23,6 +25,7 @@ class IaChatScreen extends StatefulWidget {
 class _IaChatScreenState extends State<IaChatScreen> {
   final TextEditingController _controller = TextEditingController();
   late final ChatController _chatController;
+  String? myOTP;
 
   @override
   void initState() {
@@ -102,6 +105,14 @@ class _IaChatScreenState extends State<IaChatScreen> {
     }
   }
 
+  Future<bool> sendOTP({required String email}) async {
+    bool sent = await EmailOTP.sendOTP(email: email);
+    if (sent) {
+      myOTP = EmailOTP.getOTP();
+    }
+    return sent;
+  }
+
   void _handleSendMessage() {
     final text = _controller.text;
     _controller.clear();
@@ -152,10 +163,37 @@ class _IaChatScreenState extends State<IaChatScreen> {
       },
     );
 
-    if (cubit.state.location != null) {
-      // _doneChat(context, cubit);
-      debugPrint('envio');
+    if (cubit.state.emailVerification == EmailVerification.inProgress) {
+      cubit.updateEmailVerification(EmailVerification.pending);
+      if (text == myOTP) {
+        debugPrint("✅ OTP correcto para ${cubit.state.email}");
+        cubit.updateEmailVerification(EmailVerification.success);
+        _doneChat(context, cubit);
+      } else {
+        debugPrint("❌ OTP incorrecto: $text, esperado: $myOTP");
+
+        CustomSnackbar.show(
+          context: context,
+          message: "OTP incorrecto, intenta de nuevo",
+          type: SnackbarType.error,
+        );
+      }
     }
+
+    if (cubit.state.confirmEmail) {
+      if (cubit.state.email != null) {
+        sendOTP(email: cubit.state.email!);
+        debugPrint('envio otp');
+      } else {
+        debugPrint("Email is null, cannot send OTP.");
+      }
+      cubit.updateEmailVerification(EmailVerification.inProgress);
+    }
+
+    if (cubit.state.location != null) {
+      cubit.toggleConfirmEmail();
+    }
+
     // if (cubit.state.isComplete) {
     //   _doneChat(context, cubit);
     // }

@@ -54,6 +54,14 @@ class RegisterCubit extends Cubit<RegisterState> {
     // checkCompletion();
   }
 
+  void updateEmailVerification(EmailVerification status) {
+    emit(state.copyWith(emailVerification: status));
+  }
+
+  void toggleConfirmEmail() {
+    emit(state.copyWith(confirmEmail: !state.confirmEmail));
+  }
+
   // Validador - Podria validar en cada metodo
   void checkCompletion() {
     final complete =

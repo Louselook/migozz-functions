@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
-import 'package:migozz_app/features/auth/presentation/register/register_screen.dart';
 
 Widget bottomText({required BuildContext context}) {
   return RichText(
@@ -12,10 +12,7 @@ Widget bottomText({required BuildContext context}) {
         gradientTextSpan(
           "Register Now\n",
           onTap: () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const RegisterScreen()),
-            );
+            context.go('/register');
           },
         ),
         const TextSpan(text: " By registering you agree to our\n"),

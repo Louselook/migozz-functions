@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/core/components/compuestos/progress_indicator.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
-import 'package:migozz_app/features/auth/presentation/login/login_screen.dart';
-import 'package:migozz_app/core/components/atomics/constant.dart';
+import 'package:migozz_app/features/auth/presentation/onboarding/components/constant.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -56,6 +56,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               itemCount: AppConstants.onboardingPages.length,
               itemBuilder: (context, index) {
                 return _buildOnboardingPage(
+                  context,
                   AppConstants.onboardingPages[index],
                 );
               },
@@ -66,7 +67,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  Widget _buildOnboardingPage(OnboardingData data) {
+  Widget _buildOnboardingPage(BuildContext context, OnboardingData data) {
     final double screenHeight = MediaQuery.of(context).size.height;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -94,14 +95,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ? SizedBox(
                         width: double.infinity,
                         child: GradientButton(
-                          onPressed: () {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const LoginScreen(),
-                              ),
-                            );
-                          },
+                          onPressed: () => context.go('/login'),
                           child: const TextWithIcon(
                             "Get Started",
                             icon: Icons.arrow_forward_ios_rounded,
@@ -113,14 +107,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         children: [
                           ButtonText(
                             text: 'Skip',
-                            onPressed: () {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const LoginScreen(),
-                                ),
-                              );
-                            },
+                            onPressed: () => context.go('/login'),
                           ),
                           GradientButton(
                             child: const TextWithIcon(

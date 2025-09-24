@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/custom_snackbar.dart';
 import 'package:migozz_app/core/components/compuestos/custom_textfield.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
-import 'package:migozz_app/features/auth/presentation/login/login_screen.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/ia_chat_screen.dart';
 
 // Wrapper widget que proporciona el BlocProvider
 class RegisterScreen extends StatelessWidget {
@@ -111,19 +110,7 @@ class _RegisterScreenContentState extends State<_RegisterScreenContent> {
                           }
 
                           // Ahora sí puedes acceder al cubit
-                          final cubit = context.read<RegisterCubit>();
-                          cubit.setEmail(email);
-
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => BlocProvider(
-                                create: (context) => RegisterCubit()
-                                  ..setEmail(email), // Inicializas con el email
-                                child: const IaChatScreen(),
-                              ),
-                            ),
-                          );
+                          context.pushReplacement('/ia-chat', extra: email);
                         },
                         child: const SecondaryText("Create Account"),
                       ),
@@ -149,12 +136,7 @@ class _RegisterScreenContentState extends State<_RegisterScreenContent> {
                       gradientTextSpan(
                         "Login",
                         onTap: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const LoginScreen(),
-                            ),
-                          );
+                          context.go('/login');
                         },
                       ),
                     ],

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:migozz_app/features/auth/models/user_dto.dart';
 
 class AuthService {
@@ -54,6 +55,30 @@ class AuthService {
       return userCredential;
     } on FirebaseAuthException catch (e) {
       throw Exception('Error en registro: ${e.code}');
+    } catch (e) {
+      throw Exception('Error inesperado: $e');
+    }
+  }
+
+  // Cambiar contraseña
+  Future<void> changePassword(String newPassword) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw Exception('No hay usuario logueado');
+    }
+
+    try {
+      // Actualizar la contraseña
+      await user.updatePassword(newPassword);
+      debugPrint('Contraseña actualizada correctamente');
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'requires-recent-login') {
+        throw Exception(
+          'Necesitas volver a iniciar sesión para cambiar la contraseña',
+        );
+      } else {
+        throw Exception('Error al cambiar la contraseña: ${e.code}');
+      }
     } catch (e) {
       throw Exception('Error inesperado: $e');
     }
