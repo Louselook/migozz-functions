@@ -19,6 +19,7 @@ dependencies:
 
   http: ^1.5.0 # validar email con OTP
   flutter_svg: ^2.0.9
+  url_launcher: ^6.3.0
 
   firebase_core: ^3.4.0 # necesaria para firebase
   cloud_firestore: ^5.6.0 # necesaria para firestore
