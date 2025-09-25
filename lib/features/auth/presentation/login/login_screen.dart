@@ -41,12 +41,12 @@ class _LoginScreenState extends State<LoginScreen> {
           );
         }
 
-        if (state.errorMessage != null) {
+        if (state.errorMessageLogin != null) {
           // Limpiar error en el cubit para que no se repita
           context.read<LoginCubit>().clearError();
           CustomSnackbar.show(
             context: context,
-            message: state.errorMessage!,
+            message: state.errorMessageLogin!,
             type: SnackbarType.error,
           );
         }
