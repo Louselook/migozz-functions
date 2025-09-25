@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
-import 'package:migozz_app/features/profile/pages/profile_screen.dart';
 
 enum UserDetailsAction { next, finalRegister, back }
 
@@ -10,6 +9,7 @@ Widget userDetailsButton({
   required PageController controller,
   required BuildContext context,
   UserDetailsAction action = UserDetailsAction.back,
+  VoidCallback? onFinalAction,
 }) {
   return GradientButton(
     width: double.infinity,
@@ -24,7 +24,9 @@ Widget userDetailsButton({
           break;
 
         case UserDetailsAction.finalRegister:
-          context.go('/profile');
+          if (onFinalAction != null) {
+            onFinalAction();
+          }
           break;
 
         case UserDetailsAction.back:

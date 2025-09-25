@@ -1,9 +1,11 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/models/location_dto.dart';
+import 'package:migozz_app/features/auth/services/auth_service.dart';
 import 'register_state.dart';
 
 class RegisterCubit extends Cubit<RegisterState> {
-  RegisterCubit() : super(const RegisterState());
+  final AuthService _authService;
+  RegisterCubit(this._authService) : super(const RegisterState());
 
   void setEmail(String email) {
     emit(state.copyWith(email: email));
@@ -58,8 +60,8 @@ class RegisterCubit extends Cubit<RegisterState> {
     emit(state.copyWith(emailVerification: status));
   }
 
-  void toggleConfirmEmail() {
-    emit(state.copyWith(confirmEmail: !state.confirmEmail));
+  void setCurrentOTP(String currentOTP) {
+    emit(state.copyWith(currentOTP: currentOTP));
   }
 
   // Validador - Podria validar en cada metodo
@@ -79,6 +81,36 @@ class RegisterCubit extends Cubit<RegisterState> {
 
     if (state.isComplete != complete) {
       emit(state.copyWith(isComplete: complete));
+    }
+  }
+
+  /// ------------------ NUEVO: Registro completo ------------------
+  Future<String?> completeRegistration({required String otp}) async {
+    checkCompletion();
+
+    if (!state.isComplete) {
+      throw Exception('Faltan datos para completar el registro');
+    }
+
+    final userDTO = state.buildUserDTO();
+
+    try {
+      final userCredential = await _authService.signUpRegister(
+        email: state.email!,
+        otp: otp,
+        userData: userDTO,
+      );
+
+      emit(
+        state.copyWith(
+          // opcional: podrías guardar UID u otra info en el state
+        ),
+      );
+
+      // Retorna el UID si quieres usarlo en la UI
+      return userCredential.user?.uid;
+    } catch (e) {
+      throw Exception('Error al registrar usuario: $e');
     }
   }
 }

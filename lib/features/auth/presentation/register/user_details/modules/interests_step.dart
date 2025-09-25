@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/const_sctions.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/interest_section_model.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/user_details_button.dart';
@@ -16,6 +18,27 @@ class InterestsStep extends StatefulWidget {
 
 class _InterestsStepState extends State<InterestsStep> {
   Set<String> selectedInterests = {};
+
+  void _updateCubit() {
+    final cubit = context.read<RegisterCubit>();
+
+    // Agrupar intereses por sección
+    final Map<String, List<String>> interestsBySection = {};
+    for (var section in sections) {
+      final selectedInSection = section.options
+          .where((opt) => selectedInterests.contains(opt))
+          .toList();
+      if (selectedInSection.isNotEmpty) {
+        interestsBySection[section.title] = selectedInSection;
+      }
+    }
+
+    // Guardar en el cubit
+    cubit.setInterests(interestsBySection);
+    debugPrint("Intereses guardados: ${cubit.state}");
+    debugPrint("Intereses guardados: ${cubit.state.interests}");
+    // llamar a metodo para crear usuario
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,6 +68,7 @@ class _InterestsStepState extends State<InterestsStep> {
               controller: widget.controller,
               context: context,
               action: UserDetailsAction.finalRegister,
+              onFinalAction: () => _updateCubit(),
             ),
           ],
         ),

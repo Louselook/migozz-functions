@@ -38,39 +38,25 @@ class ChatNavigationHandler {
     }
   }
 
-  static void _handlePostNavigationFlowSocial(ChatController chatController) {
-    chatController.handlePostActionResponse(
-      onSocialEcosystem: () {
-        // 👉 Después de mostrar mensaje introductorio, agregamos cards
-        chatController.addSocialCards().then((_) {
-          Future.delayed(const Duration(milliseconds: 800), () {
-            // Continuamos con el siguiente mensaje del flujo
-            chatController.showNextBotMessage();
-          });
-        });
-      },
-      onNormalFlow: () {
-        Future.delayed(const Duration(milliseconds: 600), () {
-          chatController.showNextBotMessage();
-        });
-      },
-    );
+  static void _handlePostNavigationFlowSocial(
+    ChatController chatController,
+  ) async {
+    Future.delayed(const Duration(milliseconds: 1200), () async {
+      chatController.showNextBotMessage(); // uno por defecto
+      await chatController.addSocialCards();
+      await chatController.showMultipleBotMessages(1); // n mensajes
+    });
   }
 
   // pictures
   static void _handlePostNavigationFlowPicture(ChatController chatController) {
-    Future.delayed(const Duration(milliseconds: 1200), () {
-      chatController.showNextBotMessage(); // 1er mensaje
-      Future.delayed(const Duration(milliseconds: 1000), () {
-        chatController.showNextBotMessage(); // 2do mensaje
+    // Mostrar 3 mensajes consecutivos después del "Congratulations!" inicial
+    Future.delayed(const Duration(milliseconds: 1200), () async {
+      await chatController.showMultipleBotMessages(2);
 
-        // 👇 Aquí inyectamos las picture cards
-        chatController.addPictureCards().then((_) {
-          Future.delayed(const Duration(milliseconds: 800), () {
-            chatController.showNextBotMessage(); // Continuar flujo
-          });
-        });
-      });
+      // 👇 Después de mostrar los mensajes, agregar picture cards
+      await chatController.addPictureCards();
+      chatController.showNextBotMessage();
     });
   }
 }

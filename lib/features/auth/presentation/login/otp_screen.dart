@@ -4,6 +4,7 @@ import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 // import 'package:migozz_app/pruebas/otp_validator.dart';
 import 'package:migozz_app/core/components/compuestos/custom_snackbar.dart';
+import 'package:migozz_app/pruebas/otp_validator.dart';
 
 class OtpScreen extends StatefulWidget {
   final String email;
@@ -25,14 +26,25 @@ class _OtpScreenState extends State<OtpScreen> {
     (_) => TextEditingController(),
   );
 
-  void validateOTP({required String otp}) {
+  Future<void> validateOTP({required String otp}) async {
     if (widget.userOTP == otp) {
       CustomSnackbar.show(
         context: context,
         message: "OTP correcto",
         type: SnackbarType.success,
       );
-      // changePassword(email: widget.email, newPassword: otp);
+      final result = await changePassword(
+        email: widget.email,
+        newPassword: otp,
+      );
+
+      if (result.success) {
+        // Navegar solo si el cambio fue exitoso
+        // ignore: use_build_context_synchronously
+        context.pushReplacement(
+          '/profile',
+        ); // eeen lugar d eesto notificar a routeer
+      }
     } else {
       debugPrint('user:$otp server: ${widget.userOTP}');
       CustomSnackbar.show(

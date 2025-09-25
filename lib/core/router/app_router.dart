@@ -7,11 +7,12 @@ import 'package:migozz_app/features/auth/presentation/login/otp_screen.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/ia_chat_screen.dart';
 import 'package:migozz_app/features/auth/presentation/register/register_screen.dart';
 import 'package:migozz_app/features/auth/presentation/onboarding/onboarding_screen.dart';
+import 'package:migozz_app/features/auth/services/auth_service.dart';
 import 'package:migozz_app/features/profile/pages/profile_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation:
-      '/onboarding', // pued ser splash screen de una animacion o algo
+      '/register', // pued ser splash screen de una animacion o algo
   redirect: (context, state) {
     final user = FirebaseAuth.instance.currentUser;
     // Ya está logueado
@@ -46,7 +47,7 @@ final appRouter = GoRouter(
       builder: (context, state) {
         final email = state.extra as String;
         return BlocProvider(
-          create: (context) => RegisterCubit()..setEmail(email),
+          create: (context) => RegisterCubit(AuthService())..setEmail(email),
           child: const IaChatScreen(),
         );
       },

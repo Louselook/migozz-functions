@@ -27,7 +27,7 @@ class RegisterState extends Equatable {
   final Map<String, List<String>>? interests;
 
   final EmailVerification emailVerification;
-  final bool confirmEmail;
+  final String? currentOTP;
 
   // final String? birthday;
 
@@ -52,7 +52,7 @@ class RegisterState extends Equatable {
     this.interests,
 
     this.emailVerification = EmailVerification.pending,
-    this.confirmEmail = false,
+    this.currentOTP,
     // this.birthday,
   });
 
@@ -76,7 +76,7 @@ class RegisterState extends Equatable {
     Map<String, List<String>>? interests,
 
     EmailVerification? emailVerification,
-    bool? confirmEmail,
+    String? currentOTP,
     // String? birthday,
   }) {
     return RegisterState(
@@ -99,7 +99,7 @@ class RegisterState extends Equatable {
       interests: interests ?? this.interests,
 
       emailVerification: emailVerification ?? this.emailVerification,
-      confirmEmail: confirmEmail ?? this.confirmEmail,
+      currentOTP: currentOTP ?? this.currentOTP,
       // birthday: birthday ?? this.birthday,
     );
   }
@@ -154,7 +154,7 @@ class RegisterState extends Equatable {
     category,
     interests,
 
-    confirmEmail,
+    currentOTP,
     emailVerification,
     // birthday,
   ];

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/user_details_button.dart';
-
-// Cambiar
 
 class CategoryStep extends StatefulWidget {
   final PageController controller;
@@ -15,7 +15,7 @@ class CategoryStep extends StatefulWidget {
 }
 
 class _CategoryStepState extends State<CategoryStep> {
-  List<String> selectedCategories = [];
+  String? selectedCategory;
 
   final List<String> categories = [
     'Influencer',
@@ -27,6 +27,8 @@ class _CategoryStepState extends State<CategoryStep> {
 
   @override
   Widget build(BuildContext context) {
+    final cubit = context.read<RegisterCubit>();
+
     return SafeArea(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40),
@@ -40,26 +42,26 @@ class _CategoryStepState extends State<CategoryStep> {
                 itemCount: categories.length,
                 itemBuilder: (context, index) {
                   final category = categories[index];
+                  final isSelected = selectedCategory == category;
                   return _categoryButton(
                     category,
-                    selected: selectedCategories.contains(category),
+                    selected: isSelected,
                     onTap: () {
                       setState(() {
-                        if (selectedCategories.contains(category)) {
-                          selectedCategories.remove(category);
-                        } else {
-                          selectedCategories.add(category);
-                        }
+                        selectedCategory = category;
+                        // Actualizar el cubit al seleccionar
+                        cubit.setCategory(category);
+                        debugPrint(
+                          "🏷️ Categoria seleccionada: ${cubit.state.category}",
+                        );
                       });
                     },
                   );
                 },
               ),
             ),
-
             const SizedBox(height: 20),
-
-            // Botones
+            // Botones de navegación
             userDetailsButton(
               controller: widget.controller,
               context: context,

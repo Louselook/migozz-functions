@@ -7,6 +7,8 @@ import 'package:migozz_app/core/components/compuestos/custom_textfield.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/chat_validation.dart';
+import 'package:migozz_app/features/auth/services/auth_service.dart';
 
 // Wrapper widget que proporciona el BlocProvider
 class RegisterScreen extends StatelessWidget {
@@ -15,7 +17,7 @@ class RegisterScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => RegisterCubit(),
+      create: (context) => RegisterCubit(AuthService()),
       child: const _RegisterScreenContent(),
     );
   }
@@ -93,25 +95,33 @@ class _RegisterScreenContentState extends State<_RegisterScreenContent> {
                       const SizedBox(height: 30),
 
                       // Register button
+                      // Register button
                       GradientButton(
                         width: double.infinity,
                         radius: 19,
                         onPressed: () {
                           final email = _emailController.text.trim();
 
-                          if (email.isEmpty) {
+                          // Validamos usando tu función
+                          final isValidEmail = validateCurrentField(
+                            botIndex: 20, // 20 corresponde a email
+                            userResponse: email, // pasamos el valor del input
+                          );
+
+                          if (!isValidEmail) {
                             CustomSnackbar.show(
                               context: context,
-                              message: "Please enter an email",
+                              message: "Please enter a valid email",
                               type: SnackbarType.error,
                               duration: const Duration(seconds: 4),
                             );
                             return;
                           }
 
-                          // Ahora sí puedes acceder al cubit
+                          // Email válido, vamos al chat
                           context.pushReplacement('/ia-chat', extra: email);
                         },
+
                         child: const SecondaryText("Create Account"),
                       ),
                     ],

@@ -1,6 +1,6 @@
 class IaChatService {
   bool _isEnglish = true; // por defecto inglés
-  int _currentIndex = 0;
+  int currentIndex = 0;
 
   final List<Map<String, dynamic>> _questionsEn = [
     {
@@ -45,7 +45,6 @@ class IaChatService {
       "text":
           "Perfect! Please check your email for a confirmation link to activate your profile! 📧",
       "options": [],
-      "dinamicResponse": "CheckEmail",
     },
     // AI ASSISTANT- PART 2
     // mensajes seguidos
@@ -121,9 +120,13 @@ class IaChatService {
     },
     {
       "text":
+          "¡Genial! Tu correo electrónico es john.doe@email.com. ¿Es correcto?",
+      "options": [],
+    },
+    {
+      "text":
           "¡Perfecto! Revisa tu correo electrónico para ver el enlace de confirmación para activar tu perfil. 📧",
       "options": [],
-      "dinamicResponse": "CheckEmail",
     },
     // AI ASSISTANT- PARTE 2
     // mensajes seguidos
@@ -168,9 +171,9 @@ class IaChatService {
   /// Devuelve la siguiente pregunta
   Map<String, dynamic>? getNextBotResponse() {
     final questions = _isEnglish ? _questionsEn : _questionsEs;
-    if (_currentIndex < questions.length) {
-      final response = questions[_currentIndex];
-      _currentIndex++;
+    if (currentIndex < questions.length) {
+      final response = questions[currentIndex];
+      currentIndex++;
       return response;
     }
     return {
@@ -192,7 +195,7 @@ class IaChatService {
   }
 
   void reset() {
-    _currentIndex = 0;
+    currentIndex = 0;
     _isEnglish = true;
   }
 }

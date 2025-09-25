@@ -14,12 +14,20 @@ dependencies:
 
   cupertino_icons: ^1.0.8
 
+  permission_handler: ^12.0.1 # permisos
+  record: ^6.1.1 # grabar audio
+  audio_waveforms: ^1.3.0 # mostrar ola de audio
+  path_provider: ^2.1.5 # necesaria para guardar el audio
+
+  image_picker: ^1.2.0 # imagenes
+
   flutter_bloc: ^9.1.1
   equatable: ^2.0.7
 
   http: ^1.5.0 # validar email con OTP
   flutter_svg: ^2.0.9
   go_router: ^16.2.2 # refactor de la naveegacion
+  url_launcher: ^6.3.0
 
   firebase_core: ^3.4.0 # necesaria para firebase
   cloud_firestore: ^5.6.0 # necesaria para firestore
@@ -29,6 +37,7 @@ dependencies:
   cloud_functions: ^5.6.2
   firebase_dynamic_links: ^6.1.10
   flutter_appauth: ^10.0.0
+  audioplayers: ^6.5.1
 
 dev_dependencies:
   flutter_test:
