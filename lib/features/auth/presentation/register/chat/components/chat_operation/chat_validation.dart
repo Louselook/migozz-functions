@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:migozz_app/features/auth/models/location_dto.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
-import 'package:migozz_app/features/auth/presentation/login/functions/send_otp.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_state.dart';
+import 'package:migozz_app/features/auth/services/send_otp.dart';
 
 /// Valida la respuesta del usuario según el índice del bot
 bool validateCurrentField({required int botIndex, String? userResponse}) {
   if (userResponse == null || userResponse.trim().isEmpty) return false;
 
   switch (botIndex) {
+    case 9: // teléfono
+      return RegExp(r"^\+?\d{7,15}$").hasMatch(userResponse);
     case 20: // email
       return RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$").hasMatch(userResponse);
     // case 8: // teléfono
@@ -70,11 +73,8 @@ Future<void> mapResponseToCubit({
     case 9:
       // codigo OTP
       if (userResponse == cubit.state.currentOTP) {
-        debugPrint("OTP correcto ✅");
+        cubit.updateEmailVerification(EmailVerification.success);
         // Aquí podrías actualizar un estado de confirmación de email
-      } else {
-        debugPrint("OTP incorrecto ❌");
-        // Podrías volver a pedir el OTP
       }
       break;
     case 13:

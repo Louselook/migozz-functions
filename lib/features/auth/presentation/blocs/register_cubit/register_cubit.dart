@@ -85,7 +85,7 @@ class RegisterCubit extends Cubit<RegisterState> {
   }
 
   /// ------------------ NUEVO: Registro completo ------------------
-  Future<String?> completeRegistration({required String otp}) async {
+  Future<String?> completeRegistration() async {
     checkCompletion();
 
     if (!state.isComplete) {
@@ -97,7 +97,7 @@ class RegisterCubit extends Cubit<RegisterState> {
     try {
       final userCredential = await _authService.signUpRegister(
         email: state.email!,
-        otp: otp,
+        otp: state.currentOTP!,
         userData: userDTO,
       );
 

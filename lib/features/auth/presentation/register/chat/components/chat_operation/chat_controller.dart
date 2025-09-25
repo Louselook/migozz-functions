@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/components/compuestos/chat/chat_model.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_state.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/chat_validation.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/response_ia_chat.dart';
 
@@ -55,26 +56,6 @@ class ChatController extends ChangeNotifier {
     if (!other) {
       final botIndex = _chatService.currentIndex; // índice actual del bot
 
-      // // 🔹 Validar la respuesta del usuario
-      // final isValid = validateCurrentField(
-      //   botIndex: botIndex,
-      //   userResponse: text,
-      // );
-
-      // if (!isValid) {
-      //   // 🔹 Repetir la misma pregunta del bot si no es válida
-      //   showPreviousBotMessage();
-      //   return;
-      // }
-
-      // normalizedResponse == text
-      // 🔹 Mapear al cubit
-      // mapResponseToCubit(
-      //   botIndex: botIndex,
-      //   userResponse: text!,
-      //   cubit: registerCubit,
-      // );
-
       String normalizedResponse;
       if (type == MessageType.text) {
         normalizedResponse = text ?? '';
@@ -88,6 +69,33 @@ class ChatController extends ChangeNotifier {
         normalizedResponse = '';
       }
 
+      // --------- OTP (índice 9) ---------
+      if (botIndex == 9) {
+        if (normalizedResponse == registerCubit.state.currentOTP) {
+          // OTP correcto
+          registerCubit.updateEmailVerification(EmailVerification.success);
+          // Avanzar solo si está verificado
+          Future.delayed(const Duration(milliseconds: 600), () {
+            showNextBotMessage(onActionRequired: onActionRequired);
+          });
+        } else {
+          // OTP incorrecto, repetir la misma pregunta
+          _addMessage(
+            ChatMessage(
+              other: true,
+              type: MessageType.text,
+              text: "❌ OTP incorrecto. Intenta de nuevo.",
+              time: _getTimeNow(),
+            ).toMap(),
+          );
+
+          // NO avanzamos el botIndex, se queda esperando
+          return;
+        }
+        return; // cortar aquí para no procesar lo de abajo
+      }
+
+      // --------- Flujo normal ---------
       // Luego llamas a tu función
       mapResponseToCubit(
         botIndex: botIndex,

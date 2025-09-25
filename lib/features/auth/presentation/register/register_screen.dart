@@ -95,7 +95,6 @@ class _RegisterScreenContentState extends State<_RegisterScreenContent> {
                       const SizedBox(height: 30),
 
                       // Register button
-                      // Register button
                       GradientButton(
                         width: double.infinity,
                         radius: 19,

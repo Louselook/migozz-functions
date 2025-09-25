@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
-// import 'package:migozz_app/pruebas/otp_validator.dart';
 import 'package:migozz_app/core/components/compuestos/custom_snackbar.dart';
-import 'package:migozz_app/pruebas/otp_validator.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/login_cubit/login_cubit.dart';
 
 class OtpScreen extends StatefulWidget {
   final String email;
@@ -26,72 +26,65 @@ class _OtpScreenState extends State<OtpScreen> {
     (_) => TextEditingController(),
   );
 
-  Future<void> validateOTP({required String otp}) async {
-    if (widget.userOTP == otp) {
-      CustomSnackbar.show(
-        context: context,
-        message: "OTP correcto",
-        type: SnackbarType.success,
-      );
-      final result = await changePassword(
-        email: widget.email,
-        newPassword: otp,
-      );
-
-      if (result.success) {
-        // Navegar solo si el cambio fue exitoso
-        // ignore: use_build_context_synchronously
-        context.pushReplacement(
-          '/profile',
-        ); // eeen lugar d eesto notificar a routeer
-      }
-    } else {
-      debugPrint('user:$otp server: ${widget.userOTP}');
-      CustomSnackbar.show(
-        context: context,
-        message: "OTP incorrecto",
-        type: SnackbarType.error,
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios,
-            color: AppColors.backgroundDark,
+    // Ya no navegamos manualmente, GoRouter lo hará
+    return BlocListener<LoginCubit, LoginState>(
+      listener: (context, state) {
+        if (state.errorMessage != null) {
+          // Limpiar error en el cubit para que no se repita
+          context.read<LoginCubit>().clearError();
+          CustomSnackbar.show(
+            context: context,
+            message: state.errorMessage!,
+            type: SnackbarType.error,
+          );
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(
+              Icons.arrow_back_ios,
+              color: AppColors.backgroundDark,
+            ),
+            onPressed: () => context.pop(),
           ),
-          onPressed: () => context.pop(),
         ),
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 20.0),
-          child: Column(
-            children: [
-              _titleSection(email: widget.email),
-              const SizedBox(height: 40),
-              _OtpFields(
-                controllers: _controllers,
-                onCompleted: (otp) => validateOTP(otp: otp),
-              ),
-              const _ResendButton(),
-              const Spacer(),
-              const _ImageSection(),
-              const SizedBox(height: 40),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 30.0,
+              vertical: 20.0,
+            ),
+            child: Column(
+              children: [
+                _titleSection(email: widget.email),
+                const SizedBox(height: 40),
+                _OtpFields(
+                  controllers: _controllers,
+                  onCompleted: (otp) {
+                    // ✅ Solo se manda el OTP
+                    context.read<LoginCubit>().validateOTPAndLogin(
+                      inputOTP: otp,
+                    );
+                  },
+                ),
+                _ResendButton(email: widget.email, otp: widget.userOTP),
+                const Spacer(),
+                const _ImageSection(),
+                const SizedBox(height: 40),
 
-              // botón comentado ya que el OTP se valida automáticamente
-              // GradientButton(
-              //   width: double.infinity,
-              //   radius: 19,
-              //   height: 50,
-              //   onPressed: () => validateOTP(otp: _otpController.text),
-              //   child: const SecondaryText('Verify', fontSize: 20),
-              // ),
-            ],
+                // botón comentado ya que el OTP se valida automáticamente
+                // GradientButton(
+                //   width: double.infinity,
+                //   radius: 19,
+                //   height: 50,
+                //   onPressed: () => validateOTP(otp: _otpController.text),
+                //   child: const SecondaryText('Verify', fontSize: 20),
+                // ),
+              ],
+            ),
           ),
         ),
       ),
@@ -125,12 +118,24 @@ class _OtpFields extends StatefulWidget {
 }
 
 class _OtpFieldsState extends State<_OtpFields> {
+  final List<VoidCallback> _listeners = [];
+
   @override
   void initState() {
     super.initState();
     for (var i = 0; i < widget.controllers.length; i++) {
-      widget.controllers[i].addListener(() => _onChange(i));
+      final listener = () => _onChange(i);
+      _listeners.add(listener);
+      widget.controllers[i].addListener(listener);
     }
+  }
+
+  @override
+  void dispose() {
+    for (var i = 0; i < widget.controllers.length; i++) {
+      widget.controllers[i].removeListener(_listeners[i]);
+    }
+    super.dispose();
   }
 
   void _onChange(int index) {
@@ -169,13 +174,16 @@ class _OtpFieldsState extends State<_OtpFields> {
 }
 
 class _ResendButton extends StatelessWidget {
-  const _ResendButton();
+  final String email;
+  final String otp;
+  const _ResendButton({required this.email, required this.otp});
 
   @override
   Widget build(BuildContext context) {
     return TextButton(
       onPressed: () {
-        debugPrint("Reenviar código");
+        // context.read<LoginCubit>().sendOTP(email);
+        debugPrint('eestado correo: $email, otp: $otp');
       },
       child: const SecondaryText(
         "Resend",

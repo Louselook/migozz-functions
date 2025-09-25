@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 
 class AppConstants {
@@ -22,7 +24,7 @@ class AppConstants {
     ),
   ];
 
-  // 👇 Nueva lista de imágenes
+  // Nueva lista de imágenes
   static const List<String> onboardingImages = [
     'assets/images/onboarding_1.png',
     'assets/images/onboarding_2.png',
@@ -30,10 +32,22 @@ class AppConstants {
     'assets/icons/Migozz@300x.png',
   ];
 
-  // 👇 Helper para precargar imágenes
-  static Future<void> precacheOnboardingImages(BuildContext context) async {
+  // Helper para precargar imágenes
+  static Future<void> precacheOnboardingImages() async {
     for (final path in onboardingImages) {
-      await precacheImage(AssetImage(path), context);
+      final imageProvider = AssetImage(path);
+      final config = const ImageConfiguration(); // no necesita contexto
+      final completer = Completer<void>();
+
+      final stream = imageProvider.resolve(config);
+      final listener = ImageStreamListener(
+        (image, synchronousCall) => completer.complete(),
+        onError: (error, stackTrace) => completer.complete(),
+      );
+
+      stream.addListener(listener);
+      await completer.future;
+      stream.removeListener(listener);
     }
   }
 }

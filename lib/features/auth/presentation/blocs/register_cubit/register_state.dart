@@ -4,7 +4,7 @@ import 'package:migozz_app/features/auth/models/location_dto.dart';
 
 enum RegisterStatus { initial, loading, success, failure }
 
-enum EmailVerification { pending, inProgress, success }
+enum EmailVerification { pending, success }
 
 class RegisterState extends Equatable {
   // final RegisterStatus status;

@@ -180,7 +180,6 @@ class IaChatService {
       "text": _isEnglish
           ? "Perfect recording! Now, what best describes you professionally?"
           : "¡Grabación perfecta! Ahora, ¿qué te describe mejor profesionalmente?",
-      // "dinamicResponse": 'doneChat',
       "action": 1,
     };
   }

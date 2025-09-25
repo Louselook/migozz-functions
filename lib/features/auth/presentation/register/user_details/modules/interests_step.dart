@@ -35,9 +35,11 @@ class _InterestsStepState extends State<InterestsStep> {
 
     // Guardar en el cubit
     cubit.setInterests(interestsBySection);
-    debugPrint("Intereses guardados: ${cubit.state}");
-    debugPrint("Intereses guardados: ${cubit.state.interests}");
-    // llamar a metodo para crear usuario
+
+    // debugPrint("✅ Intereses guardados: ${cubit.state.interests}");
+
+    // Solo llamas al método final de registro
+    cubit.completeRegistration();
   }
 
   @override

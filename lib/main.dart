@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:migozz_app/bloc_providers.dart';
 import 'package:migozz_app/core/config/firebase_config.dart';
 import 'package:migozz_app/core/router/app_router.dart';
+import 'package:migozz_app/core/router/app_router_notifier.dart';
 import 'package:migozz_app/email_otp_custom.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,15 +26,26 @@ Future<void> main() async {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      debugShowCheckedModeBanner: false,
-      title: 'Migozz App',
-      routerConfig: appRouter,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+    return MultiBlocProvider(
+      providers: blocProviders,
+      child: Builder(
+        builder: (context) {
+          // Conectamos el AuthCubit al GoRouterNotifier
+          final goRouterNotifier = GoRouterNotifier(context.read<AuthCubit>());
+
+          return MaterialApp.router(
+            debugShowCheckedModeBanner: false,
+            title: 'Migozz App',
+            routerConfig: createRouter(goRouterNotifier), // usamos tu GoRouter
+            theme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+              useMaterial3: true,
+            ),
+          );
+        },
       ),
     );
   }

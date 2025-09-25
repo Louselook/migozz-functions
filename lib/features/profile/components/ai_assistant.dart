@@ -1,4 +1,3 @@
-// lib/features/profile/components/ai_assistant.dart
 import 'package:flutter/material.dart';
 
 class AIAssistant extends StatelessWidget {

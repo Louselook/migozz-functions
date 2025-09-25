@@ -17,10 +17,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  @override // poner en el widget que inicie todo para cargar imagens
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    AppConstants.precacheOnboardingImages(context); //cargar imagenes
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        AppConstants.precacheOnboardingImages();
+      }
+    });
   }
 
   @override

@@ -1,34 +1,32 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'package:migozz_app/features/auth/models/user_dto.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Obtener usuaria actual
-  User? getCurrentUser() => _auth.currentUser;
+  // Escuchar cambios de autenticación en tiempo real
+  Stream<User?> authStateChanges() => _auth.authStateChanges();
 
-  // Future<UserCredential> signInLogin(String email, password) async {
-  //   try {
-  //     UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-  //       // verificar datos de usuario en la base de datos
-  //       email: email,
-  //       password: password,
-  //     );
+  Future<UserCredential> signInWithOTP({
+    required String email,
+    required String otp,
+  }) async {
+    try {
+      // acá otp se usa como "password"
+      final userCredential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: otp,
+      );
 
-  //     // save user info if it doesn't already exist
-  //     _firestore.collection("Users").doc(userCredential.user!.uid).set({
-  //       'uid': userCredential.user!.uid,
-  //       'email': email,
-  //     });
-
-  //     return userCredential;
-  //   } on FirebaseAuthException catch (e) {
-  //     throw Exception(e.code);
-  //   }
-  // }
+      return userCredential;
+    } on FirebaseAuthException catch (e) {
+      throw Exception('Error en login: ${e.code}');
+    } catch (e) {
+      throw Exception('Error inesperado en login: $e');
+    }
+  }
 
   // sing up
   Future<UserCredential> signUpRegister({
@@ -55,30 +53,6 @@ class AuthService {
       return userCredential;
     } on FirebaseAuthException catch (e) {
       throw Exception('Error en registro: ${e.code}');
-    } catch (e) {
-      throw Exception('Error inesperado: $e');
-    }
-  }
-
-  // Cambiar contraseña
-  Future<void> changePassword(String newPassword) async {
-    final user = _auth.currentUser;
-    if (user == null) {
-      throw Exception('No hay usuario logueado');
-    }
-
-    try {
-      // Actualizar la contraseña
-      await user.updatePassword(newPassword);
-      debugPrint('Contraseña actualizada correctamente');
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'requires-recent-login') {
-        throw Exception(
-          'Necesitas volver a iniciar sesión para cambiar la contraseña',
-        );
-      } else {
-        throw Exception('Error al cambiar la contraseña: ${e.code}');
-      }
     } catch (e) {
       throw Exception('Error inesperado: $e');
     }
