@@ -24,6 +24,12 @@ class AppColors {
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );
+
+    static LinearGradient get verticalOrangeRed => const LinearGradient(
+    colors: [Color(0xFFF89A44), Color(0xFFB00F15), Color(0xFFFF0004)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 }
 
 // Modificar los colores

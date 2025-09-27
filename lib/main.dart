@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:migozz_app/bloc_providers.dart';
 import 'package:migozz_app/core/config/firebase_config.dart';
 import 'package:migozz_app/core/router/app_router.dart';
 import 'package:migozz_app/core/router/app_router_notifier.dart';
 import 'package:migozz_app/email_otp_custom.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
+// import 'package:migozz_app/test_login_google.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await FirebaseConfig.initialize(); // inicialización
+  await FirebaseConfig.initialize();
+  await dotenv.load(fileName: ".env"); // inicialización
 
   // Servicio OTP
   EmailOTP.config(
@@ -50,3 +53,18 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
+// class MyApp extends StatelessWidget {
+//   const MyApp({super.key});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return MaterialApp(
+//       title: 'Firestore Users Demo',
+//       theme: ThemeData(
+//         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+//       ),
+//       home: const ProfileTest(),
+//     );
+//   }
+// }

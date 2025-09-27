@@ -8,7 +8,7 @@ Future<PasswordChangeResult> changePassword({
   required String newPassword,
 }) async {
   // url localhost
-  final url = Uri.parse('http://10.0.2.2:8000/change-password');
+  final url = Uri.parse('apiconfig.apibase/users/change_password/');
 
   try {
     final response = await http.post(

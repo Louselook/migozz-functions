@@ -16,7 +16,7 @@ class ChatAttachmentGrid extends StatelessWidget {
       );
       if (image != null) {
         onSendImage(image.path);
-        debugPrint('${image.path}');
+        debugPrint(image.path);
       }
     } else {
       debugPrint("Permiso de galería denegado");
@@ -32,7 +32,7 @@ class ChatAttachmentGrid extends StatelessWidget {
       );
       if (photo != null) {
         onSendImage(photo.path);
-        debugPrint('${photo.path}');
+        debugPrint(photo.path);
       }
     } else {
       debugPrint("Permiso de cámara denegado");

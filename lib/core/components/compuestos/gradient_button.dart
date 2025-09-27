@@ -6,6 +6,7 @@ class GradientButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final double? width, radius;
   final double height;
+  final LinearGradient? gradient;
 
   const GradientButton({
     super.key,
@@ -14,6 +15,7 @@ class GradientButton extends StatelessWidget {
     this.width = 90,
     this.height = 40,
     this.radius = 8,
+    this.gradient,
   });
 
   @override
@@ -22,7 +24,7 @@ class GradientButton extends StatelessWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        gradient: AppColors.primaryGradient,
+        gradient: gradient ?? AppColors.primaryGradient,
         borderRadius: BorderRadius.circular(radius!),
       ),
       child: Material(

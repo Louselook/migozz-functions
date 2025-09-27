@@ -33,6 +33,7 @@ class _OtpScreenState extends State<OtpScreen> {
       listener: (context, state) {
         if (state.errorMessageOTP != null) {
           // Limpiar error en el cubit para que no se repita
+          context.read<LoginCubit>().clearError();
           CustomSnackbar.show(
             context: context,
             message: state.errorMessageOTP!,
@@ -118,13 +119,12 @@ class _OtpFields extends StatefulWidget {
 
 class _OtpFieldsState extends State<_OtpFields> {
   final List<VoidCallback> _listeners = [];
-  bool _hasSent = false; // Controla envío único
 
   @override
   void initState() {
     super.initState();
     for (var i = 0; i < widget.controllers.length; i++) {
-      listener() => _onChange(i);
+      void listener() => _onChange(i);
       _listeners.add(listener);
       widget.controllers[i].addListener(listener);
     }
@@ -146,35 +146,20 @@ class _OtpFieldsState extends State<_OtpFields> {
     }
 
     String otp = widget.controllers.map((c) => c.text).join();
-    if (otp.length == 6 && !_hasSent) {
-      _hasSent = true; // ✅ evita que se envíe más de una vez
+    if (otp.length == 6) {
       widget.onCompleted(otp);
     }
   }
 
-  // Método público para limpiar los campos y poder reintentar
-  void clearFields() {
-    for (var controller in widget.controllers) {
-      controller.clear();
-    }
-    _hasSent = false; // Permitir enviar nuevamente
-    FocusScope.of(context).requestFocus(FocusNode()); // Quitar foco
-  }
-
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    double spacing = 8;
-    int count = widget.controllers.length;
-    double fieldWidth = (screenWidth - 60 - (count - 1) * spacing) / count;
-
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(count, (index) {
+      children: List.generate(6, (index) {
         return Container(
-          margin: EdgeInsets.symmetric(horizontal: spacing / 2),
-          width: fieldWidth.clamp(40, 60), // Limitar tamaño mínimo y máximo
-          height: fieldWidth.clamp(40, 60),
+          margin: const EdgeInsets.symmetric(horizontal: 3),
+          width: 44,
+          height: 44,
           child: TextField(
             controller: widget.controllers[index],
             maxLength: 1,
