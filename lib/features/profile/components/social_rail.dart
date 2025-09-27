@@ -34,7 +34,7 @@ class SocialRail extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
           decoration: BoxDecoration(
-            color: const Color.fromARGB(255, 255, 255, 255).withOpacity(0.35),
+            color: const Color.fromARGB(255, 255, 255, 255).withOpacity(0.75),
             borderRadius: radius,
             border: Border.all(color: Colors.white.withOpacity(0.12)),
             boxShadow: [

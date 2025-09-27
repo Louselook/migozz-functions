@@ -1,5 +1,6 @@
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:flutter/material.dart';
+import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/chat/chat_model.dart';
 import 'package:migozz_app/core/components/compuestos/chat/other_message.dart';
 import 'package:migozz_app/core/components/compuestos/chat/user_message.dart';
@@ -114,7 +115,7 @@ class _AudioMessageCircleState extends State<AudioMessageCircle> {
         _isPrepared = true;
       });
     } catch (_) {
-      // log si necesitas
+      // log
     }
   }
 
@@ -183,28 +184,28 @@ class _AudioMessageCircleState extends State<AudioMessageCircle> {
               ),
             ),
 
-            // Waveform recortado y SIN interacción (no seek / no edición)
-            Align(
-              alignment: const Alignment(0, 0.45),
-              child: ClipOval(
-                child: IgnorePointer(
-                  ignoring: true, // bloquea cualquier gesto
-                  child: SizedBox(
-                    width: size * 0.72,
-                    height: 26,
-                    child: AudioFileWaveforms(
-                      playerController: _player,
-                      waveformType: WaveformType.fitWidth,
-                      size: Size(size * 0.72, 26),
-                      playerWaveStyle: PlayerWaveStyle(
-                        fixedWaveColor: Colors.white.withOpacity(0.45),
-                        liveWaveColor: Colors.white,
-                        waveThickness: 2.5,
-                        spacing: 3,
-                        showBottom: true,
-                        showTop: true,
-                        scaleFactor: 0.85,
-                      ),
+            // Waveform separado y abajo del micrófono, adaptable al tamaño
+            Positioned(
+              bottom: size * 0.15, // Posicionar desde abajo para mayor separación
+              left: size * 0.12, // Márgenes laterales proporcionales
+              right: size * 0.12,
+              child: IgnorePointer(
+                ignoring: true, // bloquea cualquier gesto
+                child: SizedBox(
+                  height: size * 0.22, // Altura proporcional al círculo
+                  width: size * 0.76, // Ancho proporcional
+                  child: AudioFileWaveforms(
+                    playerController: _player,
+                    waveformType: WaveformType.fitWidth,
+                    size: Size(size * 0.76, size * 0.22),
+                    playerWaveStyle: PlayerWaveStyle(
+                      fixedWaveColor: Color(0xFFCF9FE8),
+                      liveWaveColor: Color(0xFFCF9FE8),
+                      waveThickness: size > 100 ? 2.5 : 2.0, // Grosor adaptable
+                      spacing: size > 100 ? 3.0 : 2.5, // Espaciado adaptable
+                      showBottom: true,
+                      showTop: true,
+                      scaleFactor: 0.85,
                     ),
                   ),
                 ),
@@ -215,10 +216,10 @@ class _AudioMessageCircleState extends State<AudioMessageCircle> {
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 160),
               child: Icon(
-                _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                _isPlaying ? Icons.mic_off : Icons.mic,
                 key: ValueKey(_isPlaying),
-                size: size * 0.36,
-                color: Colors.white.withOpacity(0.95),
+                size: size * 0.5,
+                color: Color(0xFFCF9FE8),
               ),
             ),
 
@@ -233,7 +234,7 @@ class _AudioMessageCircleState extends State<AudioMessageCircle> {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white.withOpacity(0.95),
+                  color: Color(0xFFCF9FE8),
                 ),
               ),
             ),

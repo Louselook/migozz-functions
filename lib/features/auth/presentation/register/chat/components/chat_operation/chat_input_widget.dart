@@ -1,11 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:migozz_app/core/color.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
 import 'package:audio_waveforms/audio_waveforms.dart';
-
-import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/chat/chat_attachment_sheet.dart';
 import 'package:migozz_app/core/components/compuestos/custom_textfield.dart';
 
@@ -112,8 +111,30 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
     setState(() {
       _isRecording = false;
       _audioPath = path;
-      _duration = Duration.zero;
+      // Mantener la duración de grabación como _maxDuration inicial
+      _maxDuration = _duration;
     });
+
+    // Preparar el reproductor para obtener la duración exacta del archivo
+    if (path != null) {
+      try {
+        await _playerController.preparePlayer(
+          path: path,
+          shouldExtractWaveform: true,
+        );
+        final exactDuration = Duration(
+          milliseconds: _playerController.maxDuration,
+        );
+        if (exactDuration > Duration.zero) {
+          setState(() {
+            _maxDuration = exactDuration;
+            _duration = exactDuration;
+          });
+        }
+      } catch (e) {
+        print('Error preparando reproductor: $e');
+      }
+    }
   }
 
   Future<void> playRecording() async {
@@ -125,6 +146,12 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
     );
 
     _maxDuration = Duration(milliseconds: _playerController.maxDuration);
+
+    if (!_isPlaying) {
+      setState(() {
+        _duration = _maxDuration;
+      });
+    }
 
     await _playerController.startPlayer();
     setState(() => _isPlaying = true);
@@ -190,24 +217,42 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.mic, color: Colors.red),
+                            ShaderMask(
+                              shaderCallback: (bounds) => AppColors
+                                  .primaryGradient
+                                  .createShader(bounds),
+                              child: const Icon(
+                                Icons.mic,
+                                color: Colors.white, // Color base para el shader
+                                size: 30,
+                              ),
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: AudioWaveforms(
                                 size: const Size(double.infinity, 40),
                                 recorderController: _waveController,
                                 enableGesture: false,
-                                waveStyle: const WaveStyle(
-                                  waveColor: Colors.red,
+                                waveStyle: WaveStyle(
+                                  waveColor: AppColors.primaryGradient.colors.last,
                                   extendWaveform: true,
                                   showMiddleLine: false,
                                 ),
                               ),
                             ),
                             const SizedBox(width: 8),
-                            Text(
-                              formatDuration(_duration),
-                              style: const TextStyle(color: Colors.red),
+                            ShaderMask(
+                              shaderCallback: (bounds) => AppColors
+                                  .primaryGradient
+                                  .createShader(bounds),
+                              child: Text(
+                                formatDuration(_duration),
+                                style: const TextStyle(
+                                  color: Colors.white, // Color base para el shader
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -268,18 +313,33 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
                                       ),
                                     ),
                                     const SizedBox(width: 8),
-                                    Text(
-                                      formatDuration(_duration),
-                                      style: const TextStyle(
-                                        color: Colors.blue,
+                                    ShaderMask(
+                                      shaderCallback: (bounds) => AppColors
+                                          .primaryGradient
+                                          .createShader(bounds),
+                                      child: Text(
+                                        formatDuration(
+                                          _isPlaying ? _duration : _maxDuration,
+                                        ),
+                                        style: const TextStyle(
+                                          color: Colors.white, // Color base para el shader
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16,
+                                        ),
                                       ),
                                     ),
                                     IconButton(
-                                      icon: Icon(
-                                        _isPlaying
-                                            ? Icons.stop
-                                            : Icons.play_arrow,
-                                        color: Colors.blue,
+                                      icon: ShaderMask(
+                                        shaderCallback: (bounds) => AppColors
+                                            .primaryGradient
+                                            .createShader(bounds),
+                                        child: Icon(
+                                          _isPlaying
+                                              ? Icons.stop
+                                              : Icons.play_arrow,
+                                          color: Colors.white,
+                                          size: 30,
+                                        ),
                                       ),
                                       onPressed: _isPlaying
                                           ? stopPlaying

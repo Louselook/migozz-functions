@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
+import 'package:migozz_app/core/utils/responsive_utils.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/social_icon_card.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/user_details_button.dart';
@@ -11,6 +12,10 @@ class SocialEcosystemStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Usar las utilidades responsive
+    final scaleFactor = context.scaleFactor;
+    final deviceType = context.deviceType;
+
     // Lista original
     final List<String> socials = [
       "Tiktok",
@@ -43,69 +48,132 @@ class SocialEcosystemStep extends StatelessWidget {
       "Xbox": "assets/icons/social_networks/Xbox.svg",
     };
 
-    // Label -> tamaño personalizado para cada icono
-    final Map<String, double> iconSizeByLabel = {
-      "Tiktok": 38.0, // Un poco más grande para mayor visibilidad
-      "Instagram": 36.0, // Tamaño estándar
-      "Facebook": 35.0, // Ligeramente más pequeño
-      "Youtube": 40.0, // Más grande para el play button
-      "Telegram": 34.0, // Más compacto
-      "Whatsapp": 37.0, // Buen tamaño para el logo
-      "Pinterest": 35.0, // Estándar
-      "Spotify": 36.0, // Para que se vea bien el círculo
-      "X": 32.0, // Más pequeño, es un diseño minimalista
-      "LinkedIn": 35.0, // Profesional, tamaño estándar
-      "Paypal": 38.0, // Más grande para mejor legibilidad
-      "Xbox": 39.0, // Un poco más grande para el logo
-    };
+    // Calcular paddings y espaciados responsivos usando las utilidades
+    final horizontalPadding = ResponsiveUtils.scaleValue(
+      24.0,
+      scaleFactor,
+      minValue: 16.0,
+      maxValue: 30.0,
+    );
+    final verticalPadding = ResponsiveUtils.scaleValue(
+      16.0,
+      scaleFactor,
+      minValue: 12.0,
+      maxValue: 20.0,
+    );
+    final topSpacing = ResponsiveUtils.scaleValue(
+      16.0,
+      scaleFactor,
+      minValue: 12.0,
+      maxValue: 24.0,
+    );
+    final contentSpacing = ResponsiveUtils.scaleValue(
+      30.0,
+      scaleFactor,
+      minValue: 15.0,
+      maxValue: 20.0,
+    );
+
+    // Determinar número de columnas según el tipo de dispositivo
+    final crossAxisCount = ResponsiveUtils.getGridColumns(deviceType);
+    final mainAxisSpacing = ResponsiveUtils.scaleValue(
+      16.0,
+      scaleFactor,
+      minValue: 10.0,
+      maxValue: 15.0,
+    );
+    final crossAxisSpacing = ResponsiveUtils.scaleValue(
+      16.0,
+      scaleFactor,
+      minValue: 10.0,
+      maxValue: 16.0,
+    );
+
+    // Calcular tamaño disponible para cada card considerando el espacio de la pantalla
+    final availableWidth =
+        MediaQuery.of(context).size.width - (horizontalPadding * 2);
+    final cardWidth =
+        (availableWidth - (crossAxisSpacing * (crossAxisCount - 1))) /
+        crossAxisCount;
+    final cardSize = Size(
+      cardWidth,
+      cardWidth * 1.1,
+    ); // Proporción ligeramente rectangular
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40),
+      padding: EdgeInsets.symmetric(
+        vertical: verticalPadding,
+        horizontal: horizontalPadding,
+      ),
       child: SafeArea(
         child: Column(
           children: [
-            const SizedBox(height: 10),
+            SizedBox(height: topSpacing),
             const PrimaryText("Your Social Ecosystem"),
             const SecondaryText("Add your platforms"),
-            const SizedBox(height: 20),
+            SizedBox(height: contentSpacing),
 
             // contenido
             Expanded(
-              child: GridView.builder(
-                itemCount: socials.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  mainAxisSpacing: 8,
-                  crossAxisSpacing: 20,
-                ),
-                itemBuilder: (context, index) {
-                  final label = socials[index];
-                  final assetPath = iconByLabel[label];
-                  final iconSize =
-                      iconSizeByLabel[label] ??
-                      35.0; // Tamaño personalizado o por defecto
-                  return SocialIconCard(
-                    label: label,
-                    assetPath: assetPath,
-                    iconSize:
-                        iconSize, // Usa el tamaño personalizado para cada icono
-                    onTap: () {
-                      final cubit = context.read<RegisterCubit>();
-                      final current = List<String>.from(
-                        cubit.state.socialEcosystem ?? [],
-                      );
-                      if (!current.contains(label)) {
-                        current.add(label);
-                      } else {
-                        current.remove(label); // toggle
-                      }
-                      cubit.setSocialEcosystem(current);
-                      debugPrint(
-                        "🌐 Ecosistema social: ${cubit.state.socialEcosystem}",
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: deviceType == DeviceType.desktop
+                        ? 800.0
+                        : deviceType == DeviceType.tablet
+                        ? 600.0
+                        : double.infinity,
+                  ),
+                  child: GridView.builder(
+                    padding: EdgeInsets.symmetric(vertical: 6.0),
+                    itemCount: socials.length,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      mainAxisSpacing: mainAxisSpacing,
+                      crossAxisSpacing: crossAxisSpacing,
+                      childAspectRatio: cardSize.width / cardSize.height,
+                    ),
+                    itemBuilder: (context, index) {
+                      final label = socials[index];
+                      final assetPath = iconByLabel[label];
+                      // Calcular el tamaño del icono como porcentaje del ancho de la card
+                      final iconSize =
+                          cardSize.width * 0.4; // 40% del ancho de la card
+                      final clampedIconSize = iconSize.clamp(24.0, 48.0);
+
+                      return SocialIconCard(
+                        label: label,
+                        assetPath: assetPath,
+                        iconSize: clampedIconSize,
+                        sizeIcon: cardSize, // tamaño responsive de la tarjeta
+                        onTap: () {
+                          final cubit = context.read<RegisterCubit>();
+                          final current = List<String>.from(
+                            cubit.state.socialEcosystem ?? [],
+                          );
+                          if (!current.contains(label)) {
+                            current.add(label);
+                          } else {
+                            current.remove(label); // toggle
+                          }
+                          cubit.setSocialEcosystem(current);
+                          debugPrint(
+                            "🌐 Ecosistema social: ${cubit.state.socialEcosystem}",
+                          );
+                        },
                       );
                     },
-                  );
-                },
+                  ),
+                ),
+              ),
+            ),
+
+            SizedBox(
+              height: ResponsiveUtils.scaleValue(
+                16.0,
+                scaleFactor,
+                minValue: 12.0,
+                maxValue: 24.0,
               ),
             ),
 

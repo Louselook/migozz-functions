@@ -4,70 +4,50 @@ import 'package:migozz_app/features/profile/components/scroll_sheet.dart';
 
 class BackgroundImage extends StatelessWidget {
   final Widget child;
-  const BackgroundImage({super.key, required this.child});
+
+  /// Qué tanto puede colapsar el header (0.5 = se detiene a mitad de pantalla)
+  final double minHeaderFraction;
+
+  const BackgroundImage({
+    super.key,
+    required this.child,
+    this.minHeaderFraction = 0.5,
+  });
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    // Altura del gradiente inferior
+
+    // Alturas base (mantenemos tus proporciones)
     final bottomGradientHeight = size.height * 0.22;
-    // Separación del card desde el borde inferior
     final bottomPaddingForCard = size.height * 0.15;
+
     return Stack(
       fit: StackFit.expand,
       children: [
-        // Imagen base (un pelín más saturada)
-        SingleChildScrollView(
-          child: Column(
-            children: [
-              Stack(
-                children: [
-                  SizedBox(
-                    height: size.height,
-                    width: size.width,
-                    child: ColorFiltered(
-                      colorFilter: const ColorFilter.matrix(<double>[
-                        1.15, 0, 0, 0, 0, // R
-                        0, 1.15, 0, 0, 0, // G
-                        0, 0, 1.25, 0, 0, // B
-                        0, 1, 1, 2, 0, // A
-                      ]),
-                      child: Image.asset(
-                        "assets/images/profileBackground.png",
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-
-                  Positioned.fill(
-                    child: Align(
-                      alignment: Alignment.bottomCenter,
-                      child: Padding(
-                        padding: EdgeInsets.only(bottom: bottomPaddingForCard),
-                        child: FractionallySizedBox(
-                          widthFactor: 0.45,
-                          heightFactor: 0.17,
-                          child: InfoUserProfile(
-                            name: 'John Doe',
-                            displayName: '@johndoe',
-                            comunityCount: '1M',
-                            nameComunity: 'Community',
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+        // Contenido scrollable: header + grid
+        NestedScrollView(
+          headerSliverBuilder: (context, innerBoxIsScrolled) {
+            return [
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _ProfileHeaderDelegate(
+                  maxHeight: size.height, // estado expandido
+                  minHeight:
+                      size.height *
+                      minHeaderFraction, // colapso mínimo (50% de alto)
+                  bottomPaddingForCard: bottomPaddingForCard,
+                ),
               ),
-
-              buildProfileCards(
-                context,
-                count: 12,
-                onTap: (i) {
-                  debugPrint("Card $i tocada");
-                },
-              ),
-            ],
+            ];
+          },
+          // El body maneja su propio scroll (arriba/abajo según cantidad)
+          body: buildProfileCardsGrid(
+            context,
+            count: 30,
+            onTap: (i) => debugPrint("Card $i tocada"),
+            // Deja un padding inferior para no chocar con tu bottom nav
+            bottomExtraPadding: bottomGradientHeight,
           ),
         ),
 
@@ -79,7 +59,7 @@ class BackgroundImage extends StatelessWidget {
                 center: const Alignment(-0.9, -0.9), // arriba-izquierda
                 radius: 1.0,
                 colors: [
-                  const Color(0xFFB86BFF).withOpacity(0.45), // morado
+                  const Color(0xFFB86BFF).withOpacity(0.45),
                   Colors.transparent,
                 ],
                 stops: const [0.0, 1.0],
@@ -93,21 +73,17 @@ class BackgroundImage extends StatelessWidget {
           left: 0,
           right: 0,
           bottom: 0,
-          // un poco más alto para que el fade termine antes del borde
           height: bottomGradientHeight * 1.6,
           child: IgnorePointer(
             child: Container(
               decoration: BoxDecoration(
                 gradient: RadialGradient(
-                  // mueve el centro por debajo y a la derecha para que no se vea el borde del círculo
                   center: const Alignment(0.9, 1.4),
-                  // radio más contenido
                   radius: 1.2,
                   colors: [
                     const Color(0xFFF3C623).withOpacity(0.55),
                     Colors.transparent,
                   ],
-                  // el transparente alcanza ~75% del radio; lo que queda ya es transparente
                   stops: const [0.4, 0.75],
                 ),
               ),
@@ -115,8 +91,107 @@ class BackgroundImage extends StatelessWidget {
           ),
         ),
 
-        // Contenido por encima del color
+        // Overlays por encima (IA, rail, bottom nav, etc.)
         child,
+      ],
+    );
+  }
+}
+
+/// Delegate del header que colapsa hasta minHeight y muestra tu imagen + card de perfil
+class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final double maxHeight;
+  final double minHeight;
+  final double bottomPaddingForCard;
+
+  _ProfileHeaderDelegate({
+    required this.maxHeight,
+    required this.minHeight,
+    required this.bottomPaddingForCard,
+  });
+
+  @override
+  double get maxExtent => maxHeight;
+
+  @override
+  double get minExtent => minHeight;
+
+  @override
+  bool shouldRebuild(covariant _ProfileHeaderDelegate oldDelegate) {
+    return oldDelegate.maxHeight != maxHeight ||
+        oldDelegate.minHeight != minHeight ||
+        oldDelegate.bottomPaddingForCard != bottomPaddingForCard;
+  }
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    // Progreso de colapso 0..1
+    final t = (shrinkOffset / (maxExtent - minExtent)).clamp(0.0, 1.0);
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // Imagen base (con tu filtro)
+        ColorFiltered(
+          colorFilter: const ColorFilter.matrix(<double>[
+            1.15, 0, 0, 0, 0, // R
+            0, 1.15, 0, 0, 0, // G
+            0, 0, 1.25, 0, 0, // B
+            0, 1, 1, 2, 0, // A
+          ]),
+          child: Image.asset(
+            "assets/images/profileBackground.png",
+            fit: BoxFit.cover,
+          ),
+        ),
+
+        // Card de perfil centrada abajo (mantiene posición relativa)
+        Positioned.fill(
+          child: Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: EdgeInsets.only(
+                bottom: bottomPaddingForCard * (1.0 - 0.25 * t),
+              ),
+              child: const FractionallySizedBox(
+                widthFactor: 0.45,
+                heightFactor: 0.17,
+                child: InfoUserProfile(
+                  name: 'John Doe',
+                  displayName: '@johndoe',
+                  comunityCount: '1M',
+                  nameComunity: 'Community',
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // Suave oscurecido inferior para legibilidad cuando se acerca el content
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: 80,
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withOpacity(0.15 + 0.25 * t),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }

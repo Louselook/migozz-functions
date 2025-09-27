@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:migozz_app/core/utils/responsive_utils.dart';
 
 class SocialIconCard extends StatelessWidget {
   final String label;
@@ -21,6 +22,15 @@ class SocialIconCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Usar utilidades responsive
+    final scaleFactor = context.scaleFactor;
+    final responsiveBorderRadius = ResponsiveUtils.scaleValue(
+      15.0,
+      scaleFactor,
+      minValue: 12.0,
+      maxValue: 20.0,
+    );
+
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
@@ -29,7 +39,7 @@ class SocialIconCard extends StatelessWidget {
         height: sizeIcon?.height ?? 80,
         decoration: BoxDecoration(
           color: const Color(0xFF404040),
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(responsiveBorderRadius),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -103,7 +113,14 @@ class SocialIconCard extends StatelessWidget {
                         },
                       ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(
+                height: ResponsiveUtils.scaleValue(
+                  8.0,
+                  scaleFactor,
+                  minValue: 6.0,
+                  maxValue: 12.0,
+                ),
+              ),
             ] else ...[
               Container(
                 width: iconSize,
@@ -115,13 +132,23 @@ class SocialIconCard extends StatelessWidget {
                   size: iconSize * 0.5,
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(
+                height: ResponsiveUtils.scaleValue(
+                  8.0,
+                  scaleFactor,
+                  minValue: 6.0,
+                  maxValue: 12.0,
+                ),
+              ),
             ],
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
-                fontSize: 12,
+                fontSize: ResponsiveUtils.getResponsiveFontSize(
+                  12.0,
+                  scaleFactor,
+                ),
                 fontWeight: FontWeight.w500,
               ),
               textAlign: TextAlign.center,

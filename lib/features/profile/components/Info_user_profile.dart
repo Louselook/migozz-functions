@@ -23,7 +23,8 @@ class InfoUserProfile extends StatelessWidget {
     return ClipRRect(
       borderRadius: borderRadius,
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        // filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        filter: ImageFilter.blur(sigmaX: 1, sigmaY: 1),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           // decoration: BoxDecoration(
@@ -85,7 +86,7 @@ class InfoUserProfile extends StatelessWidget {
                   fontSize: 13,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 5),
               Row(
                 mainAxisSize: MainAxisSize.min, 
                 mainAxisAlignment: MainAxisAlignment.center,

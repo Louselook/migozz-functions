@@ -57,6 +57,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
 
+            // 3 puntos verticales arriba a la izquierda
+            Positioned(
+              left: 0,
+              top: 70,
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.more_vert,
+                    color: const Color(0xAAFFFFFF),
+                    size: 60,
+                  ),
+                ],
+              ),
+            ),
+
             // Botón asistente IA
             Positioned.fill(
               child: Align(
@@ -73,10 +88,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             // rail social
             Align(
-              alignment: const Alignment(
-                1,
-                -0.05,
-              ), // derecha y ligeramente arriba del centro
+              alignment: const Alignment(1, -0.05), // derecha y ligeramente arriba del centro
               child: Padding(
                 padding: EdgeInsets.only(
                   right: MediaQuery.of(context).size.width * 0.02,
