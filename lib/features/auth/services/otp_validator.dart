@@ -1,14 +1,16 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:migozz_app/core/config/api/api_config.dart';
 
-// srvicio propio
+// Servicio propio
 Future<PasswordChangeResult> changePassword({
   required String email,
   required String newPassword,
 }) async {
-  // url localhost
-  final url = Uri.parse('apiconfig.apibase/users/change_password/');
+  final url = Uri.parse('${ApiConfig.apiBase}/users/change-password');
+  debugPrint('URL: $url');
 
   try {
     final response = await http.post(
@@ -20,24 +22,29 @@ Future<PasswordChangeResult> changePassword({
       }),
     );
 
-    if (response.statusCode == 200) {
-      // Cambiar contraseña OK, iniciar sesión automáticamente
+    // Decodificar siempre la respuesta si no está vacía
+    final data = response.body.isNotEmpty
+        ? jsonDecode(response.body)
+        : {"success": false, "message": "Respuesta vacía del servidor"};
+
+    // Si el cambio de contraseña fue exitoso, hacer login automático
+    if (data['success'] == true) {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email.trim(),
         password: newPassword.trim(),
       );
-
-      return PasswordChangeResult(success: true);
-    } else {
-      final error = jsonDecode(response.body)['detail'];
-      return PasswordChangeResult(success: false, message: error);
     }
+
+    return PasswordChangeResult(
+      success: data['success'] ?? false,
+      message: data['message'] ?? 'Sin mensaje del servidor',
+    );
   } catch (e) {
     return PasswordChangeResult(success: false, message: e.toString());
   }
 }
 
-// modelo de respusta
+// Modelo de respuesta
 class PasswordChangeResult {
   final bool success;
   final String? message;
