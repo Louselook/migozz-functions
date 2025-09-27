@@ -18,111 +18,20 @@ class ChatMessageBuilder {
       );
     }
 
-    // 🔹 Mensajes de audio
+    // 🔹 Mensajes de audio (diseño circular, centrado, solo reproducir/pausar)
     if (message["type"] == MessageType.audio) {
-      debugPrint('Un audiooooo');
       final audioPath = message["audio"] as String;
       final other = message["other"] == true;
-      final playerController = PlayerController();
 
-      return StatefulBuilder(
-        builder: (context, setState) {
-          Duration currentDuration = Duration.zero;
-          Duration maxDuration = Duration.zero;
-          bool isPlaying = false;
-
-          playerController.onCurrentDurationChanged.listen((durationMs) {
-            setState(() {
-              currentDuration = Duration(milliseconds: durationMs);
-            });
-          });
-
-          playerController.onCompletion.listen((_) {
-            setState(() {
-              isPlaying = false;
-              currentDuration = maxDuration;
-            });
-          });
-
-          return Container(
-            constraints: const BoxConstraints(maxWidth: 280),
-            padding: const EdgeInsets.all(12),
-            margin: const EdgeInsets.only(left: 130, bottom: 15),
-            decoration: BoxDecoration(
-              color: other ? Colors.grey[200] : Colors.blue[500],
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
-                bottomLeft: Radius.circular(12),
-                bottomRight: Radius.circular(2),
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                GestureDetector(
-                  onTap: () async {
-                    if (isPlaying) {
-                      await playerController.stopPlayer();
-                      setState(() => isPlaying = false);
-                    } else {
-                      await playerController.preparePlayer(
-                        path: audioPath,
-                        shouldExtractWaveform: true,
-                      );
-                      maxDuration = Duration(
-                        milliseconds: playerController.maxDuration,
-                      );
-                      await playerController.startPlayer();
-                      setState(() => isPlaying = true);
-                    }
-                  },
-                  child: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: other ? Colors.blue[500] : Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      isPlaying ? Icons.stop : Icons.play_arrow,
-                      color: other ? Colors.white : Colors.blue[500],
-                      size: 20,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: AudioFileWaveforms(
-                    playerController: playerController,
-                    waveformType: WaveformType.fitWidth,
-                    size: const Size(double.infinity, 30),
-                    playerWaveStyle: PlayerWaveStyle(
-                      fixedWaveColor: other
-                          ? Colors.grey[400]!
-                          : Colors.white.withValues(alpha: 0.5),
-                      liveWaveColor: other ? Colors.blue[500]! : Colors.white,
-                      waveThickness: 2.5,
-                      spacing: 3,
-                      showBottom: true,
-                      showTop: true,
-                      scaleFactor: 0.8,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  "${currentDuration.inMinutes}:${(currentDuration.inSeconds % 60).toString().padLeft(2, '0')}",
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: other ? Colors.grey[600] : Colors.white,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 15),
+        child: Center(
+          child: AudioMessageCircle(
+            audioPath: audioPath,
+            other: other,
+            size: 121,
+          ),
+        ),
       );
     }
 
@@ -144,5 +53,193 @@ class ChatMessageBuilder {
     } else {
       return UserMessage(text: message["text"] ?? "");
     }
+  }
+}
+
+class AudioMessageCircle extends StatefulWidget {
+  const AudioMessageCircle({
+    super.key,
+    required this.audioPath,
+    this.other = false,
+    this.size = 121,
+  });
+
+  final String audioPath;
+  final bool other;
+  final double size;
+
+  @override
+  State<AudioMessageCircle> createState() => _AudioMessageCircleState();
+}
+
+class _AudioMessageCircleState extends State<AudioMessageCircle> {
+  late final PlayerController _player;
+  Duration _current = Duration.zero;
+  Duration _max = Duration.zero;
+  bool _isPlaying = false;
+  bool _isPrepared = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _player = PlayerController();
+
+    // Progreso
+    _player.onCurrentDurationChanged.listen((ms) {
+      if (!mounted) return;
+      setState(() => _current = Duration(milliseconds: ms));
+    });
+
+    // Al finalizar, mostramos total y quedamos en pausa
+    _player.onCompletion.listen((_) {
+      if (!mounted) return;
+      setState(() {
+        _isPlaying = false;
+        _current = _max;
+      });
+    });
+
+    _initPlayer(); // obtenemos la duración real desde el inicio
+  }
+
+  Future<void> _initPlayer() async {
+    try {
+      await _player.preparePlayer(
+        path: widget.audioPath,
+        shouldExtractWaveform: true,
+      );
+      _max = Duration(milliseconds: _player.maxDuration);
+      setState(() {
+        _current = _max; // muestra p.ej. 0:15 desde el inicio
+        _isPrepared = true;
+      });
+    } catch (_) {
+      // log si necesitas
+    }
+  }
+
+  @override
+  void dispose() {
+    _player.dispose();
+    super.dispose();
+  }
+
+  String get _mmss {
+    final m = _current.inMinutes;
+    final s = (_current.inSeconds % 60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
+  Future<void> _onTapCircle() async {
+    if (!_isPrepared) return;
+
+    if (_isPlaying) {
+      // 🔒 Pausa (no resetea ni permite editar)
+      await _player.pausePlayer();
+      if (!mounted) return;
+      setState(() => _isPlaying = false);
+    } else {
+      // ▶️ Reanuda / reproduce desde donde iba
+      await _player.startPlayer();
+      if (!mounted) return;
+      setState(() => _isPlaying = true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final double size = widget.size;
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _onTapCircle, // el círculo entero solo hace play/pausa
+      onLongPress: null, // evita acciones raras tipo “grabar/editar”
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Fondo circular
+            Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: widget.other
+                      ? [const Color(0xFF7B1FA2), const Color(0xFF6A1B9A)]
+                      : [const Color(0xFFDF48A5), const Color(0xFF9C27B0)],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.18),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+            ),
+
+            // Waveform recortado y SIN interacción (no seek / no edición)
+            Align(
+              alignment: const Alignment(0, 0.45),
+              child: ClipOval(
+                child: IgnorePointer(
+                  ignoring: true, // bloquea cualquier gesto
+                  child: SizedBox(
+                    width: size * 0.72,
+                    height: 26,
+                    child: AudioFileWaveforms(
+                      playerController: _player,
+                      waveformType: WaveformType.fitWidth,
+                      size: Size(size * 0.72, 26),
+                      playerWaveStyle: PlayerWaveStyle(
+                        fixedWaveColor: Colors.white.withOpacity(0.45),
+                        liveWaveColor: Colors.white,
+                        waveThickness: 2.5,
+                        spacing: 3,
+                        showBottom: true,
+                        showTop: true,
+                        scaleFactor: 0.85,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // Ícono play/pausa (no micrófono, no “grabar”)
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 160),
+              child: Icon(
+                _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                key: ValueKey(_isPlaying),
+                size: size * 0.36,
+                color: Colors.white.withOpacity(0.95),
+              ),
+            ),
+
+            // Tiempo arriba centrado
+            Positioned(
+              top: size * 0.10,
+              left: 0,
+              right: 0,
+              child: Text(
+                _mmss,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white.withOpacity(0.95),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

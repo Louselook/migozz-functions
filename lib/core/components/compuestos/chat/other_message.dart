@@ -17,17 +17,22 @@ class OtherMessage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.auto_awesome, color: Colors.pinkAccent, size: 18),
-              SizedBox(width: 6),
-              Text(
+              Image(
+                image: AssetImage("assets/icons/Migozz300x.png"),
+                width: 18,
+                height: 18,
+              ),
+              const SizedBox(width: 6),
+              const Text(
                 "Migozz",
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
+                  fontSize: 16,
                 ),
-              )
+              ),
             ],
           ),
           const SizedBox(height: 8),
