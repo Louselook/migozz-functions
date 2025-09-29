@@ -1,10 +1,9 @@
-// lib/features/profile/profile_screen.dart
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:migozz_app/features/profile/components/ai_assistant.dart';
 import 'package:migozz_app/features/profile/components/bottom_nav.dart';
-// import 'package:migozz_app/features/profile/components/info_user_profile.dart';
-import 'package:migozz_app/features/profile/components/backgroundImage.dart';
+import 'package:migozz_app/features/profile/components/image_background.dart';
 import 'package:migozz_app/features/profile/components/social_rail.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -48,8 +47,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       end: Alignment.bottomCenter,
                       colors: [
                         Colors.transparent,
-                        Colors.black.withOpacity(0.35),
-                        Colors.black.withOpacity(0.6),
+                        Colors.black.withValues(alpha: 0.35),
+                        Colors.black.withValues(alpha: 0.6),
                       ],
                     ),
                   ),
@@ -60,15 +59,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
             // 3 puntos verticales arriba a la izquierda
             Positioned(
               left: 0,
-              top: 70,
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.more_vert,
-                    color: const Color(0xAAFFFFFF),
-                    size: 60,
-                  ),
-                ],
+              top: 30,
+              child: GestureDetector(
+                onTap: () => context.go('/edit-profile'),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.more_vert,
+                      color: const Color(0xAAFFFFFF),
+                      size: 60,
+                    ),
+                  ],
+                ),
               ),
             ),
 
@@ -88,7 +90,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             // rail social
             Align(
-              alignment: const Alignment(1, -0.05), // derecha y ligeramente arriba del centro
+              alignment: const Alignment(
+                1,
+                -0.05,
+              ), // derecha y ligeramente arriba del centro
               child: Padding(
                 padding: EdgeInsets.only(
                   right: MediaQuery.of(context).size.width * 0.02,

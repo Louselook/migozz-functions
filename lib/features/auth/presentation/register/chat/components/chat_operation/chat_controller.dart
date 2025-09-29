@@ -106,15 +106,9 @@ class ChatController extends ChangeNotifier {
       debugPrint('vamo: ${registerCubit.state}');
       debugPrint('vamo:  pagina $botIndex');
 
-      // if (_messages.length == 2) {
-      //   _chatService.setLanguage(text);
-      // }
       if (_messages.length == 2) {
         _chatService.setLanguage(normalizedResponse);
       }
-
-      // 🔹 Revisar si completó todos los campos
-      registerCubit.checkCompletion();
 
       // 🔹 Mostrar la siguiente respuesta del bot
       Future.delayed(const Duration(milliseconds: 600), () {
@@ -130,7 +124,7 @@ class ChatController extends ChangeNotifier {
   }) async {
     if (messagesToShow <= 0) return;
 
-    final botResponse = _chatService.getNextBotResponse();
+    final botResponse = _chatService.getNextBotResponse(registerCubit);
     if (botResponse == null) return;
 
     _addMessage({
@@ -161,7 +155,7 @@ class ChatController extends ChangeNotifier {
   /// Mostrar múltiples mensajes del bot consecutivos con delay
   Future<void> showMultipleBotMessages(int count) async {
     for (int i = 0; i < count; i++) {
-      final botResponse = _chatService.getNextBotResponse();
+      final botResponse = _chatService.getNextBotResponse(registerCubit);
       if (botResponse == null) break;
 
       _addMessage({
@@ -194,7 +188,7 @@ class ChatController extends ChangeNotifier {
     required Function() onSocialEcosystem,
     required Function() onNormalFlow,
   }) async {
-    final response = _chatService.getNextBotResponse();
+    final response = _chatService.getNextBotResponse(registerCubit);
     if (response == null) return;
 
     _addMessage({

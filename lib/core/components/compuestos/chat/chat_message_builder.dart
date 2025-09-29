@@ -1,14 +1,31 @@
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:flutter/material.dart';
-import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/chat/chat_model.dart';
 import 'package:migozz_app/core/components/compuestos/chat/other_message.dart';
+import 'package:migozz_app/core/components/compuestos/chat/other_typing.dart';
 import 'package:migozz_app/core/components/compuestos/chat/user_message.dart';
 import 'package:migozz_app/core/components/compuestos/chat/picture_options.dart';
 import '../../../../features/auth/presentation/register/chat/components/social_card.dart';
 
 class ChatMessageBuilder {
   static Widget buildMessage(Map<String, dynamic> message) {
+    // ia
+    if (message["type"] == MessageType.typing) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 15),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            OtherTyping(
+              name:
+                  message["name"] ??
+                  "IA", // Aquí puedes pasar Juan, José, IA, etc.
+            ),
+          ],
+        ),
+      );
+    }
+
     // 🔹 Mensajes de imagen (URL o local)
     if (message["type"] == MessageType.pictureCard) {
       final pics = List<Map<String, String>>.from(message["pictures"]);
@@ -176,7 +193,7 @@ class _AudioMessageCircleState extends State<AudioMessageCircle> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.18),
+                    color: Colors.black.withValues(alpha: 0.18),
                     blurRadius: 12,
                     offset: const Offset(0, 6),
                   ),
@@ -186,7 +203,8 @@ class _AudioMessageCircleState extends State<AudioMessageCircle> {
 
             // Waveform separado y abajo del micrófono, adaptable al tamaño
             Positioned(
-              bottom: size * 0.15, // Posicionar desde abajo para mayor separación
+              bottom:
+                  size * 0.15, // Posicionar desde abajo para mayor separación
               left: size * 0.12, // Márgenes laterales proporcionales
               right: size * 0.12,
               child: IgnorePointer(

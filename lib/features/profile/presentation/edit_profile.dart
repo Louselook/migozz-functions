@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 
-class ProfileTest extends StatelessWidget {
-  const ProfileTest({super.key});
+class EditProfile extends StatelessWidget {
+  const EditProfile({super.key});
 
   @override
-
   Widget build(BuildContext context) {
     return Scaffold(
-
       appBar: AppBar(
         backgroundColor: Colors.black,
         elevation: 0,
@@ -25,9 +24,7 @@ class ProfileTest extends StatelessWidget {
         title: Text('Edit Profile', style: TextStyle(color: Colors.white)),
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => context.go('/profile'),
         ),
       ),
       backgroundColor: Colors.black,
@@ -37,10 +34,11 @@ class ProfileTest extends StatelessWidget {
           child: Column(
             // mainAxisAlignment: MainAxisAlignment.start,
             children: [
-        
               Stack(
                 children: [
-                  profileImage(source: Image.asset('assets/images/profileBackground.png')),  
+                  profileImage(
+                    source: Image.asset('assets/images/profileBackground.png'),
+                  ),
                   Positioned(
                     bottom: 0,
                     right: 0,
@@ -49,35 +47,79 @@ class ProfileTest extends StatelessWidget {
                       backgroundColor: Colors.deepPurple,
                       child: CircleAvatar(
                         backgroundColor: Colors.pinkAccent,
-                        child: Icon(
-                          Icons.edit,
-                          size: 16,
-                          color: Colors.white
-                        ),
+                        child: Icon(Icons.edit, size: 16, color: Colors.white),
                       ),
                     ),
                   ),
                 ],
-              ),        
+              ),
               SizedBox(height: 20),
-        
-              listBuildBox(text: 'Full name', icon: Icons.account_box, colorbackground: Colors.grey.withAlpha(50), textColorInside: Colors.white, iconColorInside: Colors.white),
-              listBuildBox(text: 'Nickname', icon: Icons.alternate_email, colorbackground: Colors.grey.withAlpha(50), textColorInside: Colors.white, iconColorInside: Colors.white),
-              listBuildBox(text: 'Email', icon: Icons.mail, colorbackground: Colors.grey.withAlpha(50), textColorInside: Colors.white, iconColorInside: Colors.white),
-              listBuildBox(text: 'Cell Phone', icon: Icons.phone, colorbackground: Colors.grey.withAlpha(50), textColorInside: Colors.white, iconColorInside: Colors.white),
-              listBuildBox(text: 'Date of birth', icon: Icons.calendar_today, colorbackground: Colors.grey.withAlpha(50), textColorInside: Colors.white, iconColorInside: Colors.white),
-              listBuildBox(text: 'Gender', icon: Icons.transgender, colorbackground: Colors.grey.withAlpha(50), textColorInside: Colors.white, iconColorInside: Colors.white),
-              listBuildBox(text: 'Location', icon: Icons.public, colorbackground: Colors.grey.withAlpha(50), textColorInside: Colors.white, iconColorInside: Colors.white),
+
+              listBuildBox(
+                text: 'Full name',
+                icon: Icons.account_box,
+                colorbackground: Colors.grey.withAlpha(50),
+                textColorInside: Colors.white,
+                iconColorInside: Colors.white,
+              ),
+              listBuildBox(
+                text: 'Nickname',
+                icon: Icons.alternate_email,
+                colorbackground: Colors.grey.withAlpha(50),
+                textColorInside: Colors.white,
+                iconColorInside: Colors.white,
+              ),
+              listBuildBox(
+                text: 'Email',
+                icon: Icons.mail,
+                colorbackground: Colors.grey.withAlpha(50),
+                textColorInside: Colors.white,
+                iconColorInside: Colors.white,
+              ),
+              listBuildBox(
+                text: 'Cell Phone',
+                icon: Icons.phone,
+                colorbackground: Colors.grey.withAlpha(50),
+                textColorInside: Colors.white,
+                iconColorInside: Colors.white,
+              ),
+              listBuildBox(
+                text: 'Date of birth',
+                icon: Icons.calendar_today,
+                colorbackground: Colors.grey.withAlpha(50),
+                textColorInside: Colors.white,
+                iconColorInside: Colors.white,
+              ),
+              listBuildBox(
+                text: 'Gender',
+                icon: Icons.transgender,
+                colorbackground: Colors.grey.withAlpha(50),
+                textColorInside: Colors.white,
+                iconColorInside: Colors.white,
+              ),
+              listBuildBox(
+                text: 'Location',
+                icon: Icons.public,
+                colorbackground: Colors.grey.withAlpha(50),
+                textColorInside: Colors.white,
+                iconColorInside: Colors.white,
+              ),
               SizedBox(height: 10),
-               Expanded(
+              Expanded(
                 child: ListView.separated(
                   itemCount: 3,
                   cacheExtent: 0,
                   separatorBuilder: (context, index) => SizedBox(height: 0),
                   itemBuilder: (context, index) {
                     final items = [
-                      {'text': ' Edit Record', 'icon': Icons.play_circle_outline},
-                      {'text': ' Edit My Interes', 'icon': Icons.handshake_outlined},
+                      {
+                        'text': ' Edit Record',
+                        'icon': Icons.play_circle_outline,
+                      },
+                      {
+                        'text': ' Edit My Interes',
+                        'icon': Icons.handshake_outlined,
+                      },
                       {'text': ' Edit Socials', 'icon': Icons.share_outlined},
                     ];
                     return bottomOptions(
@@ -109,7 +151,7 @@ class ProfileTest extends StatelessWidget {
                   ],
                 ),
               ),
-              SizedBox(height: 5),   
+              SizedBox(height: 5),
 
               GradientButton(
                 onPressed: () {},
@@ -132,7 +174,7 @@ class ProfileTest extends StatelessWidget {
     );
   }
 
-    Widget profileImage({required Image source}) {
+  Widget profileImage({required Image source}) {
     return CircleAvatar(
       radius: 70,
       backgroundImage: source.image, // Imagen de perfil
@@ -140,13 +182,13 @@ class ProfileTest extends StatelessWidget {
   }
 
   Widget listBuildBox({
-    required String text, 
+    required String text,
     Align? align, // Opcional
     IconData? icon, // Opcional
     Color colorbackground = Colors.white, // Valores por defecto
     Color textColorInside = Colors.black,
     Color iconColorInside = Colors.black,
-    }) {
+  }) {
     return Card(
       color: colorbackground,
       child: ListTile(
@@ -154,16 +196,17 @@ class ProfileTest extends StatelessWidget {
         iconColor: iconColorInside,
         leading: Icon(icon),
         title: Text(text),
-        )
-      );
+      ),
+    );
   }
 
   Widget bottomOptions({required IconData icon, required String text}) {
-    return Row(children: [
-      Padding(padding:  EdgeInsets.only(right: 15)),
-      Icon(icon, color: Colors.white.withAlpha(200)),
-      Text(text, style: TextStyle(color: Colors.white.withAlpha(200))),
-      ]
+    return Row(
+      children: [
+        Padding(padding: EdgeInsets.only(right: 15)),
+        Icon(icon, color: Colors.white.withAlpha(200)),
+        Text(text, style: TextStyle(color: Colors.white.withAlpha(200))),
+      ],
     );
   }
 }

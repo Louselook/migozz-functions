@@ -15,7 +15,7 @@ class CategoryStep extends StatefulWidget {
 }
 
 class _CategoryStepState extends State<CategoryStep> {
-  String? selectedCategory;
+  List<String> selectedCategories = [];
   List<String> dynamicCategories = [];
   bool isLoading = true;
 
@@ -64,16 +64,10 @@ class _CategoryStepState extends State<CategoryStep> {
       });
     }
   }
-  /**
- * Estructura Firebase:
- * name -> string
- * status: string (active, inactive)
- * Solo se muestran las categorías con status: "active"
- */
 
   @override
   Widget build(BuildContext context) {
-    // final cubit = context.read<RegisterCubit>();
+    final cubit = context.read<RegisterCubit>();
 
     return SafeArea(
       child: Container(
@@ -106,7 +100,9 @@ class _CategoryStepState extends State<CategoryStep> {
                               ),
                             ]
                           : dynamicCategories.map((category) {
-                              final isSelected = selectedCategory == category;
+                              final isSelected = selectedCategories.contains(
+                                category,
+                              );
                               return SizedBox(
                                 width: itemWidth,
                                 child: _categoryButton(
@@ -114,12 +110,20 @@ class _CategoryStepState extends State<CategoryStep> {
                                   selected: isSelected,
                                   onTap: () {
                                     setState(() {
-                                      selectedCategory = category;
+                                      if (selectedCategories.contains(
+                                        category,
+                                      )) {
+                                        selectedCategories.remove(category);
+                                      } else {
+                                        selectedCategories.add(category);
+                                      }
                                     });
-                                    // cubit.setCategory(category);
-                                    // debugPrint(
-                                    //   "🏷️ Categoria seleccionada: ${cubit.state.category}",
-                                    // );
+                                    cubit.setCategories(
+                                      selectedCategories,
+                                    ); // actualizar cubit
+                                    debugPrint(
+                                      "🏷️ Categorías seleccionadas: $selectedCategories",
+                                    );
                                   },
                                 ),
                               );
@@ -157,7 +161,9 @@ class _CategoryStepState extends State<CategoryStep> {
             gradient: selected
                 ? LinearGradient(colors: AppColors.primaryGradient.colors)
                 : LinearGradient(colors: AppColors.primaryGradient.colors),
-            color: selected ? null : AppColors.backgroundGoole.withOpacity(0.4),
+            color: selected
+                ? null
+                : AppColors.backgroundGoole.withValues(alpha: 0.4),
             border: Border.all(
               color: selected
                   ? const Color.fromARGB(255, 96, 27, 255)

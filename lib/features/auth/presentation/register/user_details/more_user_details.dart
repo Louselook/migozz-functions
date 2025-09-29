@@ -44,8 +44,6 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
       SocialEcosystemStep(controller: pageController),
       CategoryStep(controller: pageController),
       InterestsStep(controller: pageController),
-      // PicAudioStep(controller: pageController),
-      // LayoutStep(controller: pageController),
     ];
 
     return Scaffold(

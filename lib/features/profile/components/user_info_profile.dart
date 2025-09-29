@@ -1,4 +1,3 @@
-// lib/features/profile/components/info_user_profile.dart
 import 'dart:ui';
 import 'package:flutter/material.dart';
 
@@ -28,15 +27,15 @@ class InfoUserProfile extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           // decoration: BoxDecoration(
-          //   color: Colors.black.withOpacity(0.35),
+          //   color: Colors.black.withValues(alpha:0.35),
           //   borderRadius: borderRadius,
-          //   border: Border.all(color: Colors.white.withOpacity(0.12)),
+          //   border: Border.all(color: Colors.white.withValues(alpha:0.12)),
           //   boxShadow: [
           //     BoxShadow(
           //       blurRadius: 18,
           //       spreadRadius: 2,
           //       offset: const Offset(0, 8),
-          //       color: Colors.black.withOpacity(0.35),
+          //       color: Colors.black.withValues(alpha:0.35),
           //     ),
           //   ],
           // ),
@@ -67,12 +66,12 @@ class InfoUserProfile extends StatelessWidget {
                   const SizedBox(width: 8),
                   Icon(
                     Icons.play_circle_outline_rounded,
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     size: 18,
                   ),
                   Icon(
                     Icons.share,
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     size: 18,
                   ),
                 ],
@@ -82,13 +81,13 @@ class InfoUserProfile extends StatelessWidget {
                 displayName,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.85),
+                  color: Colors.white.withValues(alpha: 0.85),
                   fontSize: 13,
                 ),
               ),
               const SizedBox(height: 5),
               Row(
-                mainAxisSize: MainAxisSize.min, 
+                mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
@@ -100,7 +99,6 @@ class InfoUserProfile extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 6),
-                  
                 ],
               ),
               const SizedBox(height: 1),
@@ -111,13 +109,13 @@ class InfoUserProfile extends StatelessWidget {
                   Text(
                     nameComunity,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
-              )
+              ),
             ],
           ),
         ),

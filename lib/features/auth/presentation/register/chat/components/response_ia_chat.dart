@@ -1,3 +1,6 @@
+import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_state.dart';
+
 class IaChatService {
   bool _isEnglish = true; // por defecto inglés
   int currentIndex = 0;
@@ -14,40 +17,27 @@ class IaChatService {
     },
     {
       "text":
-          "Nice to meet you Insert Name! Now, let's create a unique username for your profile.",
+          "Nice to meet you {fullName}! Now, let's create a unique username for your profile.",
       "options": [],
     },
+    {"text": "Great nickname! Are you a man or a woman?", "options": []},
+    {"text": "Let's add your social platforms!", "options": [], "action": 0},
     {
-      "text": "Great nickname! Are you a man or a woman?",
-      "options": [], // Quitar
-    },
-    {
-      "text": "Let's add your social platforms!",
-      "options": [],
-      "action": 0,
-    }, // Navegar social abajo
-    {
-      "text":
-          "Awesome! I can see you've connected TikTok, Instagram, YouTube, and X. 📱",
+      "text": "Awesome! I can see you've connected {socialEcosystem}. 📱",
       "options": [],
       "dinamicResponse": "SocialEcosystemStep", // 👈 flag especial
     },
     {
       "text":
-          "Perfect! Now, let me confirm your location. I detected you're in Bogotá, Colombia 🇨🇴. Is this correct?",
+          "Perfect! Now, let me confirm your location. I detected you're in {location}. Is this correct?",
       "options": [],
     },
-    {
-      "text": "Great! Your email is john.doe@email.com. Is this correct?",
-      "options": [],
-    },
+    {"text": "Great! Your email is {email}. Is this correct?", "options": []},
     {
       "text":
           "Perfect! Please check your email for a confirmation link to activate your profile! 📧",
       "options": [],
     },
-    // AI ASSISTANT- PART 2
-    // mensajes seguidos
     {
       "text": "Congratulations! Your profile is now activated! 🎉",
       "options": [],
@@ -63,24 +53,17 @@ class IaChatService {
           "I can suggest some options from your connected social media, or you can upload a new one.",
       "options": [],
     },
-    // dspus iconos o la opcion en el menu
     {
       "text":
           "Which one would you like to use? Or would you prefer to upload a custom photo?",
       "options": [],
     },
-    // seguidos hasta aqui, aqui respondeemos
     {"text": "Perfect! Now, what's your phone number? 📞", "options": []},
     {
       "text":
           "Great! Now let's add a personal touch. Please record a short voice note (5-10 seconds) introducing yourself! 🎤",
       "options": [],
-    }, // audio
-    // por ultimo
-    // Choose Your Category
-    // Choose Your Interests
-    // My Profile - Resultado Final
-    // Profile (Other Users)
+    },
   ];
 
   final List<Map<String, dynamic>> _questionsEs = [
@@ -95,32 +78,27 @@ class IaChatService {
     },
     {
       "text":
-          "¡Encantado de conocerte, Insertar Nombre! Ahora, vamos a crear un nombre de usuario único para tu perfil.",
+          "¡Encantado de conocerte, {fullName}! Ahora, vamos a crear un nombre de usuario único para tu perfil.",
       "options": [],
     },
-    {
-      "text": "¡Excelente apodo! ¿Eres hombre o mujer?",
-      "options": [], // Quitar
-    },
+    {"text": "¡Excelente apodo! ¿Eres hombre o mujer?", "options": []},
     {
       "text": "¡Agreguemos tus plataformas sociales!",
       "options": [],
       "action": 0,
-    }, // Navegar social abajo
-
+    },
     {
-      "text": "¡Genial! Veo que conectaste TikTok, Instagram, YouTube y X. 📱",
+      "text": "¡Genial! Veo que conectaste {socialEcosystem}. 📱",
       "options": [],
       "dinamicResponse": "SocialEcosystemStep", // 👈 flag especial
     },
     {
       "text":
-          "¡Perfecto! Ahora, déjame confirmar tu ubicación. Detecté que estás en Bogotá, Colombia 🇨🇴. ¿Es correcto?",
+          "¡Perfecto! Ahora, déjame confirmar tu ubicación. Detecté que estás en {location}. ¿Es correcto?",
       "options": [],
     },
     {
-      "text":
-          "¡Genial! Tu correo electrónico es john.doe@email.com. ¿Es correcto?",
+      "text": "¡Genial! Tu correo electrónico es {email}. ¿Es correcto?",
       "options": [],
     },
     {
@@ -128,8 +106,6 @@ class IaChatService {
           "¡Perfecto! Revisa tu correo electrónico para ver el enlace de confirmación para activar tu perfil. 📧",
       "options": [],
     },
-    // AI ASSISTANT- PARTE 2
-    // mensajes seguidos
     {
       "text": "¡Felicidades! ¡Tu perfil ya está activado! 🎉",
       "options": [],
@@ -145,13 +121,11 @@ class IaChatService {
           "Puedo sugerirte algunas opciones de tus redes sociales conectadas, o puedes subir una nueva.",
       "options": [],
     },
-    // después iconos o la opción en el menú
     {
       "text":
           "¿Cuál te gustaría usar? ¿O prefieres subir una foto personalizada?",
       "options": [],
     },
-    // seguidos hasta aquí, aquí respondemos
     {
       "text": "¡Perfecto! Ahora, ¿cuál es tu número de teléfono? 📞",
       "options": [],
@@ -160,20 +134,19 @@ class IaChatService {
       "text":
           "¡Genial! Ahora añadamos un toque personal. Por favor, graba una nota de voz corta (5-10 segundos) presentándote 🎤",
       "options": [],
-    }, // audio
-    // por ultimo
-    // Choose Your Category
-    // Choose Your Interests
-    // My Profile - Resultado Final
-    // Profile (Other Users)
+    },
   ];
 
-  /// Devuelve la siguiente pregunta
-  Map<String, dynamic>? getNextBotResponse() {
+  /// Devuelve la siguiente pregunta con los valores dinámicos reemplazados
+  Map<String, dynamic>? getNextBotResponse(RegisterCubit cubit) {
     final questions = _isEnglish ? _questionsEn : _questionsEs;
     if (currentIndex < questions.length) {
-      final response = questions[currentIndex];
+      var response = questions[currentIndex];
       currentIndex++;
+
+      // Reemplazar valores dinámicos como {fullName}, {socialEcosystem}, {location}, {email} con los datos reales
+      response["text"] = _replaceDynamicValues(response["text"], cubit.state);
+
       return response;
     }
     return {
@@ -182,6 +155,21 @@ class IaChatService {
           : "¡Grabación perfecta! Ahora, ¿qué te describe mejor profesionalmente?",
       "action": 1,
     };
+  }
+
+  String _replaceDynamicValues(String text, RegisterState state) {
+    // Reemplazar los placeholders con los valores reales, asegurándose de que sean Strings
+    text = text.replaceAll("{fullName}", state.fullName?.toString() ?? "User");
+    text = text.replaceAll(
+      "{socialEcosystem}",
+      state.socialEcosystem?.toString() ?? "your social media",
+    );
+    text = text.replaceAll(
+      "{location}",
+      state.location?.toString() ?? "your location",
+    );
+    text = text.replaceAll("{email}", state.email?.toString() ?? "your email");
+    return text;
   }
 
   /// Detecta si el usuario eligió idioma

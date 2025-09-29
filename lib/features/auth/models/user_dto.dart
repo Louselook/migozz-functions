@@ -15,7 +15,7 @@ class UserDTO {
   final String? avatarUrl;
   final String? phone;
   final String? voiceNoteUrl;
-  final String? category;
+  final List<String>? category;
   final Map<String, List<String>> interests;
 
   // Parte 2
@@ -73,7 +73,7 @@ class UserDTO {
     String? avatarUrl,
     String? phone,
     String? voiceNoteUrl,
-    String? category,
+    List<String>? category,
     Map<String, List<String>>? interests,
 
     // Parte 2

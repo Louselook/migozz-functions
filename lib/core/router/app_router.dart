@@ -6,7 +6,8 @@ import 'package:migozz_app/features/auth/presentation/login/login_screen.dart';
 import 'package:migozz_app/features/auth/presentation/login/otp_screen.dart';
 import 'package:migozz_app/features/auth/presentation/register/register_screen.dart';
 import 'package:migozz_app/features/auth/presentation/onboarding/onboarding_screen.dart';
-import 'package:migozz_app/features/profile/pages/profile_screen.dart';
+import 'package:migozz_app/features/profile/presentation/edit_profile.dart';
+import 'package:migozz_app/features/profile/presentation/profile_screen.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/ia_chat_screen.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 
@@ -36,11 +37,15 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         builder: (context, state) => const ProfileScreen(),
       ),
       GoRoute(
+        path: '/edit-profile',
+        builder: (context, state) => const EditProfile(),
+      ),
+      GoRoute(
         path: '/ia-chat',
         builder: (context, state) {
-          final email = state.extra as String;
+          // final email = state.extra as String;
           // ya existe un RegisterCubit arriba en el árbol
-          context.read<RegisterCubit>().setEmail(email);
+          context.read<RegisterCubit>().setEmail("juanes.arenilla@gmail.com");
           return const IaChatScreen();
         },
       ),
@@ -59,7 +64,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       };
 
       // Estado inicial (aún revisando auth)
-      if (status == AuthStatus.checking) return '/onboarding';
+      if (status == AuthStatus.checking) return null;
 
       // Usuario NO autenticado
       if (status == AuthStatus.notAuthenticated) {

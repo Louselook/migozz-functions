@@ -34,14 +34,19 @@ class SocialRail extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
           decoration: BoxDecoration(
-            color: const Color.fromARGB(255, 255, 255, 255).withOpacity(0.75),
+            color: const Color.fromARGB(
+              255,
+              255,
+              255,
+              255,
+            ).withValues(alpha: 0.75),
             borderRadius: radius,
-            border: Border.all(color: Colors.white.withOpacity(0.12)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
             boxShadow: [
               BoxShadow(
                 blurRadius: 16,
                 offset: const Offset(0, 8),
-                color: Colors.black.withOpacity(0.35),
+                color: Colors.black.withValues(alpha: 0.35),
               ),
             ],
           ),
@@ -78,7 +83,7 @@ class _SocialButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white.withOpacity(0.10),
+      color: Colors.white.withValues(alpha: 0.10),
       shape: const CircleBorder(),
       child: InkWell(
         customBorder: const CircleBorder(),

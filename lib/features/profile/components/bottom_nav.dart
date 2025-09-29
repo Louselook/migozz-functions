@@ -44,8 +44,8 @@ class GradientBottomNav extends StatelessWidget {
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                     colors: [
-                      Colors.black.withOpacity(0.75),
-                      Colors.black.withOpacity(0.55),
+                      Colors.black.withValues(alpha: 0.75),
+                      Colors.black.withValues(alpha: 0.55),
                       const Color(0x00000000), // transparent
                     ],
                     stops: const [0.0, 0.55, 1.0],
@@ -116,7 +116,7 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? Colors.white : Colors.white.withOpacity(0.7);
+    final color = selected ? Colors.white : Colors.white.withValues(alpha: 0.7);
     return Expanded(
       child: InkResponse(
         onTap: onTap,
@@ -156,7 +156,7 @@ class _CenterActionButton extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.35),
+                color: Colors.black.withValues(alpha: 0.35),
                 blurRadius: 14,
                 offset: const Offset(0, 8),
               ),

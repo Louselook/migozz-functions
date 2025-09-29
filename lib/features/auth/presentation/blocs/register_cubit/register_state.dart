@@ -7,9 +7,8 @@ enum RegisterStatus { initial, loading, success, failure }
 enum EmailVerification { pending, success }
 
 class RegisterState extends Equatable {
-  // final RegisterStatus status;
+  final RegisterStatus status;
   final bool isComplete;
-  // final String? errorMessage;
 
   final String? email;
   final String? language;
@@ -19,23 +18,19 @@ class RegisterState extends Equatable {
   final LocationDTO? location;
   final List<String>? socialEcosystem;
 
-  // add new
+  // Archivos y multimedia
   final String? avatarUrl;
   final String? phone;
   final String? voiceNoteUrl;
-  final String? category;
+  final List<String>? category;
   final Map<String, List<String>>? interests;
 
   final EmailVerification emailVerification;
   final String? currentOTP;
 
-  // final String? birthday;
-
   const RegisterState({
-    // this.status = RegisterStatus.initial,
+    this.status = RegisterStatus.initial,
     this.isComplete = false,
-
-    // this.errorMessage,
     this.email,
     this.language,
     this.fullName,
@@ -43,23 +38,18 @@ class RegisterState extends Equatable {
     this.gender,
     this.location,
     this.socialEcosystem,
-
-    // add new
     this.avatarUrl,
     this.phone,
     this.voiceNoteUrl,
     this.category,
     this.interests,
-
     this.emailVerification = EmailVerification.pending,
     this.currentOTP,
-    // this.birthday,
   });
 
   RegisterState copyWith({
+    RegisterStatus? status,
     bool? isComplete,
-
-    // String? errorMessage,
     String? email,
     String? language,
     String? fullName,
@@ -67,22 +57,17 @@ class RegisterState extends Equatable {
     String? gender,
     LocationDTO? location,
     List<String>? socialEcosystem,
-
-    // add new
     String? avatarUrl,
     String? phone,
     String? voiceNoteUrl,
-    String? category,
+    List<String>? category,
     Map<String, List<String>>? interests,
-
     EmailVerification? emailVerification,
     String? currentOTP,
-    // String? birthday,
   }) {
     return RegisterState(
-      // status: status ?? this.status,
+      status: status ?? this.status,
       isComplete: isComplete ?? this.isComplete,
-      // errorMessage: errorMessage ?? this.errorMessage,
       email: email ?? this.email,
       language: language ?? this.language,
       fullName: fullName ?? this.fullName,
@@ -90,21 +75,17 @@ class RegisterState extends Equatable {
       gender: gender ?? this.gender,
       location: location ?? this.location,
       socialEcosystem: socialEcosystem ?? this.socialEcosystem,
-
-      // add neew
       avatarUrl: avatarUrl ?? this.avatarUrl,
       phone: phone ?? this.phone,
       voiceNoteUrl: voiceNoteUrl ?? this.voiceNoteUrl,
       category: category ?? this.category,
       interests: interests ?? this.interests,
-
       emailVerification: emailVerification ?? this.emailVerification,
       currentOTP: currentOTP ?? this.currentOTP,
-      // birthday: birthday ?? this.birthday,
     );
   }
 
-  // Método para construir el UserDTO final
+  // Construye UserDTO
   UserDTO buildUserDTO() {
     return UserDTO(
       email: email!,
@@ -122,23 +103,16 @@ class RegisterState extends Equatable {
             lng: -75.5812,
           ),
       socialEcosystem: socialEcosystem,
-
-      // add new
-      avatarUrl: avatarUrl!,
       phone: phone!,
-      voiceNoteUrl: voiceNoteUrl!,
       category: category!,
       interests: interests!,
-
-      // birthday: birthday!,
     );
   }
 
   @override
   List<Object?> get props => [
-    // status,
+    status,
     isComplete,
-    // errorMessage,
     email,
     language,
     fullName,
@@ -146,16 +120,12 @@ class RegisterState extends Equatable {
     gender,
     location,
     socialEcosystem,
-
-    // add new
     avatarUrl,
     phone,
     voiceNoteUrl,
     category,
     interests,
-
     currentOTP,
     emailVerification,
-    // birthday,
   ];
 }

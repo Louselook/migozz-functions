@@ -7,7 +7,6 @@ import 'package:migozz_app/core/router/app_router.dart';
 import 'package:migozz_app/core/router/app_router_notifier.dart';
 import 'package:migozz_app/email_otp_custom.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
-// import 'package:migozz_app/test_login_google.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -53,18 +52,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-// class MyApp extends StatelessWidget {
-//   const MyApp({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return MaterialApp(
-//       title: 'Firestore Users Demo',
-//       theme: ThemeData(
-//         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-//       ),
-//       home: const ProfileTest(),
-//     );
-//   }
-// }

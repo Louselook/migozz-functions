@@ -79,7 +79,7 @@ class PictureOptions extends StatelessWidget {
           onTap: () => Navigator.of(context).pop(),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.88),
+              color: Colors.black.withValues(alpha: 0.88),
               borderRadius: BorderRadius.circular(14),
             ),
             padding: const EdgeInsets.all(12),
@@ -119,7 +119,6 @@ class _FramedImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     final image = _buildImage(imagePath, fit: BoxFit.cover);
 
     return GestureDetector(
@@ -143,7 +142,7 @@ class _FramedImage extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.35),
+                  color: Colors.black.withValues(alpha: 0.35),
                   blurRadius: 14,
                   offset: const Offset(0, 6),
                 ),
@@ -158,7 +157,6 @@ class _FramedImage extends StatelessWidget {
       ),
     );
   }
-
 
   Widget _buildImage(String? path, {BoxFit fit = BoxFit.cover}) {
     if (path == null) {

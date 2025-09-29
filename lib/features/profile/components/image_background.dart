@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:migozz_app/features/profile/components/info_user_profile.dart';
 import 'package:migozz_app/features/profile/components/scroll_sheet.dart';
+import 'package:migozz_app/features/profile/components/user_info_profile.dart';
 
 class BackgroundImage extends StatelessWidget {
   final Widget child;
@@ -59,7 +59,7 @@ class BackgroundImage extends StatelessWidget {
                 center: const Alignment(-0.9, -0.9), // arriba-izquierda
                 radius: 1.0,
                 colors: [
-                  const Color(0xFFB86BFF).withOpacity(0.45),
+                  const Color(0xFFB86BFF).withValues(alpha: 0.45),
                   Colors.transparent,
                 ],
                 stops: const [0.0, 1.0],
@@ -81,7 +81,7 @@ class BackgroundImage extends StatelessWidget {
                   center: const Alignment(0.9, 1.4),
                   radius: 1.2,
                   colors: [
-                    const Color(0xFFF3C623).withOpacity(0.55),
+                    const Color(0xFFF3C623).withValues(alpha: 0.55),
                     Colors.transparent,
                   ],
                   stops: const [0.4, 0.75],
@@ -185,7 +185,7 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
                   end: Alignment.bottomCenter,
                   colors: [
                     Colors.transparent,
-                    Colors.black.withOpacity(0.15 + 0.25 * t),
+                    Colors.black.withValues(alpha: 0.15 + 0.25 * t),
                   ],
                 ),
               ),

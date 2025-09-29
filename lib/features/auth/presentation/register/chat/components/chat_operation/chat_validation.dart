@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:migozz_app/features/auth/models/location_dto.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
@@ -78,16 +80,16 @@ Future<void> mapResponseToCubit({
       }
       break;
     case 13:
-      cubit.setAvatarUrl("https://picsum.photos/200");
-      // texto de foto
-      cubit.setAvatarUrl(userResponse);
+      // Avatar
+      final file = File(userResponse); // userResponse = ruta local
+      cubit.setAvatarFile(file);
       break;
     case 14:
       cubit.setPhone(userResponse);
       break;
     case 15:
       // audio pude ser texto
-      cubit.setVoiceNoteUrl("https://storage.fake/voice123.mp3");
+      cubit.setVoiceNoteFile(File(userResponse));
       break;
     // setInterests
     default:

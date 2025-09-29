@@ -2,8 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/color.dart';
+import 'package:migozz_app/core/components/atomics/loading_overlay.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_state.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/interest_section_model.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/user_details_button.dart';
 
@@ -73,7 +75,7 @@ class _InterestsStepState extends State<InterestsStep> {
     }
   }
 
-  void _updateCubit() {
+  Future<void> _updateCubit() async {
     final cubit = context.read<RegisterCubit>();
 
     // Agrupar intereses por sección (usando datos dinámicos de Firebase)
@@ -90,10 +92,11 @@ class _InterestsStepState extends State<InterestsStep> {
     // Guardar en el cubit
     cubit.setInterests(interestsBySection);
 
-    // debugPrint("✅ Intereses guardados: ${cubit.state.interests}");
+    // 🔹 Revisar si completó todos los campos
+    await cubit.checkCompletion();
 
     // Solo llamas al método final de registro
-    cubit.completeRegistration();
+    await cubit.completeRegistration();
   }
 
   /// --- Nueva lógica tipo acordeón ---
@@ -111,44 +114,63 @@ class _InterestsStepState extends State<InterestsStep> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40),
-        child: Column(
-          children: [
-            const SizedBox(height: 10),
-            const PrimaryText('Choose Your Interest'),
-            const SizedBox(height: 20),
+    return BlocListener<RegisterCubit, RegisterState>(
+      listener: (context, state) {
+        if (state.status == RegisterStatus.loading) {
+          LoadingOverlay.show(context, message: "Registrando usuario...");
+        } else {
+          LoadingOverlay.hide(context);
+          if (state.status == RegisterStatus.success) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Registro completado exitosamente')),
+            );
+            // Aquí podrías navegar al home o siguiente pantalla
+          } else if (state.status == RegisterStatus.failure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Error al registrar usuario')),
+            );
+          }
+        }
+      },
+      child: SafeArea(
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40),
+          child: Column(
+            children: [
+              const SizedBox(height: 10),
+              const PrimaryText('Choose Your Interest'),
+              const SizedBox(height: 20),
 
-            // secciones
-            Expanded(
-              child: isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : dynamicSections.isEmpty
-                  ? const Center(
-                      child: SecondaryText(
-                        'No se pudieron cargar los intereses',
-                        fontSize: 16,
+              // secciones
+              Expanded(
+                child: isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : dynamicSections.isEmpty
+                    ? const Center(
+                        child: SecondaryText(
+                          'No se pudieron cargar los intereses',
+                          fontSize: 16,
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: dynamicSections.length,
+                        itemBuilder: (context, index) {
+                          final section = dynamicSections[index];
+                          return _buildSection(section, index);
+                        },
                       ),
-                    )
-                  : ListView.builder(
-                      itemCount: dynamicSections.length,
-                      itemBuilder: (context, index) {
-                        final section = dynamicSections[index];
-                        return _buildSection(section, index);
-                      },
-                    ),
-            ),
+              ),
 
-            const SizedBox(height: 40),
-            // Botones
-            userDetailsButton(
-              controller: widget.controller,
-              context: context,
-              action: UserDetailsAction.finalRegister,
-              onFinalAction: () => _updateCubit(),
-            ),
-          ],
+              const SizedBox(height: 40),
+              // Botones
+              userDetailsButton(
+                controller: widget.controller,
+                context: context,
+                action: UserDetailsAction.finalRegister,
+                onFinalAction: () => _updateCubit(),
+              ),
+            ],
+          ),
         ),
       ),
     );
