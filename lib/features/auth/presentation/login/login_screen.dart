@@ -68,7 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     // Logo
                     Image.asset(
-                      'assets/icons/Migozz@300x.png',
+                      'assets/icons/Migozz300x.png',
                       width: 99,
                       height: 98,
                       errorBuilder: (context, error, stackTrace) {
