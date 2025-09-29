@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:migozz_app/core/utils/responsive_utils.dart';
+import 'package:migozz_app/core/color.dart';
 
 class SocialIconCard extends StatelessWidget {
   final String label;
   final String? assetPath;
   final VoidCallback? onTap;
   final Size? sizeIcon;
+  final bool isSelected;
   final double iconSize; // Tamaño específico del icono interno
 
   const SocialIconCard({
@@ -16,6 +18,7 @@ class SocialIconCard extends StatelessWidget {
     this.onTap,
     this.sizeIcon,
     this.iconSize = 40.0, // Valor por defecto para el icono
+    this.isSelected = false,
   });
 
   bool get _isSvg => (assetPath ?? '').toLowerCase().endsWith('.svg');
@@ -35,10 +38,12 @@ class SocialIconCard extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
-        width: sizeIcon?.width ?? 80,
-        height: sizeIcon?.height ?? 80,
+        width: sizeIcon?.width ?? 65,
+        height: sizeIcon?.height ?? 65,
         decoration: BoxDecoration(
-          color: const Color(0xFF404040),
+          gradient: isSelected
+              ? AppColors.primaryGradient : null, 
+          color: isSelected ? null : const Color(0xFF404040), 
           borderRadius: BorderRadius.circular(responsiveBorderRadius),
         ),
         child: Column(

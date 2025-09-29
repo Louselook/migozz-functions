@@ -54,6 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
       builder: (context, state) {
         return Scaffold(
           backgroundColor: AppColors.backgroundDark,
+          resizeToAvoidBottomInset: false,
           body: SafeArea(
             child: Form(
               key: _formKey,

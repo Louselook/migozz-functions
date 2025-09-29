@@ -36,7 +36,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         children: [
           // Indicadores de progreso
           Padding(
-            padding: const EdgeInsets.only(top: 30, left: 20, right: 20),
+            padding: const EdgeInsets.only(top: 40, left: 20, right: 20),
             child: Row(
               children: List.generate(
                 AppConstants.onboardingPages.length,
@@ -137,47 +137,51 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         // Parte inferior → 60%
         Expanded(
           flex: 6,
-          child: Container(
-            width: double.infinity,
-            decoration: const BoxDecoration(
-              color: AppColors.backgroundLight,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(30),
-                topRight: Radius.circular(30),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                color: AppColors.backgroundLight,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(30),
+                  topRight: Radius.circular(30),
+                ),
               ),
-            ),
-            child: ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(30),
-                topRight: Radius.circular(30),
-              ),
-              child: Stack(
-                children: [
-                  // Imagen principal siempre abajo y centrada
-                  Positioned.fill(
-                    child: Align(
-                      alignment: Alignment.bottomCenter,
-                      child: Image.asset(
-                        'assets/images/onboarding_${_currentPage + 1}.png',
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ),
-
-                  // Efecto radial
-                  Positioned.fill(
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        gradient: RadialGradient(
-                          center: Alignment.bottomRight,
-                          radius: 0.6,
-                          colors: [AppColors.radialEffect, Colors.transparent],
-                          stops: [0, 1],
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(30),
+                  topRight: Radius.circular(30),
+                ),
+                child: Stack(
+                  children: [
+                    // Imagen principal siempre abajo y centrada
+                    Positioned.fill(
+                      child: Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Image.asset(
+                          scale: screenHeight < 800 ? 1.5 : 1,
+                          data.imagePath,
+                          fit: BoxFit.contain,
                         ),
                       ),
                     ),
-                  ),
-                ],
+            //issamu382@gmail.com
+                    // Efecto radial
+                    Positioned.fill(
+                      child: Container(
+                        decoration: const BoxDecoration(
+                          gradient: RadialGradient(
+                            center: Alignment.bottomRight,
+                            radius: 0.6,
+                            colors: [AppColors.radialEffect, Colors.transparent],
+                            stops: [0, 1],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

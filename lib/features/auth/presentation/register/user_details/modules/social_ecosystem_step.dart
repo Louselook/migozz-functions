@@ -7,12 +7,14 @@ import 'package:migozz_app/features/auth/presentation/register/user_details/comp
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/user_details_button.dart';
 
 class SocialEcosystemStep extends StatelessWidget {
+  
   final PageController controller;
   const SocialEcosystemStep({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {
     // Usar las utilidades responsive
+    
     final scaleFactor = context.scaleFactor;
     final deviceType = context.deviceType;
 
@@ -30,6 +32,7 @@ class SocialEcosystemStep extends StatelessWidget {
       "LinkedIn",
       "Paypal",
       "Xbox",
+      "Others",
     ];
 
     // Label -> path exacto
@@ -46,6 +49,7 @@ class SocialEcosystemStep extends StatelessWidget {
       "LinkedIn": "assets/icons/social_networks/LinkedIn.png",
       "Paypal": "assets/icons/social_networks/Paypal.svg",
       "Xbox": "assets/icons/social_networks/Xbox.svg",
+      "Others": "assets/icons/social_networks/Others.png",
     };
 
     // Calcular paddings y espaciados responsivos usando las utilidades
@@ -136,16 +140,19 @@ class SocialEcosystemStep extends StatelessWidget {
                     itemBuilder: (context, index) {
                       final label = socials[index];
                       final assetPath = iconByLabel[label];
-                      // Calcular el tamaño del icono como porcentaje del ancho de la card
-                      final iconSize =
-                          cardSize.width * 0.4; // 40% del ancho de la card
+                      final iconSize = cardSize.width * 0.4;
                       final clampedIconSize = iconSize.clamp(24.0, 48.0);
+
+                      // Obtener la lista seleccionada del cubit
+                      final selectedList = context.watch<RegisterCubit>().state.socialEcosystem ?? [];
+                      final selected = selectedList.contains(label);
 
                       return SocialIconCard(
                         label: label,
                         assetPath: assetPath,
                         iconSize: clampedIconSize,
-                        sizeIcon: cardSize, // tamaño responsive de la tarjeta
+                        sizeIcon: cardSize,
+                        isSelected: selected, 
                         onTap: () {
                           final cubit = context.read<RegisterCubit>();
                           final current = List<String>.from(

@@ -41,6 +41,7 @@ class _RegisterScreenContentState extends State<_RegisterScreenContent> {
 
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Stack(
           children: [
