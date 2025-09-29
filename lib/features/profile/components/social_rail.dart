@@ -1,114 +1,143 @@
-// lib/features/profile/components/social_rail.dart
-import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SocialLink {
-  final String asset; // ruta del icono (svg/png)
-  final Uri url; // enlace de la red
+  final String asset;
+  final Uri url;
+
   const SocialLink({required this.asset, required this.url});
 }
 
 class SocialRail extends StatelessWidget {
   final List<SocialLink> links;
-  final double itemSize; // tamaño del “botoncito” circular de cada icono
-  final double iconSize; // tamaño del gráfico dentro del botón
+  final double itemSize;
+  final double iconSize;
+  final bool isDragging;
 
   const SocialRail({
     super.key,
     required this.links,
-    this.itemSize = 80,
-    this.iconSize = 50,
+    this.itemSize = 50,
+    this.iconSize = 45,
+    this.isDragging = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final radius = BorderRadius.circular(18);
-
-    return ClipRRect(
-      borderRadius: radius,
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 2, sigmaY: 10),
-
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-          decoration: BoxDecoration(
-            color: const Color.fromARGB(
-              255,
-              255,
-              255,
-              255,
-            ).withValues(alpha: 0.75),
-            borderRadius: radius,
-            border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-            boxShadow: [
-              BoxShadow(
-                blurRadius: 16,
-                offset: const Offset(0, 8),
-                color: Colors.black.withValues(alpha: 0.35),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (int i = 0; i < links.length; i++) ...[
-                _SocialButton(
-                  link: links[i],
-                  size: itemSize,
-                  iconSize: iconSize,
-                ),
-                if (i != links.length - 1) const SizedBox(height: 8),
-              ],
-            ],
-          ),
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(25),
+        color: isDragging
+            ? Colors.white.withValues(alpha: 0.3)
+            : Colors.white.withValues(alpha: 0.2),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: isDragging ? 0.4 : 0.3),
+          width: 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: links.asMap().entries.map((entry) {
+          final index = entry.key;
+          final link = entry.value;
+
+          return Padding(
+            padding: EdgeInsets.only(bottom: index < links.length - 1 ? 8 : 0),
+            child: _SocialButton(
+              link: link,
+              size: itemSize,
+              iconSize: iconSize,
+              isDragging: isDragging,
+            ),
+          );
+        }).toList(),
       ),
     );
   }
 }
 
-class _SocialButton extends StatelessWidget {
+class _SocialButton extends StatefulWidget {
   final SocialLink link;
   final double size;
   final double iconSize;
+  final bool isDragging;
 
   const _SocialButton({
     required this.link,
     required this.size,
     required this.iconSize,
+    this.isDragging = false,
   });
 
   @override
+  State<_SocialButton> createState() => _SocialButtonState();
+}
+
+class _SocialButtonState extends State<_SocialButton> {
+  bool _isPressed = false;
+
+  @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white.withValues(alpha: 0.10),
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: () => {
-          launchUrl(link.url, mode: LaunchMode.externalApplication),
-        },
-        child: SizedBox(
-          width: size,
-          height: size,
-          child: Center(child: _buildIcon(link.asset, iconSize)),
+    return GestureDetector(
+      onTapDown: widget.isDragging
+          ? null
+          : (_) => setState(() => _isPressed = true),
+      onTapUp: widget.isDragging
+          ? null
+          : (_) => setState(() => _isPressed = false),
+      onTapCancel: widget.isDragging
+          ? null
+          : () => setState(() => _isPressed = false),
+      onTap: widget.isDragging ? null : () => _launchUrl(widget.link.url),
+      child: AnimatedScale(
+        scale: _isPressed ? 0.95 : 1.0,
+        duration: const Duration(milliseconds: 100),
+        child: Container(
+          width: widget.size,
+          height: widget.size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: widget.isDragging
+                ? Colors.white.withValues(alpha: 0.6)
+                : Colors.white.withValues(alpha: 0.4),
+            border: Border.all(
+              color: Colors.white.withValues(
+                alpha: widget.isDragging ? 0.8 : 0.6,
+              ),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Image.asset(
+              widget.link.asset,
+              width: widget.iconSize,
+              height: widget.iconSize,
+              fit: BoxFit.contain,
+            ),
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildIcon(String asset, double size) {
-    final isSvg = asset.toLowerCase().endsWith('.svg');
-    if (isSvg) {
-      return SvgPicture.asset(
-        asset,
-        width: 35,
-        height: 35,
-        fit: BoxFit.contain,
-      );
+  Future<void> _launchUrl(Uri url) async {
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      throw Exception('Could not launch $url');
     }
-    return Image.asset(asset, width: 35, height: 35, fit: BoxFit.contain);
   }
 }

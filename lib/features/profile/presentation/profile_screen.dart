@@ -1,9 +1,11 @@
+// lib/features/profile/profile_screen.dart
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:migozz_app/features/profile/components/draggable_social_rail.dart';
 import 'package:migozz_app/features/profile/components/ai_assistant.dart';
 import 'package:migozz_app/features/profile/components/bottom_nav.dart';
-import 'package:migozz_app/features/profile/components/image_background.dart';
+// import 'package:migozz_app/features/profile/components/info_user_profile.dart';
+import 'package:migozz_app/features/profile/components/background_image.dart';
 import 'package:migozz_app/features/profile/components/social_rail.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -23,12 +25,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
     // Altura del gradiente inferior
     final bottomGradientHeight = size.height * 0.22;
     // Separación del card desde el borde inferior
-    final bottomPaddingForCard = size.height * 0.15;
+    final bottomPaddingForCard = size.height * 0.25;
 
-    // Tamaño y posición del botón (proporcional para distintas pantallas)
+    // Tamaño del botón (proporcional para distintas pantallas)
     final assistantSize = (size.width * 0.18).clamp(56.0, 88.0);
-    final assistantRight = size.width * 0.03;
-    final assistantBottom = bottomPaddingForCard - size.height * 0.03;
+
+    // Posición inicial del asistente IA (esquina inferior derecha)
+    final initialAssistantPosition = Offset(
+      size.width - assistantSize - (size.width * 0.03),
+      size.height - bottomPaddingForCard + (size.height * 0.03),
+    );
+
+    // Posición inicial del social rail (derecha, centro-superior)
+    final initialSocialPosition = Offset(
+      size.width - 65, // 65 (itemSize) + 16 (padding)
+      size.height * 0.2, // Posición más alta
+    );
 
     return Scaffold(
       body: BackgroundImage(
@@ -59,68 +71,51 @@ class _ProfileScreenState extends State<ProfileScreen> {
             // 3 puntos verticales arriba a la izquierda
             Positioned(
               left: 0,
-              top: 30,
-              child: GestureDetector(
-                onTap: () => context.go('/edit-profile'),
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.more_vert,
-                      color: const Color(0xAAFFFFFF),
-                      size: 60,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Botón asistente IA
-            Positioned.fill(
-              child: Align(
-                alignment: Alignment.bottomRight,
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    right: assistantRight,
-                    bottom: assistantBottom,
+              top: 70,
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.more_vert,
+                    color: const Color(0xAAFFFFFF),
+                    size: 60,
                   ),
-                  child: AIAssistant(size: assistantSize, onTap: () {}),
-                ),
+                ],
               ),
             ),
 
-            // rail social
-            Align(
-              alignment: const Alignment(
-                1,
-                -0.05,
-              ), // derecha y ligeramente arriba del centro
-              child: Padding(
-                padding: EdgeInsets.only(
-                  right: MediaQuery.of(context).size.width * 0.02,
+            // Botón asistente IA (draggable)
+            AIAssistant(
+              size: assistantSize,
+              initialPosition: initialAssistantPosition,
+              onTap: () {
+                // Aquí implementarás la lógica para abrir el chat del asistente
+                debugPrint('Asistente IA presionado');
+              },
+            ),
+
+            // rail social (ahora draggable)
+            DraggableSocialRail(
+              initialPosition: initialSocialPosition,
+              links: [
+                SocialLink(
+                  asset: 'assets/icons/social_networks/TikTok.png',
+                  url: Uri.parse('https://www.tiktok.com/@johndoe'),
                 ),
-                child: SocialRail(
-                  links: [
-                    SocialLink(
-                      asset: 'assets/icons/social_networks/TikTok.svg',
-                      url: Uri.parse('https://www.tiktok.com/@johndoe'),
-                    ),
-                    SocialLink(
-                      asset: 'assets/icons/social_networks/Instagram.svg',
-                      url: Uri.parse('https://www.instagram.com/johndoe'),
-                    ),
-                    SocialLink(
-                      asset: 'assets/icons/social_networks/X.svg',
-                      url: Uri.parse('https://x.com/johndoe'),
-                    ),
-                    SocialLink(
-                      asset: 'assets/icons/social_networks/Pinterest.svg',
-                      url: Uri.parse('https://www.pinterest.com/johndoe'),
-                    ),
-                  ],
-                  itemSize: 42, // botón
-                  iconSize: 22, // icono dentro
+                SocialLink(
+                  asset: 'assets/icons/social_networks/Instagram.png',
+                  url: Uri.parse('https://www.instagram.com/johndoe'),
                 ),
-              ),
+                SocialLink(
+                  asset: 'assets/icons/social_networks/X.png',
+                  url: Uri.parse('https://x.com/johndoe'),
+                ),
+                SocialLink(
+                  asset: 'assets/icons/social_networks/Pinterest.png',
+                  url: Uri.parse('https://www.pinterest.com/johndoe'),
+                ),
+              ],
+              itemSize: 50, // botón
+              iconSize: 45, // icono dentro
             ),
 
             // zona del bottomnavigate
