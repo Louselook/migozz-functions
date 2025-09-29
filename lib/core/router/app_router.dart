@@ -43,9 +43,9 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       GoRoute(
         path: '/ia-chat',
         builder: (context, state) {
-          // final email = state.extra as String;
+          final email = state.extra as String;
           // ya existe un RegisterCubit arriba en el árbol
-          context.read<RegisterCubit>().setEmail("juanes.arenilla@gmail.com");
+          context.read<RegisterCubit>().setEmail(email);
           return const IaChatScreen();
         },
       ),
