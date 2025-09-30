@@ -81,64 +81,67 @@ class _CategoryStepState extends State<CategoryStep> {
               child: Center(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    const spacing = 16.0;
-                    final itemWidth = (constraints.maxWidth - spacing) / 2;
-
-                    return Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: spacing,
-                      runSpacing: spacing,
-                      children: isLoading
-                          ? [const Center(child: CircularProgressIndicator())]
-                          : dynamicCategories.isEmpty
-                          ? [
-                              const Center(
-                                child: SecondaryText(
-                                  'No hay categorías disponibles',
-                                  fontSize: 16,
+                    return SingleChildScrollView(
+                      child: Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 12.0,
+                        runSpacing: 12.0,
+                        children: isLoading
+                            ? [const Center(child: CircularProgressIndicator())]
+                            : dynamicCategories.isEmpty
+                            ? [
+                                const Center(
+                                  child: SecondaryText(
+                                    'No hay categorías disponibles',
+                                    fontSize: 16,
+                                  ),
                                 ),
-                              ),
-                            ]
-                          : dynamicCategories.map((category) {
-                              final isSelected = selectedCategories.contains(
-                                category,
-                              );
-                              return SizedBox(
-                                width: itemWidth,
-                                child: _categoryButton(
+                              ]
+                            : dynamicCategories.map((category) {
+                                final isSelected = selectedCategories.contains(
                                   category,
-                                  selected: isSelected,
-                                  onTap: () {
-                                    setState(() {
-                                      if (selectedCategories.contains(
-                                        category,
-                                      )) {
-                                        selectedCategories.remove(category);
-                                      } else {
-                                        selectedCategories.add(category);
-                                      }
-                                    });
-                                    cubit.setCategories(
-                                      selectedCategories,
-                                    ); // actualizar cubit
-                                    debugPrint(
-                                      "🏷️ Categorías seleccionadas: $selectedCategories",
-                                    );
-                                  },
-                                ),
-                              );
-                            }).toList(),
+                                );
+                                return ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    minWidth: constraints.maxWidth * 0.4,
+                                    maxWidth: constraints.maxWidth * 0.9,
+                                  ),
+                                  child: _categoryButton(
+                                    category,
+                                    selected: isSelected,
+                                    onTap: () {
+                                      setState(() {
+                                        if (selectedCategories.contains(
+                                          category,
+                                        )) {
+                                          selectedCategories.remove(category);
+                                        } else {
+                                          selectedCategories.add(category);
+                                        }
+                                      });
+                                      cubit.setCategories(
+                                        selectedCategories,
+                                      ); // actualizar cubit
+                                      debugPrint(
+                                        "🏷️ Categorías seleccionadas: $selectedCategories",
+                                      );
+                                    },
+                                  ),
+                                );
+                              }).toList(),
+                      ),
                     );
                   },
                 ),
               ),
             ),
-            const SizedBox(height: 20),
-            // Botones de navegación
-            userDetailsButton(
-              controller: widget.controller,
-              context: context,
-              action: UserDetailsAction.next,
+            Padding(
+              padding: const EdgeInsets.only(top: 20, bottom: 10),
+              child: userDetailsButton(
+                controller: widget.controller,
+                context: context,
+                action: UserDetailsAction.next,
+              ),
             ),
           ],
         ),
@@ -151,37 +154,45 @@ class _CategoryStepState extends State<CategoryStep> {
     bool selected = false,
     VoidCallback? onTap,
   }) {
-    return SizedBox(
-      height: 56, // altura consistente
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Ink(
-          decoration: BoxDecoration(
-            gradient: selected
-                ? LinearGradient(colors: AppColors.primaryGradient.colors)
-                : LinearGradient(colors: AppColors.primaryGradient.colors),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        constraints: const BoxConstraints(minHeight: 50),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+        decoration: BoxDecoration(
+          gradient: selected
+              ? LinearGradient(colors: AppColors.primaryGradient.colors)
+              : LinearGradient(colors: AppColors.primaryGradient.colors),
+          border: Border.all(
             color: selected
-                ? null
-                : AppColors.backgroundGoole.withValues(alpha: 0.4),
-            border: Border.all(
-              color: selected
-                  ? const Color.fromARGB(255, 96, 27, 255)
-                  : AppColors.backgroundGoole,
-              width: 4,
-            ),
-            borderRadius: BorderRadius.circular(12),
+                ? const Color.fromARGB(255, 96, 27, 255)
+                : AppColors.backgroundGoole,
+            width: 3,
           ),
-          child: Container(
-            height: 56,
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            alignment: Alignment.centerLeft,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                SecondaryText(label, fontSize: 20, color: Colors.white),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Center(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: SecondaryText(label, fontSize: 18, color: Colors.white),
+              ),
+              if (selected) ...[
+                const SizedBox(width: 8),
+                Container(
+                  width: 20,
+                  height: 20,
+                  decoration: const BoxDecoration(
+                    color: Colors.green,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.check, color: Colors.white, size: 14),
+                ),
               ],
-            ),
+            ],
           ),
         ),
       ),

@@ -8,6 +8,10 @@ class EditProfile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final screenHeight = screenSize.height;
+    final screenWidth = screenSize.width;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.black,
@@ -29,144 +33,150 @@ class EditProfile extends StatelessWidget {
       ),
       backgroundColor: Colors.black,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 0),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(
+            horizontal: screenWidth * 0.08,
+            vertical: 0,
+          ),
           child: Column(
-            // mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Stack(
                 children: [
                   profileImage(
                     source: Image.asset('assets/images/profileBackground.png'),
+                    radius: screenWidth * 0.18,
                   ),
                   Positioned(
                     bottom: 0,
                     right: 0,
                     child: CircleAvatar(
-                      radius: 18,
+                      radius: screenWidth * 0.048,
                       backgroundColor: Colors.deepPurple,
                       child: CircleAvatar(
                         backgroundColor: Colors.pinkAccent,
-                        child: Icon(Icons.edit, size: 16, color: Colors.white),
+                        child: Icon(
+                          Icons.edit,
+                          size: screenWidth * 0.042,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
                 ],
               ),
-              SizedBox(height: 20),
+              SizedBox(height: screenHeight * 0.025),
 
               listBuildBox(
                 text: 'Full name',
                 icon: Icons.account_box,
-                colorbackground: Colors.grey.withAlpha(50),
                 textColorInside: Colors.white,
                 iconColorInside: Colors.white,
               ),
               listBuildBox(
                 text: 'Nickname',
                 icon: Icons.alternate_email,
-                colorbackground: Colors.grey.withAlpha(50),
                 textColorInside: Colors.white,
                 iconColorInside: Colors.white,
               ),
               listBuildBox(
                 text: 'Email',
                 icon: Icons.mail,
-                colorbackground: Colors.grey.withAlpha(50),
                 textColorInside: Colors.white,
                 iconColorInside: Colors.white,
               ),
               listBuildBox(
                 text: 'Cell Phone',
                 icon: Icons.phone,
-                colorbackground: Colors.grey.withAlpha(50),
                 textColorInside: Colors.white,
                 iconColorInside: Colors.white,
               ),
               listBuildBox(
                 text: 'Date of birth',
                 icon: Icons.calendar_today,
-                colorbackground: Colors.grey.withAlpha(50),
                 textColorInside: Colors.white,
                 iconColorInside: Colors.white,
               ),
               listBuildBox(
                 text: 'Gender',
                 icon: Icons.transgender,
-                colorbackground: Colors.grey.withAlpha(50),
                 textColorInside: Colors.white,
                 iconColorInside: Colors.white,
               ),
               listBuildBox(
                 text: 'Location',
                 icon: Icons.public,
-                colorbackground: Colors.grey.withAlpha(50),
                 textColorInside: Colors.white,
                 iconColorInside: Colors.white,
               ),
-              SizedBox(height: 10),
-              Expanded(
-                child: ListView.separated(
-                  itemCount: 3,
-                  cacheExtent: 0,
-                  separatorBuilder: (context, index) => SizedBox(height: 0),
-                  itemBuilder: (context, index) {
-                    final items = [
-                      {
-                        'text': ' Edit Record',
-                        'icon': Icons.play_circle_outline,
-                      },
-                      {
-                        'text': ' Edit My Interes',
-                        'icon': Icons.handshake_outlined,
-                      },
-                      {'text': ' Edit Socials', 'icon': Icons.share_outlined},
-                    ];
-                    return bottomOptions(
-                      text: items[index]['text'] as String,
-                      icon: items[index]['icon'] as IconData,
-                    );
-                  },
-                ),
+              SizedBox(height: screenHeight * 0.025),
+
+              // Sección de opciones adicionales
+              Column(
+                children: [
+                  bottomOptions(
+                    text: ' Edit Record',
+                    icon: Icons.play_circle_outline,
+                  ),
+                  SizedBox(height: screenHeight * 0.018),
+                  bottomOptions(
+                    text: ' Edit My Interes',
+                    icon: Icons.handshake_outlined,
+                  ),
+                  SizedBox(height: screenHeight * 0.018),
+                  bottomOptions(
+                    text: ' Edit Socials',
+                    icon: Icons.share_outlined,
+                  ),
+                ],
               ),
+
+              SizedBox(height: screenHeight * 0.04),
 
               GradientButton(
                 onPressed: () {},
                 width: double.infinity,
-                height: 50,
-                radius: 8,
+                height: screenHeight * 0.065,
+                radius: screenWidth * 0.02,
                 gradient: AppColors.verticalOrangeRed,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.delete_outline_outlined, color: Colors.white),
+                    Icon(
+                      Icons.delete_outline_outlined,
+                      color: Colors.white,
+                      size: screenWidth * 0.05,
+                    ),
+                    SizedBox(width: screenWidth * 0.02),
                     Text(
                       'Delete Account',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 16,
+                        fontSize: screenWidth * 0.042,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
                 ),
               ),
-              SizedBox(height: 5),
+              SizedBox(height: screenHeight * 0.012),
 
               GradientButton(
                 onPressed: () {},
                 width: double.infinity,
-                height: 50,
-                radius: 8,
+                height: screenHeight * 0.065,
+                radius: screenWidth * 0.02,
                 child: Text(
                   'Save',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 16,
+                    fontSize: screenWidth * 0.042,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
+              SizedBox(
+                height: screenHeight * 0.025,
+              ), // Espacio adicional al final
             ],
           ),
         ),
@@ -174,10 +184,24 @@ class EditProfile extends StatelessWidget {
     );
   }
 
-  Widget profileImage({required Image source}) {
-    return CircleAvatar(
-      radius: 70,
-      backgroundImage: source.image, // Imagen de perfil
+  Widget profileImage({required Image source, double radius = 70}) {
+    return ClipOval(
+      child: ColorFiltered(
+        colorFilter: const ColorFilter.matrix(<double>[
+          1.15, 0, 0, 0, 0, // R
+          0, 1.15, 0, 0, 0, // G
+          0, 0, 1.25, 0, 0, // B
+          0, 1, 1, 2, 0, // A
+        ]),
+        child: SizedBox(
+          width: radius * 2,
+          height: radius * 2,
+          child: Image.asset(
+            'assets/images/profileBackground.png',
+            fit: BoxFit.cover,
+          ),
+        ),
+      ),
     );
   }
 
@@ -189,8 +213,21 @@ class EditProfile extends StatelessWidget {
     Color textColorInside = Colors.black,
     Color iconColorInside = Colors.black,
   }) {
-    return Card(
-      color: colorbackground,
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 2),
+      decoration: BoxDecoration(
+        color: const Color.fromARGB(
+          86,
+          153,
+          149,
+          149,
+        ).withValues(alpha: 0.08), // Fondo blanco muy transparente
+        border: Border.all(
+          color: Colors.grey.withValues(alpha: 0.3), // Borde gris más visible
+          width: 1,
+        ),
+        borderRadius: BorderRadius.circular(8), // Bordes redondeados
+      ),
       child: ListTile(
         textColor: textColorInside,
         iconColor: iconColorInside,
@@ -201,12 +238,28 @@ class EditProfile extends StatelessWidget {
   }
 
   Widget bottomOptions({required IconData icon, required String text}) {
-    return Row(
-      children: [
-        Padding(padding: EdgeInsets.only(right: 15)),
-        Icon(icon, color: Colors.white.withAlpha(200)),
-        Text(text, style: TextStyle(color: Colors.white.withAlpha(200))),
-      ],
+    return Builder(
+      builder: (context) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        return Row(
+          children: [
+            Padding(padding: EdgeInsets.only(right: screenWidth * 0.04)),
+            Icon(
+              icon,
+              color: Colors.white.withAlpha(200),
+              size: screenWidth * 0.055,
+            ),
+            SizedBox(width: screenWidth * 0.02),
+            Text(
+              text,
+              style: TextStyle(
+                color: Colors.white.withAlpha(200),
+                fontSize: screenWidth * 0.04,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

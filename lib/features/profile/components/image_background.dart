@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:migozz_app/features/profile/components/info_user_profile.dart';
 import 'package:migozz_app/features/profile/components/scroll_sheet.dart';
-import 'package:migozz_app/features/profile/components/user_info_profile.dart';
 
 class BackgroundImage extends StatelessWidget {
   final Widget child;
@@ -11,7 +11,7 @@ class BackgroundImage extends StatelessWidget {
   const BackgroundImage({
     super.key,
     required this.child,
-    this.minHeaderFraction = 0.5,
+    this.minHeaderFraction = 0.4,
   });
 
   @override
@@ -26,28 +26,32 @@ class BackgroundImage extends StatelessWidget {
       fit: StackFit.expand,
       children: [
         // Contenido scrollable: header + grid
-        NestedScrollView(
-          headerSliverBuilder: (context, innerBoxIsScrolled) {
-            return [
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: _ProfileHeaderDelegate(
-                  maxHeight: size.height, // estado expandido
-                  minHeight:
-                      size.height *
-                      minHeaderFraction, // colapso mínimo (50% de alto)
-                  bottomPaddingForCard: bottomPaddingForCard,
+        SafeArea(
+          bottom: false,
+          child: NestedScrollView(
+            physics: const BouncingScrollPhysics(),
+            headerSliverBuilder: (context, innerBoxIsScrolled) {
+              return [
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _ProfileHeaderDelegate(
+                    maxHeight: size.height, // estado expandido
+                    minHeight:
+                        size.height *
+                        minHeaderFraction, // colapso mínimo (50% de alto)
+                    bottomPaddingForCard: bottomPaddingForCard,
+                  ),
                 ),
-              ),
-            ];
-          },
-          // El body maneja su propio scroll (arriba/abajo según cantidad)
-          body: buildProfileCardsGrid(
-            context,
-            count: 30,
-            onTap: (i) => debugPrint("Card $i tocada"),
-            // Deja un padding inferior para no chocar con tu bottom nav
-            bottomExtraPadding: bottomGradientHeight,
+              ];
+            },
+            // El body maneja su propio scroll (arriba/abajo según cantidad)
+            body: buildProfileCardsGrid(
+              context,
+              count: 30,
+              onTap: (i) => debugPrint("Card $i tocada"),
+              // Deja un padding inferior para no chocar con tu bottom nav
+              bottomExtraPadding: bottomGradientHeight,
+            ),
           ),
         ),
 
@@ -132,67 +136,76 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
     // Progreso de colapso 0..1
     final t = (shrinkOffset / (maxExtent - minExtent)).clamp(0.0, 1.0);
 
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        // Imagen base (con tu filtro)
-        ColorFiltered(
-          colorFilter: const ColorFilter.matrix(<double>[
-            1.15, 0, 0, 0, 0, // R
-            0, 1.15, 0, 0, 0, // G
-            0, 0, 1.25, 0, 0, // B
-            0, 1, 1, 2, 0, // A
-          ]),
-          child: Image.asset(
-            "assets/images/profileBackground.png",
-            fit: BoxFit.cover,
+    return ClipRect(
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Imagen base (con tu filtro)
+          ColorFiltered(
+            colorFilter: const ColorFilter.matrix(<double>[
+              1.15, 0, 0, 0, 0, // R
+              0, 1.15, 0, 0, 0, // G
+              0, 0, 1.25, 0, 0, // B
+              0, 1, 1, 2, 0, // A
+            ]),
+            child: Image.asset(
+              "assets/images/profileBackground.png",
+              fit: BoxFit.cover,
+            ),
           ),
-        ),
 
-        // Card de perfil centrada abajo (mantiene posición relativa)
-        Positioned.fill(
-          child: Align(
-            alignment: Alignment.bottomCenter,
-            child: Padding(
-              padding: EdgeInsets.only(
-                bottom: bottomPaddingForCard * (1.0 - 0.25 * t),
-              ),
-              child: const FractionallySizedBox(
-                widthFactor: 0.45,
-                heightFactor: 0.17,
-                child: InfoUserProfile(
-                  name: 'John Doe',
-                  displayName: '@johndoe',
-                  comunityCount: '1M',
-                  nameComunity: 'Community',
+          // Card de perfil centrada abajo (mantiene posición relativa)
+          Positioned.fill(
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: bottomPaddingForCard * (1.2 - 0.25 * t),
+                  left: 16,
+                  right: 16,
+                ),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.6,
+                    minHeight: 80,
+                    maxHeight: 180,
+                  ),
+                  child: const IntrinsicHeight(
+                    child: InfoUserProfile(
+                      name: 'John Doe',
+                      displayName: '@johndoe',
+                      comunityCount: '1M',
+                      nameComunity: 'Community',
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
 
-        // Suave oscurecido inferior para legibilidad cuando se acerca el content
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          height: 80,
-          child: IgnorePointer(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withValues(alpha: 0.15 + 0.25 * t),
-                  ],
+          // Suave oscurecido inferior para legibilidad cuando se acerca el content
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 80,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.15 + 0.25 * t),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

@@ -166,7 +166,7 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
                 ),
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
-                    maxWidth: MediaQuery.of(context).size.width * 0.4,
+                    maxWidth: MediaQuery.of(context).size.width * 0.6,
                     minHeight: 80,
                     maxHeight: 180,
                   ),
