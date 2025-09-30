@@ -1,6 +1,7 @@
 // lib/features/profile/profile_screen.dart
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:migozz_app/features/profile/components/draggable_social_rail.dart';
 import 'package:migozz_app/features/profile/components/ai_assistant.dart';
 import 'package:migozz_app/features/profile/components/bottom_nav.dart';
@@ -72,14 +73,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Positioned(
               left: 0,
               top: 70,
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.more_vert,
-                    color: const Color(0xAAFFFFFF),
-                    size: 60,
-                  ),
-                ],
+              child: GestureDetector(
+                onTap: () => context.go('/edit-profile'),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.more_vert,
+                      color: const Color(0xAAFFFFFF),
+                      size: 60,
+                    ),
+                  ],
+                ),
               ),
             ),
 
