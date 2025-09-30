@@ -102,7 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         onPressed: () {},
                         icon: const Icon(Icons.sync),
                       ),
-                      controller: _emailController,
+                      controller: _emailController, keyboardType: TextInputType.emailAddress,
                     ),
 
                     const SizedBox(height: 35),
@@ -119,6 +119,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           botIndex: 20,
                           userResponse: email,
                         );
+
+                        final Keyboardclose = FocusScope.of(context);
+                          Keyboardclose.unfocus();
 
                         if (!isValidEmail) {
                           CustomSnackbar.show(

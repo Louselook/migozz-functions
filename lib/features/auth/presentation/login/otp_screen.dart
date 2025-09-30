@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/core/components/compuestos/custom_snackbar.dart';
+import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/login_cubit/login_cubit.dart';
 
 class OtpScreen extends StatefulWidget {
@@ -29,7 +30,8 @@ class _OtpScreenState extends State<OtpScreen> {
   @override
   Widget build(BuildContext context) {
     // Ya no navegamos manualmente, GoRouter lo hará
-    return BlocListener<LoginCubit, LoginState>(
+    return BlocListener<LoginCubit, 
+    LoginState>(
       listener: (context, state) {
         if (state.errorMessageOTP != null) {
           // Limpiar error en el cubit para que no se repita
@@ -42,6 +44,7 @@ class _OtpScreenState extends State<OtpScreen> {
         }
       },
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(
@@ -53,41 +56,50 @@ class _OtpScreenState extends State<OtpScreen> {
         ),
         body: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 30.0,
-              vertical: 20.0,
-            ),
-            child: Column(
-              children: [
-                _titleSection(email: widget.email),
-                const SizedBox(height: 40),
-                _OtpFields(
-                  controllers: _controllers,
-                  onCompleted: (otp) {
-                    // ✅ Solo se manda el OTP
-                    context.read<LoginCubit>().validateOTPAndLogin(
-                      inputOTP: otp,
-                    );
-                  },
-                ),
-                _ResendButton(email: widget.email, otp: widget.userOTP),
-                const Spacer(),
-                const _ImageSection(),
-                const SizedBox(height: 40),
+            padding: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 20.0),
+              child: Column(
+                children: [
+                  _titleSection(email: widget.email),
+                  const SizedBox(height: 40),
+                  _OtpFields(
+                    controllers: _controllers,
+                    onCompleted: (otp) {
+                      // Ahora se maneja con el botón
+                    },
+                  ),
+                  _ResendButton(email: widget.email, otp: widget.userOTP),
 
-                // botón comentado ya que el OTP se valida automáticamente
-                // GradientButton(
-                //   width: double.infinity,
-                //   radius: 19,
-                //   height: 50,
-                //   onPressed: () => validateOTP(otp: _otpController.text),
-                //   child: const SecondaryText('Verify', fontSize: 20),
-                // ),
-              ],
+                  const SizedBox(height: 40),
+
+                  // Imagen en el medio
+                  const _ImageSection(),
+                ],
+              ),
             ),
           ),
+
+          // Botón fijo al final
+          bottomNavigationBar: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: GradientButton(
+              width: double.infinity,
+              radius: 19,
+              height: 50,
+              onPressed: () {
+                FocusScope.of(context).unfocus();
+                final otp = context.read<LoginCubit>().state.currentOTP;
+
+                if (otp != null && otp.length == 6) {
+                  context.read<LoginCubit>().validateOTPAndLogin(inputOTP: otp);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Ingresa el OTP completo",), ),
+                  );
+                }
+              },
+              child: const Text("Verify", style: TextStyle(color: Colors.white)),),
         ),
-      ),
+      )
     );
   }
 }
@@ -183,7 +195,7 @@ class _ResendButton extends StatelessWidget {
     return TextButton(
       onPressed: () {
         // context.read<LoginCubit>().sendOTP(email);
-        debugPrint('eestado correo: $email, otp: $otp');
+        debugPrint('estado correo: $email, otp: $otp');
       },
       child: const SecondaryText(
         "Resend",
@@ -199,6 +211,13 @@ class _ImageSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Icon(Icons.sms, size: 100, color: Colors.grey);
+    return Column(
+      children: [
+        const Image(
+          image:AssetImage('assets/images/otp_image.png'),
+          width: 400,
+          ),
+      ],
+    );
   }
 }

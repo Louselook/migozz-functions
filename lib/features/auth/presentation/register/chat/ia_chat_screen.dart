@@ -71,9 +71,9 @@ class _IaChatScreenState extends State<IaChatScreen> {
 
             // Input Bar
             ChatInputWidget(
+              key: ValueKey(_chatController.keyboardType), // 👈 fuerza rebuild al cambiar keyboardType
               controller: _controller,
-
-              /// Enviar texto
+              keyboardType: _chatController.keyboardType,
               onSend: () {
                 _chatController.sendChat(
                   other: false,
@@ -87,8 +87,6 @@ class _IaChatScreenState extends State<IaChatScreen> {
                     );
                   },
                 );
-
-                // Limpiar el input después de enviar
                 _controller.clear();
               },
 
@@ -119,6 +117,7 @@ class _IaChatScreenState extends State<IaChatScreen> {
                   ],
                 );
               },
+              
             ),
           ],
         ),

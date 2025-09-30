@@ -32,7 +32,7 @@ class SocialEcosystemStep extends StatelessWidget {
       "LinkedIn",
       "Paypal",
       "Xbox",
-      "Others",
+      "Other",
     ];
 
     // Label -> path exacto
