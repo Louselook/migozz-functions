@@ -103,8 +103,8 @@ class ChatController extends ChangeNotifier {
         cubit: registerCubit,
       );
 
-      debugPrint('vamo: ${registerCubit.state}');
-      debugPrint('vamo:  pagina $botIndex');
+      // debugPrint('vamo: ${registerCubit.state}');
+      // debugPrint('vamo:  pagina $botIndex');
 
       if (_messages.length == 2) {
         _chatService.setLanguage(normalizedResponse);
@@ -118,11 +118,28 @@ class ChatController extends ChangeNotifier {
   }
 
   /// ------------------- Mensajes del bot -------------------
+  // En ChatController
   void showNextBotMessage({
     Function(Map<String, dynamic>)? onActionRequired,
     int messagesToShow = 1,
+    bool showTyping = true, // 👈 Nuevo parámetro
   }) async {
     if (messagesToShow <= 0) return;
+
+    // Solo mostrar typing si showTyping es true
+    if (showTyping) {
+      _addMessage({
+        "other": true,
+        "type": MessageType.typing,
+        "name": "Migozz",
+        "time": _getTimeNow(),
+      });
+
+      await Future.delayed(const Duration(milliseconds: 1500));
+
+      _messages.removeWhere((msg) => msg["type"] == MessageType.typing);
+      notifyListeners();
+    }
 
     final botResponse = _chatService.getNextBotResponse(registerCubit);
     if (botResponse == null) return;
@@ -142,12 +159,12 @@ class ChatController extends ChangeNotifier {
       onActionRequired?.call(botResponse);
     }
 
-    // 🔹 Espera un pequeño delay antes de mostrar el siguiente mensaje
     if (messagesToShow > 1) {
       await Future.delayed(const Duration(milliseconds: 600));
       showNextBotMessage(
         onActionRequired: onActionRequired,
         messagesToShow: messagesToShow - 1,
+        showTyping: false, // 👈 No mostrar typing en mensajes consecutivos
       );
     }
   }
@@ -168,7 +185,7 @@ class ChatController extends ChangeNotifier {
 
       _currentSuggestions = List<String>.from(botResponse["options"] ?? []);
 
-      // Espera antes del siguiente mensaje
+      // Solo delay corto entre mensajes, sin typing
       await Future.delayed(const Duration(milliseconds: 600));
     }
   }
@@ -188,6 +205,20 @@ class ChatController extends ChangeNotifier {
     required Function() onSocialEcosystem,
     required Function() onNormalFlow,
   }) async {
+    // Typing
+    _addMessage({
+      "other": true,
+      "type": MessageType.typing,
+      "name": "Migozz",
+      "time": _getTimeNow(),
+    });
+
+    await Future.delayed(const Duration(milliseconds: 1500));
+
+    _messages.removeWhere((msg) => msg["type"] == MessageType.typing);
+    notifyListeners();
+
+    // Mensaje real
     final response = _chatService.getNextBotResponse(registerCubit);
     if (response == null) return;
 
@@ -206,33 +237,33 @@ class ChatController extends ChangeNotifier {
   }
 
   /// ------------------- Tarjetas sociales y de imágenes -------------------
-  Future<void> addSocialCards() async {
-    final socialCards = [
-      {
-        "platform": "Instagram",
-        "stats": "12.5K followers • 248 posts",
-        "emoji": "📸",
-      },
-      {
-        "platform": "TikTok",
-        "stats": "8.2K followers • 156 videos",
-        "emoji": "📱",
-      },
-    ];
+  // Future<void> addSocialCards() async {
+  //   final socialCards = [
+  //     {
+  //       "platform": "Instagram",
+  //       "stats": "12.5K followers • 248 posts",
+  //       "emoji": "📸",
+  //     },
+  //     {
+  //       "platform": "TikTok",
+  //       "stats": "8.2K followers • 156 videos",
+  //       "emoji": "📱",
+  //     },
+  //   ];
 
-    for (var card in socialCards) {
-      await Future.delayed(const Duration(milliseconds: 800));
-      _addMessage({
-        "other": true,
-        "type": MessageType.socialCard,
-        "social": true,
-        "platform": card["platform"],
-        "stats": card["stats"],
-        "emoji": card["emoji"],
-        "time": _getTimeNow(),
-      });
-    }
-  }
+  //   for (var card in socialCards) {
+  //     await Future.delayed(const Duration(milliseconds: 800));
+  //     _addMessage({
+  //       "other": true,
+  //       "type": MessageType.socialCard,
+  //       "social": true,
+  //       "platform": card["platform"],
+  //       "stats": card["stats"],
+  //       "emoji": card["emoji"],
+  //       "time": _getTimeNow(),
+  //     });
+  //   }
+  // }
 
   Future<void> addPictureCards() async {
     final pictureCards = [

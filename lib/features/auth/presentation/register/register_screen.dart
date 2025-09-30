@@ -9,6 +9,7 @@ import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/chat_validation.dart';
 import 'package:migozz_app/features/auth/services/auth_service.dart';
+import 'package:migozz_app/features/auth/services/location_service.dart';
 
 // Wrapper widget que proporciona el BlocProvider
 class RegisterScreen extends StatelessWidget {
@@ -17,7 +18,7 @@ class RegisterScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => RegisterCubit(AuthService()),
+      create: (context) => RegisterCubit(AuthService(), LocationService()),
       child: const _RegisterScreenContent(),
     );
   }

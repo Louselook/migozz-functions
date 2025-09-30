@@ -3,6 +3,7 @@ import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubi
 import 'package:migozz_app/features/auth/presentation/blocs/login_cubit/login_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/services/auth_service.dart';
+import 'package:migozz_app/features/auth/services/location_service.dart';
 
 /// Lista de providers globales de la app
 final List<BlocProvider> blocProviders = [
@@ -11,6 +12,6 @@ final List<BlocProvider> blocProviders = [
     create: (context) => LoginCubit(authService: AuthService()),
   ),
   BlocProvider<RegisterCubit>(
-    create: (context) => RegisterCubit(AuthService()),
+    create: (context) => RegisterCubit(AuthService(), LocationService()),
   ),
 ];

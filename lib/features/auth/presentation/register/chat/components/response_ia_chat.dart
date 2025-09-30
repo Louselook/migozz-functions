@@ -158,17 +158,23 @@ class IaChatService {
   }
 
   String _replaceDynamicValues(String text, RegisterState state) {
-    // Reemplazar los placeholders con los valores reales, asegurándose de que sean Strings
-    text = text.replaceAll("{fullName}", state.fullName?.toString() ?? "User");
+    text = text.replaceAll("{fullName}", state.fullName ?? "User");
+
     text = text.replaceAll(
       "{socialEcosystem}",
-      state.socialEcosystem?.toString() ?? "your social media",
+      state.socialEcosystem?.join(", ") ?? "your social media",
     );
+
+    // 👇 CAMBIAR ESTO
     text = text.replaceAll(
       "{location}",
-      state.location?.toString() ?? "your location",
+      state.location != null
+          ? "${state.location!.city}, ${state.location!.country}"
+          : "your location",
     );
-    text = text.replaceAll("{email}", state.email?.toString() ?? "your email");
+
+    text = text.replaceAll("{email}", state.email ?? "your email");
+
     return text;
   }
 

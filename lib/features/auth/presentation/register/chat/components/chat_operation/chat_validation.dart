@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:migozz_app/features/auth/models/location_dto.dart';
+// import 'package:migozz_app/features/auth/models/location_dto.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_state.dart';
 import 'package:migozz_app/features/auth/services/send_otp.dart';
@@ -44,15 +44,15 @@ Future<void> mapResponseToCubit({
       break;
     // setSocialEcosystem
     case 7: // setLocation
-      cubit.setLocation(
-        LocationDTO(
-          country: "Colombia",
-          state: "Antioquia",
-          city: "Medellín",
-          lat: 6.2442,
-          lng: -75.5812,
-        ),
-      );
+      // cubit.setLocation(
+      //   LocationDTO(
+      //     country: "Colombia",
+      //     state: "Antioquia",
+      //     city: "Medellín",
+      //     lat: 6.2442,
+      //     lng: -75.5812,
+      //   ),
+      // );
       // // Confirmar con si la ubicacion
       // if (parseYesNo(userResponse)) {
       // } else {}

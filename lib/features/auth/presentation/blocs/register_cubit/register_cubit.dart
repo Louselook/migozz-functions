@@ -1,19 +1,31 @@
-import 'dart:io';
-import 'package:flutter/material.dart';
+import 'dart:io'; // 👈 No olvides este import para File
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/models/location_dto.dart';
 import 'package:migozz_app/features/auth/services/auth_service.dart';
+import 'package:migozz_app/features/auth/services/location_service.dart';
 import 'package:migozz_app/features/auth/services/media_service.dart';
 import 'register_state.dart';
 
 class RegisterCubit extends Cubit<RegisterState> {
   final AuthService _authService;
+  final LocationService _locationService;
   final UserMediaService _mediaService = UserMediaService();
 
   File? avatarFile;
   File? voiceNoteFile;
 
-  RegisterCubit(this._authService) : super(const RegisterState());
+  RegisterCubit(this._authService, this._locationService)
+    : super(const RegisterState()) {
+    fetchLocation(); // 👈 Debe ir dentro de las llaves
+  }
+
+  // Método para obtener ubicación
+  Future<void> fetchLocation() async {
+    final location = await _locationService.initAndFetchAddress();
+    if (location != null) {
+      emit(state.copyWith(location: location));
+    }
+  }
 
   // ---------------------- Archivos temporales ----------------------
   void setAvatarFile(File file) => avatarFile = file;
@@ -53,7 +65,6 @@ class RegisterCubit extends Cubit<RegisterState> {
       if (voiceNoteFile != null) {
         filesToUpload[MediaType.voice] = voiceNoteFile!;
       }
-      debugPrint("archivos: $filesToUpload");
 
       Map<MediaType, String> mediaUrls = {};
       mediaUrls = await _mediaService.uploadFilesTemporarily(
@@ -69,18 +80,6 @@ class RegisterCubit extends Cubit<RegisterState> {
         setVoiceNoteUrl(mediaUrls[MediaType.voice]!);
       }
 
-      // Imprimir cada estado
-      debugPrint("email: ${state.email}");
-      debugPrint("language: ${state.language}");
-      debugPrint("fullName: ${state.fullName}");
-      debugPrint("username: ${state.username}");
-      debugPrint("gender: ${state.gender}");
-      debugPrint("location: ${state.location}");
-      debugPrint("phone: ${state.phone}");
-      debugPrint("category: ${state.category}");
-      debugPrint("interests: ${state.interests}");
-      debugPrint("avatarUrl: ${state.avatarUrl}");
-      debugPrint("voiceNoteUrl: ${state.voiceNoteUrl}");
       // 2️⃣ Validar completitud incluyendo archivos
       final complete =
           state.email != null &&
@@ -100,9 +99,7 @@ class RegisterCubit extends Cubit<RegisterState> {
         // Solo llamas al método final de registro
         completeRegistration();
       }
-    } catch (e) {
-      debugPrint("$e");
-    }
+    } catch (e) {}
   }
 
   // ---------------------- completeRegistration ----------------------
