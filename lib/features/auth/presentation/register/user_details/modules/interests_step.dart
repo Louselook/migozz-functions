@@ -94,9 +94,6 @@ class _InterestsStepState extends State<InterestsStep> {
 
     // 🔹 Revisar si completó todos los campos
     await cubit.checkCompletion();
-
-    // Solo llamas al método final de registro
-    await cubit.completeRegistration();
   }
 
   /// --- Nueva lógica tipo acordeón ---

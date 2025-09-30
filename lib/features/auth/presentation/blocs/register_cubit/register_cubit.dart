@@ -69,8 +69,18 @@ class RegisterCubit extends Cubit<RegisterState> {
         setVoiceNoteUrl(mediaUrls[MediaType.voice]!);
       }
 
-      // Luego validas completitud y llamas a completeRegistration()
-
+      // Imprimir cada estado
+      debugPrint("email: ${state.email}");
+      debugPrint("language: ${state.language}");
+      debugPrint("fullName: ${state.fullName}");
+      debugPrint("username: ${state.username}");
+      debugPrint("gender: ${state.gender}");
+      debugPrint("location: ${state.location}");
+      debugPrint("phone: ${state.phone}");
+      debugPrint("category: ${state.category}");
+      debugPrint("interests: ${state.interests}");
+      debugPrint("avatarUrl: ${state.avatarUrl}");
+      debugPrint("voiceNoteUrl: ${state.voiceNoteUrl}");
       // 2️⃣ Validar completitud incluyendo archivos
       final complete =
           state.email != null &&
@@ -87,6 +97,8 @@ class RegisterCubit extends Cubit<RegisterState> {
 
       if (state.isComplete != complete) {
         emit(state.copyWith(isComplete: complete));
+        // Solo llamas al método final de registro
+        completeRegistration();
       }
     } catch (e) {
       debugPrint("$e");
