@@ -186,22 +186,6 @@ class SocialEcosystemStep extends StatelessWidget {
                           }
 
                           debugPrint("🌐 Ecosistema social: ${cubit.state.socialEcosystem}");
-
-
-                          final url = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => SocialDetailScreen(
-                                label: label,
-                                assetPath: assetPath!,
-                              ),
-                            ),
-                          );
-
-                          if (url != null && url is String) {
-                            debugPrint("✅ Guardar URL de $label: $url");
-                            // cubit.setSocialLink(label, url);
-                          }
                         },
                       );
                     },

@@ -76,7 +76,7 @@ class _SocialDetailScreenState extends State<SocialDetailScreen> {
               child: GradientButton(
                 onPressed: () {
                   // Guardar en cubit o devolver el resultado
-                  // Navigator.pop(context, _controller.text);
+                  Navigator.pop(context, _controller.text);
                 },
                 width: double.infinity,
                 radius: 19,

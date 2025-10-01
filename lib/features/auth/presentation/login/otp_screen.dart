@@ -84,7 +84,7 @@ class _OtpScreenState extends State<OtpScreen> {
             child: GradientButton(
               width: double.infinity,
               radius: 19,
-              height: 50,
+              height: 40,
               onPressed: () {
                 FocusScope.of(context).unfocus();
                 final otp = context.read<LoginCubit>().state.currentOTP;
@@ -215,7 +215,7 @@ class _ImageSection extends StatelessWidget {
       children: [
         const Image(
           image:AssetImage('assets/images/otp_image.png'),
-          width: 400,
+          width: 300,
           ),
       ],
     );
