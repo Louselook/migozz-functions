@@ -9,7 +9,7 @@ class IaChatService {
     {
       "text":
           "Hello! 👋 I´m here to help you set up your profile. Let’s start: What is your preferred language?",
-      "options": [],
+      "options": ["English", "Español"], // 👈 Sugerencias de idioma
       "keyboardType": "text",
     },
     {
@@ -23,7 +23,11 @@ class IaChatService {
       "options": [],
       "keyboardType": "text",
     },
-    {"text": "Great nickname! Are you a man or a woman?", "options": [], "keyboardType": "text"},
+    {
+      "text": "Great nickname! Are you a man or a woman?",
+      "options": ["Man", "Woman", "Other"], // 👈 Sugerencias de género
+      "keyboardType": "text"
+    },
     {"text": "Let's add your social platforms!", "options": [], "action": 0},
     {
       "text": "Awesome! I can see you've connected {socialEcosystem}. 📱",
@@ -33,9 +37,9 @@ class IaChatService {
     {
       "text":
           "Perfect! Now, let me confirm your location. I detected you're in {location}. Is this correct?",
-      "options": [],
+      "options": ["Yes", "No"], // 👈 Confirmación
     },
-    {"text": "Great! Your email is {email}. Is this correct?", "options": [], "keyboardType": "text"},
+    {"text": "Great! Your email is {email}. Is this correct?", "options": ["Yes", "No"], "keyboardType": "text"},
     {
       "text":
           "Perfect! Please check your email for a confirmation link to activate your profile! 📧",
@@ -74,7 +78,7 @@ class IaChatService {
     {
       "text":
           "¡Hola! 👋 Estoy aquí para ayudarte a configurar tu perfil. Empecemos: ¿Cuál es tu idioma preferido?",
-      "options": [],
+      "options": ["Español", "English"], // 👈 Sugerencias de idioma
       "keyboardType": "text",
     },
     {
@@ -88,7 +92,11 @@ class IaChatService {
       "options": [],
       "keyboardType": "text",
     },
-    {"text": "¡Excelente apodo! ¿Eres hombre o mujer?", "options": [], "keyboardType": "text"},
+    {
+      "text": "¡Excelente apodo! ¿Eres hombre o mujer?",
+      "options": ["Hombre", "Mujer", "Otro"], // 👈 Sugerencias de género
+      "keyboardType": "text"
+    },
     {
       "text": "¡Agreguemos tus plataformas sociales!",
       "options": [],
@@ -102,11 +110,11 @@ class IaChatService {
     {
       "text":
           "¡Perfecto! Ahora, déjame confirmar tu ubicación. Detecté que estás en {location}. ¿Es correcto?",
-      "options": [],
+      "options": ["Sí", "No"], // 👈 Confirmación
     },
     {
       "text": "¡Genial! Tu correo electrónico es {email}. ¿Es correcto?",
-      "options": [],
+      "options": ["Sí", "No"], // 👈 Confirmación
       "keyboardType": "text",
     },
     {
