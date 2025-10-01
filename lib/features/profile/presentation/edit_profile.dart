@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:migozz_app/features/auth/services/media_service.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
+import 'package:migozz_app/features/profile/presentation/config/edit_audio.dart';
 
 class EditProfile extends StatefulWidget {
   const EditProfile({super.key});
@@ -201,16 +202,34 @@ class _EditProfileState extends State<EditProfile> {
                   bottomOptions(
                     text: ' Edit Record',
                     icon: Icons.play_circle_outline,
+                    onTap: () {
+                      Navigator.push(
+                        context, 
+                        MaterialPageRoute(builder: (_) => const EditRecordScreen())
+                      );
+                    }
                   ),
                   SizedBox(height: screenHeight * 0.018),
                   bottomOptions(
                     text: ' Edit My Interes',
                     icon: Icons.handshake_outlined,
+                    onTap: () {
+                      Navigator.push(
+                        context, 
+                        MaterialPageRoute(builder: (_) => const EditRecordScreen())
+                      );
+                    }
                   ),
                   SizedBox(height: screenHeight * 0.018),
                   bottomOptions(
                     text: ' Edit Socials',
                     icon: Icons.share_outlined,
+                    onTap: () {
+                      Navigator.push(
+                        context, 
+                        MaterialPageRoute(builder: (_) => const EditRecordScreen())
+                      );
+                    }
                   ),
                 ],
               ),
@@ -322,31 +341,34 @@ class _EditProfileState extends State<EditProfile> {
     );
   }
 
-  Widget bottomOptions({required IconData icon, required String text}) {
-    return Builder(
-      builder: (context) {
-        final screenWidth = MediaQuery.of(context).size.width;
-        return Row(
-          children: [
-            Padding(padding: EdgeInsets.only(right: screenWidth * 0.04)),
-            Icon(
-              icon,
-              color: Colors.white.withAlpha(200),
-              size: screenWidth * 0.055,
-            ),
-            SizedBox(width: screenWidth * 0.02),
-            Text(
-              text,
-              style: TextStyle(
-                color: Colors.white.withAlpha(200),
-                fontSize: screenWidth * 0.04,
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
+    Widget bottomOptions({required IconData icon, required String text, VoidCallback? onTap,}) {
+      return InkWell(
+        onTap: onTap,
+        child: Builder(
+          builder: (context) {
+            final screenWidth = MediaQuery.of(context).size.width;
+            return Row(
+              children: [
+                Padding(padding: EdgeInsets.only(right: screenWidth * 0.04)),
+                Icon(
+                  icon,
+                  color: Colors.white.withAlpha(200),
+                  size: screenWidth * 0.055,
+                ),
+                SizedBox(width: screenWidth * 0.02),
+                Text(
+                  text,
+                  style: TextStyle(
+                    color: Colors.white.withAlpha(200),
+                    fontSize: screenWidth * 0.04,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      );
+    }
 
   Future<void> _onChangeAvatar() async {
     try {
