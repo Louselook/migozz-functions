@@ -9,18 +9,25 @@ class IaChatService {
     {
       "text":
           "Hello! 👋 I´m here to help you set up your profile. Let’s start: What is your preferred language?",
-      "options": [],
+      "options": ["English", "Español"], // 👈 Sugerencias de idioma
+      "keyboardType": "text",
     },
     {
       "text": "Great! Let’s continue in English. What is your full name?",
       "options": [],
+      "keyboardType": "text",
     },
     {
       "text":
           "Nice to meet you {fullName}! Now, let's create a unique username for your profile.",
       "options": [],
+      "keyboardType": "text",
     },
-    {"text": "Great nickname! Are you a man or a woman?", "options": []},
+    {
+      "text": "Great nickname! Are you a man or a woman?",
+      "options": ["Man", "Woman", "Other"], // 👈 Sugerencias de género
+      "keyboardType": "text"
+    },
     {"text": "Let's add your social platforms!", "options": [], "action": 0},
     {
       "text": "Awesome! I can see you've connected {socialEcosystem}. 📱",
@@ -30,13 +37,14 @@ class IaChatService {
     {
       "text":
           "Perfect! Now, let me confirm your location. I detected you're in {location}. Is this correct?",
-      "options": [],
+      "options": ["Yes", "No"], // 👈 Confirmación
     },
-    {"text": "Great! Your email is {email}. Is this correct?", "options": []},
+    {"text": "Great! Your email is {email}. Is this correct?", "options": ["Yes", "No"], "keyboardType": "text"},
     {
       "text":
           "Perfect! Please check your email for a confirmation link to activate your profile! 📧",
       "options": [],
+      "keyboardType": "number", // <-- OTP espera número
     },
     {
       "text": "Congratulations! Your profile is now activated! 🎉",
@@ -58,7 +66,7 @@ class IaChatService {
           "Which one would you like to use? Or would you prefer to upload a custom photo?",
       "options": [],
     },
-    {"text": "Perfect! Now, what's your phone number? 📞", "options": []},
+    {"text": "Perfect! Now, what's your phone number? 📞", "options": [], "keyboardType": "number"},
     {
       "text":
           "Great! Now let's add a personal touch. Please record a short voice note (5-10 seconds) introducing yourself! 🎤",
@@ -70,18 +78,25 @@ class IaChatService {
     {
       "text":
           "¡Hola! 👋 Estoy aquí para ayudarte a configurar tu perfil. Empecemos: ¿Cuál es tu idioma preferido?",
-      "options": [],
+      "options": ["Español", "English"], // 👈 Sugerencias de idioma
+      "keyboardType": "text",
     },
     {
       "text": "¡Genial! Continuemos en Español. ¿Cuál es tu nombre completo?",
       "options": [],
+      "keyboardType": "text",
     },
     {
       "text":
           "¡Encantado de conocerte, {fullName}! Ahora, vamos a crear un nombre de usuario único para tu perfil.",
       "options": [],
+      "keyboardType": "text",
     },
-    {"text": "¡Excelente apodo! ¿Eres hombre o mujer?", "options": []},
+    {
+      "text": "¡Excelente apodo! ¿Eres hombre o mujer?",
+      "options": ["Hombre", "Mujer", "Otro"], // 👈 Sugerencias de género
+      "keyboardType": "text"
+    },
     {
       "text": "¡Agreguemos tus plataformas sociales!",
       "options": [],
@@ -95,16 +110,18 @@ class IaChatService {
     {
       "text":
           "¡Perfecto! Ahora, déjame confirmar tu ubicación. Detecté que estás en {location}. ¿Es correcto?",
-      "options": [],
+      "options": ["Sí", "No"], // 👈 Confirmación
     },
     {
       "text": "¡Genial! Tu correo electrónico es {email}. ¿Es correcto?",
-      "options": [],
+      "options": ["Sí", "No"], // 👈 Confirmación
+      "keyboardType": "text",
     },
     {
       "text":
           "¡Perfecto! Revisa tu correo electrónico para ver el enlace de confirmación para activar tu perfil. 📧",
       "options": [],
+      "keyboardType": "number", // <-- OTP espera número
     },
     {
       "text": "¡Felicidades! ¡Tu perfil ya está activado! 🎉",
@@ -129,6 +146,7 @@ class IaChatService {
     {
       "text": "¡Perfecto! Ahora, ¿cuál es tu número de teléfono? 📞",
       "options": [],
+      "keyboardType": "number",
     },
     {
       "text":
@@ -144,7 +162,6 @@ class IaChatService {
       var response = questions[currentIndex];
       currentIndex++;
 
-      // Reemplazar valores dinámicos como {fullName}, {socialEcosystem}, {location}, {email} con los datos reales
       response["text"] = _replaceDynamicValues(response["text"], cubit.state);
 
       return response;
@@ -154,6 +171,7 @@ class IaChatService {
           ? "Perfect recording! Now, what best describes you professionally?"
           : "¡Grabación perfecta! Ahora, ¿qué te describe mejor profesionalmente?",
       "action": 1,
+      "keyboardType": "text",
     };
   }
 

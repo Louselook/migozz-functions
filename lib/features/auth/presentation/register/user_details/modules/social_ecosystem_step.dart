@@ -32,7 +32,7 @@ class SocialEcosystemStep extends StatelessWidget {
       "LinkedIn",
       "Paypal",
       "Xbox",
-      "Others",
+      "Other",
     ];
 
     // Label -> path exacto
@@ -49,7 +49,7 @@ class SocialEcosystemStep extends StatelessWidget {
       "LinkedIn": "assets/icons/social_networks/LinkedIn.png",
       "Paypal": "assets/icons/social_networks/Paypal.svg",
       "Xbox": "assets/icons/social_networks/Xbox.svg",
-      "Others": "assets/icons/social_networks/Others.png",
+      "Other": "assets/icons/social_networks/Other.png",
     };
 
     // Calcular paddings y espaciados responsivos usando las utilidades

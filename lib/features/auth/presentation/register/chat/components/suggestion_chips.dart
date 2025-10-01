@@ -16,7 +16,7 @@ class SuggestionChips extends StatelessWidget {
     if (suggestions.isEmpty) return const SizedBox.shrink();
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: suggestions.map((s) {
@@ -30,11 +30,11 @@ class SuggestionChips extends StatelessWidget {
                   horizontal: 15,
                 ),
                 decoration: BoxDecoration(
-                  gradient: AppColors.verticalPinkPurple,
+                  color: AppColors.backgroundGoole,
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(10),
-                    topRight: Radius.circular(5),
-                    bottomLeft: Radius.circular(0),
+                    topRight: Radius.circular(10),
+                    bottomLeft: Radius.circular(10),
                     bottomRight: Radius.circular(10),
                   ),
                 ),

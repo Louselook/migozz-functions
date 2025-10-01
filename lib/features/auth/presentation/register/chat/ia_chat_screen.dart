@@ -8,6 +8,7 @@ import 'package:migozz_app/features/auth/presentation/register/chat/components/c
 import 'package:migozz_app/core/components/compuestos/chat/chat_message_builder.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/chat_controller.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/chat_navigation_handler.dart';
+import 'package:migozz_app/features/auth/presentation/register/chat/components/suggestion_chips.dart';
 
 class IaChatScreen extends StatefulWidget {
   const IaChatScreen({super.key});
@@ -60,20 +61,54 @@ class _IaChatScreenState extends State<IaChatScreen> {
             Expanded(
               child: ListView.builder(
                 controller: _chatController.scrollController,
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(10),
                 itemCount: _chatController.messages.length,
                 itemBuilder: (context, index) {
                   final message = _chatController.messages[index];
-                  return ChatMessageBuilder.buildMessage(message);
+                  final isLastBotMsgWithOptions =
+                      message["other"] == true &&
+                      (message["options"] != null &&
+                          (message["options"] as List).isNotEmpty) &&
+                      // Solo mostrar para el último mensaje del bot con opciones
+                      !_chatController.messages
+                          .sublist(index + 1)
+                          .any((m) =>
+                              m["other"] == true &&
+                              (m["options"] != null &&
+                                  (m["options"] as List).isNotEmpty));
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ChatMessageBuilder.buildMessage(message),
+                      if (isLastBotMsgWithOptions)
+                        SuggestionChips(
+                          suggestions: List<String>.from(message["options"]),
+                          onSelected: (choice) {
+                            _chatController.sendChat(
+                              other: false,
+                              text: choice,
+                              onActionRequired: (botResponse) {
+                                ChatNavigationHandler.handleBotAction(
+                                  context: context,
+                                  botResponse: botResponse,
+                                  chatController: _chatController,
+                                );
+                              },
+                            );
+                            _controller.clear();
+                          },
+                        ),
+                    ],
+                  );
                 },
               ),
             ),
 
             // Input Bar
             ChatInputWidget(
+              key: ValueKey(_chatController.keyboardType), // fuerza rebuild al cambiar keyboardType
               controller: _controller,
-
-              /// Enviar texto
+              keyboardType: _chatController.keyboardType,
               onSend: () {
                 _chatController.sendChat(
                   other: false,
@@ -87,8 +122,6 @@ class _IaChatScreenState extends State<IaChatScreen> {
                     );
                   },
                 );
-
-                // Limpiar el input después de enviar
                 _controller.clear();
               },
 
@@ -119,6 +152,7 @@ class _IaChatScreenState extends State<IaChatScreen> {
                   ],
                 );
               },
+              
             ),
           ],
         ),

@@ -18,6 +18,10 @@ class ChatController extends ChangeNotifier {
   List<Map<String, dynamic>> get messages => _messages;
   List<String> get currentSuggestions => _currentSuggestions;
 
+  bool isExpectingOTP = false;
+  TextInputType _keyboardType = TextInputType.text;
+  TextInputType get keyboardType => _keyboardType;
+
   /// ------------------- Inicialización -------------------
   void initializeChat({Function(Map<String, dynamic>)? onActionRequired}) {
     showNextBotMessage(onActionRequired: onActionRequired);
@@ -25,6 +29,15 @@ class ChatController extends ChangeNotifier {
 
   /// ------------------- Envío de mensajes -------------------
   // import 'chat_validation.dart';
+
+  void handleBotAction(String botResponse) {
+    if (botResponse.contains("OTP") || botResponse.contains("código")) {
+      isExpectingOTP = true;
+    } else {
+      isExpectingOTP = false;
+    }
+    notifyListeners();
+  }
 
   void sendChat({
     required bool other,
@@ -144,6 +157,14 @@ class ChatController extends ChangeNotifier {
     final botResponse = _chatService.getNextBotResponse(registerCubit);
     if (botResponse == null) return;
 
+    // 👇 Actualiza el keyboardType según la pregunta
+    final String? keyboardTypeStr = botResponse["keyboardType"];
+    if (keyboardTypeStr == "number") {
+      _keyboardType = TextInputType.number;
+    } else {
+      _keyboardType = TextInputType.text;
+    }
+
     _addMessage({
       "other": true,
       "text": botResponse["text"],
@@ -167,6 +188,7 @@ class ChatController extends ChangeNotifier {
         showTyping: false, // 👈 No mostrar typing en mensajes consecutivos
       );
     }
+    notifyListeners(); // Notifica para que la UI actualice el teclado
   }
 
   /// Mostrar múltiples mensajes del bot consecutivos con delay

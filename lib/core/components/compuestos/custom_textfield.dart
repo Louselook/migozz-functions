@@ -8,6 +8,7 @@ class CustomTextField extends StatelessWidget {
   final String hintText;
   final bool obscureText;
   final double radius;
+  final TextInputType keyboardType;
 
   const CustomTextField({
     super.key,
@@ -17,6 +18,7 @@ class CustomTextField extends StatelessWidget {
     this.hintText = "Enter text",
     this.obscureText = false,
     this.radius = 19,
+    required this.keyboardType,
   });
 
   @override
@@ -31,6 +33,7 @@ class CustomTextField extends StatelessWidget {
         controller: controller,
         cursorColor: AppColors.secondaryText,
         obscureText: obscureText,
+        keyboardType: keyboardType,
         style: const TextStyle(
           color: AppColors.secondaryText,
           fontSize: 16,

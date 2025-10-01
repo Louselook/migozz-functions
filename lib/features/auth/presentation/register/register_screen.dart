@@ -91,7 +91,7 @@ class _RegisterScreenContentState extends State<_RegisterScreenContent> {
                           Icons.email_outlined,
                           color: AppColors.secondaryText,
                         ),
-                        controller: _emailController,
+                        controller: _emailController, keyboardType: TextInputType.emailAddress,
                       ),
 
                       const SizedBox(height: 30),
@@ -102,7 +102,17 @@ class _RegisterScreenContentState extends State<_RegisterScreenContent> {
                         radius: 19,
                         onPressed: () {
                           final email = _emailController.text.trim();
-
+                          final Keyboardclose = FocusScope.of(context);
+                          Keyboardclose.unfocus();
+                          if (email.isEmpty) {
+                            CustomSnackbar.show(
+                              context: context,
+                              message: "Email cannot be empty",
+                              type: SnackbarType.error,
+                              duration: const Duration(seconds: 4),
+                            );
+                            return;
+                          }
                           // Validamos usando tu función
                           final isValidEmail = validateCurrentField(
                             botIndex: 20, // 20 corresponde a email

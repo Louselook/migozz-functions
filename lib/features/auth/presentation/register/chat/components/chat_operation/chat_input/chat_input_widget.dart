@@ -13,9 +13,11 @@ class ChatInputWidget extends StatefulWidget {
   final VoidCallback onSend;
   final void Function(String path)? onSendAudio;
   final void Function(String path)? onSendImage;
+  final TextInputType keyboardType; 
 
   const ChatInputWidget({
     super.key,
+    this.keyboardType = TextInputType.text,
     required this.controller,
     required this.onSend,
     this.onSendAudio,
@@ -152,6 +154,7 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
       controller: widget.controller,
       hintText: "Escribe algo...",
       radius: 8,
+      keyboardType: widget.keyboardType,
       suffixIcon: IconButton(
         icon: Icon(
           _showAttachments ? Icons.close : Icons.attach_file,
@@ -202,7 +205,7 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
         left: left,
         top: showAbove
             ? offset.dy - 75
-            : offset.dy + size.height + 12, // 👈 más espacio
+            : offset.dy + size.height + 12, 
         width: tooltipWidth,
         child: Material(
           color: Colors.transparent,
