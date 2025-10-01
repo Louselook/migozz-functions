@@ -25,7 +25,7 @@ class IaChatService {
     },
     {
       "text": "Great nickname! Are you a man or a woman?",
-      "options": ["Man", "Woman", "Other"], // 👈 Sugerencias de género
+      "options": ["Man", "Woman"], // 👈 Sugerencias de género
       "keyboardType": "text"
     },
     {"text": "Let's add your social platforms!", "options": [], "action": 0},
@@ -42,7 +42,7 @@ class IaChatService {
     {"text": "Great! Your email is {email}. Is this correct?", "options": ["Yes", "No"], "keyboardType": "text"},
     {
       "text":
-          "Perfect! Please check your email for a confirmation link to activate your profile! 📧",
+          "Perfect! Please check your email for a OTP code and write it to activate your profile! 📧",
       "options": [],
       "keyboardType": "number", // <-- OTP espera número
     },
@@ -94,7 +94,7 @@ class IaChatService {
     },
     {
       "text": "¡Excelente apodo! ¿Eres hombre o mujer?",
-      "options": ["Hombre", "Mujer", "Otro"], // 👈 Sugerencias de género
+      "options": ["Hombre", "Mujer"], // 👈 Sugerencias de género
       "keyboardType": "text"
     },
     {
@@ -119,7 +119,7 @@ class IaChatService {
     },
     {
       "text":
-          "¡Perfecto! Revisa tu correo electrónico para ver el enlace de confirmación para activar tu perfil. 📧",
+          "¡Perfecto! Revisa tu correo electrónico para ver el código OTP e ingresarlo para activar tu perfil. 📧",
       "options": [],
       "keyboardType": "number", // <-- OTP espera número
     },

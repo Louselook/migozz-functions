@@ -5,6 +5,7 @@ import 'package:migozz_app/core/utils/responsive_utils.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/social_icon_card.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/user_details_button.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_detail_step.dart';
 
 class SocialEcosystemStep extends StatelessWidget {
   
@@ -153,20 +154,54 @@ class SocialEcosystemStep extends StatelessWidget {
                         iconSize: clampedIconSize,
                         sizeIcon: cardSize,
                         isSelected: selected, 
-                        onTap: () {
+                        onTap: () async {
                           final cubit = context.read<RegisterCubit>();
                           final current = List<String>.from(
                             cubit.state.socialEcosystem ?? [],
                           );
+
                           if (!current.contains(label)) {
+                            // Sí no estaba seleccionado: agregar y abrir detail
                             current.add(label);
+                            cubit.setSocialEcosystem(current);
+
+                            final url = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => SocialDetailScreen(
+                                  label: label,
+                                  assetPath: assetPath!,
+                                ),
+                              ),
+                            );
+
+                            if (url != null && url is String) {
+                              debugPrint("✅ Guardar URL de $label: $url");
+                              // cubit.setSocialLink(label, url);
+                            }
                           } else {
-                            current.remove(label); // toggle
+                            // Ya estaba seleccionado: solo quitar
+                            current.remove(label);
+                            cubit.setSocialEcosystem(current);
                           }
-                          cubit.setSocialEcosystem(current);
-                          debugPrint(
-                            "🌐 Ecosistema social: ${cubit.state.socialEcosystem}",
+
+                          debugPrint("🌐 Ecosistema social: ${cubit.state.socialEcosystem}");
+
+
+                          final url = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => SocialDetailScreen(
+                                label: label,
+                                assetPath: assetPath!,
+                              ),
+                            ),
                           );
+
+                          if (url != null && url is String) {
+                            debugPrint("✅ Guardar URL de $label: $url");
+                            // cubit.setSocialLink(label, url);
+                          }
                         },
                       );
                     },
