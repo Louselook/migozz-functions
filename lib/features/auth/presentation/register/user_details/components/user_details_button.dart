@@ -9,12 +9,12 @@ Widget userDetailsButton({
   required PageController controller,
   required BuildContext context,
   UserDetailsAction action = UserDetailsAction.back,
-  VoidCallback? onFinalAction,
+  Future<void> Function()? onFinalAction,
 }) {
   return GradientButton(
     width: double.infinity,
     radius: 19,
-    onPressed: () {
+    onPressed: () async {
       switch (action) {
         case UserDetailsAction.next:
           controller.nextPage(
@@ -25,7 +25,7 @@ Widget userDetailsButton({
 
         case UserDetailsAction.finalRegister:
           if (onFinalAction != null) {
-            onFinalAction();
+            await onFinalAction();
           }
           break;
 

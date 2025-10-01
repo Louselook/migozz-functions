@@ -82,14 +82,22 @@ Future<void> mapResponseToCubit({
     case 13:
       // Avatar
       final file = File(userResponse); // userResponse = ruta local
-      cubit.setAvatarFile(file);
+      if (await file.exists()) {
+        cubit.setAvatarFile(file);
+      }
       break;
     case 14:
       cubit.setPhone(userResponse);
+      // Intentar completar registro cuando ya hay teléfono
+      await cubit.checkCompletion();
       break;
     case 15:
       // audio pude ser texto
-      cubit.setVoiceNoteFile(File(userResponse));
+      final vFile = File(userResponse);
+      if (await vFile.exists()) {
+        cubit.setVoiceNoteFile(vFile);
+      }
+      await cubit.checkCompletion();
       break;
     // setInterests
     default:
