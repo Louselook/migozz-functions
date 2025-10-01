@@ -7,7 +7,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:migozz_app/features/auth/services/media_service.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
-import 'package:migozz_app/features/profile/presentation/config/edit_audio.dart';
+import 'package:migozz_app/features/profile/presentation/config/edit_my_interest.dart';
+import 'package:migozz_app/features/profile/presentation/config/edit_social.dart';
+import 'package:migozz_app/features/profile/presentation/config/edit_audio.dart'; 
+
 
 class EditProfile extends StatefulWidget {
   const EditProfile({super.key});
@@ -205,7 +208,7 @@ class _EditProfileState extends State<EditProfile> {
                     onTap: () {
                       Navigator.push(
                         context, 
-                        MaterialPageRoute(builder: (_) => const EditRecordScreen())
+                        MaterialPageRoute(builder: (_) => EditRecordScreen())
                       );
                     }
                   ),
@@ -216,7 +219,7 @@ class _EditProfileState extends State<EditProfile> {
                     onTap: () {
                       Navigator.push(
                         context, 
-                        MaterialPageRoute(builder: (_) => const EditRecordScreen())
+                        MaterialPageRoute(builder: (_) => const EditInterestsScreen())
                       );
                     }
                   ),
@@ -227,7 +230,7 @@ class _EditProfileState extends State<EditProfile> {
                     onTap: () {
                       Navigator.push(
                         context, 
-                        MaterialPageRoute(builder: (_) => const EditRecordScreen())
+                        MaterialPageRoute(builder: (_) => const EditSocialScreen())
                       );
                     }
                   ),

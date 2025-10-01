@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:migozz_app/core/color.dart'; // si ya tienes tu archivo de colores
+import 'package:migozz_app/core/color.dart'; 
 
 class EditRecordScreen extends StatelessWidget {
   const EditRecordScreen({super.key});
@@ -16,7 +16,7 @@ class EditRecordScreen extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pop(context), // solo navega
         ),
         title: const Text(
           "Edit Record",
@@ -44,7 +44,7 @@ class EditRecordScreen extends StatelessWidget {
             const SizedBox(height: 6),
 
             const Text(
-              "Voice note: 5–10 sec max.",
+              "Voice note: 5 or 10 sec max.",
               style: TextStyle(
                 color: Colors.grey,
                 fontSize: 14,
@@ -53,11 +53,9 @@ class EditRecordScreen extends StatelessWidget {
 
             SizedBox(height: screenHeight * 0.05),
 
-            // Mic image (desde assets)
+            // Mic image (botón visual)
             GestureDetector(
-              onTap: () {
-                // Logica para iniciar la grabación
-              },
+              onTap: () {}, // Ingresar logica de grabacion
               child: Container(
                 width: 140,
                 height: 140,
@@ -67,7 +65,7 @@ class EditRecordScreen extends StatelessWidget {
                 ),
                 child: Center(
                   child: Image.asset(
-                    "assets/icons/mic.png", 
+                    "assets/icons/Mic.png", 
                     width: 70,
                     height: 70,
                     color: Colors.white,
@@ -78,7 +76,7 @@ class EditRecordScreen extends StatelessWidget {
 
             SizedBox(height: screenHeight * 0.05),
 
-            // Play audio button
+            // Play audio button (solo visual)
             Column(
               children: [
                 Container(
@@ -98,9 +96,7 @@ class EditRecordScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       GestureDetector(
-                        onTap: () {
-                          // Logica para reproducir el audio
-                        },
+                        onTap: () {}, // Ingresar logica de play
                         child: Container(
                           width: 70,
                           height: 70,
@@ -110,7 +106,7 @@ class EditRecordScreen extends StatelessWidget {
                           ),
                           child: Center(
                             child: Image.asset(
-                              "assets/icons/play.png", // 
+                              "assets/icons/Play.png",
                               width: 40,
                               height: 40,
                               color: Colors.white,
@@ -126,26 +122,21 @@ class EditRecordScreen extends StatelessWidget {
 
             const Spacer(),
 
-            // Save button
+            // Save button (maqueta, solo cierra la vista)
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  // Guardar lógica
-                  Navigator.pop(context);
-                },
+                onPressed: () => Navigator.pop(context), // solo sale
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                   backgroundColor: null,
-                  foregroundColor: Colors.white,
+                  foregroundColor: Colors.transparent,
                   textStyle: const TextStyle(fontSize: 18),
                 ).copyWith(
-                  backgroundColor: WidgetStateProperty.all(
-                    null, // null porque lo vamos a hacer gradient
-                  ),
+                  backgroundColor: WidgetStateProperty.all(null),
                 ),
                 child: Container(
                   decoration: BoxDecoration(

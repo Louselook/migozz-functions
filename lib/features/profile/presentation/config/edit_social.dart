@@ -27,7 +27,7 @@ class EditSocialScreen extends StatelessWidget {
       "Other",
     ];
 
-    // Label -> assetPath
+    // Label -> assetPath // recomiendo llamar directamente cada app registrada en el cubit por temas de seleccion
     final Map<String, String> iconByLabel = {
       "Tiktok": "assets/icons/social_networks/TikTok.png",
       "Instagram": "assets/icons/social_networks/Instagram.png",
@@ -39,8 +39,8 @@ class EditSocialScreen extends StatelessWidget {
       "Spotify": "assets/icons/social_networks/Spotify.png",
       "X": "assets/icons/social_networks/X.png",
       "LinkedIn": "assets/icons/social_networks/LinkedIn.png",
-      "Paypal": "assets/icons/social_networks/Paypal.png",
-      "Xbox": "assets/icons/social_networks/Xbox.png",
+      "Paypal": "assets/icons/social_networks/Paypal.svg",
+      "Xbox": "assets/icons/social_networks/Xbox.svg",
       "Other": "assets/icons/social_networks/Other.png",
     };
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
@@ -15,73 +16,58 @@ class EditInterestsScreen extends StatefulWidget {
 class _EditInterestsScreenState extends State<EditInterestsScreen> {
   Set<String> selectedInterests = {};
   List<InterestSectionModel> sections = [];
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadFakeData(); //// Aca hay que carga los datos reales
+    fetchCollection();
   }
 
-  void _loadFakeData() {
-    sections = [
-      InterestSectionModel(
-        title: "Going Out",
-        options: [
-          "Concerts",
-          "Museum & Galleries",
-          "Yoga",
-          "Comedy",
-          "Theater",
-          "Clubs",
-          "Bars",
-          "Karaoke",
-          "Film Festivals",
-          "Lounging"
-        ],
-        expanded: true,
-      ),
-      InterestSectionModel(
-        title: "Sports",
-        options: [
-          "Football",
-          "Soccer",
-          "Hockey",
-          "Sports News",
-          "Fishing",
-          "Basquetball",
-          "Cricket",
-          "Pickleball",
-          "Gymnastia",
-          "Horse Riding",
-          "MMA",
-          "Tennis",
-          "Swimming",
-          "Snowboarding",
-          "Gym",
-          "Surfing",
-          "Skiing",
-          "Baseball",
-          "Golf",
-          "Boxing"
-        ],
-        expanded: true,
-      ),
-      InterestSectionModel(
-        title: "Film & Tv",
-        options: [
-          "Drama",
-          "Thriller",
-          "Crime",
-          "Fantasy",
-          "Anime",
-          "Sci-fi",
-          "Mistery",
-          "Comedy",
-          "Romance",
-        ],
-        expanded: true,
-      ),
-    ];
+  Future<void> fetchCollection() async {
+    try {
+      setState(() {
+        isLoading = true;
+      });
+
+      CollectionReference collection = FirebaseFirestore.instance.collection(
+        'interests_catalog',
+      );
+      QuerySnapshot snapshot = await collection.get();
+
+      List<InterestSectionModel> fetchedSections = [];
+
+      for (var doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        data.forEach((categoryTitle, categoryOptions) {
+          if (categoryOptions is List) {
+            fetchedSections.add(
+              InterestSectionModel(
+                title: categoryTitle,
+                options: List<String>.from(categoryOptions),
+                expanded: false,
+              ),
+            );
+          }
+        });
+      }
+
+      setState(() {
+        sections = fetchedSections;
+        isLoading = false;
+      });
+
+      // Opcional: cargar intereses seleccionados previamente del cubit
+      final cubit = context.read<RegisterCubit>();
+      final interests = cubit.state.interests;
+      if (interests != null) {
+        selectedInterests = interests.values.expand((list) => list).toSet();
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   @override
@@ -103,15 +89,16 @@ class _EditInterestsScreenState extends State<EditInterestsScreen> {
         child: Column(
           children: [
             Expanded(
-              child: ListView.builder(
-                itemCount: sections.length,
-                itemBuilder: (context, index) {
-                  final section = sections[index];
-                  return _buildSection(section);
-                },
-              ),
+              child: isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                      itemCount: sections.length,
+                      itemBuilder: (context, index) {
+                        final section = sections[index];
+                        return _buildSection(section, index);
+                      },
+                    ),
             ),
-
             // Save button (gradient)
             SizedBox(
               width: double.infinity,
@@ -164,76 +151,86 @@ class _EditInterestsScreenState extends State<EditInterestsScreen> {
     );
   }
 
-  Widget _buildSection(InterestSectionModel section) {
+  Widget _buildSection(InterestSectionModel section, int index) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Título con el botón "+"
-        Row(
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                gradient: AppColors.primaryGradient,
-                borderRadius: BorderRadius.circular(6),
+        // Título de la sección (clickeable)
+        GestureDetector(
+          onTap: () {
+            setState(() {
+              section.expanded = !section.expanded;
+            });
+          },
+          child: Row(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(
+                  section.expanded ? Icons.arrow_drop_down_outlined : Icons.add,
+                  color: Colors.white,
+                  size: 20,
+                ),
               ),
-              child: const Icon(Icons.add, color: Colors.white, size: 20),
-            ),
-            const SizedBox(width: 8),
-            SecondaryText(section.title, fontSize: 18),
-          ],
+              const SizedBox(width: 8),
+              SecondaryText(section.title, fontSize: 18),
+            ],
+          ),
         ),
         const SizedBox(height: 8),
-
-        // Opciones en chips
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: section.options.map((opt) {
-            final selected = selectedInterests.contains(opt);
-            return GestureDetector(
-              onTap: () {
-                setState(() {
-                  if (selected) {
-                    selectedInterests.remove(opt);
-                  } else {
-                    selectedInterests.add(opt);
-                  }
-                });
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: selected ? Colors.green : Colors.white,
-                    width: 2,
+        if (section.expanded)
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: section.options.map((opt) {
+              final selected = selectedInterests.contains(opt);
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    if (selected) {
+                      selectedInterests.remove(opt);
+                    } else {
+                      selectedInterests.add(opt);
+                    }
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: selected ? Colors.green : Colors.white,
+                      width: 2,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (selected)
+                        const Icon(Icons.check,
+                            size: 16, color: Colors.green),
+                      if (selected) const SizedBox(width: 4),
+                      Text(
+                        opt,
+                        style: TextStyle(
+                          color: selected
+                              ? Colors.green
+                              : AppColors.backgroundDark,
+                          fontWeight:
+                              selected ? FontWeight.bold : FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (selected)
-                      const Icon(Icons.check,
-                          size: 16, color: Colors.green),
-                    if (selected) const SizedBox(width: 4),
-                    Text(
-                      opt,
-                      style: TextStyle(
-                        color: selected
-                            ? Colors.green
-                            : AppColors.backgroundDark,
-                        fontWeight:
-                            selected ? FontWeight.bold : FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }).toList(),
-        ),
+              );
+            }).toList(),
+          ),
         const SizedBox(height: 20),
       ],
     );
