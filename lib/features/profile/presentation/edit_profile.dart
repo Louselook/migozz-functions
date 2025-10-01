@@ -1,16 +1,70 @@
+import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:migozz_app/features/auth/services/media_service.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 
-class EditProfile extends StatelessWidget {
+class EditProfile extends StatefulWidget {
   const EditProfile({super.key});
+
+  @override
+  State<EditProfile> createState() => _EditProfileState();
+}
+
+class _EditProfileState extends State<EditProfile> {
+  Map<String, dynamic>? _userDoc;
+  bool _uploading = false;
+  bool _dirty = false; // hubo cambios en esta vista
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    try {
+      final docTest = await FirebaseFirestore.instance
+          .collection('test')
+          .doc(user.uid)
+          .get();
+      Map<String, dynamic>? data = docTest.data();
+      if (data == null) {
+        final docUsers = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+        data = docUsers.data();
+      }
+      if (mounted) setState(() => _userDoc = data);
+    } catch (e) {
+      debugPrint('Error cargando usuario: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final screenHeight = screenSize.height;
     final screenWidth = screenSize.width;
+
+    final name = (_userDoc?['displayName'] as String?) ?? '';
+    final username =
+        ((_userDoc?['username'] as String?) ??
+        (_userDoc?['userName'] as String?) ??
+        '');
+    final email = (_userDoc?['email'] as String?) ?? '';
+    final phone = (_userDoc?['phone'] as String?) ?? '';
+    final gender = (_userDoc?['gender'] as String?) ?? '';
+    final location = (_userDoc?['location'] as Map?) ?? const {};
+    final city = location['city'] ?? '';
+    final avatarUrl = (_userDoc?['avatarUrl'] as String?);
 
     return Scaffold(
       appBar: AppBar(
@@ -20,15 +74,13 @@ class EditProfile extends StatelessWidget {
         actions: [
           IconButton(
             icon: Icon(Icons.close, color: Colors.red),
-            onPressed: () {
-              // Acción al presionar el ícono de configuración
-            },
+            onPressed: () => context.pop(_dirty ? 'updated' : null),
           ),
         ],
         title: Text('Edit Profile', style: TextStyle(color: Colors.white)),
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => context.go('/profile'),
+          onPressed: () => context.pop(_dirty ? 'updated' : null),
         ),
       ),
       backgroundColor: Colors.black,
@@ -42,23 +94,56 @@ class EditProfile extends StatelessWidget {
             children: [
               Stack(
                 children: [
-                  profileImage(
-                    source: Image.asset('assets/images/profileBackground.png'),
-                    radius: screenWidth * 0.18,
+                  ClipOval(
+                    child: SizedBox(
+                      width: screenWidth * 0.36,
+                      height: screenWidth * 0.36,
+                      child: avatarUrl != null && avatarUrl.isNotEmpty
+                          ? Image.network(
+                              avatarUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Image.asset(
+                                'assets/images/profileBackground.png',
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          : Image.asset(
+                              'assets/images/profileBackground.png',
+                              fit: BoxFit.cover,
+                            ),
+                    ),
                   ),
                   Positioned(
                     bottom: 0,
                     right: 0,
-                    child: CircleAvatar(
-                      radius: screenWidth * 0.048,
-                      backgroundColor: Colors.deepPurple,
-                      child: CircleAvatar(
-                        backgroundColor: Colors.pinkAccent,
-                        child: Icon(
-                          Icons.edit,
-                          size: screenWidth * 0.042,
-                          color: Colors.white,
-                        ),
+                    child: GestureDetector(
+                      onTap: _uploading ? null : _onChangeAvatar,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          CircleAvatar(
+                            radius: screenWidth * 0.048,
+                            backgroundColor: Colors.deepPurple,
+                          ),
+                          CircleAvatar(
+                            radius: screenWidth * 0.044,
+                            backgroundColor: Colors.pinkAccent,
+                            child: _uploading
+                                ? SizedBox(
+                                    width: screenWidth * 0.036,
+                                    height: screenWidth * 0.036,
+                                    child: const CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : Icon(
+                                    Icons.edit,
+                                    size: screenWidth * 0.042,
+                                    color: Colors.white,
+                                  ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -67,25 +152,25 @@ class EditProfile extends StatelessWidget {
               SizedBox(height: screenHeight * 0.025),
 
               listBuildBox(
-                text: 'Full name',
+                text: name.isEmpty ? 'Full name' : name,
                 icon: Icons.account_box,
                 textColorInside: Colors.white,
                 iconColorInside: Colors.white,
               ),
               listBuildBox(
-                text: 'Nickname',
+                text: username.isEmpty ? 'Nickname' : '@$username',
                 icon: Icons.alternate_email,
                 textColorInside: Colors.white,
                 iconColorInside: Colors.white,
               ),
               listBuildBox(
-                text: 'Email',
+                text: email.isEmpty ? 'Email' : email,
                 icon: Icons.mail,
                 textColorInside: Colors.white,
                 iconColorInside: Colors.white,
               ),
               listBuildBox(
-                text: 'Cell Phone',
+                text: phone.isEmpty ? 'Cell Phone' : phone,
                 icon: Icons.phone,
                 textColorInside: Colors.white,
                 iconColorInside: Colors.white,
@@ -97,13 +182,13 @@ class EditProfile extends StatelessWidget {
                 iconColorInside: Colors.white,
               ),
               listBuildBox(
-                text: 'Gender',
+                text: gender.isEmpty ? 'Gender' : gender,
                 icon: Icons.transgender,
                 textColorInside: Colors.white,
                 iconColorInside: Colors.white,
               ),
               listBuildBox(
-                text: 'Location',
+                text: city.toString().isEmpty ? 'Location' : city.toString(),
                 icon: Icons.public,
                 textColorInside: Colors.white,
                 iconColorInside: Colors.white,
@@ -161,7 +246,7 @@ class EditProfile extends StatelessWidget {
               SizedBox(height: screenHeight * 0.012),
 
               GradientButton(
-                onPressed: () {},
+                onPressed: () => context.pop('updated'),
                 width: double.infinity,
                 height: screenHeight * 0.065,
                 radius: screenWidth * 0.02,
@@ -261,5 +346,62 @@ class EditProfile extends StatelessWidget {
         );
       },
     );
+  }
+
+  Future<void> _onChangeAvatar() async {
+    try {
+      final picker = ImagePicker();
+      final xfile = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
+      if (xfile == null) return;
+
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+      final email = (_userDoc?['email'] as String?) ?? user.email ?? user.uid;
+
+      setState(() => _uploading = true);
+
+      // Subir usando el mismo servicio que en registro
+      final mediaService = UserMediaService();
+      final urls = await mediaService.uploadFilesTemporarily(
+        email: email,
+        files: {MediaType.avatar: File(xfile.path)},
+      );
+      final newUrl = urls[MediaType.avatar];
+      if (newUrl == null) return;
+
+      // Actualizar en test y users (merge)
+      final now = FieldValue.serverTimestamp();
+      final db = FirebaseFirestore.instance;
+      await db.collection('test').doc(user.uid).set({
+        'avatarUrl': newUrl,
+        'updatedAt': now,
+      }, SetOptions(merge: true));
+      await db.collection('users').doc(user.uid).set({
+        'avatarUrl': newUrl,
+        'updatedAt': now,
+      }, SetOptions(merge: true));
+
+      if (mounted) {
+        setState(() {
+          _userDoc = {...?_userDoc, 'avatarUrl': newUrl};
+          _uploading = false;
+          _dirty = true;
+        });
+        // notificar a la pantalla anterior que hay cambios
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Profile photo updated')));
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _uploading = false);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error updating photo: $e')));
+      }
+    }
   }
 }

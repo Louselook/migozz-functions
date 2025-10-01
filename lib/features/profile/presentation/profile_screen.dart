@@ -1,4 +1,5 @@
 // lib/features/profile/profile_screen.dart
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -18,6 +19,67 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   int _tab = 0; // índice del tab seleccionado
+  Map<String, dynamic>? _userDoc;
+  List<Map<String, String>> _userSocials = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    try {
+      // Usamos 'test' porque AuthService actualmente guarda allí
+      final docTest = await FirebaseFirestore.instance
+          .collection('test')
+          .doc(user.uid)
+          .get();
+      Map<String, dynamic>? data = docTest.data();
+      if (data == null) {
+        final docUsers = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+        data = docUsers.data();
+      }
+
+      if (mounted) {
+        setState(() => _userDoc = data);
+        final username = (data?['username'] as String?) ?? '';
+        if (username.isNotEmpty) {
+          _loadUserSocials(username);
+        }
+      }
+    } catch (e) {
+      debugPrint('Error cargando usuario: $e');
+    }
+  }
+
+  Future<void> _loadUserSocials(String username) async {
+    final u = username.replaceFirst('@', '');
+    try {
+      final q = await FirebaseFirestore.instance
+          .collection('userSocials')
+          .where('userName', isEqualTo: u)
+          .get();
+      final list = q.docs
+          .map((d) {
+            final m = d.data();
+            return {
+              'provider': (m['provider'] ?? '').toString(),
+              'url': (m['url'] ?? '').toString(),
+            };
+          })
+          .where((e) => e['provider']!.isNotEmpty)
+          .toList();
+      if (mounted) setState(() => _userSocials = list);
+    } catch (e) {
+      debugPrint('Error cargando userSocials: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,8 +105,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
       size.height * 0.2, // Posición más alta
     );
 
+    final name = (_userDoc?['displayName'] as String?) ?? 'John Doe';
+    final username = (_userDoc?['username'] as String?) ?? '@johndoe';
+    final avatarUrl = (_userDoc?['avatarUrl'] as String?);
+    final social = _userSocials.isNotEmpty
+        ? _userSocials.map((e) => e['provider']!).toList()
+        : ((_userDoc?['socialEcosystem'] as List?)
+                  ?.map((e) => e.toString())
+                  .toList() ??
+              const []);
+
     return Scaffold(
       body: BackgroundImage(
+        avatarUrl: avatarUrl,
+        name: name,
+        displayName: username.startsWith('@') ? username : '@$username',
+        comunityCount: '1M',
+        nameComunity: 'Community',
         child: Stack(
           children: [
             Positioned(
@@ -74,7 +151,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               left: 0,
               top: 70,
               child: GestureDetector(
-                onTap: () => context.go('/edit-profile'),
+                onTap: () async {
+                  final res = await context.push('/edit-profile');
+                  if (res == 'updated') {
+                    _loadUser();
+                  }
+                },
                 child: Column(
                   children: [
                     Icon(
@@ -100,24 +182,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             // rail social (ahora draggable)
             DraggableSocialRail(
               initialPosition: initialSocialPosition,
-              links: [
-                SocialLink(
-                  asset: 'assets/icons/social_networks/TikTok.png',
-                  url: Uri.parse('https://www.tiktok.com/@johndoe'),
-                ),
-                SocialLink(
-                  asset: 'assets/icons/social_networks/Instagram.png',
-                  url: Uri.parse('https://www.instagram.com/johndoe'),
-                ),
-                SocialLink(
-                  asset: 'assets/icons/social_networks/X.png',
-                  url: Uri.parse('https://x.com/johndoe'),
-                ),
-                SocialLink(
-                  asset: 'assets/icons/social_networks/Pinterest.png',
-                  url: Uri.parse('https://www.pinterest.com/johndoe'),
-                ),
-              ],
+              links: _userSocials.isNotEmpty
+                  ? _mapUserSocialDocsToLinks(_userSocials)
+                  : _mapSocialToLinks(social, username),
               itemSize: 50, // botón
               iconSize: 45, // icono dentro
             ),
@@ -138,5 +205,91 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ),
     );
+  }
+
+  List<SocialLink> _mapSocialToLinks(List<String> platforms, String username) {
+    final map = <SocialLink>[];
+    final u = username.replaceFirst('@', '');
+    for (final p in platforms) {
+      switch (p.toLowerCase()) {
+        case 'tiktok':
+          map.add(
+            SocialLink(
+              asset: 'assets/icons/social_networks/TikTok.png',
+              url: Uri.parse('https://www.tiktok.com/@$u'),
+            ),
+          );
+          break;
+        case 'instagram':
+          map.add(
+            SocialLink(
+              asset: 'assets/icons/social_networks/Instagram.png',
+              url: Uri.parse('https://www.instagram.com/$u'),
+            ),
+          );
+          break;
+        case 'x':
+        case 'twitter':
+          map.add(
+            SocialLink(
+              asset: 'assets/icons/social_networks/X.png',
+              url: Uri.parse('https://x.com/$u'),
+            ),
+          );
+          break;
+        case 'pinterest':
+          map.add(
+            SocialLink(
+              asset: 'assets/icons/social_networks/Pinterest.png',
+              url: Uri.parse('https://www.pinterest.com/$u'),
+            ),
+          );
+          break;
+        case 'youtube':
+          map.add(
+            SocialLink(
+              asset: 'assets/icons/social_networks/YouTube.png',
+              url: Uri.parse('https://www.youtube.com/@$u'),
+            ),
+          );
+          break;
+        default:
+          break;
+      }
+    }
+    return map;
+  }
+
+  List<SocialLink> _mapUserSocialDocsToLinks(List<Map<String, String>> docs) {
+    final map = <SocialLink>[];
+    for (final m in docs) {
+      final provider = (m['provider'] ?? '').toLowerCase();
+      final url = m['url'] ?? '';
+      String? asset;
+      switch (provider) {
+        case 'tiktok':
+          asset = 'assets/icons/social_networks/TikTok.png';
+          break;
+        case 'instagram':
+          asset = 'assets/icons/social_networks/Instagram.png';
+          break;
+        case 'x':
+        case 'twitter':
+          asset = 'assets/icons/social_networks/X.png';
+          break;
+        case 'pinterest':
+          asset = 'assets/icons/social_networks/Pinterest.png';
+          break;
+        case 'youtube':
+          asset = 'assets/icons/social_networks/YouTube.png';
+          break;
+        default:
+          break;
+      }
+      if (asset != null && url.isNotEmpty) {
+        map.add(SocialLink(asset: asset, url: Uri.parse(url)));
+      }
+    }
+    return map;
   }
 }

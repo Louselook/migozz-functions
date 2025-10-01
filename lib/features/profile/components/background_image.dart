@@ -7,11 +7,22 @@ class BackgroundImage extends StatelessWidget {
 
   /// Qué tanto puede colapsar el header (0.5 = se detiene a mitad de pantalla)
   final double minHeaderFraction;
+  // Datos del perfil
+  final String? avatarUrl;
+  final String name;
+  final String displayName;
+  final String comunityCount;
+  final String nameComunity;
 
   const BackgroundImage({
     super.key,
     required this.child,
     this.minHeaderFraction = 0.4,
+    this.avatarUrl,
+    this.name = 'John Doe',
+    this.displayName = '@johndoe',
+    this.comunityCount = '1M',
+    this.nameComunity = 'Community',
   });
 
   @override
@@ -40,6 +51,11 @@ class BackgroundImage extends StatelessWidget {
                         size.height *
                         minHeaderFraction, // colapso mínimo (50% de alto)
                     bottomPaddingForCard: bottomPaddingForCard,
+                    avatarUrl: avatarUrl,
+                    name: name,
+                    displayName: displayName,
+                    comunityCount: comunityCount,
+                    nameComunity: nameComunity,
                   ),
                 ),
               ];
@@ -107,11 +123,21 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
   final double maxHeight;
   final double minHeight;
   final double bottomPaddingForCard;
+  final String? avatarUrl;
+  final String name;
+  final String displayName;
+  final String comunityCount;
+  final String nameComunity;
 
   _ProfileHeaderDelegate({
     required this.maxHeight,
     required this.minHeight,
     required this.bottomPaddingForCard,
+    this.avatarUrl,
+    required this.name,
+    required this.displayName,
+    required this.comunityCount,
+    required this.nameComunity,
   });
 
   @override
@@ -148,10 +174,19 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
               0, 0, 1.25, 0, 0, // B
               0, 1, 1, 2, 0, // A
             ]),
-            child: Image.asset(
-              "assets/images/profileBackground.png",
-              fit: BoxFit.cover,
-            ),
+            child: avatarUrl != null && avatarUrl!.isNotEmpty
+                ? Image.network(
+                    avatarUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Image.asset(
+                      "assets/images/profileBackground.png",
+                      fit: BoxFit.cover,
+                    ),
+                  )
+                : Image.asset(
+                    "assets/images/profileBackground.png",
+                    fit: BoxFit.cover,
+                  ),
           ),
 
           // Card de perfil centrada abajo (mantiene posición relativa)
@@ -170,13 +205,33 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
                     minHeight: 80,
                     maxHeight: 180,
                   ),
-                  child: const IntrinsicHeight(
-                    child: InfoUserProfile(
-                      name: 'John Doe',
-                      displayName: '@johndoe',
-                      comunityCount: '1M',
-                      nameComunity: 'Community',
-                    ),
+                  child: const IntrinsicHeight(child: SizedBox.shrink()),
+                ),
+              ),
+            ),
+          ),
+
+          // Info card (separada para inyectar datos dinámicos sin const)
+          Positioned.fill(
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: bottomPaddingForCard * (1.2 - 0.25 * t),
+                  left: 16,
+                  right: 16,
+                ),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.6,
+                    minHeight: 80,
+                    maxHeight: 180,
+                  ),
+                  child: InfoUserProfile(
+                    name: name,
+                    displayName: displayName,
+                    comunityCount: comunityCount,
+                    nameComunity: nameComunity,
                   ),
                 ),
               ),
