@@ -4,6 +4,9 @@ import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/loading_overlay.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
+import '../components/add_platform_bottom_sheet.dart';
+import '../components/edit_platform_bottom_sheet.dart';
+import '../components/platform_card.dart';
 
 class SocialDetailScreen extends StatefulWidget {
   final String label;
@@ -21,6 +24,49 @@ class SocialDetailScreen extends StatefulWidget {
 
 class _SocialDetailScreenState extends State<SocialDetailScreen> {
   final TextEditingController _controller = TextEditingController();
+  List<Map<String, String>> addedPlatforms = [];
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _showAddPlatformBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => AddPlatformBottomSheet(
+        onPlatformAdded: (platformData) {
+          setState(() {
+            addedPlatforms.add(platformData);
+          });
+        },
+      ),
+    );
+  }
+
+  void _showEditPlatformBottomSheet(Map<String, String> platform, int index) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => EditPlatformBottomSheet(
+        platform: platform,
+        onPlatformUpdated: (updatedPlatform) {
+          setState(() {
+            addedPlatforms[index] = updatedPlatform;
+          });
+        },
+        onPlatformDeleted: () {
+          setState(() {
+            addedPlatforms.removeAt(index);
+          });
+        },
+      ),
+    );
+  }
 
   Future<void> _fetchProfileAndPop() async {
     final cubit = context.read<RegisterCubit>();
@@ -28,13 +74,9 @@ class _SocialDetailScreenState extends State<SocialDetailScreen> {
     if (usernameOrLink.isEmpty) return;
 
     try {
-      // Mostrar rueda
       LoadingOverlay.show(context);
-
-      // Llamada al Cubit para obtener el perfil
       await cubit.fetchSocialProfile(widget.label, usernameOrLink);
 
-      // Imprimir los datos
       final profile = cubit.state.userSocials?[widget.label];
       if (profile != null) {
         debugPrint(
@@ -48,10 +90,9 @@ class _SocialDetailScreenState extends State<SocialDetailScreen> {
         );
       }
 
-      // Ocultar rueda y volver a la pantalla anterior
       if (!mounted) return;
       LoadingOverlay.hide(context);
-      Navigator.of(context).pop(); // ya regresamos
+      Navigator.of(context).pop();
     } catch (e) {
       LoadingOverlay.hide(context);
       if (!mounted) return;
@@ -68,7 +109,7 @@ class _SocialDetailScreenState extends State<SocialDetailScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         leading: BackButton(color: Colors.white),
-        title: Text(
+        title: const Text(
           "Your Social Ecosystem",
           style: TextStyle(
             color: Colors.white,
@@ -83,6 +124,7 @@ class _SocialDetailScreenState extends State<SocialDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            // TextField para añadir social
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -101,27 +143,68 @@ class _SocialDetailScreenState extends State<SocialDetailScreen> {
                       fillColor: Colors.black26,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.white24),
+                        borderSide: const BorderSide(color: Colors.white24),
                       ),
                     ),
                   ),
                 ),
               ],
             ),
-            const Spacer(),
+
+            const SizedBox(height: 20),
+
+            // Botón principal
             SizedBox(
               width: double.infinity,
               child: GradientButton(
-                onPressed: _fetchProfileAndPop,
+                onPressed:
+                    _fetchProfileAndPop, // O puedes usar _showAddPlatformBottomSheet
                 width: double.infinity,
                 radius: 19,
                 child: const Text(
-                  "Continue",
+                  "Continue / Add New Platform",
                   style: TextStyle(color: Colors.white, fontSize: 20),
                 ),
                 gradient: AppColors.primaryGradient,
               ),
             ),
+
+            const SizedBox(height: 20),
+
+            // Lista de plataformas agregadas
+            if (addedPlatforms.isNotEmpty) ...[
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Added Platforms:",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Expanded(
+                child: GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 10,
+                    childAspectRatio: 1.0,
+                  ),
+                  itemCount: addedPlatforms.length,
+                  itemBuilder: (context, index) {
+                    final platform = addedPlatforms[index];
+                    return PlatformCard(
+                      platform: platform,
+                      onTap: () =>
+                          _showEditPlatformBottomSheet(platform, index),
+                    );
+                  },
+                ),
+              ),
+            ],
           ],
         ),
       ),

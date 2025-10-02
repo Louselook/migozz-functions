@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
 import 'package:audio_waveforms/audio_waveforms.dart';
 
@@ -58,8 +57,6 @@ class AudioRecorderManager {
   }
 
   Future<void> startRecording() async {
-    if (!await Permission.microphone.request().isGranted) return;
-
     final dir = await getApplicationDocumentsDirectory();
     final path =
         '${dir.path}/voice_note_${DateTime.now().millisecondsSinceEpoch}.m4a';

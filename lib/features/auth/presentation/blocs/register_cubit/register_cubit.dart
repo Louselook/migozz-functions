@@ -1,7 +1,8 @@
 import 'dart:io'; // 👈 No olvides este import para File
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/models/location_dto.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_detail_step.dart';
 import 'package:migozz_app/features/auth/services/add_networks/add_networks.dart';
 import 'package:migozz_app/features/auth/services/add_networks/profile_data.dart';
 import 'package:migozz_app/features/auth/services/auth_service.dart';
@@ -13,6 +14,7 @@ class RegisterCubit extends Cubit<RegisterState> {
   final AuthService _authService;
   final LocationService _locationService;
   final UserMediaService _mediaService = UserMediaService();
+  final AddNetworkService networkService = AddNetworkService();
 
   File? avatarFile;
   File? voiceNoteFile;
@@ -172,22 +174,17 @@ class RegisterCubit extends Cubit<RegisterState> {
   // ---------------------- fetch social profile ----------------------
   Future<void> fetchSocialProfile(String network, String usernameOrLink) async {
     emit(state.copyWith(status: RegisterStatus.loading));
-    final service = AddNetworkService();
-
     try {
       ProfileData profile;
-
       switch (network.toLowerCase()) {
         case 'instagram':
-          profile = await service.getInstagramProfile(
+          profile = await networkService.getInstagramProfile(
             usernameOrLink: usernameOrLink,
           );
           break;
-
-        // Casos futuros: TikTok, Facebook, etc.
         default:
           profile = ProfileData(
-            url: '', // si no hay URL conocida, se deja vacía
+            url: '',
             username: usernameOrLink,
             fullName: usernameOrLink,
             profilePicUrl: '',
@@ -196,14 +193,59 @@ class RegisterCubit extends Cubit<RegisterState> {
             totalPosts: 0,
           );
       }
-
-      // Guardar el perfil en el cubit (incluye URL)
       addUserSocial(network, profile);
     } catch (e) {
-      debugPrint('Error fetching $network profile: $e');
-      rethrow;
+      debugPrint('Error fetching $network: $e');
     } finally {
       emit(state.copyWith(status: RegisterStatus.initial));
+    }
+  }
+
+  Future<void> startSocialAuth(BuildContext context, String network) async {
+    switch (network.toLowerCase()) {
+      case 'instagram':
+        final assetPath = 'assets/icons/social_networks/Instagram.png';
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) =>
+                SocialDetailScreen(label: network, assetPath: assetPath),
+          ),
+        );
+        if (result != null && result is String) {
+          await fetchSocialProfile(network, result);
+        }
+        break;
+
+      case 'youtube':
+        final assetPath = 'assets/icons/social_networks/Youtube.png';
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) =>
+                SocialDetailScreen(label: network, assetPath: assetPath),
+          ),
+        );
+        if (result != null && result is String) {
+          debugPrint('✅ Simulación de fetch YouTube con input: $result');
+          // Aquí podrías llamar a fetchSocialProfile('youtube', result) después
+        }
+        break;
+
+      case 'twitter':
+        await networkService.startTwitterAuth(context);
+        break;
+
+      case 'spotify':
+        await networkService.startSpotifyAuth(context);
+        break;
+
+      case 'tiktok':
+        await networkService.startTikTokAuth(context);
+        break;
+
+      default:
+        debugPrint('Red social no soportada: $network');
     }
   }
 }
