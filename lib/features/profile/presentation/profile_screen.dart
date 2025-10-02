@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:migozz_app/core/components/formart/text_formart.dart';
 import 'package:migozz_app/features/profile/components/draggable_social_rail.dart';
 import 'package:migozz_app/features/profile/components/ai_assistant.dart';
 import 'package:migozz_app/features/profile/components/bottom_nav.dart';
@@ -104,8 +105,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       size.width - 65, // 65 (itemSize) + 16 (padding)
       size.height * 0.2, // Posición más alta
     );
-
-    final name = (_userDoc?['displayName'] as String?) ?? 'John Doe';
+    
+    final rawname = (_userDoc?['displayName'] as String?) ?? 'John Doe';
+    final name = formatDisplayName(rawname, format: NameFormat.short); // Pasaria a John D.
     final username = (_userDoc?['username'] as String?) ?? '@johndoe';
     final avatarUrl = (_userDoc?['avatarUrl'] as String?);
     final social = _userSocials.isNotEmpty

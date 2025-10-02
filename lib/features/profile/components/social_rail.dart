@@ -86,6 +86,8 @@ class _SocialButtonState extends State<_SocialButton> {
 
   @override
   Widget build(BuildContext context) {
+    final hasAsset = widget.link.asset.isNotEmpty; // check si tiene ícono
+
     return GestureDetector(
       onTapDown: widget.isDragging
           ? null
@@ -105,9 +107,11 @@ class _SocialButtonState extends State<_SocialButton> {
           height: widget.size,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: widget.isDragging
-                ? Colors.white.withValues(alpha: 0.6)
-                : Colors.white.withValues(alpha: 0.4),
+            color: hasAsset
+                ? (widget.isDragging
+                    ? Colors.white.withValues(alpha: 0.6)
+                    : Colors.white.withValues(alpha: 0.4))
+                : Colors.purple.shade400, // fallback moradito
             border: Border.all(
               color: Colors.white.withValues(
                 alpha: widget.isDragging ? 0.8 : 0.6,
@@ -123,12 +127,18 @@ class _SocialButtonState extends State<_SocialButton> {
             ],
           ),
           child: Center(
-            child: Image.asset(
-              widget.link.asset,
-              width: widget.iconSize,
-              height: widget.iconSize,
-              fit: BoxFit.contain,
-            ),
+            child: hasAsset
+                ? Image.asset(
+                    widget.link.asset,
+                    width: widget.iconSize,
+                    height: widget.iconSize,
+                    fit: BoxFit.contain,
+                  )
+                : Icon(
+                    Icons.link,
+                    color: Colors.white,
+                    size: widget.iconSize * 0.7,
+                  ),
           ),
         ),
       ),

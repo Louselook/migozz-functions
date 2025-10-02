@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/core/components/compuestos/custom_snackbar.dart';
-import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/login_cubit/login_cubit.dart';
 
 class OtpScreen extends StatefulWidget {
@@ -56,7 +55,7 @@ class _OtpScreenState extends State<OtpScreen> {
         ),
         body: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 20.0),
+            padding: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 10.0),
               child: Column(
                 children: [
                   _titleSection(email: widget.email),
@@ -64,41 +63,19 @@ class _OtpScreenState extends State<OtpScreen> {
                   _OtpFields(
                     controllers: _controllers,
                     onCompleted: (otp) {
+                      context.read<LoginCubit>().validateOTPAndLogin(
+                      inputOTP: otp);
                       // Ahora se maneja con el botón
-                    },
+                    }
                   ),
                   _ResendButton(email: widget.email, otp: widget.userOTP),
-
-                  const SizedBox(height: 40),
-
+                  const Spacer(),
                   // Imagen en el medio
                   const _ImageSection(),
                 ],
               ),
             ),
           ),
-
-          // Botón fijo al final
-          bottomNavigationBar: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: GradientButton(
-              width: double.infinity,
-              radius: 19,
-              height: 40,
-              onPressed: () {
-                FocusScope.of(context).unfocus();
-                final otp = context.read<LoginCubit>().state.currentOTP;
-
-                if (otp != null && otp.length == 6) {
-                  context.read<LoginCubit>().validateOTPAndLogin(inputOTP: otp);
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Ingresa el OTP completo",), ),
-                  );
-                }
-              },
-              child: const Text("Verify", style: TextStyle(color: Colors.white)),),
-        ),
       )
     );
   }
