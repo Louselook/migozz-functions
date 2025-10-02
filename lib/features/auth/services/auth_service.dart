@@ -10,6 +10,18 @@ class AuthService {
   // Escuchar cambios de autenticación en tiempo real
   Stream<User?> authStateChanges() => _auth.authStateChanges();
 
+  final FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+  Future<bool> emailExists(String email) async {
+    final querySnapshot = await firestore
+        .collection('test') // nombre de tu colección
+        .where('email', isEqualTo: email)
+        .limit(1) // solo necesitamos verificar si hay al menos uno
+        .get();
+
+    return querySnapshot.docs.isNotEmpty;
+  }
+
   Future<UserCredential> signInWithOTP({
     required String email,
     required String otp,

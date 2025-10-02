@@ -100,7 +100,7 @@ class _RegisterScreenContentState extends State<_RegisterScreenContent> {
                       GradientButton(
                         width: double.infinity,
                         radius: 19,
-                        onPressed: () {
+                        onPressed: () async {
                           final email = _emailController.text.trim();
                           final Keyboardclose = FocusScope.of(context);
                           Keyboardclose.unfocus();
@@ -125,6 +125,20 @@ class _RegisterScreenContentState extends State<_RegisterScreenContent> {
                               message: "Please enter a valid email",
                               type: SnackbarType.error,
                               duration: const Duration(seconds: 4),
+                            );
+                            return;
+                          }
+
+                          // Validar existencia (async)
+                          final exists = await AuthService().emailExists(email);
+                          if (exists) {
+                            debugPrint("Si existe :D");
+                            CustomSnackbar.show(
+                              context: context,
+                              message: "This email is already registered",
+                              type: SnackbarType.error,
+                              duration: const Duration(seconds: 4),
+                              
                             );
                             return;
                           }
