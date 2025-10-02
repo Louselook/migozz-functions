@@ -91,7 +91,8 @@ class _RegisterScreenContentState extends State<_RegisterScreenContent> {
                           Icons.email_outlined,
                           color: AppColors.secondaryText,
                         ),
-                        controller: _emailController, keyboardType: TextInputType.emailAddress,
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
                       ),
 
                       const SizedBox(height: 30),
@@ -138,7 +139,6 @@ class _RegisterScreenContentState extends State<_RegisterScreenContent> {
                               message: "This email is already registered",
                               type: SnackbarType.error,
                               duration: const Duration(seconds: 4),
-                              
                             );
                             return;
                           }

@@ -1,8 +1,9 @@
 import 'dart:io'; // 👈 No olvides este import para File
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:migozz_app/core/components/atomics/loading_overlay.dart';
 import 'package:migozz_app/features/auth/models/location_dto.dart';
-import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_detail_step.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/add_network.dart';
 import 'package:migozz_app/features/auth/services/add_networks/add_networks.dart';
 // import 'package:migozz_app/features/auth/services/add_networks/profile_data.dart';
 import 'package:migozz_app/features/auth/services/auth_service.dart';
@@ -48,7 +49,7 @@ class RegisterCubit extends Cubit<RegisterState> {
   void setLanguage(String language) => emit(state.copyWith(language: language));
   void setUsername(String username) => emit(state.copyWith(username: username));
   void setGender(String gender) => emit(state.copyWith(gender: gender));
-  void setSocialEcosystem(List<String> platforms) =>
+  void setSocialEcosystem(List<Map<String, Map<String, dynamic>>> platforms) =>
       emit(state.copyWith(socialEcosystem: platforms));
   void setLocation(LocationDTO location) =>
       emit(state.copyWith(location: location));
@@ -182,14 +183,12 @@ class RegisterCubit extends Cubit<RegisterState> {
           data = await networkService.getInstagramProfile(
             usernameOrLink: usernameOrLink,
           );
-          debugPrint("✅ Instagram profile data: $data");
           break;
 
         case 'youtube':
           data = await networkService.getYouTubeProfile(
             handleOrUrl: usernameOrLink,
           );
-          debugPrint("✅ YouTube profile data: $data");
           break;
 
         default:
@@ -203,44 +202,70 @@ class RegisterCubit extends Cubit<RegisterState> {
     }
   }
 
-  Future<void> startSocialAuth(BuildContext context, String network) async {
+  Future<void> startSocialAuth(
+    BuildContext context,
+    String network,
+    String assetPath,
+  ) async {
     switch (network.toLowerCase()) {
       case 'instagram':
-        final assetPath = 'assets/icons/social_networks/Instagram.png';
-        final result = await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) =>
-                SocialDetailScreen(label: network, assetPath: assetPath),
-          ),
-        );
-        if (result != null && result is String) {
-          await fetchSocialProfile(network, result);
-        }
-        break;
-
       case 'youtube':
-        final assetPath = 'assets/icons/social_networks/Youtube.png';
-        final result = await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) =>
-                SocialDetailScreen(label: network, assetPath: assetPath),
-          ),
-        );
-        if (result != null && result is String) {
-          await fetchSocialProfile(network, result); // Solo fetch por ahora
-        }
-        break;
+        {
+          await showModalBottomSheet<String>(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (_) => AddNetworkBottomSheet(
+              label: network,
+              assetPath: assetPath,
+              onSaved: (value) async {
+                LoadingOverlay.show(context);
 
+                try {
+                  // 1️⃣ Obtener los datos del perfil
+                  Map<String, dynamic> profileData = {};
+                  if (network.toLowerCase() == 'instagram') {
+                    profileData = await networkService.getInstagramProfile(
+                      usernameOrLink: value,
+                    );
+                  } else if (network.toLowerCase() == 'youtube') {
+                    profileData = await networkService.getYouTubeProfile(
+                      handleOrUrl: value,
+                    );
+                  }
+
+                  // 2️⃣ Obtener la lista actual del cubit
+                  final current = List<Map<String, Map<String, dynamic>>>.from(
+                    state.socialEcosystem ?? [],
+                  );
+
+                  // 3️⃣ Agregar los datos en el formato correcto
+                  current.add({network.toLowerCase(): profileData});
+
+                  // 4️⃣ Actualizar el cubit
+                  setSocialEcosystem(current);
+                } catch (e) {
+                  debugPrint("❌ Error fetching $network profile: $e");
+                } finally {
+                  LoadingOverlay.hide(context);
+                }
+
+                Navigator.of(context).pop(value);
+              },
+            ),
+          );
+
+          debugPrint("✅ $network agregada: ${state.socialEcosystem}");
+          break;
+        }
+
+      // OAuth2 se manejará aparte
       case 'twitter':
         await networkService.startTwitterAuth(context);
         break;
-
       case 'spotify':
         await networkService.startSpotifyAuth(context);
         break;
-
       case 'tiktok':
         await networkService.startTikTokAuth(context);
         break;

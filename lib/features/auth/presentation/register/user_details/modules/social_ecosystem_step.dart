@@ -149,7 +149,11 @@ class SocialEcosystemStep extends StatelessWidget {
                               .state
                               .socialEcosystem ??
                           [];
-                      final selected = selectedList.contains(label);
+                      // Para saber si ya está agregada:
+                      final selected = selectedList.any(
+                        (e) => e.keys.first == label.toLowerCase(),
+                      );
+
                       return SocialIconCard(
                         label: label,
                         assetPath: assetPath,
@@ -158,19 +162,51 @@ class SocialEcosystemStep extends StatelessWidget {
                         isSelected: selected,
                         onTap: () async {
                           final cubit = context.read<RegisterCubit>();
-                          final current = List<String>.from(
-                            cubit.state.socialEcosystem ?? [],
+                          final current =
+                              List<Map<String, Map<String, dynamic>>>.from(
+                                cubit.state.socialEcosystem ?? [],
+                              );
+
+                          final index = current.indexWhere(
+                            (e) => e.keys.first == label.toLowerCase(),
                           );
 
-                          if (!current.contains(label)) {
-                            current.add(label);
-                            cubit.setSocialEcosystem(current);
-
-                            // Lógica de social auth separada en el cubit
-                            await cubit.startSocialAuth(context, label);
+                          if (index == -1) {
+                            // No está vinculado → agregar
+                            await cubit.startSocialAuth(
+                              context,
+                              label,
+                              iconByLabel[label]!,
+                            );
+                            // Nota: startSocialAuth debe agregar automáticamente a socialEcosystem al terminar
                           } else {
-                            current.remove(label);
-                            cubit.setSocialEcosystem(current);
+                            // Ya está vinculado → confirmar eliminación
+                            final remove = await showDialog<bool>(
+                              context: context,
+                              builder: (_) => AlertDialog(
+                                title: Text("Desvincular $label?"),
+                                content: Text(
+                                  "¿Estás seguro que quieres desvincular $label?",
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(false),
+                                    child: const Text("No"),
+                                  ),
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(true),
+                                    child: const Text("Sí"),
+                                  ),
+                                ],
+                              ),
+                            );
+
+                            if (remove == true) {
+                              current.removeAt(index);
+                              cubit.setSocialEcosystem(current);
+                            }
                           }
 
                           debugPrint(

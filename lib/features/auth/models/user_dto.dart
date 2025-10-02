@@ -8,7 +8,7 @@ class UserDTO {
   final String displayName;
   final String username;
   final String gender;
-  final List<String>? socialEcosystem;
+  List<Map<String, Map<String, dynamic>>>? socialEcosystem;
   final LocationDTO location;
 
   // new add
@@ -66,7 +66,7 @@ class UserDTO {
     String? displayName,
     String? username,
     String? gender,
-    List<String>? socialEcosystem,
+    List<Map<String, Map<String, dynamic>>>? socialEcosystem,
     LocationDTO? location,
 
     // new add

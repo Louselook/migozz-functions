@@ -13,7 +13,7 @@ import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/regis
 
 GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
   return GoRouter(
-    initialLocation: '/onboarding',
+    initialLocation: '/ia-chat',
     refreshListenable: goRouterNotifier, // 🔑 clave
     routes: [
       GoRoute(
@@ -43,9 +43,9 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       GoRoute(
         path: '/ia-chat',
         builder: (context, state) {
-          final email = state.extra as String;
+          // final email = state.extra as String;
           // ya existe un RegisterCubit arriba en el árbol
-          context.read<RegisterCubit>().setEmail(email);
+          context.read<RegisterCubit>().setEmail("juanes.arenilla@gmail.com");
           return const IaChatScreen();
         },
       ),

@@ -595,71 +595,71 @@ class ChatController extends ChangeNotifier {
   }
 
   /// ------------------- Social Cards (después de conectar redes) -------------------
-  Future<void> addSocialCards() async {
-    final platforms = registerCubit.state.socialEcosystem ?? [];
-    if (platforms.isEmpty) return;
+  // Future<void> addSocialCards() async {
+  //   final platforms = registerCubit.state.socialEcosystem ?? [];
+  //   if (platforms.isEmpty) return;
 
-    final isSpanish = (registerCubit.state.language ?? '')
-        .toLowerCase()
-        .contains('es');
+  //   final isSpanish = (registerCubit.state.language ?? '')
+  //       .toLowerCase()
+  //       .contains('es');
 
-    // Mensaje encabezado
-    _addMessage({
-      "other": true,
-      "type": MessageType.text,
-      "text": isSpanish
-          ? "Aquí tienes la información de tus redes conectadas:"
-          : "Here is the information from your connected platforms:",
-      "time": _getTimeNow(),
-    });
+  //   // Mensaje encabezado
+  //   _addMessage({
+  //     "other": true,
+  //     "type": MessageType.text,
+  //     "text": isSpanish
+  //         ? "Aquí tienes la información de tus redes conectadas:"
+  //         : "Here is the information from your connected platforms:",
+  //     "time": _getTimeNow(),
+  //   });
 
-    // Card por plataforma (placeholder de estadísticas)
-    for (final p in platforms) {
-      final name = _normalizePlatformName(p);
-      final stats = isSpanish
-          ? "Seguidores: 1,000\nPublicaciones: 200"
-          : "Followers: 1,000\nPosts: 200";
-      final emoji = _platformEmoji(name);
+  //   // Card por plataforma (placeholder de estadísticas)
+  //   for (final p in platforms) {
+  //     final name = _normalizePlatformName(p);
+  //     final stats = isSpanish
+  //         ? "Seguidores: 1,000\nPublicaciones: 200"
+  //         : "Followers: 1,000\nPosts: 200";
+  //     final emoji = _platformEmoji(name);
 
-      _addMessage({
-        "other": true,
-        "social": true,
-        "platform": name,
-        "stats": stats,
-        "emoji": emoji,
-        "time": _getTimeNow(),
-      });
-      await Future.delayed(const Duration(milliseconds: 250));
-    }
-  }
+  //     _addMessage({
+  //       "other": true,
+  //       "social": true,
+  //       "platform": name,
+  //       "stats": stats,
+  //       "emoji": emoji,
+  //       "time": _getTimeNow(),
+  //     });
+  //     await Future.delayed(const Duration(milliseconds: 250));
+  //   }
+  // }
 
-  String _normalizePlatformName(String p) {
-    final t = p.trim().toLowerCase();
-    if (t.contains('tiktok')) return 'TikTok';
-    if (t.contains('instagram')) return 'Instagram';
-    if (t == 'x' || t.contains('twitter')) return 'X';
-    if (t.contains('pinterest')) return 'Pinterest';
-    if (t.contains('youtube')) return 'YouTube';
-    return p;
-  }
+  // String _normalizePlatformName(String p) {
+  //   final t = p.trim().toLowerCase();
+  //   if (t.contains('tiktok')) return 'TikTok';
+  //   if (t.contains('instagram')) return 'Instagram';
+  //   if (t == 'x' || t.contains('twitter')) return 'X';
+  //   if (t.contains('pinterest')) return 'Pinterest';
+  //   if (t.contains('youtube')) return 'YouTube';
+  //   return p;
+  // }
 
-  String _platformEmoji(String name) {
-    switch (name.toLowerCase()) {
-      case 'tiktok':
-        return '🎵';
-      case 'instagram':
-        return '📸';
-      case 'x':
-      case 'twitter':
-        return '🐦';
-      case 'pinterest':
-        return '📌';
-      case 'youtube':
-        return '▶️';
-      default:
-        return '📱';
-    }
-  }
+  // String _platformEmoji(String name) {
+  //   switch (name.toLowerCase()) {
+  //     case 'tiktok':
+  //       return '🎵';
+  //     case 'instagram':
+  //       return '📸';
+  //     case 'x':
+  //     case 'twitter':
+  //       return '🐦';
+  //     case 'pinterest':
+  //       return '📌';
+  //     case 'youtube':
+  //       return '▶️';
+  //     default:
+  //       return '📱';
+  //   }
+  // }
 
   /// ------------------- Utilidades -------------------
   void _addMessage(Map<String, dynamic> message) {
