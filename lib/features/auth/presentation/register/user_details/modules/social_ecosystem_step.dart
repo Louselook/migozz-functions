@@ -8,14 +8,13 @@ import 'package:migozz_app/features/auth/presentation/register/user_details/comp
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_detail_step.dart';
 
 class SocialEcosystemStep extends StatelessWidget {
-  
   final PageController controller;
   const SocialEcosystemStep({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {
     // Usar las utilidades responsive
-    
+
     final scaleFactor = context.scaleFactor;
     final deviceType = context.deviceType;
 
@@ -145,7 +144,12 @@ class SocialEcosystemStep extends StatelessWidget {
                       final clampedIconSize = iconSize.clamp(24.0, 48.0);
 
                       // Obtener la lista seleccionada del cubit
-                      final selectedList = context.watch<RegisterCubit>().state.socialEcosystem ?? [];
+                      final selectedList =
+                          context
+                              .watch<RegisterCubit>()
+                              .state
+                              .socialEcosystem ??
+                          [];
                       final selected = selectedList.contains(label);
 
                       return SocialIconCard(
@@ -153,7 +157,7 @@ class SocialEcosystemStep extends StatelessWidget {
                         assetPath: assetPath,
                         iconSize: clampedIconSize,
                         sizeIcon: cardSize,
-                        isSelected: selected, 
+                        isSelected: selected,
                         onTap: () async {
                           final cubit = context.read<RegisterCubit>();
                           final current = List<String>.from(
@@ -161,23 +165,26 @@ class SocialEcosystemStep extends StatelessWidget {
                           );
 
                           if (!current.contains(label)) {
-                            // Sí no estaba seleccionado: agregar y abrir detail
+                            // Si no estaba seleccionado: agregar
                             current.add(label);
                             cubit.setSocialEcosystem(current);
 
-                            final url = await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => SocialDetailScreen(
-                                  label: label,
-                                  assetPath: assetPath!,
+                            // Solo navegar a SocialDetailScreen si la opción es "Other"
+                            if (label == "Other") {
+                              final url = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => SocialDetailScreen(
+                                    label: label,
+                                    assetPath: assetPath!,
+                                  ),
                                 ),
-                              ),
-                            );
+                              );
 
-                            if (url != null && url is String) {
-                              debugPrint("✅ Guardar URL de $label: $url");
-                              // cubit.setSocialLink(label, url);
+                              if (url != null && url is String) {
+                                debugPrint("✅ Guardar URL de $label: $url");
+                                // cubit.setSocialLink(label, url);
+                              }
                             }
                           } else {
                             // Ya estaba seleccionado: solo quitar
@@ -185,7 +192,9 @@ class SocialEcosystemStep extends StatelessWidget {
                             cubit.setSocialEcosystem(current);
                           }
 
-                          debugPrint("🌐 Ecosistema social: ${cubit.state.socialEcosystem}");
+                          debugPrint(
+                            "🌐 Ecosistema social: ${cubit.state.socialEcosystem}",
+                          );
                         },
                       );
                     },

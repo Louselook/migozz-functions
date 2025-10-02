@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/core/utils/responsive_utils.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/social_icon_card.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_detail_step.dart';
 
 class EditSocialScreen extends StatelessWidget {
   const EditSocialScreen({super.key});
@@ -99,9 +100,23 @@ class EditSocialScreen extends StatelessWidget {
                     label: label,
                     assetPath: assetPath,
                     isSelected: false, // manejar luego con cubit o estado
-                    onTap: () {
-                      // Aquí luego conectar con SocialDetailScreen o la pantalla correspondiente
-                      // Navigator.push(...)
+                    onTap: () async {
+                      // Solo navegar a SocialDetailScreen si la opción es "Other"
+                      if (label == "Other") {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => SocialDetailScreen(
+                              label: label,
+                              assetPath: assetPath,
+                            ),
+                          ),
+                        );
+                      } else {
+                        // Para otras redes sociales, puedes agregar lógica diferente aquí
+                        // Por ejemplo, seleccionar/deseleccionar o abrir un editor específico
+                        debugPrint("Selected: $label");
+                      }
                     },
                   );
                 },
