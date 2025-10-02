@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:migozz_app/features/auth/models/user_dto.dart';
-import 'package:migozz_app/features/auth/services/add_networks/profile_data.dart';
+// import 'package:migozz_app/features/auth/services/add_networks/profile_data.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -60,22 +60,22 @@ class AuthService {
   }
 
   /// Guarda un perfil social de un usuario en Firestore
-  Future<void> saveUserSocial({
-    required String uid,
-    required String network,
-    required ProfileData profile,
-  }) async {
-    try {
-      await _firestore
-          .collection('users')
-          .doc(uid)
-          .collection('socials')
-          .doc(network.toLowerCase())
-          .set(profile.toJson());
-    } catch (e) {
-      throw Exception('Error guardando red social $network: $e');
-    }
-  }
+  // Future<void> saveUserSocial({
+  //   required String uid,
+  //   required String network,
+  //   required ProfileData profile,
+  // }) async {
+  //   try {
+  //     await _firestore
+  //         .collection('users')
+  //         .doc(uid)
+  //         .collection('socials')
+  //         .doc(network.toLowerCase())
+  //         .set(profile.toJson());
+  //   } catch (e) {
+  //     throw Exception('Error guardando red social $network: $e');
+  //   }
+  // }
 
   // sing out
   Future<void> signOutHome() async {

@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:migozz_app/features/auth/models/user_dto.dart';
 import 'package:migozz_app/features/auth/models/location_dto.dart';
-import 'package:migozz_app/features/auth/services/add_networks/profile_data.dart';
+// import 'package:migozz_app/features/auth/services/add_networks/profile_data.dart';
 
 enum RegisterStatus { initial, loading, success, failure }
 
@@ -28,7 +28,7 @@ class RegisterState extends Equatable {
 
   final EmailVerification emailVerification;
   final String? currentOTP;
-  final Map<String, ProfileData>? userSocials;
+  // final Map<String, ProfileData>? userSocials;
 
   const RegisterState({
     this.status = RegisterStatus.initial,
@@ -47,7 +47,7 @@ class RegisterState extends Equatable {
     this.interests,
     this.emailVerification = EmailVerification.pending,
     this.currentOTP,
-    this.userSocials,
+    // this.userSocials,
   });
 
   RegisterState copyWith({
@@ -67,7 +67,7 @@ class RegisterState extends Equatable {
     Map<String, List<String>>? interests,
     EmailVerification? emailVerification,
     String? currentOTP,
-    Map<String, ProfileData>? userSocials,
+    // Map<String, ProfileData>? userSocials,
   }) {
     return RegisterState(
       status: status ?? this.status,
@@ -86,7 +86,7 @@ class RegisterState extends Equatable {
       interests: interests ?? this.interests,
       emailVerification: emailVerification ?? this.emailVerification,
       currentOTP: currentOTP ?? this.currentOTP,
-      userSocials: userSocials ?? this.userSocials,
+      // userSocials: userSocials ?? this.userSocials,
     );
   }
 
@@ -132,6 +132,6 @@ class RegisterState extends Equatable {
     interests,
     currentOTP,
     emailVerification,
-    userSocials,
+    // userSocials,
   ];
 }

@@ -183,7 +183,7 @@ class _AddPlatformBottomSheetState extends State<AddPlatformBottomSheet> {
                 decoration: BoxDecoration(
                   color: const Color(0xFF3D3D3D),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                  border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
                 ),
                 child: _selectedImage != null
                     ? ClipRRect(

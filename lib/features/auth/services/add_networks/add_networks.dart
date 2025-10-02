@@ -2,63 +2,37 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:migozz_app/core/config/api/api_config.dart';
-import 'package:migozz_app/features/auth/services/add_networks/profile_data.dart';
+// import 'package:migozz_app/features/auth/services/add_networks/profile_data.dart';
 import 'package:url_launcher/url_launcher_string.dart'; // <--- necesario para launchUrlString
 
 class AddNetworkService {
   /// Obtiene perfil de Instagram
-  Future<ProfileData> getInstagramProfile({
+  Future<Map<String, dynamic>> getInstagramProfile({
     required String usernameOrLink,
   }) async {
     final uri = Uri.parse(
       '${ApiConfig.apiBase}/networks/add-instagram',
     ).replace(queryParameters: {'username_or_link': usernameOrLink});
-
-    try {
-      final response = await http.get(uri);
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        return ProfileData.fromJson(data);
-      } else if (response.statusCode == 404) {
-        throw Exception('Perfil no encontrado: $usernameOrLink');
-      } else {
-        throw Exception('Error ${response.statusCode}: ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('Error obteniendo perfil de Instagram: $e');
+    final response = await http.get(uri);
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Error obteniendo perfil de Instagram: ${response.body}');
     }
   }
 
   /// Obtiene perfil de YouTube
-  Future<ProfileData> getYouTubeProfile({required String handleOrUrl}) async {
+  Future<Map<String, dynamic>> getYouTubeProfile({
+    required String handleOrUrl,
+  }) async {
     final uri = Uri.parse(
       '${ApiConfig.apiBase}/youtube/channel',
     ).replace(queryParameters: {'query': handleOrUrl});
-
-    try {
-      final response = await http.get(uri);
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-
-        // Convertimos la respuesta a ProfileData
-        return ProfileData(
-          url: data['customUrl'] ?? '',
-          username: data['title'] ?? handleOrUrl,
-          fullName: data['title'] ?? handleOrUrl,
-          profilePicUrl: data['thumbnail'] ?? '',
-          followers: int.tryParse(data['subscriberCount'] ?? '0') ?? 0,
-          followees: 0,
-          totalPosts: int.tryParse(data['videoCount'] ?? '0') ?? 0,
-        );
-      } else if (response.statusCode == 404) {
-        throw Exception('Canal no encontrado: $handleOrUrl');
-      } else {
-        throw Exception('Error ${response.statusCode}: ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('Error obteniendo perfil de YouTube: $e');
+    final response = await http.get(uri);
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Error obteniendo perfil de YouTube: ${response.body}');
     }
   }
 

@@ -4,7 +4,7 @@ import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/loading_overlay.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
-import '../components/add_platform_bottom_sheet.dart';
+// import '../components/add_platform_bottom_sheet.dart';
 import '../components/edit_platform_bottom_sheet.dart';
 import '../components/platform_card.dart';
 
@@ -32,20 +32,20 @@ class _SocialDetailScreenState extends State<SocialDetailScreen> {
     super.dispose();
   }
 
-  void _showAddPlatformBottomSheet() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => AddPlatformBottomSheet(
-        onPlatformAdded: (platformData) {
-          setState(() {
-            addedPlatforms.add(platformData);
-          });
-        },
-      ),
-    );
-  }
+  // void _showAddPlatformBottomSheet() {
+  //   showModalBottomSheet(
+  //     context: context,
+  //     isScrollControlled: true,
+  //     backgroundColor: Colors.transparent,
+  //     builder: (context) => AddPlatformBottomSheet(
+  //       onPlatformAdded: (platformData) {
+  //         setState(() {
+  //           addedPlatforms.add(platformData);
+  //         });
+  //       },
+  //     ),
+  //   );
+  // }
 
   void _showEditPlatformBottomSheet(Map<String, String> platform, int index) {
     showModalBottomSheet(
@@ -76,19 +76,6 @@ class _SocialDetailScreenState extends State<SocialDetailScreen> {
     try {
       LoadingOverlay.show(context);
       await cubit.fetchSocialProfile(widget.label, usernameOrLink);
-
-      final profile = cubit.state.userSocials?[widget.label];
-      if (profile != null) {
-        debugPrint(
-          "✅ ${widget.label} profile data: "
-          "username: ${profile.username}, "
-          "fullName: ${profile.fullName}, "
-          "url: ${profile.url}, "
-          "followers: ${profile.followers}, "
-          "followees: ${profile.followees}, "
-          "totalPosts: ${profile.totalPosts}",
-        );
-      }
 
       if (!mounted) return;
       LoadingOverlay.hide(context);

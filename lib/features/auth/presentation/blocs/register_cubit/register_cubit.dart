@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/models/location_dto.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_detail_step.dart';
 import 'package:migozz_app/features/auth/services/add_networks/add_networks.dart';
-import 'package:migozz_app/features/auth/services/add_networks/profile_data.dart';
+// import 'package:migozz_app/features/auth/services/add_networks/profile_data.dart';
 import 'package:migozz_app/features/auth/services/auth_service.dart';
 import 'package:migozz_app/features/auth/services/location_service.dart';
 import 'package:migozz_app/features/auth/services/media_service.dart';
@@ -136,19 +136,19 @@ class RegisterCubit extends Cubit<RegisterState> {
       }
 
       // 3️⃣ Guardar los perfiles sociales en la subcolección "socials"
-      if (state.userSocials != null && state.userSocials!.isNotEmpty) {
-        for (final entry in state.userSocials!.entries) {
-          final network = entry.key;
-          final profile = entry.value;
+      // if (state.userSocials != null && state.userSocials!.isNotEmpty) {
+      //   for (final entry in state.userSocials!.entries) {
+      //     final network = entry.key;
+      //     final profile = entry.value;
 
-          // Guardar cada perfil incluyendo URL
-          await _authService.saveUserSocial(
-            uid: uid,
-            network: network,
-            profile: profile,
-          );
-        }
-      }
+      //     // Guardar cada perfil incluyendo URL
+      //     await _authService.saveUserSocial(
+      //       uid: uid,
+      //       network: network,
+      //       profile: profile,
+      //     );
+      //   }
+      // }
 
       return uid;
     } catch (e) {
@@ -160,40 +160,42 @@ class RegisterCubit extends Cubit<RegisterState> {
   }
 
   // ---------------------- add socials ----------------------
-  void addUserSocial(String network, ProfileData profile) {
-    // Crear copia del mapa actual para no modificar el estado directamente
-    final current = Map<String, ProfileData>.from(state.userSocials ?? {});
+  // void addUserSocial(String network, ProfileData profile) {
+  //   // Crear copia del mapa actual para no modificar el estado directamente
+  //   final current = Map<String, ProfileData>.from(state.userSocials ?? {});
 
-    // Guardar o actualizar la red social (incluye url)
-    current[network] = profile;
+  //   // Guardar o actualizar la red social (incluye url)
+  //   current[network] = profile;
 
-    // Emitir nuevo estado con el mapa actualizado
-    emit(state.copyWith(userSocials: current));
-  }
+  //   // Emitir nuevo estado con el mapa actualizado
+  //   emit(state.copyWith(userSocials: current));
+  // }
 
   // ---------------------- fetch social profile ----------------------
   Future<void> fetchSocialProfile(String network, String usernameOrLink) async {
     emit(state.copyWith(status: RegisterStatus.loading));
     try {
-      ProfileData profile;
+      Map<String, dynamic> data;
+
       switch (network.toLowerCase()) {
         case 'instagram':
-          profile = await networkService.getInstagramProfile(
+          data = await networkService.getInstagramProfile(
             usernameOrLink: usernameOrLink,
           );
+          debugPrint("✅ Instagram profile data: $data");
           break;
-        default:
-          profile = ProfileData(
-            url: '',
-            username: usernameOrLink,
-            fullName: usernameOrLink,
-            profilePicUrl: '',
-            followers: 0,
-            followees: 0,
-            totalPosts: 0,
+
+        case 'youtube':
+          data = await networkService.getYouTubeProfile(
+            handleOrUrl: usernameOrLink,
           );
+          debugPrint("✅ YouTube profile data: $data");
+          break;
+
+        default:
+          debugPrint("Red social no soportada: $network");
+          return;
       }
-      addUserSocial(network, profile);
     } catch (e) {
       debugPrint('Error fetching $network: $e');
     } finally {
@@ -227,8 +229,7 @@ class RegisterCubit extends Cubit<RegisterState> {
           ),
         );
         if (result != null && result is String) {
-          debugPrint('✅ Simulación de fetch YouTube con input: $result');
-          // Aquí podrías llamar a fetchSocialProfile('youtube', result) después
+          await fetchSocialProfile(network, result); // Solo fetch por ahora
         }
         break;
 
