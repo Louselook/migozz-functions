@@ -29,6 +29,7 @@ dependencies:
   http: ^1.5.0 # validar email con OTP
   flutter_svg: ^2.0.9
   go_router: ^16.2.2 # refactor de la naveegacion
+  google_generative_ai: ^0.4.6
   url_launcher: ^6.3.0
   location: ^8.0.1
 
