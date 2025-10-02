@@ -20,7 +20,7 @@ class EditRecordScreen extends StatelessWidget {
         ),
         title: const Text(
           "Edit Record",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
         ),
         centerTitle: true,
       ),
@@ -57,8 +57,8 @@ class EditRecordScreen extends StatelessWidget {
             GestureDetector(
               onTap: () {}, // Ingresar logica de grabacion
               child: Container(
-                width: 140,
-                height: 140,
+                width: 191,
+                height: 191,
                 decoration: const BoxDecoration(
                   color: Color(0xFFFF4DB6), 
                   shape: BoxShape.circle,
@@ -66,8 +66,8 @@ class EditRecordScreen extends StatelessWidget {
                 child: Center(
                   child: Image.asset(
                     "assets/icons/Mic.png", 
-                    width: 70,
-                    height: 70,
+                    width: 140,
+                    height: 140,
                     color: Colors.white,
                   ),
                 ),
@@ -91,15 +91,15 @@ class EditRecordScreen extends StatelessWidget {
                         "Listen to your audio",
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 12,
+                          fontSize: 10,
                         ),
                       ),
                       const SizedBox(height: 8),
                       GestureDetector(
                         onTap: () {}, // Ingresar logica de play
                         child: Container(
-                          width: 70,
-                          height: 70,
+                          width: 86,
+                          height: 86,
                           decoration: const BoxDecoration(
                             color: Color(0xFFFF4DB6),
                             shape: BoxShape.circle,
@@ -107,8 +107,8 @@ class EditRecordScreen extends StatelessWidget {
                           child: Center(
                             child: Image.asset(
                               "assets/icons/Play.png",
-                              width: 40,
-                              height: 40,
+                              width: 51,
+                              height: 51,
                               color: Colors.white,
                             ),
                           ),
@@ -123,37 +123,31 @@ class EditRecordScreen extends StatelessWidget {
             const Spacer(),
 
             // Save button (maqueta, solo cierra la vista)
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(context), // solo sale
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  backgroundColor: null,
-                  foregroundColor: Colors.transparent,
-                  textStyle: const TextStyle(fontSize: 18),
-                ).copyWith(
-                  backgroundColor: WidgetStateProperty.all(null),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.zero,
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: () => Navigator.pop(context),
+              child: Ink(
+                decoration: BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Container(
-                  decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  child: const Center(
-                    child: Text(
-                      "Save",
-                      style: TextStyle(fontSize: 18, color: Colors.white),
-                    ),
+                  alignment: Alignment.center,
+                  child: const Text(
+                    "Save",
+                    style: TextStyle(fontSize: 20, color: Colors.white),
                   ),
                 ),
-              ),  
+              ),
             ),
-
             SizedBox(height: screenHeight * 0.03),
           ],
         ),
