@@ -1,6 +1,9 @@
 import 'dart:io'; // 👈 No olvides este import para File
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/models/location_dto.dart';
+import 'package:migozz_app/features/auth/services/add_networks/add_networks.dart';
+import 'package:migozz_app/features/auth/services/add_networks/profile_data.dart';
 import 'package:migozz_app/features/auth/services/auth_service.dart';
 import 'package:migozz_app/features/auth/services/location_service.dart';
 import 'package:migozz_app/features/auth/services/media_service.dart';
@@ -122,21 +125,85 @@ class RegisterCubit extends Cubit<RegisterState> {
 
       // 2️⃣ Asociar archivos subidos temporalmente al UID definitivo
       final Map<MediaType, String> mediaUrls = {};
-      if (state.avatarUrl != null) {
+      if (state.avatarUrl != null)
         mediaUrls[MediaType.avatar] = state.avatarUrl!;
-      }
-      if (state.voiceNoteUrl != null) {
+      if (state.voiceNoteUrl != null)
         mediaUrls[MediaType.voice] = state.voiceNoteUrl!;
-      }
       if (mediaUrls.isNotEmpty) {
         await _mediaService.associateMediaToUid(uid: uid, email: state.email!);
+      }
+
+      // 3️⃣ Guardar los perfiles sociales en la subcolección "socials"
+      if (state.userSocials != null && state.userSocials!.isNotEmpty) {
+        for (final entry in state.userSocials!.entries) {
+          final network = entry.key;
+          final profile = entry.value;
+
+          // Guardar cada perfil incluyendo URL
+          await _authService.saveUserSocial(
+            uid: uid,
+            network: network,
+            profile: profile,
+          );
+        }
       }
 
       return uid;
     } catch (e) {
       throw Exception('Error al registrar usuario: $e');
     } finally {
+      // Cambiar el estado a success aunque haya fallado la guardada de socials
       emit(state.copyWith(status: RegisterStatus.success));
+    }
+  }
+
+  // ---------------------- add socials ----------------------
+  void addUserSocial(String network, ProfileData profile) {
+    // Crear copia del mapa actual para no modificar el estado directamente
+    final current = Map<String, ProfileData>.from(state.userSocials ?? {});
+
+    // Guardar o actualizar la red social (incluye url)
+    current[network] = profile;
+
+    // Emitir nuevo estado con el mapa actualizado
+    emit(state.copyWith(userSocials: current));
+  }
+
+  // ---------------------- fetch social profile ----------------------
+  Future<void> fetchSocialProfile(String network, String usernameOrLink) async {
+    emit(state.copyWith(status: RegisterStatus.loading));
+    final service = AddNetworkService();
+
+    try {
+      ProfileData profile;
+
+      switch (network.toLowerCase()) {
+        case 'instagram':
+          profile = await service.getInstagramProfile(
+            usernameOrLink: usernameOrLink,
+          );
+          break;
+
+        // Casos futuros: TikTok, Facebook, etc.
+        default:
+          profile = ProfileData(
+            url: '', // si no hay URL conocida, se deja vacía
+            username: usernameOrLink,
+            fullName: usernameOrLink,
+            profilePicUrl: '',
+            followers: 0,
+            followees: 0,
+            totalPosts: 0,
+          );
+      }
+
+      // Guardar el perfil en el cubit (incluye URL)
+      addUserSocial(network, profile);
+    } catch (e) {
+      debugPrint('Error fetching $network profile: $e');
+      rethrow;
+    } finally {
+      emit(state.copyWith(status: RegisterStatus.initial));
     }
   }
 }

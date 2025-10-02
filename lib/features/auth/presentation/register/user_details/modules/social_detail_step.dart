@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/color.dart';
+import 'package:migozz_app/core/components/atomics/loading_overlay.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 
 class SocialDetailScreen extends StatefulWidget {
   final String label;
@@ -19,6 +22,45 @@ class SocialDetailScreen extends StatefulWidget {
 class _SocialDetailScreenState extends State<SocialDetailScreen> {
   final TextEditingController _controller = TextEditingController();
 
+  Future<void> _fetchProfileAndPop() async {
+    final cubit = context.read<RegisterCubit>();
+    final usernameOrLink = _controller.text.trim();
+    if (usernameOrLink.isEmpty) return;
+
+    try {
+      // Mostrar rueda
+      LoadingOverlay.show(context);
+
+      // Llamada al Cubit para obtener el perfil
+      await cubit.fetchSocialProfile(widget.label, usernameOrLink);
+
+      // Imprimir los datos
+      final profile = cubit.state.userSocials?[widget.label];
+      if (profile != null) {
+        debugPrint(
+          "✅ ${widget.label} profile data: "
+          "username: ${profile.username}, "
+          "fullName: ${profile.fullName}, "
+          "url: ${profile.url}, "
+          "followers: ${profile.followers}, "
+          "followees: ${profile.followees}, "
+          "totalPosts: ${profile.totalPosts}",
+        );
+      }
+
+      // Ocultar rueda y volver a la pantalla anterior
+      if (!mounted) return;
+      LoadingOverlay.hide(context);
+      Navigator.of(context).pop(); // ya regresamos
+    } catch (e) {
+      LoadingOverlay.hide(context);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching ${widget.label} profile')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -26,7 +68,14 @@ class _SocialDetailScreenState extends State<SocialDetailScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         leading: BackButton(color: Colors.white),
-        title: Text("Your Social Ecosystem", style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+        title: Text(
+          "Your Social Ecosystem",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         centerTitle: true,
       ),
       body: Padding(
@@ -34,21 +83,13 @@ class _SocialDetailScreenState extends State<SocialDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const Text("Add your platform", style: TextStyle(color: Colors.white, fontSize: 14)), 
-            // Ícono grande
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Padding(
                   padding: const EdgeInsets.only(right: 12.0),
-                  child: Image.asset(
-                    widget.assetPath,
-                    width: 40,
-                    height: 40,
-                  ),
+                  child: Image.asset(widget.assetPath, width: 40, height: 40),
                 ),
-                
-                // Campo de texto para la URL
                 Expanded(
                   child: TextField(
                     controller: _controller,
@@ -67,20 +108,17 @@ class _SocialDetailScreenState extends State<SocialDetailScreen> {
                 ),
               ],
             ),
-
             const Spacer(),
-
-            // Botón continuar
             SizedBox(
               width: double.infinity,
               child: GradientButton(
-                onPressed: () {
-                  // Guardar en cubit o devolver el resultado
-                  Navigator.pop(context, _controller.text);
-                },
+                onPressed: _fetchProfileAndPop,
                 width: double.infinity,
                 radius: 19,
-                child: const Text("Continue", style: TextStyle(color: Colors.white, fontSize: 20),),
+                child: const Text(
+                  "Continue",
+                  style: TextStyle(color: Colors.white, fontSize: 20),
+                ),
                 gradient: AppColors.primaryGradient,
               ),
             ),
