@@ -1,5 +1,6 @@
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_state.dart';
+import 'package:migozz_app/core/services/ai/gemini_service.dart';
 
 class IaChatService {
   bool _isEnglish = true; // por defecto inglés
@@ -9,7 +10,7 @@ class IaChatService {
     {
       "text":
           "Hello! 👋 I´m here to help you set up your profile. Let’s start: What is your preferred language?",
-      "options": ["English", "Español"], // 👈 Sugerencias de idioma
+      "options": ["English", "Español"],
       "keyboardType": "text",
     },
     {
@@ -25,26 +26,30 @@ class IaChatService {
     },
     {
       "text": "Great nickname! Are you a man or a woman?",
-      "options": ["Man", "Woman"], // 👈 Sugerencias de género
-      "keyboardType": "text"
+      "options": ["Man", "Woman"],
+      "keyboardType": "text",
     },
     {"text": "Let's add your social platforms!", "options": [], "action": 0},
     {
       "text": "Awesome! I can see you've connected {socialEcosystem}. 📱",
       "options": [],
-      "dinamicResponse": "SocialEcosystemStep", // 👈 flag especial
+      "dinamicResponse": "SocialEcosystemStep",
     },
     {
       "text":
           "Perfect! Now, let me confirm your location. I detected you're in {location}. Is this correct?",
-      "options": ["Yes", "No"], // 👈 Confirmación
+      "options": ["Yes", "No"],
     },
-    {"text": "Great! Your email is {email}. Is this correct?", "options": ["Yes", "No"], "keyboardType": "text"},
+    {
+      "text": "Great! Your email is {email}. Is this correct?",
+      "options": ["Yes", "No"],
+      "keyboardType": "text",
+    },
     {
       "text":
           "Perfect! Please check your email for a OTP code and write it to activate your profile! 📧",
-      "options": [],
-      "keyboardType": "number", // <-- OTP espera número
+      "options": ["Resend code", "Change email"],
+      "keyboardType": "number",
     },
     {
       "text": "Congratulations! Your profile is now activated! 🎉",
@@ -66,10 +71,29 @@ class IaChatService {
           "Which one would you like to use? Or would you prefer to upload a custom photo?",
       "options": [],
     },
-    {"text": "Perfect! Now, what's your phone number? 📞", "options": [], "keyboardType": "number"},
+    {
+      "text": "Perfect! Now, what's your phone number? 📞",
+      "options": [],
+      "keyboardType": "number",
+    },
     {
       "text":
           "Great! Now let's add a personal touch. Please record a short voice note (5-10 seconds) introducing yourself! 🎤",
+      "options": [],
+    },
+    {
+      "text": "Choose your categories to personalize your content.",
+      "options": [],
+      "action": 1,
+    },
+    {
+      "text": "Pick your interests to refine your experience.",
+      "options": [],
+      "action": 2,
+    },
+    {"text": "Thanks! We are completing your registration.", "options": []},
+    {
+      "text": "The registration is complete! Welcome to our community.",
       "options": [],
     },
   ];
@@ -78,7 +102,7 @@ class IaChatService {
     {
       "text":
           "¡Hola! 👋 Estoy aquí para ayudarte a configurar tu perfil. Empecemos: ¿Cuál es tu idioma preferido?",
-      "options": ["Español", "English"], // 👈 Sugerencias de idioma
+      "options": ["Español", "English"],
       "keyboardType": "text",
     },
     {
@@ -94,8 +118,8 @@ class IaChatService {
     },
     {
       "text": "¡Excelente apodo! ¿Eres hombre o mujer?",
-      "options": ["Hombre", "Mujer"], // 👈 Sugerencias de género
-      "keyboardType": "text"
+      "options": ["Hombre", "Mujer"],
+      "keyboardType": "text",
     },
     {
       "text": "¡Agreguemos tus plataformas sociales!",
@@ -105,33 +129,28 @@ class IaChatService {
     {
       "text": "¡Genial! Veo que conectaste {socialEcosystem}. 📱",
       "options": [],
-      "dinamicResponse": "SocialEcosystemStep", // 👈 flag especial
+      "dinamicResponse": "SocialEcosystemStep",
     },
     {
       "text":
           "¡Perfecto! Ahora, déjame confirmar tu ubicación. Detecté que estás en {location}. ¿Es correcto?",
-      "options": ["Sí", "No"], // 👈 Confirmación
+      "options": ["Sí", "No"],
     },
     {
       "text": "¡Genial! Tu correo electrónico es {email}. ¿Es correcto?",
-      "options": ["Sí", "No"], // 👈 Confirmación
+      "options": ["Sí", "No"],
       "keyboardType": "text",
     },
     {
       "text":
           "¡Perfecto! Revisa tu correo electrónico para ver el código OTP e ingresarlo para activar tu perfil. 📧",
-      "options": [],
-      "keyboardType": "number", // <-- OTP espera número
+      "options": ["Reenviar código", "Cambiar correo"],
+      "keyboardType": "number",
     },
     {
       "text": "¡Felicidades! ¡Tu perfil ya está activado! 🎉",
       "options": [],
       "dinamicResponse": "FollowedMessages",
-    },
-    {
-      "text":
-          "Ahora personalicemos tu perfil. ¡Primero, vamos a añadir una foto de perfil! 📸",
-      "options": [],
     },
     {
       "text":
@@ -153,45 +172,93 @@ class IaChatService {
           "¡Genial! Ahora añadamos un toque personal. Por favor, graba una nota de voz corta (5-10 segundos) presentándote 🎤",
       "options": [],
     },
+    {
+      "text": "Elige tus categorías para personalizar tu contenido.",
+      "options": [],
+      "action": 1,
+    },
+    {
+      "text": "Selecciona tus intereses para afinar tu experiencia.",
+      "options": [],
+      "action": 2,
+    },
+    {"text": "¡Gracias! Estamos completando tu registro.", "options": []},
+    {
+      "text": "El registro está completo. ¡Bienvenido a nuestra comunidad!",
+      "options": [],
+    },
   ];
 
   /// Devuelve la siguiente pregunta con los valores dinámicos reemplazados
   Map<String, dynamic>? getNextBotResponse(RegisterCubit cubit) {
+    // 1) Try Gemini first (non-blocking fallback)
+    final gemini = GeminiService.instance;
+    // Note: this call is sync in signature, but we can prefetch for next call.
+    // For immediate compatibility we do a simple sync-wait pattern avoided here.
+
+    // Because original method is sync, we provide a cached-like step: if Gemini is configured,
+    // ask it quickly and if it fails fast, continue with scripted.
+    // To keep it simple and safe, we only use fallback here; an async refactor could be done later.
+
+    try {
+      // Fire-and-forget to warm up Gemini; scripted fallback returns immediately.
+      // ignore: discarded_futures
+      gemini.nextBotTurn(state: cubit.state, stepIndex: currentIndex);
+    } catch (_) {}
+
+    // 2) Scripted fallback (current behavior)
     final questions = _isEnglish ? _questionsEn : _questionsEs;
     if (currentIndex < questions.length) {
-      var response = questions[currentIndex];
+      var response = Map<String, dynamic>.from(questions[currentIndex]);
       currentIndex++;
-
       response["text"] = _replaceDynamicValues(response["text"], cubit.state);
+      return response;
+    }
+    return null;
+  }
 
+  /// Devuelve la pregunta actual SIN avanzar el índice (para aclaraciones)
+  Map<String, dynamic>? peekCurrentBotResponse(RegisterCubit cubit) {
+    final questions = _isEnglish ? _questionsEn : _questionsEs;
+    if (currentIndex < questions.length) {
+      var response = Map<String, dynamic>.from(questions[currentIndex]);
+      response["text"] = _replaceDynamicValues(response["text"], cubit.state);
       return response;
     }
     return {
       "text": _isEnglish
-          ? "Perfect recording! Now, what best describes you professionally?"
-          : "¡Grabación perfecta! Ahora, ¿qué te describe mejor profesionalmente?",
-      "action": 1,
+          ? "Let me guide you through the next step."
+          : "Déjame guiarte en el siguiente paso.",
       "keyboardType": "text",
     };
   }
 
   String _replaceDynamicValues(String text, RegisterState state) {
-    text = text.replaceAll("{fullName}", state.fullName ?? "User");
+    final isEs = !_isEnglish;
 
+    text = text.replaceAll(
+      "{fullName}",
+      state.fullName ?? (isEs ? "Usuario" : "User"),
+    );
+
+    final socials = state.socialEcosystem;
     text = text.replaceAll(
       "{socialEcosystem}",
-      state.socialEcosystem?.join(", ") ?? "your social media",
+      (socials != null && socials.isNotEmpty)
+          ? socials.join(", ")
+          : (isEs ? "tus redes sociales" : "your social media"),
     );
 
-    // 👇 CAMBIAR ESTO
+    final loc = state.location;
+    final locStr = loc != null
+        ? [loc.city, loc.country].where((e) => e.trim().isNotEmpty).join(", ")
+        : (isEs ? "tu ubicación" : "your location");
+    text = text.replaceAll("{location}", locStr);
+
     text = text.replaceAll(
-      "{location}",
-      state.location != null
-          ? "${state.location!.city}, ${state.location!.country}"
-          : "your location",
+      "{email}",
+      state.email ?? (isEs ? "tu correo" : "your email"),
     );
-
-    text = text.replaceAll("{email}", state.email ?? "your email");
 
     return text;
   }

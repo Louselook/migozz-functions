@@ -9,8 +9,7 @@ import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/features/profile/presentation/config/edit_my_interest.dart';
 import 'package:migozz_app/features/profile/presentation/config/edit_social.dart';
-import 'package:migozz_app/features/profile/presentation/config/edit_audio.dart'; 
-
+import 'package:migozz_app/features/profile/presentation/config/edit_audio.dart';
 
 class EditProfile extends StatefulWidget {
   const EditProfile({super.key});
@@ -207,10 +206,19 @@ class _EditProfileState extends State<EditProfile> {
                     icon: Icons.play_circle_outline,
                     onTap: () {
                       Navigator.push(
-                        context, 
-                        MaterialPageRoute(builder: (_) => EditRecordScreen())
+                        context,
+                        MaterialPageRoute(builder: (_) => EditRecordScreen()),
                       );
-                    }
+                    },
+                  ),
+                  SizedBox(height: screenHeight * 0.018),
+                  bottomOptions(
+                    text: ' Logout',
+                    icon: Icons.logout,
+                    onTap: () async {
+                      await FirebaseAuth.instance.signOut();
+                      if (mounted) context.go('/login');
+                    },
                   ),
                   SizedBox(height: screenHeight * 0.018),
                   bottomOptions(
@@ -218,10 +226,12 @@ class _EditProfileState extends State<EditProfile> {
                     icon: Icons.handshake_outlined,
                     onTap: () {
                       Navigator.push(
-                        context, 
-                        MaterialPageRoute(builder: (_) => const EditInterestsScreen())
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const EditInterestsScreen(),
+                        ),
                       );
-                    }
+                    },
                   ),
                   SizedBox(height: screenHeight * 0.018),
                   bottomOptions(
@@ -229,10 +239,12 @@ class _EditProfileState extends State<EditProfile> {
                     icon: Icons.share_outlined,
                     onTap: () {
                       Navigator.push(
-                        context, 
-                        MaterialPageRoute(builder: (_) => const EditSocialScreen())
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const EditSocialScreen(),
+                        ),
                       );
-                    }
+                    },
                   ),
                 ],
               ),
@@ -344,34 +356,38 @@ class _EditProfileState extends State<EditProfile> {
     );
   }
 
-    Widget bottomOptions({required IconData icon, required String text, VoidCallback? onTap,}) {
-      return InkWell(
-        onTap: onTap,
-        child: Builder(
-          builder: (context) {
-            final screenWidth = MediaQuery.of(context).size.width;
-            return Row(
-              children: [
-                Padding(padding: EdgeInsets.only(right: screenWidth * 0.04)),
-                Icon(
-                  icon,
+  Widget bottomOptions({
+    required IconData icon,
+    required String text,
+    VoidCallback? onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Builder(
+        builder: (context) {
+          final screenWidth = MediaQuery.of(context).size.width;
+          return Row(
+            children: [
+              Padding(padding: EdgeInsets.only(right: screenWidth * 0.04)),
+              Icon(
+                icon,
+                color: Colors.white.withAlpha(200),
+                size: screenWidth * 0.055,
+              ),
+              SizedBox(width: screenWidth * 0.02),
+              Text(
+                text,
+                style: TextStyle(
                   color: Colors.white.withAlpha(200),
-                  size: screenWidth * 0.055,
+                  fontSize: screenWidth * 0.04,
                 ),
-                SizedBox(width: screenWidth * 0.02),
-                Text(
-                  text,
-                  style: TextStyle(
-                    color: Colors.white.withAlpha(200),
-                    fontSize: screenWidth * 0.04,
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-      );
-    }
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
 
   Future<void> _onChangeAvatar() async {
     try {

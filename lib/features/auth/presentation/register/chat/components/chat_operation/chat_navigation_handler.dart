@@ -43,7 +43,7 @@ class ChatNavigationHandler {
   ) async {
     Future.delayed(const Duration(milliseconds: 1200), () async {
       chatController.showNextBotMessage(); // uno por defecto
-      // await chatController.addSocialCards();
+      await chatController.addSocialCards();
       await chatController.showMultipleBotMessages(1); // n mensajes
     });
   }

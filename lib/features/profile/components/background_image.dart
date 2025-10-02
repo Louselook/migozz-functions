@@ -177,6 +177,9 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
             child: avatarUrl != null && avatarUrl!.isNotEmpty
                 ? Image.network(
                     avatarUrl!,
+                    key: ValueKey<String>(
+                      avatarUrl!,
+                    ), // fuerza refresh cuando cambia la URL
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Image.asset(
                       "assets/images/profileBackground.png",
