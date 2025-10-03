@@ -33,6 +33,10 @@ class RegisterCubit extends Cubit<RegisterState> {
     }
   }
 
+  void updateLocation(LocationDTO? location) {
+    emit(state.copyWith(location: location));
+  }
+
   // ---------------------- Archivos temporales ----------------------
   void setAvatarFile(File file) => avatarFile = file;
   void setVoiceNoteFile(File file) => voiceNoteFile = file;
@@ -159,18 +163,6 @@ class RegisterCubit extends Cubit<RegisterState> {
       emit(state.copyWith(status: RegisterStatus.success));
     }
   }
-
-  // ---------------------- add socials ----------------------
-  // void addUserSocial(String network, ProfileData profile) {
-  //   // Crear copia del mapa actual para no modificar el estado directamente
-  //   final current = Map<String, ProfileData>.from(state.userSocials ?? {});
-
-  //   // Guardar o actualizar la red social (incluye url)
-  //   current[network] = profile;
-
-  //   // Emitir nuevo estado con el mapa actualizado
-  //   emit(state.copyWith(userSocials: current));
-  // }
 
   // ---------------------- fetch social profile ----------------------
   Future<void> fetchSocialProfile(String network, String usernameOrLink) async {

@@ -8,7 +8,7 @@ class UserDTO {
   final String displayName;
   final String username;
   final String gender;
-  List<Map<String, Map<String, dynamic>>>? socialEcosystem;
+  final List<Map<String, Map<String, dynamic>>>? socialEcosystem;
   final LocationDTO location;
 
   // new add

@@ -5,7 +5,7 @@ import 'package:migozz_app/core/components/compuestos/chat/other_message.dart';
 import 'package:migozz_app/core/components/compuestos/chat/other_typing.dart';
 import 'package:migozz_app/core/components/compuestos/chat/user_message.dart';
 import 'package:migozz_app/core/components/compuestos/chat/picture_options.dart';
-import '../../../../features/auth/presentation/register/chat/components/social_card.dart';
+import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/social_cards/social_cards.dart';
 
 class ChatMessageBuilder {
   static Widget buildMessage(Map<String, dynamic> message) {
@@ -56,12 +56,8 @@ class ChatMessageBuilder {
     // 🔹 Mensajes de texto y social cards
     if (message["other"] == true) {
       if (message["social"] == true) {
-        return buildSocialCard(
-          message["platform"],
-          message["stats"],
-          message["emoji"],
-          message["time"],
-        );
+        final platformData = message["platform"] as Map<String, dynamic>;
+        return SocialCardMini(platformData: platformData);
       }
 
       return OtherMessage(

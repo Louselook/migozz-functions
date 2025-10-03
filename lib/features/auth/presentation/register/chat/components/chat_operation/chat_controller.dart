@@ -4,7 +4,8 @@ import 'package:migozz_app/core/components/compuestos/chat/chat_model.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_state.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/chat_validation.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/components/response_ia_chat.dart';
+import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/social_cards/helper_cards.dart';
+import 'package:migozz_app/core/services/bot/response_ia_chat.dart';
 import 'package:migozz_app/core/services/ai/gemini_service.dart';
 import 'package:migozz_app/features/auth/services/send_otp.dart';
 
@@ -26,6 +27,7 @@ class ChatController extends ChangeNotifier {
   TextInputType get keyboardType => _keyboardType;
   String? _lastUserMessage; // para dar contexto a Gemini
   bool _waitingForNewEmail = false;
+  bool _isDisposed = false;
 
   /// ------------------- Inicialización -------------------
   void initializeChat({Function(Map<String, dynamic>)? onActionRequired}) {
@@ -284,13 +286,14 @@ class ChatController extends ChangeNotifier {
 
       // --------- Flujo normal ---------
       // Luego llamas a tu función
+      debugPrint('respuesta nuemro $botIndex,');
       mapResponseToCubit(
         botIndex: botIndex,
         userResponse: normalizedResponse,
         cubit: registerCubit,
       );
 
-      // debugPrint('vamo: ${registerCubit.state}');
+      debugPrint('vamo: ${registerCubit.state}');
       // debugPrint('vamo:  pagina $botIndex');
 
       // Asegurar idioma del script según el estado del cubit
@@ -549,41 +552,46 @@ class ChatController extends ChangeNotifier {
     }
   }
 
-  /// ------------------- Tarjetas sociales y de imágenes -------------------
-  // Future<void> addSocialCards() async {
-  //   final socialCards = [
-  //     {
-  //       "platform": "Instagram",
-  //       "stats": "12.5K followers • 248 posts",
-  //       "emoji": "📸",
-  //     },
-  //     {
-  //       "platform": "TikTok",
-  //       "stats": "8.2K followers • 156 videos",
-  //       "emoji": "📱",
-  //     },
-  //   ];
-
-  //   for (var card in socialCards) {
-  //     await Future.delayed(const Duration(milliseconds: 800));
-  //     _addMessage({
-  //       "other": true,
-  //       "type": MessageType.socialCard,
-  //       "social": true,
-  //       "platform": card["platform"],
-  //       "stats": card["stats"],
-  //       "emoji": card["emoji"],
-  //       "time": _getTimeNow(),
-  //     });
-  //   }
-  // }
-
   Future<void> addPictureCards() async {
-    final pictureCards = [
-      {"imageUrl": "https://picsum.photos/200", "label": "Camera"},
-      {"imageUrl": "https://picsum.photos/201", "label": "Gallery"},
-      {"imageUrl": "https://picsum.photos/202", "label": "Custom"},
-    ];
+    final platforms = registerCubit.state.socialEcosystem ?? [];
+    if (platforms.isEmpty) return;
+
+    final pictureCards = <Map<String, String>>[];
+
+    for (final platform in platforms) {
+      final key = platform.keys.first; // ej: "youtube", "instagram"
+      final data = platform[key] as Map<String, dynamic>;
+
+      // Buscar dinámicamente un campo de imagen
+      final possibleKeys = [
+        "thumbnail",
+        "profile_pic_url",
+        "avatar_url",
+        "image",
+      ];
+      String? imageUrl;
+
+      for (final imgKey in possibleKeys) {
+        if (data[imgKey] != null && (data[imgKey] as String).isNotEmpty) {
+          imageUrl = data[imgKey] as String;
+          break; // usamos el primero que encontremos
+        }
+      }
+
+      // Si encontramos imagen, añadimos
+      if (imageUrl != null) {
+        // Usamos cualquier campo de texto amigable como label
+        final label =
+            data["title"] ??
+            data["username"] ??
+            data["full_name"] ??
+            key; // fallback al nombre de la red social
+
+        pictureCards.add({"imageUrl": imageUrl, "label": label});
+      }
+    }
+
+    if (pictureCards.isEmpty) return;
 
     await Future.delayed(const Duration(milliseconds: 800));
     _addMessage({
@@ -595,71 +603,25 @@ class ChatController extends ChangeNotifier {
   }
 
   /// ------------------- Social Cards (después de conectar redes) -------------------
-  // Future<void> addSocialCards() async {
-  //   final platforms = registerCubit.state.socialEcosystem ?? [];
-  //   if (platforms.isEmpty) return;
+  Future<void> addSocialCards() async {
+    final platforms = registerCubit.state.socialEcosystem ?? [];
+    if (platforms.isEmpty) return;
 
-  //   final isSpanish = (registerCubit.state.language ?? '')
-  //       .toLowerCase()
-  //       .contains('es');
+    final isSpanish = (registerCubit.state.language ?? '')
+        .toLowerCase()
+        .contains('es');
 
-  //   // Mensaje encabezado
-  //   _addMessage({
-  //     "other": true,
-  //     "type": MessageType.text,
-  //     "text": isSpanish
-  //         ? "Aquí tienes la información de tus redes conectadas:"
-  //         : "Here is the information from your connected platforms:",
-  //     "time": _getTimeNow(),
-  //   });
+    final socialMessages = SocialCardsHelper.generateSocialCards(
+      platforms: platforms,
+      isSpanish: isSpanish,
+      getTimeNow: _getTimeNow,
+    );
 
-  //   // Card por plataforma (placeholder de estadísticas)
-  //   for (final p in platforms) {
-  //     final name = _normalizePlatformName(p);
-  //     final stats = isSpanish
-  //         ? "Seguidores: 1,000\nPublicaciones: 200"
-  //         : "Followers: 1,000\nPosts: 200";
-  //     final emoji = _platformEmoji(name);
-
-  //     _addMessage({
-  //       "other": true,
-  //       "social": true,
-  //       "platform": name,
-  //       "stats": stats,
-  //       "emoji": emoji,
-  //       "time": _getTimeNow(),
-  //     });
-  //     await Future.delayed(const Duration(milliseconds: 250));
-  //   }
-  // }
-
-  // String _normalizePlatformName(String p) {
-  //   final t = p.trim().toLowerCase();
-  //   if (t.contains('tiktok')) return 'TikTok';
-  //   if (t.contains('instagram')) return 'Instagram';
-  //   if (t == 'x' || t.contains('twitter')) return 'X';
-  //   if (t.contains('pinterest')) return 'Pinterest';
-  //   if (t.contains('youtube')) return 'YouTube';
-  //   return p;
-  // }
-
-  // String _platformEmoji(String name) {
-  //   switch (name.toLowerCase()) {
-  //     case 'tiktok':
-  //       return '🎵';
-  //     case 'instagram':
-  //       return '📸';
-  //     case 'x':
-  //     case 'twitter':
-  //       return '🐦';
-  //     case 'pinterest':
-  //       return '📌';
-  //     case 'youtube':
-  //       return '▶️';
-  //     default:
-  //       return '📱';
-  //   }
-  // }
+    for (final message in socialMessages) {
+      _addMessage(message);
+      await Future.delayed(const Duration(milliseconds: 400));
+    }
+  }
 
   /// ------------------- Utilidades -------------------
   void _addMessage(Map<String, dynamic> message) {
@@ -687,7 +649,15 @@ class ChatController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _isDisposed = true;
     scrollController.dispose();
     super.dispose();
+  }
+
+  @override
+  void notifyListeners() {
+    if (!_isDisposed) {
+      super.notifyListeners();
+    }
   }
 }

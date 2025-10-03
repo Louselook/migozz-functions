@@ -1,4 +1,11 @@
-enum MessageType { text, socialCard, pictureCard, audio, typing }
+enum MessageType {
+  text,
+  socialCard,
+  pictureCard,
+  audio,
+  typing,
+  socialCardsCompact,
+}
 
 class ChatMessage {
   final bool other;

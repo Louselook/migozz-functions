@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:migozz_app/core/components/atomics/network_list.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/core/utils/responsive_utils.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
@@ -13,43 +14,8 @@ class SocialEcosystemStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Usar las utilidades responsive
-
     final scaleFactor = context.scaleFactor;
     final deviceType = context.deviceType;
-
-    // Lista original
-    final List<String> socials = [
-      "Tiktok",
-      "Instagram",
-      "Facebook",
-      "Youtube",
-      "Telegram",
-      "Whatsapp",
-      "Pinterest",
-      "Spotify",
-      "twitter",
-      "LinkedIn",
-      "Paypal",
-      "Xbox",
-      "Other",
-    ];
-
-    // Label -> path exacto
-    final Map<String, String> iconByLabel = {
-      "Tiktok": "assets/icons/social_networks/TikTok.png",
-      "Instagram": "assets/icons/social_networks/Instagram.png",
-      "Facebook": "assets/icons/social_networks/Facebook.png",
-      "Youtube": "assets/icons/social_networks/Youtube.png",
-      "Telegram": "assets/icons/social_networks/Telegram.png",
-      "Whatsapp": "assets/icons/social_networks/WhatsApp.png",
-      "Pinterest": "assets/icons/social_networks/Pinterest.png",
-      "Spotify": "assets/icons/social_networks/Spotify.png",
-      "twitter": "assets/icons/social_networks/X.png",
-      "LinkedIn": "assets/icons/social_networks/LinkedIn.png",
-      "Paypal": "assets/icons/social_networks/Paypal.svg",
-      "Xbox": "assets/icons/social_networks/Xbox.svg",
-      "Other": "assets/icons/social_networks/Other.png",
-    };
 
     // Calcular paddings y espaciados responsivos usando las utilidades
     final horizontalPadding = ResponsiveUtils.scaleValue(

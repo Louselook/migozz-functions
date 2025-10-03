@@ -36,7 +36,7 @@ class LocationService {
 
     final response = await http.get(uri);
     if (response.statusCode != 200) {
-      throw Exception("Error en la API de ubicación: ${response.body}");
+      // throw Exception("Error en la API de ubicación: ${response.body}");
     }
 
     final data = jsonDecode(response.body);

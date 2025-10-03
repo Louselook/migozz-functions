@@ -43,8 +43,8 @@ class ChatNavigationHandler {
   ) async {
     Future.delayed(const Duration(milliseconds: 1200), () async {
       chatController.showNextBotMessage(); // uno por defecto
-      // await chatController.addSocialCards();
       await chatController.showMultipleBotMessages(1); // n mensajes
+      await chatController.addSocialCards();
     });
   }
 
@@ -52,9 +52,7 @@ class ChatNavigationHandler {
   static void _handlePostNavigationFlowPicture(ChatController chatController) {
     // Mostrar 3 mensajes consecutivos después del "Congratulations!" inicial
     Future.delayed(const Duration(milliseconds: 1200), () async {
-      await chatController.showMultipleBotMessages(2);
-
-      // 👇 Después de mostrar los mensajes, agregar picture cards
+      await chatController.showMultipleBotMessages(1);
       await chatController.addPictureCards();
       chatController.showNextBotMessage();
     });

@@ -241,13 +241,18 @@ class IaChatService {
       state.fullName ?? (isEs ? "Usuario" : "User"),
     );
 
-    final socials = state.socialEcosystem;
-    text = text.replaceAll(
-      "{socialEcosystem}",
-      (socials != null && socials.isNotEmpty)
-          ? socials.join(", ")
-          : (isEs ? "tus redes sociales" : "your social media"),
-    );
+    final socialKeys =
+        state.socialEcosystem
+            ?.map(
+              (e) => e.keys.first,
+            ) // extrae la primera (y única) key de cada map
+            .toList() ??
+        [];
+
+    final socialText = socialKeys.isNotEmpty
+        ? socialKeys.join(", ")
+        : (_isEnglish ? "your social media" : "tus redes sociales");
+    text = text.replaceAll("{socialEcosystem}", socialText);
 
     final loc = state.location;
     final locStr = loc != null
