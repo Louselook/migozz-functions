@@ -28,6 +28,8 @@ class ChatController extends ChangeNotifier {
   String? _lastUserMessage; // para dar contexto a Gemini
   bool _waitingForNewEmail = false;
   bool _isDisposed = false;
+  bool _awaitingInstagramAvatarConfirm =
+      false; // Espera confirmación de avatar IG
 
   /// ------------------- Inicialización -------------------
   void initializeChat({Function(Map<String, dynamic>)? onActionRequired}) {
@@ -97,6 +99,53 @@ class ChatController extends ChangeNotifier {
       }
 
       _lastUserMessage = normalizedResponse;
+
+      // Si estamos esperando confirmación del avatar de Instagram, interceptar respuesta Sí/No
+      if (_awaitingInstagramAvatarConfirm) {
+        final isSpanish = (registerCubit.state.language ?? '')
+            .toLowerCase()
+            .contains('es');
+        final lower = normalizedResponse.trim().toLowerCase();
+
+        // Normalizar entradas comunes
+        final isYes = lower == 'sí' || lower == 'si' || lower == 'yes';
+        final isNo = lower == 'no';
+
+        if (isYes || isNo) {
+          if (isNo) {
+            // El usuario no desea usar la foto de IG como avatar
+            registerCubit.clearAvatarUrl();
+            _addMessage(
+              ChatMessage(
+                other: true,
+                type: MessageType.text,
+                text: isSpanish
+                    ? 'Sin problema. No usaré tu foto de Instagram como avatar.'
+                    : "No problem. I won't use your Instagram photo as your avatar.",
+                time: _getTimeNow(),
+              ).toMap(),
+            );
+          } else {
+            // Mantener avatar actual (ya establecido desde IG)
+            _addMessage(
+              ChatMessage(
+                other: true,
+                type: MessageType.text,
+                text: isSpanish
+                    ? 'Perfecto, usaré tu foto de Instagram como avatar.'
+                    : 'Great, I will use your Instagram photo as your avatar.',
+                time: _getTimeNow(),
+              ).toMap(),
+            );
+          }
+
+          _awaitingInstagramAvatarConfirm = false;
+          _currentSuggestions = const [];
+          notifyListeners();
+          return; // No avanzar índice ni mapear a cubit
+        }
+        // Si la respuesta no es Sí/No, continúa flujo normal (podría ser otra entrada)
+      }
 
       // Si el usuario hace una pregunta aclaratoria, no mapeamos a cubit
       if (_isClarifyingQuestion(normalizedResponse)) {
@@ -624,6 +673,11 @@ class ChatController extends ChangeNotifier {
   }
 
   /// ------------------- Utilidades -------------------
+  // Señalar que esperamos confirmación del avatar IG (se activa desde el NavigationHandler)
+  void expectInstagramAvatarConfirmation() {
+    _awaitingInstagramAvatarConfirm = true;
+  }
+
   void _addMessage(Map<String, dynamic> message) {
     _messages.add(message);
     notifyListeners();

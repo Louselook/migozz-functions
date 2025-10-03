@@ -7,6 +7,9 @@
 
 # The following line activates a set of recommended lints for Flutter apps,
 # packages, and plugins designed to encourage good coding practices.
+# Use Flutter lints if available; otherwise fall back to default analyzer settings.
+# The pubspec includes flutter_lints ^5.0.0; if your environment cannot resolve it,
+# comment the include line to avoid analyzer failure.
 include: package:flutter_lints/flutter.yaml
 
 linter:

@@ -132,7 +132,6 @@ class SocialEcosystemStep extends StatelessWidget {
                               List<Map<String, Map<String, dynamic>>>.from(
                                 cubit.state.socialEcosystem ?? [],
                               );
-
                           final index = current.indexWhere(
                             (e) => e.keys.first == label.toLowerCase(),
                           );

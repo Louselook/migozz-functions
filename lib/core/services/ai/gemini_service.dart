@@ -111,7 +111,11 @@ class GeminiService {
       ' Always answer in Spanish if the selected language is Spanish, otherwise in English.'
       ' You must return ONLY a compact JSON object with keys: text (string), options (array of strings, may be empty),'
       ' keyboardType ("text"|"number"), action (number, optional), dinamicResponse (string, optional).'
+      ' Use short, friendly, and intuitive sentences tailored to the current step.'
+      ' Avoid technical jargon; guide the user with clear next actions.'
       ' Do not include Markdown or extra commentary, and NEVER wrap the JSON in code fences (no ```json).'
+      ' Strict JSON: use commas "," between fields and never use semicolons ";".'
+      ' Return a single JSON object only.'
       ' The flow collects: email, language, fullName, username, gender, location, socialEcosystem (list of strings), avatarUrl, phone, voiceNoteUrl, category (list of strings), interests (map category->list).'
       ' Keep one question at a time and suggest options when appropriate.'
       ' VERY IMPORTANT: Use the "Current step index" provided to decide the next prompt according to this plan:'
@@ -128,6 +132,7 @@ class GeminiService {
       ' [11 avatar intro] introduce profile picture;'
       ' [12 avatar options] propose using social media photo or uploading new one;'
       ' [13 avatar choose] ask which one to use (the app may open uploader on user action);'
+      '     If Instagram is connected and has a profile picture, suggest using it as default.'
       ' [14 phone] ask phone number (keyboardType="number");'
       ' [15 voice note] ask to record a short voice note;'
       ' [16 category action] ask to choose categories and set {"action":1};'
@@ -177,9 +182,9 @@ class GeminiService {
   }
 
   Map<String, dynamic>? _looseJsonDecode(String s) {
-    // Small fixers: normalize quotes, remove trailing commas, collapse whitespace.
+    // Small fixers: normalize quotes, replace semicolons, remove trailing commas, collapse whitespace.
     String fixed = s
-        .replaceAll(RegExp(r"\r?\n"), ' ')
+        .replaceAll(RegExp(r'\r?\n'), ' ')
         // smart quotes to plain
         .replaceAll('\u201c', '"')
         .replaceAll('\u201d', '"')
@@ -187,9 +192,18 @@ class GeminiService {
         .replaceAll('\u2019', '"')
         // occasional single quotes
         .replaceAll(RegExp(r"'"), '"')
+        // common mistake: semicolons between fields -> commas
+        .replaceAll(RegExp(r';\s*\}'), '}')
+        .replaceAll(RegExp(r';\s*\]'), ']')
+        .replaceAll(RegExp(r';\s*"'), ',"')
         // remove trailing commas before } or ]
-        .replaceAll(RegExp(r",\s*([}\]])"), r"$1")
+        .replaceAll(RegExp(r',\s*([}\]])'), r'$1')
         .trim();
+    // convert any remaining "; key" into ",key"
+    fixed = fixed.replaceAllMapped(
+      RegExp(r';\s*([a-zA-Z0-9_])'),
+      (m) => ',${m.group(1)}',
+    );
     return _tryStrictJson(fixed);
   }
 

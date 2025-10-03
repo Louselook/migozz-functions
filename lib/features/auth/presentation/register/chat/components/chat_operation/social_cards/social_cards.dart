@@ -10,6 +10,7 @@ class SocialCardMini extends StatelessWidget {
   Widget build(BuildContext context) {
     final label = platformData["label"] ?? "";
     final iconPath = platformData["iconPath"] ?? "";
+    final followers = platformData["followersFormatted"] as String?;
 
     return GestureDetector(
       onTap: () {
@@ -87,6 +88,17 @@ class SocialCardMini extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colors.white),
                 ),
+                if (followers != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    followers,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.8),
+                      fontSize: 12,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ],
             ),
           ),

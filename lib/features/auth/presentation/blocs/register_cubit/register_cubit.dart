@@ -43,6 +43,7 @@ class RegisterCubit extends Cubit<RegisterState> {
 
   void setAvatarUrl(String avatarUrl) =>
       emit(state.copyWith(avatarUrl: avatarUrl));
+  void clearAvatarUrl() => emit(state.copyWith(avatarUrl: null));
   void setVoiceNoteUrl(String voiceNoteUrl) =>
       emit(state.copyWith(voiceNoteUrl: voiceNoteUrl));
 
@@ -76,11 +77,8 @@ class RegisterCubit extends Cubit<RegisterState> {
         filesToUpload[MediaType.voice] = voiceNoteFile!;
       }
 
-      Map<MediaType, String> mediaUrls = {};
-      mediaUrls = await _mediaService.uploadFilesTemporarily(
-        email: state.email!,
-        files: filesToUpload,
-      );
+      Map<MediaType, String> mediaUrls = await _mediaService
+          .uploadFilesTemporarily(email: state.email!, files: filesToUpload);
 
       // Guardar URLs en el cubit inmediatamente
       if (mediaUrls.containsKey(MediaType.avatar)) {
@@ -168,19 +166,15 @@ class RegisterCubit extends Cubit<RegisterState> {
   Future<void> fetchSocialProfile(String network, String usernameOrLink) async {
     emit(state.copyWith(status: RegisterStatus.loading));
     try {
-      Map<String, dynamic> data;
-
       switch (network.toLowerCase()) {
         case 'instagram':
-          data = await networkService.getInstagramProfile(
+          await networkService.getInstagramProfile(
             usernameOrLink: usernameOrLink,
           );
           break;
 
         case 'youtube':
-          data = await networkService.getYouTubeProfile(
-            handleOrUrl: usernameOrLink,
-          );
+          await networkService.getYouTubeProfile(handleOrUrl: usernameOrLink);
           break;
 
         default:
@@ -233,6 +227,18 @@ class RegisterCubit extends Cubit<RegisterState> {
 
                   // 3️⃣ Agregar los datos en el formato correcto
                   current.add({network.toLowerCase(): profileData});
+
+                  // 3.1️⃣ Si es Instagram y hay foto de perfil, usarla como avatar
+                  if (network.toLowerCase() == 'instagram') {
+                    final avatar =
+                        (profileData['profile_picture_url'] ??
+                                profileData['profilePicUrl'] ??
+                                profileData['thumbnail_url'])
+                            ?.toString();
+                    if (avatar != null && avatar.isNotEmpty) {
+                      setAvatarUrl(avatar);
+                    }
+                  }
 
                   // 4️⃣ Actualizar el cubit
                   setSocialEcosystem(current);
