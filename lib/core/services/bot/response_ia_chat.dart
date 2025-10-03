@@ -73,7 +73,7 @@ class IaChatService {
     },
     {
       "text": "Perfect! Now, what's your phone number? 📞",
-      "options": ["I don´t have"],
+      "options": [],
       "keyboardType": "number",
     },
     {
@@ -164,7 +164,7 @@ class IaChatService {
     },
     {
       "text": "¡Perfecto! Ahora, ¿cuál es tu número de teléfono? 📞",
-      "options": ["No tengo número"],
+      "options": [],
       "keyboardType": "number",
     },
     {

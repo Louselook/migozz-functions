@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'package:migozz_app/features/auth/models/user_dto.dart';
 // import 'package:migozz_app/features/auth/services/add_networks/profile_data.dart';
 
@@ -15,7 +14,7 @@ class AuthService {
 
   Future<bool> emailExists(String email) async {
     final querySnapshot = await firestore
-        .collection('test') // nombre de tu colección
+        .collection('users') // nombre de tu colección
         .where('email', isEqualTo: email)
         .limit(1) // solo necesitamos verificar si hay al menos uno
         .get();
@@ -61,8 +60,8 @@ class AuthService {
         updatedAt: DateTime.now(),
       );
 
-      // await _firestore.collection('users').doc(uid).set(userToSave.toMap());
-      await _firestore.collection('test').doc(uid).set(userToSave.toMap());
+      await _firestore.collection('users').doc(uid).set(userToSave.toMap());
+      // await _firestore.collection('test').doc(uid).set(userToSave.toMap());
 
       return userCredential;
     } on FirebaseAuthException catch (e) {

@@ -34,7 +34,7 @@ class _EditProfileState extends State<EditProfile> {
     if (user == null) return;
     try {
       final docTest = await FirebaseFirestore.instance
-          .collection('test')
+          .collection('users')
           .doc(user.uid)
           .get();
       Map<String, dynamic>? data = docTest.data();
@@ -416,7 +416,7 @@ class _EditProfileState extends State<EditProfile> {
       // Actualizar en test y users (merge)
       final now = FieldValue.serverTimestamp();
       final db = FirebaseFirestore.instance;
-      await db.collection('test').doc(user.uid).set({
+      await db.collection('users').doc(user.uid).set({
         'avatarUrl': newUrl,
         'updatedAt': now,
       }, SetOptions(merge: true));

@@ -23,7 +23,9 @@ class OtpScreen extends StatefulWidget {
 class _OtpScreenState extends State<OtpScreen> {
   final List<TextEditingController> _controllers = List.generate(
     6,
+    
     (_) => TextEditingController(),
+    
   );
 
   @override
@@ -107,33 +109,51 @@ class _OtpFields extends StatefulWidget {
 }
 
 class _OtpFieldsState extends State<_OtpFields> {
-  final List<VoidCallback> _listeners = [];
+  late List<FocusNode> _focusNodes;
 
   @override
   void initState() {
     super.initState();
-    for (var i = 0; i < widget.controllers.length; i++) {
-      void listener() => _onChange(i);
-      _listeners.add(listener);
-      widget.controllers[i].addListener(listener);
-    }
+    _focusNodes = List.generate(6, (_) => FocusNode());
   }
 
   @override
   void dispose() {
-    for (var i = 0; i < widget.controllers.length; i++) {
-      widget.controllers[i].removeListener(_listeners[i]);
+    for (final node in _focusNodes) {
+      node.dispose();
     }
     super.dispose();
   }
 
-  void _onChange(int index) {
-    if (widget.controllers[index].text.length == 1 && index < 5) {
-      FocusScope.of(context).nextFocus();
-    } else if (widget.controllers[index].text.isEmpty && index > 0) {
-      FocusScope.of(context).previousFocus();
+  void _onChanged(String value, int index) {
+    if (value.length > 1) {
+      // Caso PASTE (más de un dígito pegado)
+      // 1. Limpiar todo antes de repartir
+      for (int i = 0; i < widget.controllers.length; i++) {
+        widget.controllers[i].clear();
+      }
+
+      // 2. Repartir caracteres en los campos
+      List<String> chars = value.split('');
+      for (int i = 0; i < chars.length; i++) {
+        if (i < widget.controllers.length) {
+          widget.controllers[i].text = chars[i];
+        }
+      }
+
+      // 3. Posicionar foco al último caracter pegado
+      int lastIndex = (chars.length - 1).clamp(0, 5);
+      _focusNodes[lastIndex].requestFocus();
+    } else {
+      // Caso normal (tecleo o borrar)
+      if (value.isNotEmpty && index < 5) {
+        _focusNodes[index + 1].requestFocus();
+      } else if (value.isEmpty && index > 0) {
+        _focusNodes[index - 1].requestFocus();
+      }
     }
 
+    // Construir OTP
     String otp = widget.controllers.map((c) => c.text).join();
     if (otp.length == 6) {
       widget.onCompleted(otp);
@@ -151,17 +171,19 @@ class _OtpFieldsState extends State<_OtpFields> {
           height: 44,
           child: TextField(
             controller: widget.controllers[index],
+            focusNode: _focusNodes[index],
+            autofocus: index == 0, // auto-focus en el primer campo
             maxLength: 1,
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
             decoration: const InputDecoration(counterText: ""),
+            onChanged: (value) => _onChanged(value, index),
           ),
         );
       }),
     );
   }
 }
-
 class _ResendButton extends StatelessWidget {
   final String email;
   final String otp;

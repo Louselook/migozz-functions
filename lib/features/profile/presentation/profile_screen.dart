@@ -35,7 +35,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       // Usamos 'test' porque AuthService actualmente guarda allí
       final docTest = await FirebaseFirestore.instance
-          .collection('test')
+          .collection('users')
           .doc(user.uid)
           .get();
       Map<String, dynamic>? data = docTest.data();
