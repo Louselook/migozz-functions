@@ -447,7 +447,7 @@ class _AudioPlaybackWidgetState extends State<AudioPlaybackWidget> {
                   const SizedBox(width: 12),
 
                   // Waveform - tamaño fijo en lugar de Expanded
-                  Container(
+                  SizedBox(
                     width: 200,
                     height: 24,
                     child: AudioFileWaveforms(

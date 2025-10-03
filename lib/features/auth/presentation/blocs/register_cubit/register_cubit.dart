@@ -130,10 +130,12 @@ class RegisterCubit extends Cubit<RegisterState> {
 
       // 2️⃣ Asociar archivos subidos temporalmente al UID definitivo
       final Map<MediaType, String> mediaUrls = {};
-      if (state.avatarUrl != null)
+      if (state.avatarUrl != null) {
         mediaUrls[MediaType.avatar] = state.avatarUrl!;
-      if (state.voiceNoteUrl != null)
+      }
+      if (state.voiceNoteUrl != null) {
         mediaUrls[MediaType.voice] = state.voiceNoteUrl!;
+      }
       if (mediaUrls.isNotEmpty) {
         await _mediaService.associateMediaToUid(uid: uid, email: state.email!);
       }

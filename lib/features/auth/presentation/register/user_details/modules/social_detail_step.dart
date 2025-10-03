@@ -148,11 +148,11 @@ class _SocialDetailScreenState extends State<SocialDetailScreen> {
                     _fetchProfileAndPop, // O puedes usar _showAddPlatformBottomSheet
                 width: double.infinity,
                 radius: 19,
+                gradient: AppColors.primaryGradient,
                 child: const Text(
                   "Continue / Add New Platform",
                   style: TextStyle(color: Colors.white, fontSize: 20),
                 ),
-                gradient: AppColors.primaryGradient,
               ),
             ),
 

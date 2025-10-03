@@ -32,10 +32,7 @@ class _AddUsernameBottomSheetState extends State<AddUsernameBottomSheet> {
       ),
       child: Padding(
         padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 20,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+          bottom: MediaQuery.of(context).viewInsets.bottom
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,

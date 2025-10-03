@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/color.dart';
-import 'package:migozz_app/core/components/compuestos/progress_indicator.dart';
+// import 'package:migozz_app/core/components/compuestos/progress_indicator.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/category_step.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/interests_step.dart';
 // import 'package:migozz_app/features/auth/presentation/register/user_details/modules/layout_step.dart';
@@ -51,11 +51,12 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
       body: Stack(
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 40.0),
+            padding: const EdgeInsets.symmetric(vertical: 0.0), // Antes era 40 por el progreso, pero sin el queda mucho espacio libre
             child: PageView.builder(
               controller:
                   pageController, // Aseguramos que el controlador se pase correctamente
               itemCount: steps.length,
+              physics: const NeverScrollableScrollPhysics(),
               onPageChanged: (index) {
                 setState(() {
                   _currentPage = index;
@@ -64,26 +65,26 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
               itemBuilder: (_, index) => steps[index],
             ),
           ),
-          // Indicadores de progreso
-          Container(
-            padding: const EdgeInsets.only(top: 30, left: 20, right: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                steps.length,
-                (index) => CustomProgressIndicator(
-                  index,
-                  currentIndex: _currentPage,
-                  activeWidth: 16,
-                  activeHeight: 16,
-                  inactiveWidth: 16,
-                  inactiveHeight: 16,
-                  borderRadius: BorderRadius.circular(20),
-                  inactiveColor: Colors.white,
-                ),
-              ),
-            ),
-          ),
+          // Indicadores de progreso - Por ordenes se dejo tanto sin scroll como sin indicadores
+          // Container(
+          //   padding: const EdgeInsets.only(top: 30, left: 20, right: 20),
+          //   child: Row(
+          //     mainAxisAlignment: MainAxisAlignment.center,
+          //     children: List.generate(
+          //       steps.length,
+          //       (index) => CustomProgressIndicator(
+          //         index,
+          //         currentIndex: _currentPage,
+          //         activeWidth: 16,
+          //         activeHeight: 16,
+          //         inactiveWidth: 16,
+          //         inactiveHeight: 16,
+          //         borderRadius: BorderRadius.circular(20),
+          //         inactiveColor: Colors.white,
+          //       ),
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     );

@@ -60,9 +60,7 @@ class GeminiService {
 
     try {
       final prompt =
-          _systemPrompt() +
-          '\n' +
-          _stateSummary(state, stepIndex, lastUserMessage);
+          '${_systemPrompt()}\n${_stateSummary(state, stepIndex, lastUserMessage)}';
       final resp = await _session!.sendMessage(Content.text(prompt));
       final raw = resp.text?.trim();
       if (raw == null || raw.isEmpty) return null;
@@ -87,9 +85,7 @@ class GeminiService {
             resetSession();
             // reintento una vez
             final prompt =
-                _systemPrompt() +
-                '\n' +
-                _stateSummary(state, stepIndex, lastUserMessage);
+                '${_systemPrompt()}\n${_stateSummary(state, stepIndex, lastUserMessage)}';
             final resp = await _session!.sendMessage(Content.text(prompt));
             final raw = resp.text?.trim();
             if (raw == null || raw.isEmpty) return null;

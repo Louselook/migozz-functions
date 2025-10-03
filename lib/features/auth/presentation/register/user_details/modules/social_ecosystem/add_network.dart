@@ -46,69 +46,74 @@ class _AddNetworkBottomSheetState extends State<AddNetworkBottomSheet> {
         color: Colors.black,
         borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Header
-          Text(
-            "Add ${widget.label}",
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Logo
-          Image.asset(widget.assetPath, width: 50, height: 50),
-          const SizedBox(height: 20),
-
-          // Input
-          TextField(
-            controller: _controller,
-            style: const TextStyle(color: Colors.white),
-            decoration: InputDecoration(
-              hintText: "Enter username",
-              hintStyle: const TextStyle(color: Colors.grey),
-              filled: true,
-              fillColor: Colors.grey[900],
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header
+            Text(
+              "Add ${widget.label}",
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
               ),
             ),
-          ),
-
-          const SizedBox(height: 10),
-
-          // Preview URL
-          Text(
-            "https://www.${widget.label.toLowerCase()}.com/",
-            style: const TextStyle(color: Colors.grey),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Botón Guardar (con degradado)
-          SizedBox(
-            width: double.infinity,
-            child: GradientButton(
-              onPressed: _handleSave,
-              child: const Text(
-                "Save",
-                style: TextStyle(fontSize: 16, color: Colors.white),
+            const SizedBox(height: 20),
+        
+            // Logo
+            Image.asset(widget.assetPath, width: 50, height: 50),
+            const SizedBox(height: 20),
+        
+            // Input
+            TextField(
+              controller: _controller,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: "Enter username",
+                hintStyle: const TextStyle(color: Colors.grey),
+                filled: true,
+                fillColor: Colors.grey[900],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
               ),
-              gradient: AppColors.primaryGradient,
-              radius: 20,
-              height: 48,
             ),
-          ),
-        ],
+        
+            const SizedBox(height: 10),
+        
+            // Preview URL
+            Text(
+              "https://www.${widget.label.toLowerCase()}.com/",
+              style: const TextStyle(color: Colors.grey),
+            ),
+        
+            const SizedBox(height: 20),
+        
+            // Botón Guardar (con degradado)
+            SizedBox(
+              width: double.infinity,
+              child: GradientButton(
+                onPressed: _handleSave,
+                gradient: AppColors.primaryGradient,
+                radius: 20,
+                height: 48,
+                child: const Text(
+                  "Save",
+                  style: TextStyle(fontSize: 16, color: Colors.white),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

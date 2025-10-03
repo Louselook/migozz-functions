@@ -5,6 +5,8 @@ import 'package:migozz_app/core/components/atomics/text.dart';
 
 // va en eel chat
 class PicAudioStep extends StatelessWidget {
+  const PicAudioStep({super.key});
+
   // final PageController controller;
   // const PicAudioStep({super.key, required this.controller});
 
