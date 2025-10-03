@@ -71,8 +71,8 @@ class SocialCardMini extends StatelessWidget {
         color: Colors.grey[850],
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: SizedBox(
-          width: 110, // ancho fijo igual para todas
-          height: 110, // altura fija igual para todas
+          width: 120, // ancho fijo igual para todas
+          height: 120, // altura fija igual para todas
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
             child: Column(
@@ -93,7 +93,7 @@ class SocialCardMini extends StatelessWidget {
                   Text(
                     followers,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                       fontSize: 12,
                     ),
                     textAlign: TextAlign.center,

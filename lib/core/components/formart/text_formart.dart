@@ -1,22 +1,22 @@
-enum NameFormat { short, firstOnly, initials, full }
+enum FormatName { short, firstOnly, initials, full }
 
-String formatDisplayName(String? text, {NameFormat format = NameFormat.short}) {
+String formatDisplayName(String? text, {FormatName format = FormatName.short}) {
   if (text == null || text.isEmpty) return "John Doe";
 
   final parts = text.split(" ");
   if (parts.isEmpty) return text;
 
   switch (format) {
-    case NameFormat.short:
+    case FormatName.short:
       return parts.length > 1 ? "${parts[0]} ${parts[1][0]}." : parts[0]; // Agarra el primer numero y el segundo se toma la primera letra en mayuscula
 
-    case NameFormat.firstOnly: // Agarra solo el primer nombre
+    case FormatName.firstOnly: // Agarra solo el primer nombre
       return parts[0];
 
-    case NameFormat.initials:
+    case FormatName.initials:
       return parts.map((p) => "${p[0].toUpperCase()}.").join(""); // Agarra solo las iniciales
 
-    case NameFormat.full: // Todo el nombre
+    case FormatName.full: // Todo el nombre
       return text;
   }
 }

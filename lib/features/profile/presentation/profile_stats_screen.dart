@@ -87,6 +87,7 @@ class ProfileStatsScreen extends StatelessWidget {
                       ),
                     ),
                     textStyle: const TextStyle(color: Colors.white),
+                    width: 20,
                     trailingIcon: const Icon(Icons.arrow_drop_down, color: Colors.white),
                     onSelected: (value) {
                       debugPrint("Seleccionado: $value");

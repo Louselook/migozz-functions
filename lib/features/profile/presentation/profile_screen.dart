@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:migozz_app/core/components/formart/text_formart.dart';
 import 'package:migozz_app/features/profile/components/draggable_social_rail.dart';
 import 'package:migozz_app/features/profile/components/ai_assistant.dart';
 import 'package:migozz_app/features/profile/components/bottom_nav.dart';
@@ -120,8 +121,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       size.height * 0.2, // Posición más alta
     );
     // Obtener datos reales del usuario
-    final rawname = (_userDoc?['displayName'] as String?) ?? 'John Doe';
-    final name = rawname; // Usar el nombre completo directo sin formatear
+    final rawname = (_userDoc?['displayName'] as String?) ?? 'John Doe'; // Resive el nombre completo
+    final name = formatDisplayName(rawname, format: FormatName.short); // Agarra el nombre y lo formatea
     final username = (_userDoc?['username'] as String?) ?? '@johndoe';
     final avatarUrl = (_userDoc?['avatarUrl'] as String?);
     final social = _userSocials.isNotEmpty
