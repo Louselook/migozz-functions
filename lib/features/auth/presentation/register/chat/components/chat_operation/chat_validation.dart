@@ -59,7 +59,7 @@ Future<void> mapResponseToCubit({
       break;
     case 8:
       // Confirmar con si para mandar el otp
-      if (parseYesNo(userResponse)) {
+      // if (parseYesNo(userResponse)) {
         final Map<String, dynamic> result = await sendOTP(
           email: cubit.state.email!,
         );
@@ -70,7 +70,7 @@ Future<void> mapResponseToCubit({
           // Manejar error de envío
           debugPrint("No se pudo enviar el OTP");
         }
-      } else {}
+      // } else {}
       break;
     case 9:
       // codigo OTP

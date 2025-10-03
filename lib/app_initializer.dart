@@ -80,16 +80,13 @@ class _AppInitializerState extends State<AppInitializer> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: const [
-                CircularProgressIndicator(color: Colors.white),
-                SizedBox(height: 16),
-                Text(
-                  'Splash Screen',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                Image(
+                  image: AssetImage("assets/icons/Migozz300x.png"),
+                  width: 150,
+                  height: 150,
                   ),
-                ),
+                  SizedBox(height: 30,),
+                  CircularProgressIndicator(color: Colors.white),
               ],
             ),
           ),
