@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
 import 'package:migozz_app/features/auth/models/user_dto.dart';
 import 'package:migozz_app/features/auth/models/location_dto.dart';
 
