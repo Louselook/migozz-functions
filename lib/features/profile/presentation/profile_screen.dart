@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:migozz_app/core/components/formart/text_formart.dart';
 import 'package:migozz_app/features/profile/components/draggable_social_rail.dart';
 import 'package:migozz_app/features/profile/components/ai_assistant.dart';
 import 'package:migozz_app/features/profile/components/bottom_nav.dart';
@@ -22,6 +21,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   int _tab = 0; // índice del tab seleccionado
   Map<String, dynamic>? _userDoc;
   List<Map<String, String>> _userSocials = const [];
+  bool _isLoading = true; // Loading state
 
   @override
   void initState() {
@@ -48,14 +48,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
 
       if (mounted) {
-        setState(() => _userDoc = data);
+        setState(() {
+          _userDoc = data;
+          _isLoading = false; // Marcar como cargado
+        });
+
+        // Force rebuild para asegurar que la UI se actualice
+        Future.delayed(const Duration(milliseconds: 100), () {
+          if (mounted) setState(() {});
+        });
+
         final username = (data?['username'] as String?) ?? '';
         if (username.isNotEmpty) {
           _loadUserSocials(username);
         }
       }
     } catch (e) {
-      debugPrint('Error cargando usuario: $e');
+      debugPrint('❌ Error cargando usuario: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false; // Marcar como cargado aunque haya error
+        });
+      }
     }
   }
 
@@ -105,9 +119,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       size.width - 65, // 65 (itemSize) + 16 (padding)
       size.height * 0.2, // Posición más alta
     );
-    
+    // Obtener datos reales del usuario
     final rawname = (_userDoc?['displayName'] as String?) ?? 'John Doe';
-    final name = formatDisplayName(rawname, format: NameFormat.short); // Pasaria a John D.
+    final name = rawname; // Usar el nombre completo directo sin formatear
     final username = (_userDoc?['username'] as String?) ?? '@johndoe';
     final avatarUrl = (_userDoc?['avatarUrl'] as String?);
     final social = _userSocials.isNotEmpty
@@ -117,11 +131,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   .toList() ??
               const []);
 
+    // Mostrar loading mientras carga
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(child: CircularProgressIndicator(color: Colors.white)),
+      );
+    }
+
+    // DEBUG: Verificar valores exactos antes de pasar a BackgroundImage
+    final finalDisplayName = username.startsWith('@') ? username : '@$username';
+
     return Scaffold(
       body: BackgroundImage(
         avatarUrl: avatarUrl,
-        name: name,
-        displayName: username.startsWith('@') ? username : '@$username',
+        name: name.isNotEmpty ? name : 'NOMBRE VACÍO',
+        displayName: finalDisplayName,
         comunityCount: '1M',
         nameComunity: 'Community',
         child: Stack(

@@ -8,6 +8,7 @@ import 'package:migozz_app/core/router/app_router.dart';
 import 'package:migozz_app/core/router/app_router_notifier.dart';
 import 'package:migozz_app/email_otp_custom.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,8 +42,11 @@ class MyApp extends StatelessWidget {
           return AppInitializer(
             builder: (context, initResult) {
               // initResult contiene permisos y ubicación; si quieres los metes en un Cubit aquí
-              // Ejemplo: context.read<LocationCubit>().setLocation(initResult?.location);
-
+              if (initResult?.location != null) {
+                context.read<RegisterCubit>().updateLocation(
+                  initResult!.location,
+                );
+              }
               return MaterialApp.router(
                 debugShowCheckedModeBanner: false,
                 title: 'Migozz App',

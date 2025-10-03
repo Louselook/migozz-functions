@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:migozz_app/features/profile/presentation/profile_stats_screen.dart';
 
 class GradientBottomNav extends StatelessWidget {
   final int currentIndex;
@@ -73,7 +74,14 @@ class GradientBottomNav extends StatelessWidget {
                       _NavItem(
                         icon: Icons.bar_chart_rounded,
                         selected: currentIndex == 2,
-                        onTap: () => onItemSelected(2),
+                        onTap: () {
+                           Navigator.push(
+                              context,
+                              MaterialPageRoute<void>(
+                                builder: (context) => const ProfileStatsScreen(),
+                              ),
+                           );
+                        },
                       ),
                       _NavItem(
                         icon: Icons.settings_outlined,

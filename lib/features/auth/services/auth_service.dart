@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:migozz_app/features/auth/models/user_dto.dart';
 // import 'package:migozz_app/features/auth/services/add_networks/profile_data.dart';
 
