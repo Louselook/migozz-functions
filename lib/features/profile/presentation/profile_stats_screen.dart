@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 // TODA ESTA VISTA ESTA CON DATOS QUEMADOS
 
-class TestScreen extends StatelessWidget {
-  const TestScreen({super.key});
+class ProfileStatsScreen extends StatelessWidget {
+  const ProfileStatsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +39,7 @@ class TestScreen extends StatelessWidget {
                     children: [
                       Icon(Icons.favorite, color: Colors.white, size: 28),
                       SizedBox(height: 4),
-                      Text("3.1 mill.", style: TextStyle(color: Colors.white)),
+                      Text("3.1 mill.", style: TextStyle(color: Colors.white)), 
                     ],
                   ),
                   // Comentarios
@@ -92,7 +92,6 @@ class TestScreen extends StatelessWidget {
                       debugPrint("Seleccionado: $value");
                     },
                   ),
-
                   // rango fijo a la derecha, se puede cambiar para calcular los dias
                   const Text(
                     "18/1/2025 to 18/11/2025",
