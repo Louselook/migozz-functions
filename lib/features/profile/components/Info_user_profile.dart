@@ -22,23 +22,23 @@ class InfoUserProfile extends StatelessWidget {
     return ClipRRect(
       borderRadius: borderRadius,
       child: BackdropFilter(
-        // filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        filter: ImageFilter.blur(sigmaX: 1, sigmaY: 1),
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        // filter: ImageFilter.blur(sigmaX: 1, sigmaY: 1),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          // decoration: BoxDecoration(
-          //   color: Colors.black.withValues(alpha:0.35),
-          //   borderRadius: borderRadius,
-          //   border: Border.all(color: Colors.white.withValues(alpha:0.12)),
-          //   boxShadow: [
-          //     BoxShadow(
-          //       blurRadius: 18,
-          //       spreadRadius: 2,
-          //       offset: const Offset(0, 8),
-          //       color: Colors.black.withValues(alpha:0.35),
-          //     ),
-          //   ],
-          // ),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha:0.35),
+            borderRadius: borderRadius,
+            border: Border.all(color: Colors.white.withValues(alpha:0.12)),
+            boxShadow: [
+              BoxShadow(
+                blurRadius: 18,
+                spreadRadius: 2,
+                offset: const Offset(0, 8),
+                color: Colors.black.withValues(alpha:0.35),
+              ),
+            ],
+          ),
           alignment:
               Alignment.center, // centra el contenido vertical/horizontal
           constraints: const BoxConstraints(maxWidth: 400, maxHeight: 150),

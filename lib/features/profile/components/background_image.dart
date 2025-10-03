@@ -220,13 +220,13 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
               alignment: Alignment.bottomCenter,
               child: Padding(
                 padding: EdgeInsets.only(
-                  bottom: bottomPaddingForCard * (1.2 - 0.25 * t),
+                  bottom: bottomPaddingForCard * (1.2 - 0.17 * t),
                   left: 16,
                   right: 16,
                 ),
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
-                    maxWidth: MediaQuery.of(context).size.width * 0.6,
+                    maxWidth: MediaQuery.of(context).size.width * 0.8,
                     minHeight: 80,
                     maxHeight: 180,
                   ),
@@ -255,7 +255,7 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.transparent,
-                      Colors.black.withValues(alpha: 0.15 + 0.25 * t),
+                      Colors.black.withValues(alpha: 0.15 + 0.17 * t),
                     ],
                   ),
                 ),

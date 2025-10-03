@@ -3,6 +3,7 @@ enum MessageType {
   socialCard,
   pictureCard,
   audio,
+  audioPlayback, // Para reproducir audio con UI específica
   typing,
   socialCardsCompact,
 }
