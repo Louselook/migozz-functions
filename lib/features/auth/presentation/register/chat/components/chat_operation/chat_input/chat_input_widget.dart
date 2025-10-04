@@ -4,6 +4,7 @@ import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/chat/chat_attachment_sheet.dart';
 import 'package:migozz_app/core/components/compuestos/custom_textfield.dart';
 import 'package:migozz_app/core/components/compuestos/custom_tooltip.dart';
+import 'package:audio_waveforms/audio_waveforms.dart';
 import 'audio_recorder_manager.dart';
 import 'recording_display.dart';
 import 'audio_player_display.dart';
@@ -13,7 +14,7 @@ class ChatInputWidget extends StatefulWidget {
   final VoidCallback onSend;
   final void Function(String path)? onSendAudio;
   final void Function(String path)? onSendImage;
-  final TextInputType keyboardType; 
+  final TextInputType keyboardType;
 
   const ChatInputWidget({
     super.key,
@@ -63,10 +64,77 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
     setState(() => _showAttachments = !_showAttachments);
   }
 
-  void _handleSendAudio() {
+  void _handleSendAudio() async {
     if (_audioManager.audioPath != null) {
-      widget.onSendAudio?.call(_audioManager.audioPath!);
-      setState(() => _audioManager.reset());
+      final audioPath = _audioManager.audioPath!;
+
+      try {
+        final tempPlayer = PlayerController();
+        await tempPlayer.preparePlayer(
+          path: audioPath,
+          shouldExtractWaveform: false,
+        );
+
+        // Leer la duración del archivo fresco
+        final freshDurationMs = tempPlayer.maxDuration;
+        final durationInSeconds = freshDurationMs / 1000.0;
+
+        // Limpiar el player temporal
+        tempPlayer.dispose();
+
+        if (durationInSeconds < 5.0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'El audio es muy corto (${durationInSeconds.toStringAsFixed(1)} segundos). Debe durar entre 5 y 10 segundos',
+              ),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 3),
+            ),
+          );
+          _audioManager.reset();
+          setState(() {});
+          return;
+        }
+
+        if (durationInSeconds > 10.0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'El audio es muy largo (${durationInSeconds.toStringAsFixed(1)} segundos). Debe durar entre 5 y 10 segundos',
+              ),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 3),
+            ),
+          );
+          _audioManager.reset();
+          setState(() {});
+          return;
+        }
+
+        // Audio válido (5-10 segundos)
+        print(
+          'DEBUG: Audio válido (${durationInSeconds.toStringAsFixed(1)}s), enviando...',
+        );
+        widget.onSendAudio?.call(audioPath);
+        _audioManager.reset();
+        setState(() {});
+      } catch (e) {
+        print('ERROR al leer duración: $e');
+        // Si falla todo, enviar sin validar
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'No se pudo validar la duración. Enviando audio sin validar.',
+            ),
+            backgroundColor: Colors.blue,
+            duration: Duration(seconds: 2),
+          ),
+        );
+        widget.onSendAudio?.call(audioPath);
+        _audioManager.reset();
+        setState(() {});
+      }
     }
   }
 
@@ -203,9 +271,7 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
     _tooltipEntry = OverlayEntry(
       builder: (ctx) => Positioned(
         left: left,
-        top: showAbove
-            ? offset.dy - 75
-            : offset.dy + size.height + 12, 
+        top: showAbove ? offset.dy - 75 : offset.dy + size.height + 12,
         width: tooltipWidth,
         child: Material(
           color: Colors.transparent,

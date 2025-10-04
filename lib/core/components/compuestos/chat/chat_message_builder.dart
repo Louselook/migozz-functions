@@ -1,5 +1,6 @@
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:flutter/material.dart';
+import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/chat/chat_model.dart';
 import 'package:migozz_app/core/components/compuestos/chat/other_message.dart';
 import 'package:migozz_app/core/components/compuestos/chat/other_typing.dart';
@@ -446,7 +447,7 @@ class _AudioPlaybackWidgetState extends State<AudioPlaybackWidget> {
 
                   const SizedBox(width: 12),
 
-                  // Waveform - tamaño fijo en lugar de Expanded
+                  // Waveform - con formas reales de volumen como la imagen
                   SizedBox(
                     width: 200,
                     height: 24,
@@ -456,12 +457,19 @@ class _AudioPlaybackWidgetState extends State<AudioPlaybackWidget> {
                       size: const Size(200, 24),
                       playerWaveStyle: PlayerWaveStyle(
                         fixedWaveColor: Color(0xFF555555),
-                        liveWaveColor: Color(0xFFDF48A5),
-                        waveThickness: 1.0,
-                        spacing: 2.5,
-                        showBottom: false,
+                        liveWaveGradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: AppColors.primaryGradient.colors,
+                        ).createShader(Rect.fromLTWH(0, 0, 200, 24)),
+                        waveThickness: 1.2,
+                        spacing: 1.8,
+                        showBottom: true,
                         showTop: true,
-                        scaleFactor: 0.7,
+                        scaleFactor:
+                            150.0, // Aumentar para montañitas más altas
+                        waveCap: StrokeCap.round,
+                        showSeekLine: false, // Sin línea en el medio
                       ),
                     ),
                   ),
@@ -483,14 +491,6 @@ class _AudioPlaybackWidgetState extends State<AudioPlaybackWidget> {
                 ],
               ),
             ),
-          ),
-
-          const SizedBox(height: 6),
-
-          // Timestamp - igual que OtherMessage
-          Text(
-            "2024-08-18 • 19:44",
-            style: const TextStyle(color: Colors.grey, fontSize: 10),
           ),
         ],
       ),

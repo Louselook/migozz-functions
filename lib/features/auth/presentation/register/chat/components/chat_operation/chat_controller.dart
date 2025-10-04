@@ -30,9 +30,6 @@ class ChatController extends ChangeNotifier {
   bool _isDisposed = false;
   bool _awaitingInstagramAvatarConfirm =
       false; // Espera confirmación de avatar IG
-  bool _awaitingAudioListenConfirm =
-      false; // Espera confirmación para escuchar audio
-  String? _pendingAudioPath; // Path del audio pendiente de escuchar
   bool _awaitingContinueAfterAudio =
       false; // Espera confirmación para continuar después de escuchar
 
@@ -59,29 +56,20 @@ class ChatController extends ChangeNotifier {
     }
   }
 
-  void _handleAudioSent(String audioPath) {
-    _pendingAudioPath = audioPath;
-    _awaitingAudioListenConfirm = true;
-
-    final isSpanish = (registerCubit.state.language ?? '')
-        .toLowerCase()
-        .contains('es');
-
-    // Mensaje del bot preguntando si quiere escuchar el audio
-    final botMessage = ChatMessage(
+  void _handleAudioSentDirectly(String audioPath) {
+    final audioMessage = ChatMessage(
       other: true,
-      type: MessageType.text,
-      text: isSpanish
-          ? "Tu audio se escuchó genial! ¿Quieres escuchar cómo te quedó?"
-          : "Your audio turned out great! Do you want to listen to it?",
-      options: isSpanish
-          ? ["Listen to the audio", "No"]
-          : ["Listen to the audio", "No"],
+      type: MessageType.audioPlayback,
+      audio: audioPath,
       time: _getTimeNow(),
-    );
+    ).toMap();
 
-    _addMessage(botMessage.toMap());
-    _currentSuggestions = botMessage.options ?? [];
+    // Pasar referencia del controller
+    audioMessage["chatController"] = this;
+    _addMessage(audioMessage);
+
+    // Cambiar estado para esperar que termine el audio
+    _awaitingContinueAfterAudio = true;
     notifyListeners();
   }
 
@@ -122,17 +110,20 @@ class ChatController extends ChangeNotifier {
       return;
     }
 
-    final message = ChatMessage(
-      other: other,
-      type: type,
-      text: text,
-      audio: audio,
-      pictures: pictures,
-      options: options,
-      time: _getTimeNow(),
-    );
+    // Solo añadir el mensaje si NO es un audio del usuario
+    if (!(type == MessageType.audio && !other)) {
+      final message = ChatMessage(
+        other: other,
+        type: type,
+        text: text,
+        audio: audio,
+        pictures: pictures,
+        options: options,
+        time: _getTimeNow(),
+      );
 
-    _addMessage(message.toMap());
+      _addMessage(message.toMap());
+    }
 
     if (!other) _currentSuggestions = [];
 
@@ -144,8 +135,7 @@ class ChatController extends ChangeNotifier {
         normalizedResponse = text ?? '';
       } else if (type == MessageType.audio) {
         normalizedResponse = audio ?? "https://storage.fake/voice123.mp3";
-        // Después de enviar audio, preguntar si quiere escucharlo
-        _handleAudioSent(audio ?? "");
+        _handleAudioSentDirectly(audio ?? "");
         return; // No continuar con el flujo normal
       } else if (type == MessageType.pictureCard) {
         normalizedResponse = pictures != null && pictures.isNotEmpty
@@ -156,51 +146,6 @@ class ChatController extends ChangeNotifier {
       }
 
       _lastUserMessage = normalizedResponse;
-
-      // Si estamos esperando confirmación para escuchar audio
-      if (_awaitingAudioListenConfirm) {
-        final lower = normalizedResponse.trim().toLowerCase();
-
-        // Normalizar entradas comunes
-        final isYes =
-            lower == 'sí' ||
-            lower == 'si' ||
-            lower == 'yes' ||
-            lower == 'listen to the audio' ||
-            lower == 'escuchar el audio';
-        final isNo = lower == 'no';
-
-        if (isYes || isNo) {
-          if (isYes && _pendingAudioPath != null) {
-            // El usuario quiere escuchar el audio
-            final audioMessage = ChatMessage(
-              other: true,
-              type: MessageType.audioPlayback,
-              audio: _pendingAudioPath,
-              time: _getTimeNow(),
-            ).toMap();
-
-            // Pasar referencia del controller
-            audioMessage["chatController"] = this;
-            _addMessage(audioMessage);
-
-            // Cambiar estado para esperar que termine el audio
-            _awaitingContinueAfterAudio = true;
-          } else {
-            // Si dice que no, continuar con el flujo normal
-            Future.delayed(const Duration(milliseconds: 600), () {
-              showNextBotMessage(onActionRequired: onActionRequired);
-            });
-          }
-
-          _awaitingAudioListenConfirm = false;
-          _pendingAudioPath = null;
-          _currentSuggestions = const [];
-          notifyListeners();
-          return;
-        }
-        // Si la respuesta no es Sí/No, continúa flujo normal
-      }
 
       // Si el usuario responde a la pregunta de continuar después del audio
       if (_currentSuggestions.isNotEmpty &&
