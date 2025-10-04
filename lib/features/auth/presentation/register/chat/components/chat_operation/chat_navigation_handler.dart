@@ -41,6 +41,7 @@ class ChatNavigationHandler {
                 _handlePostNavigationFlowCategory(chatController);
                 break;
               case 2:
+                // ignore: use_build_context_synchronously
                 _handlePostNavigationFlowInterests(context, chatController);
                 break;
               default:

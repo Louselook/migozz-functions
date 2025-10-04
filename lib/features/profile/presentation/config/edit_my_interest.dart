@@ -58,6 +58,7 @@ class _EditInterestsScreenState extends State<EditInterestsScreen> {
       });
 
       // Opcional: cargar intereses seleccionados previamente del cubit
+      // ignore: use_build_context_synchronously
       final cubit = context.read<RegisterCubit>();
       final interests = cubit.state.interests;
       if (interests != null) {
@@ -136,10 +137,7 @@ class _EditInterestsScreenState extends State<EditInterestsScreen> {
                   child: Container(
                     alignment: Alignment.center,
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    child: const Text(
-                      "Save",
-                      style: TextStyle(fontSize: 18),
-                    ),
+                    child: const Text("Save", style: TextStyle(fontSize: 18)),
                   ),
                 ),
               ),
@@ -199,7 +197,9 @@ class _EditInterestsScreenState extends State<EditInterestsScreen> {
                 },
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 8),
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
@@ -212,8 +212,7 @@ class _EditInterestsScreenState extends State<EditInterestsScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (selected)
-                        const Icon(Icons.check,
-                            size: 16, color: Colors.green),
+                        const Icon(Icons.check, size: 16, color: Colors.green),
                       if (selected) const SizedBox(width: 4),
                       Text(
                         opt,
@@ -221,8 +220,9 @@ class _EditInterestsScreenState extends State<EditInterestsScreen> {
                           color: selected
                               ? Colors.green
                               : AppColors.backgroundDark,
-                          fontWeight:
-                              selected ? FontWeight.bold : FontWeight.w500,
+                          fontWeight: selected
+                              ? FontWeight.bold
+                              : FontWeight.w500,
                         ),
                       ),
                     ],

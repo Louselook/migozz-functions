@@ -21,7 +21,6 @@ class MoreUserDetails extends StatefulWidget {
 
 class _MoreUserDetailsState extends State<MoreUserDetails> {
   late PageController pageController;
-  int _currentPage = 0;
 
   @override
   void initState() {
@@ -29,7 +28,6 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
     pageController = PageController(
       initialPage: widget.pageIndicator,
     ); // Inicializamos el PageController
-    _currentPage = widget.pageIndicator;
   }
 
   @override
@@ -51,40 +49,20 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
       body: Stack(
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 0.0), // Antes era 40 por el progreso, pero sin el queda mucho espacio libre
+            padding: const EdgeInsets.symmetric(
+              vertical: 0.0,
+            ), // Antes era 40 por el progreso, pero sin el queda mucho espacio libre
             child: PageView.builder(
               controller:
                   pageController, // Aseguramos que el controlador se pase correctamente
               itemCount: steps.length,
               physics: const NeverScrollableScrollPhysics(),
               onPageChanged: (index) {
-                setState(() {
-                  _currentPage = index;
-                });
+                setState(() {});
               },
               itemBuilder: (_, index) => steps[index],
             ),
           ),
-          // Indicadores de progreso - Por ordenes se dejo tanto sin scroll como sin indicadores
-          // Container(
-          //   padding: const EdgeInsets.only(top: 30, left: 20, right: 20),
-          //   child: Row(
-          //     mainAxisAlignment: MainAxisAlignment.center,
-          //     children: List.generate(
-          //       steps.length,
-          //       (index) => CustomProgressIndicator(
-          //         index,
-          //         currentIndex: _currentPage,
-          //         activeWidth: 16,
-          //         activeHeight: 16,
-          //         inactiveWidth: 16,
-          //         inactiveHeight: 16,
-          //         borderRadius: BorderRadius.circular(20),
-          //         inactiveColor: Colors.white,
-          //       ),
-          //     ),
-          //   ),
-          // ),
         ],
       ),
     );

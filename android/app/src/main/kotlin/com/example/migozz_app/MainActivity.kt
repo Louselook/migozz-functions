@@ -24,13 +24,18 @@ class MainActivity: FlutterActivity() {
         val data: Uri? = intent.data
 
         if (Intent.ACTION_VIEW == action && data != null) {
-            if (data.scheme == "migozz" && data.host == "spotify" && data.path == "/success") {
-                val queryParams = data.query ?: ""
+            flutterEngine?.dartExecutor?.binaryMessenger?.let { messenger ->
+                val channel = MethodChannel(messenger, "socialAuth")
 
-                // Notificar a Flutter mediante platform channel
-                flutterEngine?.dartExecutor?.binaryMessenger?.let { messenger: BinaryMessenger ->
-                    val channel = MethodChannel(messenger, "socialAuth")
-                    channel.invokeMethod("spotifySuccess", queryParams)
+                when {
+                    data.scheme == "migozz" && data.host == "spotify" && data.path == "/success" -> {
+                        val queryParams = data.query ?: ""
+                        channel.invokeMethod("spotifySuccess", queryParams)
+                    }
+                    data.scheme == "migozz" && data.host == "twitter" && data.path == "/success" -> {
+                        val queryParams = data.query ?: ""
+                        channel.invokeMethod("twitterSuccess", queryParams)
+                    }
                 }
             }
         }

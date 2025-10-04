@@ -107,6 +107,7 @@ class RegisterCubit extends Cubit<RegisterState> {
         // Solo llamas al método final de registro
         completeRegistration();
       }
+      // ignore: empty_catches
     } catch (e) {}
   }
 
@@ -231,15 +232,9 @@ class RegisterCubit extends Cubit<RegisterState> {
                   current.add({network.toLowerCase(): profileData});
 
                   // 3.1️⃣ Si es Instagram y hay foto de perfil, usarla como avatar
-                  if (network.toLowerCase() == 'instagram') {
-                    final avatar =
-                        (profileData['profile_picture_url'] ??
-                                profileData['profilePicUrl'] ??
-                                profileData['thumbnail_url'])
-                            ?.toString();
-                    if (avatar != null && avatar.isNotEmpty) {
-                      setAvatarUrl(avatar);
-                    }
+                  final avatar = profileData['profile_image_url']?.toString();
+                  if (avatar != null && avatar.isNotEmpty) {
+                    setAvatarUrl(avatar);
                   }
 
                   // 4️⃣ Actualizar el cubit
@@ -247,9 +242,11 @@ class RegisterCubit extends Cubit<RegisterState> {
                 } catch (e) {
                   debugPrint("❌ Error fetching $network profile: $e");
                 } finally {
+                  // ignore: use_build_context_synchronously
                   LoadingOverlay.hide(context);
                 }
 
+                // ignore: use_build_context_synchronously
                 Navigator.of(context).pop(value);
               },
             ),

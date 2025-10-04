@@ -83,6 +83,7 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
         tempPlayer.dispose();
 
         if (durationInSeconds < 5.0) {
+          // ignore: use_build_context_synchronously
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
@@ -98,6 +99,7 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
         }
 
         if (durationInSeconds > 10.0) {
+          // ignore: use_build_context_synchronously
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
@@ -113,15 +115,16 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
         }
 
         // Audio válido (5-10 segundos)
-        print(
+        debugPrint(
           'DEBUG: Audio válido (${durationInSeconds.toStringAsFixed(1)}s), enviando...',
         );
         widget.onSendAudio?.call(audioPath);
         _audioManager.reset();
         setState(() {});
       } catch (e) {
-        print('ERROR al leer duración: $e');
+        debugPrint('ERROR al leer duración: $e');
         // Si falla todo, enviar sin validar
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(

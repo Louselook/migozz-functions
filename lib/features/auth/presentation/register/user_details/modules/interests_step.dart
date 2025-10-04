@@ -120,6 +120,7 @@ class _InterestsStepState extends State<InterestsStep> {
                 await cubit.checkCompletion();
 
                 if (mounted) {
+                  // ignore: use_build_context_synchronously
                   Navigator.of(context).pop('done');
                 }
               },

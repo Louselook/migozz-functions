@@ -34,11 +34,19 @@
               android:resource="@style/NormalTheme"
               />
            <!-- Inicio Deeplinks para redes socuales  -->
+           <!-- Spotify -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="migozz" android:host="spotify" android:path="/success"/>
+            </intent-filter>
+           <!-- Twitter -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="migozz" android:host="twitter" android:path="/success"/>
             </intent-filter>
             <!-- Fin Deeplinks para redes socuales  -->
 

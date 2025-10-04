@@ -103,6 +103,7 @@ class _RegisterScreenContentState extends State<_RegisterScreenContent> {
                         radius: 19,
                         onPressed: () async {
                           final email = _emailController.text.trim();
+                          // ignore: non_constant_identifier_names
                           final Keyboardclose = FocusScope.of(context);
                           Keyboardclose.unfocus();
                           if (email.isEmpty) {
@@ -135,6 +136,7 @@ class _RegisterScreenContentState extends State<_RegisterScreenContent> {
                           if (exists) {
                             debugPrint("Si existe :D");
                             CustomSnackbar.show(
+                              // ignore: use_build_context_synchronously
                               context: context,
                               message: "This email is already registered",
                               type: SnackbarType.error,
@@ -144,6 +146,7 @@ class _RegisterScreenContentState extends State<_RegisterScreenContent> {
                           }
 
                           // Email válido, vamos al chat
+                          // ignore: use_build_context_synchronously
                           context.pushReplacement('/ia-chat', extra: email);
                         },
 

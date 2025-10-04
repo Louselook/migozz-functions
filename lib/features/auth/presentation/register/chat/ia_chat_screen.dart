@@ -10,6 +10,8 @@ import 'package:migozz_app/core/components/compuestos/chat/chat_message_builder.
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/chat_controller.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/chat_navigation_handler.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/suggestion_chips.dart';
+import 'package:migozz_app/features/auth/presentation/register/chat/deeplink_functions/handle_spotify.dart';
+import 'package:migozz_app/features/auth/presentation/register/chat/deeplink_functions/handle_twitter.dart';
 
 class IaChatScreen extends StatefulWidget {
   const IaChatScreen({super.key});
@@ -19,7 +21,7 @@ class IaChatScreen extends StatefulWidget {
 }
 
 class _IaChatScreenState extends State<IaChatScreen> {
-  static const _spotifyChannel = MethodChannel('socialAuth');
+  static const _socialChannel = MethodChannel('socialAuth');
   final TextEditingController _controller = TextEditingController();
   late final ChatController _chatController;
   String? myOTP;
@@ -27,41 +29,18 @@ class _IaChatScreenState extends State<IaChatScreen> {
   @override
   void initState() {
     super.initState();
+
     _chatController = ChatController(
       registerCubit: context.read<RegisterCubit>(),
     );
-
-    // Solo inicializa si no hay mensajes previos
-    if (_chatController.messages.isEmpty) {
-      _chatController.initializeChat();
-    }
-
+    if (_chatController.messages.isEmpty) _chatController.initializeChat();
     _chatController.addListener(_onChatStateChanged);
 
-    // Deeplink Spotify
-    _spotifyChannel.setMethodCallHandler((call) async {
+    _socialChannel.setMethodCallHandler((call) async {
       if (call.method == 'spotifySuccess') {
-        final queryString = call.arguments as String;
-        final params = Uri.splitQueryString(queryString);
-
-        final registerCubit = context.read<RegisterCubit>();
-        final current = List<Map<String, Map<String, dynamic>>>.from(
-          registerCubit.state.socialEcosystem ?? [],
-        );
-
-        current.add({
-          'spotify': {
-            'access_token': params['access_token'],
-            'refresh_token': params['refresh_token'],
-            'display_name': params['display_name'],
-            'email': params['email'],
-            'followers': int.tryParse(params['followers'] ?? '0') ?? 0,
-            'pais': params['pais'],
-            'plan': params['plan'],
-          },
-        });
-
-        registerCubit.setSocialEcosystem(current);
+        handleSpotify(call.arguments as String, context); // <- pasar context
+      } else if (call.method == 'twitterSuccess') {
+        handleTwitter(call.arguments as String, context); // <- pasar context
       }
     });
   }

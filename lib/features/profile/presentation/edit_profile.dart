@@ -217,6 +217,7 @@ class _EditProfileState extends State<EditProfile> {
                     icon: Icons.logout,
                     onTap: () async {
                       await FirebaseAuth.instance.signOut();
+                      // ignore: use_build_context_synchronously
                       if (mounted) context.go('/login');
                     },
                   ),

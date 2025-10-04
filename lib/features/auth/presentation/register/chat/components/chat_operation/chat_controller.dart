@@ -679,12 +679,7 @@ class ChatController extends ChangeNotifier {
       final data = platform[key] as Map<String, dynamic>;
 
       // Buscar dinámicamente un campo de imagen
-      final possibleKeys = [
-        "thumbnail",
-        "profile_pic_url",
-        "avatar_url",
-        "image",
-      ];
+      final possibleKeys = ["profile_image_url"];
       String? imageUrl;
 
       for (final imgKey in possibleKeys) {
@@ -719,6 +714,7 @@ class ChatController extends ChangeNotifier {
   }
 
   /// ------------------- Social Cards (después de conectar redes) -------------------
+  /// ------------------- Social Cards (después de conectar redes) -------------------
   Future<void> addSocialCards() async {
     final platforms = registerCubit.state.socialEcosystem ?? [];
     if (platforms.isEmpty) return;
@@ -727,6 +723,29 @@ class ChatController extends ChangeNotifier {
         .toLowerCase()
         .contains('es');
 
+    // 🔹 NUEVO: Mensaje previo mencionando las redes conectadas
+    final platformNames = platforms
+        .map((p) => p.keys.first.capitalize())
+        .join(', ')
+        .replaceFirst(
+          RegExp(r',\s(?!.*,)'),
+          isSpanish ? ' y ' : ' and ',
+        ); // último separador
+
+    final introText = isSpanish
+        ? '¡Genial! Veo que conectaste $platformNames. 🎉'
+        : 'Great! I see you connected $platformNames. 🎉';
+
+    _addMessage({
+      "other": true,
+      "text": introText,
+      "type": MessageType.text,
+      "time": _getTimeNow(),
+    });
+
+    await Future.delayed(const Duration(milliseconds: 600));
+
+    // 🔹 Luego mostrar las cards
     final socialMessages = SocialCardsHelper.generateSocialCards(
       platforms: platforms,
       isSpanish: isSpanish,

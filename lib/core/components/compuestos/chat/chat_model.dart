@@ -1,6 +1,7 @@
 enum MessageType {
   text,
-  socialCard,
+  socialCard, // Individual (mantener)
+  socialCards, // ← NUEVO: Múltiples cards
   pictureCard,
   audio,
   audioPlayback, // Para reproducir audio con UI específica

@@ -7,6 +7,7 @@ import 'package:migozz_app/core/components/compuestos/chat/other_typing.dart';
 import 'package:migozz_app/core/components/compuestos/chat/user_message.dart';
 import 'package:migozz_app/core/components/compuestos/chat/picture_options.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/social_cards/social_cards.dart';
+import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/social_cards/social_cards_container.dart';
 
 class ChatMessageBuilder {
   static Widget buildMessage(Map<String, dynamic> message) {
@@ -16,13 +17,7 @@ class ChatMessageBuilder {
         padding: const EdgeInsets.only(bottom: 15),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            OtherTyping(
-              name:
-                  message["name"] ??
-                  "IA", // Aquí puedes pasar Juan, José, IA, etc.
-            ),
-          ],
+          children: [OtherTyping(name: message["name"] ?? "IA")],
         ),
       );
     }
@@ -34,6 +29,15 @@ class ChatMessageBuilder {
         pictures: pics,
         time: message["time"],
         sender: message["other"],
+      );
+    }
+
+    // 🔹 NUEVO: Contenedor de múltiples social cards (horizontal)
+    if (message["type"] == MessageType.socialCards) {
+      final platforms = List<Map<String, dynamic>>.from(message["platforms"]);
+      return SocialCardsContainer(
+        platforms: platforms,
+        time: message["time"] ?? "",
       );
     }
 
@@ -77,7 +81,7 @@ class ChatMessageBuilder {
       );
     }
 
-    // 🔹 Mensajes de texto y social cards
+    // 🔹 Mensajes de texto y social card individual (legacy)
     if (message["other"] == true) {
       if (message["social"] == true) {
         final platformData = message["platform"] as Map<String, dynamic>;

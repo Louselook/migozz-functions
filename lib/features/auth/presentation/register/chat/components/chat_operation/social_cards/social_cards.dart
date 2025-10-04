@@ -36,14 +36,13 @@ class SocialCardMini extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    if (platformData["thumbnail"] != null ||
-                        platformData["profile_pic_url"] != null)
+                    if (platformData["profile_image_url"] != null)
                       Image.network(
-                        platformData["thumbnail"] ??
-                            platformData["profile_pic_url"]!,
+                        platformData["profile_image_url"]!,
                         width: 80,
                         height: 80,
                       ),
+
                     const SizedBox(height: 10),
                     const SizedBox(height: 10),
                     ...platformData.entries
@@ -51,8 +50,7 @@ class SocialCardMini extends StatelessWidget {
                           (e) =>
                               e.key != "label" &&
                               e.key != "iconPath" &&
-                              e.key != "thumbnail" &&
-                              e.key != "profile_pic_url",
+                              e.key != "profile_image_url",
                         )
                         .map(
                           (e) => Text(

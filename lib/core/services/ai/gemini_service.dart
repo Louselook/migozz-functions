@@ -6,9 +6,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_state.dart';
 
-/// Contract: input = current RegisterState + last user message (optional) + step index
-/// Output: Map<String,dynamic> with same shape used in IaChatService:
-///   { text: String, options: List<String>, action: int?, dinamicResponse: String?, keyboardType: 'text'|'number' }
 class GeminiService {
   GeminiService._();
   static final GeminiService instance = GeminiService._();

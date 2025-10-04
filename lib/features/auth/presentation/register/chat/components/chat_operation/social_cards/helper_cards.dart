@@ -7,7 +7,8 @@ class SocialCardsHelper {
     required bool isSpanish,
     required String Function() getTimeNow,
   }) {
-    final List<Map<String, dynamic>> messages = [];
+    // 🔹 Construir lista de todas las plataformas
+    final List<Map<String, dynamic>> allPlatforms = [];
 
     for (var platform in platforms) {
       final networkName = platform.keys.first; // youtube, instagram...
@@ -21,21 +22,23 @@ class SocialCardsHelper {
         networkData,
       );
 
-      messages.add({
-        "other": true,
-        "type": MessageType.socialCard,
-        "social": true,
-        "platform": {
-          ...networkData,
-          "label": networkName.capitalize(),
-          "iconPath": iconPath,
-          if (followers != null) "followersFormatted": followers,
-        },
-        "time": getTimeNow(),
+      allPlatforms.add({
+        ...networkData,
+        "label": networkName.capitalize(),
+        "iconPath": iconPath,
+        if (followers != null) "followersFormatted": followers,
       });
     }
 
-    return messages;
+    // 🔹 Retornar UN solo mensaje con TODAS las plataformas
+    return [
+      {
+        "other": true,
+        "type": MessageType.socialCards, // ← Plural (nuevo tipo)
+        "platforms": allPlatforms, // ← Lista completa
+        "time": getTimeNow(),
+      },
+    ];
   }
 
   static String? _extractFollowers(String network, Map<String, dynamic> data) {
