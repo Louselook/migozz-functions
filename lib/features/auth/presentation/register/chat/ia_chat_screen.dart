@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
@@ -18,6 +19,7 @@ class IaChatScreen extends StatefulWidget {
 }
 
 class _IaChatScreenState extends State<IaChatScreen> {
+  static const _spotifyChannel = MethodChannel('socialAuth');
   final TextEditingController _controller = TextEditingController();
   late final ChatController _chatController;
   String? myOTP;
@@ -28,10 +30,40 @@ class _IaChatScreenState extends State<IaChatScreen> {
     _chatController = ChatController(
       registerCubit: context.read<RegisterCubit>(),
     );
-    // los meensajees que eenvio
+
+    // Solo inicializa si no hay mensajes previos
+    if (_chatController.messages.isEmpty) {
+      _chatController.initializeChat();
+    }
+
     _chatController.addListener(_onChatStateChanged);
-    // Inicia con mnsaje del chat
-    _chatController.initializeChat();
+
+    // Deeplink Spotify
+    _spotifyChannel.setMethodCallHandler((call) async {
+      if (call.method == 'spotifySuccess') {
+        final queryString = call.arguments as String;
+        final params = Uri.splitQueryString(queryString);
+
+        final registerCubit = context.read<RegisterCubit>();
+        final current = List<Map<String, Map<String, dynamic>>>.from(
+          registerCubit.state.socialEcosystem ?? [],
+        );
+
+        current.add({
+          'spotify': {
+            'access_token': params['access_token'],
+            'refresh_token': params['refresh_token'],
+            'display_name': params['display_name'],
+            'email': params['email'],
+            'followers': int.tryParse(params['followers'] ?? '0') ?? 0,
+            'pais': params['pais'],
+            'plan': params['plan'],
+          },
+        });
+
+        registerCubit.setSocialEcosystem(current);
+      }
+    });
   }
 
   @override
@@ -72,10 +104,12 @@ class _IaChatScreenState extends State<IaChatScreen> {
                       // Solo mostrar para el último mensaje del bot con opciones
                       !_chatController.messages
                           .sublist(index + 1)
-                          .any((m) =>
-                              m["other"] == true &&
-                              (m["options"] != null &&
-                                  (m["options"] as List).isNotEmpty));
+                          .any(
+                            (m) =>
+                                m["other"] == true &&
+                                (m["options"] != null &&
+                                    (m["options"] as List).isNotEmpty),
+                          );
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -106,7 +140,9 @@ class _IaChatScreenState extends State<IaChatScreen> {
 
             // Input Bar
             ChatInputWidget(
-              key: ValueKey(_chatController.keyboardType), // fuerza rebuild al cambiar keyboardType
+              key: ValueKey(
+                _chatController.keyboardType,
+              ), // fuerza rebuild al cambiar keyboardType
               controller: _controller,
               keyboardType: _chatController.keyboardType,
               onSend: () {
@@ -152,7 +188,6 @@ class _IaChatScreenState extends State<IaChatScreen> {
                   ],
                 );
               },
-              
             ),
           ],
         ),

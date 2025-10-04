@@ -43,9 +43,15 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       GoRoute(
         path: '/ia-chat',
         builder: (context, state) {
-          final email = state.extra as String;
-          // ya existe un RegisterCubit arriba en el árbol
-          context.read<RegisterCubit>().setEmail(email);
+          // Intentar tomar email desde extra
+          final email =
+              state.extra as String? ??
+              context.read<RegisterCubit>().state.email;
+
+          if (email != null) {
+            context.read<RegisterCubit>().setEmail(email);
+          }
+
           return const IaChatScreen();
         },
       ),
@@ -69,6 +75,9 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       // Usuario NO autenticado
       if (status == AuthStatus.notAuthenticated) {
         if (publicRoutes.contains(goingTo)) return null;
+        if (context.read<RegisterCubit>().state.email!.isNotEmpty) {
+          return '/ia-chat';
+        }
         return '/login';
       }
 
