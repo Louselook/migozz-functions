@@ -141,21 +141,6 @@ class RegisterCubit extends Cubit<RegisterState> {
         await _mediaService.associateMediaToUid(uid: uid, email: state.email!);
       }
 
-      // 3️⃣ Guardar los perfiles sociales en la subcolección "socials"
-      // if (state.userSocials != null && state.userSocials!.isNotEmpty) {
-      //   for (final entry in state.userSocials!.entries) {
-      //     final network = entry.key;
-      //     final profile = entry.value;
-
-      //     // Guardar cada perfil incluyendo URL
-      //     await _authService.saveUserSocial(
-      //       uid: uid,
-      //       network: network,
-      //       profile: profile,
-      //     );
-      //   }
-      // }
-
       return uid;
     } catch (e) {
       throw Exception('Error al registrar usuario: $e');
@@ -266,7 +251,9 @@ class RegisterCubit extends Cubit<RegisterState> {
       case 'tiktok':
         await networkService.startTikTokAuth(context);
         break;
-
+      case 'facebook':
+        await networkService.startFacebookAuth(context);
+        break;
       default:
         debugPrint('Red social no soportada: $network');
     }

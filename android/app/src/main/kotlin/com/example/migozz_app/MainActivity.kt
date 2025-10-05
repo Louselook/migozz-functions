@@ -36,6 +36,14 @@ class MainActivity: FlutterActivity() {
                         val queryParams = data.query ?: ""
                         channel.invokeMethod("twitterSuccess", queryParams)
                     }
+                    data.scheme == "migozz" && data.host == "facebook" && data.path == "/success" -> {
+                        val queryParams = data.query ?: ""
+                        channel.invokeMethod("facebookSuccess", queryParams)
+                    }
+                    data.scheme == "migozz" && data.host == "tiktok" && data.path == "/success" -> {
+                        val queryParams = data.query ?: ""
+                        channel.invokeMethod("tiktokSuccess", queryParams)
+                    }
                 }
             }
         }

@@ -48,6 +48,20 @@
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="migozz" android:host="twitter" android:path="/success"/>
             </intent-filter>
+           <!-- Facebook -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="migozz" android:host="facebook" android:path="/success"/>
+            </intent-filter>
+           <!-- Tiktok -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="migozz" android:host="tiktok" android:path="/success"/>
+            </intent-filter>
             <!-- Fin Deeplinks para redes socuales  -->
 
 

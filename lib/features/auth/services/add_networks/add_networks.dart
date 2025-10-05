@@ -89,4 +89,21 @@ class AddNetworkService {
       debugPrint('No se pudo abrir la URL de TikTok\nError: $e');
     }
   }
+
+  Future<void> startFacebookAuth(BuildContext context) async {
+    final url = Uri.parse('${ApiConfig.apiBase}/facebook/auth');
+
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final authUrl = data['auth_url'];
+        await launchUrlString(authUrl, mode: LaunchMode.externalApplication);
+      } else {
+        debugPrint('Error al obtener URL de Facebook: ${response.body}');
+      }
+    } catch (e) {
+      debugPrint('No se pudo abrir la URL de Facebook\nError: $e');
+    }
+  }
 }

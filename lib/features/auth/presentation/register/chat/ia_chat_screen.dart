@@ -10,7 +10,9 @@ import 'package:migozz_app/core/components/compuestos/chat/chat_message_builder.
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/chat_controller.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/chat_navigation_handler.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/suggestion_chips.dart';
+import 'package:migozz_app/features/auth/presentation/register/chat/deeplink_functions/handle_facebook.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/deeplink_functions/handle_spotify.dart';
+import 'package:migozz_app/features/auth/presentation/register/chat/deeplink_functions/handle_tiktok.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/deeplink_functions/handle_twitter.dart';
 
 class IaChatScreen extends StatefulWidget {
@@ -41,6 +43,10 @@ class _IaChatScreenState extends State<IaChatScreen> {
         handleSpotify(call.arguments as String, context); // <- pasar context
       } else if (call.method == 'twitterSuccess') {
         handleTwitter(call.arguments as String, context); // <- pasar context
+      } else if (call.method == 'facebookSuccess') {
+        handleFacebook(call.arguments as String, context); // <- pasar context
+      } else if (call.method == 'tiktokSuccess') {
+        handleTikTok(call.arguments as String, context); // <- pasar context
       }
     });
   }
