@@ -1,9 +1,65 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-// TODA ESTA VISTA ESTA CON DATOS QUEMADOS
-
-class ProfileStatsScreen extends StatelessWidget {
+class ProfileStatsScreen extends StatefulWidget {
   const ProfileStatsScreen({super.key});
+
+  @override
+  State<ProfileStatsScreen> createState() => _ProfileStatsScreenState();
+}
+
+class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
+  DateTimeRange? selectedRange;
+
+  // Cargar datos del usuario
+  Future<void> _loadUser() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      if (doc.exists) {
+        debugPrint('Datos de usuario: ${doc.data()}');
+      }
+    } catch (e) {
+      debugPrint('Error cargando usuario: $e');
+    }
+  }
+
+  // Mostrar el DateRangePicker
+  Future<void> _pickDateRange() async {
+    final DateTime now = DateTime.now();
+
+    final DateTimeRange? picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(1990, 1, 1),
+      lastDate: now,
+      initialDateRange: selectedRange ??
+          DateTimeRange(
+            start: now.subtract(const Duration(days: 7)),
+            end: now,
+          ),
+      helpText: 'Selecciona el rango de fechas',
+      saveText: 'Seleccionar',
+    );
+
+    if (picked != null) {
+      setState(() {
+        selectedRange = picked;
+      });
+    }
+  }
+
+  // Texto formateado del rango
+  String get rangeText {
+    if (selectedRange == null) return "No seleccionado";
+    final start = selectedRange!.start;
+    final end = selectedRange!.end;
+    return "${start.day}/${start.month}/${start.year} → ${end.day}/${end.month}/${end.year}";
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,142 +86,118 @@ class ProfileStatsScreen extends StatelessWidget {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              // MÉTRICAS ARRIBA
+              //  Metricas arriba :p
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: const [
-                  // Likes
-                  Column(
-                    children: [
-                      Icon(Icons.favorite, color: Colors.white, size: 28),
-                      SizedBox(height: 4),
-                      Text("3.1 mill.", style: TextStyle(color: Colors.white)), 
-                    ],
-                  ),
-                  // Comentarios
-                  Column(
-                    children: [
-                      Icon(Icons.comment, color: Colors.white, size: 28),
-                      SizedBox(height: 4),
-                      Text("55.3 mil", style: TextStyle(color: Colors.white)),
-                    ],
-                  ),
-                  // Compartidos
-                  Column(
-                    children: [
-                      Icon(Icons.reply, color: Colors.white, size: 28),
-                      SizedBox(height: 4),
-                      Text("41.5 mil", style: TextStyle(color: Colors.white)),
-                    ],
-                  ),
+                  _Metric(icon: Icons.favorite, label: "3.1 mill."),
+                  _Metric(icon: Icons.comment, label: "55.3 mil"),
+                  _Metric(icon: Icons.reply, label: "41.5 mil"),
                 ],
               ),
               const SizedBox(height: 20),
 
-              // FILTRO DE TIEMPO + RANGO
+              //  FILTRO DE TIEMPO + RANGO
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // 🔽 DropdownMenu
-                  DropdownMenu<String>(
-                    initialSelection: "Rango de fechas",
-                    dropdownMenuEntries: const [
-                      DropdownMenuEntry(value: "Hoy", label: "Hoy"),
-                      DropdownMenuEntry(value: "Ayer", label: "Ayer"),
-                      DropdownMenuEntry(value: "Hace una semana", label: "Hace una semana"),
-                      DropdownMenuEntry(value: "Hace dos semanas", label: "Hace dos semanas"),
-                      DropdownMenuEntry(value: "Hace un mes", label: "Hace un mes"),
-                      DropdownMenuEntry(value: "Hace seis mes", label: "Hace seis mes"),
-                      DropdownMenuEntry(value: "Hace un año", label: "Hace un año"),
-                    ],
-                    inputDecorationTheme: InputDecorationTheme(
-                      filled: true,
-                      fillColor: Colors.grey[800],
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide.none,
-                      ),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey[800],
+                      foregroundColor: Colors.white,
                     ),
-                    textStyle: const TextStyle(color: Colors.white),
-                    width: 20,
-                    trailingIcon: const Icon(Icons.arrow_drop_down, color: Colors.white),
-                    onSelected: (value) {
-                      debugPrint("Seleccionado: $value");
-                    },
+                    onPressed: _pickDateRange,
+                    child: const Text("Seleccionar fecha"),
                   ),
-                  // rango fijo a la derecha, se puede cambiar para calcular los dias
-                  const Text(
-                    "18/1/2025 to 18/11/2025",
-                    style: TextStyle(color: Colors.grey, fontSize: 15),
+                  Text(
+                    rangeText,
+                    style: const TextStyle(color: Colors.grey, fontSize: 15),
                   ),
                 ],
               ),
               const SizedBox(height: 20),
 
-              // OVERVIEW CARD
-              Card(
-                color: Colors.grey[900],
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                margin: EdgeInsets.zero,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text("Overview",
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold)),
-                      SizedBox(height: 12),
-                      // filas de datos
-                      _RowData(label: "Likes:", value: "3,100,000"),
-                      _RowData(label: "Coments:", value: "55,300"),
-                      _RowData(label: "Shared:", value: "41,500"),
-                    ],
-                  ),
-                ),
+              //  Card superior
+              _DataCard(
+                title: "Overview",
+                rows: const [
+                  _RowData(label: "Likes:", value: "3,100,000"),
+                  _RowData(label: "Comments:", value: "55,300"),
+                  _RowData(label: "Shared:", value: "41,500"),
+                ],
               ),
               const SizedBox(height: 16),
 
-              // FOLLOWERS CARD
-              Card(
-                color: Colors.grey[900],
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                margin: EdgeInsets.zero,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text("Followers",
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold)),
-                      SizedBox(height: 12),
-                      _RowData(label: "Migozz", value: "60.2K"),
-                      _RowData(label: "Tiktok", value: "40.1K"),
-                      _RowData(label: "Instagram", value: "90.2K"),
-                      _RowData(label: "All", value: "130.3K"),
-                    ],
-                  ),
-                ),
+              //  Card inferior
+              _DataCard(
+                title: "Followers",
+                rows: const [
+                  _RowData(label: "Migozz:", value: "60.2K"),
+                  _RowData(label: "Tiktok:", value: "40.1K"),
+                  _RowData(label: "Instagram:", value: "90.2K"),
+                  _RowData(label: "All:", value: "130.3K"),
+                ],
               ),
-            ]
+            ],
           ),
         ),
-      )
+      ),
     );
   }
 }
 
-// Fila simple para datos (dejé esto como helper porque sino el código se repetiria arriba una y otra y otra vez)
-// Igualmente se pueden llamar directamente los datos y ponerlos dependiendo de la 
+// ------------------------------------------------------------
+// Complementos
+// ------------------------------------------------------------
+
+class _Metric extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _Metric({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Icon(icon, color: Colors.white, size: 28),
+        const SizedBox(height: 4),
+        Text(label, style: const TextStyle(color: Colors.white)),
+      ],
+    );
+  }
+}
+
+class _DataCard extends StatelessWidget {
+  final String title;
+  final List<_RowData> rows;
+  const _DataCard({required this.title, required this.rows});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: Colors.grey[900],
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title,
+                style: const TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            ...rows,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _RowData extends StatelessWidget {
   final String label;
   final String value;

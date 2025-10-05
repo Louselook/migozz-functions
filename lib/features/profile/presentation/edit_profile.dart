@@ -21,7 +21,9 @@ class EditProfile extends StatefulWidget {
 class _EditProfileState extends State<EditProfile> {
   Map<String, dynamic>? _userDoc;
   bool _uploading = false;
-  bool _dirty = false; // hubo cambios en esta vista
+  bool _dirty = false; // Douglas: hubo cambios en esta vista - SOL: tambien hice cambios :D
+  // ───────────────────────────────────────────────────────────────────
+  DateTime? _dob; // Se llenará desde Firestore (Timestamp o String ISO)
 
   @override
   void initState() {
@@ -45,7 +47,42 @@ class _EditProfileState extends State<EditProfile> {
             .get();
         data = docUsers.data();
       }
-      if (mounted) setState(() => _userDoc = data);
+
+      // ─────────────────────────────────────────────────────────────
+      // DOB: parseo seguro desde Firestore
+      //  - Si viene como Timestamp -> toDate().toUtc()
+      //  - Si viene como String "YYYY-MM-DD" -> parseo manual a UTC
+      //  - Si no existe, _dob queda null
+      // También sincronizamos birthController para mostrar el texto.
+      // ─────────────────────────────────────────────────────────────
+      DateTime? parsedDob;
+      final rawDob = data?['dob'];
+      if (rawDob is Timestamp) {
+        parsedDob = rawDob.toDate().toUtc();
+      } else if (rawDob is String && rawDob.isNotEmpty) {
+        final p = rawDob.split('-'); // "YYYY-MM-DD"
+        if (p.length == 3) {
+          parsedDob = DateTime.utc(
+            int.parse(p[0]),
+            int.parse(p[1]),
+            int.parse(p[2]),
+          );
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          _userDoc = data;
+          _dob = parsedDob;
+          // DOB: si más adelante conectas el campo a un TextField con controller,
+          // aquí ya queda precargado.
+          birthController.text = _dob != null
+              ? "${_dob!.year.toString().padLeft(4,'0')}-"
+                "${_dob!.month.toString().padLeft(2,'0')}-"
+                "${_dob!.day.toString().padLeft(2,'0')}"
+              : '';
+        });
+      }
     } catch (e) {
       debugPrint('Error cargando usuario: $e');
     }
@@ -58,16 +95,19 @@ class _EditProfileState extends State<EditProfile> {
     final screenWidth = screenSize.width;
 
     final name = (_userDoc?['displayName'] as String?) ?? '';
-    final username =
-        ((_userDoc?['username'] as String?) ??
-        (_userDoc?['userName'] as String?) ??
-        '');
+    final username = ((_userDoc?['username'] as String?) ?? '');
     final email = (_userDoc?['email'] as String?) ?? '';
     final phone = (_userDoc?['phone'] as String?) ?? '';
     final gender = (_userDoc?['gender'] as String?) ?? '';
     final location = (_userDoc?['location'] as Map?) ?? const {};
     final city = location['city'] ?? '';
     final avatarUrl = (_userDoc?['avatarUrl'] as String?);
+    String dobLabel() { // DOB formateado para UI
+      if (_dob == null) return 'Date of birth';
+      return "${_dob!.year.toString().padLeft(4,'0')}-"
+             "${_dob!.month.toString().padLeft(2,'0')}-"
+             "${_dob!.day.toString().padLeft(2,'0')}";
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -153,38 +193,43 @@ class _EditProfileState extends State<EditProfile> {
                 ],
               ),
               SizedBox(height: screenHeight * 0.025),
-
+              
               listBuildBox(
+                controller: nameController,
                 text: name.isEmpty ? 'Full name' : name,
                 icon: Icons.account_box,
                 textColorInside: Colors.white,
                 iconColorInside: Colors.white,
-              ),
+              ), 
               listBuildBox(
+                controller: userNameController,
                 text: username.isEmpty ? 'Nickname' : '@$username',
                 icon: Icons.alternate_email,
                 textColorInside: Colors.white,
                 iconColorInside: Colors.white,
               ),
               listBuildBox(
+                controller: emailController,
                 text: email.isEmpty ? 'Email' : email,
                 icon: Icons.mail,
                 textColorInside: Colors.white,
                 iconColorInside: Colors.white,
               ),
               listBuildBox(
+                controller: phoneController,
                 text: phone.isEmpty ? 'Cell Phone' : phone,
                 icon: Icons.phone,
                 textColorInside: Colors.white,
                 iconColorInside: Colors.white,
               ),
               listBuildBox(
-                text: 'Date of birth',
+                text: dobLabel(),
                 icon: Icons.calendar_today,
                 textColorInside: Colors.white,
                 iconColorInside: Colors.white,
               ),
               listBuildBox(
+                controller: genderController,
                 text: gender.isEmpty ? 'Gender' : gender,
                 icon: Icons.transgender,
                 textColorInside: Colors.white,
@@ -281,7 +326,11 @@ class _EditProfileState extends State<EditProfile> {
               SizedBox(height: screenHeight * 0.012),
 
               GradientButton(
-                onPressed: () => context.pop('updated'),
+                onPressed: () async {
+                  await saveChanges();
+                  if (!context.mounted) return; // Por buenas practicas de flutter
+                  context.pop('updated');
+                  },
                 width: double.infinity,
                 height: screenHeight * 0.065,
                 radius: screenWidth * 0.02,
@@ -332,6 +381,7 @@ class _EditProfileState extends State<EditProfile> {
     Color colorbackground = Colors.white, // Valores por defecto
     Color textColorInside = Colors.black,
     Color iconColorInside = Colors.black,
+    TextEditingController? controller,
   }) {
     return Container(
       margin: EdgeInsets.symmetric(vertical: 2),
@@ -348,13 +398,49 @@ class _EditProfileState extends State<EditProfile> {
         ),
         borderRadius: BorderRadius.circular(8), // Bordes redondeados
       ),
-      child: ListTile(
-        textColor: textColorInside,
-        iconColor: iconColorInside,
-        leading: Icon(icon),
-        title: Text(text),
+      child: TextField( // Cambio a TextField para manejo de cambios por parte del usuario
+      controller: controller,
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.fromLTRB(0, 14, 0, 0),
+          prefixIcon: Icon(icon, color: iconColorInside),
+          hintStyle: TextStyle(color: iconColorInside),
+          hintText: text, 
+        )
       ),
     );
+  }
+
+  final nameController = TextEditingController();
+  final userNameController = TextEditingController();
+  final emailController = TextEditingController();
+  final phoneController = TextEditingController();
+  final genderController = TextEditingController();
+  final birthController = TextEditingController(); // DOB: sincronizado en _loadUser
+  // final cityController = TextEditingController(); // Prefiero manejarlo con una "Georreferenciación autumatica"
+
+  Future<void> saveChanges() async{
+    final user = _userDoc;
+    final newName = nameController.text.trim();
+    final newUsername = nameController.text.trim();
+    final newEmail = nameController.text.trim();
+    final newPhone = nameController.text.trim();
+    final newGender = nameController.text.trim();
+
+    Map<String, dynamic> updates = {};
+    if (newName != user?['userName'] && newUsername.isNotEmpty){
+      updates['userName'] = newName;
+    }
+    if (newName != user?['email'] && newEmail.isNotEmpty){
+      updates['email'] = newEmail;
+    }
+    if (newName != user?['phone'] && newPhone.isNotEmpty){
+      updates['phone'] = newPhone;
+    }
+    if (newName != user?['gender'] && newGender.isNotEmpty){
+      updates['gender'] = newGender;
+    }
+    // El cambio de fecha es mas complejo, luego lo resuelvo  [SOL]
   }
 
   Widget bottomOptions({
