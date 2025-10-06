@@ -11,25 +11,85 @@ class ProfileStatsScreen extends StatefulWidget {
 
 class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
   DateTimeRange? selectedRange;
+  bool _loading = true;
 
-  // Cargar datos del usuario
-  Future<void> _loadUser() async {
+  List<SocialStats> _socials = [];
+  Map<String, int> _totals = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+// Carga de datos del usuario
+
+  Future<void> _loadData() async {
+    setState(() => _loading = true);
+    final socials = await _loadUserSocials();
+    final totals = _calculateTotals(socials);
+    setState(() {
+      _socials = socials;
+      _totals = totals;
+      _loading = false;
+    });
+
+    debugPrint('Socials detectadas: ${_socials.map((s) => s.social).toList()}');
+    debugPrint('Totales: $_totals');
+  }
+
+
+  // Carga y parsing robusto
+
+  Future<List<SocialStats>> _loadUserSocials() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
+    if (user == null) return [];
+
     try {
-      final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
-      if (doc.exists) {
-        debugPrint('Datos de usuario: ${doc.data()}');
+      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+
+      if (!doc.exists) return [];
+
+      final data = doc.data();
+      debugPrint('Data Firestore: $data');
+
+      final dynamic ecosystem = data?['socialEcosystem'];
+      final List<SocialStats> out = [];
+
+      final entries = _parseEcosystem(ecosystem);
+      for (final e in entries) {
+        out.add(SocialStats.fromMap(e.key, e.value));
       }
-    } catch (e) {
-      debugPrint('Error cargando usuario: $e');
+
+      return out;
+    } catch (e, st) {
+      debugPrint('Error cargando socials: $e\n$st');
+      return [];
     }
   }
 
-  // Mostrar el DateRangePicker
+  // Calculadora de totales
+
+  Map<String, int> _calculateTotals(List<SocialStats> list) {
+    int followers = 0;
+    int likes = 0;
+    int shares = 0;
+
+    for (final s in list) {
+      followers += s.followers;
+      likes += s.likes;
+      shares += s.shares;
+    }
+
+    return {
+      'followers': followers,
+      'likes': likes,
+      'shares': shares,
+    };
+  }
+
+  // Selector de rango (sin cambios)
+
   Future<void> _pickDateRange() async {
     final DateTime now = DateTime.now();
 
@@ -53,13 +113,14 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
     }
   }
 
-  // Texto formateado del rango
   String get rangeText {
     if (selectedRange == null) return "No seleccionado";
     final start = selectedRange!.start;
     final end = selectedRange!.end;
     return "${start.day}/${start.month}/${start.year} → ${end.day}/${end.month}/${end.year}";
   }
+
+  // BUILD: UI usando _Metric y _DataCard
 
   @override
   Widget build(BuildContext context) {
@@ -82,63 +143,99 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
         ],
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              //  Metricas arriba :p
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: const [
-                  _Metric(icon: Icons.favorite, label: "3.1 mill."),
-                  _Metric(icon: Icons.comment, label: "55.3 mil"),
-                  _Metric(icon: Icons.reply, label: "41.5 mil"),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              //  FILTRO DE TIEMPO + RANGO
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey[800],
-                      foregroundColor: Colors.white,
-                    ),
-                    onPressed: _pickDateRange,
-                    child: const Text("Seleccionar fecha"),
-                  ),
-                  Text(
-                    rangeText,
-                    style: const TextStyle(color: Colors.grey, fontSize: 15),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              //  Card superior
-              _DataCard(
-                title: "Overview",
-                rows: const [
-                  _RowData(label: "Likes:", value: "3,100,000"),
-                  _RowData(label: "Comments:", value: "55,300"),
-                  _RowData(label: "Shared:", value: "41,500"),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              //  Card inferior
-              _DataCard(
-                title: "Followers",
-                rows: const [
-                  _RowData(label: "Migozz:", value: "60.2K"),
-                  _RowData(label: "Tiktok:", value: "40.1K"),
-                  _RowData(label: "Instagram:", value: "90.2K"),
-                  _RowData(label: "All:", value: "130.3K"),
-                ],
-              ),
-            ],
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: _loading
+                ? const Center(child: CircularProgressIndicator(color: Colors.white))
+                : _socials.isEmpty
+                    ? Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text('Aún no tienes socials conectadas, ¡Conectalas!',
+                              style: TextStyle(color: Colors.grey)),
+                          const SizedBox(height: 12),
+                          ElevatedButton(
+                            onPressed: _loadData,
+                            child: const Text('Actualizar'),
+                          ),
+                        ],
+                      )
+                    : Column(
+                        children: [
+                          // Métricas totales
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              _Metric(
+                                icon: Icons.favorite,
+                                label: '${_formatNum(_totals['likes'] ?? 0)} likes',
+                              ),
+                              _Metric(
+                                icon: Icons.reply,
+                                label: '${_formatNum(_totals['shares'] ?? 0)} shares',
+                              ),
+                              _Metric(
+                                icon: Icons.people,
+                                label: '${_formatNum(_totals['followers'] ?? 0)} followers',
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+          
+                          // Rango de fechas
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.grey[800],
+                                  foregroundColor: Colors.white,
+                                ),
+                                onPressed: _pickDateRange,
+                                child: const Text("Seleccionar fecha"),
+                              ),
+                              Text(
+                                rangeText,
+                                style: const TextStyle(color: Colors.grey, fontSize: 15),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+          
+                          // Card resumen general
+                          _DataCard(
+                            title: "Overview",
+                            rows: [
+                              _RowData(label: "Likes:", value: _formatNum(_totals['likes'] ?? 0)),
+                              _RowData(label: "Shares:", value: _formatNum(_totals['shares'] ?? 0)),
+                              _RowData(label: "Followers:", value: _formatNum(_totals['followers'] ?? 0)),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+          
+                          // Card por cada social
+                          Expanded(
+                            child: ListView.builder(
+                              itemCount: _socials.length,
+                              itemBuilder: (context, i) {
+                                final s = _socials[i];
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: _DataCard(
+                                    title: s.social,
+                                    rows: [
+                                      _RowData(label: "Followers:", value: _formatNum(s.followers)),
+                                      _RowData(label: "Likes:", value: _formatNum(s.likes)),
+                                      _RowData(label: "Shares:", value: _formatNum(s.shares)),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
           ),
         ),
       ),
@@ -146,10 +243,71 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
   }
 }
 
-// ------------------------------------------------------------
-// Complementos
-// ------------------------------------------------------------
+// Helpers globales
 
+// Convierte cualquier dynamic a int de forma segura
+int _toInt(dynamic v) {
+  if (v == null) return 0;
+  if (v is int) return v;
+  if (v is double) return v.toInt();
+  if (v is num) return v.toInt();
+  if (v is String) {
+    final digits = v.replaceAll(RegExp(r'[^0-9-]'), '');
+    return int.tryParse(digits) ?? 0;
+  }
+  return 0;
+}
+
+// Parsea el campo socialEcosystem con varias formas comunes y devuelve pares (SocialName, dataMap)
+List<MapEntry<String, Map<String, dynamic>>> _parseEcosystem(dynamic ecosystem) {
+  final out = <MapEntry<String, Map<String, dynamic>>>[];
+  if (ecosystem == null) return out;
+
+  if (ecosystem is List) {
+    for (final item in ecosystem) {
+      if (item is Map<String, dynamic>) {
+        item.forEach((k, v) {
+          if (v is Map<String, dynamic>) out.add(MapEntry(k, v));
+        });
+      }
+    }
+  } else if (ecosystem is Map<String, dynamic>) {
+    // ej: { "0": { "tiktok": { ... } }, "1": { "spotify": { ... } } } depende mucho si el usuario conecta o no redes
+    ecosystem.forEach((k, v) {
+      if (v is Map<String, dynamic>) {
+        if (v.length == 1 && v.values.first is Map<String, dynamic>) {
+          final innerKey = v.keys.first;
+          final innerVal = v[innerKey] as Map<String, dynamic>;
+          out.add(MapEntry(innerKey, innerVal));
+        } else {
+          // Caso: v podría ser { "tiktok": {...}, "spotify": {...} } o directamente los datos
+          bool added = false;
+          v.forEach((subk, subv) {
+            if (subv is Map<String, dynamic>) {
+              out.add(MapEntry(subk, subv));
+              added = true;
+            }
+          });
+          if (!added) {
+            // Fallback: use k como nombre si no se detectó subcolección
+            out.add(MapEntry(k, Map<String, dynamic>.from(v)));
+          }
+        }
+      }
+    });
+  }
+
+  return out;
+}
+
+// Abrevia números (1200 -> 1.2K, 1230000 -> 1.23M)
+String _formatNum(int n) {
+  if (n >= 1000000) return '${(n / 1000000).toStringAsFixed(2).replaceAll(RegExp(r'\.?0+$'), '')}M';
+  if (n >= 1000) return '${(n / 1000).toStringAsFixed(1).replaceAll(RegExp(r'\.?0+$'), '')}K';
+  return n.toString();
+}
+
+// Widgets auxiliares (sin cambiar)
 class _Metric extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -186,9 +344,7 @@ class _DataCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title,
-                style: const TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold)),
+            Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             ...rows,
           ],
@@ -211,11 +367,44 @@ class _RowData extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(color: Colors.grey)),
-          Text(value,
-              style: const TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.w500)),
+          Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
         ],
       ),
+    );
+  }
+}
+
+// Modelo SocialStats
+class SocialStats {
+  final String social;
+  final int followers;
+  final int likes;
+  final int shares;
+
+  SocialStats({
+    required this.social,
+    required this.followers,
+    required this.likes,
+    required this.shares,
+  });
+
+  factory SocialStats.fromMap(String social, Map<String, dynamic> data) {
+    int readInt(List<String> keys) {
+      for (final k in keys) {
+        if (data.containsKey(k)) return _toInt(data[k]);
+      }
+      return 0;
+    }
+
+    final followers = readInt(['followers', 'followers_count', 'followersCount', 'followers_count', 'followers_count']);
+    final likes = readInt(['likes', 'likes_count', 'likesCount', 'likes_count']);
+    final shares = readInt(['shares', 'reposts', 'shared', 'shared_count']);
+
+    return SocialStats(
+      social: social,
+      followers: followers,
+      likes: likes,
+      shares: shares,
     );
   }
 }
