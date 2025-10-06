@@ -26,7 +26,7 @@ class IaChatService {
     },
     {
       "text": "Great nickname! What is your gender?",
-      "options": ["Man", "Woman", "Other"],
+      "options": ["Man", "Woman"],
       "keyboardType": "text",
     },
     {"text": "Let's add your social platforms!", "options": [], "action": 0},
@@ -58,17 +58,7 @@ class IaChatService {
     },
     {
       "text":
-          "Now let's personalize your profile. First, let's add a profile picture! 📸",
-      "options": [],
-    },
-    {
-      "text":
-          "I can suggest some options from your connected social media, or you can upload a new one.",
-      "options": [],
-    },
-    {
-      "text":
-          "Which one would you like to use? Or would you prefer to upload a custom photo?",
+          "Now let's personalize your profile. I can suggest a photo from your connected social media or you can upload a new one. Which do you prefer? 📸",
       "options": [],
     },
     {
@@ -118,7 +108,7 @@ class IaChatService {
     },
     {
       "text": "¡Excelente apodo! ¿Cuál es tu género?",
-      "options": ["Hombre", "Mujer", "Otro"],
+      "options": ["Hombre", "Mujer"],
       "keyboardType": "text",
     },
     {
@@ -154,12 +144,7 @@ class IaChatService {
     },
     {
       "text":
-          "Puedo sugerirte algunas opciones de tus redes sociales conectadas, o puedes subir una nueva.",
-      "options": [],
-    },
-    {
-      "text":
-          "¿Cuál te gustaría usar? ¿O prefieres subir una foto personalizada?",
+          "Personalicemos tu perfil. Puedo sugerirte una foto de tus redes sociales conectadas o puedes subir una nueva. ¿Cuál prefieres? 📸",
       "options": [],
     },
     {

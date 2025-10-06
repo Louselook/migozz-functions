@@ -99,12 +99,40 @@ Future<void> mapResponseToCubit({
     // 10) Activado (dinamicResponse FollowedMessages) - sin mapeo directo
     // 11-12-13) Flujo Avatar. Solo en 13 esperamos la selección final.
     case 13:
-      // userResponse puede ser una ruta local o una URL ya asignada.
-      final file = File(trimmed);
-      if (await file.exists()) {
-        cubit.setAvatarFile(file); // se subirá luego en checkCompletion
-      } else if (Uri.tryParse(trimmed)?.hasAbsolutePath == true) {
-        cubit.setAvatarUrl(trimmed); // ya es una URL directa
+      // Selección de avatar.
+      final lower = trimmed.toLowerCase();
+      final platforms = cubit.state.socialEcosystem ?? [];
+      bool matchedPlatform = false;
+      for (final p in platforms) {
+        final key = p.keys.first; // ej: instagram
+        if (lower == key.toLowerCase()) {
+          final data = p[key] as Map<String, dynamic>;
+          final avatar = data['profile_image_url']?.toString();
+          if (avatar != null && avatar.isNotEmpty) {
+            cubit.setAvatarUrl(avatar);
+            matchedPlatform = true;
+          }
+          break;
+        }
+      }
+      if (!matchedPlatform) {
+        final isSpanish = (cubit.state.language ?? '').toLowerCase().contains(
+          'es',
+        );
+        final uploadKeywords = isSpanish
+            ? ['subir', 'subir foto', 'cargar', 'cargar foto']
+            : ['upload', 'upload photo', 'add photo'];
+        if (uploadKeywords.contains(lower)) {
+          // Aquí podrías disparar un action en UI; de momento no hacemos nada más
+        } else {
+          // userResponse puede ser una ruta local o una URL ya asignada.
+          final file = File(trimmed);
+          if (await file.exists()) {
+            cubit.setAvatarFile(file); // se subirá luego en checkCompletion
+          } else if (Uri.tryParse(trimmed)?.hasAbsolutePath == true) {
+            cubit.setAvatarUrl(trimmed); // ya es una URL directa
+          }
+        }
       }
       break;
 

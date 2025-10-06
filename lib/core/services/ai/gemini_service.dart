@@ -187,6 +187,17 @@ class GeminiService {
       ' [17 interests action] -> ask choose interests action=2.'
       ' [18 finishing] -> short finishing message.'
       ' [19 complete] -> final welcome.'
+      ' Avatar & Anti-Repetition Rules (DO NOT break these):'
+      ' 1) Avatar steps are ONLY 11, 12, 13. Outside these steps NEVER mention photo, avatar, picture or image sources.'
+      ' 2) Step 11: single short intro sentence; options empty.'
+      ' 3) Step 12: options list = connected platform names WITH an image (exact capitalization) + final option (Spanish:"Subir foto" English:"Upload photo"). If no platforms: only that upload option.'
+      ' 4) Step 13: if user chooses a valid platform name or upload option, give ONE concise confirmation; no options; never restate the list. If invalid platform, brief correction + list once.'
+      ' 5) After successful confirmation in step 13 never mention avatar again.'
+      ' 6) Never repeat the exact same question consecutively; keep short memory to avoid loops.'
+      ' 7) If user repeats already confirmed choice, acknowledge briefly (<=10 words) without options.'
+      ' 8) Clarifying question during steps 11-13: <=2 brief explanatory sentences + proper step behavior (no duplication).'
+      ' 9) No invented platforms; only those given. If none: just upload option.'
+      ' 10) Avoid repeating identical emoji sequences in consecutive steps.'
       ' JSON ONLY.';
 
   String _stateSummary(RegisterState s, int step, String? lastUser) {
@@ -194,7 +205,16 @@ class GeminiService {
     final loc = s.location != null
         ? '${s.location!.city}, ${s.location!.country}'
         : 'unknown';
-    final socials = s.socialEcosystem?.join(', ') ?? '';
+    final socials =
+        s.socialEcosystem?.map((e) => e.keys.first).join(', ') ?? '';
+    // Mask future fields so model doesn't jump ahead
+    String? avatarMasked = step >= 11 ? s.avatarUrl : null;
+    String? phoneMasked = step >= 14 ? s.phone : null;
+    String? voiceMasked = step >= 15 ? s.voiceNoteUrl : null;
+    List<String>? categoryMasked = step >= 16 ? s.category : null;
+    Map<String, List<String>>? interestsMasked = step >= 17
+        ? s.interests
+        : null;
     return [
       'Current step index: $step',
       'Selected language: $lang',
@@ -205,11 +225,11 @@ class GeminiService {
       'email=${s.email}',
       'location=$loc',
       'socialEcosystem=$socials',
-      'avatarUrl=${s.avatarUrl}',
-      'phone=${s.phone}',
-      'voiceNoteUrl=${s.voiceNoteUrl}',
-      'category=${s.category}',
-      'interests=${s.interests}',
+      'avatarUrl=$avatarMasked',
+      'phone=$phoneMasked',
+      'voiceNoteUrl=$voiceMasked',
+      'category=$categoryMasked',
+      'interests=$interestsMasked',
       if (lastUser != null) 'Last user message: $lastUser',
     ].join('\n');
   }

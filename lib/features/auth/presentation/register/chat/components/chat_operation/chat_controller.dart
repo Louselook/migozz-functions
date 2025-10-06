@@ -1,6 +1,9 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:migozz_app/core/components/compuestos/chat/chat_model.dart';
+import 'package:migozz_app/features/auth/services/media_service.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_state.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/chat_validation.dart';
@@ -32,6 +35,7 @@ class ChatController extends ChangeNotifier {
       false; // Espera confirmación de avatar IG
   bool _awaitingContinueAfterAudio =
       false; // Espera confirmación para continuar después de escuchar
+  bool _awaitingNewRecording = false; // Usuario pidió regrabar nota de voz
 
   /// ------------------- Manejo de Audio -------------------
   void onAudioFinished() {
@@ -39,18 +43,19 @@ class ChatController extends ChangeNotifier {
       final isSpanish = (registerCubit.state.language ?? '')
           .toLowerCase()
           .contains('es');
-
-      // Mensaje preguntando si desea continuar
-      final continueMessage = ChatMessage(
+      final msg = ChatMessage(
         other: true,
         type: MessageType.text,
-        text: isSpanish ? "¿Desea continuar?" : "Do you want to continue?",
-        options: isSpanish ? ["Sí", "No"] : ["Yes", "No"],
+        text: isSpanish
+            ? 'Verifica tu audio. ¿Deseas continuar?'
+            : 'Check your audio. Do you want to continue?',
+        options: isSpanish
+            ? ['Continuar', 'Grabar otro']
+            : ['Continue', 'Record again'],
         time: _getTimeNow(),
       );
-
-      _addMessage(continueMessage.toMap());
-      _currentSuggestions = continueMessage.options ?? [];
+      _addMessage(msg.toMap());
+      _currentSuggestions = msg.options ?? [];
       _awaitingContinueAfterAudio = false;
       notifyListeners();
     }
@@ -67,9 +72,24 @@ class ChatController extends ChangeNotifier {
     // Pasar referencia del controller
     audioMessage["chatController"] = this;
     _addMessage(audioMessage);
-
-    // Cambiar estado para esperar que termine el audio
-    _awaitingContinueAfterAudio = true;
+    // Mostrar inmediatamente el mensaje de verificación (sin esperar reproducción completa)
+    final isSpanish = (registerCubit.state.language ?? '')
+        .toLowerCase()
+        .contains('es');
+    final confirm = ChatMessage(
+      other: true,
+      type: MessageType.text,
+      text: isSpanish
+          ? 'Verifica tu audio. ¿Deseas continuar?'
+          : 'Check your audio. Do you want to continue?',
+      options: isSpanish
+          ? ['Continuar', 'Grabar otro']
+          : ['Continue', 'Record again'],
+      time: _getTimeNow(),
+    );
+    _addMessage(confirm.toMap());
+    _currentSuggestions = confirm.options ?? [];
+    _awaitingContinueAfterAudio = false; // ya mostramos confirmación
     notifyListeners();
   }
 
@@ -135,6 +155,10 @@ class ChatController extends ChangeNotifier {
         normalizedResponse = text ?? '';
       } else if (type == MessageType.audio) {
         normalizedResponse = audio ?? "https://storage.fake/voice123.mp3";
+        // Si veníamos de regrabar, limpiamos la bandera
+        if (_awaitingNewRecording) {
+          _awaitingNewRecording = false;
+        }
         _handleAudioSentDirectly(audio ?? "");
         return; // No continuar con el flujo normal
       } else if (type == MessageType.pictureCard) {
@@ -147,24 +171,66 @@ class ChatController extends ChangeNotifier {
 
       _lastUserMessage = normalizedResponse;
 
-      // Si el usuario responde a la pregunta de continuar después del audio
-      if (_currentSuggestions.isNotEmpty &&
-          (_currentSuggestions.contains("Sí") ||
-              _currentSuggestions.contains("Yes"))) {
+      // Manejo de opciones tras reproducir audio (Continuar / Regrabar)
+      if (_currentSuggestions.isNotEmpty) {
         final lower = normalizedResponse.trim().toLowerCase();
-        final isYes = lower == 'sí' || lower == 'si' || lower == 'yes';
-        final isNo = lower == 'no';
-
-        if (isYes || isNo) {
+        final isContinue = [
+          'continuar',
+          'continue',
+          'sí',
+          'si',
+          'yes',
+        ].contains(lower);
+        final isReRecord = [
+          'regrabar',
+          'grabar otro',
+          'record again',
+        ].contains(lower);
+        if (isReRecord) {
+          _currentSuggestions = const [];
+          _awaitingNewRecording = true;
+          _addMessage(
+            ChatMessage(
+              other: true,
+              type: MessageType.text,
+              text:
+                  (registerCubit.state.language ?? '').toLowerCase().contains(
+                    'es',
+                  )
+                  ? 'Graba tu nueva nota de voz.'
+                  : 'Record your new voice note.',
+              time: _getTimeNow(),
+            ).toMap(),
+          );
+          notifyListeners();
+          return; // Esperar nuevo audio
+        } else if (isContinue) {
           _currentSuggestions = const [];
           notifyListeners();
-
-          // Continuar con el flujo normal independientemente de la respuesta
           Future.delayed(const Duration(milliseconds: 600), () {
             showNextBotMessage(onActionRequired: onActionRequired);
           });
           return;
         }
+      }
+
+      // Si el usuario debe regrabar y envía texto u otra cosa que no sea audio, recordarle.
+      if (_awaitingNewRecording && type == MessageType.text) {
+        final isSpanish = (registerCubit.state.language ?? '')
+            .toLowerCase()
+            .contains('es');
+        _addMessage(
+          ChatMessage(
+            other: true,
+            type: MessageType.text,
+            text: isSpanish
+                ? 'Por favor regraba tu nota de voz antes de continuar.'
+                : 'Please re-record your voice note before continuing.',
+            time: _getTimeNow(),
+          ).toMap(),
+        );
+        notifyListeners();
+        return; // Bloquea avance hasta recibir nuevo audio
       }
 
       // Si estamos esperando confirmación del avatar de Instagram, interceptar respuesta Sí/No
@@ -409,6 +475,57 @@ class ChatController extends ChangeNotifier {
         cubit: registerCubit,
       );
 
+      // Manejo especial del paso consolidado de avatar (one-based 12, botIndex previo era 11)
+      if (botIndex == 11) {
+        final lower = normalizedResponse.toLowerCase();
+        final isSpanish = (registerCubit.state.language ?? '')
+            .toLowerCase()
+            .contains('es');
+        final platforms = registerCubit.state.socialEcosystem ?? [];
+        bool matchedPlatform = false;
+        for (final p in platforms) {
+          final key = p.keys.first; // instagram, youtube
+          if (lower == key.toLowerCase()) {
+            final data = p[key] as Map<String, dynamic>;
+            final avatar = data['profile_image_url']?.toString();
+            if (avatar != null && avatar.isNotEmpty) {
+              registerCubit.setAvatarUrl(avatar);
+              _addMessage(
+                ChatMessage(
+                  other: true,
+                  type: MessageType.text,
+                  text: isSpanish
+                      ? '✅ Avatar seleccionado de ${key.capitalize()}.'
+                      : '✅ Avatar selected from ${key.capitalize()}.',
+                  time: _getTimeNow(),
+                ).toMap(),
+              );
+            }
+            matchedPlatform = true;
+            break;
+          }
+        }
+        if (!matchedPlatform) {
+          // Usuario eligió subir foto
+          if (lower.contains('upload') || lower.contains('subir')) {
+            _addMessage(
+              ChatMessage(
+                other: true,
+                type: MessageType.text,
+                text: isSpanish
+                    ? 'Abriendo selector de imágenes...'
+                    : 'Opening image picker...',
+                time: _getTimeNow(),
+              ).toMap(),
+            );
+            // Implementación: abrir picker, subir temporalmente y asignar URL
+            _pickAndUploadAvatar(isSpanish: isSpanish);
+          }
+        }
+        // Limpiar sugerencias de avatar para que no repregunte
+        _currentSuggestions = [];
+      }
+
       debugPrint('vamo: ${registerCubit.state}');
       // debugPrint('vamo:  pagina $botIndex');
 
@@ -430,7 +547,7 @@ class ChatController extends ChangeNotifier {
   void showNextBotMessage({
     Function(Map<String, dynamic>)? onActionRequired,
     int messagesToShow = 1,
-    bool showTyping = true, // 👈 Nuevo parámetro
+    bool showTyping = true, //  Nuevo parámetro
   }) async {
     if (messagesToShow <= 0) return;
 
@@ -454,6 +571,33 @@ class ChatController extends ChangeNotifier {
     );
     if (botResponse == null) return;
 
+    // Inyectar opciones dinámicas para avatar SOLO en el paso 11 (consolidado)
+    final oneBasedStep = _chatService.currentIndex;
+    if (oneBasedStep == 11 &&
+        (registerCubit.state.avatarUrl == null ||
+            registerCubit.state.avatarUrl!.isEmpty)) {
+      final platforms = registerCubit.state.socialEcosystem ?? [];
+      final platformOptions = <String>[];
+      for (final p in platforms) {
+        final key = p.keys.first;
+        final data = p[key] as Map<String, dynamic>;
+        final avatar = data['profile_image_url']?.toString();
+        if (avatar != null && avatar.isNotEmpty) {
+          platformOptions.add(key.capitalize());
+        }
+      }
+      final isSpanish = (registerCubit.state.language ?? '')
+          .toLowerCase()
+          .contains('es');
+      final uploadLabel = isSpanish ? 'Subir foto' : 'Upload photo';
+      final cameraLabel = isSpanish ? 'Tomar foto' : 'Take photo';
+      if (!platformOptions.contains(uploadLabel))
+        platformOptions.add(uploadLabel);
+      if (!platformOptions.contains(cameraLabel))
+        platformOptions.add(cameraLabel);
+      botResponse['options'] = platformOptions;
+    }
+
     // Defensive: if text contains a JSON object (possibly code-fenced), parse it
     final t = (botResponse["text"] ?? '').toString();
     if ((botResponse["action"] == null) && t.contains('{') && t.contains('}')) {
@@ -474,7 +618,7 @@ class ChatController extends ChangeNotifier {
       }
     }
 
-    // 👇 Actualiza el keyboardType según la pregunta
+    //  Actualiza el keyboardType según la pregunta
     final Map<String, dynamic> br = Map<String, dynamic>.from(
       botResponse as Map<String, dynamic>,
     );
@@ -783,6 +927,90 @@ class ChatController extends ChangeNotifier {
         );
       }
     });
+  }
+
+  /// Pick an image, upload via UserMediaService through the cubit and set avatarUrl
+  Future<void> _pickAndUploadAvatar({required bool isSpanish}) async {
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1080,
+        imageQuality: 85,
+      );
+      if (picked == null) {
+        _addMessage(
+          ChatMessage(
+            other: true,
+            type: MessageType.text,
+            text: isSpanish
+                ? 'No seleccionaste ninguna imagen.'
+                : 'No image selected.',
+            time: _getTimeNow(),
+          ).toMap(),
+        );
+        return;
+      }
+
+      // Guardar file temporal en cubit y subir
+      final file = File(picked.path);
+      registerCubit.setAvatarFile(file);
+      if (registerCubit.state.email == null) {
+        _addMessage(
+          ChatMessage(
+            other: true,
+            type: MessageType.text,
+            text: isSpanish
+                ? 'Aún no tengo tu email para subir la imagen.'
+                : 'I do not have your email yet to upload the image.',
+            time: _getTimeNow(),
+          ).toMap(),
+        );
+        return;
+      }
+
+      // Subir solo el avatar usando el mismo servicio que checkCompletion
+      // Reutilizamos uploadFilesTemporarily directamente para feedback inmediato
+      final mediaService = UserMediaService();
+      final result = await mediaService.uploadFilesTemporarily(
+        email: registerCubit.state.email!,
+        files: {MediaType.avatar: file},
+      );
+      final url = result[MediaType.avatar];
+      if (url != null) {
+        registerCubit.setAvatarUrl(url);
+        _addMessage(
+          ChatMessage(
+            other: true,
+            type: MessageType.text,
+            text: isSpanish
+                ? '✅ Avatar subido correctamente.'
+                : '✅ Avatar uploaded successfully.',
+            time: _getTimeNow(),
+          ).toMap(),
+        );
+      } else {
+        _addMessage(
+          ChatMessage(
+            other: true,
+            type: MessageType.text,
+            text: isSpanish
+                ? 'Error al subir el avatar.'
+                : 'Error uploading avatar.',
+            time: _getTimeNow(),
+          ).toMap(),
+        );
+      }
+    } catch (e) {
+      _addMessage(
+        ChatMessage(
+          other: true,
+          type: MessageType.text,
+          text: isSpanish ? '❌ Falló la subida: $e' : '❌ Upload failed: $e',
+          time: _getTimeNow(),
+        ).toMap(),
+      );
+    }
   }
 
   String _getTimeNow() {
