@@ -1,6 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:migozz_app/features/profile/presentation/profile_stats_screen.dart';
+import 'package:migozz_app/features/profile/presentation/profile_stats.dart';
 
 class GradientBottomNav extends StatelessWidget {
   final int currentIndex;

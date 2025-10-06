@@ -10,6 +10,7 @@ class ProfileStatsScreen extends StatefulWidget {
 }
 
 class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
+  
   DateTimeRange? selectedRange;
   bool _loading = true;
 
@@ -24,18 +25,54 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
 
 // Carga de datos del usuario
 
+  Map<String, dynamic> _fieldMap = {};
+
   Future<void> _loadData() async {
     setState(() => _loading = true);
+
+    // Cargar mapeo global
+    _fieldMap = await _loadFieldMapping();
+
+    // Cargar redes del usuario
     final socials = await _loadUserSocials();
+
+    // Calcular totales
     final totals = _calculateTotals(socials);
+
     setState(() {
       _socials = socials;
       _totals = totals;
       _loading = false;
     });
 
-    debugPrint('Socials detectadas: ${_socials.map((s) => s.social).toList()}');
+    debugPrint('Socials detectadas: ${_socials.map((s) => s.name).toList()}');
     debugPrint('Totales: $_totals');
+  }
+
+  Future<Map<String, dynamic>> _loadFieldMapping() async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('config')
+          .doc('socialFieldMapping')
+          .get();
+
+      if (!doc.exists || doc.data() == null) return {};
+      
+      final raw = doc.data()!;
+      final result = <String, dynamic>{};
+
+      raw.forEach((key, value) {
+        if (value is Map) {
+          result[key.toLowerCase()] = Map<String, dynamic>.from(value);
+        }
+      });
+
+      debugPrint('Field mapping cargado: $result');
+      return result;
+    } catch (e) {
+      debugPrint('Error cargando mapping: $e');
+      return {};
+    }
   }
 
 
@@ -58,7 +95,7 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
 
       final entries = _parseEcosystem(ecosystem);
       for (final e in entries) {
-        out.add(SocialStats.fromMap(e.key, e.value));
+        out.add(SocialStats.fromMap(e.key, e.value, _fieldMap));
       }
 
       return out;
@@ -223,7 +260,7 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
                                 return Padding(
                                   padding: const EdgeInsets.only(bottom: 12),
                                   child: _DataCard(
-                                    title: s.social,
+                                    title: s.name,
                                     rows: [
                                       _RowData(label: "Followers:", value: _formatNum(s.followers)),
                                       _RowData(label: "Likes:", value: _formatNum(s.likes)),
@@ -376,35 +413,36 @@ class _RowData extends StatelessWidget {
 
 // Modelo SocialStats
 class SocialStats {
-  final String social;
+  final String name;
   final int followers;
   final int likes;
   final int shares;
 
   SocialStats({
-    required this.social,
+    required this.name,
     required this.followers,
     required this.likes,
     required this.shares,
   });
+  
 
-  factory SocialStats.fromMap(String social, Map<String, dynamic> data) {
-    int readInt(List<String> keys) {
-      for (final k in keys) {
-        if (data.containsKey(k)) return _toInt(data[k]);
-      }
-      return 0;
-    }
-
-    final followers = readInt(['followers', 'followers_count', 'followersCount', 'followers_count', 'followers_count']);
-    final likes = readInt(['likes', 'likes_count', 'likesCount', 'likes_count']);
-    final shares = readInt(['shares', 'reposts', 'shared', 'shared_count']);
+  factory SocialStats.fromMap(String name, Map<String, dynamic> data, Map<String, dynamic> fieldMap) {
+    final mapping = fieldMap[name.toLowerCase()] ?? {}; // Ej: {followers: "subscriberCount"}
+    final followerField = mapping['followers'] ?? 'followers';
+    final likesField = mapping['likes'] ?? 'likes';
+    final sharesField = mapping['shares'] ?? 'shares';
 
     return SocialStats(
-      social: social,
-      followers: followers,
-      likes: likes,
-      shares: shares,
+      name: name,
+      followers: (data[followerField] ?? 0) is int
+          ? data[followerField] ?? 0
+          : int.tryParse(data[followerField].toString()) ?? 0,
+      likes: (data[likesField] ?? 0) is int
+          ? data[likesField] ?? 0
+          : int.tryParse(data[likesField].toString()) ?? 0,
+      shares: (data[sharesField] ?? 0) is int
+          ? data[sharesField] ?? 0
+          : int.tryParse(data[sharesField].toString()) ?? 0,
     );
   }
 }
