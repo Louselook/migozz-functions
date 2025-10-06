@@ -25,8 +25,8 @@ class IaChatService {
       "keyboardType": "text",
     },
     {
-      "text": "Great nickname! Are you a man or a woman?",
-      "options": ["Man", "Woman"],
+      "text": "Great nickname! What is your gender?",
+      "options": ["Man", "Woman", "Other"],
       "keyboardType": "text",
     },
     {"text": "Let's add your social platforms!", "options": [], "action": 0},
@@ -117,8 +117,8 @@ class IaChatService {
       "keyboardType": "text",
     },
     {
-      "text": "¡Excelente apodo! ¿Eres hombre o mujer?",
-      "options": ["Hombre", "Mujer"],
+      "text": "¡Excelente apodo! ¿Cuál es tu género?",
+      "options": ["Hombre", "Mujer", "Otro"],
       "keyboardType": "text",
     },
     {
@@ -202,8 +202,9 @@ class IaChatService {
 
     try {
       // Fire-and-forget to warm up Gemini; scripted fallback returns immediately.
+      // stepIndex se define 1-based en el prompt, por eso currentIndex + 1
       // ignore: discarded_futures
-      gemini.nextBotTurn(state: cubit.state, stepIndex: currentIndex);
+      gemini.nextBotTurn(state: cubit.state, stepIndex: currentIndex + 1);
     } catch (_) {}
 
     // 2) Scripted fallback (current behavior)

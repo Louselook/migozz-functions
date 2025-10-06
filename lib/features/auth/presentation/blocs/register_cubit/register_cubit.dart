@@ -216,11 +216,12 @@ class RegisterCubit extends Cubit<RegisterState> {
                   // 3️⃣ Agregar los datos en el formato correcto
                   current.add({network.toLowerCase(): profileData});
 
-                  // 3.1️⃣ Si es Instagram y hay foto de perfil, usarla como avatar
-                  final avatar = profileData['profile_image_url']?.toString();
-                  if (avatar != null && avatar.isNotEmpty) {
-                    setAvatarUrl(avatar);
-                  }
+                  // 3.1️⃣ Antes se autoasignaba avatar de Instagram aquí.
+                  // Se elimina para que el usuario confirme en el paso 13 del flujo.
+                  // final avatar = profileData['profile_image_url']?.toString();
+                  // if (avatar != null && avatar.isNotEmpty) {
+                  //   setAvatarUrl(avatar);
+                  // }
 
                   // 4️⃣ Actualizar el cubit
                   setSocialEcosystem(current);

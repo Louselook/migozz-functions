@@ -552,20 +552,23 @@ class ChatController extends ChangeNotifier {
     bool advanceIndex = true,
   }) async {
     try {
-      final gemini = GeminiService.instance;
-      gemini.ensureConfigured();
-      if (gemini.isConfigured) {
-        final r = await gemini.nextBotTurn(
-          state: registerCubit.state,
-          stepIndex: _chatService.currentIndex,
-          lastUserMessage: _lastUserMessage,
-        );
-        if (r != null) {
-          // Avanzamos índice solo si no es aclaración
-          if (advanceIndex) {
-            _chatService.currentIndex++;
+      // Usar Gemini solo a partir del paso 11 para evitar fugas tempranas (avatar, etc.)
+      final oneBased = _chatService.currentIndex + 1;
+      if (oneBased >= 11) {
+        final gemini = GeminiService.instance;
+        gemini.ensureConfigured();
+        if (gemini.isConfigured) {
+          final r = await gemini.nextBotTurn(
+            state: registerCubit.state,
+            stepIndex: oneBased,
+            lastUserMessage: _lastUserMessage,
+          );
+          if (r != null) {
+            if (advanceIndex) {
+              _chatService.currentIndex++;
+            }
+            return r;
           }
-          return r;
         }
       }
     } catch (_) {}

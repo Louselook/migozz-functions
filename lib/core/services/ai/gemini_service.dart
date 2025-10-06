@@ -15,6 +15,12 @@ class GeminiService {
   String _modelName = 'gemini-2.0-flash';
   bool _triedFallback = false;
 
+  // --- Concurrency & duplicate guards ---
+  bool _inFlight = false;
+  int? _lastStepResponded;
+  String? _lastResponseHash;
+  DateTime? _lastStepTimestamp;
+
   bool get isConfigured => _model != null;
 
   void ensureConfigured() {
@@ -52,6 +58,33 @@ class GeminiService {
     ensureConfigured();
     if (_model == null) return null; // fallback to scripted flow
 
+    // Validate step range (1..19); silently ignore if out-of-range
+    if (stepIndex < 1 || stepIndex > 19) {
+      if (kDebugMode) {
+        debugPrint('GeminiService: Ignoring out-of-range stepIndex=$stepIndex');
+      }
+      return null;
+    }
+
+    // Concurrency lock
+    if (_inFlight) {
+      if (kDebugMode) debugPrint('GeminiService: in-flight request skipped');
+      return null;
+    }
+    _inFlight = true;
+
+    // Throttle duplicate rapid calls for same step (<700ms)
+    final now = DateTime.now();
+    if (_lastStepResponded == stepIndex &&
+        _lastStepTimestamp != null &&
+        now.difference(_lastStepTimestamp!) <
+            const Duration(milliseconds: 700)) {
+      _inFlight = false;
+      if (kDebugMode)
+        debugPrint('GeminiService: throttled duplicate step=$stepIndex');
+      return null;
+    }
+
     // Aseguramos sesión activa
     _session ??= _model!.startChat();
 
@@ -60,17 +93,37 @@ class GeminiService {
           '${_systemPrompt()}\n${_stateSummary(state, stepIndex, lastUserMessage)}';
       final resp = await _session!.sendMessage(Content.text(prompt));
       final raw = resp.text?.trim();
-      if (raw == null || raw.isEmpty) return null;
+      if (raw == null || raw.isEmpty) {
+        _inFlight = false;
+        return null;
+      }
 
       // Normalize (strip Markdown/code fences) before parsing
       final text = _stripCodeFences(raw);
 
       // Expect a JSON-like block in response. Try to parse lightly.
       final parsed = _parseToMap(text) ?? _parseToMap(raw);
-      if (parsed == null) return {'text': raw, 'options': <String>[]};
-      return _withDefaults(parsed);
+      final result = _withDefaults(
+        parsed ?? {'text': raw, 'options': <String>[]},
+      );
+
+      // Duplicate textual response filter
+      final hash = result['text'].hashCode.toString();
+      if (_lastResponseHash == hash && _lastStepResponded == stepIndex) {
+        if (kDebugMode)
+          debugPrint('GeminiService: filtered duplicate response');
+        _inFlight = false;
+        return null;
+      }
+
+      _lastResponseHash = hash;
+      _lastStepResponded = stepIndex;
+      _lastStepTimestamp = now;
+      _inFlight = false;
+      return result;
     } catch (e) {
       if (kDebugMode) debugPrint('GeminiService error: $e');
+      _inFlight = false;
       // Fallback de modelo si falla (p.ej., modelo no disponible)
       if (!_triedFallback) {
         _triedFallback = true;
@@ -101,44 +154,40 @@ class GeminiService {
 
   String _systemPrompt() =>
       'You are an assistant that drives a registration chat wizard.'
-      ' Always answer in Spanish if the selected language is Spanish, otherwise in English.'
-      ' You must return ONLY a compact JSON object with keys: text (string), options (array of strings, may be empty),'
-      ' keyboardType ("text"|"number"), action (number, optional), dinamicResponse (string, optional).'
-      ' Use short, friendly, and intuitive sentences tailored to the current step.'
-      ' Avoid technical jargon; guide the user with clear next actions.'
-      ' Do not include Markdown or extra commentary, and NEVER wrap the JSON in code fences (no ```json).'
-      ' Strict JSON: use commas "," between fields and never use semicolons ";".'
-      ' Return a single JSON object only.'
-      ' The flow collects: email, language, fullName, username, gender, location, socialEcosystem (list of strings), avatarUrl, phone, voiceNoteUrl, category (list of strings), interests (map category->list).'
-      ' Keep one question at a time and suggest options when appropriate.'
-      ' VERY IMPORTANT: Use the "Current step index" provided to decide the next prompt according to this plan:'
-      ' [1 language] ask preferred language with options ["Español","English"];'
-      ' [2 fullName] ask for full name;'
-      ' [3 username] ask for username;'
-      ' [4 gender] ask for gender with options ["Hombre","Mujer"] in Spanish or ["Man","Woman"] in English;'
-      ' [5 social action] ask to add social platforms and set {"action":0};'
-      ' [6 social summary] acknowledge connected platforms and set {"dinamicResponse":"SocialEcosystemStep"};'
-      ' [7 location confirm] confirm detected location with options ["Sí","No"] or ["Yes","No"];'
-      ' [8 email confirm] confirm email with options ["Sí","No"] or ["Yes","No"]; if user said yes previously, the app will send OTP;'
-      ' [9 OTP] ask the user to enter the OTP code (keyboardType="number");'
-      ' [10 activated] congratulate and set {"dinamicResponse":"FollowedMessages"};'
-      ' [11 avatar intro] introduce profile picture;'
-      ' [12 avatar options] propose using social media photo or uploading new one;'
-      ' [13 avatar choose] ask which one to use (the app may open uploader on user action);'
-      '     If Instagram is connected and has a profile picture, suggest using it as default.'
-      ' [14 phone] ask phone number (keyboardType="number");'
-      ' [15 voice note] ask to record a short voice note;'
-      ' [16 category action] ask to choose categories and set {"action":1};'
-      ' [17 interests action] ask to choose interests and set {"action":2};'
-      ' [18 finishing] say a short message like "Thanks! We are completing your registration.";'
-      ' [19 complete] say registration is complete and welcome the user.'
-      ' After step 19 the app will navigate to the profile screen.'
-      ' Always keep responses short and friendly.'
-      ' If the last user message is a clarifying question (e.g., "¿para qué es?", "what is it?"), first provide a brief explanation (max 2 lines) and then immediately continue with the relevant registration question for the current step.'
-      ' Always keep the answer inside the JSON as the value of "text" and preserve the appropriate "keyboardType", "options", and optional "action"/"dinamicResponse".'
-      ' When asking for OTP code or phone, set keyboardType to "number".'
-      ' If you need to trigger navigation to the social ecosystem step, set {"action":0}.'
-      ' If you want to follow with a special sequence after activation, set {"dinamicResponse":"FollowedMessages"}.';
+      ' Output policy: Return ONLY one compact JSON object. No markdown, no backticks, no commentary.'
+      ' Keys: text (string), options (array<string>), keyboardType ("text"|"number"), optional action (int), optional dinamicResponse (string).'
+      ' Language: If selected language is Spanish, respond in Spanish; else respond in English.'
+      ' HARD CONSTRAINTS:'
+      ' 1) Never mention or hint future steps beyond the current step index.'
+      ' 2) Do NOT mention avatar/photo before steps 11-13.'
+      ' 3) Do NOT mention location before step 7.'
+      ' 4) Do NOT mention email confirmation before step 8.'
+      ' 5) Do NOT ask for OTP before step 9.'
+      ' 6) Exactly one concise question or confirmation per response.'
+      ' 7) If user asked a clarifying question, prepend <=2 short explanatory sentences then append the proper step question in same "text".'
+      ' 8) If Instagram is connected and step is 11-13 you may suggest using that photo politely once.'
+      ' 9) For OTP or phone set keyboardType="number".'
+      ' STEP PLAN:'
+      ' [1 language] -> ask language with options ["Español","English"].'
+      ' [2 fullName] -> ask full name.'
+      ' [3 username] -> ask username.'
+      ' [4 gender] -> ask gender with localized options.'
+      ' [5 social action] -> ask to add platforms action=0.'
+      ' [6 social summary] -> acknowledge connected platforms dinamicResponse=SocialEcosystemStep.'
+      ' [7 location confirm] -> confirm location with Yes/No.'
+      ' [8 email confirm] -> confirm email with Yes/No.'
+      ' [9 OTP] -> request OTP code.'
+      ' [10 activated] -> congratulate dinamicResponse=FollowedMessages.'
+      ' [11 avatar intro] -> introduce avatar step.'
+      ' [12 avatar options] -> explain options.'
+      ' [13 avatar choose] -> ask which to use.'
+      ' [14 phone] -> ask phone.'
+      ' [15 voice note] -> ask for short voice note.'
+      ' [16 category action] -> ask choose categories action=1.'
+      ' [17 interests action] -> ask choose interests action=2.'
+      ' [18 finishing] -> short finishing message.'
+      ' [19 complete] -> final welcome.'
+      ' JSON ONLY.';
 
   String _stateSummary(RegisterState s, int step, String? lastUser) {
     final lang = s.language ?? 'auto';
