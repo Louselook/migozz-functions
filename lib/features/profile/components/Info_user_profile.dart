@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:migozz_app/features/profile/presentation/share_profile.dart';
 
 class InfoUserProfile extends StatelessWidget {
   final String name;
@@ -63,15 +64,27 @@ class InfoUserProfile extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Icon(
-                    Icons.play_circle_outline_rounded,
+                  IconButton(
+                    icon: Icon(Icons.play_circle_outline_rounded),
+                    onPressed: () {
+                      // Logica para reproducir el audio
+                    },
+                    iconSize: 18,
                     color: Colors.white.withValues(alpha: 0.9),
-                    size: 18,
                   ),
-                  Icon(
-                    Icons.share,
+                  IconButton(
+                    icon: Icon(Icons.share),
+                    onPressed: ()
+                    {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (context) => const ProfileQrScreen(),
+                        ),
+                      );
+                    },
+                    iconSize: 18,
                     color: Colors.white.withValues(alpha: 0.9),
-                    size: 18,
                   ),
                 ],
               ),

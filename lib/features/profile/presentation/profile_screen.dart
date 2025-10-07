@@ -180,7 +180,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     // Obtener datos reales del usuario
     final rawname =
         (_userDoc?['displayName'] as String?) ??
-        'John Doe'; // Resive el nombre completo
+        'John Doe'; // Recibe el nombre completo
     final name = formatDisplayName(
       rawname,
       format: FormatName.short,

@@ -411,7 +411,6 @@ class SocialStats {
     required this.shares,
   });
   
-
   factory SocialStats.fromMap(String name, Map<String, dynamic> data, Map<String, dynamic> fieldMap) {
     final mapping = fieldMap[name.toLowerCase()] ?? {}; // Ej: {followers: "subscriberCount"}
     final followerField = mapping['followers'] ?? 'followers';
