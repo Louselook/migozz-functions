@@ -350,10 +350,12 @@ List<MapEntry<String, Map<String, dynamic>>> _parseEcosystem(
 
 // Abrevia números (1200 -> 1.2K, 1230000 -> 1.23M)
 String _formatNum(int n) {
-  if (n >= 1000000)
+  if (n >= 1000000) {
     return '${(n / 1000000).toStringAsFixed(2).replaceAll(RegExp(r'\.?0+$'), '')}M';
-  if (n >= 1000)
+  }
+  if (n >= 1000) {
     return '${(n / 1000).toStringAsFixed(1).replaceAll(RegExp(r'\.?0+$'), '')}K';
+  }
   return n.toString();
 }
 

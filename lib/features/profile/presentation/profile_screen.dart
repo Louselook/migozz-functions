@@ -19,12 +19,10 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  int _tab = 0; // índice del tab seleccionado
+  int _tab = 0;
   Map<String, dynamic>? _userDoc;
   List<Map<String, String>> _userSocials = const [];
-  bool _isLoading = true; // Loading state
-  // Total de seguidores (si se quiere cachear); actualmente usamos directamente snapshot
-  // int _totalFollowers = 0; // (Opcional si en el futuro se necesita conservar)
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -32,17 +30,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _loadUser();
   }
 
-  // Obtiene la informacion de las redes sociales
+  // Obtiene las estadísticas sociales del usuario
   Future<List<SocialStats>> getUserSocialStats(String userId) async {
     final db = FirebaseFirestore.instance;
     final userDoc = await db.collection('users').doc(userId).get();
     final userData = userDoc.data();
     if (userData == null) return [];
 
-    final fieldMapDoc = await db
-        .collection('config')
-        .doc('socialFieldMapping')
-        .get();
+    final fieldMapDoc = await db.collection('config').doc('socialFieldMapping').get();
     final fieldMap = fieldMapDoc.data() ?? {};
 
     final rawEco = userData['socialEcosystem'];
@@ -50,7 +45,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     final List<Map<String, dynamic>> ecosystem = [];
 
-    // 🔍 Normalizamos (ya sea lista, mapa numérico o mapa normal)
     if (rawEco is List) {
       for (final item in rawEco) {
         if (item is Map<String, dynamic>) ecosystem.add(item);
@@ -62,75 +56,66 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     }
 
-    debugPrint('♻️ Ecosystem normalizado: $ecosystem');
-
-    // 🔧 Creamos una lista de objetos SocialStats con el mapping aplicado
     final List<SocialStats> statsList = [];
     for (final social in ecosystem) {
       final platformName = social.keys.first;
       final platformData = social[platformName];
       if (platformData is Map<String, dynamic>) {
-        statsList.add(
-          SocialStats.fromMap(platformName, platformData, fieldMap),
-        );
+        statsList.add(SocialStats.fromMap(platformName, platformData, fieldMap));
       }
     }
-
-    debugPrint(
-      '📊 Stats generadas: ${statsList.map((e) => "${e.name}: ${e.followers}").toList()}',
-    );
 
     return statsList;
   }
 
+  // Calcula el total de seguidores combinando todas las redes
   Future<int> getTotalFollowers(String userId) async {
     final stats = await getUserSocialStats(userId);
-    return stats.fold<int>(0, (total, s) => total + s.followers);
+
+    // Debug opcional: muestra detalle por red
+    for (final s in stats) {
+      debugPrint('${s.name}: ${s.followers}');
+    }
+
+    final total = stats.fold<int>(0, (total, s) => total + s.followers);
+    debugPrint('Total followers: $total');
+
+    return total;
   }
 
+  // Carga el documento del usuario actual
   Future<void> _loadUser() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
     try {
-      // Usamos 'test' porque AuthService actualmente guarda allí
-      final docTest = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
+      final docTest = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
       Map<String, dynamic>? data = docTest.data();
       if (data == null) {
-        final docUsers = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .get();
+        final docUsers = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
         data = docUsers.data();
       }
       if (mounted) {
         setState(() {
           _userDoc = data;
-          _isLoading = false; // Marcar como cargado
+          _isLoading = false;
         });
 
-        // Force rebuild para asegurar que la UI se actualice
         Future.delayed(const Duration(milliseconds: 100), () {
           if (mounted) setState(() {});
         });
 
         final username = (data?['username'] as String?) ?? '';
-        if (username.isNotEmpty) {
-          _loadUserSocials(username);
-        }
+        if (username.isNotEmpty) _loadUserSocials(username);
       }
     } catch (e) {
-      debugPrint('❌ Error cargando usuario: $e');
+      debugPrint('Error cargando usuario: $e');
       if (mounted) {
-        setState(() {
-          _isLoading = false; // Marcar como cargado aunque haya error
-        });
+        setState(() => _isLoading = false);
       }
     }
   }
 
+  // Carga los documentos de redes sociales del usuario
   Future<void> _loadUserSocials(String username) async {
     final u = username.replaceFirst('@', '');
     try {
@@ -138,6 +123,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           .collection('userSocials')
           .where('userName', isEqualTo: u)
           .get();
+
       final list = q.docs
           .map((d) {
             final m = d.data();
@@ -148,6 +134,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           })
           .where((e) => e['provider']!.isNotEmpty)
           .toList();
+
       if (mounted) setState(() => _userSocials = list);
     } catch (e) {
       debugPrint('Error cargando userSocials: $e');
@@ -157,44 +144,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-
-    // Altura del gradiente inferior
     final bottomGradientHeight = size.height * 0.22;
-    // Separación del card desde el borde inferior
     final bottomPaddingForCard = size.height * 0.25;
-
-    // Tamaño del botón (proporcional para distintas pantallas)
     final assistantSize = (size.width * 0.18).clamp(56.0, 88.0);
 
-    // Posición inicial del asistente IA (esquina inferior derecha)
     final initialAssistantPosition = Offset(
       size.width - assistantSize - (size.width * 0.03),
       size.height - bottomPaddingForCard + (size.height * 0.03),
     );
 
-    // Posición inicial del social rail (derecha, centro-superior)
     final initialSocialPosition = Offset(
-      size.width - 65, // 65 (itemSize) + 16 (padding)
-      size.height * 0.2, // Posición más alta
+      size.width - 65,
+      size.height * 0.2,
     );
-    // Obtener datos reales del usuario
-    final rawname =
-        (_userDoc?['displayName'] as String?) ??
-        'John Doe'; // Recibe el nombre completo
-    final name = formatDisplayName(
-      rawname,
-      format: FormatName.short,
-    ); // Agarra el nombre y lo formatea
+
+    final rawname = (_userDoc?['displayName'] as String?) ?? 'John Doe';
+    final name = formatDisplayName(rawname, format: FormatName.short);
     final username = (_userDoc?['username'] as String?) ?? '@johndoe';
     final avatarUrl = (_userDoc?['avatarUrl'] as String?);
     final social = _userSocials.isNotEmpty
         ? _userSocials.map((e) => e['provider']!).toList()
-        : ((_userDoc?['socialEcosystem'] as List?)
-                  ?.map((e) => e.toString())
-                  .toList() ??
-              const []);
+        : ((_userDoc?['socialEcosystem'] as List?)?.map((e) => e.toString()).toList() ?? const []);
 
-    // Mostrar loading mientras carga
     if (_isLoading) {
       return const Scaffold(
         backgroundColor: Colors.black,
@@ -202,22 +173,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
     }
 
-    // DEBUG: Verificar valores exactos antes de pasar a BackgroundImage
     final finalDisplayName = username.startsWith('@') ? username : '@$username';
+
     return FutureBuilder<int>(
       future: getTotalFollowers(FirebaseAuth.instance.currentUser!.uid),
       builder: (context, snapshot) {
         final totalFollowers = snapshot.data ?? 0;
+
         return Scaffold(
           body: BackgroundImage(
             avatarUrl: avatarUrl,
             name: name.isNotEmpty ? name : 'NOMBRE VACÍO',
             displayName: finalDisplayName,
-            comunityCount: totalFollowers
-                .toString(), // 👈 Ahora muestra la suma real
+            comunityCount: totalFollowers.toString(), // total de followers combinados
             nameComunity: 'Community',
             child: Stack(
               children: [
+                // Fondo degradado inferior
                 Positioned(
                   left: 0,
                   right: 0,
@@ -240,49 +212,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
 
-                // 3 puntos verticales arriba a la izquierda
+                // Botón de menú para editar perfil
                 Positioned(
                   left: 0,
                   top: 70,
                   child: GestureDetector(
                     onTap: () async {
                       final res = await context.push('/edit-profile');
-                      if (res == 'updated') {
-                        _loadUser();
-                      }
+                      if (res == 'updated') _loadUser();
                     },
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.more_vert,
-                          color: const Color(0xAAFFFFFF),
-                          size: 60,
-                        ),
-                      ],
+                    child: const Icon(
+                      Icons.more_vert,
+                      color: Color(0xAAFFFFFF),
+                      size: 60,
                     ),
                   ),
                 ),
 
-                // Botón asistente IA (draggable)
+                // Asistente IA flotante
                 AIAssistant(
                   size: assistantSize,
                   initialPosition: initialAssistantPosition,
-                  onTap: () {
-                    // Aquí implementarás la lógica para abrir el chat del asistente
-                    debugPrint('Asistente IA presionado');
-                  },
+                  onTap: () => debugPrint('Asistente IA presionado'),
                 ),
 
-                // Rail social con stats (followers / shares) mediante FutureBuilder
+                // Panel lateral de redes sociales
                 FutureBuilder<List<SocialStats>>(
-                  future: getUserSocialStats(
-                    FirebaseAuth.instance.currentUser!.uid,
-                  ),
+                  future: getUserSocialStats(FirebaseAuth.instance.currentUser!.uid),
                   builder: (context, statsSnap) {
                     final stats = statsSnap.data ?? [];
-                    final statsMap = {
-                      for (final s in stats) s.name.toLowerCase(): s,
-                    };
+                    final statsMap = {for (final s in stats) s.name.toLowerCase(): s};
                     return DraggableSocialRail(
                       initialPosition: initialSocialPosition,
                       links: _userSocials.isNotEmpty
@@ -294,15 +253,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   },
                 ),
 
-                // zona del bottomnavigate
+                // Navegación inferior
                 Align(
                   alignment: Alignment.bottomCenter,
                   child: GradientBottomNav(
                     currentIndex: _tab,
                     onItemSelected: (i) => setState(() => _tab = i),
                     onCenterTap: () async {
-                      await FirebaseAuth.instance
-                          .signOut(); // notificar a route para volver a login
+                      await FirebaseAuth.instance.signOut();
                     },
                   ),
                 ),
@@ -314,6 +272,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  // Mapea la lista de redes del ecosistema a objetos SocialLink
   List<SocialLink> _mapSocialToLinks(
     List<String> platforms,
     String username,
@@ -325,55 +284,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final stat = statsMap?[p.toLowerCase()];
       switch (p.toLowerCase()) {
         case 'tiktok':
-          map.add(
-            SocialLink(
-              asset: 'assets/icons/social_networks/TikTok.png',
-              url: Uri.parse('https://www.tiktok.com/@$u'),
-              followers: stat?.followers,
-              shares: stat?.shares,
-            ),
-          );
+          map.add(SocialLink(
+            asset: 'assets/icons/social_networks/TikTok.png',
+            url: Uri.parse('https://www.tiktok.com/@$u'),
+            followers: stat?.followers,
+            shares: stat?.shares,
+          ));
           break;
         case 'instagram':
-          map.add(
-            SocialLink(
-              asset: 'assets/icons/social_networks/Instagram.png',
-              url: Uri.parse('https://www.instagram.com/$u'),
-              followers: stat?.followers,
-              shares: stat?.shares,
-            ),
-          );
+          map.add(SocialLink(
+            asset: 'assets/icons/social_networks/Instagram.png',
+            url: Uri.parse('https://www.instagram.com/$u'),
+            followers: stat?.followers,
+            shares: stat?.shares,
+          ));
           break;
         case 'x':
         case 'twitter':
-          map.add(
-            SocialLink(
-              asset: 'assets/icons/social_networks/X.png',
-              url: Uri.parse('https://x.com/$u'),
-              followers: stat?.followers,
-              shares: stat?.shares,
-            ),
-          );
+          map.add(SocialLink(
+            asset: 'assets/icons/social_networks/X.png',
+            url: Uri.parse('https://x.com/$u'),
+            followers: stat?.followers,
+            shares: stat?.shares,
+          ));
           break;
         case 'pinterest':
-          map.add(
-            SocialLink(
-              asset: 'assets/icons/social_networks/Pinterest.png',
-              url: Uri.parse('https://www.pinterest.com/$u'),
-              followers: stat?.followers,
-              shares: stat?.shares,
-            ),
-          );
+          map.add(SocialLink(
+            asset: 'assets/icons/social_networks/Pinterest.png',
+            url: Uri.parse('https://www.pinterest.com/$u'),
+            followers: stat?.followers,
+            shares: stat?.shares,
+          ));
           break;
         case 'youtube':
-          map.add(
-            SocialLink(
-              asset: 'assets/icons/social_networks/YouTube.png',
-              url: Uri.parse('https://www.youtube.com/@$u'),
-              followers: stat?.followers,
-              shares: stat?.shares,
-            ),
-          );
+          map.add(SocialLink(
+            asset: 'assets/icons/social_networks/YouTube.png',
+            url: Uri.parse('https://www.youtube.com/@$u'),
+            followers: stat?.followers,
+            shares: stat?.shares,
+          ));
           break;
         default:
           break;
@@ -382,6 +331,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return map;
   }
 
+  // Mapea los documentos de Firestore (userSocials) a objetos SocialLink
   List<SocialLink> _mapUserSocialDocsToLinks(
     List<Map<String, String>> docs,
     Map<String, SocialStats>? statsMap,
@@ -413,14 +363,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           break;
       }
       if (asset != null && url.isNotEmpty) {
-        map.add(
-          SocialLink(
-            asset: asset,
-            url: Uri.parse(url),
-            followers: stat?.followers,
-            shares: stat?.shares,
-          ),
-        );
+        map.add(SocialLink(
+          asset: asset,
+          url: Uri.parse(url),
+          followers: stat?.followers,
+          shares: stat?.shares,
+        ));
       }
     }
     return map;
