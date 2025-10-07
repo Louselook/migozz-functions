@@ -43,6 +43,21 @@ class GeminiService {
     _model = GenerativeModel(model: modelName, apiKey: apiKey);
   }
 
+  /// Permite refrescar la API Key en caliente (por rotación de credenciales)
+  Future<bool> refreshApiKey({String? newKey, String? newModel}) async {
+    final key = newKey ?? dotenv.env['GEMINI_API_KEY'];
+    if (key == null || key.isEmpty) {
+      if (kDebugMode) debugPrint('GeminiService.refreshApiKey: key vacía');
+      return false;
+    }
+    _modelName = newModel ?? _modelName;
+    _configureModel(key, _modelName);
+    resetSession();
+    if (kDebugMode)
+      debugPrint('GeminiService: API key refrescada, modelo=$_modelName');
+    return true;
+  }
+
   /// Reinicia la memoria de la sesión (nuevo registro)
   void resetSession() {
     if (_model == null) return;
