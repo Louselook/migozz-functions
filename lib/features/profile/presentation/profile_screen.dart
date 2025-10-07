@@ -273,14 +273,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   },
                 ),
 
-                // rail social (ahora draggable)
-                DraggableSocialRail(
-                  initialPosition: initialSocialPosition,
-                  links: _userSocials.isNotEmpty
-                      ? _mapUserSocialDocsToLinks(_userSocials)
-                      : _mapSocialToLinks(social, username),
-                  itemSize: 50, // botón
-                  iconSize: 45, // icono dentro
+                // Rail social con stats (followers / shares) mediante FutureBuilder
+                FutureBuilder<List<SocialStats>>(
+                  future: getUserSocialStats(
+                    FirebaseAuth.instance.currentUser!.uid,
+                  ),
+                  builder: (context, statsSnap) {
+                    final stats = statsSnap.data ?? [];
+                    final statsMap = {
+                      for (final s in stats) s.name.toLowerCase(): s,
+                    };
+                    return DraggableSocialRail(
+                      initialPosition: initialSocialPosition,
+                      links: _userSocials.isNotEmpty
+                          ? _mapUserSocialDocsToLinks(_userSocials, statsMap)
+                          : _mapSocialToLinks(social, username, statsMap),
+                      itemSize: 50,
+                      iconSize: 45,
+                    );
+                  },
                 ),
 
                 // zona del bottomnavigate
@@ -303,16 +314,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  List<SocialLink> _mapSocialToLinks(List<String> platforms, String username) {
+  List<SocialLink> _mapSocialToLinks(
+    List<String> platforms,
+    String username,
+    Map<String, SocialStats>? statsMap,
+  ) {
     final map = <SocialLink>[];
     final u = username.replaceFirst('@', '');
     for (final p in platforms) {
+      final stat = statsMap?[p.toLowerCase()];
       switch (p.toLowerCase()) {
         case 'tiktok':
           map.add(
             SocialLink(
               asset: 'assets/icons/social_networks/TikTok.png',
               url: Uri.parse('https://www.tiktok.com/@$u'),
+              followers: stat?.followers,
+              shares: stat?.shares,
             ),
           );
           break;
@@ -321,6 +339,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             SocialLink(
               asset: 'assets/icons/social_networks/Instagram.png',
               url: Uri.parse('https://www.instagram.com/$u'),
+              followers: stat?.followers,
+              shares: stat?.shares,
             ),
           );
           break;
@@ -330,6 +350,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             SocialLink(
               asset: 'assets/icons/social_networks/X.png',
               url: Uri.parse('https://x.com/$u'),
+              followers: stat?.followers,
+              shares: stat?.shares,
             ),
           );
           break;
@@ -338,6 +360,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             SocialLink(
               asset: 'assets/icons/social_networks/Pinterest.png',
               url: Uri.parse('https://www.pinterest.com/$u'),
+              followers: stat?.followers,
+              shares: stat?.shares,
             ),
           );
           break;
@@ -346,6 +370,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             SocialLink(
               asset: 'assets/icons/social_networks/YouTube.png',
               url: Uri.parse('https://www.youtube.com/@$u'),
+              followers: stat?.followers,
+              shares: stat?.shares,
             ),
           );
           break;
@@ -356,12 +382,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return map;
   }
 
-  List<SocialLink> _mapUserSocialDocsToLinks(List<Map<String, String>> docs) {
+  List<SocialLink> _mapUserSocialDocsToLinks(
+    List<Map<String, String>> docs,
+    Map<String, SocialStats>? statsMap,
+  ) {
     final map = <SocialLink>[];
     for (final m in docs) {
       final provider = (m['provider'] ?? '').toLowerCase();
       final url = m['url'] ?? '';
       String? asset;
+      final stat = statsMap?[provider];
       switch (provider) {
         case 'tiktok':
           asset = 'assets/icons/social_networks/TikTok.png';
@@ -383,7 +413,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           break;
       }
       if (asset != null && url.isNotEmpty) {
-        map.add(SocialLink(asset: asset, url: Uri.parse(url)));
+        map.add(
+          SocialLink(
+            asset: asset,
+            url: Uri.parse(url),
+            followers: stat?.followers,
+            shares: stat?.shares,
+          ),
+        );
       }
     }
     return map;
