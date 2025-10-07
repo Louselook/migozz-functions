@@ -80,8 +80,9 @@ class GeminiService {
         now.difference(_lastStepTimestamp!) <
             const Duration(milliseconds: 700)) {
       _inFlight = false;
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint('GeminiService: throttled duplicate step=$stepIndex');
+      }
       return null;
     }
 
@@ -110,8 +111,9 @@ class GeminiService {
       // Duplicate textual response filter
       final hash = result['text'].hashCode.toString();
       if (_lastResponseHash == hash && _lastStepResponded == stepIndex) {
-        if (kDebugMode)
+        if (kDebugMode) {
           debugPrint('GeminiService: filtered duplicate response');
+        }
         _inFlight = false;
         return null;
       }

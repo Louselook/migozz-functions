@@ -591,10 +591,12 @@ class ChatController extends ChangeNotifier {
           .contains('es');
       final uploadLabel = isSpanish ? 'Subir foto' : 'Upload photo';
       final cameraLabel = isSpanish ? 'Tomar foto' : 'Take photo';
-      if (!platformOptions.contains(uploadLabel))
+      if (!platformOptions.contains(uploadLabel)) {
         platformOptions.add(uploadLabel);
-      if (!platformOptions.contains(cameraLabel))
+      }
+      if (!platformOptions.contains(cameraLabel)) {
         platformOptions.add(cameraLabel);
+      }
       botResponse['options'] = platformOptions;
     }
 
