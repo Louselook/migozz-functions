@@ -23,6 +23,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Map<String, dynamic>? _userDoc;
   List<Map<String, String>> _userSocials = const [];
   bool _isLoading = true; // Loading state
+  // Total de seguidores (si se quiere cachear); actualmente usamos directamente snapshot
+  // int _totalFollowers = 0; // (Opcional si en el futuro se necesita conservar)
 
   @override
   void initState() {
@@ -37,8 +39,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final userData = userDoc.data();
     if (userData == null) return [];
 
-    final fieldMapDoc =
-        await db.collection('config').doc('socialFieldMapping').get();
+    final fieldMapDoc = await db
+        .collection('config')
+        .doc('socialFieldMapping')
+        .get();
     final fieldMap = fieldMapDoc.data() ?? {};
 
     final rawEco = userData['socialEcosystem'];
@@ -66,11 +70,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final platformName = social.keys.first;
       final platformData = social[platformName];
       if (platformData is Map<String, dynamic>) {
-        statsList.add(SocialStats.fromMap(platformName, platformData, fieldMap));
+        statsList.add(
+          SocialStats.fromMap(platformName, platformData, fieldMap),
+        );
       }
     }
 
-    debugPrint('📊 Stats generadas: ${statsList.map((e) => "${e.name}: ${e.followers}").toList()}');
+    debugPrint(
+      '📊 Stats generadas: ${statsList.map((e) => "${e.name}: ${e.followers}").toList()}',
+    );
 
     return statsList;
   }
@@ -170,8 +178,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       size.height * 0.2, // Posición más alta
     );
     // Obtener datos reales del usuario
-    final rawname = (_userDoc?['displayName'] as String?) ?? 'John Doe'; // Resive el nombre completo
-    final name = formatDisplayName(rawname, format: FormatName.short); // Agarra el nombre y lo formatea
+    final rawname =
+        (_userDoc?['displayName'] as String?) ??
+        'John Doe'; // Resive el nombre completo
+    final name = formatDisplayName(
+      rawname,
+      format: FormatName.short,
+    ); // Agarra el nombre y lo formatea
     final username = (_userDoc?['username'] as String?) ?? '@johndoe';
     final avatarUrl = (_userDoc?['avatarUrl'] as String?);
     final social = _userSocials.isNotEmpty
@@ -191,28 +204,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     // DEBUG: Verificar valores exactos antes de pasar a BackgroundImage
     final finalDisplayName = username.startsWith('@') ? username : '@$username';
-    int _totalFollowers = 0;
-
     return FutureBuilder<int>(
       future: getTotalFollowers(FirebaseAuth.instance.currentUser!.uid),
       builder: (context, snapshot) {
         final totalFollowers = snapshot.data ?? 0;
-
-        // Guardamos el valor apenas cambie
-        if (snapshot.hasData && _totalFollowers != totalFollowers) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            setState(() {
-              _totalFollowers = totalFollowers;
-            });
-          });
-        }
-        
         return Scaffold(
           body: BackgroundImage(
             avatarUrl: avatarUrl,
             name: name.isNotEmpty ? name : 'NOMBRE VACÍO',
             displayName: finalDisplayName,
-            comunityCount: _totalFollowers.toString(),
+            comunityCount: totalFollowers
+                .toString(), // 👈 Ahora muestra la suma real
             nameComunity: 'Community',
             child: Stack(
               children: [
