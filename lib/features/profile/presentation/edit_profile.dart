@@ -23,37 +23,42 @@ class _EditProfileState extends State<EditProfile> {
   bool _uploading = false;
   bool _dirty = false; // Douglas: hubo cambios en esta vista - SOL: tambien hice cambios :D
   DateTime? _dob; // Se llenará desde Firestore (Timestamp o String ISO)
-  bool _hasChanges = false;
-  bool _allFilled = false;
-  late Map<String, dynamic> _originalData;
-  
 
   @override
   void initState() {
     super.initState();
     _loadUser();
-
   }
 
   Future<void> _loadUser() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-
     try {
-      final doc = await FirebaseFirestore.instance
+      final docTest = await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
           .get();
+      Map<String, dynamic>? data = docTest.data();
+      if (data == null) {
+        final docUsers = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+        data = docUsers.data();
+      }
 
-      final data = doc.data();
-      if (data == null) return;
-
+      // DOB: parseo seguro desde Firestore
+      //  - Si viene como Timestamp -> toDate().toUtc()
+      //  - Si viene como String "YYYY-MM-DD" -> parseo manual a UTC
+      //  - Si no existe, _dob queda null
+      // También sincronizamos birthController para mostrar el texto.
+      
       DateTime? parsedDob;
-      final rawDob = data['dob'];
+      final rawDob = data?['dob'];
       if (rawDob is Timestamp) {
         parsedDob = rawDob.toDate().toUtc();
       } else if (rawDob is String && rawDob.isNotEmpty) {
-        final p = rawDob.split('-');
+        final p = rawDob.split('-'); // "YYYY-MM-DD"
         if (p.length == 3) {
           parsedDob = DateTime.utc(
             int.parse(p[0]),
@@ -67,76 +72,18 @@ class _EditProfileState extends State<EditProfile> {
         setState(() {
           _userDoc = data;
           _dob = parsedDob;
-
-          // Llenamos los controladores para poder cargarlos correctamente
-          _originalData = {
-            'displayName': data['displayName'] ?? '',
-            'username': data['username'] ?? '',
-            'email': data['email'] ?? '',
-            'phone': data['phone'] ?? '',
-            'gender': data['gender'] ?? '',
-          };
-          displayNameController.text = data['displayName'] ?? '';
-          usernameController.text = data['username'] ?? '';
-          emailController.text = data['email'] ?? '';
-          phoneController.text = data['phone'] ?? '';
-          genderController.text = data['gender'] ?? '';
+          // DOB: si más adelante conectas el campo a un TextField con controller,
+          // aquí ya queda precargado.
           birthController.text = _dob != null
-              ? "${_dob!.year.toString().padLeft(4, '0')}-"
-                "${_dob!.month.toString().padLeft(2, '0')}-"
-                "${_dob!.day.toString().padLeft(2, '0')}"
+              ? "${_dob!.year.toString().padLeft(4,'0')}-"
+                "${_dob!.month.toString().padLeft(2,'0')}-"
+                "${_dob!.day.toString().padLeft(2,'0')}"
               : '';
         });
-        for (var controller in [
-          displayNameController,
-          usernameController,
-          emailController,
-          phoneController,
-          genderController
-        ]) {
-          controller.addListener(_checkForChanges);
-        }
       }
     } catch (e) {
       debugPrint('Error cargando usuario: $e');
     }
-  }
-
-    void _checkForChanges() {
-    if (_userDoc == null) return;
-
-    final currentValues = {
-      'displayName': displayNameController.text.trim(),
-      'username': usernameController.text.trim(),
-      'email': emailController.text.trim(),
-      'phone': phoneController.text.trim(),
-      'gender': genderController.text.trim(),
-    };
-
-    // Verifica que todos los campos tengan contenido
-    _allFilled = currentValues.values.every((v) => v.isNotEmpty);
-
-    // Detecta si hay alguna diferencia con los datos originales
-    _hasChanges = currentValues.entries.any(
-      (e) => e.value != _originalData[e.key],
-    );
-
-    setState(() {}); // Esto actualiza el botón "save" dinámicamente
-  }
-
-  @override
-  void dispose() {
-    for (var controller in [
-      displayNameController,
-      usernameController,
-      emailController,
-      phoneController,
-      genderController
-    ]) {
-      controller.removeListener(_checkForChanges);
-      controller.dispose();
-    }
-    super.dispose();
   }
 
   @override
@@ -144,6 +91,12 @@ class _EditProfileState extends State<EditProfile> {
     final screenSize = MediaQuery.of(context).size;
     final screenHeight = screenSize.height;
     final screenWidth = screenSize.width;
+
+    final name = (_userDoc?['displayName'] as String?) ?? '';
+    final username = ((_userDoc?['username'] as String?) ?? '');
+    final email = (_userDoc?['email'] as String?) ?? '';
+    final phone = (_userDoc?['phone'] as String?) ?? '';
+    final gender = (_userDoc?['gender'] as String?) ?? '';
     final location = (_userDoc?['location'] as Map?) ?? const {};
     final city = location['city'] ?? '';
     final avatarUrl = (_userDoc?['avatarUrl'] as String?);
@@ -240,29 +193,29 @@ class _EditProfileState extends State<EditProfile> {
               SizedBox(height: screenHeight * 0.025),
               
               listBuildBox(
-                controller: displayNameController,
-                text: 'Name',
+                controller: nameController,
+                text: name.isEmpty ? 'Full name' : name,
                 icon: Icons.account_box,
                 textColorInside: Colors.white,
                 iconColorInside: Colors.white,
               ), 
               listBuildBox(
-                controller: usernameController,
-                text: 'Nickname',
+                controller: userNameController,
+                text: username.isEmpty ? 'Nickname' : '@$username',
                 icon: Icons.alternate_email,
                 textColorInside: Colors.white,
                 iconColorInside: Colors.white,
               ),
               listBuildBox(
                 controller: emailController,
-                text: 'Email',
+                text: email.isEmpty ? 'Email' : email,
                 icon: Icons.mail,
                 textColorInside: Colors.white,
                 iconColorInside: Colors.white,
               ),
               listBuildBox(
                 controller: phoneController,
-                text: 'Phone',
+                text: phone.isEmpty ? 'Cell Phone' : phone,
                 icon: Icons.phone,
                 textColorInside: Colors.white,
                 iconColorInside: Colors.white,
@@ -272,11 +225,10 @@ class _EditProfileState extends State<EditProfile> {
                 icon: Icons.calendar_today,
                 textColorInside: Colors.white,
                 iconColorInside: Colors.white,
-                isReadingOnly: true,
               ),
               listBuildBox(
                 controller: genderController,
-                text: 'Gender',
+                text: gender.isEmpty ? 'Gender' : gender,
                 icon: Icons.transgender,
                 textColorInside: Colors.white,
                 iconColorInside: Colors.white,
@@ -286,9 +238,9 @@ class _EditProfileState extends State<EditProfile> {
                 icon: Icons.public,
                 textColorInside: Colors.white,
                 iconColorInside: Colors.white,
-                isReadingOnly: true,
               ),
               SizedBox(height: screenHeight * 0.025),
+
               // Sección de opciones adicionales
               Column(
                 children: [
@@ -371,26 +323,21 @@ class _EditProfileState extends State<EditProfile> {
               ),
               SizedBox(height: screenHeight * 0.012),
 
-              Opacity(
-                opacity: (_hasChanges && _allFilled) ? 1 : 0.5,
-                child: GradientButton(
-                  onPressed: (_hasChanges && _allFilled)
-                      ? () async {
-                          await saveChanges();
-                          if (!context.mounted) return;
-                          context.pop('updated');
-                        }
-                      : null,
-                  width: double.infinity,
-                  height: screenHeight * 0.065,
-                  radius: screenWidth * 0.02,
-                  child: Text(
-                    'Save',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: screenWidth * 0.042,
-                      fontWeight: FontWeight.bold,
-                    ),
+              GradientButton(
+                onPressed: () async {
+                  await saveChanges();
+                  if (!context.mounted) return; // Por buenas practicas de flutter
+                  context.pop('updated');
+                  },
+                width: double.infinity,
+                height: screenHeight * 0.065,
+                radius: screenWidth * 0.02,
+                child: Text(
+                  'Save',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: screenWidth * 0.042,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
@@ -433,7 +380,6 @@ class _EditProfileState extends State<EditProfile> {
     Color textColorInside = Colors.black,
     Color iconColorInside = Colors.black,
     TextEditingController? controller,
-    bool isReadingOnly = false,
   }) {
     return Container(
       margin: EdgeInsets.symmetric(vertical: 2),
@@ -452,79 +398,48 @@ class _EditProfileState extends State<EditProfile> {
       ),
       child: TextField( // Cambio a TextField para manejo de cambios por parte del usuario
       controller: controller,
-      style: TextStyle(
-        color: iconColorInside
-      ),
-      readOnly: isReadingOnly,
         decoration: InputDecoration(
           border: InputBorder.none,
           contentPadding: EdgeInsets.fromLTRB(0, 14, 0, 0),
           prefixIcon: Icon(icon, color: iconColorInside),
-          hintStyle: TextStyle(color: iconColorInside.withValues(alpha: 8.0)),
+          hintStyle: TextStyle(color: iconColorInside),
           hintText: text, 
-        ),
+        )
       ),
     );
   }
 
-  final displayNameController = TextEditingController();
-  final usernameController = TextEditingController();
+  final nameController = TextEditingController();
+  final userNameController = TextEditingController();
   final emailController = TextEditingController();
   final phoneController = TextEditingController();
   final genderController = TextEditingController();
   final birthController = TextEditingController(); // DOB: sincronizado en _loadUser
   // final cityController = TextEditingController(); // Prefiero manejarlo con una "Georreferenciación autumatica"
 
-  Future<void> saveChanges() async {
-  final currentUser = FirebaseAuth.instance.currentUser; // usuario real
-  if (currentUser == null) return;
+  Future<void> saveChanges() async{
+    final user = _userDoc;
+    final newName = nameController.text.trim();
+    final newUsername = nameController.text.trim();
+    final newEmail = nameController.text.trim();
+    final newPhone = nameController.text.trim();
+    final newGender = nameController.text.trim();
 
-  final newDisplayName = displayNameController.text.trim();
-  final newUsername = usernameController.text.trim();
-  final newEmail = emailController.text.trim();
-  final newPhone = phoneController.text.trim();
-  final newGender = genderController.text.trim();
-
-  final oldData = _userDoc ?? {};
-
-  Map<String, dynamic> updates = {};
-
-  if (newDisplayName.isNotEmpty && newDisplayName != oldData['displayName']) {
-    updates['displayName'] = newDisplayName;
-  }
-  if (newUsername.isNotEmpty && newUsername != oldData['username']) {
-    updates['username'] = newUsername;
-  }
-  if (newEmail.isNotEmpty && newEmail != oldData['email']) {
-    updates['email'] = newEmail;
-  }
-  if (newPhone.isNotEmpty && newPhone != oldData['phone']) {
-    updates['phone'] = newPhone;
-  }
-  if (newGender.isNotEmpty && newGender != oldData['gender']) {
-    updates['gender'] = newGender;
-  }
-
-  if (updates.isNotEmpty) {
-    
-      updates['updatedAt'] = FieldValue.serverTimestamp();
-
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(currentUser.uid)
-          .update(updates);  
+    Map<String, dynamic> updates = {};
+    if (newName != user?['userName'] && newUsername.isNotEmpty){
+      updates['userName'] = newName;
     }
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile updated successfully')),
-      );
+    if (newName != user?['email'] && newEmail.isNotEmpty){
+      updates['email'] = newEmail;
     }
-
-    await _loadUser();
-    setState(() => _dirty = true);
-  }
+    if (newName != user?['phone'] && newPhone.isNotEmpty){
+      updates['phone'] = newPhone;
+    }
+    if (newName != user?['gender'] && newGender.isNotEmpty){
+      updates['gender'] = newGender;
+    }
     // El cambio de fecha es mas complejo, luego lo resuelvo  [SOL]
+  }
 
   Widget bottomOptions({
     required IconData icon,

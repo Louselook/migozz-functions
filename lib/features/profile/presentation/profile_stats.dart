@@ -75,7 +75,6 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
     }
   }
 
-
   // Carga y parsing robusto
 
   Future<List<SocialStats>> _loadUserSocials() async {
@@ -281,19 +280,6 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
 }
 
 // Helpers globales
-
-// Convierte cualquier dynamic a int de forma segura
-int _toInt(dynamic v) {
-  if (v == null) return 0;
-  if (v is int) return v;
-  if (v is double) return v.toInt();
-  if (v is num) return v.toInt();
-  if (v is String) {
-    final digits = v.replaceAll(RegExp(r'[^0-9-]'), '');
-    return int.tryParse(digits) ?? 0;
-  }
-  return 0;
-}
 
 // Parsea el campo socialEcosystem con varias formas comunes y devuelve pares (SocialName, dataMap)
 List<MapEntry<String, Map<String, dynamic>>> _parseEcosystem(dynamic ecosystem) {

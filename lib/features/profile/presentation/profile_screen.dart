@@ -7,9 +7,9 @@ import 'package:migozz_app/core/components/formart/text_formart.dart';
 import 'package:migozz_app/features/profile/components/draggable_social_rail.dart';
 import 'package:migozz_app/features/profile/components/ai_assistant.dart';
 import 'package:migozz_app/features/profile/components/bottom_nav.dart';
-// import 'package:migozz_app/features/profile/components/info_user_profile.dart';
 import 'package:migozz_app/features/profile/components/background_image.dart';
 import 'package:migozz_app/features/profile/components/social_rail.dart';
+import 'package:migozz_app/features/profile/presentation/profile_stats.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -30,6 +30,56 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _loadUser();
   }
 
+  // Obtiene la informacion de las redes sociales
+  Future<List<SocialStats>> getUserSocialStats(String userId) async {
+    final db = FirebaseFirestore.instance;
+    final userDoc = await db.collection('users').doc(userId).get();
+    final userData = userDoc.data();
+    if (userData == null) return [];
+
+    final fieldMapDoc =
+        await db.collection('config').doc('socialFieldMapping').get();
+    final fieldMap = fieldMapDoc.data() ?? {};
+
+    final rawEco = userData['socialEcosystem'];
+    if (rawEco == null) return [];
+
+    final List<Map<String, dynamic>> ecosystem = [];
+
+    // 🔍 Normalizamos (ya sea lista, mapa numérico o mapa normal)
+    if (rawEco is List) {
+      for (final item in rawEco) {
+        if (item is Map<String, dynamic>) ecosystem.add(item);
+      }
+    } else if (rawEco is Map) {
+      for (final key in rawEco.keys) {
+        final value = rawEco[key];
+        if (value is Map<String, dynamic>) ecosystem.add(value);
+      }
+    }
+
+    debugPrint('♻️ Ecosystem normalizado: $ecosystem');
+
+    // 🔧 Creamos una lista de objetos SocialStats con el mapping aplicado
+    final List<SocialStats> statsList = [];
+    for (final social in ecosystem) {
+      final platformName = social.keys.first;
+      final platformData = social[platformName];
+      if (platformData is Map<String, dynamic>) {
+        statsList.add(SocialStats.fromMap(platformName, platformData, fieldMap));
+      }
+    }
+
+    debugPrint('📊 Stats generadas: ${statsList.map((e) => "${e.name}: ${e.followers}").toList()}');
+
+    return statsList;
+  }
+
+  Future<int> getTotalFollowers(String userId) async {
+    final stats = await getUserSocialStats(userId);
+    return stats.fold<int>(0, (total, s) => total + s.followers);
+  }
+
   Future<void> _loadUser() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -47,7 +97,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             .get();
         data = docUsers.data();
       }
-
       if (mounted) {
         setState(() {
           _userDoc = data;
@@ -142,96 +191,113 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     // DEBUG: Verificar valores exactos antes de pasar a BackgroundImage
     final finalDisplayName = username.startsWith('@') ? username : '@$username';
+    int _totalFollowers = 0;
 
-    return Scaffold(
-      body: BackgroundImage(
-        avatarUrl: avatarUrl,
-        name: name.isNotEmpty ? name : 'NOMBRE VACÍO',
-        displayName: finalDisplayName,
-        comunityCount: '1M',
-        nameComunity: 'Community',
-        child: Stack(
-          children: [
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              height: bottomGradientHeight,
-              child: IgnorePointer(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        Colors.black.withValues(alpha: 0.35),
-                        Colors.black.withValues(alpha: 0.6),
+    return FutureBuilder<int>(
+      future: getTotalFollowers(FirebaseAuth.instance.currentUser!.uid),
+      builder: (context, snapshot) {
+        final totalFollowers = snapshot.data ?? 0;
+
+        // Guardamos el valor apenas cambie
+        if (snapshot.hasData && _totalFollowers != totalFollowers) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            setState(() {
+              _totalFollowers = totalFollowers;
+            });
+          });
+        }
+        
+        return Scaffold(
+          body: BackgroundImage(
+            avatarUrl: avatarUrl,
+            name: name.isNotEmpty ? name : 'NOMBRE VACÍO',
+            displayName: finalDisplayName,
+            comunityCount: _totalFollowers.toString(),
+            nameComunity: 'Community',
+            child: Stack(
+              children: [
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  height: bottomGradientHeight,
+                  child: IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withValues(alpha: 0.35),
+                            Colors.black.withValues(alpha: 0.6),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // 3 puntos verticales arriba a la izquierda
+                Positioned(
+                  left: 0,
+                  top: 70,
+                  child: GestureDetector(
+                    onTap: () async {
+                      final res = await context.push('/edit-profile');
+                      if (res == 'updated') {
+                        _loadUser();
+                      }
+                    },
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.more_vert,
+                          color: const Color(0xAAFFFFFF),
+                          size: 60,
+                        ),
                       ],
                     ),
                   ),
                 ),
-              ),
-            ),
 
-            // 3 puntos verticales arriba a la izquierda
-            Positioned(
-              left: 0,
-              top: 70,
-              child: GestureDetector(
-                onTap: () async {
-                  final res = await context.push('/edit-profile');
-                  if (res == 'updated') {
-                    _loadUser();
-                  }
-                },
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.more_vert,
-                      color: const Color(0xAAFFFFFF),
-                      size: 60,
-                    ),
-                  ],
+                // Botón asistente IA (draggable)
+                AIAssistant(
+                  size: assistantSize,
+                  initialPosition: initialAssistantPosition,
+                  onTap: () {
+                    // Aquí implementarás la lógica para abrir el chat del asistente
+                    debugPrint('Asistente IA presionado');
+                  },
                 ),
-              ),
-            ),
 
-            // Botón asistente IA (draggable)
-            AIAssistant(
-              size: assistantSize,
-              initialPosition: initialAssistantPosition,
-              onTap: () {
-                // Aquí implementarás la lógica para abrir el chat del asistente
-                debugPrint('Asistente IA presionado');
-              },
-            ),
+                // rail social (ahora draggable)
+                DraggableSocialRail(
+                  initialPosition: initialSocialPosition,
+                  links: _userSocials.isNotEmpty
+                      ? _mapUserSocialDocsToLinks(_userSocials)
+                      : _mapSocialToLinks(social, username),
+                  itemSize: 50, // botón
+                  iconSize: 45, // icono dentro
+                ),
 
-            // rail social (ahora draggable)
-            DraggableSocialRail(
-              initialPosition: initialSocialPosition,
-              links: _userSocials.isNotEmpty
-                  ? _mapUserSocialDocsToLinks(_userSocials)
-                  : _mapSocialToLinks(social, username),
-              itemSize: 50, // botón
-              iconSize: 45, // icono dentro
+                // zona del bottomnavigate
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: GradientBottomNav(
+                    currentIndex: _tab,
+                    onItemSelected: (i) => setState(() => _tab = i),
+                    onCenterTap: () async {
+                      await FirebaseAuth.instance
+                          .signOut(); // notificar a route para volver a login
+                    },
+                  ),
+                ),
+              ],
             ),
-
-            // zona del bottomnavigate
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: GradientBottomNav(
-                currentIndex: _tab,
-                onItemSelected: (i) => setState(() => _tab = i),
-                onCenterTap: () async {
-                  await FirebaseAuth.instance
-                      .signOut(); // notificar a route para volver a login
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
