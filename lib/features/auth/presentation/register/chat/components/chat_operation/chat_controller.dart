@@ -36,6 +36,11 @@ class ChatController extends ChangeNotifier {
   bool _awaitingContinueAfterAudio =
       false; // Espera confirmación para continuar después de escuchar
   bool _awaitingNewRecording = false; // Usuario pidió regrabar nota de voz
+  bool _processingAudioReRecord =
+      false; // Prevenir múltiples llamadas simultáneas
+
+  // Guardar la pregunta original del bot para repetirla si el usuario quiere regrabar
+  String? _lastBotQuestionForAudio;
 
   /// ------------------- Manejo de Audio -------------------
   void onAudioFinished() {
@@ -80,15 +85,16 @@ class ChatController extends ChangeNotifier {
       other: true,
       type: MessageType.text,
       text: isSpanish
-          ? 'Verifica tu audio. ¿Deseas continuar?'
-          : 'Check your audio. Do you want to continue?',
+          ? '¿Deseas conservar ese audio o grabar uno nuevo?'
+          : 'Do you want to keep this audio or record a new one?',
       options: isSpanish
-          ? ['Continuar', 'Grabar otro']
-          : ['Continue', 'Record again'],
+          ? ['Conservar el audio', 'Grabar uno nuevo']
+          : ['Keep the audio', 'Record a new one'],
       time: _getTimeNow(),
     );
     _addMessage(confirm.toMap());
     _currentSuggestions = confirm.options ?? [];
+    print('🎯 DEBUG: Establecido _currentSuggestions = $_currentSuggestions');
     _awaitingContinueAfterAudio = false; // ya mostramos confirmación
     notifyListeners();
   }
@@ -145,8 +151,6 @@ class ChatController extends ChangeNotifier {
       _addMessage(message.toMap());
     }
 
-    if (!other) _currentSuggestions = [];
-
     if (!other) {
       final botIndex = _chatService.currentIndex; // índice actual del bot
 
@@ -155,9 +159,10 @@ class ChatController extends ChangeNotifier {
         normalizedResponse = text ?? '';
       } else if (type == MessageType.audio) {
         normalizedResponse = audio ?? "https://storage.fake/voice123.mp3";
-        // Si veníamos de regrabar, limpiamos la bandera
+        // Si veníamos de regrabar, limpiamos las banderas
         if (_awaitingNewRecording) {
           _awaitingNewRecording = false;
+          _processingAudioReRecord = false;
         }
         _handleAudioSentDirectly(audio ?? "");
         return; // No continuar con el flujo normal
@@ -171,48 +176,77 @@ class ChatController extends ChangeNotifier {
 
       _lastUserMessage = normalizedResponse;
 
-      // Manejo de opciones tras reproducir audio (Continuar / Regrabar)
-      if (_currentSuggestions.isNotEmpty) {
+      // Verificar opciones de audio ANTES de limpiar _currentSuggestions
+
+      // Manejo de opciones de audio (como el OTP)
+      if (_currentSuggestions.contains('Conservar el audio') ||
+          _currentSuggestions.contains('Grabar uno nuevo') ||
+          _currentSuggestions.contains('Keep the audio') ||
+          _currentSuggestions.contains('Record a new one')) {
+        final isSpanish = (registerCubit.state.language ?? '')
+            .toLowerCase()
+            .contains('es');
         final lower = normalizedResponse.trim().toLowerCase();
+
         final isContinue = [
-          'continuar',
-          'continue',
-          'sí',
-          'si',
-          'yes',
+          'conservar el audio',
+          'conservar',
+          'keep the audio',
+          'keep',
         ].contains(lower);
+
         final isReRecord = [
-          'regrabar',
-          'grabar otro',
-          'record again',
+          'grabar uno nuevo',
+          'grabar nuevo',
+          'nuevo',
+          'record a new one',
+          'new one',
+          'record new',
         ].contains(lower);
+
+        print('🔍 DEBUG: isContinue = $isContinue, isReRecord = $isReRecord');
+
         if (isReRecord) {
-          _currentSuggestions = const [];
+          // 🛡️ Prevenir múltiples llamadas simultáneas
+          if (_processingAudioReRecord) {
+            return;
+          }
+
+          _processingAudioReRecord = true;
+
+          // Establecer estado de espera para nueva grabación
           _awaitingNewRecording = true;
+          _currentSuggestions = [];
+
+          // Repetir la pregunta original del bot
           _addMessage(
             ChatMessage(
               other: true,
               type: MessageType.text,
-              text:
-                  (registerCubit.state.language ?? '').toLowerCase().contains(
-                    'es',
-                  )
-                  ? 'Graba tu nueva nota de voz.'
-                  : 'Record your new voice note.',
+              text: isSpanish
+                  ? '🎤 Graba una nota de voz contándome sobre ti.'
+                  : '🎤 Record a voice note telling me about yourself.',
               time: _getTimeNow(),
             ).toMap(),
           );
+
           notifyListeners();
-          return; // Esperar nuevo audio
-        } else if (isContinue) {
-          _currentSuggestions = const [];
-          notifyListeners();
+
+          _processingAudioReRecord = false;
+
+          return; // SALIR sin procesar más
+        }
+
+        if (isContinue) {
+          _currentSuggestions = [];
           Future.delayed(const Duration(milliseconds: 600), () {
             showNextBotMessage(onActionRequired: onActionRequired);
           });
-          return;
+          return; // SALIR sin procesar más
         }
       }
+
+      _currentSuggestions = [];
 
       // Si el usuario debe regrabar y envía texto u otra cosa que no sea audio, recordarle.
       if (_awaitingNewRecording && type == MessageType.text) {
@@ -467,6 +501,9 @@ class ChatController extends ChangeNotifier {
       }
 
       // --------- Flujo normal ---------
+
+      print('📨 DEBUG: Continuando con flujo normal - botIndex: $botIndex');
+
       // Luego llamas a tu función
       debugPrint('respuesta nuemro $botIndex,');
       mapResponseToCubit(
@@ -642,6 +679,13 @@ class ChatController extends ChangeNotifier {
     _currentSuggestions = List<String>.from((br["options"] as List?) ?? []);
 
     if (br["action"] != null || br["dinamicResponse"] == "FollowedMessages") {
+      // Guardar pregunta original si es para audio
+      if (br["action"] == "record_audio" ||
+          (br["text"] as String?)?.toLowerCase().contains("graba") == true ||
+          (br["text"] as String?)?.toLowerCase().contains("record") == true) {
+        _lastBotQuestionForAudio = br["text"];
+      }
+
       onActionRequired?.call(br);
     }
 
@@ -687,6 +731,13 @@ class ChatController extends ChangeNotifier {
     _currentSuggestions = List<String>.from(resp["options"] ?? []);
     if (resp["action"] != null ||
         resp["dinamicResponse"] == "FollowedMessages") {
+      // Si la acción es pedir audio, guardar la pregunta original
+      if (resp["action"] == "record_audio" ||
+          (resp["text"] as String?)?.toLowerCase().contains("graba") == true ||
+          (resp["text"] as String?)?.toLowerCase().contains("record") == true) {
+        _lastBotQuestionForAudio = resp["text"];
+      }
+
       onActionRequired?.call(resp);
     }
 
