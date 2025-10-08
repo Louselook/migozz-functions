@@ -2,12 +2,31 @@ import 'package:equatable/equatable.dart';
 import 'package:migozz_app/features/auth/models/user_dto.dart';
 import 'package:migozz_app/features/auth/models/location_dto.dart';
 
-enum RegisterStatus { initial, loading, success, failure }
+enum RegisterIsLogin { initial, loading, success }
+
+enum RegisterStatusProgress {
+  emty,
+  language,
+  fullName,
+  username,
+  gender,
+  socialEcosystem,
+  location,
+  emailVerification,
+  avatarUrl,
+  phone,
+  voiceNoteUrl,
+  category,
+  interests,
+  done,
+}
 
 enum EmailVerification { pending, success }
 
 class RegisterState extends Equatable {
-  final RegisterStatus status;
+  final bool loadigAiResponse;
+  final RegisterStatusProgress regProgress;
+  final RegisterIsLogin status;
   final bool isComplete;
 
   final String? email;
@@ -31,7 +50,9 @@ class RegisterState extends Equatable {
   final String? currentOTP;
 
   const RegisterState({
-    this.status = RegisterStatus.initial,
+    this.loadigAiResponse = false,
+    this.regProgress = RegisterStatusProgress.emty,
+    this.status = RegisterIsLogin.initial,
     this.isComplete = false,
     this.email,
     this.language,
@@ -50,7 +71,9 @@ class RegisterState extends Equatable {
   });
 
   RegisterState copyWith({
-    RegisterStatus? status,
+    bool? loadigAiResponse,
+    RegisterStatusProgress? regProgress,
+    RegisterIsLogin? status,
     bool? isComplete,
     String? email,
     String? language,
@@ -68,6 +91,8 @@ class RegisterState extends Equatable {
     String? currentOTP,
   }) {
     return RegisterState(
+      loadigAiResponse: loadigAiResponse ?? this.loadigAiResponse,
+      regProgress: regProgress ?? this.regProgress,
       status: status ?? this.status,
       isComplete: isComplete ?? this.isComplete,
       email: email ?? this.email,
@@ -113,6 +138,8 @@ class RegisterState extends Equatable {
 
   @override
   List<Object?> get props => [
+    loadigAiResponse,
+    regProgress,
     status,
     isComplete,
     email,

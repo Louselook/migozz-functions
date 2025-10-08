@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 
 enum UserDetailsAction { next, finalRegister, back }
 
@@ -9,6 +10,7 @@ Widget userDetailsButton({
   required PageController controller,
   required BuildContext context,
   UserDetailsAction action = UserDetailsAction.back,
+  RegisterCubit? cubit,
   Future<void> Function()? onFinalAction,
 }) {
   return GradientButton(
@@ -30,6 +32,7 @@ Widget userDetailsButton({
           break;
 
         case UserDetailsAction.back:
+          cubit?.setSocialEcosystemEmty();
           context.pop('done');
           break;
       }

@@ -5,7 +5,6 @@ import 'package:migozz_app/core/components/atomics/loading_overlay.dart';
 import 'package:migozz_app/features/auth/models/location_dto.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/add_network.dart';
 import 'package:migozz_app/features/auth/services/add_networks/add_networks.dart';
-// import 'package:migozz_app/features/auth/services/add_networks/profile_data.dart';
 import 'package:migozz_app/features/auth/services/auth_service.dart';
 import 'package:migozz_app/features/auth/services/location_service.dart';
 import 'package:migozz_app/features/auth/services/media_service.dart';
@@ -25,6 +24,11 @@ class RegisterCubit extends Cubit<RegisterState> {
     fetchLocation(); // 👈 Debe ir dentro de las llaves
   }
 
+  // respuesta de la ia
+  void setAiResponse(bool value) {
+    emit(state.copyWith(loadigAiResponse: value));
+  }
+
   // Método para obtener ubicación
   Future<void> fetchLocation() async {
     final location = await _locationService.initAndFetchAddress();
@@ -37,39 +41,109 @@ class RegisterCubit extends Cubit<RegisterState> {
     emit(state.copyWith(location: location));
   }
 
-  // ---------------------- Archivos temporales ----------------------
-  void setAvatarFile(File file) => avatarFile = file;
-  void setVoiceNoteFile(File file) => voiceNoteFile = file;
-
-  void setAvatarUrl(String avatarUrl) =>
-      emit(state.copyWith(avatarUrl: avatarUrl));
-  void clearAvatarUrl() => emit(state.copyWith(avatarUrl: null));
-  void setVoiceNoteUrl(String voiceNoteUrl) =>
-      emit(state.copyWith(voiceNoteUrl: voiceNoteUrl));
-
   // ---------------------- Otros setters ----------------------
-  void setEmail(String email) => emit(state.copyWith(email: email));
-  void setFullName(String fullName) => emit(state.copyWith(fullName: fullName));
-  void setPhone(String phone) => emit(state.copyWith(phone: phone));
-  void setLanguage(String language) => emit(state.copyWith(language: language));
-  void setUsername(String username) => emit(state.copyWith(username: username));
-  void setGender(String gender) => emit(state.copyWith(gender: gender));
+  // email
+  void updateEmail(String email) => emit(state.copyWith(email: email));
+  void setEmail(String email) => emit(
+    state.copyWith(email: email, regProgress: RegisterStatusProgress.language),
+  );
+  // language
+  void setLanguage(String language) => emit(
+    state.copyWith(
+      language: language,
+      regProgress: RegisterStatusProgress.fullName,
+    ),
+  );
+  // nombre
+  void setFullName(String fullName) => emit(
+    state.copyWith(
+      fullName: fullName,
+      regProgress: RegisterStatusProgress.username,
+    ),
+  );
+  // username
+  void setUsername(String username) => emit(
+    state.copyWith(
+      username: username,
+      regProgress: RegisterStatusProgress.gender,
+    ),
+  );
+  // gender
+  void setGender(String gender) => emit(
+    state.copyWith(
+      gender: gender,
+      regProgress: RegisterStatusProgress.socialEcosystem,
+    ),
+  );
+  // social networks
   void setSocialEcosystem(List<Map<String, Map<String, dynamic>>> platforms) =>
-      emit(state.copyWith(socialEcosystem: platforms));
+      emit(
+        state.copyWith(
+          socialEcosystem: platforms,
+          regProgress: RegisterStatusProgress.location,
+        ),
+      );
+  void setSocialEcosystemEmty() =>
+      emit(state.copyWith(regProgress: RegisterStatusProgress.location));
+  // location
   void setLocation(LocationDTO location) =>
       emit(state.copyWith(location: location));
-  void setCategories(List<String>? category) =>
-      emit(state.copyWith(category: category));
+  void setVerifyLocation() => emit(
+    state.copyWith(regProgress: RegisterStatusProgress.emailVerification),
+  );
+  // email verification
+  void updateEmailVerification(EmailVerification status) => emit(
+    state.copyWith(
+      emailVerification: status,
+      regProgress: RegisterStatusProgress.avatarUrl,
+    ),
+  );
+  // picture profile
+  void setAvatarFile(File file) => avatarFile = file;
+  void setAvatarUrl(String avatarUrl) => emit(
+    state.copyWith(
+      avatarUrl: avatarUrl,
+      regProgress: RegisterStatusProgress.phone,
+    ),
+  );
+  void clearAvatarUrl() => emit(state.copyWith(avatarUrl: null));
+
+  // phone
+  void setPhone(String phone) => emit(
+    state.copyWith(
+      phone: phone,
+      regProgress: RegisterStatusProgress.voiceNoteUrl,
+    ),
+  );
+
+  // voice audio
+  void setVoiceNoteFile(File file) => voiceNoteFile = file;
+  void setVoiceNoteUrl(String voiceNoteUrl) => emit(
+    state.copyWith(
+      voiceNoteUrl: voiceNoteUrl,
+      regProgress: RegisterStatusProgress.category,
+    ),
+  );
+  //category
+  void setCategories(List<String>? category) => emit(
+    state.copyWith(
+      category: category,
+      regProgress: RegisterStatusProgress.interests,
+    ),
+  );
   void setInterests(Map<String, List<String>> interests) =>
       emit(state.copyWith(interests: interests));
-  void updateEmailVerification(EmailVerification status) =>
-      emit(state.copyWith(emailVerification: status));
-  void setCurrentOTP(String currentOTP) =>
-      emit(state.copyWith(currentOTP: currentOTP));
+
+  void setCurrentOTP(String currentOTP) => emit(
+    state.copyWith(
+      currentOTP: currentOTP,
+      regProgress: RegisterStatusProgress.done,
+    ),
+  );
 
   // ---------------------- checkCompletion ----------------------
   Future<void> checkCompletion() async {
-    emit(state.copyWith(status: RegisterStatus.loading));
+    emit(state.copyWith(status: RegisterIsLogin.loading));
     try {
       final Map<MediaType, File> filesToUpload = {};
       if (avatarFile != null) filesToUpload[MediaType.avatar] = avatarFile!;
@@ -146,13 +220,13 @@ class RegisterCubit extends Cubit<RegisterState> {
       throw Exception('Error al registrar usuario: $e');
     } finally {
       // Cambiar el estado a success aunque haya fallado la guardada de socials
-      emit(state.copyWith(status: RegisterStatus.success));
+      emit(state.copyWith(status: RegisterIsLogin.success));
     }
   }
 
   // ---------------------- fetch social profile ----------------------
   Future<void> fetchSocialProfile(String network, String usernameOrLink) async {
-    emit(state.copyWith(status: RegisterStatus.loading));
+    emit(state.copyWith(status: RegisterIsLogin.loading));
     try {
       switch (network.toLowerCase()) {
         case 'instagram':
@@ -172,7 +246,7 @@ class RegisterCubit extends Cubit<RegisterState> {
     } catch (e) {
       debugPrint('Error fetching $network: $e');
     } finally {
-      emit(state.copyWith(status: RegisterStatus.initial));
+      emit(state.copyWith(status: RegisterIsLogin.initial));
     }
   }
 

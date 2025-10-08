@@ -10,7 +10,7 @@ import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/features/auth/components/bottom_text.dart';
 import 'package:migozz_app/features/auth/components/google_button.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/login_cubit/login_cubit.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/chat_validation.dart';
+import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/functions/chat_validation.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

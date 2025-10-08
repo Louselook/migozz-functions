@@ -7,9 +7,10 @@ import 'package:migozz_app/core/components/compuestos/chat/chat_model.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/chat_input/chat_input_widget.dart';
 import 'package:migozz_app/core/components/compuestos/chat/chat_message_builder.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/chat_controller.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/chat_navigation_handler.dart';
+import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/controller/chat_controller.dart';
+import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/controller/send_chat.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/suggestion_chips.dart';
+import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/functions/chat_navigation_handler.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/deeplink_functions/handle_facebook.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/deeplink_functions/handle_spotify.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/deeplink_functions/handle_tiktok.dart';
@@ -25,28 +26,31 @@ class IaChatScreen extends StatefulWidget {
 class _IaChatScreenState extends State<IaChatScreen> {
   static const _socialChannel = MethodChannel('socialAuth');
   final TextEditingController _controller = TextEditingController();
-  late final ChatController _chatController;
-  String? myOTP;
+  late final ChatControllerTest _chatController;
 
   @override
   void initState() {
     super.initState();
 
-    _chatController = ChatController(
+    _chatController = ChatControllerTest(
       registerCubit: context.read<RegisterCubit>(),
     );
-    if (_chatController.messages.isEmpty) _chatController.initializeChat();
+
+    if (_chatController.messages.isEmpty) {
+      _chatController.initializeChat(onActionRequired: _handleNavigation);
+    }
+
     _chatController.addListener(_onChatStateChanged);
 
     _socialChannel.setMethodCallHandler((call) async {
       if (call.method == 'spotifySuccess') {
-        handleSpotify(call.arguments as String, context); // <- pasar context
+        handleSpotify(call.arguments as String, context);
       } else if (call.method == 'twitterSuccess') {
-        handleTwitter(call.arguments as String, context); // <- pasar context
+        handleTwitter(call.arguments as String, context);
       } else if (call.method == 'facebookSuccess') {
-        handleFacebook(call.arguments as String, context); // <- pasar context
+        handleFacebook(call.arguments as String, context);
       } else if (call.method == 'tiktokSuccess') {
-        handleTikTok(call.arguments as String, context); // <- pasar context
+        handleTikTok(call.arguments as String, context);
       }
     });
   }
@@ -61,6 +65,15 @@ class _IaChatScreenState extends State<IaChatScreen> {
 
   void _onChatStateChanged() {
     setState(() {});
+  }
+
+  void _handleNavigation(Map<String, dynamic> botResponse) {
+    debugPrint('🚀 [IaChatScreen] _handleNavigation llamado con: $botResponse');
+    ChatNavigationHandler.handleBotAction(
+      context: context,
+      botResponse: botResponse,
+      chatController: _chatController,
+    );
   }
 
   @override
@@ -86,7 +99,6 @@ class _IaChatScreenState extends State<IaChatScreen> {
                       message["other"] == true &&
                       (message["options"] != null &&
                           (message["options"] as List).isNotEmpty) &&
-                      // Solo mostrar para el último mensaje del bot con opciones
                       !_chatController.messages
                           .sublist(index + 1)
                           .any(
@@ -95,26 +107,17 @@ class _IaChatScreenState extends State<IaChatScreen> {
                                 (m["options"] != null &&
                                     (m["options"] as List).isNotEmpty),
                           );
+
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       ChatMessageBuilder.buildMessage(message),
+
                       if (isLastBotMsgWithOptions)
                         SuggestionChips(
                           suggestions: List<String>.from(message["options"]),
-                          onSelected: (choice) {
-                            _chatController.sendChat(
-                              other: false,
-                              text: choice,
-                              onActionRequired: (botResponse) {
-                                ChatNavigationHandler.handleBotAction(
-                                  context: context,
-                                  botResponse: botResponse,
-                                  chatController: _chatController,
-                                );
-                              },
-                            );
-                            _controller.clear();
+                          onSelected: (suggestion) {
+                            _chatController.onSuggestionSelected(suggestion);
                           },
                         ),
                     ],
@@ -125,52 +128,36 @@ class _IaChatScreenState extends State<IaChatScreen> {
 
             // Input Bar
             ChatInputWidget(
-              key: ValueKey(
-                _chatController.keyboardType,
-              ), // fuerza rebuild al cambiar keyboardType
               controller: _controller,
               keyboardType: _chatController.keyboardType,
               onSend: () {
-                _chatController.sendChat(
+                sendChat(
                   other: false,
                   type: MessageType.text,
                   text: _controller.text,
-                  onActionRequired: (botResponse) {
-                    ChatNavigationHandler.handleBotAction(
-                      context: context,
-                      botResponse: botResponse,
-                      chatController: _chatController,
-                    );
-                  },
+                  controller: _chatController,
+                  context: context,
                 );
                 _controller.clear();
               },
-
-              /// Enviar audio
               onSendAudio: (path) {
-                _chatController.sendChat(
+                sendChat(
                   other: false,
                   type: MessageType.audio,
                   audio: path,
-                  onActionRequired: (botResponse) {
-                    ChatNavigationHandler.handleBotAction(
-                      context: context,
-                      botResponse: botResponse,
-                      chatController: _chatController,
-                    );
-                  },
+                  controller: _chatController,
+                  context: context,
                 );
               },
-
-              /// Enviar imagen
               onSendImage: (path) {
-                debugPrint(path);
-                _chatController.sendChat(
+                sendChat(
                   other: false,
                   type: MessageType.pictureCard,
                   pictures: [
                     {"imageUrl": path, "label": "Mi Imagen"},
                   ],
+                  controller: _chatController,
+                  context: context,
                 );
               },
             ),
@@ -180,24 +167,3 @@ class _IaChatScreenState extends State<IaChatScreen> {
     );
   }
 }
-
-
-// sugerncias
-
-            // Dynamic Suggestions
-            // if (_chatController.currentSuggestions.isNotEmpty)
-            //   SuggestionChips(
-            //     suggestions: _chatController.currentSuggestions,
-            //     onSelected: (choice) {
-            //       _chatController.sendChat(other: false);
-            //       //   choice,
-            //       //   onActionRequired: (botResponse) {
-            //       //     ChatNavigationHandler.handleBotAction(
-            //       //       context: context,
-            //       //       botResponse: botResponse,
-            //       //       chatController: _chatController,
-            //       //     );
-            //       //   },
-            //       // );
-            //     },
-            //   ),

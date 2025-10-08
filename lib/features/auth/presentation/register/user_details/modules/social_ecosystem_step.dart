@@ -16,6 +16,7 @@ class SocialEcosystemStep extends StatelessWidget {
     // Usar las utilidades responsive
     final scaleFactor = context.scaleFactor;
     final deviceType = context.deviceType;
+    final cubit = context.read<RegisterCubit>();
 
     // Calcular paddings y espaciados responsivos usando las utilidades
     final horizontalPadding = ResponsiveUtils.scaleValue(
@@ -127,7 +128,6 @@ class SocialEcosystemStep extends StatelessWidget {
                         sizeIcon: cardSize,
                         isSelected: selected,
                         onTap: () async {
-                          final cubit = context.read<RegisterCubit>();
                           final current =
                               List<Map<String, Map<String, dynamic>>>.from(
                                 cubit.state.socialEcosystem ?? [],
@@ -196,6 +196,7 @@ class SocialEcosystemStep extends StatelessWidget {
 
             // Botones
             userDetailsButton(
+              cubit: cubit,
               controller: controller,
               context: context,
               action: UserDetailsAction.back,

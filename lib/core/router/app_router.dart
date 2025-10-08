@@ -13,7 +13,7 @@ import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/regis
 
 GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
   return GoRouter(
-    initialLocation: '/onboarding',
+    initialLocation: '/ia-chat',
     refreshListenable: goRouterNotifier, // 🔑 clave
     routes: [
       GoRoute(
@@ -44,13 +44,13 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         path: '/ia-chat',
         builder: (context, state) {
           // Intentar tomar email desde extra
-          final email =
-              state.extra as String? ??
-              context.read<RegisterCubit>().state.email;
+          final email = "juanes.arenilla@gmail.com";
+          // state.extra as String? ??
+          // context.read<RegisterCubit>().state.email;
 
-          if (email != null) {
-            context.read<RegisterCubit>().setEmail(email);
-          }
+          // if (email != null) {
+          context.read<RegisterCubit>().setEmail(email);
+          // }
 
           return const IaChatScreen();
         },
