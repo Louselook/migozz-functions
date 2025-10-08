@@ -17,10 +17,10 @@ class TintesGradients extends StatelessWidget {
                 center: const Alignment(-0.9, -0.9), // arriba-izquierda
                 radius: 0.8,
                 colors: [
-                  const Color.fromARGB(174, 184, 107, 255),
-                  const Color.fromARGB(144, 0, 0, 0),
+                  const Color.fromARGB(110, 184, 107, 255),
+                  Colors.transparent,
                 ],
-                stops: const [0.15, 0.75],
+                stops: const [0.2, 0.9],
               ),
             ),
           ),
@@ -34,10 +34,10 @@ class TintesGradients extends StatelessWidget {
                 center: const Alignment(0.9, 0.9),
                 radius: 1.5,
                 colors: [
-                  const Color.fromARGB(181, 243, 198, 35),
-                  const Color.fromARGB(144, 0, 0, 0),
+                  const Color.fromARGB(100, 243, 198, 35),
+                  Colors.transparent,
                 ],
-                stops: const [0.02, 0.35],
+                stops: const [0.1, 0.9],
               ),
             ),
           ),

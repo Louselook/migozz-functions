@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/features/profile/components/bottom_nav.dart';
+import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
 
 class ProfileStatsScreen extends StatefulWidget {
   const ProfileStatsScreen({super.key});
@@ -165,44 +166,7 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
       body: Stack(
         children: [
           // Fondo con gradientes decorativos
-          IgnorePointer(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: const Alignment(-0.9, -0.9), // arriba-izquierda
-                  radius: 1.0,
-                  colors: [
-                    const Color(0xFFB86BFF).withValues(alpha: 0.45),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 1.0],
-                ),
-              ),
-            ),
-          ),
-
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: bottomGradientHeight * 1.6,
-            child: IgnorePointer(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: const Alignment(0.9, 1.4),
-                    radius: 1.2,
-                    colors: [
-                      const Color(0xFFF3C623).withValues(alpha: 0.55),
-                      Colors.transparent,
-                    ],
-                    stops: const [0.4, 0.75],
-                  ),
-                ),
-              ),
-            ),
-          ),
-
+          TintesGradients(child: Container(height: bottomGradientHeight)),
           // Contenido principal
           SafeArea(
             child: Padding(

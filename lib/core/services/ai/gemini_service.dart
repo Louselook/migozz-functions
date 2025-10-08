@@ -53,8 +53,9 @@ class GeminiService {
     _modelName = newModel ?? _modelName;
     _configureModel(key, _modelName);
     resetSession();
-    if (kDebugMode)
+    if (kDebugMode) {
       debugPrint('GeminiService: API key refrescada, modelo=$_modelName');
+    }
     return true;
   }
 

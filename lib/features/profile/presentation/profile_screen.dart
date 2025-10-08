@@ -2,7 +2,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/components/formart/text_formart.dart';
 import 'package:migozz_app/features/profile/components/draggable_social_rail.dart';
 import 'package:migozz_app/features/profile/components/ai_assistant.dart';
@@ -10,6 +9,7 @@ import 'package:migozz_app/features/profile/components/bottom_nav.dart';
 import 'package:migozz_app/features/profile/components/background_image.dart';
 import 'package:migozz_app/features/profile/components/social_rail.dart';
 import 'package:migozz_app/features/profile/presentation/profile_stats.dart';
+import 'package:migozz_app/features/search/presentation/search_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -158,9 +158,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       size.height * 0.2,
     );
 
-    final rawname = (_userDoc?['displayName'] as String?) ?? 'John Doe';
+    final rawname = (_userDoc?['displayName'] as String?) ?? 'Fullname';
     final name = formatDisplayName(rawname, format: FormatName.short);
-    final username = (_userDoc?['username'] as String?) ?? '@johndoe';
+    final username = (_userDoc?['username'] as String?) ?? '@username';
     final avatarUrl = (_userDoc?['avatarUrl'] as String?);
     final social = _userSocials.isNotEmpty
         ? _userSocials.map((e) => e['provider']!).toList()
@@ -212,17 +212,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
 
-                // Botón de menú para editar perfil
+                // Botón de menú para busqueda de usuarios
                 Positioned(
-                  left: 0,
+                  left: 20,
                   top: 70,
                   child: GestureDetector(
-                    onTap: () async {
-                      final res = await context.push('/edit-profile');
-                      if (res == 'updated') _loadUser();
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const SearchScreen())
+                      );
                     },
                     child: const Icon(
-                      Icons.more_vert,
+                      Icons.search,
                       color: Color(0xAAFFFFFF),
                       size: 60,
                     ),

@@ -231,12 +231,15 @@ class _ResultSearchState extends State<ResultSearch> {
                         Builder(
                           builder: (_) {
                             final parts = <String>[];
-                            if (city != null && city.isNotEmpty)
+                            if (city != null && city.isNotEmpty) {
                               parts.add(city);
-                            if (state != null && state.isNotEmpty)
+                            }
+                            if (state != null && state.isNotEmpty) {
                               parts.add(state);
-                            if (country != null && country.isNotEmpty)
+                            }
+                            if (country != null && country.isNotEmpty) {
                               parts.add(country);
+                            }
                             final locationLine = parts.join(', ');
                             return Row(
                               children: [

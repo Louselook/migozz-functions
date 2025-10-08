@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -102,8 +103,10 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
+        // Tintes y gradientes
         alignment: Alignment.center,
         children: [
+        TintesGradients(child: Container(height: bottomGradientHeight)),
           FutureBuilder<_ProfileData>(
             future: _futureProfile,
             builder: (context, snap) {
@@ -191,44 +194,6 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
               onPressed: () => Navigator.pop(context),
             ),
           ),
-          IgnorePointer(
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: RadialGradient(
-                center: const Alignment(-0.9, -0.9), // arriba-izquierda
-                radius: 1.0,
-                colors: [
-                  const Color(0xFFB86BFF).withValues(alpha: 0.45),
-                  Colors.transparent,
-                ],
-                stops: const [0.0, 1.0],
-              ),
-            ),
-          ),
-        ),
-
-        // Gradiente dorado inferior, suave
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          height: bottomGradientHeight * 1.6,
-          child: IgnorePointer(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: const Alignment(0.9, 1.4),
-                  radius: 1.2,
-                  colors: [
-                    const Color(0xFFF3C623).withValues(alpha: 0.55),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.4, 0.75],
-                ),
-              ),
-            ),
-          ),
-        ),
         ],
       ),
     );

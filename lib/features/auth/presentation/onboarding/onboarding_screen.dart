@@ -16,6 +16,8 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
+  
+  get gradient => null;
 
   @override
   void didChangeDependencies() {
@@ -141,8 +143,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             padding: const EdgeInsets.all(8.0),
             child: Container(
               width: double.infinity,
-              decoration: const BoxDecoration(
-                color: AppColors.backgroundLight,
+              decoration: BoxDecoration(
+                gradient: gradient ?? AppColors.verticalOnboarding,
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(30),
                   topRight: Radius.circular(30),
@@ -166,7 +168,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                       ),
                     ),
-            //issamu382@gmail.com
                     // Efecto radial
                     Positioned.fill(
                       child: Container(
