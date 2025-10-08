@@ -84,24 +84,24 @@ class GradientBottomNav extends StatelessWidget {
                         icon: Icons.bar_chart_rounded,
                         selected: currentIndex == 2,
                         onTap: () {
-                           Navigator.push(
-                              context,
-                              MaterialPageRoute<void>(
-                                builder: (context) => const ProfileStatsScreen(),
-                              ),
-                           );
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (context) => const ProfileStatsScreen(),
+                            ),
+                          );
                         },
                       ),
                       _NavItem(
                         icon: Icons.settings_outlined,
                         selected: currentIndex == 3,
                         onTap: () {
-                           Navigator.push(
-                              context,
-                              MaterialPageRoute<void>(
-                                builder: (context) => const EditProfile(),
-                              ),
-                           );
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (context) => const EditProfile(),
+                            ),
+                          );
                         },
                       ),
                     ],
@@ -113,7 +113,7 @@ class GradientBottomNav extends StatelessWidget {
 
           // Botón central flotante (sobresale)
           Positioned(
-            top: -22, // eleva el botón
+            top: 05, // eleva el botón
             left: 0,
             right: 0,
             child: Align(
@@ -144,10 +144,10 @@ class _NavItem extends StatelessWidget {
     return Expanded(
       child: InkResponse(
         onTap: onTap,
-        radius: 28,
+        radius: 0,
         child: SizedBox(
           height: double.infinity,
-          child: Icon(icon, color: color, size: 26),
+          child: Icon(icon, color: color, size: 36),
         ),
       ),
     );
@@ -189,7 +189,7 @@ class _CenterActionButton extends StatelessWidget {
           child: const Icon(
             Icons.arrow_upward_rounded,
             color: Colors.white,
-            size: 26,
+            size: 36,
           ),
         ),
       ),
