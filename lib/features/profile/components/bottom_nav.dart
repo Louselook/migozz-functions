@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/features/profile/presentation/edit_profile.dart';
+import 'package:migozz_app/features/profile/presentation/profile_screen.dart';
 import 'package:migozz_app/features/profile/presentation/profile_stats.dart';
 
 class GradientBottomNav extends StatelessWidget {
@@ -64,7 +65,14 @@ class GradientBottomNav extends StatelessWidget {
                       _NavItem(
                         icon: Icons.home_outlined,
                         selected: currentIndex == 0,
-                        onTap: () => onItemSelected(0),
+                         onTap: () {
+                           Navigator.push(
+                              context,
+                              MaterialPageRoute<void>(
+                                builder: (context) => const ProfileScreen(),
+                              ),
+                           );
+                        },
                       ),
                       _NavItem(
                         icon: Icons.link,

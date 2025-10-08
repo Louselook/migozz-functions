@@ -37,6 +37,8 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
     _futureProfile = _loadProfileData();
   }
 
+  
+
   Future<_ProfileData> _loadProfileData() async {
     // Si ya vienen los datos, retornarlos sin ir a Firestore
     if (widget.overrideUsername != null && widget.overrideDisplayName != null) {
@@ -96,20 +98,12 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final bottomGradientHeight = size.height * 0.22;
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
         alignment: Alignment.center,
         children: [
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.black, Colors.deepPurple],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-          ),
           FutureBuilder<_ProfileData>(
             future: _futureProfile,
             builder: (context, snap) {
@@ -129,38 +123,43 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
-                    width: size.width * 0.7,
-                    padding: const EdgeInsets.all(20),
+                    padding: EdgeInsets.fromLTRB(22, 10, 22, 0),
+                    width: 301,
+                    height: 372,
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(24),
                     ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        QrImageView(
-                          data: data.link,
-                          version: QrVersions.auto,
-                          size: size.width * 0.5,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          data.displayName,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          QrImageView(
+                            data: data.link,
+                            eyeStyle: QrEyeStyle(eyeShape: QrEyeShape.square, color: Color(0xFFD43AB6)),
+                            dataModuleStyle: QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: Color(0xFFD43AB6)),
+                            version: QrVersions.auto,
+                            size: 256,
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '@${data.username}',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey,
+                          const SizedBox(height: 10),
+                          Text(
+                            data.displayName,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 4),
+                          Text(
+                            '@${data.username}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 40),
@@ -192,6 +191,44 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
               onPressed: () => Navigator.pop(context),
             ),
           ),
+          IgnorePointer(
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                center: const Alignment(-0.9, -0.9), // arriba-izquierda
+                radius: 1.0,
+                colors: [
+                  const Color(0xFFB86BFF).withValues(alpha: 0.45),
+                  Colors.transparent,
+                ],
+                stops: const [0.0, 1.0],
+              ),
+            ),
+          ),
+        ),
+
+        // Gradiente dorado inferior, suave
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: bottomGradientHeight * 1.6,
+          child: IgnorePointer(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: const Alignment(0.9, 1.4),
+                  radius: 1.2,
+                  colors: [
+                    const Color(0xFFF3C623).withValues(alpha: 0.55),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.4, 0.75],
+                ),
+              ),
+            ),
+          ),
+        ),
         ],
       ),
     );
