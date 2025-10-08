@@ -6,7 +6,7 @@ import 'package:migozz_app/features/auth/presentation/login/login_screen.dart';
 import 'package:migozz_app/features/auth/presentation/login/otp_screen.dart';
 import 'package:migozz_app/features/auth/presentation/register/register_screen.dart';
 import 'package:migozz_app/features/auth/presentation/onboarding/onboarding_screen.dart';
-import 'package:migozz_app/features/profile/presentation/edit_profile.dart';
+import 'package:migozz_app/features/edit/presentation/edit_profile_screen.dart';
 import 'package:migozz_app/features/profile/presentation/profile_screen.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/ia_chat_screen.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
@@ -38,7 +38,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       ),
       GoRoute(
         path: '/edit-profile',
-        builder: (context, state) => const EditProfile(),
+        builder: (context, state) => const EditProfileScreen(),
       ),
       GoRoute(
         path: '/ia-chat',
