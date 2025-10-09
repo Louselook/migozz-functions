@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
+import 'package:migozz_app/features/auth/services/location_service.dart';
 import 'package:migozz_app/features/auth/services/media_service.dart';
 import 'package:migozz_app/features/edit/components/edit_profile_controller.dart';
 import 'package:migozz_app/features/edit/components/profile_avatar.dart';
@@ -39,11 +40,43 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   DateTime? _dob;
 
+  String get formattedLocation {
+    if (_user == null) return 'Location';
+    final city = _user!.city;
+    final country = _user!.country;
+    if (city == null && country == null) return 'Location';
+    if (city != null && country != null) return '$city, $country';
+    return city ?? country ?? 'Location';
+  }
+
   @override
   void initState() {
       super.initState();
       _loadUser();
     }
+
+    Future<void> _pickBirthday() async {
+      final DateTime now = DateTime.now();
+
+      final DateTime? picked = await showDatePicker(
+        context: context,
+        initialDate: _dob ?? DateTime(2010, 1, 1),
+        firstDate: DateTime(1900, 1, 1),
+        lastDate: now,
+        helpText: 'Selecciona tu fecha de nacimiento',
+      );
+
+      if (picked != null) {
+        setState(() {
+          _dob = picked;
+          birthCtrl.text = 
+          "${picked.year.toString().padLeft(4, '0')}-"
+          "${picked.month.toString().padLeft(2, '0')}-"
+          "${picked.day.toString().padLeft(2, '0')}";
+        });
+      }
+    }
+
   Future<void> _loadUser() async {
     final user = await _controller.loadUser();
     if (user == null) return;
@@ -155,23 +188,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> _saveChanges() async {
     if (_user == null) return;
 
-    DateTime? parsedDob;
-    final dobText = birthCtrl.text.trim();
-    if (dobText.isNotEmpty) {
-      try {
-        parsedDob = DateTime.parse(dobText);
-      } catch (_) {
-        parsedDob = null;
-      }
-    }
-
     final updatedUser = _user!.copyWith(
       displayName: nameCtrl.text.trim(),
       username: usernameCtrl.text.trim(),
       email: emailCtrl.text.trim(),
       phone: phoneCtrl.text.trim(),
       gender: genderCtrl.text.trim(),
-      dob: parsedDob,
+      dob: _dob,
     );
 
     await _controller.saveUserProfile(updatedUser);
@@ -186,11 +209,59 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  String get _dobLabel {
-    if (_dob == null) return 'Date of birth';
-    return "${_dob!.year.toString().padLeft(4, '0')}-"
-           "${_dob!.month.toString().padLeft(2, '0')}-"
-           "${_dob!.day.toString().padLeft(2, '0')}";
+  Future<void> _confirmAndChangeLocation() async {
+    try {
+      final svc = LocationService();
+      final newLocation = await svc.initAndFetchAddress();
+
+      if (newLocation == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not fetch current location')),
+        );
+        return;
+      }
+
+      // Mostrar confirmación con la ubicación detectada
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Confirm location'),
+            content: Text(
+              "The current location is ${newLocation.city}, ${newLocation.country}. Is that correct?",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+
+      // Si el usuario confirmó, actualizamos la UI (pero no guardamos aún)
+      if (confirm == true) {
+        setState(() {
+          _user = _user!.copyWith(
+            city: newLocation.city,
+            country: newLocation.country,
+          );
+          _dirty = true;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error getting location: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error getting location')),
+      );
+    }
   }
 
   @override
@@ -258,9 +329,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 icon: Icons.phone,
               ),
               ProfileField(
-                hint: _dobLabel,
+                hint: 'Date of birth',
                 controller: birthCtrl,
                 icon: Icons.calendar_today,
+                readOnly: true,
+                onTap: _pickBirthday, // función que abre el date picker
               ),
               ProfileField(
                 hint: _user?.gender ?? 'Gender',
@@ -268,8 +341,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 icon: Icons.transgender,
               ),
               ProfileField(
-                hint: _user?.city ?? 'Location',
+                hint: formattedLocation,
                 icon: Icons.public,
+                readOnly: true,
+                onTap: _confirmAndChangeLocation,
+                displayValue: formattedLocation,
               ),
               SizedBox(height: screenHeight * 0.025),
 
@@ -366,3 +442,4 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 }
+
