@@ -12,7 +12,9 @@ import 'package:migozz_app/features/profile/presentation/profile_stats.dart';
 import 'package:migozz_app/features/search/presentation/search_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final String? userId; // optional: when provided, show that user's profile
+
+  const ProfileScreen({super.key, this.userId});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -37,7 +39,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final userData = userDoc.data();
     if (userData == null) return [];
 
-    final fieldMapDoc = await db.collection('config').doc('socialFieldMapping').get();
+    final fieldMapDoc = await db
+        .collection('config')
+        .doc('socialFieldMapping')
+        .get();
     final fieldMap = fieldMapDoc.data() ?? {};
 
     final rawEco = userData['socialEcosystem'];
@@ -61,7 +66,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final platformName = social.keys.first;
       final platformData = social[platformName];
       if (platformData is Map<String, dynamic>) {
-        statsList.add(SocialStats.fromMap(platformName, platformData, fieldMap));
+        statsList.add(
+          SocialStats.fromMap(platformName, platformData, fieldMap),
+        );
       }
     }
 
@@ -85,15 +92,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   // Carga el documento del usuario actual
   Future<void> _loadUser() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
+    // If a userId was passed to the widget, show that profile; otherwise use current user
+    final current = FirebaseAuth.instance.currentUser;
+    final targetId = widget.userId ?? current?.uid;
+    if (targetId == null) return;
     try {
-      final docTest = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-      Map<String, dynamic>? data = docTest.data();
-      if (data == null) {
-        final docUsers = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-        data = docUsers.data();
-      }
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(targetId)
+          .get();
+      Map<String, dynamic>? data = doc.data();
       if (mounted) {
         setState(() {
           _userDoc = data;
@@ -153,10 +161,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       size.height - bottomPaddingForCard + (size.height * 0.03),
     );
 
-    final initialSocialPosition = Offset(
-      size.width - 65,
-      size.height * 0.2,
-    );
+    final initialSocialPosition = Offset(size.width - 65, size.height * 0.2);
 
     final rawname = (_userDoc?['displayName'] as String?) ?? 'Fullname';
     final name = formatDisplayName(rawname, format: FormatName.short);
@@ -164,7 +169,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final avatarUrl = (_userDoc?['avatarUrl'] as String?);
     final social = _userSocials.isNotEmpty
         ? _userSocials.map((e) => e['provider']!).toList()
-        : ((_userDoc?['socialEcosystem'] as List?)?.map((e) => e.toString()).toList() ?? const []);
+        : ((_userDoc?['socialEcosystem'] as List?)
+                  ?.map((e) => e.toString())
+                  .toList() ??
+              const []);
 
     if (_isLoading) {
       return const Scaffold(
@@ -175,8 +183,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     final finalDisplayName = username.startsWith('@') ? username : '@$username';
 
+    final current = FirebaseAuth.instance.currentUser;
+    final targetId = widget.userId ?? current?.uid;
+
     return FutureBuilder<int>(
-      future: getTotalFollowers(FirebaseAuth.instance.currentUser!.uid),
+      future: targetId != null ? getTotalFollowers(targetId) : Future.value(0),
       builder: (context, snapshot) {
         final totalFollowers = snapshot.data ?? 0;
 
@@ -185,7 +196,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             avatarUrl: avatarUrl,
             name: name.isNotEmpty ? name : 'NOMBRE VACÍO',
             displayName: finalDisplayName,
-            comunityCount: totalFollowers.toString(), // total de followers combinados
+            comunityCount: totalFollowers
+                .toString(), // total de followers combinados
             nameComunity: 'Community',
             child: Stack(
               children: [
@@ -220,7 +232,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const SearchScreen())
+                        MaterialPageRoute(
+                          builder: (context) => const SearchScreen(),
+                        ),
                       );
                     },
                     child: const Icon(
@@ -240,10 +254,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                 // Panel lateral de redes sociales
                 FutureBuilder<List<SocialStats>>(
-                  future: getUserSocialStats(FirebaseAuth.instance.currentUser!.uid),
+                  future: targetId != null
+                      ? getUserSocialStats(targetId)
+                      : Future.value([]),
                   builder: (context, statsSnap) {
                     final stats = statsSnap.data ?? [];
-                    final statsMap = {for (final s in stats) s.name.toLowerCase(): s};
+                    final statsMap = {
+                      for (final s in stats) s.name.toLowerCase(): s,
+                    };
                     return DraggableSocialRail(
                       initialPosition: initialSocialPosition,
                       links: _userSocials.isNotEmpty
@@ -286,45 +304,55 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final stat = statsMap?[p.toLowerCase()];
       switch (p.toLowerCase()) {
         case 'tiktok':
-          map.add(SocialLink(
-            asset: 'assets/icons/social_networks/TikTok.png',
-            url: Uri.parse('https://www.tiktok.com/@$u'),
-            followers: stat?.followers,
-            shares: stat?.shares,
-          ));
+          map.add(
+            SocialLink(
+              asset: 'assets/icons/social_networks/TikTok.png',
+              url: Uri.parse('https://www.tiktok.com/@$u'),
+              followers: stat?.followers,
+              shares: stat?.shares,
+            ),
+          );
           break;
         case 'instagram':
-          map.add(SocialLink(
-            asset: 'assets/icons/social_networks/Instagram.png',
-            url: Uri.parse('https://www.instagram.com/$u'),
-            followers: stat?.followers,
-            shares: stat?.shares,
-          ));
+          map.add(
+            SocialLink(
+              asset: 'assets/icons/social_networks/Instagram.png',
+              url: Uri.parse('https://www.instagram.com/$u'),
+              followers: stat?.followers,
+              shares: stat?.shares,
+            ),
+          );
           break;
         case 'x':
         case 'twitter':
-          map.add(SocialLink(
-            asset: 'assets/icons/social_networks/X.png',
-            url: Uri.parse('https://x.com/$u'),
-            followers: stat?.followers,
-            shares: stat?.shares,
-          ));
+          map.add(
+            SocialLink(
+              asset: 'assets/icons/social_networks/X.png',
+              url: Uri.parse('https://x.com/$u'),
+              followers: stat?.followers,
+              shares: stat?.shares,
+            ),
+          );
           break;
         case 'pinterest':
-          map.add(SocialLink(
-            asset: 'assets/icons/social_networks/Pinterest.png',
-            url: Uri.parse('https://www.pinterest.com/$u'),
-            followers: stat?.followers,
-            shares: stat?.shares,
-          ));
+          map.add(
+            SocialLink(
+              asset: 'assets/icons/social_networks/Pinterest.png',
+              url: Uri.parse('https://www.pinterest.com/$u'),
+              followers: stat?.followers,
+              shares: stat?.shares,
+            ),
+          );
           break;
         case 'youtube':
-          map.add(SocialLink(
-            asset: 'assets/icons/social_networks/YouTube.png',
-            url: Uri.parse('https://www.youtube.com/@$u'),
-            followers: stat?.followers,
-            shares: stat?.shares,
-          ));
+          map.add(
+            SocialLink(
+              asset: 'assets/icons/social_networks/YouTube.png',
+              url: Uri.parse('https://www.youtube.com/@$u'),
+              followers: stat?.followers,
+              shares: stat?.shares,
+            ),
+          );
           break;
         default:
           break;
@@ -365,12 +393,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           break;
       }
       if (asset != null && url.isNotEmpty) {
-        map.add(SocialLink(
-          asset: asset,
-          url: Uri.parse(url),
-          followers: stat?.followers,
-          shares: stat?.shares,
-        ));
+        map.add(
+          SocialLink(
+            asset: asset,
+            url: Uri.parse(url),
+            followers: stat?.followers,
+            shares: stat?.shares,
+          ),
+        );
       }
     }
     return map;

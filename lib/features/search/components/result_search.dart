@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:migozz_app/features/profile/presentation/profile_screen.dart';
 
 /// ResultSearch realiza una búsqueda simple en la colección `users || profiles_public`
 /// por `username` y `displayName`. Muestra los resultados en una lista.
@@ -120,6 +122,23 @@ class _ResultSearchState extends State<ResultSearch> {
 
         final items = snapshot.data ?? [];
 
+        // Prefetch avatar images to improve perceived loading speed.
+        // Use a short circuit to avoid doing this repeatedly for identical snapshots.
+        if (items.isNotEmpty) {
+          for (final item in items) {
+            final avatar = item['avatarUrl'] as String?;
+            if (avatar != null && avatar.isNotEmpty) {
+              // Use Flutter precache with CachedNetworkImageProvider so images
+              // are downloaded into the image cache ahead of time.
+              try {
+                precacheImage(CachedNetworkImageProvider(avatar), context);
+              } catch (e) {
+                // ignore prefetch errors
+              }
+            }
+          }
+        }
+
         if (widget.query.isNotEmpty && items.isEmpty) {
           return Center(
             child: Padding(
@@ -179,94 +198,124 @@ class _ResultSearchState extends State<ResultSearch> {
             final state = location?['state'] as String?;
             final country = location?['country'] as String?;
 
-            return Container(
-              padding: EdgeInsets.all(containerPadding),
-              decoration: BoxDecoration(
-                color: Colors.white10,
-                borderRadius: BorderRadius.circular(borderRadius),
-              ),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: avatarRadius,
-                    backgroundImage: avatar != null && avatar.isNotEmpty
-                        ? NetworkImage(avatar)
-                        : null,
-                    child: (avatar == null || avatar.isEmpty)
-                        ? Icon(Icons.person, size: avatarRadius)
-                        : null,
+            return InkWell(
+              onTap: () {
+                // Navigate to ProfileScreen showing the selected user
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ProfileScreen(userId: item['id'] as String),
                   ),
-                  SizedBox(width: 12 * scale),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // displayName y username pegados (como en el prototipo)
-                        Text.rich(
-                          TextSpan(
-                            children: [
-                              TextSpan(
-                                text: displayName,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: displayNameFont,
-                                ),
-                              ),
-                              const TextSpan(text: ' '),
-                              TextSpan(
-                                text: '@$username',
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: usernameFont,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(height: 6 * scale),
-                        // location line: join available parts with a pin icon
-                        Builder(
-                          builder: (_) {
-                            final parts = <String>[];
-                            if (city != null && city.isNotEmpty) {
-                              parts.add(city);
-                            }
-                            if (state != null && state.isNotEmpty) {
-                              parts.add(state);
-                            }
-                            if (country != null && country.isNotEmpty) {
-                              parts.add(country);
-                            }
-                            final locationLine = parts.join(', ');
-                            return Row(
-                              children: [
-                                Icon(
-                                  Icons.location_on,
-                                  size: iconSize,
-                                  color: Colors.white70,
-                                ),
-                                SizedBox(width: 6 * scale),
-                                Expanded(
-                                  child: Text(
-                                    locationLine,
-                                    style: TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: locationFont,
+                );
+              },
+              child: Container(
+                padding: EdgeInsets.all(containerPadding),
+                decoration: BoxDecoration(
+                  color: Colors.white10,
+                  borderRadius: BorderRadius.circular(borderRadius),
+                ),
+                child: Row(
+                  children: [
+                    // Avatar: use CachedNetworkImage with placeholder and errorWidget
+                    Container(
+                      width: avatarRadius * 2,
+                      height: avatarRadius * 2,
+                      decoration: const BoxDecoration(shape: BoxShape.circle),
+                      child: ClipOval(
+                        child: avatar != null && avatar.isNotEmpty
+                            ? CachedNetworkImage(
+                                imageUrl: avatar,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => Center(
+                                  child: SizedBox(
+                                    width: avatarRadius,
+                                    height: avatarRadius,
+                                    child: const CircularProgressIndicator(
+                                      strokeWidth: 2,
                                     ),
-                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                errorWidget: (context, url, error) => Icon(
+                                  Icons.person,
+                                  size: avatarRadius,
+                                  color: Colors.white70,
+                                ),
+                              )
+                            : Icon(Icons.person, size: avatarRadius),
+                      ),
+                    ),
+                    SizedBox(width: 12 * scale),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // displayName y username pegados (como en el prototipo)
+                          Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: displayName,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: displayNameFont,
+                                  ),
+                                ),
+                                const TextSpan(text: ' '),
+                                TextSpan(
+                                  text: '@$username',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: usernameFont,
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
                               ],
-                            );
-                          },
-                        ),
-                      ],
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          SizedBox(height: 6 * scale),
+                          // location line: join available parts with a pin icon
+                          Builder(
+                            builder: (_) {
+                              final parts = <String>[];
+                              if (city != null && city.isNotEmpty) {
+                                parts.add(city);
+                              }
+                              if (state != null && state.isNotEmpty) {
+                                parts.add(state);
+                              }
+                              if (country != null && country.isNotEmpty) {
+                                parts.add(country);
+                              }
+                              final locationLine = parts.join(', ');
+                              return Row(
+                                children: [
+                                  Icon(
+                                    Icons.location_on,
+                                    size: iconSize,
+                                    color: Colors.white70,
+                                  ),
+                                  SizedBox(width: 6 * scale),
+                                  Expanded(
+                                    child: Text(
+                                      locationLine,
+                                      style: TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: locationFont,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           },
