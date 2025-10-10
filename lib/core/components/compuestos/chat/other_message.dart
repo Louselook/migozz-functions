@@ -1,12 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/social_cards/social_cards.dart';
 
 class OtherMessage extends StatelessWidget {
   final String text;
   final String time;
-  const OtherMessage({super.key, required this.text, required this.time});
+  final List<Map<String, dynamic>>?
+  platforms; // 👈 Opcional, solo si hay social cards
+
+  const OtherMessage({
+    super.key,
+    required this.text,
+    required this.time,
+    this.platforms,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final hasPlatforms = platforms != null && platforms!.isNotEmpty;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
@@ -17,9 +28,10 @@ class OtherMessage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 🟣 Encabezado con ícono de Migozz
           Row(
             children: [
-              Image(
+              const Image(
                 image: AssetImage("assets/icons/Migozz300x.png"),
                 width: 18,
                 height: 18,
@@ -36,9 +48,36 @@ class OtherMessage extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
+
+          // 🟢 Texto del mensaje
           Text(text, style: const TextStyle(color: Colors.white, fontSize: 14)),
+
+          // 🔹 Social Cards (opcional)
+          if (hasPlatforms) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 120,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: platforms!.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 12),
+                itemBuilder: (context, index) {
+                  return SocialCardMini(platformData: platforms![index]);
+                },
+              ),
+            ),
+          ],
+
           const SizedBox(height: 6),
-          Text(time, style: const TextStyle(color: Colors.grey, fontSize: 10)),
+
+          // 🕒 Hora
+          Align(
+            alignment: Alignment.bottomLeft,
+            child: Text(
+              time,
+              style: const TextStyle(color: Colors.grey, fontSize: 10),
+            ),
+          ),
         ],
       ),
     );

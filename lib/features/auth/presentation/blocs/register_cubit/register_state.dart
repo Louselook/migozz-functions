@@ -12,6 +12,7 @@ enum RegisterStatusProgress {
   gender,
   socialEcosystem,
   location,
+  sendOTP,
   emailVerification,
   avatarUrl,
   phone,

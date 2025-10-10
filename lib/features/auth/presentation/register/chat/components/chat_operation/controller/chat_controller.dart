@@ -3,7 +3,7 @@ import 'package:migozz_app/core/components/atomics/get_time_now.dart';
 import 'package:migozz_app/core/components/compuestos/chat/chat_model.dart';
 import 'package:migozz_app/core/services/ai/gemini_service.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/functions/chat_call_handler.dart';
+import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/functions/audio_chat_handler.dart';
 
 class ChatControllerTest extends ChangeNotifier {
   final RegisterCubit registerCubit;
@@ -14,91 +14,119 @@ class ChatControllerTest extends ChangeNotifier {
   final ScrollController scrollController = ScrollController();
   final List<Map<String, dynamic>> _messages = [];
   List<Map<String, dynamic>> get messages => _messages;
-
-  TextInputType _keyboardType = TextInputType.text;
-  TextInputType get keyboardType => _keyboardType;
-
   String? _lastUserMessage;
   String? get lastUserMessage => _lastUserMessage;
 
-  // 🔹 Nuevo: flag para saber si estamos esperando validación de OTP
-  bool _waitingForOtpValidation = false;
+  // Handler para toda la lógica de audio
+  final AudioChatHandler _audioHandler = AudioChatHandler();
+  List<String> get currentSuggestions => _audioHandler.currentSuggestions;
 
   void initializeChat({void Function(Map<String, dynamic>)? onActionRequired}) {
-    try {
-      GeminiService.instance.ensureConfigured();
-      if (GeminiService.instance.isConfigured) {
-        GeminiService.instance.resetSession();
-      }
-    } catch (_) {}
-
+    GeminiService.instance.ensureConfigured();
     onBotAction = onActionRequired;
     showNextBotMessage();
   }
 
-  Future<void> showNextBotMessage() async {
-    final gemini = GeminiService.instance;
+  /// Callback cuando el audio termina de reproducirse
+  void onAudioFinished() {
+    _audioHandler.onAudioFinished(
+      registerCubit: registerCubit,
+      addMessage: addMessage,
+    );
+    notifyListeners();
+  }
 
+  /// Enviar audio del usuario
+  Future<void> sendUserAudio(String audioPath) async {
+    _audioHandler.sendUserAudio(
+      audioPath: audioPath,
+      registerCubit: registerCubit,
+      addMessage: addMessage,
+      chatController: this,
+    );
+    notifyListeners();
+  }
+
+  Future<void> showNextBotMessage() async {
     registerCubit.setAiResponse(true);
 
+    // Mostrar typing
     addMessage({
       "other": true,
       "type": MessageType.typing,
       "name": "Migozz",
       "time": getTimeNow(),
     });
-
     notifyListeners();
 
-    debugPrint(
-      '🤖 [Chat] Solicitando respuesta IA para paso: ${registerCubit.state.regProgress}',
-    );
+    try {
+      final userInput = _lastUserMessage ?? '';
+      final botResponse = await GeminiService.instance.sendMessage(
+        userInput,
+        registerCubit: registerCubit,
+      );
 
-    final botResponse = await gemini.nextBotTurn(
-      state: registerCubit.state,
-      lastUserMessage: _lastUserMessage,
-    );
+      // Remover typing
+      _messages.removeWhere((msg) => msg["type"] == MessageType.typing);
 
-    _messages.removeWhere((msg) => msg["type"] == MessageType.typing);
-    registerCubit.setAiResponse(false);
+      addMessage({
+        "other": true,
+        "type": MessageType.text,
+        "text": botResponse["text"],
+        "options": botResponse["options"] ?? [],
+        "step": botResponse["step"],
+        "valid": botResponse["valid"],
+        "action": botResponse["action"],
+        "extracted": botResponse["extracted"],
+        "call": botResponse["call"],
+        "name": "Migozz",
+        "time": getTimeNow(),
+      });
 
-    if (botResponse == null) {
-      debugPrint('❌ [Chat] La IA no devolvió respuesta.');
+      // Ejecutar callback para navegar
+      if (onBotAction != null) {
+        onBotAction!(botResponse);
+      }
+    } catch (e) {
+      debugPrint('❌ Error obteniendo respuesta IA: $e');
+    } finally {
+      registerCubit.setAiResponse(false);
       notifyListeners();
-      return;
     }
-
-    final keyboardTypeStr = botResponse["keyboardType"] as String?;
-    _keyboardType = keyboardTypeStr == "number"
-        ? TextInputType.number
-        : TextInputType.text;
-
-    final msg = {
-      "other": true,
-      "text": botResponse["text"],
-      "options": botResponse["options"] ?? [],
-      "type": MessageType.text,
-      "time": getTimeNow(),
-      "action": botResponse["action"],
-      "call": botResponse["call"], // 🔹 Importante: pasar el call
-    };
-
-    addMessage(msg);
-
-    debugPrint(
-      '📊 [Chat] Estado actualizado tras respuesta IA: '
-      'lang=${registerCubit.state.language}, '
-      'name=${registerCubit.state.fullName}, '
-      'user=${registerCubit.state.username}, '
-      'gender=${registerCubit.state.gender}, '
-      'progress=${registerCubit.state.regProgress}',
-    );
-
-    notifyListeners();
   }
 
   Future<void> sendUserMessage(String text) async {
     if (text.trim().isEmpty) return;
+
+    // Delegar manejo de confirmación de audio al handler
+    final audioResponse = _audioHandler.handleAudioConfirmationResponse(text);
+
+    if (audioResponse != null) {
+      // Añadir mensaje del usuario
+      addMessage({
+        "other": false,
+        "text": text,
+        "type": MessageType.text,
+        "time": getTimeNow(),
+      });
+
+      if (audioResponse == 'keep') {
+        // Usuario confirma el audio → continuar con siguiente mensaje
+        await Future.delayed(const Duration(milliseconds: 600));
+        await showNextBotMessage();
+      } else if (audioResponse == 'record') {
+        // Usuario quiere regrabar → mostrar mensaje de regrabar
+        final recordMessage = _audioHandler.getRecordAgainMessage(
+          registerCubit,
+        );
+        addMessage(recordMessage);
+        notifyListeners();
+      }
+      return;
+    }
+
+    // Flujo normal de mensajes de texto
+    _lastUserMessage = text;
 
     addMessage({
       "other": false,
@@ -107,68 +135,19 @@ class ChatControllerTest extends ChangeNotifier {
       "time": getTimeNow(),
     });
 
-    _lastUserMessage = text;
+    await showNextBotMessage();
+  }
 
-    // 🔹 Si estamos esperando validación de OTP, llamar directamente al handler
-    if (_waitingForOtpValidation) {
-      debugPrint('🔐 Validando OTP del usuario...');
-      _waitingForOtpValidation = false; // resetear flag
-
-      final callHandler = ChatCallHandler(
-        cubit: registerCubit,
-        controller: this,
-      );
-      await callHandler.handle("verifyEmailOtp", {});
-      return; // 🔹 Salir aquí, no continuar con IA
-    }
-
-    final gemini = GeminiService.instance;
-
-    registerCubit.setAiResponse(true);
-
-    addMessage({
-      "other": true,
-      "type": MessageType.typing,
-      "name": "Migozz",
-      "time": getTimeNow(),
-    });
+  void addMessage(Map<String, dynamic> message) {
+    _messages.add(message);
     notifyListeners();
-
-    final response = await gemini.handleUserInput(
-      cubit: registerCubit,
-      userInput: text,
-    );
-
-    _messages.removeWhere((msg) => msg["type"] == MessageType.typing);
-    registerCubit.setAiResponse(false);
-
-    if (response == null) {
-      notifyListeners();
-      return;
-    }
-
-    final botMsg = {
-      "other": true,
-      "text": response["text"],
-      "options": response["options"] ?? [],
-      "type": MessageType.text,
-      "time": getTimeNow(),
-      "action": response["action"],
-      "call": response["call"], // 🔹 Pasar el call
-    };
-
-    _keyboardType = (response["keyboardType"] == "number")
-        ? TextInputType.number
-        : TextInputType.text;
-
-    addMessage(botMsg);
-
-    notifyListeners();
+    _scrollToBottom();
   }
 
   void onSuggestionSelected(String suggestion) {
     sendUserMessage(suggestion);
 
+    // Limpiar opciones del último mensaje del bot
     for (var msg in _messages.reversed) {
       if (msg["other"] == true && msg["options"] != null) {
         msg["options"] = [];
@@ -177,48 +156,6 @@ class ChatControllerTest extends ChangeNotifier {
     }
 
     notifyListeners();
-  }
-
-  void addMessage(Map<String, dynamic> message) {
-    _messages.add(message);
-    notifyListeners();
-    _scrollToBottom();
-
-    // 🔹 Detectar si este mensaje está esperando OTP
-    if (message["__waitingForOtp"] == true) {
-      _waitingForOtpValidation = true;
-      debugPrint('🔒 Esperando validación de OTP del usuario');
-    }
-
-    // 🔹 Si el bot manda "call", ejecutamos el manejador externo
-    final callName = message["call"];
-    if (callName is String && callName.trim().isNotEmpty) {
-      debugPrint('📞 Ejecutando call: $callName');
-      Future.delayed(const Duration(milliseconds: 800), () async {
-        final callHandler = ChatCallHandler(
-          cubit: registerCubit,
-          controller: this,
-        );
-        await callHandler.handle(callName, message);
-      });
-    }
-
-    // 🔹 Si hay "action", mantener la navegación que ya tenías
-    if (message["action"] is int &&
-        onBotAction != null &&
-        message["__actionHandled"] != true) {
-      message["__actionHandled"] = true;
-      final botResponse = {
-        "text": message["text"],
-        "options": message["options"] ?? [],
-        "keyboardType": message["keyboardType"] ?? "text",
-        "valid": message["valid"] ?? false,
-        "action": message["action"],
-      };
-      Future.delayed(const Duration(milliseconds: 1500), () {
-        onBotAction?.call(botResponse);
-      });
-    }
   }
 
   void _scrollToBottom() {
@@ -231,5 +168,12 @@ class ChatControllerTest extends ChangeNotifier {
         );
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _audioHandler.reset();
+    scrollController.dispose();
+    super.dispose();
   }
 }

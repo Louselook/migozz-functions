@@ -7,7 +7,7 @@ import 'package:migozz_app/core/components/compuestos/custom_textfield.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/functions/chat_validation.dart';
+import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/functions/email_validation.dart';
 import 'package:migozz_app/features/auth/services/auth_service.dart';
 import 'package:migozz_app/features/auth/services/location_service.dart';
 

@@ -87,9 +87,9 @@ class SocialEcosystemHandler {
       }
 
       // 3️⃣ Continuar con el siguiente paso del registro
-      Future.delayed(const Duration(milliseconds: 1500), () {
-        chatController.showNextBotMessage();
-      });
+      // Future.delayed(const Duration(milliseconds: 1500), () {
+      //   chatController.showNextBotMessage();
+      // });
     });
   }
 

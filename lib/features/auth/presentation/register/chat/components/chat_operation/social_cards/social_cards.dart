@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:migozz_app/core/color.dart';
 
 class SocialCardMini extends StatelessWidget {
   final Map<String, dynamic> platformData;
@@ -69,39 +70,73 @@ class SocialCardMini extends StatelessWidget {
         color: Colors.grey[850],
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: SizedBox(
-          width: 120, // ancho fijo igual para todas
-          height: 120, // altura fija igual para todas
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (iconPath.isNotEmpty)
-                  iconPath.endsWith('.svg')
-                      ? SvgPicture.asset(iconPath, width: 50, height: 50)
-                      : Image.asset(iconPath, width: 50, height: 50),
-                const SizedBox(height: 8),
-                Text(
-                  label,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white),
-                ),
-                if (followers != null) ...[
-                  const SizedBox(height: 4),
+          width: 200, // ancho fijo igual para todas
+          child: Row(
+            children: [
+              if (iconPath.isNotEmpty)
+                iconPath.endsWith('.svg')
+                    ? SvgPicture.asset(iconPath, width: 100, height: 100)
+                    : Image.asset(iconPath, width: 100, height: 100),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
                   Text(
-                    followers,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.8),
-                      fontSize: 12,
-                    ),
+                    label,
                     textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
+                  if (followers != null) ...[
+                    const SizedBox(height: 4),
+                    dataCard(),
+                    // Text(
+                    //   followers,
+                    //   style: TextStyle(
+                    //     color: Colors.white.withValues(alpha: 0.8),
+                    //     fontSize: 12,
+                    //   ),
+                    //   textAlign: TextAlign.center,
+                    // ),
+                  ],
                 ],
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget dataCard() {
+    final items = {
+      "Seguidores": platformData["followers"],
+      "Seguidos": platformData["following"],
+      "Likes": platformData["likes_count"],
+      "Contenido": platformData["mediaCount"],
+      "Vistas": platformData["viewCount"],
+    };
+
+    // Filtra los que no tienen valor
+    final validItems = items.entries.where((e) {
+      final v = e.value;
+      return v != null && v.toString().trim().isNotEmpty && v != 0;
+    });
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: validItems
+          .map((e) => customCardTeext("${e.key}: ${e.value}"))
+          .toList(),
+    );
+  }
+
+  Widget customCardTeext(String text) {
+    return Text(
+      text,
+      style: TextStyle(color: AppColors.backgroundLight, fontSize: 10),
     );
   }
 }

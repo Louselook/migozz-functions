@@ -1,10 +1,9 @@
-// send_chat.dart (usa esta versión)
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/components/compuestos/chat/chat_model.dart';
 import 'package:migozz_app/core/components/atomics/get_time_now.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/controller/chat_controller.dart';
 
-void sendChat({
+Future<void> sendChat({
   required bool other,
   required ChatControllerTest controller,
   required BuildContext context,
@@ -13,7 +12,13 @@ void sendChat({
   String? audio,
   List<Map<String, String>>? pictures,
   List<String>? options,
-}) {
+}) async {
+  // 🎵 Manejar audio del usuario con el AudioHandler
+  if (!other && type == MessageType.audio && audio != null) {
+    await controller.sendUserAudio(audio);
+    return;
+  }
+
   if (other) {
     // Mensaje del bot u otro
     controller.addMessage({
@@ -26,8 +31,20 @@ void sendChat({
       "time": getTimeNow(),
     });
   } else {
-    // Mensaje del usuario → el controlador se encarga del flujo IA
-    // NOTA: ya no se pasa callback onActionRequired aquí; la UI debe haber registrado onBotAction al inicializar
-    controller.sendUserMessage(text ?? '');
+    // Mensaje del usuario → agregar directamente al chat
+    controller.addMessage({
+      "other": false,
+      "type": type,
+      "text": text,
+      "audio": audio,
+      "pictures": pictures,
+      "options": options ?? [],
+      "time": getTimeNow(),
+    });
+
+    // Solo texto va a la IA
+    if (type == MessageType.text && (text?.trim().isNotEmpty ?? false)) {
+      await controller.sendUserMessage(text!);
+    }
   }
 }

@@ -1,29 +1,27 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/register/chat/deeplink_functions/social_normalizer.dart';
 
 void handleTwitter(String queryString, BuildContext context) {
-  final params = Uri.splitQueryString(queryString);
+  try {
+    // 1️⃣ Parsear la query del deeplink
+    final params = Uri.splitQueryString(queryString);
 
-  final registerCubit = context.read<RegisterCubit>();
-  final current = List<Map<String, Map<String, dynamic>>>.from(
-    registerCubit.state.socialEcosystem ?? [],
-  );
+    // 2️⃣ Normalizar los datos
+    final normalized = normalizeTwitter(params);
 
-  current.add({
-    'twitter': {
-      'id': params['id'],
-      'name': params['name'],
-      'username': params['username'],
-      'profile_image_url': params['profile_image_url'],
-      'followers_count': int.tryParse(params['followers_count'] ?? '0') ?? 0,
-      'following_count': int.tryParse(params['following_count'] ?? '0') ?? 0,
-      'tweet_count': int.tryParse(params['tweet_count'] ?? '0') ?? 0,
-      'listed_count': int.tryParse(params['listed_count'] ?? '0') ?? 0,
-      'like_count': int.tryParse(params['like_count'] ?? '0') ?? 0,
-      'media_count': int.tryParse(params['media_count'] ?? '0') ?? 0,
-    },
-  });
+    // 3️⃣ Guardar en el cubit
+    final registerCubit = context.read<RegisterCubit>();
+    final current = List<Map<String, Map<String, dynamic>>>.from(
+      registerCubit.state.socialEcosystem ?? [],
+    );
 
-  registerCubit.setSocialEcosystem(current);
+    current.add({'twitter': normalized});
+    registerCubit.setSocialEcosystem(current);
+
+    debugPrint("✅ Twitter conectado: $normalized");
+  } catch (e, s) {
+    debugPrint('❌ Error handleTwitter: $e\n$s');
+  }
 }

@@ -1,28 +1,33 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/register/chat/deeplink_functions/social_normalizer.dart';
 
-void handleSpotify(String queryString, BuildContext context) {
-  final params = Uri.splitQueryString(queryString);
+void handleSpotify(String rawData, BuildContext context) {
+  try {
+    Map<String, dynamic> params;
 
-  // Obtener el cubit desde el context
-  final registerCubit = context.read<RegisterCubit>();
+    // Si empieza con "{" es JSON; de lo contrario, parseamos query string
+    if (rawData.trim().startsWith('{')) {
+      params = json.decode(rawData) as Map<String, dynamic>;
+    } else {
+      params = Uri.splitQueryString(rawData);
+    }
 
-  final current = List<Map<String, Map<String, dynamic>>>.from(
-    registerCubit.state.socialEcosystem ?? [],
-  );
+    final normalized = normalizeSpotify(params);
 
-  current.add({
-    'spotify': {
-      'access_token': params['access_token'],
-      'refresh_token': params['refresh_token'],
-      'display_name': params['display_name'],
-      'email': params['email'],
-      'followers': int.tryParse(params['followers'] ?? '0') ?? 0,
-      'pais': params['pais'],
-      'plan': params['plan'],
-    },
-  });
+    final cubit = context.read<RegisterCubit>();
+    final current = List<Map<String, Map<String, dynamic>>>.from(
+      cubit.state.socialEcosystem ?? [],
+    );
 
-  registerCubit.setSocialEcosystem(current);
+    current.add({'spotify': normalized});
+    cubit.setSocialEcosystem(current);
+
+    debugPrint("✅ Spotify conectado: $normalized");
+  } catch (e) {
+    debugPrint('❌ Error handleSpotify: $e');
+    debugPrint(rawData);
+  }
 }
