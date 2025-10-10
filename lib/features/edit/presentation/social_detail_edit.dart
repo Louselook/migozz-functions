@@ -4,9 +4,10 @@ import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/loading_overlay.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/components/edit_platform_bottom_sheet.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/components/platform_card.dart';
 // import '../components/add_platform_bottom_sheet.dart';
-import '../components/edit_platform_bottom_sheet.dart';
-import '../components/platform_card.dart';
+
 
 class SocialDetailScreen extends StatefulWidget {
   final String label;

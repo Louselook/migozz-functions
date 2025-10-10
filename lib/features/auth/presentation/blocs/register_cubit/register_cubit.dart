@@ -99,8 +99,8 @@ class RegisterCubit extends Cubit<RegisterState> {
           state.phone != null &&
           state.category != null &&
           state.interests != null; //&&
-      // state.avatarUrl != null &&
-      // state.voiceNoteUrl != null;
+          state.avatarUrl != null &&
+          state.voiceNoteUrl != null;
 
       if (state.isComplete != complete) {
         emit(state.copyWith(isComplete: complete));

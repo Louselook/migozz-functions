@@ -11,11 +11,11 @@ import 'package:migozz_app/features/edit/components/profile_avatar.dart';
 import 'package:migozz_app/features/edit/components/profile_field.dart';
 import 'package:migozz_app/features/edit/components/profile_option_button.dart';
 import 'package:migozz_app/features/edit/components/user_profile.dart';
-import 'package:migozz_app/features/profile/presentation/config/edit_audio.dart';
-import 'package:migozz_app/features/profile/presentation/config/edit_my_interest.dart';
-import 'package:migozz_app/features/profile/presentation/config/edit_social.dart';
+import 'package:migozz_app/features/edit/presentation/edit_audio.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:migozz_app/features/edit/presentation/edit_my_interest.dart';
+import 'package:migozz_app/features/edit/presentation/edit_social.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});

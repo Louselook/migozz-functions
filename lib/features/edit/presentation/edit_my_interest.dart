@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
-import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/interest_section_model.dart';
 
 class EditInterestsScreen extends StatefulWidget {
@@ -30,15 +29,13 @@ class _EditInterestsScreenState extends State<EditInterestsScreen> {
         isLoading = true;
       });
 
-      CollectionReference collection = FirebaseFirestore.instance.collection(
-        'interests_catalog',
-      );
-      QuerySnapshot snapshot = await collection.get();
+      // 1️⃣ Cargar catálogo
+      final catalogSnapshot =
+          await FirebaseFirestore.instance.collection('interests_catalog').get();
 
-      List<InterestSectionModel> fetchedSections = [];
-
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
+      final List<InterestSectionModel> fetchedSections = [];
+      for (var doc in catalogSnapshot.docs) {
+        final data = doc.data();
         data.forEach((categoryTitle, categoryOptions) {
           if (categoryOptions is List) {
             fetchedSections.add(
@@ -52,25 +49,49 @@ class _EditInterestsScreenState extends State<EditInterestsScreen> {
         });
       }
 
+      // 2️⃣ Obtener UID actual
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) {
+        debugPrint('No user logged in');
+        setState(() {
+          sections = fetchedSections;
+          isLoading = false;
+        });
+        return;
+      }
+
+      // 3️⃣ Cargar intereses del usuario
+      final userDoc =
+          await FirebaseFirestore.instance.collection('users').doc(uid).get();
+
+      final userData = userDoc.data();
+      final userInterests = userData?['interests'] as Map<String, dynamic>? ?? {};
+
+      // 4️⃣ Convertir el mapa a un set plano
+      final selected = userInterests.values
+          .expand((value) => List<String>.from(value))
+          .toSet();
+
+      // 5️⃣ Expandir las secciones donde el usuario tenga algo seleccionado
+      for (final section in fetchedSections) {
+        if (userInterests[section.title] != null) {
+          section.expanded = true;
+        }
+      }
+
+      // 6️⃣ Actualizar el estado
       setState(() {
         sections = fetchedSections;
+        selectedInterests = selected;
         isLoading = false;
       });
-
-      // Opcional: cargar intereses seleccionados previamente del cubit
-      // ignore: use_build_context_synchronously
-      final cubit = context.read<RegisterCubit>();
-      final interests = cubit.state.interests;
-      if (interests != null) {
-        selectedInterests = interests.values.expand((list) => list).toSet();
-      }
     } catch (e) {
+      debugPrint('Error loading interests: $e');
       setState(() {
         isLoading = false;
       });
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -104,10 +125,15 @@ class _EditInterestsScreenState extends State<EditInterestsScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  final cubit = context.read<RegisterCubit>();
+                onPressed: () async {
+                  final uid = FirebaseAuth.instance.currentUser?.uid;
+                  if (uid == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('User not logged in')),
+                    );
+                    return;
+                  }
                   final selectedBySection = <String, List<String>>{};
-
                   for (final section in sections) {
                     final picked = section.options
                         .where((o) => selectedInterests.contains(o))
@@ -116,9 +142,22 @@ class _EditInterestsScreenState extends State<EditInterestsScreen> {
                       selectedBySection[section.title] = picked;
                     }
                   }
-
-                  cubit.setInterests(selectedBySection);
-                  Navigator.pop(context, "done");
+                  try {
+                    await FirebaseFirestore.instance.collection('users').doc(uid).update({
+                      'interests': selectedBySection, // reemplaza el campo completo, en caso de deseleccionar lo elimina
+                    });
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Interests saved successfully')),
+                      );
+                      Navigator.pop(context, "done");
+                    }
+                  } catch (e) {
+                    debugPrint('Error saving interests: $e');
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Error saving interests')),
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
