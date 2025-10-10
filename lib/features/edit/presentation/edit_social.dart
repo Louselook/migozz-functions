@@ -86,7 +86,7 @@ class _EditSocialScreenState extends State<EditSocialScreen> {
 
       Set<String> socialsFound = {};
 
-      // 🔹 1. Leer 'socials' clásico
+      // 1. Leer 'socials' clásico
       if (data['socials'] != null) {
         final socialsData = Map<String, dynamic>.from(data['socials']);
         socialsFound.addAll(
@@ -94,7 +94,7 @@ class _EditSocialScreenState extends State<EditSocialScreen> {
         );
       }
 
-      // 🔹 2. Leer 'socialEcosystem' nuevo
+      // 2. Leer 'socialEcosystem' nuevo
       if (data['socialEcosystem'] != null &&
           data['socialEcosystem'] is List &&
           data['socialEcosystem'].isNotEmpty) {
@@ -237,21 +237,78 @@ class _EditSocialScreenState extends State<EditSocialScreen> {
       final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid == null) return;
 
-      // Crear mapa limpio de redes seleccionadas
-      final updatedSocials = {
-        for (final label in selectedSocials) label.toLowerCase(): {"active": true}
-      };
+      final userRef = FirebaseFirestore.instance.collection('users').doc(uid);
+      final snapshot = await userRef.get();
+      final data = snapshot.data();
 
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(uid)
-          .update({'socials': updatedSocials});
+      // Estado anterior
+      final oldEcosystem = data?['socialEcosystem'] ?? [];
+      final oldSocials = <String>{};
+      for (final item in oldEcosystem) {
+        final map = Map<String, dynamic>.from(item);
+        for (final key in map.keys) {
+          oldSocials.add(key.toLowerCase());
+        }
+      }
 
-      // actualizar en el cubit también si lo usas
+      // Diferencia para detectar eliminaciones
+      final removedSocials = oldSocials.difference(selectedSocials);
+
+      // Confirmación si se quitaron redes
+      if (removedSocials.isNotEmpty) {
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: Colors.black,
+            title: const Text(
+              "Disconnect socials",
+              style: TextStyle(color: Colors.white),
+            ),
+            content: Text(
+              "Are you sure you want to disconnect ${removedSocials.join(', ')} from your ecosystem?",
+              style: const TextStyle(color: Colors.white70),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text("OK", style: TextStyle(color: Colors.redAccent)),
+              ),
+            ],
+          ),
+        );
+
+        if (confirmed != true) return; // No continuar si canceló
+      }
+
+      // Crear el nuevo socialEcosystem con formato original
+      final updatedEcosystem = [
+        for (final social in selectedSocials)
+          {social.toLowerCase(): {"active": true}}
+      ];
+
+      // Si se eliminaron redes, limpiar el array anterior
+      List<Map<String, Map<String, dynamic>>> finalEcosystem = List.from(updatedEcosystem);
+
+      if (removedSocials.isNotEmpty) {
+        // filtramos cualquier posible resto
+        finalEcosystem = updatedEcosystem
+            .where((item) {
+              final key = item.keys.first.toLowerCase();
+              return !removedSocials.contains(key);
+            })
+            .toList();
+      }
+
+      // Guardar el resultado final con formato correcto
+      await userRef.update({'socialEcosystem': finalEcosystem});
+
+      // Actualizar cubit/local state
       final cubit = context.read<RegisterCubit>();
-      cubit.setSocialEcosystem(updatedSocials.entries
-          .map((e) => {e.key: e.value})
-          .toList());
+      cubit.setSocialEcosystem(finalEcosystem);
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -260,21 +317,10 @@ class _EditSocialScreenState extends State<EditSocialScreen> {
         Navigator.pop(context, "done");
       }
     } on FirebaseException catch (e) {
-      if (e.code == 'not-found') {
-        await FirebaseFirestore.instance.collection('users').doc(
-          FirebaseAuth.instance.currentUser!.uid,
-        ).set({
-          'socials': {
-            for (final label in selectedSocials)
-              label.toLowerCase(): {"active": true}
-          }
-        });
-      } else {
-        debugPrint("Error saving socials: $e");
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error saving socials')),
-        );
-      }
+      debugPrint("Error saving socials: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error saving socials')),
+      );
     }
   }
 }
