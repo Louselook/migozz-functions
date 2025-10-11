@@ -111,7 +111,10 @@ class _IaChatScreenState extends State<IaChatScreen> {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      ChatMessageBuilder.buildMessage(message),
+                      ChatMessageBuilder.buildMessage(
+                        message,
+                        chatController: _chatController,
+                      ),
 
                       if (isLastBotMsgWithOptions)
                         SuggestionChips(

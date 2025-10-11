@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/controller/chat_controller.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/functions/profile_picture_selector.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/social_cards/social_cards.dart';
 
@@ -6,14 +7,16 @@ class OtherMessage extends StatelessWidget {
   final String text;
   final String time;
   final List<Map<String, dynamic>>? platforms;
-  final List<Map<String, String>>? profilePictures; // 👈 Nuevo
+  final List<Map<String, String>>? profilePictures;
+  final ChatControllerTest? chatController; // 👈 Agregar controller
 
   const OtherMessage({
     super.key,
     required this.text,
     required this.time,
     this.platforms,
-    this.profilePictures, // 👈 Agregar
+    this.profilePictures,
+    this.chatController, // 👈 Opcional
   });
 
   @override
@@ -57,14 +60,11 @@ class OtherMessage extends StatelessWidget {
           Text(text, style: const TextStyle(color: Colors.white, fontSize: 14)),
 
           // 🔹 Fotos de perfil (para selección de avatar)
-          if (hasProfilePictures) ...[
+          if (hasProfilePictures && chatController != null) ...[
             const SizedBox(height: 12),
             ProfilePictureSelector(
               pictures: profilePictures!,
-              onPhotoSelected: () {
-                // Mostrar mensaje de confirmación adicional si quieres
-                // O continuar automáticamente al siguiente paso
-              },
+              chatController: chatController!,
             ),
           ],
 

@@ -8,7 +8,10 @@ import 'package:migozz_app/core/components/compuestos/chat/picture_options.dart'
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/social_cards/social_cards.dart';
 
 class ChatMessageBuilder {
-  static Widget buildMessage(Map<String, dynamic> message) {
+  static Widget buildMessage(
+    Map<String, dynamic> message, {
+    dynamic chatController,
+  }) {
     if (message["type"] == MessageType.typing) {
       return Padding(
         padding: const EdgeInsets.only(bottom: 15),
@@ -33,13 +36,14 @@ class ChatMessageBuilder {
         text: "Aquí está la información extraída de sus redes sociales.",
         time: message["time"] ?? "",
         platforms: List<Map<String, dynamic>>.from(message["platforms"]),
+        chatController: chatController,
       );
     }
 
     if (message["type"] == MessageType.audioPlayback) {
       final audioPath = message["audio"] as String;
       final other = message["other"] == true;
-      final chatController = message["chatController"];
+      final controller = message["chatController"];
 
       return Padding(
         padding: const EdgeInsets.only(bottom: 15),
@@ -51,7 +55,7 @@ class ChatMessageBuilder {
             AudioPlaybackWidget(
               audioPath: audioPath,
               other: other,
-              chatController: chatController,
+              chatController: controller,
             ),
           ],
         ),
@@ -74,6 +78,7 @@ class ChatMessageBuilder {
         profilePictures: message["profilePictures"] != null
             ? List<Map<String, String>>.from(message["profilePictures"])
             : null,
+        chatController: chatController, // 👈 Pasar el controller
       );
     } else {
       return UserMessage(text: message["text"] ?? "");

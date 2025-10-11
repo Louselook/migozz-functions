@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/color.dart';
-import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/controller/chat_controller.dart';
 
-/// Widget para mostrar fotos de perfil clickeables en OtherMessage
+/// Widget para mostrar fotos de perfil clickeables
 class ProfilePictureSelector extends StatelessWidget {
   final List<Map<String, String>> pictures;
-  final VoidCallback? onPhotoSelected; // Callback cuando selecciona foto
+  final ChatControllerTest chatController; // 👈 Agregar controller
 
   const ProfilePictureSelector({
     super.key,
     required this.pictures,
-    this.onPhotoSelected,
+    required this.chatController, // 👈 Requerido
   });
 
   @override
@@ -93,8 +92,8 @@ class ProfilePictureSelector extends StatelessWidget {
   }
 
   void _selectPhoto(BuildContext context, Map<String, String> photo) {
-    final cubit = context.read<RegisterCubit>();
-    cubit.setAvatarUrl(photo["imageUrl"]!);
+    // 📸 Enviar la foto usando el controller
+    chatController.sendAvatarPhoto(photo["imageUrl"]!);
 
     // Mostrar confirmación
     ScaffoldMessenger.of(context).showSnackBar(
@@ -104,9 +103,6 @@ class ProfilePictureSelector extends StatelessWidget {
         backgroundColor: Colors.green,
       ),
     );
-
-    // Ejecutar callback si existe
-    onPhotoSelected?.call();
   }
 }
 
@@ -222,7 +218,7 @@ class _PhotoPreviewDialog extends StatelessWidget {
 
               const SizedBox(height: 16),
 
-              // 🔹 Botón cerrar (opcional)
+              // 🔹 Botón cerrar
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
                 child: const Text(

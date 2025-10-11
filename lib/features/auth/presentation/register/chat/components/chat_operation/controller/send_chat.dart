@@ -19,6 +19,18 @@ Future<void> sendChat({
     return;
   }
 
+  // 📸 Manejar foto de avatar
+  if (!other &&
+      type == MessageType.pictureCard &&
+      pictures != null &&
+      pictures.isNotEmpty) {
+    final photoPath = pictures.first["imageUrl"];
+    if (photoPath != null) {
+      await controller.sendAvatarPhoto(photoPath);
+      return;
+    }
+  }
+
   if (other) {
     // Mensaje del bot → agregar directamente
     controller.addMessage({
@@ -32,20 +44,8 @@ Future<void> sendChat({
     });
   } else {
     // ⚠️ MENSAJE DEL USUARIO → NO agregar aquí, delegar al controller
-    // El controller.sendUserMessage() ya se encarga de agregarlo
-
     if (type == MessageType.text && (text?.trim().isNotEmpty ?? false)) {
-      await controller.sendUserMessage(
-        text!,
-      ); // Ya agrega el mensaje internamente
-    } else if (type == MessageType.pictureCard && pictures != null) {
-      // Para imágenes, agregar directamente (no pasa por IA)
-      controller.addMessage({
-        "other": false,
-        "type": type,
-        "pictures": pictures,
-        "time": getTimeNow(),
-      });
+      await controller.sendUserMessage(text!);
     }
   }
 }
