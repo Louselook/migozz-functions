@@ -20,7 +20,7 @@ Future<void> sendChat({
   }
 
   if (other) {
-    // Mensaje del bot u otro
+    // Mensaje del bot → agregar directamente
     controller.addMessage({
       "other": true,
       "type": type,
@@ -31,20 +31,21 @@ Future<void> sendChat({
       "time": getTimeNow(),
     });
   } else {
-    // Mensaje del usuario → agregar directamente al chat
-    controller.addMessage({
-      "other": false,
-      "type": type,
-      "text": text,
-      "audio": audio,
-      "pictures": pictures,
-      "options": options ?? [],
-      "time": getTimeNow(),
-    });
+    // ⚠️ MENSAJE DEL USUARIO → NO agregar aquí, delegar al controller
+    // El controller.sendUserMessage() ya se encarga de agregarlo
 
-    // Solo texto va a la IA
     if (type == MessageType.text && (text?.trim().isNotEmpty ?? false)) {
-      await controller.sendUserMessage(text!);
+      await controller.sendUserMessage(
+        text!,
+      ); // Ya agrega el mensaje internamente
+    } else if (type == MessageType.pictureCard && pictures != null) {
+      // Para imágenes, agregar directamente (no pasa por IA)
+      controller.addMessage({
+        "other": false,
+        "type": type,
+        "pictures": pictures,
+        "time": getTimeNow(),
+      });
     }
   }
 }

@@ -47,10 +47,34 @@ class ChatControllerTest extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// ✅ NUEVO: Manejar selección/subida de foto de avatar
+  Future<void> sendAvatarPhoto(String photoUrl) async {
+    debugPrint('📸 Foto de avatar seleccionada: $photoUrl');
+
+    // Agregar mensaje visual del usuario
+    addMessage({
+      "other": false,
+      "type": MessageType.pictureCard,
+      "pictures": [
+        {"imageUrl": photoUrl, "label": "Mi foto de perfil"},
+      ],
+      "time": getTimeNow(),
+    });
+
+    // Guardar en el cubit
+    registerCubit.setAvatarUrl(photoUrl);
+
+    // Simular respuesta para avanzar en el flujo
+    _lastUserMessage = photoUrl;
+
+    // Mostrar siguiente mensaje
+    await Future.delayed(const Duration(milliseconds: 600));
+    await showNextBotMessage();
+  }
+
   Future<void> showNextBotMessage() async {
     registerCubit.setAiResponse(true);
 
-    // Mostrar typing
     addMessage({
       "other": true,
       "type": MessageType.typing,
@@ -66,10 +90,9 @@ class ChatControllerTest extends ChangeNotifier {
         registerCubit: registerCubit,
       );
 
-      // Remover typing
       _messages.removeWhere((msg) => msg["type"] == MessageType.typing);
 
-      addMessage({
+      final message = {
         "other": true,
         "type": MessageType.text,
         "text": botResponse["text"],
@@ -77,18 +100,37 @@ class ChatControllerTest extends ChangeNotifier {
         "step": botResponse["step"],
         "valid": botResponse["valid"],
         "action": botResponse["action"],
-        "extracted": botResponse["extracted"],
-        "call": botResponse["call"],
         "name": "Migozz",
         "time": getTimeNow(),
-      });
+      };
 
-      // Ejecutar callback para navegar
+      if (botResponse["isError"] == true) {
+        message["isError"] = true;
+      }
+
+      if (botResponse["profilePictures"] != null) {
+        message["profilePictures"] = botResponse["profilePictures"];
+      }
+
+      addMessage(message);
+
+      if (botResponse["autoAdvance"] == true) {
+        debugPrint(
+          '🎉 Mensaje de éxito detectado, avanzando automáticamente...',
+        );
+        await Future.delayed(const Duration(milliseconds: 1500));
+        _lastUserMessage = 'continue';
+        await showNextBotMessage();
+        return;
+      }
+
       if (onBotAction != null) {
-        onBotAction!(botResponse);
+        Future.delayed(const Duration(milliseconds: 850), () {
+          onBotAction!(botResponse);
+        });
       }
     } catch (e) {
-      debugPrint('❌ Error obteniendo respuesta IA: $e');
+      debugPrint('❌ Error: $e');
     } finally {
       registerCubit.setAiResponse(false);
       notifyListeners();
@@ -102,7 +144,6 @@ class ChatControllerTest extends ChangeNotifier {
     final audioResponse = _audioHandler.handleAudioConfirmationResponse(text);
 
     if (audioResponse != null) {
-      // Añadir mensaje del usuario
       addMessage({
         "other": false,
         "text": text,
@@ -111,11 +152,9 @@ class ChatControllerTest extends ChangeNotifier {
       });
 
       if (audioResponse == 'keep') {
-        // Usuario confirma el audio → continuar con siguiente mensaje
         await Future.delayed(const Duration(milliseconds: 600));
         await showNextBotMessage();
       } else if (audioResponse == 'record') {
-        // Usuario quiere regrabar → mostrar mensaje de regrabar
         final recordMessage = _audioHandler.getRecordAgainMessage(
           registerCubit,
         );
@@ -147,7 +186,6 @@ class ChatControllerTest extends ChangeNotifier {
   void onSuggestionSelected(String suggestion) {
     sendUserMessage(suggestion);
 
-    // Limpiar opciones del último mensaje del bot
     for (var msg in _messages.reversed) {
       if (msg["other"] == true && msg["options"] != null) {
         msg["options"] = [];

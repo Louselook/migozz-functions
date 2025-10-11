@@ -9,7 +9,6 @@ import 'package:migozz_app/features/auth/presentation/register/chat/components/c
 
 class ChatMessageBuilder {
   static Widget buildMessage(Map<String, dynamic> message) {
-    // Mensaje de typing (IA escribiendo)
     if (message["type"] == MessageType.typing) {
       return Padding(
         padding: const EdgeInsets.only(bottom: 15),
@@ -20,7 +19,6 @@ class ChatMessageBuilder {
       );
     }
 
-    // Mensajes de imagen (URL o local)
     if (message["type"] == MessageType.pictureCard) {
       final pics = List<Map<String, String>>.from(message["pictures"]);
       return PictureOptions(
@@ -30,7 +28,6 @@ class ChatMessageBuilder {
       );
     }
 
-    // Social cards
     if (message["type"] == MessageType.socialCards) {
       return OtherMessage(
         text: "Aquí está la información extraída de sus redes sociales.",
@@ -39,7 +36,6 @@ class ChatMessageBuilder {
       );
     }
 
-    // 🎵 Mensajes de audio - Diseño horizontal con waveform
     if (message["type"] == MessageType.audioPlayback) {
       final audioPath = message["audio"] as String;
       final other = message["other"] == true;
@@ -62,16 +58,22 @@ class ChatMessageBuilder {
       );
     }
 
-    // Mensajes de texto y social card individual
     if (message["other"] == true) {
       if (message["social"] == true) {
         final platformData = message["platform"] as Map<String, dynamic>;
         return SocialCardMini(platformData: platformData);
       }
 
+      // 🔹 Mensaje de texto con posibles fotos de perfil
       return OtherMessage(
         text: message["text"] ?? "",
         time: message["time"] ?? "",
+        platforms: message["platforms"] != null
+            ? List<Map<String, dynamic>>.from(message["platforms"])
+            : null,
+        profilePictures: message["profilePictures"] != null
+            ? List<Map<String, String>>.from(message["profilePictures"])
+            : null,
       );
     } else {
       return UserMessage(text: message["text"] ?? "");

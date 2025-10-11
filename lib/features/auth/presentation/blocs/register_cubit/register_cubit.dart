@@ -137,7 +137,7 @@ class RegisterCubit extends Cubit<RegisterState> {
   void setCurrentOTP(String currentOTP) => emit(
     state.copyWith(
       currentOTP: currentOTP,
-      regProgress: RegisterStatusProgress.done,
+      regProgress: RegisterStatusProgress.doneChat,
     ),
   );
 

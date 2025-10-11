@@ -3,7 +3,7 @@ import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/regis
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_state.dart';
 import 'package:migozz_app/features/auth/services/send_otp.dart';
 
-Future<void> processBotResponse(
+Future<Map<String, dynamic>?> processBotResponse(
   Map<String, dynamic> resp, {
   required RegisterCubit registerCubit,
 }) async {
@@ -12,103 +12,172 @@ Future<void> processBotResponse(
 
   final bool? isValid = resp['valid'];
   final String? userResponse = resp['userResponse'];
-  final String? text = resp['text'];
 
   debugPrint('📩 [processBotResponse]');
   debugPrint('   • stepRaw: "$stepRaw"');
   debugPrint('   • step: $step');
   debugPrint('   • valid: $isValid');
   debugPrint('   • userResponse: $userResponse');
-  debugPrint('   • text: $text');
   debugPrint('----------------------------------------');
-  debugPrint('Estado de las variables: ${registerCubit.state}');
 
   switch (step) {
     case RegisterStatusProgress.language:
-      // Validado
-      if (isValid == true) {
-        registerCubit.setLanguage(userResponse!);
-      } else if (isValid == false) {
-        debugPrint('⚠️ Respuesta inválida, se esperaba un idioma.');
+      if (isValid == true && userResponse != null) {
+        registerCubit.setLanguage(userResponse);
+        debugPrint('✅ Idioma guardado: $userResponse');
       }
       break;
 
     case RegisterStatusProgress.fullName:
-      debugPrint('🔹 Estás en el paso: fullName');
-      if (isValid == true) {
-        registerCubit.setFullName(userResponse!);
-      } else if (isValid == false) {
-        debugPrint('⚠️ Respuesta inválida, para fullName.');
+      if (isValid == true && userResponse != null) {
+        registerCubit.setFullName(userResponse);
+        debugPrint('✅ Nombre completo guardado: $userResponse');
       }
       break;
 
     case RegisterStatusProgress.username:
-      debugPrint('✅ Registro completo (username)');
-      registerCubit.setUsername(userResponse!);
+      if (isValid == true && userResponse != null) {
+        registerCubit.setUsername(userResponse);
+        debugPrint('✅ Username guardado: $userResponse');
+      }
       break;
 
     case RegisterStatusProgress.gender:
-      debugPrint('✅ Registro completo (gender)');
-      registerCubit.setGender(userResponse!);
+      if (isValid == true && userResponse != null) {
+        registerCubit.setGender(userResponse);
+        debugPrint('✅ Género guardado: $userResponse');
+      }
       break;
 
     case RegisterStatusProgress.socialEcosystem:
-      debugPrint('Abrir action: 0');
+      debugPrint('📱 Paso de redes sociales - se maneja en navigation handler');
       break;
 
     case RegisterStatusProgress.location:
-      debugPrint('✅ veerificar si o no (location)');
-      registerCubit.setVerifyLocation();
+      if (isValid == true) {
+        // Si ya tiene ubicación del inicio, solo actualiza el progreso
+        if (registerCubit.state.location != null) {
+          registerCubit.setVerifyLocation();
+          debugPrint(
+            '✅ Ubicación confirmada: ${registerCubit.state.location!.city}',
+          );
+        }
+      } else {
+        debugPrint('❌ Usuario rechazó la ubicación');
+        // Aquí podrías solicitar ubicación manual
+        return {
+          "needsManualLocation": true,
+          "message": "Por favor, ingresa tu ciudad manualmente",
+        };
+      }
       break;
 
     case RegisterStatusProgress.sendOTP:
-      debugPrint('Puede que cambie de telefo\nemailVerification');
-      if (registerCubit.state.email != null) {
-        try {
-          final result = await sendOTP(email: registerCubit.state.email!);
-          if (result['sent'] == true) {
-            registerCubit.setCurrentOTP(result['myOTP']);
-            debugPrint('OTP enviado a ${registerCubit.state.email}');
-          } else {
-            debugPrint('Fallo al enviar OTP');
+      if (isValid == true) {
+        // Usuario confirmó el email
+        if (registerCubit.state.email != null) {
+          try {
+            debugPrint('📧 Enviando OTP a: ${registerCubit.state.email}');
+            final result = await sendOTP(email: registerCubit.state.email!);
+
+            if (result['sent'] == true) {
+              registerCubit.setCurrentOTP(result['myOTP']);
+              debugPrint('✅ OTP enviado: ${result['myOTP']}');
+              return {"otpSent": true};
+            } else {
+              debugPrint('❌ Fallo al enviar OTP');
+              return {
+                "error": true,
+                "message": "Error al enviar el código. Intenta nuevamente.",
+              };
+            }
+          } catch (e) {
+            debugPrint('❌ Error enviando OTP: $e');
+            return {
+              "error": true,
+              "message": "Error de conexión. Verifica tu internet.",
+            };
           }
-        } catch (e) {
-          debugPrint('Error enviando OTP: $e');
         }
+      } else {
+        // Usuario quiere cambiar email
+        debugPrint('📝 Usuario solicitó cambiar email');
+        return {
+          "changeEmail": true,
+          "message": "De acuerdo, ingresa tu nuevo correo electrónico",
+        };
       }
-      // registerCubit.updateEmailVerification();
-      // registerCubit.setCurrentOTP();
       break;
 
     case RegisterStatusProgress.emailVerification:
-      debugPrint('Puede que cambie de telefo\nemailVerification');
-      if (userResponse == registerCubit.state.currentOTP) {
-        registerCubit.updateEmailVerification(EmailVerification.success);
+      if (isValid == true && userResponse != null) {
+        // ✅ NUEVO: Si es "continue", solo es confirmación del mensaje de éxito
+        if (userResponse.toLowerCase() == 'continue') {
+          debugPrint('✅ Usuario confirmó mensaje de éxito, avanzando...');
+          return null; // No hacer nada, solo permitir avanzar
+        }
+
+        // Validar OTP normalmente
+        final storedOTP = registerCubit.state.currentOTP;
+
+        debugPrint(
+          '🔍 Comparando OTP: ingresado=$userResponse, esperado=$storedOTP',
+        );
+
+        if (userResponse == storedOTP) {
+          registerCubit.updateEmailVerification(EmailVerification.success);
+          debugPrint('✅ Email verificado correctamente');
+          return {"verified": true};
+        } else {
+          debugPrint('❌ OTP incorrecto');
+          final isSpanish = registerCubit.state.language == 'Español';
+          return {
+            "error": true,
+            "invalidOTP": true,
+            "message": isSpanish
+                ? "❌ Código incorrecto. Por favor verifica e intenta nuevamente."
+                : "❌ Incorrect code. Please verify and try again.",
+          };
+        }
       }
-      // registerCubit.updateEmailVerification();
-      // registerCubit.setCurrentOTP();
       break;
 
     case RegisterStatusProgress.avatarUrl:
-      debugPrint('Manejar eel archivo');
-      // registerCubit.setAvatarFile();
-      // registerCubit.setAvatarUrl();
+      // Las fotos se manejan en el controller/navigation handler
+      if (userResponse != null && userResponse.isNotEmpty) {
+        registerCubit.setAvatarUrl(userResponse);
+        debugPrint('✅ Avatar guardado: $userResponse');
+      } else {
+        debugPrint('⚠️ No se proporcionó avatar, continuando sin foto');
+      }
       break;
 
     case RegisterStatusProgress.phone:
-      debugPrint('Ingresar telefono');
-      registerCubit.setPhone(userResponse!);
+      if (isValid == true && userResponse != null) {
+        registerCubit.setPhone(userResponse);
+        debugPrint('✅ Teléfono guardado: $userResponse');
+      }
       break;
 
     case RegisterStatusProgress.voiceNoteUrl:
-      debugPrint('Manejar el archivo');
-      // registerCubit.setVoiceNoteFile();
-      // registerCubit.setVoiceNoteUrl();
+      // Los audios se manejan en el controller
+      if (userResponse != null && userResponse.isNotEmpty) {
+        registerCubit.setVoiceNoteUrl(userResponse);
+        debugPrint('✅ Nota de voz guardada: $userResponse');
+      } else {
+        debugPrint('⚠️ No se proporcionó nota de voz');
+      }
+      break;
+
+    case RegisterStatusProgress.category:
+      debugPrint('🎯 Navegando a selección de categorías');
       break;
 
     default:
-      debugPrint('➡️ Otro paso detectado: $step');
+      debugPrint('➡️ Paso no manejado: $step');
   }
+
+  return null;
 }
 
 RegisterStatusProgress _parseStep(String raw) {
@@ -122,15 +191,19 @@ RegisterStatusProgress _parseStep(String raw) {
     return RegisterStatusProgress.socialEcosystem;
   }
   if (raw.contains('location')) return RegisterStatusProgress.location;
-  if (raw.contains('sendotp')) {
-    return RegisterStatusProgress.sendOTP; // 👈 AÑADIDO
+  if (raw.contains('sendotp')) return RegisterStatusProgress.sendOTP;
+
+  // ✅ IMPORTANTE: emailSuccess también mapea a emailVerification
+  // porque ambos manejan el flujo de verificación de email
+  if (raw.contains('emailsuccess') ||
+      raw.contains('otpinput') ||
+      raw.contains('email')) {
+    return RegisterStatusProgress.emailVerification;
   }
-  if (raw.contains('email')) return RegisterStatusProgress.emailVerification;
+
   if (raw.contains('avatar')) return RegisterStatusProgress.avatarUrl;
   if (raw.contains('phone')) return RegisterStatusProgress.phone;
   if (raw.contains('voice')) return RegisterStatusProgress.voiceNoteUrl;
-  if (raw.contains('category')) return RegisterStatusProgress.category;
-  if (raw.contains('interest')) return RegisterStatusProgress.interests;
-  if (raw.contains('done')) return RegisterStatusProgress.done;
+  if (raw.contains('done')) return RegisterStatusProgress.doneChat;
   return RegisterStatusProgress.emty;
 }

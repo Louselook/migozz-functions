@@ -120,8 +120,8 @@
 //   }
 // }
 
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:migozz_app/core/services/ai/assistant_functions.dart';
 import 'package:migozz_app/core/services/ai/chat_validation_min.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 
@@ -131,75 +131,141 @@ class GeminiService {
 
   void ensureConfigured() {}
 
+  int _currentQuestionIndex = 0;
+
+  final List<String> _questionFlow = [
+    'language', // 0
+    'fullName', // 1
+    'username', // 2
+    'gender', // 3
+    'socialEcosystem', // 4
+    'location', // 5
+    'sendOTP', // 6
+    'emailVerification', // 7 - "te envié el código" (keepTalk: true, se salta)
+    'otpInput', // 8 - Pedir código
+    'emailSuccess', // 9 - ✅ "¡Felicidades!" (ahora keepTalk: false, se muestra)
+    'avatarUrl', // 10
+    'phone', // 11
+    'voiceNoteUrl', // 12
+    'category', // 13
+  ];
+
+  void setStartIndex(int index) {
+    if (index >= 0 && index < _questionFlow.length) {
+      _currentQuestionIndex = index;
+      debugPrint('📍 Índice inicial: $index (${_questionFlow[index]})');
+    }
+  }
+
+  void reset() {
+    _currentQuestionIndex = 0;
+  }
+
   Future<Map<String, dynamic>> sendMessage(
     String userInput, {
     required RegisterCubit registerCubit,
   }) async {
     await Future.delayed(const Duration(milliseconds: 400));
 
-    // === 🟢 Etapa 1: mensaje inicial ===
+    // === 🟢 MENSAJE INICIAL ===
     if (userInput.trim().isEmpty) {
-      final jsonString = '''
-      {
-        "text": "Personalicemos tu perfil. Puedo sugerirte una foto de tus redes sociales conectadas o puedes subir una nueva. ¿Cuál prefieres? 📸",
-        "step": "regProgress.avatarUrl"
+      return _prepareQuestion(
+        AssistantFunctions.getCurrentQuestion(
+          _questionFlow,
+          _currentQuestionIndex,
+          registerCubit,
+        ),
+        registerCubit,
+      );
+    }
 
+    // === 🟡 EVALUAR RESPUESTA ===
+    final currentStepKey = _questionFlow[_currentQuestionIndex];
+    final decision = AssistantFunctions.evaluateUserResponse(
+      userInput,
+      currentStepKey,
+      registerCubit,
+    );
+
+    debugPrint('🤖 Decisión: $decision');
+
+    // === 🔵 SI ES VÁLIDO → PROCESAR Y VERIFICAR ===
+    if (decision['valid'] == true) {
+      // ✅ PRIMERO procesa y verifica si hay errores
+      final processResult = await processBotResponse(
+        decision,
+        registerCubit: registerCubit,
+      );
+
+      // ⚠️ MANEJO DE ERRORES (OTP incorrecto, etc.)
+      if (processResult != null && processResult['error'] == true) {
+        debugPrint('❌ Error en procesamiento: ${processResult['message']}');
+
+        // Si es error de OTP inválido, devolver mensaje de error
+        if (processResult['invalidOTP'] == true) {
+          final isSpanish = registerCubit.state.language == 'Español';
+          return {
+            "text": processResult['message'],
+            "options": isSpanish
+                ? ["Reenviar código", "Cambiar correo"]
+                : ["Resend code", "Change email"],
+            "step": "regProgress.emailVerification",
+            "keepTalk": false,
+            "keyboardType": "number",
+            "isError": true, // ✅ Flag para que la UI lo muestre como error
+          };
+        }
+
+        return processResult;
       }
-      ''';
-      // "step": "regProgress.sendOTP",
-      // "valid": false
-      final initial = jsonDecode(jsonString);
-      processBotResponse(initial, registerCubit: registerCubit);
-      return initial;
+
+      // ✅ Si no hubo errores, AHORA SÍ avanzar
+      _currentQuestionIndex++;
+
+      var nextQuestion = AssistantFunctions.getCurrentQuestion(
+        _questionFlow,
+        _currentQuestionIndex,
+        registerCubit,
+      );
+
+      // ✅ Manejo de keepTalk (solo para mensajes intermedios)
+      while (nextQuestion['keepTalk'] == true) {
+        debugPrint(
+          '⏩ Saltando mensaje keepTalk: ${_questionFlow[_currentQuestionIndex]}',
+        );
+        _currentQuestionIndex++;
+        if (_currentQuestionIndex >= _questionFlow.length) break;
+
+        nextQuestion = AssistantFunctions.getCurrentQuestion(
+          _questionFlow,
+          _currentQuestionIndex,
+          registerCubit,
+        );
+      }
+
+      return _prepareQuestion(nextQuestion, registerCubit);
     }
 
-    // === 🟡 Etapa 2: Decisión del usuario ===
-    final normalized = userInput.trim().toLowerCase();
-    Map<String, dynamic> decision;
+    // === 🔴 SI NO ES VÁLIDO → MENSAJE DE ERROR ===
+    return AssistantFunctions.getErrorMessageForStep(currentStepKey) ??
+        decision;
+  }
 
-    if (["si", "sí", "correcto"].contains(normalized)) {
-      // Usuario confirma el email -> enviamos OTP
-      decision = {
-        "text": "Perfecto, te acabo de enviar un código a tu correo. 📩",
-        "step": "regProgress.sendOTP",
-        "valid": false,
-        "userResponse": userInput.trim(),
-      };
-    } else if (["no", "cambiar"].contains(normalized)) {
-      // Usuario quiere cambiar el email
-      decision = {
-        "text": "De acuerdo, escribe tu correo electrónico nuevamente.",
-        "step": "regProgress.emailVerification",
-        "valid": false,
-        "userResponse": userInput.trim(),
-      };
-    } else {
-      // Respuesta no válida
-      decision = {
-        "text": "Por favor responde 'Sí' o 'No'.",
-        "options": ["Sí", "No"],
-        "step": "regProgress.sendOTP",
-        "valid": false,
-      };
+  Map<String, dynamic> _prepareQuestion(
+    Map<String, dynamic> question,
+    RegisterCubit registerCubit,
+  ) {
+    // 🔹 Si la pregunta necesita fotos de perfil
+    if (question['showProfilePictures'] == true) {
+      final pictures = AssistantFunctions.getProfilePictures(registerCubit);
+      if (pictures.isNotEmpty) {
+        question['profilePictures'] = pictures;
+        question['options'] = ['Subir foto', 'Tomar foto'];
+      } else {
+        question['options'] = ['Subir foto', 'Tomar foto'];
+      }
     }
 
-    debugPrint('🤖 Decisión IA: $decision');
-    await processBotResponse(decision, registerCubit: registerCubit);
-
-    // === 🟣 Etapa 3: Si dijo “Sí” → siguiente paso (ingreso de OTP)
-    if (decision["valid"] == true &&
-        decision["step"] == "regProgress.sendOTP") {
-      final nextMessage = {
-        "text":
-            "Por favor ingresa el código de verificación que recibiste por correo.",
-        "step": "regProgress.emailVerification",
-        "valid": true,
-      };
-
-      processBotResponse(nextMessage, registerCubit: registerCubit);
-      return nextMessage;
-    }
-
-    return decision;
+    return question;
   }
 }

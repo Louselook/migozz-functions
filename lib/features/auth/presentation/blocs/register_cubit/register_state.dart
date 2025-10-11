@@ -19,7 +19,7 @@ enum RegisterStatusProgress {
   voiceNoteUrl,
   category,
   interests,
-  done,
+  doneChat,
 }
 
 enum EmailVerification { pending, success }

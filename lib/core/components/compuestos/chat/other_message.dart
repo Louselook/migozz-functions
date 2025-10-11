@@ -1,22 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/functions/profile_picture_selector.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/social_cards/social_cards.dart';
 
 class OtherMessage extends StatelessWidget {
   final String text;
   final String time;
-  final List<Map<String, dynamic>>?
-  platforms; // 👈 Opcional, solo si hay social cards
+  final List<Map<String, dynamic>>? platforms;
+  final List<Map<String, String>>? profilePictures; // 👈 Nuevo
 
   const OtherMessage({
     super.key,
     required this.text,
     required this.time,
     this.platforms,
+    this.profilePictures, // 👈 Agregar
   });
 
   @override
   Widget build(BuildContext context) {
     final hasPlatforms = platforms != null && platforms!.isNotEmpty;
+    final hasProfilePictures =
+        profilePictures != null && profilePictures!.isNotEmpty;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -52,7 +56,19 @@ class OtherMessage extends StatelessWidget {
           // 🟢 Texto del mensaje
           Text(text, style: const TextStyle(color: Colors.white, fontSize: 14)),
 
-          // 🔹 Social Cards (opcional)
+          // 🔹 Fotos de perfil (para selección de avatar)
+          if (hasProfilePictures) ...[
+            const SizedBox(height: 12),
+            ProfilePictureSelector(
+              pictures: profilePictures!,
+              onPhotoSelected: () {
+                // Mostrar mensaje de confirmación adicional si quieres
+                // O continuar automáticamente al siguiente paso
+              },
+            ),
+          ],
+
+          // 🔹 Social Cards (para otras cosas)
           if (hasPlatforms) ...[
             const SizedBox(height: 12),
             SizedBox(
