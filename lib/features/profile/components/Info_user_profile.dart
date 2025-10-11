@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:migozz_app/features/profile/presentation/share_profile.dart';
 
 class InfoUserProfile extends StatelessWidget {
   final String name;
@@ -25,7 +26,7 @@ class InfoUserProfile extends StatelessWidget {
         filter: ImageFilter.blur(sigmaX: 05, sigmaY: 05),
         // filter: ImageFilter.blur(sigmaX: 1, sigmaY: 1),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+          padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
             color: const Color.fromARGB(176, 0, 0, 0).withValues(alpha:0.05),
             borderRadius: borderRadius,
@@ -62,20 +63,36 @@ class InfoUserProfile extends StatelessWidget {
                       height: 1.1,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Icon(
-                    Icons.play_circle_outline_rounded,
-                    color: Colors.white.withValues(alpha: 0.9),
-                    size: 18,
+                  const SizedBox(height: 20),
+                  GestureDetector(
+                    onTap: () {
+                      // Lógica para reproducir el audio
+                    },
+                    child: Icon(
+                      Icons.play_circle_outline_rounded,
+                      size: 18,
+                      color: Colors.white.withValues(alpha: 0.9),
+                    ),
                   ),
-                  Icon(
-                    Icons.share,
-                    color: Colors.white.withValues(alpha: 0.9),
-                    size: 18,
+                  const SizedBox(width: 10), 
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (context) => const ProfileQrScreen(),
+                        ),
+                      );
+                    },
+                    child: Icon(
+                      Icons.share,
+                      size: 18,
+                      color: Colors.white.withValues(alpha: 0.9),
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 10),
               Text(
                 displayName,
                 textAlign: TextAlign.center,

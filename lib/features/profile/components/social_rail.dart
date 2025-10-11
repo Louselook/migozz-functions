@@ -4,8 +4,15 @@ import 'package:url_launcher/url_launcher.dart';
 class SocialLink {
   final String asset;
   final Uri url;
+  final int? followers;
+  final int? shares;
 
-  const SocialLink({required this.asset, required this.url});
+  const SocialLink({
+    required this.asset,
+    required this.url,
+    this.followers,
+    this.shares,
+  });
 }
 
 class SocialRail extends StatelessWidget {
@@ -102,44 +109,67 @@ class _SocialButtonState extends State<_SocialButton> {
       child: AnimatedScale(
         scale: _isPressed ? 0.95 : 1.0,
         duration: const Duration(milliseconds: 100),
-        child: Container(
-          width: widget.size,
-          height: widget.size,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: hasAsset
-                ? (widget.isDragging
-                    ? Colors.white.withValues(alpha: 0.6)
-                    : Colors.white.withValues(alpha: 0.4))
-                : Colors.purple.shade400, // fallback moradito
-            border: Border.all(
-              color: Colors.white.withValues(
-                alpha: widget.isDragging ? 0.8 : 0.6,
-              ),
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Center(
-            child: hasAsset
-                ? Image.asset(
-                    widget.link.asset,
-                    width: widget.iconSize,
-                    height: widget.iconSize,
-                    fit: BoxFit.contain,
-                  )
-                : Icon(
-                    Icons.link,
-                    color: Colors.white,
-                    size: widget.iconSize * 0.7,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              width: widget.size,
+              height: widget.size,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: hasAsset
+                    ? (widget.isDragging
+                          ? Colors.white.withValues(alpha: 0.6)
+                          : Colors.white.withValues(alpha: 0.4))
+                    : Colors.purple.shade400,
+                border: Border.all(
+                  color: Colors.white.withValues(
+                    alpha: widget.isDragging ? 0.8 : 0.6,
                   ),
-          ),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: hasAsset
+                    ? Image.asset(
+                        widget.link.asset,
+                        width: widget.iconSize,
+                        height: widget.iconSize,
+                        fit: BoxFit.contain,
+                      )
+                    : Icon(
+                        Icons.link,
+                        color: Colors.white,
+                        size: widget.iconSize * 0.7,
+                      ),
+              ),
+            ),
+            if ((widget.link.followers ?? 0) > 0)
+              Positioned(
+                top: -4,
+                left: -4,
+                child: _StatBadge(
+                  text: _abbrNumber(widget.link.followers!),
+                  color: Colors.blueAccent,
+                ),
+              ),
+            if ((widget.link.shares ?? 0) > 0)
+              Positioned(
+                bottom: -4,
+                right: -4,
+                child: _StatBadge(
+                  text: _abbrNumber(widget.link.shares!),
+                  color: Colors.deepPurpleAccent,
+                ),
+              ),
+          ],
         ),
       ),
     );
@@ -150,4 +180,45 @@ class _SocialButtonState extends State<_SocialButton> {
       throw Exception('Could not launch $url');
     }
   }
+}
+
+// Badge pequeño reutilizable
+class _StatBadge extends StatelessWidget {
+  final String text;
+  final Color color;
+  const _StatBadge({required this.text, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.7),
+          width: 0.5,
+        ),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 9,
+          fontWeight: FontWeight.w600,
+          height: 1,
+        ),
+      ),
+    );
+  }
+}
+
+String _abbrNumber(int n) {
+  if (n >= 1000000) {
+    return '${(n / 1000000).toStringAsFixed(1).replaceAll(RegExp(r'\.0'), '')}M';
+  }
+  if (n >= 1000) {
+    return '${(n / 1000).toStringAsFixed(1).replaceAll(RegExp(r'\.0'), '')}K';
+  }
+  return n.toString();
 }

@@ -13,6 +13,12 @@ class AppColors {
   static const Color textInputBackGround = Color.fromARGB(255, 99, 99, 99);
   static const Color backgroundGoole = Color(0xFF404040);
 
+  static LinearGradient get verticalOnboarding => LinearGradient(
+    colors:[Color(0xFFE1E2E4), Color(0xFFCED1D8)],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter
+    );
+
   static LinearGradient get primaryGradient => const LinearGradient(
     colors: [Color(0xFFF89A44), Color(0xFFD43AB6), Color(0xFF9321BD)],
     begin: Alignment.centerLeft,

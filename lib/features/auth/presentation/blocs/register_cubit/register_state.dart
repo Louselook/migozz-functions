@@ -160,4 +160,6 @@ class RegisterState extends Equatable {
     currentOTP,
     emailVerification,
   ];
+
+  get uid => null;
 }

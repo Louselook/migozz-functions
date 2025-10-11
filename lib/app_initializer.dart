@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
+import 'package:migozz_app/features/splash/splash_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:migozz_app/features/auth/services/location_service.dart';
 import 'package:migozz_app/features/auth/models/location_dto.dart';
@@ -74,23 +75,7 @@ class _AppInitializerState extends State<AppInitializer> {
         context.read<AuthCubit>().state.status == AuthStatus.checking) {
       return MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: Scaffold(
-          backgroundColor: Colors.black,
-          body: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                Image(
-                  image: AssetImage("assets/icons/Migozz300x.png"),
-                  width: 150,
-                  height: 150,
-                  ),
-                  SizedBox(height: 30,),
-                  CircularProgressIndicator(color: Colors.white),
-              ],
-            ),
-          ),
-        ),
+        home: SplashScreen(),
       );
     }
 

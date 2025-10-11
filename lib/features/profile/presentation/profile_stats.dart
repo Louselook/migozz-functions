@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:migozz_app/features/profile/components/bottom_nav.dart';
+import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
 
 class ProfileStatsScreen extends StatefulWidget {
   const ProfileStatsScreen({super.key});
@@ -12,6 +14,7 @@ class ProfileStatsScreen extends StatefulWidget {
 class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
   DateTimeRange? selectedRange;
   bool _loading = true;
+  int _tab = 1;
 
   List<SocialStats> _socials = [];
   Map<String, int> _totals = {};
@@ -156,155 +159,186 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        elevation: 0,
-        centerTitle: true,
-        title: const Text('My Stats', style: TextStyle(color: Colors.white)),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.close, color: Colors.red),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: _loading
-                ? const Center(
-                    child: CircularProgressIndicator(color: Colors.white),
-                  )
-                : _socials.isEmpty
-                ? Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        'Aún no tienes socials conectadas, ¡Conectalas!',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                      const SizedBox(height: 12),
-                      ElevatedButton(
-                        onPressed: _loadData,
-                        child: const Text('Actualizar'),
-                      ),
-                    ],
-                  )
-                : Column(
-                    children: [
-                      // Métricas totales
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          _Metric(
-                            icon: Icons.favorite,
-                            label: '${_formatNum(_totals['likes'] ?? 0)} likes',
-                          ),
-                          _Metric(
-                            icon: Icons.reply,
-                            label:
-                                '${_formatNum(_totals['shares'] ?? 0)} shares',
-                          ),
-                          _Metric(
-                            icon: Icons.people,
-                            label:
-                                '${_formatNum(_totals['followers'] ?? 0)} followers',
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
+  final double bottomGradientHeight = MediaQuery.of(context).size.height * 0.15;
 
-                      // Rango de fechas
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.grey[800],
-                              foregroundColor: Colors.white,
-                            ),
-                            onPressed: _pickDateRange,
-                            child: const Text("Seleccionar fecha"),
-                          ),
-                          Text(
-                            rangeText,
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 15,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Card resumen general
-                      _DataCard(
-                        title: "Overview",
-                        rows: [
-                          _RowData(
-                            label: "Likes:",
-                            value: _formatNum(_totals['likes'] ?? 0),
-                          ),
-                          _RowData(
-                            label: "Shares:",
-                            value: _formatNum(_totals['shares'] ?? 0),
-                          ),
-                          _RowData(
-                            label: "Followers:",
-                            value: _formatNum(_totals['followers'] ?? 0),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Card por cada social
-                      Expanded(
-                        child: ListView.builder(
-                          itemCount: _socials.length,
-                          itemBuilder: (context, i) {
-                            final s = _socials[i];
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: _DataCard(
-                                title: s.name,
-                                rows: [
-                                  _RowData(
-                                    label: "Followers:",
-                                    value: _formatNum(s.followers),
-                                  ),
-                                  _RowData(
-                                    label: "Likes:",
-                                    value: _formatNum(s.likes),
-                                  ),
-                                  _RowData(
-                                    label: "Shares:",
-                                    value: _formatNum(s.shares),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
+  return Scaffold(
+    backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          // Fondo con gradientes decorativos
+          TintesGradients(child: Container(height: bottomGradientHeight)),
+          // Contenido principal
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  // Título superior
+                  const Text(
+                    'My Stats',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
+                  const SizedBox(height: 20),
+
+                  // Contenido principal (usa Expanded para scroll)
+                  Expanded(
+                    child: Center(
+                      child: _loading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : _socials.isEmpty
+                              ? Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Text(
+                                      'Aún no tienes socials conectadas, ¡Conéctalas!',
+                                      style: TextStyle(color: Colors.grey),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    ElevatedButton(
+                                      onPressed: _loadData,
+                                      child: const Text('Actualizar'),
+                                    ),
+                                  ],
+                                )
+                              : Column(
+                                  children: [
+                                    // Métricas totales
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceAround,
+                                      children: [
+                                        _Metric(
+                                          icon: Icons.favorite,
+                                          label:
+                                              '${_formatNum(_totals['likes'] ?? 0)} likes',
+                                        ),
+                                        _Metric(
+                                          icon: Icons.reply,
+                                          label:
+                                              '${_formatNum(_totals['shares'] ?? 0)} shares',
+                                        ),
+                                        _Metric(
+                                          icon: Icons.people,
+                                          label:
+                                              '${_formatNum(_totals['followers'] ?? 0)} followers',
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 20),
+
+                                    // Rango de fechas
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.grey[800],
+                                            foregroundColor: Colors.white,
+                                          ),
+                                          onPressed: _pickDateRange,
+                                          child:
+                                              const Text("Seleccionar fecha"),
+                                        ),
+                                        Text(
+                                          rangeText,
+                                          style: const TextStyle(
+                                            color: Colors.grey,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 20),
+
+                                    // Card resumen general
+                                    _DataCard(
+                                      image:
+                                          'assets/icons/social_networks/mini_icon_migozz.png',
+                                      title: "Overview",
+                                      rows: [
+                                        _RowData(
+                                          label: "Likes:",
+                                          value:
+                                              _formatNum(_totals['likes'] ?? 0),
+                                        ),
+                                        _RowData(
+                                          label: "Shares:",
+                                          value:
+                                              _formatNum(_totals['shares'] ?? 0),
+                                        ),
+                                        _RowData(
+                                          label: "Followers:",
+                                          value: _formatNum(
+                                              _totals['followers'] ?? 0),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 16),
+
+                                    // Lista de redes sociales
+                                    Expanded(
+                                      child: ListView.builder(
+                                        itemCount: _socials.length,
+                                        itemBuilder: (context, i) {
+                                          final s = _socials[i];
+                                          return Padding(
+                                            padding: const EdgeInsets.only(
+                                                bottom: 12),
+                                            child: _DataCard(
+                                              image:
+                                                  "assets/icons/social_networks/mini_icon_${(s.name).toLowerCase()}.png",
+                                              title: s.name,
+                                              rows: [
+                                                _RowData(
+                                                  label: "Followers:",
+                                                  value: _formatNum(s.followers),
+                                                ),
+                                                _RowData(
+                                                  label: "Likes:",
+                                                  value: _formatNum(s.likes),
+                                                ),
+                                                _RowData(
+                                                  label: "Shares:",
+                                                  value: _formatNum(s.shares),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
+          Align(
+                  alignment: Alignment.bottomCenter,
+                  child: GradientBottomNav(
+                    currentIndex: _tab,
+                    onItemSelected: (i) => setState(() => _tab = i),
+                    onCenterTap: () async {
+                      await FirebaseAuth.instance.signOut();
+                    },
+                  ),
+                ),
+        ],
       ),
     );
   }
 }
 
 // Helpers globales
-
-// Convierte cualquier dynamic a int de forma segura
 
 // Parsea el campo socialEcosystem con varias formas comunes y devuelve pares (SocialName, dataMap)
 List<MapEntry<String, Map<String, dynamic>>> _parseEcosystem(
@@ -352,10 +386,12 @@ List<MapEntry<String, Map<String, dynamic>>> _parseEcosystem(
 
 // Abrevia números (1200 -> 1.2K, 1230000 -> 1.23M)
 String _formatNum(int n) {
-  if (n >= 1000000)
+  if (n >= 1000000) {
     return '${(n / 1000000).toStringAsFixed(2).replaceAll(RegExp(r'\.?0+$'), '')}M';
-  if (n >= 1000)
+  }
+  if (n >= 1000) {
     return '${(n / 1000).toStringAsFixed(1).replaceAll(RegExp(r'\.?0+$'), '')}K';
+  }
   return n.toString();
 }
 
@@ -379,8 +415,9 @@ class _Metric extends StatelessWidget {
 
 class _DataCard extends StatelessWidget {
   final String title;
+  final String? image;
   final List<_RowData> rows;
-  const _DataCard({required this.title, required this.rows});
+  const _DataCard({required this.title, required this.rows, this.image});
 
   @override
   Widget build(BuildContext context) {
@@ -394,12 +431,26 @@ class _DataCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              title,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
+            Row(
+              children: [
+                if (image != null && image!.isNotEmpty)
+                  Image.asset(
+                    image!,
+                    width: 20,
+                    height: 20,
+                    errorBuilder: (context, error, stackTrace) =>
+                        const SizedBox.shrink(),
+                  ),
+                if (image != null && image!.isNotEmpty)
+                  const SizedBox(width: 8), // separación entre icono y texto
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
             ...rows,
@@ -455,24 +506,87 @@ class SocialStats {
     Map<String, dynamic> data,
     Map<String, dynamic> fieldMap,
   ) {
+    final lowerPlatform = name.toLowerCase();
     final mapping =
-        fieldMap[name.toLowerCase()] ??
-        {}; // Ej: {followers: "subscriberCount"}
-    final followerField = mapping['followers'] ?? 'followers';
-    final likesField = mapping['likes'] ?? 'likes';
-    final sharesField = mapping['shares'] ?? 'shares';
+        fieldMap[lowerPlatform] ?? {}; // Ej: {followers: "subscriberCount"}
+
+    final followerField = (mapping['followers'] ?? 'followers').toString();
+    final likesField = (mapping['likes'] ?? 'likes').toString();
+    final sharesField = (mapping['shares'] ?? 'shares').toString();
+
+    // Fallbacks conocidos por plataformas
+    const followerFallbacks = [
+      'followercount',
+      'followers',
+      'fans',
+      'subscribers',
+      'subscribercount',
+      'subscriber_count',
+    ];
+    const likesFallbacks = [
+      'likes',
+      'likecount',
+      'hearts',
+      'favoritecount',
+      'favorites',
+      'favorite_count',
+    ];
+    const sharesFallbacks = [
+      'shares',
+      'sharecount',
+      'reposts',
+      'retweets',
+      'retweetcount',
+      'repostcount',
+    ];
+
+    int parseInt(dynamic v) {
+      if (v == null) return 0;
+      if (v is int) return v;
+      if (v is double) return v.round();
+      return int.tryParse(v.toString().replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+    }
+
+    int extract(String primary, List<String> fallbacks, String metricName) {
+      final primaryLower = primary.toLowerCase();
+      if (data.containsKey(primary)) {
+        return parseInt(data[primary]);
+      }
+      if (data.containsKey(primaryLower)) {
+        return parseInt(data[primaryLower]);
+      }
+      for (final f in fallbacks) {
+        if (data.containsKey(f)) {
+          debugPrint('🔁 Fallback "$f" usado para $metricName en $name');
+          return parseInt(data[f]);
+        }
+      }
+      // Búsqueda heurística parcial
+      for (final entry in data.entries) {
+        final k = entry.key.toString().toLowerCase();
+        if (fallbacks.any((f) => k.contains(f)) || k.contains(primaryLower)) {
+          debugPrint('🔎 Heurística detectó "$k" para $metricName en $name');
+          return parseInt(entry.value);
+        }
+      }
+      return 0;
+    }
+
+    final followers = extract(followerField, followerFallbacks, 'followers');
+    final likes = extract(likesField, likesFallbacks, 'likes');
+    final shares = extract(sharesField, sharesFallbacks, 'shares');
+
+    if (followers == 0 && likes == 0 && shares == 0) {
+      debugPrint(
+        '⚠️ Ninguna métrica encontrada para $name. Claves disponibles: ${data.keys.toList()}',
+      );
+    }
 
     return SocialStats(
       name: name,
-      followers: (data[followerField] ?? 0) is int
-          ? data[followerField] ?? 0
-          : int.tryParse(data[followerField].toString()) ?? 0,
-      likes: (data[likesField] ?? 0) is int
-          ? data[likesField] ?? 0
-          : int.tryParse(data[likesField].toString()) ?? 0,
-      shares: (data[sharesField] ?? 0) is int
-          ? data[sharesField] ?? 0
-          : int.tryParse(data[sharesField].toString()) ?? 0,
+      followers: followers,
+      likes: likes,
+      shares: shares,
     );
   }
 }

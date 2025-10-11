@@ -87,6 +87,7 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
         tempPlayer.dispose();
 
         if (durationInSeconds < 5.0) {
+          // ignore: use_build_context_synchronously
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
@@ -102,6 +103,7 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
         }
 
         if (durationInSeconds > 10.0) {
+          // ignore: use_build_context_synchronously
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
@@ -124,6 +126,7 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
         setState(() {});
       } catch (e) {
         debugPrint('❌ Error al validar duración: $e');
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
