@@ -15,6 +15,10 @@ class ChatControllerTest extends ChangeNotifier {
   bool _active = true;
   bool get isActive => _active;
 
+  /// ✅ Nuevo: Estado para detectar si se debe mostrar input de teléfono
+  bool _showPhoneInput = false;
+  bool get showPhoneInput => _showPhoneInput;
+
   /// Handler opcional para acciones que requieren navegación externa
   void Function(Map<String, dynamic> botResponse)? onBotAction;
 
@@ -116,7 +120,6 @@ class ChatControllerTest extends ChangeNotifier {
 
     if (isUrl) {
       debugPrint('✅ URL de avatar guardada: $photoPath');
-      // Si quieres persistir la URL ya aquí en el cubit:
       registerCubit.setAvatarUrl(photoPath);
     } else {
       // Es un archivo local (galería/cámara)
@@ -188,6 +191,11 @@ class ChatControllerTest extends ChangeNotifier {
         message["profilePictures"] = botResponse["profilePictures"];
       }
 
+      // ✅ Detectar si es el paso de teléfono
+      final step = botResponse["step"]?.toString() ?? '';
+      _showPhoneInput =
+          step.contains('phone') || botResponse["showPhoneCode"] == true;
+
       addMessage(message);
 
       if (!_active) return;
@@ -256,6 +264,9 @@ class ChatControllerTest extends ChangeNotifier {
       "type": MessageType.text,
       "time": getTimeNow(),
     });
+
+    // ✅ Resetear showPhoneInput después de enviar
+    _showPhoneInput = false;
 
     await showNextBotMessage();
   }

@@ -20,7 +20,7 @@ dependencies:
   record: ^6.1.1 # grabar audio
   audio_waveforms: ^1.3.0 # mostrar ola de audio
   path_provider: ^2.1.5 # necesaria para guardar el audio
-  intl_phone_number_field: ^0.2.1
+  intl_phone_field: ^3.2.0
 
   image_picker: ^1.2.0 # imagenes
 

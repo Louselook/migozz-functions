@@ -68,7 +68,6 @@ class _IaChatScreenState extends State<IaChatScreen> {
   }
 
   void _handleNavigation(Map<String, dynamic> botResponse) {
-    // debugPrint('🚀 [IaChatScreen] _handleNavigation llamado con: $botResponse');
     ChatNavigationHandler.handleBotAction(
       context: context,
       botResponse: botResponse,
@@ -129,10 +128,11 @@ class _IaChatScreenState extends State<IaChatScreen> {
               ),
             ),
 
-            // Input Bar
+            // ✅ Input Bar con detección de teléfono
             ChatInputWidget(
               controller: _controller,
-              // keyboardType: _chatController.keyboardType,
+              showPhoneInput:
+                  _chatController.showPhoneInput, // ✅ Nuevo parámetro
               onSend: () {
                 sendChat(
                   other: false,

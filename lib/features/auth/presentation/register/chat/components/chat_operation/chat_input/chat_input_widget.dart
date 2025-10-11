@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/chat/chat_attachment_sheet.dart';
 import 'package:migozz_app/core/components/compuestos/custom_textfield.dart';
@@ -15,6 +16,7 @@ class ChatInputWidget extends StatefulWidget {
   final void Function(String path)? onSendAudio;
   final void Function(String path)? onSendImage;
   final TextInputType keyboardType;
+  final bool showPhoneInput;
 
   const ChatInputWidget({
     super.key,
@@ -23,6 +25,7 @@ class ChatInputWidget extends StatefulWidget {
     required this.onSend,
     this.onSendAudio,
     this.onSendImage,
+    this.showPhoneInput = false,
   });
 
   @override
@@ -36,6 +39,10 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
   OverlayEntry? _tooltipEntry;
   bool _isLongPressValid = false;
   final GlobalKey _micButtonKey = GlobalKey();
+
+  // ✅ Variables simples para el teléfono
+  String _completePhoneNumber = '';
+  bool _isPhoneValid = false;
 
   @override
   void initState() {
@@ -80,14 +87,13 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
         tempPlayer.dispose();
 
         if (durationInSeconds < 5.0) {
-          // ignore: use_build_context_synchronously
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
                 'El audio es muy corto (${durationInSeconds.toStringAsFixed(1)} segundos). Debe durar entre 5 y 10 segundos',
               ),
               backgroundColor: Colors.orange,
-              duration: Duration(seconds: 3),
+              duration: const Duration(seconds: 3),
             ),
           );
           _audioManager.reset();
@@ -96,14 +102,13 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
         }
 
         if (durationInSeconds > 10.0) {
-          // ignore: use_build_context_synchronously
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
                 'El audio es muy largo (${durationInSeconds.toStringAsFixed(1)} segundos). Debe durar entre 5 y 10 segundos',
               ),
               backgroundColor: Colors.orange,
-              duration: Duration(seconds: 3),
+              duration: const Duration(seconds: 3),
             ),
           );
           _audioManager.reset();
@@ -111,7 +116,6 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
           return;
         }
 
-        // ✅ Audio válido (5-10 segundos)
         debugPrint(
           '✅ Audio válido (${durationInSeconds.toStringAsFixed(1)}s), enviando...',
         );
@@ -120,7 +124,6 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
         setState(() {});
       } catch (e) {
         debugPrint('❌ Error al validar duración: $e');
-        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -138,6 +141,20 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
   }
 
   void _handleMainButton() {
+    // ✅ Si es input de teléfono, usar el número completo
+    if (widget.showPhoneInput) {
+      if (_isPhoneValid && _completePhoneNumber.isNotEmpty) {
+        widget.controller.text = _completePhoneNumber;
+        widget.onSend();
+        setState(() {
+          _completePhoneNumber = '';
+          _isPhoneValid = false;
+        });
+      }
+      return;
+    }
+
+    // Flujo normal para texto
     final hasText = widget.controller.text.trim().isNotEmpty;
 
     if (hasText) {
@@ -159,12 +176,13 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final hasText = widget.controller.text.trim().isNotEmpty;
+    final hasText = widget.showPhoneInput
+        ? (_isPhoneValid && _completePhoneNumber.isNotEmpty)
+        : widget.controller.text.trim().isNotEmpty;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Panel de adjuntos
         AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           child: _showAttachments
@@ -177,7 +195,6 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
               : null,
         ),
 
-        // Barra de input
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 5, 20, 20),
           child: Row(
@@ -217,25 +234,99 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
         },
         onSeek: (position) => _audioManager.seekToPosition(position),
         onDelete: () {
-          // 🗑️ Eliminar audio grabado
           _audioManager.reset();
           setState(() {});
         },
       );
     }
 
-    // ⌨️ Input de texto normal
-    return CustomTextField(
-      controller: widget.controller,
-      hintText: "Escribe algo...",
-      radius: 8,
-      keyboardType: widget.keyboardType,
-      suffixIcon: IconButton(
-        icon: Icon(
-          _showAttachments ? Icons.close : Icons.attach_file,
-          color: _showAttachments ? Colors.red : Colors.grey,
+    // 📞 Input de teléfono con selector de país (MISMO DISEÑO que CustomTextField)
+    if (widget.showPhoneInput) {
+      return AnimatedSwitcher(
+        duration: const Duration(milliseconds: 400),
+        transitionBuilder: (child, animation) {
+          return FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position:
+                  Tween<Offset>(
+                    begin: const Offset(0, 0.1),
+                    end: Offset.zero,
+                  ).animate(
+                    CurvedAnimation(parent: animation, curve: Curves.easeOut),
+                  ),
+              child: child,
+            ),
+          );
+        },
+        child: Container(
+          key: const ValueKey('phone_input'),
+          height: 48,
+          decoration: BoxDecoration(
+            color: const Color(0xFF2C2C2E),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: IntlPhoneField(
+            decoration: InputDecoration(
+              hintText: '1234',
+              hintStyle: const TextStyle(color: Colors.white54, fontSize: 15),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(vertical: 12),
+              counterText: '',
+            ),
+            showDropdownIcon: false,
+            style: const TextStyle(color: Colors.white, fontSize: 15),
+            dropdownTextStyle: const TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+            ),
+            onChanged: (phone) {
+              setState(() {
+                _completePhoneNumber = phone.completeNumber;
+                _isPhoneValid = phone.number.length >= 4;
+              });
+            },
+            dropdownDecoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            keyboardType: TextInputType.phone,
+            disableLengthCheck: true,
+          ),
         ),
-        onPressed: _toggleAttachments,
+      );
+    }
+
+    // ⌨️ Input de texto normal
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 400),
+      transitionBuilder: (child, animation) {
+        return FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position:
+                Tween<Offset>(
+                  begin: const Offset(0, 0.1),
+                  end: Offset.zero,
+                ).animate(
+                  CurvedAnimation(parent: animation, curve: Curves.easeOut),
+                ),
+            child: child,
+          ),
+        );
+      },
+      child: CustomTextField(
+        key: const ValueKey('text_input'),
+        controller: widget.controller,
+        hintText: "Escribe algo...",
+        radius: 8,
+        keyboardType: widget.keyboardType,
+        suffixIcon: IconButton(
+          icon: Icon(
+            _showAttachments ? Icons.close : Icons.attach_file,
+            color: _showAttachments ? Colors.red : Colors.grey,
+          ),
+          onPressed: _toggleAttachments,
+        ),
       ),
     );
   }
@@ -309,6 +400,28 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
       icon = Icons.mic;
     }
 
+    // ✅ Botón unificado para texto Y teléfono
+    if (widget.showPhoneInput) {
+      // Para teléfono, mostrar botón de enviar cuando el número es válido
+      return Container(
+        height: 48,
+        width: 50,
+        decoration: BoxDecoration(
+          gradient: hasText
+              ? AppColors.verticalPinkPurple
+              : LinearGradient(
+                  colors: [Colors.grey.shade700, Colors.grey.shade600],
+                ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: IconButton(
+          icon: const Icon(Icons.send_outlined, color: Colors.white),
+          onPressed: hasText ? _handleMainButton : null,
+        ),
+      );
+    }
+
+    // Botón normal con audio/texto
     if (hasText ||
         _audioManager.audioPath != null ||
         _audioManager.isRecording) {
