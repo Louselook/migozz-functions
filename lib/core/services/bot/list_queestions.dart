@@ -30,7 +30,7 @@ final Map<String, Map<String, dynamic>> questionsEs = {
 
   "gender": {
     "text": "¡Excelente apodo! ¿Cuál es tu género?",
-    "options": ["Hombre", "Mujer", "Otro"],
+    "options": ["Hombre", "Mujer"],
     "step": "regProgress.gender",
     "keepTalk": false,
     "keyboardType": "text",
@@ -146,7 +146,7 @@ final Map<String, Map<String, dynamic>> questionsEn = {
 
   "gender": {
     "text": "Great nickname! What is your gender?",
-    "options": ["Man", "Woman", "Other"],
+    "options": ["Man", "Woman"],
     "step": "regProgress.gender",
     "keepTalk": false,
     "keyboardType": "text",
@@ -293,7 +293,6 @@ final Map<String, Map<String, dynamic>> errorMessagesEs = {
   "avatarUrl": {
     "text":
         "Por favor selecciona una foto de las opciones, súbela desde tu galería o tómala con la cámara. 📸",
-    "options": ["Subir foto", "Tomar foto"],
     "step": "regProgress.avatarUrl",
     "keepTalk": false,
     "showProfilePictures": true, // ✅ Volver a mostrar las fotos

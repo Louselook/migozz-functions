@@ -117,13 +117,24 @@ class RegisterCubit extends Cubit<RegisterState> {
   );
 
   // voice audio
-  void setVoiceNoteFile(File file) => voiceNoteFile = file;
-  void setVoiceNoteUrl(String voiceNoteUrl) => emit(
-    state.copyWith(
-      voiceNoteUrl: voiceNoteUrl,
-      regProgress: RegisterStatusProgress.category,
-    ),
-  );
+  void setVoiceNoteFile(File file) {
+    voiceNoteFile = file;
+    debugPrint('🎤 [Cubit] setVoiceNoteFile llamado');
+    debugPrint('🎤 [Cubit] Archivo path: ${file.path}');
+    debugPrint('🎤 [Cubit] Archivo existe: ${file.existsSync()}');
+    debugPrint('🎤 [Cubit] voiceNoteFile guardado: ${voiceNoteFile?.path}');
+  }
+
+  void setVoiceNoteUrl(String voiceNoteUrl) {
+    debugPrint('🎤 [Cubit] setVoiceNoteUrl llamado: $voiceNoteUrl');
+    emit(
+      state.copyWith(
+        voiceNoteUrl: voiceNoteUrl,
+        regProgress: RegisterStatusProgress.category,
+      ),
+    );
+  }
+
   //category
   void setCategories(List<String>? category) => emit(
     state.copyWith(
@@ -142,27 +153,55 @@ class RegisterCubit extends Cubit<RegisterState> {
   );
 
   // ---------------------- checkCompletion ----------------------
+  // Dentro de tu cubit
   Future<void> checkCompletion() async {
     emit(state.copyWith(status: RegisterIsLogin.loading));
     try {
       final Map<MediaType, File> filesToUpload = {};
-      if (avatarFile != null) filesToUpload[MediaType.avatar] = avatarFile!;
+
+      if (avatarFile != null) {
+        filesToUpload[MediaType.avatar] = avatarFile!;
+        debugPrint('✅ [Cubit] Avatar agregado para subir: ${avatarFile!.path}');
+      }
+
       if (voiceNoteFile != null) {
         filesToUpload[MediaType.voice] = voiceNoteFile!;
+        debugPrint(
+          '✅ [Cubit] Audio agregado para subir: ${voiceNoteFile!.path}',
+        );
       }
 
-      Map<MediaType, String> mediaUrls = await _mediaService
-          .uploadFilesTemporarily(email: state.email!, files: filesToUpload);
+      // Si hay archivos, subirlos usando email y guardar URLs en el estado
+      if (filesToUpload.isNotEmpty) {
+        try {
+          final mediaUrls = await _mediaService.uploadFiles(
+            email: state.email!,
+            files: filesToUpload,
+          );
 
-      // Guardar URLs en el cubit inmediatamente
-      if (mediaUrls.containsKey(MediaType.avatar)) {
-        setAvatarUrl(mediaUrls[MediaType.avatar]!);
-      }
-      if (mediaUrls.containsKey(MediaType.voice)) {
-        setVoiceNoteUrl(mediaUrls[MediaType.voice]!);
+          if (mediaUrls.containsKey(MediaType.avatar)) {
+            setAvatarUrl(mediaUrls[MediaType.avatar]!);
+            debugPrint(
+              '✅ [Cubit] Avatar URL guardada: ${mediaUrls[MediaType.avatar]}',
+            );
+          }
+          if (mediaUrls.containsKey(MediaType.voice)) {
+            setVoiceNoteUrl(mediaUrls[MediaType.voice]!);
+            debugPrint(
+              '✅ [Cubit] Voice URL guardada: ${mediaUrls[MediaType.voice]}',
+            );
+          }
+        } catch (e) {
+          // Si falla la subida, puedes optar por:
+          //  - lanzar para detener el flujo: rethrow;
+          //  - o solo loggear y continuar sin URLs (aquí elijo loggear).
+          debugPrint('❌ [Cubit] Error subiendo archivos: $e');
+          // Si prefieres bloquear el registro hasta subir, descomenta:
+          // rethrow;
+        }
       }
 
-      // 2️⃣ Validar completitud incluyendo archivos
+      // Validar completitud (mismo criterio que tenías)
       final complete =
           state.email != null &&
           state.language != null &&
@@ -172,17 +211,21 @@ class RegisterCubit extends Cubit<RegisterState> {
           state.location != null &&
           state.phone != null &&
           state.category != null &&
-          state.interests != null; //&&
-      // state.avatarUrl != null &&
-      // state.voiceNoteUrl != null;
+          state.interests != null;
+
+      debugPrint('✅ [Cubit] Registro completo: $complete');
 
       if (state.isComplete != complete) {
         emit(state.copyWith(isComplete: complete));
-        // Solo llamas al método final de registro
-        completeRegistration();
+        await completeRegistration();
+      } else {
+        // regresar a estado idle si no cambia completitud
+        emit(state.copyWith(status: RegisterIsLogin.initial));
       }
-      // ignore: empty_catches
-    } catch (e) {}
+    } catch (e) {
+      debugPrint('❌ [Cubit] Error en checkCompletion: $e');
+      emit(state.copyWith(status: RegisterIsLogin.initial));
+    }
   }
 
   // ---------------------- completeRegistration ----------------------
@@ -194,7 +237,7 @@ class RegisterCubit extends Cubit<RegisterState> {
 
       final userDTO = state.buildUserDTO();
 
-      // 1️⃣ Crear usuario en Auth y Firestore
+      // 1️⃣ Crear usuario en Auth y Firestore (o donde lo manejes)
       final userCredential = await _authService.signUpRegister(
         email: state.email!,
         otp: state.currentOTP!,
@@ -203,23 +246,14 @@ class RegisterCubit extends Cubit<RegisterState> {
 
       final uid = userCredential.user!.uid;
 
-      // 2️⃣ Asociar archivos subidos temporalmente al UID definitivo
-      final Map<MediaType, String> mediaUrls = {};
-      if (state.avatarUrl != null) {
-        mediaUrls[MediaType.avatar] = state.avatarUrl!;
-      }
-      if (state.voiceNoteUrl != null) {
-        mediaUrls[MediaType.voice] = state.voiceNoteUrl!;
-      }
-      if (mediaUrls.isNotEmpty) {
-        await _mediaService.associateMediaToUid(uid: uid, email: state.email!);
-      }
+      // Ya no asociamos archivos al UID.
+      // Las URLs subidas con el email se guardaron en el DTO y el backend/Firestore
+      // debe guardar esos campos como parte del documento del usuario.
 
       return uid;
     } catch (e) {
       throw Exception('Error al registrar usuario: $e');
     } finally {
-      // Cambiar el estado a success aunque haya fallado la guardada de socials
       emit(state.copyWith(status: RegisterIsLogin.success));
     }
   }
@@ -289,13 +323,6 @@ class RegisterCubit extends Cubit<RegisterState> {
 
                   // 3️⃣ Agregar los datos en el formato correcto
                   current.add({network.toLowerCase(): profileData});
-
-                  // 3.1️⃣ Antes se autoasignaba avatar de Instagram aquí.
-                  // Se elimina para que el usuario confirme en el paso 13 del flujo.
-                  // final avatar = profileData['profile_image_url']?.toString();
-                  // if (avatar != null && avatar.isNotEmpty) {
-                  //   setAvatarUrl(avatar);
-                  // }
 
                   // 4️⃣ Actualizar el cubit
                   setSocialEcosystem(current);

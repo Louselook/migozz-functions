@@ -21,18 +21,17 @@ class EditProfile extends StatefulWidget {
 class _EditProfileState extends State<EditProfile> {
   Map<String, dynamic>? _userDoc;
   bool _uploading = false;
-  bool _dirty = false; // Douglas: hubo cambios en esta vista - SOL: tambien hice cambios :D
+  bool _dirty =
+      false; // Douglas: hubo cambios en esta vista - SOL: tambien hice cambios :D
   DateTime? _dob; // Se llenará desde Firestore (Timestamp o String ISO)
   bool _hasChanges = false;
   bool _allFilled = false;
   late Map<String, dynamic> _originalData;
-  
 
   @override
   void initState() {
     super.initState();
     _loadUser();
-
   }
 
   Future<void> _loadUser() async {
@@ -83,8 +82,8 @@ class _EditProfileState extends State<EditProfile> {
           genderController.text = data['gender'] ?? '';
           birthController.text = _dob != null
               ? "${_dob!.year.toString().padLeft(4, '0')}-"
-                "${_dob!.month.toString().padLeft(2, '0')}-"
-                "${_dob!.day.toString().padLeft(2, '0')}"
+                    "${_dob!.month.toString().padLeft(2, '0')}-"
+                    "${_dob!.day.toString().padLeft(2, '0')}"
               : '';
         });
         for (var controller in [
@@ -92,7 +91,7 @@ class _EditProfileState extends State<EditProfile> {
           usernameController,
           emailController,
           phoneController,
-          genderController
+          genderController,
         ]) {
           controller.addListener(_checkForChanges);
         }
@@ -102,7 +101,7 @@ class _EditProfileState extends State<EditProfile> {
     }
   }
 
-    void _checkForChanges() {
+  void _checkForChanges() {
     if (_userDoc == null) return;
 
     final currentValues = {
@@ -131,7 +130,7 @@ class _EditProfileState extends State<EditProfile> {
       usernameController,
       emailController,
       phoneController,
-      genderController
+      genderController,
     ]) {
       controller.removeListener(_checkForChanges);
       controller.dispose();
@@ -147,11 +146,12 @@ class _EditProfileState extends State<EditProfile> {
     final location = (_userDoc?['location'] as Map?) ?? const {};
     final city = location['city'] ?? '';
     final avatarUrl = (_userDoc?['avatarUrl'] as String?);
-    String dobLabel() { // DOB formateado para UI
+    String dobLabel() {
+      // DOB formateado para UI
       if (_dob == null) return 'Date of birth';
-      return "${_dob!.year.toString().padLeft(4,'0')}-"
-             "${_dob!.month.toString().padLeft(2,'0')}-"
-             "${_dob!.day.toString().padLeft(2,'0')}";
+      return "${_dob!.year.toString().padLeft(4, '0')}-"
+          "${_dob!.month.toString().padLeft(2, '0')}-"
+          "${_dob!.day.toString().padLeft(2, '0')}";
     }
 
     return Scaffold(
@@ -238,14 +238,14 @@ class _EditProfileState extends State<EditProfile> {
                 ],
               ),
               SizedBox(height: screenHeight * 0.025),
-              
+
               listBuildBox(
                 controller: displayNameController,
                 text: 'Name',
                 icon: Icons.account_box,
                 textColorInside: Colors.white,
                 iconColorInside: Colors.white,
-              ), 
+              ),
               listBuildBox(
                 controller: usernameController,
                 text: 'Nickname',
@@ -450,18 +450,17 @@ class _EditProfileState extends State<EditProfile> {
         ),
         borderRadius: BorderRadius.circular(8), // Bordes redondeados
       ),
-      child: TextField( // Cambio a TextField para manejo de cambios por parte del usuario
-      controller: controller,
-      style: TextStyle(
-        color: iconColorInside
-      ),
-      readOnly: isReadingOnly,
+      child: TextField(
+        // Cambio a TextField para manejo de cambios por parte del usuario
+        controller: controller,
+        style: TextStyle(color: iconColorInside),
+        readOnly: isReadingOnly,
         decoration: InputDecoration(
           border: InputBorder.none,
           contentPadding: EdgeInsets.fromLTRB(0, 14, 0, 0),
           prefixIcon: Icon(icon, color: iconColorInside),
           hintStyle: TextStyle(color: iconColorInside.withValues(alpha: 8.0)),
-          hintText: text, 
+          hintText: text,
         ),
       ),
     );
@@ -472,47 +471,47 @@ class _EditProfileState extends State<EditProfile> {
   final emailController = TextEditingController();
   final phoneController = TextEditingController();
   final genderController = TextEditingController();
-  final birthController = TextEditingController(); // DOB: sincronizado en _loadUser
+  final birthController =
+      TextEditingController(); // DOB: sincronizado en _loadUser
   // final cityController = TextEditingController(); // Prefiero manejarlo con una "Georreferenciación autumatica"
 
   Future<void> saveChanges() async {
-  final currentUser = FirebaseAuth.instance.currentUser; // usuario real
-  if (currentUser == null) return;
+    final currentUser = FirebaseAuth.instance.currentUser; // usuario real
+    if (currentUser == null) return;
 
-  final newDisplayName = displayNameController.text.trim();
-  final newUsername = usernameController.text.trim();
-  final newEmail = emailController.text.trim();
-  final newPhone = phoneController.text.trim();
-  final newGender = genderController.text.trim();
+    final newDisplayName = displayNameController.text.trim();
+    final newUsername = usernameController.text.trim();
+    final newEmail = emailController.text.trim();
+    final newPhone = phoneController.text.trim();
+    final newGender = genderController.text.trim();
 
-  final oldData = _userDoc ?? {};
+    final oldData = _userDoc ?? {};
 
-  Map<String, dynamic> updates = {};
+    Map<String, dynamic> updates = {};
 
-  if (newDisplayName.isNotEmpty && newDisplayName != oldData['displayName']) {
-    updates['displayName'] = newDisplayName;
-  }
-  if (newUsername.isNotEmpty && newUsername != oldData['username']) {
-    updates['username'] = newUsername;
-  }
-  if (newEmail.isNotEmpty && newEmail != oldData['email']) {
-    updates['email'] = newEmail;
-  }
-  if (newPhone.isNotEmpty && newPhone != oldData['phone']) {
-    updates['phone'] = newPhone;
-  }
-  if (newGender.isNotEmpty && newGender != oldData['gender']) {
-    updates['gender'] = newGender;
-  }
+    if (newDisplayName.isNotEmpty && newDisplayName != oldData['displayName']) {
+      updates['displayName'] = newDisplayName;
+    }
+    if (newUsername.isNotEmpty && newUsername != oldData['username']) {
+      updates['username'] = newUsername;
+    }
+    if (newEmail.isNotEmpty && newEmail != oldData['email']) {
+      updates['email'] = newEmail;
+    }
+    if (newPhone.isNotEmpty && newPhone != oldData['phone']) {
+      updates['phone'] = newPhone;
+    }
+    if (newGender.isNotEmpty && newGender != oldData['gender']) {
+      updates['gender'] = newGender;
+    }
 
-  if (updates.isNotEmpty) {
-    
+    if (updates.isNotEmpty) {
       updates['updatedAt'] = FieldValue.serverTimestamp();
 
       await FirebaseFirestore.instance
           .collection('users')
           .doc(currentUser.uid)
-          .update(updates);  
+          .update(updates);
     }
 
     if (mounted) {
@@ -524,7 +523,7 @@ class _EditProfileState extends State<EditProfile> {
     await _loadUser();
     setState(() => _dirty = true);
   }
-    // El cambio de fecha es mas complejo, luego lo resuelvo  [SOL]
+  // El cambio de fecha es mas complejo, luego lo resuelvo  [SOL]
 
   Widget bottomOptions({
     required IconData icon,
@@ -576,7 +575,7 @@ class _EditProfileState extends State<EditProfile> {
 
       // Subir usando el mismo servicio que en registro
       final mediaService = UserMediaService();
-      final urls = await mediaService.uploadFilesTemporarily(
+      final urls = await mediaService.uploadFiles(
         email: email,
         files: {MediaType.avatar: File(xfile.path)},
       );

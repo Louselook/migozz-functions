@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_state.dart';
@@ -160,10 +162,22 @@ Future<Map<String, dynamic>?> processBotResponse(
       break;
 
     case RegisterStatusProgress.voiceNoteUrl:
-      // Los audios se manejan en el controller
+      // El audio ya se guardó como File en el handler
+      // Solo validamos que el archivo exista
       if (userResponse != null && userResponse.isNotEmpty) {
-        registerCubit.setVoiceNoteUrl(userResponse);
-        debugPrint('✅ Nota de voz guardada: $userResponse');
+        final audioFile = File(userResponse);
+        if (await audioFile.exists()) {
+          debugPrint('✅ Audio validado: $userResponse');
+          // El archivo ya está guardado con setVoiceNoteFile
+          // El progreso se actualiza automáticamente en GeminiService
+        } else {
+          debugPrint('⚠️ Archivo de audio no encontrado');
+          return {
+            "error": true,
+            "message":
+                "No se pudo encontrar el archivo de audio. Por favor, graba nuevamente.",
+          };
+        }
       } else {
         debugPrint('⚠️ No se proporcionó nota de voz');
       }

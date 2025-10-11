@@ -9,6 +9,7 @@ class AudioPlayerDisplay extends StatelessWidget {
   final Duration maxDuration;
   final bool isPlaying;
   final VoidCallback onPlayPause;
+  final VoidCallback? onDelete; // 👈 Nuevo: callback para eliminar
   final void Function(Duration) onSeek;
 
   const AudioPlayerDisplay({
@@ -19,12 +20,8 @@ class AudioPlayerDisplay extends StatelessWidget {
     required this.isPlaying,
     required this.onPlayPause,
     required this.onSeek,
+    this.onDelete, // 👈 Opcional
   });
-
-  double _dxToProgress(double dx, double width) {
-    if (maxDuration.inMilliseconds <= 0) return 0.0;
-    return (dx.clamp(0.0, width) / width) * maxDuration.inMilliseconds;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,59 +33,62 @@ class AudioPlayerDisplay extends StatelessWidget {
       ),
       child: Row(
         children: [
-          IconButton(
-            onPressed: onPlayPause,
-            icon: ShaderMask(
-              shaderCallback: (bounds) =>
-                  AppColors.primaryGradient.createShader(bounds),
+          // 🎵 Botón de play/pause (circular con gradiente)
+          GestureDetector(
+            onTap: onPlayPause,
+            child: Container(
+              width: 32,
+              height: 32,
+              decoration: const BoxDecoration(
+                color: Color(0xFFDF48A5),
+                shape: BoxShape.circle,
+              ),
               child: Icon(
                 isPlaying ? Icons.pause : Icons.play_arrow,
                 color: Colors.white,
-                size: 30,
+                size: 18,
               ),
             ),
           ),
-          const SizedBox(width: 8),
+
+          const SizedBox(width: 12),
+
+          // 🌊 Waveform completa (diseño horizontal)
           Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return GestureDetector(
-                  behavior: HitTestBehavior.translucent,
-                  onTapDown: (details) {
-                    final pos = Duration(
-                      milliseconds: _dxToProgress(
-                        details.localPosition.dx,
-                        constraints.maxWidth,
-                      ).round(),
-                    );
-                    onSeek(pos);
-                  },
-                  onHorizontalDragUpdate: (details) {
-                    final dx = details.localPosition.dx;
-                    final pos = Duration(
-                      milliseconds: _dxToProgress(
-                        dx,
-                        constraints.maxWidth,
-                      ).round(),
-                    );
-                    onSeek(pos);
-                  },
-                  child: AudioFileWaveforms(
-                    playerController: playerController,
-                    size: Size(constraints.maxWidth, 20),
-                    enableSeekGesture: false,
-                    waveformType: WaveformType.fitWidth,
-                  ),
-                );
-              },
+            child: SizedBox(
+              height: 24,
+              child: AudioFileWaveforms(
+                playerController: playerController,
+                waveformType: WaveformType.fitWidth,
+                size: const Size(double.infinity, 24),
+                enableSeekGesture: false, // Deshabilitado para simplicidad
+                playerWaveStyle: PlayerWaveStyle(
+                  fixedWaveColor: const Color(0xFF555555),
+                  liveWaveGradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: AppColors.primaryGradient.colors,
+                  ).createShader(const Rect.fromLTWH(0, 0, 200, 24)),
+                  waveThickness: 1.2,
+                  spacing: 1.8,
+                  showBottom: true,
+                  showTop: true,
+                  scaleFactor: 150.0,
+                  waveCap: StrokeCap.round,
+                  showSeekLine: false,
+                ),
+              ),
             ),
           ),
-          const SizedBox(width: 8),
+
+          const SizedBox(width: 12),
+
+          // ⏱️ Tiempo actual
           ShaderMask(
             shaderCallback: (bounds) =>
                 AppColors.primaryGradient.createShader(bounds),
             child: Text(
-              "${AudioUtils.formatDuration(duration)} / ${AudioUtils.formatDuration(maxDuration)}",
+              AudioUtils.formatDuration(duration),
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
@@ -96,6 +96,26 @@ class AudioPlayerDisplay extends StatelessWidget {
               ),
             ),
           ),
+
+          // 🗑️ Botón de eliminar (si existe callback)
+          if (onDelete != null) ...[
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: onDelete,
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.delete_outline,
+                  color: Colors.red,
+                  size: 18,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

@@ -260,9 +260,6 @@ class GeminiService {
       final pictures = AssistantFunctions.getProfilePictures(registerCubit);
       if (pictures.isNotEmpty) {
         question['profilePictures'] = pictures;
-        question['options'] = ['Subir foto', 'Tomar foto'];
-      } else {
-        question['options'] = ['Subir foto', 'Tomar foto'];
       }
     }
 

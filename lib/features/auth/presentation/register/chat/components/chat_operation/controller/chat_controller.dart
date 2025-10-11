@@ -11,6 +11,11 @@ class ChatControllerTest extends ChangeNotifier {
   final RegisterCubit registerCubit;
   ChatControllerTest({required this.registerCubit});
 
+  /// --- Estado activo/inactivo del chat ---
+  bool _active = true;
+  bool get isActive => _active;
+
+  /// Handler opcional para acciones que requieren navegación externa
   void Function(Map<String, dynamic> botResponse)? onBotAction;
 
   final ScrollController scrollController = ScrollController();
@@ -23,14 +28,41 @@ class ChatControllerTest extends ChangeNotifier {
   final AudioChatHandler _audioHandler = AudioChatHandler();
   List<String> get currentSuggestions => _audioHandler.currentSuggestions;
 
+  /// Inicializa el chat y lo marca como activo
   void initializeChat({void Function(Map<String, dynamic>)? onActionRequired}) {
     GeminiService.instance.ensureConfigured();
     onBotAction = onActionRequired;
+    _active = true;
     showNextBotMessage();
+  }
+
+  /// Termina y destruye el chat — llama esto antes de navegar fuera
+  Future<void> terminateChat({bool clearMessages = false}) async {
+    if (!_active) return;
+    _active = false;
+
+    // Resetear audio/recorders/reproducciones
+    try {
+      _audioHandler.reset();
+    } catch (e) {
+      debugPrint('Error al resetear audioHandler: $e');
+    }
+
+    // Limpiar mensajes (opcional)
+    if (clearMessages) {
+      _messages.clear();
+    }
+
+    // Quitar callbacks y liberar recursos
+    onBotAction = null;
+
+    // Notificar UI para que actualice (y deje de mostrar controls)
+    notifyListeners();
   }
 
   /// Callback cuando el audio termina de reproducirse
   void onAudioFinished() {
+    if (!_active) return;
     _audioHandler.onAudioFinished(
       registerCubit: registerCubit,
       addMessage: addMessage,
@@ -40,17 +72,33 @@ class ChatControllerTest extends ChangeNotifier {
 
   /// Enviar audio del usuario
   Future<void> sendUserAudio(String audioPath) async {
-    _audioHandler.sendUserAudio(
+    if (!_active) return;
+
+    // Delegar al handler para procesar el audio
+    await _audioHandler.sendUserAudio(
       audioPath: audioPath,
       registerCubit: registerCubit,
       addMessage: addMessage,
       chatController: this,
     );
+
+    if (!_active) return;
+
+    // Establecer lastUserMessage para que el flujo continúe
+    _lastUserMessage = audioPath;
+
+    // Avanzar automáticamente al siguiente paso
+    await Future.delayed(const Duration(milliseconds: 600));
+    if (!_active) return;
+    await showNextBotMessage();
+
     notifyListeners();
   }
 
-  /// ✅ Manejar envío de foto de avatar (URL o archivo local)
+  /// Manejar envío de foto de avatar (URL o archivo local)
   Future<void> sendAvatarPhoto(String photoPath) async {
+    if (!_active) return;
+
     debugPrint('📸 Foto de avatar recibida: $photoPath');
 
     // Agregar mensaje visual del usuario
@@ -67,9 +115,9 @@ class ChatControllerTest extends ChangeNotifier {
     final isUrl = photoPath.startsWith('http');
 
     if (isUrl) {
-      // Es una foto de red social (URL)
-      registerCubit.setAvatarUrl(photoPath);
       debugPrint('✅ URL de avatar guardada: $photoPath');
+      // Si quieres persistir la URL ya aquí en el cubit:
+      registerCubit.setAvatarUrl(photoPath);
     } else {
       // Es un archivo local (galería/cámara)
       final file = File(photoPath);
@@ -85,21 +133,28 @@ class ChatControllerTest extends ChangeNotifier {
     // Simular respuesta para avanzar en el flujo
     _lastUserMessage = photoPath;
 
-    // Mostrar siguiente mensaje (teléfono)
+    // Mostrar siguiente mensaje (teléfono u otro)
     await Future.delayed(const Duration(milliseconds: 600));
+    if (!_active) return;
     await showNextBotMessage();
   }
 
+  /// Obtener próxima respuesta del bot (protegida por _active)
   Future<void> showNextBotMessage() async {
+    if (!_active) return;
+
     registerCubit.setAiResponse(true);
 
-    addMessage({
-      "other": true,
-      "type": MessageType.typing,
-      "name": "Migozz",
-      "time": getTimeNow(),
-    });
-    notifyListeners();
+    // Añadir typing solo si sigue activo
+    if (_active) {
+      addMessage({
+        "other": true,
+        "type": MessageType.typing,
+        "name": "Migozz",
+        "time": getTimeNow(),
+      });
+      notifyListeners();
+    }
 
     try {
       final userInput = _lastUserMessage ?? '';
@@ -107,6 +162,9 @@ class ChatControllerTest extends ChangeNotifier {
         userInput,
         registerCubit: registerCubit,
       );
+
+      // Si el chat fue terminado mientras esperábamos, ignorar la respuesta
+      if (!_active) return;
 
       _messages.removeWhere((msg) => msg["type"] == MessageType.typing);
 
@@ -132,11 +190,14 @@ class ChatControllerTest extends ChangeNotifier {
 
       addMessage(message);
 
+      if (!_active) return;
+
       if (botResponse["autoAdvance"] == true) {
         debugPrint(
           '🎉 Mensaje de éxito detectado, avanzando automáticamente...',
         );
         await Future.delayed(const Duration(milliseconds: 1500));
+        if (!_active) return;
         _lastUserMessage = 'continue';
         await showNextBotMessage();
         return;
@@ -144,18 +205,21 @@ class ChatControllerTest extends ChangeNotifier {
 
       if (onBotAction != null) {
         Future.delayed(const Duration(milliseconds: 850), () {
+          if (!_active) return;
           onBotAction!(botResponse);
         });
       }
     } catch (e) {
-      debugPrint('❌ Error: $e');
+      debugPrint('❌ Error en showNextBotMessage: $e');
     } finally {
-      registerCubit.setAiResponse(false);
+      if (_active) registerCubit.setAiResponse(false);
       notifyListeners();
     }
   }
 
+  /// Enviar mensaje de texto del usuario (protegido por _active)
   Future<void> sendUserMessage(String text) async {
+    if (!_active) return;
     if (text.trim().isEmpty) return;
 
     // Delegar manejo de confirmación de audio al handler
@@ -171,6 +235,7 @@ class ChatControllerTest extends ChangeNotifier {
 
       if (audioResponse == 'keep') {
         await Future.delayed(const Duration(milliseconds: 600));
+        if (!_active) return;
         await showNextBotMessage();
       } else if (audioResponse == 'record') {
         final recordMessage = _audioHandler.getRecordAgainMessage(
@@ -196,12 +261,15 @@ class ChatControllerTest extends ChangeNotifier {
   }
 
   void addMessage(Map<String, dynamic> message) {
+    if (!_active) return;
     _messages.add(message);
     notifyListeners();
     _scrollToBottom();
   }
 
   void onSuggestionSelected(String suggestion) {
+    if (!_active) return;
+
     sendUserMessage(suggestion);
 
     for (var msg in _messages.reversed) {
@@ -216,6 +284,7 @@ class ChatControllerTest extends ChangeNotifier {
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_active) return;
       if (scrollController.hasClients) {
         scrollController.animateTo(
           scrollController.position.maxScrollExtent,
@@ -228,7 +297,13 @@ class ChatControllerTest extends ChangeNotifier {
 
   @override
   void dispose() {
-    _audioHandler.reset();
+    // Asegurar que el chat esté marcado como inactivo y limpiar recursos
+    _active = false;
+    try {
+      _audioHandler.reset();
+    } catch (e) {
+      debugPrint('Error al resetear audioHandler en dispose: $e');
+    }
     scrollController.dispose();
     super.dispose();
   }

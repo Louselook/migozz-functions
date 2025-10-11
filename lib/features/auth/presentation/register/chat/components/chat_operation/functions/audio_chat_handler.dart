@@ -1,151 +1,83 @@
+import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:migozz_app/core/components/atomics/get_time_now.dart';
 import 'package:migozz_app/core/components/compuestos/chat/chat_model.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 
-/// Maneja toda la lógica relacionada con audio en el chat
 class AudioChatHandler {
-  bool _awaitingAudioConfirmation = false;
-  List<String> _currentSuggestions = [];
+  List<String> currentSuggestions = [];
 
-  bool get isAwaitingConfirmation => _awaitingAudioConfirmation;
-  List<String> get currentSuggestions => _currentSuggestions;
-
-  /// Enviar audio del usuario y mostrar confirmación
-  Map<String, dynamic> sendUserAudio({
+  /// Enviar audio del usuario para el paso de voiceNoteUrl
+  Future<void> sendUserAudio({
     required String audioPath,
     required RegisterCubit registerCubit,
     required Function(Map<String, dynamic>) addMessage,
     required dynamic chatController,
-  }) {
-    final isSpanish = (registerCubit.state.language ?? '')
-        .toLowerCase()
-        .contains('es');
+  }) async {
+    debugPrint('🎤 [AudioHandler] Procesando audio: $audioPath');
 
-    // 1. Añadir mensaje de audio
-    final audioMessage = {
-      "other": true,
+    // 1️⃣ Verificar que el archivo existe
+    final audioFile = File(audioPath);
+    if (!await audioFile.exists()) {
+      debugPrint('❌ [AudioHandler] Archivo no encontrado: $audioPath');
+      addMessage({
+        "other": true,
+        "type": MessageType.text,
+        "text":
+            "❌ Error: No se pudo encontrar el archivo de audio. Intenta grabar nuevamente.",
+        "time": getTimeNow(),
+      });
+      return;
+    }
+
+    // 2️⃣ Guardar el archivo en el cubit
+    registerCubit.setVoiceNoteFile(audioFile);
+    debugPrint('✅ [AudioHandler] Archivo guardado en cubit: $audioPath');
+    debugPrint('✅ [AudioHandler] Archivo existe: ${await audioFile.exists()}');
+    debugPrint(
+      '✅ [AudioHandler] Tamaño del archivo: ${await audioFile.length()} bytes',
+    );
+
+    // 3️⃣ Agregar mensaje visual del audio en el chat
+    addMessage({
+      "other": false,
       "type": MessageType.audioPlayback,
       "audio": audioPath,
       "chatController": chatController,
       "time": getTimeNow(),
-    };
-    addMessage(audioMessage);
-
-    // 2. Mostrar opciones de confirmación
-    final confirmMessage = {
-      "other": true,
-      "type": MessageType.text,
-      "text": isSpanish
-          ? '¿Deseas conservar ese audio o grabar uno nuevo?'
-          : 'Do you want to keep this audio or record a new one?',
-      "options": isSpanish
-          ? ['Conservar el audio', 'Grabar uno nuevo']
-          : ['Keep the audio', 'Record a new one'],
-      "time": getTimeNow(),
-    };
-    addMessage(confirmMessage);
-
-    _currentSuggestions = List<String>.from(confirmMessage["options"] as List);
-    _awaitingAudioConfirmation = true;
-
-    return confirmMessage;
+    });
   }
 
-  /// Callback cuando termina de reproducirse el audio
+  /// Callback cuando el audio termina de reproducirse
   void onAudioFinished({
     required RegisterCubit registerCubit,
     required Function(Map<String, dynamic>) addMessage,
   }) {
-    if (_awaitingAudioConfirmation) return; // Ya mostrado
-
-    final isSpanish = (registerCubit.state.language ?? '')
-        .toLowerCase()
-        .contains('es');
-
-    final confirmMessage = {
-      "other": true,
-      "type": MessageType.text,
-      "text": isSpanish
-          ? '¿Deseas conservar ese audio o grabar uno nuevo?'
-          : 'Do you want to keep this audio or record a new one?',
-      "options": isSpanish
-          ? ['Conservar el audio', 'Grabar uno nuevo']
-          : ['Keep the audio', 'Record a new one'],
-      "time": getTimeNow(),
-    };
-
-    addMessage(confirmMessage);
-    _currentSuggestions = List<String>.from(confirmMessage["options"] as List);
-    _awaitingAudioConfirmation = true;
+    debugPrint('🎵 [AudioHandler] Audio terminó de reproducirse');
   }
 
-  /// Procesar respuesta del usuario a la confirmación de audio
-  /// Retorna:
-  /// - 'keep': usuario quiere conservar el audio
-  /// - 'record': usuario quiere regrabar
-  /// - null: no es una respuesta válida para audio
-  String? handleAudioConfirmationResponse(String userText) {
-    if (!_awaitingAudioConfirmation || _currentSuggestions.isEmpty) {
-      return null;
-    }
-
-    final lower = userText.trim().toLowerCase();
-
-    // Verificar si quiere conservar
-    final isKeep = [
-      'conservar el audio',
-      'conservar',
-      'keep the audio',
-      'keep',
-    ].contains(lower);
-
-    // Verificar si quiere regrabar
-    final isRecord = [
-      'grabar uno nuevo',
-      'grabar nuevo',
-      'nuevo',
-      'record a new one',
-      'new one',
-      'record new',
-    ].contains(lower);
-
-    if (isKeep) {
-      _resetState();
-      return 'keep';
-    }
-
-    if (isRecord) {
-      _resetState();
-      return 'record';
-    }
-
+  /// Manejar respuestas de confirmación de audio (si las hay)
+  String? handleAudioConfirmationResponse(String text) {
+    // Por ahora no necesitamos confirmación
     return null;
   }
 
-  /// Generar mensaje para regrabar
+  /// Obtener mensaje para grabar de nuevo
   Map<String, dynamic> getRecordAgainMessage(RegisterCubit registerCubit) {
-    final isSpanish = (registerCubit.state.language ?? '')
-        .toLowerCase()
-        .contains('es');
-
+    final isSpanish = registerCubit.state.language == 'Español';
     return {
       "other": true,
       "type": MessageType.text,
       "text": isSpanish
-          ? '🎤 Graba una nueva nota de voz.'
-          : '🎤 Record a new voice note.',
+          ? "Por favor, graba tu nota de voz nuevamente. 🎤"
+          : "Please record your voice note again. 🎤",
       "time": getTimeNow(),
     };
   }
 
   /// Resetear estado del handler
-  void _resetState() {
-    _currentSuggestions = [];
-    _awaitingAudioConfirmation = false;
-  }
-
-  /// Limpiar completamente el handler
   void reset() {
-    _resetState();
+    currentSuggestions = [];
+    debugPrint('🔄 [AudioHandler] Reset completo');
   }
 }

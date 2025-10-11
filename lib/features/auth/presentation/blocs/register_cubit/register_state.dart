@@ -134,6 +134,8 @@ class RegisterState extends Equatable {
       phone: phone!,
       category: category!,
       interests: interests!,
+      avatarUrl: avatarUrl, // opcional, ya en el state si se subió
+      voiceNoteUrl: voiceNoteUrl, // opcional
     );
   }
 

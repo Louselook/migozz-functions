@@ -7,7 +7,7 @@ import 'package:migozz_app/core/config/api/api_config.dart';
 enum MediaType { avatar, voice, video, document }
 
 class UserMediaService {
-  Future<Map<MediaType, String>> uploadFilesTemporarily({
+  Future<Map<MediaType, String>> uploadFiles({
     required String email,
     required Map<MediaType, File> files,
   }) async {
@@ -37,26 +37,5 @@ class UserMediaService {
     }
 
     return urls;
-  }
-
-  /// ----------------------
-  /// Asociar archivos al UID definitivo en backend
-  /// ----------------------
-  Future<void> associateMediaToUid({
-    required String uid,
-    required String email,
-  }) async {
-    final url = Uri.parse('${ApiConfig.apiBase}/users/associate-media');
-    final body = {'uid': uid, 'email': email};
-
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(body),
-    );
-
-    if (response.statusCode != 200) {
-      throw Exception('Error asociando media: ${response.body}');
-    }
   }
 }

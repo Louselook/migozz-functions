@@ -47,7 +47,6 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
       },
     );
 
-    // 🔹 Listener para actualizar el botón mientras se escribe
     widget.controller.addListener(() {
       if (mounted) setState(() {});
     });
@@ -75,11 +74,9 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
           shouldExtractWaveform: false,
         );
 
-        // Leer la duración del archivo fresco
         final freshDurationMs = tempPlayer.maxDuration;
         final durationInSeconds = freshDurationMs / 1000.0;
 
-        // Limpiar el player temporal
         tempPlayer.dispose();
 
         if (durationInSeconds < 5.0) {
@@ -114,16 +111,15 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
           return;
         }
 
-        // Audio válido (5-10 segundos)
+        // ✅ Audio válido (5-10 segundos)
         debugPrint(
-          'DEBUG: Audio válido (${durationInSeconds.toStringAsFixed(1)}s), enviando...',
+          '✅ Audio válido (${durationInSeconds.toStringAsFixed(1)}s), enviando...',
         );
         widget.onSendAudio?.call(audioPath);
         _audioManager.reset();
         setState(() {});
       } catch (e) {
-        debugPrint('ERROR al leer duración: $e');
-        // Si falla todo, enviar sin validar
+        debugPrint('❌ Error al validar duración: $e');
         // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -197,6 +193,7 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
   }
 
   Widget _buildInputArea() {
+    // 🎙️ Grabando audio
     if (_audioManager.isRecording) {
       return RecordingDisplay(
         duration: _audioManager.duration,
@@ -204,6 +201,7 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
       );
     }
 
+    // 🎵 Audio grabado listo para enviar
     if (_audioManager.audioPath != null) {
       return AudioPlayerDisplay(
         playerController: _audioManager.playerController,
@@ -218,9 +216,15 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
           }
         },
         onSeek: (position) => _audioManager.seekToPosition(position),
+        onDelete: () {
+          // 🗑️ Eliminar audio grabado
+          _audioManager.reset();
+          setState(() {});
+        },
       );
     }
 
+    // ⌨️ Input de texto normal
     return CustomTextField(
       controller: widget.controller,
       hintText: "Escribe algo...",
@@ -243,8 +247,6 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
     }
 
     final overlay = Overlay.of(context);
-
-    // 📍 Posición y tamaño del botón
     final renderBox =
         _micButtonKey.currentContext!.findRenderObject() as RenderBox;
     final size = renderBox.size;
@@ -256,19 +258,14 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
     const tooltipWidth = 180.0;
     const margin = 8.0;
 
-    // 👆 Ver si mostramos arriba o abajo
     final showAbove = offset.dy > screenHeight / 2;
-
-    // 📐 Posición X del tooltip
     double left = offset.dx + size.width / 2 - tooltipWidth / 2;
 
-    // Limitar dentro de pantalla
     if (left < margin) left = margin;
     if (left + tooltipWidth > screenWidth - margin) {
       left = screenWidth - tooltipWidth - margin;
     }
 
-    // 📍 Flecha debe apuntar al botón
     final arrowOffset = offset.dx + size.width / 2 - left;
 
     _tooltipEntry = OverlayEntry(
@@ -302,7 +299,6 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
   Widget _buildMainButton(bool hasText) {
     IconData icon;
 
-    // 🔹 Elegir icono según estado
     if (hasText) {
       icon = Icons.send_outlined;
     } else if (_audioManager.isRecording) {
@@ -313,7 +309,6 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
       icon = Icons.mic;
     }
 
-    // 🔹 Si hay texto o hay audio grabado, usar IconButton normal
     if (hasText ||
         _audioManager.audioPath != null ||
         _audioManager.isRecording) {
@@ -331,7 +326,6 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
       );
     }
 
-    // 🔹 Si no hay texto ni audio, Listener para grabación
     return Listener(
       onPointerDown: (_) {
         _isLongPressValid = false;
