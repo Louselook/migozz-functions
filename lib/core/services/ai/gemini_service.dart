@@ -121,6 +121,8 @@
 // }
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:migozz_app/core/services/ai/assistant_functions.dart';
 import 'package:migozz_app/core/services/ai/chat_validation_min.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
@@ -130,8 +132,33 @@ class GeminiService {
   static final GeminiService instance = GeminiService._privateConstructor();
 
   String _language = 'English';
+  GenerativeModel? _model;
+  ChatSession? _session;
 
-  void ensureConfigured() {}
+  void ensureConfigured() {
+    if (_model != null) return;
+    final apiKey = dotenv.env['GEMINI_API_KEY'];
+    if (apiKey == null || apiKey.isEmpty) {
+      if (kDebugMode) {
+        debugPrint('GeminiService: GEMINI_API_KEY missing; AI text disabled.');
+      }
+      return;
+    }
+    try {
+      _model = GenerativeModel(
+        model: 'gemini-2.0-flash',
+        apiKey: apiKey,
+        generationConfig: GenerationConfig(
+          temperature: 0.4,
+          maxOutputTokens: 180,
+        ),
+      );
+      _session = _model!.startChat();
+      if (kDebugMode) debugPrint('GeminiService configured.');
+    } catch (e) {
+      if (kDebugMode) debugPrint('GeminiService config error: $e');
+    }
+  }
 
   int _currentQuestionIndex = 0;
 
@@ -177,7 +204,7 @@ class GeminiService {
 
     // === 🟢 MENSAJE INICIAL ===
     if (userInput.trim().isEmpty) {
-      return _prepareQuestion(
+      return await _prepareQuestion(
         AssistantFunctions.getCurrentQuestion(
           _questionFlow,
           _currentQuestionIndex,
@@ -251,21 +278,31 @@ class GeminiService {
         );
       }
 
-      return _prepareQuestion(nextQuestion, registerCubit);
+      return await _prepareQuestion(nextQuestion, registerCubit);
     }
 
     // === 🔴 SI NO ES VÁLIDO → MENSAJE DE ERROR ===
-    return AssistantFunctions.getErrorMessageForStep(
+    final err =
+        AssistantFunctions.getErrorMessageForStep(
           currentStepKey,
           registerCubit,
         ) ??
         decision;
+    // Enriquecer texto de error con IA (opcional)
+    final enriched = await _enrichTextIfPossible(
+      baseText: err['text']?.toString(),
+      stepKey: currentStepKey,
+      registerCubit: registerCubit,
+      purpose: 'error',
+    );
+    if (enriched != null) err['text'] = enriched;
+    return err;
   }
 
-  Map<String, dynamic> _prepareQuestion(
+  Future<Map<String, dynamic>> _prepareQuestion(
     Map<String, dynamic> question,
     RegisterCubit registerCubit,
-  ) {
+  ) async {
     // 🔹 Si la pregunta necesita fotos de perfil
     if (question['showProfilePictures'] == true) {
       final pictures = AssistantFunctions.getProfilePictures(registerCubit);
@@ -273,7 +310,88 @@ class GeminiService {
         question['profilePictures'] = pictures;
       }
     }
-
+    // Enriquecer el texto de la pregunta manteniendo opciones/paso
+    final enriched = await _enrichTextIfPossible(
+      baseText: question['text']?.toString(),
+      stepKey:
+          question['step']?.toString() ?? _questionFlow[_currentQuestionIndex],
+      registerCubit: registerCubit,
+      purpose: 'question',
+      options: (question['options'] is List)
+          ? List<String>.from(question['options'])
+          : const <String>[],
+    );
+    if (enriched != null) {
+      question['text'] = enriched;
+    }
     return question;
+  }
+
+  Future<String?> _enrichTextIfPossible({
+    required String? baseText,
+    required String stepKey,
+    required RegisterCubit registerCubit,
+    required String purpose, // 'question' | 'error'
+    List<String> options = const <String>[],
+  }) async {
+    ensureConfigured();
+    if (_session == null) return null; // IA deshabilitada
+
+    final s = registerCubit.state;
+    final known = _stateSummary(s);
+    final intent = purpose == 'error'
+        ? 'Write a very short, friendly correction and advice (<= 120 chars).'
+        : 'Rephrase the prompt into a short, friendly question (<= 140 chars).';
+    final opts = options.isNotEmpty
+        ? 'Options: ${options.join(' | ')}'
+        : 'Options: none';
+    final seed = baseText == null || baseText.isEmpty
+        ? 'Ask the user.'
+        : baseText;
+
+    final prompt = [
+      'You are the registration assistant in a strict step-by-step wizard. Do NOT change the step order.',
+      'Current step key: $stepKey',
+      'Language: ${s.language ?? _language}',
+      known,
+      opts,
+      'Seed text: "$seed"',
+      intent,
+      'Output: plain text only. No markdown, no emojis, no lists.',
+    ].join('\n');
+
+    try {
+      final resp = await _session!.sendMessage(Content.text(prompt));
+      final text = resp.text?.trim();
+      if (text == null || text.isEmpty) return null;
+      // Limitar longitud por seguridad
+      return text.length > 180 ? text.substring(0, 180) : text;
+    } catch (e) {
+      if (kDebugMode) debugPrint('Gemini enrich error: $e');
+      return null;
+    }
+  }
+
+  String _stateSummary(dynamic s) {
+    try {
+      final parts = <String>[
+        'Known values:',
+        if (s.email != null) 'email=${s.email}',
+        if (s.language != null) 'language=${s.language}',
+        if (s.fullName != null) 'fullName=${s.fullName}',
+        if (s.username != null) 'username=${s.username}',
+        if (s.gender != null) 'gender=${s.gender}',
+        if (s.location != null)
+          'location=${s.location?.city}, ${s.location?.country}',
+        if (s.phone != null) 'phoneSet=true',
+        if (s.category != null) 'category=${s.category}',
+        if (s.interests != null) 'interests=${s.interests?.keys.join(";")}',
+        if (s.socialEcosystem != null)
+          'socials=${s.socialEcosystem?.map((e) => e.keys.first).join(",")}',
+      ];
+      return parts.join(' | ');
+    } catch (_) {
+      return 'Known values: minimal';
+    }
   }
 }
