@@ -126,6 +126,7 @@ Future<Map<String, dynamic>?> processBotResponse(
           '🔍 Comparando OTP: ingresado=$userResponse, esperado=$storedOTP',
         );
 
+        // Dentro del case RegisterStatusProgress.emailVerification:
         if (userResponse == storedOTP) {
           registerCubit.updateEmailVerification(EmailVerification.success);
           debugPrint('✅ Email verificado correctamente');

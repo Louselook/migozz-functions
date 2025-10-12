@@ -3,6 +3,12 @@ import 'package:migozz_app/core/services/bot/list_queestions.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 
 class AssistantFunctions {
+  /// Helper para determinar si usar español basado en el estado del cubit
+  static bool _getIsSpanish(RegisterCubit cubit) {
+    // Por defecto es inglés (false) si no se ha seleccionado idioma
+    return cubit.state.language == 'Español';
+  }
+
   /// Obtiene la pregunta actual del flujo
   static Map<String, dynamic> getCurrentQuestion(
     List<String> questionFlow,
@@ -10,11 +16,12 @@ class AssistantFunctions {
     RegisterCubit cubit,
   ) {
     if (currentIndex >= questionFlow.length) {
-      return getQuestion('done', true)!;
+      return getQuestion('done', _getIsSpanish(cubit))!;
     }
 
     final stepKey = questionFlow[currentIndex];
-    var question = getQuestion(stepKey, true)!;
+    final isSpanish = _getIsSpanish(cubit);
+    var question = getQuestion(stepKey, isSpanish)!;
 
     // Reemplazar valores dinámicos
     question = _replaceDynamicValues(question, cubit);
@@ -105,10 +112,12 @@ class AssistantFunctions {
     };
   }
 
-  // Mantén los métodos _evaluateEmail y _evaluateOTP como estaban
   /// Obtiene mensaje de error desde list_questions
-  static Map<String, dynamic>? getErrorMessageForStep(String stepKey) {
-    return getErrorMessage(stepKey, true);
+  static Map<String, dynamic>? getErrorMessageForStep(
+    String stepKey,
+    RegisterCubit cubit, // ✅ Agregar parámetro cubit
+  ) {
+    return getErrorMessage(stepKey, _getIsSpanish(cubit));
   }
 
   // ==================== REEMPLAZO DE VALORES DINÁMICOS ====================

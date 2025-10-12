@@ -129,6 +129,8 @@ class GeminiService {
   GeminiService._privateConstructor();
   static final GeminiService instance = GeminiService._privateConstructor();
 
+  String _language = 'English';
+
   void ensureConfigured() {}
 
   int _currentQuestionIndex = 0;
@@ -149,6 +151,12 @@ class GeminiService {
     'voiceNoteUrl', // 12
     'category', // 13
   ];
+
+  String get currentLanguage => _language;
+  void setLanguage(String lang) {
+    _language = lang;
+    debugPrint('🌐 Idioma establecido: $_language');
+  }
 
   void setStartIndex(int index) {
     if (index >= 0 && index < _questionFlow.length) {
@@ -247,7 +255,10 @@ class GeminiService {
     }
 
     // === 🔴 SI NO ES VÁLIDO → MENSAJE DE ERROR ===
-    return AssistantFunctions.getErrorMessageForStep(currentStepKey) ??
+    return AssistantFunctions.getErrorMessageForStep(
+          currentStepKey,
+          registerCubit,
+        ) ??
         decision;
   }
 

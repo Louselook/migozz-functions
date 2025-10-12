@@ -38,7 +38,8 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
     // Cuando el audio termina, reiniciamos el estado
     _player.playerStateStream.listen((state) async {
       if (state.processingState == ProcessingState.completed) {
-        await _player.seek(Duration.zero); await _player.pause(); // Reinicia al inicio y pausa (al finalizar)
+        await _player.seek(Duration.zero);
+        await _player.pause(); // Reinicia al inicio y pausa (al finalizar)
         setState(() => _isPlaying = false);
       }
     });
@@ -62,9 +63,9 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
   Future<void> _togglePlay() async {
     final voiceNoteUrl = widget.voiceNoteUrl;
     if (voiceNoteUrl.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("No hay audio disponible")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("No hay audio disponible")));
       return;
     }
 
@@ -81,6 +82,7 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
       setState(() => _isPlaying = !_isPlaying);
     } catch (e) {
       debugPrint('Error reproduciendo audio: $e');
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Error al reproducir el audio")),
       );
