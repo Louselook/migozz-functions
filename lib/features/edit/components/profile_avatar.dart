@@ -15,6 +15,7 @@ class ProfileAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size.width * 0.36;
+
     return Stack(
       children: [
         ClipOval(
@@ -22,8 +23,17 @@ class ProfileAvatar extends StatelessWidget {
             width: size,
             height: size,
             child: avatarUrl != null && avatarUrl!.isNotEmpty
-                ? Image.network(avatarUrl!, fit: BoxFit.cover)
-                : Image.asset('assets/images/profileBackground.png', fit: BoxFit.cover),
+                ? Image.network(
+                    avatarUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      // Si hay error cargando, dejamos el fondo vacío
+                      return Container(color: Colors.grey[900]);
+                    },
+                  )
+                : Container(
+                    color: Colors.grey[900],
+                  ),
           ),
         ),
         Positioned(
@@ -35,7 +45,10 @@ class ProfileAvatar extends StatelessWidget {
               backgroundColor: Colors.pinkAccent,
               radius: 20,
               child: uploading
-                  ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                  ? const CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    )
                   : const Icon(Icons.edit, color: Colors.white, size: 20),
             ),
           ),

@@ -164,6 +164,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final initialSocialPosition = Offset(size.width - 65, size.height * 0.2);
 
     final rawname = (_userDoc?['displayName'] as String?) ?? 'Fullname';
+    final voiceNoteUrl = _userDoc?['voiceNoteUrl']?.toString() ?? '';
     final name = formatDisplayName(rawname, format: FormatName.short);
     final username = (_userDoc?['username'] as String?) ?? '@username';
     final avatarUrl = (_userDoc?['avatarUrl'] as String?);
@@ -186,6 +187,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final current = FirebaseAuth.instance.currentUser;
     final targetId = widget.userId ?? current?.uid;
 
+    
+
     return FutureBuilder<int>(
       future: targetId != null ? getTotalFollowers(targetId) : Future.value(0),
       builder: (context, snapshot) {
@@ -199,6 +202,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             comunityCount: totalFollowers
                 .toString(), // total de followers combinados
             nameComunity: 'Community',
+            voiceNoteUrl: voiceNoteUrl,
             child: Stack(
               children: [
                 // Fondo degradado inferior

@@ -168,7 +168,7 @@ class _EditRecordScreenState extends State<EditRecordScreen>
     final filename = localPath.split('/').last;
     final storageRef = FirebaseStorage.instance
         .ref()
-        .child('users/${user.uid}/avatar/$filename'); 
+        .child('users/${user.uid}/voice/$filename');
 
     setState(() => _isUploading = true);
 

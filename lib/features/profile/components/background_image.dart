@@ -14,6 +14,7 @@ class BackgroundImage extends StatelessWidget {
   final String displayName;
   final String comunityCount;
   final String nameComunity;
+  final String voiceNoteUrl;
 
   const BackgroundImage({
     super.key,
@@ -24,6 +25,7 @@ class BackgroundImage extends StatelessWidget {
     this.displayName = '@johndoe',
     this.comunityCount = '1M',
     this.nameComunity = 'Community',
+    this.voiceNoteUrl = '',
   });
 
   @override
@@ -57,6 +59,7 @@ class BackgroundImage extends StatelessWidget {
                     displayName: displayName,
                     comunityCount: comunityCount,
                     nameComunity: nameComunity,
+                    voiceNoteUrl: voiceNoteUrl,
                   ),
                 ),
               ];
@@ -86,6 +89,7 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
   final double minHeight;
   final double bottomPaddingForCard;
   final String? avatarUrl;
+  final String voiceNoteUrl;
   final String name;
   final String displayName;
   final String comunityCount;
@@ -96,6 +100,7 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
     required this.minHeight,
     required this.bottomPaddingForCard,
     this.avatarUrl,
+    required this.voiceNoteUrl,
     required this.name,
     required this.displayName,
     required this.comunityCount,
@@ -197,6 +202,7 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
                     displayName: displayName,
                     comunityCount: comunityCount,
                     nameComunity: nameComunity,
+                    voiceNoteUrl: voiceNoteUrl,
                   ),
                 ),
               ),

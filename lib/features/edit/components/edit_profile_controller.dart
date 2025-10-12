@@ -31,21 +31,23 @@ class EditProfileController {
   }
 
   /// Cambia el avatar y actualiza su URL en Firestore
-  Future<String?> changeAvatar(String userId, String email) async {
+  Future<String?> changeAvatar(String userId) async {
     final picked = await _picker.pickImage(
       source: ImageSource.gallery,
       imageQuality: 85,
     );
     if (picked == null) return null;
 
+    // 🔹 Usa el UID del usuario (no el email)
     final urls = await _mediaService.uploadFiles(
-      email: email,
+      uid: userId,
       files: {MediaType.avatar: File(picked.path)},
     );
 
     final newUrl = urls[MediaType.avatar];
     if (newUrl == null) return null;
 
+    // 🔹 Actualiza el documento en Firestore
     await _firestore.collection('users').doc(userId).set({
       'avatarUrl': newUrl,
       'updatedAt': FieldValue.serverTimestamp(),

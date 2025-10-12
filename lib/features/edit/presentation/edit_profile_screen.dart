@@ -158,7 +158,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       final mediaService = UserMediaService();
       final urls = await mediaService.uploadFiles(
-        email: _user!.email ?? current.email ?? current.uid,
+        uid: _user!.id,
         files: {MediaType.avatar: File(xfile.path)},
       );
 

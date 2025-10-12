@@ -176,6 +176,7 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
                       displayName: '@johndoe',
                       comunityCount: '1M',
                       nameComunity: 'Community',
+                      voiceNoteUrl: 'voiceNoteUrl',
                     ),
                   ),
                 ),

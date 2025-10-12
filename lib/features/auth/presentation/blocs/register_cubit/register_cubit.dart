@@ -153,7 +153,6 @@ class RegisterCubit extends Cubit<RegisterState> {
   );
 
   // ---------------------- checkCompletion ----------------------
-  // Dentro de tu cubit
   Future<void> checkCompletion() async {
     emit(state.copyWith(status: RegisterIsLogin.loading));
     try {
@@ -166,42 +165,29 @@ class RegisterCubit extends Cubit<RegisterState> {
 
       if (voiceNoteFile != null) {
         filesToUpload[MediaType.voice] = voiceNoteFile!;
-        debugPrint(
-          '✅ [Cubit] Audio agregado para subir: ${voiceNoteFile!.path}',
-        );
+        debugPrint('✅ [Cubit] Audio agregado para subir: ${voiceNoteFile!.path}');
       }
 
-      // Si hay archivos, subirlos usando email y guardar URLs en el estado
+      // Subir temporalmente con email
       if (filesToUpload.isNotEmpty) {
         try {
-          final mediaUrls = await _mediaService.uploadFiles(
+          final mediaUrls = await _mediaService.uploadFilesTemporarily(
             email: state.email!,
             files: filesToUpload,
           );
 
           if (mediaUrls.containsKey(MediaType.avatar)) {
             setAvatarUrl(mediaUrls[MediaType.avatar]!);
-            debugPrint(
-              '✅ [Cubit] Avatar URL guardada: ${mediaUrls[MediaType.avatar]}',
-            );
           }
           if (mediaUrls.containsKey(MediaType.voice)) {
             setVoiceNoteUrl(mediaUrls[MediaType.voice]!);
-            debugPrint(
-              '✅ [Cubit] Voice URL guardada: ${mediaUrls[MediaType.voice]}',
-            );
           }
         } catch (e) {
-          // Si falla la subida, puedes optar por:
-          //  - lanzar para detener el flujo: rethrow;
-          //  - o solo loggear y continuar sin URLs (aquí elijo loggear).
           debugPrint('❌ [Cubit] Error subiendo archivos: $e');
-          // Si prefieres bloquear el registro hasta subir, descomenta:
-          // rethrow;
         }
       }
 
-      // Validar completitud (mismo criterio que tenías)
+      // Validar completitud
       final complete =
           state.email != null &&
           state.language != null &&
@@ -219,7 +205,6 @@ class RegisterCubit extends Cubit<RegisterState> {
         emit(state.copyWith(isComplete: complete));
         await completeRegistration();
       } else {
-        // regresar a estado idle si no cambia completitud
         emit(state.copyWith(status: RegisterIsLogin.initial));
       }
     } catch (e) {
@@ -228,35 +213,37 @@ class RegisterCubit extends Cubit<RegisterState> {
     }
   }
 
-  // ---------------------- completeRegistration ----------------------
-  Future<String?> completeRegistration() async {
-    try {
-      if (!state.isComplete) {
-        throw Exception('Faltan datos para completar el registro');
-      }
-
-      final userDTO = state.buildUserDTO();
-
-      // 1️⃣ Crear usuario en Auth y Firestore (o donde lo manejes)
-      final userCredential = await _authService.signUpRegister(
-        email: state.email!,
-        otp: state.currentOTP!,
-        userData: userDTO,
-      );
-
-      final uid = userCredential.user!.uid;
-
-      // Ya no asociamos archivos al UID.
-      // Las URLs subidas con el email se guardaron en el DTO y el backend/Firestore
-      // debe guardar esos campos como parte del documento del usuario.
-
-      return uid;
-    } catch (e) {
-      throw Exception('Error al registrar usuario: $e');
-    } finally {
-      emit(state.copyWith(status: RegisterIsLogin.success));
+// ---------------------- completeRegistration ----------------------
+Future<String?> completeRegistration() async {
+  try {
+    if (!state.isComplete) {
+      throw Exception('Faltan datos para completar el registro');
     }
+
+    final userDTO = state.buildUserDTO();
+
+    // Crear usuario en Firebase
+    final userCredential = await _authService.signUpRegister(
+      email: state.email!,
+      otp: state.currentOTP!,
+      userData: userDTO,
+    );
+
+    final uid = userCredential.user!.uid;
+
+    // Asociar media (email → UID)
+    await _mediaService.associateMediaToUid(
+      uid: uid,
+      email: state.email!,
+    );
+
+    return uid;
+  } catch (e) {
+    throw Exception('Error al registrar usuario: $e');
+  } finally {
+    emit(state.copyWith(status: RegisterIsLogin.success));
   }
+}
 
   // ---------------------- fetch social profile ----------------------
   Future<void> fetchSocialProfile(String network, String usernameOrLink) async {
