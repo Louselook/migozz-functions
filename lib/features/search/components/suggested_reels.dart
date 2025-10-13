@@ -13,7 +13,7 @@ class SuggestedReels extends StatelessWidget {
       'assets/images/onboarding_1.png',
       'assets/images/onboarding_2.png',
       'assets/images/onboarding_3.png',
-      'assets/images/profileBackground.png',
+      'assets/images/profileBackground.jpg',
       'assets/images/otp_image.png',
     ];
 

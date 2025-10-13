@@ -149,7 +149,7 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
               0, 1, 1, 2, 0, // A
             ]),
             child: Image.asset(
-              "assets/images/profileBackground.png",
+              "assets/images/profileBackground.jpg",
               fit: BoxFit.cover,
             ),
           ),

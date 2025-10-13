@@ -149,12 +149,12 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
                     ), // fuerza refresh cuando cambia la URL
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Image.asset(
-                      "assets/images/profileBackground.png",
+                      "assets/images/profileBackground.jpg",
                       fit: BoxFit.cover,
                     ),
                   )
                 : Image.asset(
-                    "assets/images/profileBackground.png",
+                    "assets/images/profileBackground.jpg",
                     fit: BoxFit.cover,
                   ),
           ),
