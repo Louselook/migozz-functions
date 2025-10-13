@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/components/atomics/get_time_now.dart';
@@ -161,10 +162,30 @@ class ChatControllerTest extends ChangeNotifier {
 
     try {
       final userInput = _lastUserMessage ?? '';
-      final botResponse = await GeminiService.instance.sendMessage(
-        userInput,
-        registerCubit: registerCubit,
-      );
+      Map<String, dynamic> botResponse;
+      try {
+        botResponse = await GeminiService.instance
+            .sendMessage(userInput, registerCubit: registerCubit)
+            .timeout(const Duration(seconds: 20));
+      } on TimeoutException {
+        // Quitar typing y mostrar un mensaje coherente sin alterar el flujo
+        if (!_active) return;
+        _messages.removeWhere((msg) => msg["type"] == MessageType.typing);
+
+        final isSpanish = registerCubit.state.language == 'Español';
+        addMessage({
+          "other": true,
+          "type": MessageType.text,
+          "text": isSpanish
+              ? "Estoy tardando más de lo normal. Intenta de nuevo, por favor."
+              : "I'm taking longer than usual. Please try again.",
+          "options": const [],
+          "name": "Migozz",
+          "time": getTimeNow(),
+          "isError": true,
+        });
+        return; // No continuar, se mantiene el mismo paso para el usuario
+      }
 
       // Si el chat fue terminado mientras esperábamos, ignorar la respuesta
       if (!_active) return;
@@ -219,6 +240,21 @@ class ChatControllerTest extends ChangeNotifier {
       }
     } catch (e) {
       debugPrint('❌ Error en showNextBotMessage: $e');
+      if (!_active) return;
+      // Quitar typing y mostrar mensaje coherente
+      _messages.removeWhere((msg) => msg["type"] == MessageType.typing);
+      final isSpanish = registerCubit.state.language == 'Español';
+      addMessage({
+        "other": true,
+        "type": MessageType.text,
+        "text": isSpanish
+            ? "Ha ocurrido un problema. Intenta de nuevo, por favor."
+            : "Something went wrong. Please try again.",
+        "options": const [],
+        "name": "Migozz",
+        "time": getTimeNow(),
+        "isError": true,
+      });
     } finally {
       if (_active) registerCubit.setAiResponse(false);
       notifyListeners();

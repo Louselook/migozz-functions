@@ -120,6 +120,7 @@
 //   }
 // }
 
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
@@ -134,6 +135,8 @@ class GeminiService {
   String _language = 'English';
   GenerativeModel? _model;
   ChatSession? _session;
+  // Timeout máximo para llamadas de enriquecimiento IA (evita que la UI quede colgada)
+  static const Duration _enrichTimeout = Duration(seconds: 8);
 
   void ensureConfigured() {
     if (_model != null) return;
@@ -287,8 +290,9 @@ class GeminiService {
           currentStepKey,
           registerCubit,
         ) ??
-        decision;
-    // Enriquecer texto de error con IA (opcional)
+        Map<String, dynamic>.from(decision);
+
+    // Enriquecer texto de error con IA (opcional, con timeout)
     final enriched = await _enrichTextIfPossible(
       baseText: err['text']?.toString(),
       stepKey: currentStepKey,
@@ -296,6 +300,17 @@ class GeminiService {
       purpose: 'error',
     );
     if (enriched != null) err['text'] = enriched;
+
+    // Fallback robusto: si por alguna razón no hay texto, proporcionar uno genérico
+    if (err['text'] == null ||
+        (err['text'] is String && (err['text'] as String).trim().isEmpty)) {
+      final isSpanish = registerCubit.state.language == 'Español';
+      err['text'] = isSpanish
+          ? 'Por favor ingresa un valor válido.'
+          : 'Please enter a valid value.';
+      // Asegurar que la UI no quede esperando interacción extraña
+      err['keepTalk'] = false;
+    }
     return err;
   }
 
@@ -361,11 +376,16 @@ class GeminiService {
     ].join('\n');
 
     try {
-      final resp = await _session!.sendMessage(Content.text(prompt));
+      final resp = await _session!
+          .sendMessage(Content.text(prompt))
+          .timeout(_enrichTimeout);
       final text = resp.text?.trim();
       if (text == null || text.isEmpty) return null;
       // Limitar longitud por seguridad
       return text.length > 180 ? text.substring(0, 180) : text;
+    } on TimeoutException {
+      if (kDebugMode) debugPrint('Gemini enrich timeout ($_enrichTimeout)');
+      return null; // No bloquear: devolvemos null para usar el texto base
     } catch (e) {
       if (kDebugMode) debugPrint('Gemini enrich error: $e');
       return null;
