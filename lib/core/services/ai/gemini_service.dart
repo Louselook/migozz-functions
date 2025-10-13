@@ -137,6 +137,10 @@ class GeminiService {
   ChatSession? _session;
   // Timeout máximo para llamadas de enriquecimiento IA (evita que la UI quede colgada)
   static const Duration _enrichTimeout = Duration(seconds: 8);
+  String _modelName = 'gemini-2.0-flash'; // default por compatibilidad
+  double _temperature = 0.4;
+  int _maxOutputTokens = 180;
+  bool _allowRuntimeSwitch = false; // por defecto NO alterna en runtime
 
   void ensureConfigured() {
     if (_model != null) return;
@@ -148,16 +152,41 @@ class GeminiService {
       return;
     }
     try {
+      // Permitir override por .env
+      final envModel = dotenv.env['GEMINI_MODEL'];
+      if (envModel != null && envModel.trim().isNotEmpty) {
+        _modelName = envModel.trim();
+      }
+      final envAllowSwitch = dotenv.env['GEMINI_ALLOW_RUNTIME_SWITCH'];
+      if (envAllowSwitch != null) {
+        final v = envAllowSwitch.toLowerCase();
+        _allowRuntimeSwitch = v == '1' || v == 'true' || v == 'yes';
+      }
+      final envTemp = dotenv.env['GEMINI_TEMPERATURE'];
+      if (envTemp != null) {
+        final t = double.tryParse(envTemp);
+        if (t != null) _temperature = t;
+      }
+      final envMax = dotenv.env['GEMINI_MAX_TOKENS'];
+      if (envMax != null) {
+        final m = int.tryParse(envMax);
+        if (m != null) _maxOutputTokens = m;
+      }
+
       _model = GenerativeModel(
-        model: 'gemini-2.0-flash',
+        model: _modelName,
         apiKey: apiKey,
         generationConfig: GenerationConfig(
-          temperature: 0.4,
-          maxOutputTokens: 180,
+          temperature: _temperature,
+          maxOutputTokens: _maxOutputTokens,
         ),
       );
       _session = _model!.startChat();
-      if (kDebugMode) debugPrint('GeminiService configured.');
+      if (kDebugMode) {
+        debugPrint(
+          'GeminiService configured. model=$_modelName temp=$_temperature maxTokens=$_maxOutputTokens',
+        );
+      }
     } catch (e) {
       if (kDebugMode) debugPrint('GeminiService config error: $e');
     }
@@ -198,6 +227,42 @@ class GeminiService {
   void reset() {
     _currentQuestionIndex = 0;
   }
+
+  // Permite cambiar el modelo en runtime sin reiniciar la app.
+  // Reconfigura la sesión manteniendo el flujo actual.
+  void setModel(String modelName, {double? temperature, int? maxTokens}) {
+    if (!_allowRuntimeSwitch) {
+      if (kDebugMode) {
+        debugPrint(
+          'GeminiService: runtime model switch is disabled. Set GEMINI_ALLOW_RUNTIME_SWITCH=true to enable.',
+        );
+      }
+      return;
+    }
+    final newName = modelName.trim();
+    if (newName.isEmpty) return;
+    final changed =
+        newName != _modelName ||
+        (temperature != null && temperature != _temperature) ||
+        (maxTokens != null && maxTokens != _maxOutputTokens);
+    if (!changed) return;
+
+    _modelName = newName;
+    if (temperature != null) _temperature = temperature;
+    if (maxTokens != null) _maxOutputTokens = maxTokens;
+
+    // Reiniciar modelo/sesión y reconfigurar
+    _model = null;
+    _session = null;
+    if (kDebugMode) {
+      debugPrint(
+        'GeminiService switching model to $_modelName (temp=$_temperature, maxTokens=$_maxOutputTokens)...',
+      );
+    }
+    ensureConfigured();
+  }
+
+  String get currentModel => _modelName;
 
   Future<Map<String, dynamic>> sendMessage(
     String userInput, {
