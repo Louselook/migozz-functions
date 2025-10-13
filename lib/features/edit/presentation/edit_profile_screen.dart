@@ -157,8 +157,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       setState(() => _uploading = true);
 
       final mediaService = UserMediaService();
+
+      // Asegurar que los archivos estén en la carpeta correcta (UID)
+      await mediaService.associateMediaToUid(
+        uid: current.uid,
+        email: _user!.email ?? '',
+      );
+
+      // Ahora subimos la imagen directamente al UID correcto
       final urls = await mediaService.uploadFiles(
-        uid: _user!.id,
+        uid: current.uid,
         files: {MediaType.avatar: File(xfile.path)},
       );
 
@@ -190,7 +198,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ).showSnackBar(SnackBar(content: Text('Error updating photo: $e')));
       }
     }
-  }
+    }
 
   Future<void> _saveChanges() async {
     if (_user == null) return;

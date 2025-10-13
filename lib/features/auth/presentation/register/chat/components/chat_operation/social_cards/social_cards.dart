@@ -112,11 +112,11 @@ class SocialCardMini extends StatelessWidget {
 
   Widget dataCard() {
     final items = {
-      "Seguidores": platformData["followers"],
-      "Seguidos": platformData["following"],
+      "Followers": platformData["followers"],
+      "Following": platformData["following"],
       "Likes": platformData["likes_count"],
-      "Contenido": platformData["mediaCount"],
-      "Vistas": platformData["viewCount"],
+      "Content": platformData["mediaCount"],
+      "Views": platformData["viewCount"],
     };
 
     // Filtra los que no tienen valor

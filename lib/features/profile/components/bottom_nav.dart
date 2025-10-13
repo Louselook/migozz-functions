@@ -8,12 +8,14 @@ class GradientBottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onItemSelected;
   final VoidCallback onCenterTap;
+  final VoidCallback? onProfileUpdated;
 
   const GradientBottomNav({
     super.key,
     required this.currentIndex,
     required this.onItemSelected,
     required this.onCenterTap,
+    this.onProfileUpdated,
   });
 
   static const double _barHeight = 64;
@@ -95,13 +97,17 @@ class GradientBottomNav extends StatelessWidget {
                       _NavItem(
                         icon: Icons.settings_outlined,
                         selected: currentIndex == 3,
-                        onTap: () {
-                          Navigator.push(
+                        onTap: () async {
+                          final result = await Navigator.push<String?>(
                             context,
-                            MaterialPageRoute<void>(
+                            MaterialPageRoute<String?>(
                               builder: (context) => const EditProfileScreen(),
                             ),
                           );
+
+                          if (result == 'updated' && onProfileUpdated != null) {
+                            onProfileUpdated!(); // llama el callback del padre (ProfileScreen)
+                          }
                         },
                       ),
                     ],

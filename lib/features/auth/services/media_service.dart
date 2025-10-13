@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:migozz_app/core/config/api/api_config.dart';
@@ -40,25 +42,54 @@ class UserMediaService {
   }
 
   /// 🔹 Asociar archivos temporales (guardados con el email) al UID definitivo del usuario
-  Future<void> associateMediaToUid({
+  Future<Map<MediaType, String>> associateMediaToUid({
     required String uid,
     required String email,
   }) async {
-    final url = Uri.parse('${ApiConfig.apiBase}/users/associate-media');
-    final body = {'uid': uid, 'email': email};
+    final storage = FirebaseStorage.instance;
+    final urls = <MediaType, String>{};
 
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(body),
-    );
+    // carpetas que se manejan
+    const folders = {
+      MediaType.avatar: 'avatar',
+      MediaType.voice: 'voice',
+    };
 
-    if (response.statusCode != 200) {
-      throw Exception('Error asociando media: ${response.body}');
+    for (final entry in folders.entries) {
+      final folder = entry.value;
+      final oldRef = storage.ref().child('$folder/$email');
+      final newRef = storage.ref().child('$folder/$uid');
+
+      try {
+        // Listar todos los archivos que haya en la carpeta (por si hay más de uno)
+        final oldFiles = await oldRef.listAll();
+
+        for (final item in oldFiles.items) {
+          // descargamos los bytes
+          final data = await item.getData();
+          if (data == null) continue;
+
+          // creamos el nuevo archivo con el mismo nombre
+          final newFileRef = newRef.child(item.name);
+          await newFileRef.putData(data);
+
+          // borramos el archivo viejo
+          await item.delete();
+
+          // obtenemos la nueva URL pública
+          final newUrl = await newFileRef.getDownloadURL();
+          urls[entry.key] = newUrl;
+        }
+      } catch (e) {
+        // si no existía esa carpeta o no había archivo, simplemente se ignora
+        debugPrint('No se pudo mover archivo de $folder/$email → $folder/$uid: $e');
+      }
     }
+
+    return urls;
   }
 
-  /// 🧩 (Opcional) Método genérico para subir con UID directamente (si el usuario ya está registrado)
+  /// Método genérico para subir con UID directamente (si el usuario ya está registrado)
   Future<Map<MediaType, String>> uploadFiles({
     required String uid,
     required Map<MediaType, File> files,
@@ -91,3 +122,4 @@ class UserMediaService {
     return urls;
   }
 }
+
