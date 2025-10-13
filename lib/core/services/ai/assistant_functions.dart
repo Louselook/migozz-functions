@@ -37,6 +37,17 @@ class AssistantFunctions {
   ) {
     final normalized = userInput.trim().toLowerCase();
 
+    // 👇 Detección de preguntas del tipo "why/para qué/por qué"
+    final isWhy =
+        normalized == 'why' ||
+        normalized == 'why?' ||
+        normalized.contains('why ') ||
+        normalized.contains(' why') ||
+        normalized.contains('por qué') ||
+        normalized.contains('por que') ||
+        normalized.contains('para qué') ||
+        normalized.contains('para que');
+
     switch (stepKey) {
       case 'language':
         return _evaluateLanguage(normalized, userInput);
@@ -72,6 +83,7 @@ class AssistantFunctions {
         return {
           "step": "regProgress.$stepKey",
           "valid": true,
+          if (isWhy) "explainWhy": true,
           "userResponse": userInput.trim(),
         };
 
@@ -79,6 +91,7 @@ class AssistantFunctions {
         return {
           "step": "regProgress.$stepKey",
           "valid": true,
+          if (isWhy) "explainWhy": true,
           "userResponse": userInput.trim(),
         };
     }

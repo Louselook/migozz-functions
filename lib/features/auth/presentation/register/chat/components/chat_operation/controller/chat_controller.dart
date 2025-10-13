@@ -221,6 +221,15 @@ class ChatControllerTest extends ChangeNotifier {
 
       if (!_active) return;
 
+      // Si el bot pidió explicar y repetir, mostramos la explicación
+      // y luego repetimos la pregunta actual sin consumir el input.
+      if (botResponse["explainAndRepeat"] == true) {
+        await Future.delayed(const Duration(milliseconds: 900));
+        if (!_active) return;
+        await showNextBotMessage();
+        return;
+      }
+
       if (botResponse["autoAdvance"] == true) {
         debugPrint(
           '🎉 Mensaje de éxito detectado, avanzando automáticamente...',

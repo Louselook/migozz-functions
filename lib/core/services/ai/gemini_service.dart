@@ -285,6 +285,24 @@ class GeminiService {
     }
 
     // === 🔴 SI NO ES VÁLIDO → MENSAJE DE ERROR ===
+    // Si el usuario pidió una explicación ("why?/¿para qué?") mostramos
+    // un mensaje corto y repetimos la misma pregunta automáticamente.
+    if (decision['explainWhy'] == true) {
+      final isSpanish = registerCubit.state.language == 'Español';
+      final explain =
+          _whyExplanation(currentStepKey, isSpanish) ??
+          (isSpanish
+              ? 'Con gusto. Te explico brevemente y continuamos.'
+              : 'Sure. Let me explain briefly and continue.');
+      return {
+        "text": explain,
+        "options": const <String>[],
+        "step": 'regProgress.$currentStepKey',
+        "keepTalk": true, // mensaje contextual
+        "explainAndRepeat": true, // la UI repetirá la pregunta actual
+      };
+    }
+
     final err =
         AssistantFunctions.getErrorMessageForStep(
           currentStepKey,
@@ -413,5 +431,33 @@ class GeminiService {
     } catch (_) {
       return 'Known values: minimal';
     }
+  }
+
+  String? _whyExplanation(String stepKey, bool isSpanish) {
+    final es = <String, String>{
+      'phone':
+          'Tu número nos ayuda a proteger tu cuenta y permitir funciones como recuperación y verificación en dos pasos.',
+      'voiceNoteUrl':
+          'Una nota de voz breve (5–10s) ayuda a que otros te conozcan mejor y hace tu perfil más auténtico.',
+      'avatarUrl':
+          'Una foto hace tu perfil reconocible y confiable. Puedes elegir de tus redes o subir una nueva.',
+      'sendOTP':
+          'Verificamos tu correo para garantizar la seguridad y que podamos contactarte si es necesario.',
+      'location':
+          'La ubicación mejora tus recomendaciones y conexiones cercanas. No compartimos tu ubicación exacta.',
+    };
+    final en = <String, String>{
+      'phone':
+          "Your phone helps secure your account and enables features like recovery and two-step verification.",
+      'voiceNoteUrl':
+          "A short voice note (5–10s) helps others know you better and makes your profile feel authentic.",
+      'avatarUrl':
+          "A profile photo makes you recognizable and trustworthy. Pick from socials or upload a new one.",
+      'sendOTP':
+          "We verify your email to keep your account secure and ensure we can reach you if needed.",
+      'location':
+          "Location improves recommendations and nearby connections. We don't share your exact location.",
+    };
+    return (isSpanish ? es[stepKey] : en[stepKey]);
   }
 }
