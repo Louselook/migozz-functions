@@ -9,6 +9,7 @@ import 'package:migozz_app/features/profile/components/ai_assistant.dart';
 import 'package:migozz_app/features/profile/components/bottom_nav.dart';
 import 'package:migozz_app/features/profile/components/background_image.dart';
 import 'package:migozz_app/features/profile/components/social_rail.dart';
+import 'package:migozz_app/features/profile/components/stats_helper.dart';
 import 'package:migozz_app/features/profile/presentation/profile_stats.dart';
 import 'package:migozz_app/features/search/presentation/search_screen.dart';
 
@@ -104,10 +105,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final userData = userDoc.data();
     if (userData == null) return [];
 
-    final fieldMapDoc =
-        await db.collection('config').doc('socialFieldMapping').get();
-    final fieldMap = fieldMapDoc.data() ?? {};
-
     final rawEco = userData['socialEcosystem'];
     if (rawEco == null) return [];
 
@@ -128,7 +125,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final platformName = social.keys.first;
       final platformData = social[platformName];
       if (platformData is Map<String, dynamic>) {
-        statsList.add(SocialStats.fromMap(platformName, platformData, fieldMap));
+        statsList.add(SocialStats.fromMap(platformName, platformData));
       }
     }
 
@@ -137,8 +134,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<int> getTotalFollowers(String userId) async {
     final stats = await getUserSocialStats(userId);
-    final total = stats.fold<int>(0, (total, s) => total + s.followers);
-    return total;
+    final totals = calculateUnifiedTotals(stats);
+    return totals['followers'] ?? 0;
   }
 
   @override
