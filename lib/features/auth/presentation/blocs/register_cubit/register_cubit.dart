@@ -85,6 +85,25 @@ class RegisterCubit extends Cubit<RegisterState> {
       );
   void setSocialEcosystemEmty() =>
       emit(state.copyWith(regProgress: RegisterStatusProgress.location));
+
+  Future<void> loadSocialsFromFirestore({String? uid}) async {
+    try {
+      // opcional: emitir estado de loading si tienes uno
+      final platforms = await _authService.fetchUserSocialEcosystem(uid: uid);
+
+      if (platforms.isEmpty) {
+        // no hay redes asociadas
+        setSocialEcosystemEmty();
+      } else {
+        setSocialEcosystem(platforms);
+      }
+    } catch (e, st) {
+      debugPrint('🔥 Error cargando socials en cubit: $e\n$st');
+      // fallback seguro
+      setSocialEcosystemEmty();
+    }
+  }
+  
   // location
   void setLocation(LocationDTO location) =>
       emit(state.copyWith(location: location));

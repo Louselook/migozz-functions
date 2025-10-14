@@ -192,7 +192,7 @@ class GeminiService {
     }
   }
 
-  int _currentQuestionIndex = 0;
+  int _currentQuestionIndex = 4;
 
   final List<String> _questionFlow = [
     'language', // 0

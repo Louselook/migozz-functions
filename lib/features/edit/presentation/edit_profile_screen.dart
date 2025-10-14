@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
 import 'package:migozz_app/features/auth/services/location_service.dart';
 import 'package:migozz_app/features/auth/services/media_service.dart';
 import 'package:migozz_app/features/edit/components/edit_profile_controller.dart';
@@ -15,7 +18,6 @@ import 'package:migozz_app/features/edit/presentation/edit_audio.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:migozz_app/features/edit/presentation/edit_my_interest.dart';
-import 'package:migozz_app/features/edit/presentation/edit_social.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -81,9 +83,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final user = await _controller.loadUser();
     if (user == null) return;
 
+    // -------------------
+    // Parseo DOB (igual a tu implementación)
+    // -------------------
     DateTime? parsedDob;
-    final dynamic rawDob =
-        user.dob; // puede ser Timestamp, DateTime, String, int, o null
+    final dynamic rawDob = user.dob; // puede ser Timestamp, DateTime, String, int, o null
 
     if (rawDob == null) {
       parsedDob = null;
@@ -118,15 +122,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         );
       }
     } else {
-      // Si viene en otro formato raro, lo ignoramos (evita crashes)
       parsedDob = null;
     }
 
-    // Llenar el controlador de texto para el DOB (UI)
+    // -------------------
+    // Llenar UI con datos del user
+    // -------------------
     birthCtrl.text = parsedDob != null
         ? "${parsedDob.year.toString().padLeft(4, '0')}-"
-              "${parsedDob.month.toString().padLeft(2, '0')}-"
-              "${parsedDob.day.toString().padLeft(2, '0')}"
+          "${parsedDob.month.toString().padLeft(2, '0')}-"
+          "${parsedDob.day.toString().padLeft(2, '0')}"
         : '';
 
     setState(() {
@@ -140,6 +145,39 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       phoneCtrl.text = user.phone ?? '';
       genderCtrl.text = user.gender ?? '';
     });
+
+    // -------------------
+    // AQUÍ: pedir al CUBIT que cargue las socials desde Firestore
+    // -------------------
+    // Nota: comprobamos mounted antes de usar context después de await
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? user.id;
+
+    try {
+      // Opcional: si quieres mostrar loader local para la carga de socials,
+      // activa una bandera antes y la apagas después.
+      // setState(() => _loadingSocials = true);
+
+      // 1) Esperar a que el cubit termine (útil si tu UI depende de esto inmediatamente)
+      await context.read<RegisterCubit>().loadSocialsFromFirestore(uid: uid);
+
+      // 2) Si prefieres no bloquear UI, en vez de await puedes:
+      // context.read<AuthCubit>().loadSocialsFromFirestore(uid: uid); // fire-and-forget
+
+      // After awaiting any async, check mounted before touching context/state
+      if (!mounted) return;
+
+      // opcional: actualizar algo en la UI local si lo necesitas,
+      // por ejemplo sincronizar un selectedSocials local desde el cubit.
+      // final cubitState = context.read<AuthCubit>().state;
+      // setState(() => selectedSocials = cubitState.socialKeys);
+
+    } catch (e, st) {
+      debugPrint('🔥 Error delegando loadSocials al cubit: $e\n$st');
+      // fallback: nada o limpiar UI localmente
+      // setState(() => selectedSocials = {});
+    } finally {
+      // setState(() => _loadingSocials = false);
+    }
   }
 
   Future<void> _changeAvatar() async {
@@ -413,7 +451,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => const EditSocialScreen(),
+                          builder: (_) => const MoreUserDetails(pageIndicator: 0,),
                         ),
                       );
                     },

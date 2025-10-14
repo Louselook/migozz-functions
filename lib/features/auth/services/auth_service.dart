@@ -71,23 +71,62 @@ class AuthService {
     }
   }
 
-  /// Guarda un perfil social de un usuario en Firestore
-  // Future<void> saveUserSocial({
-  //   required String uid,
-  //   required String network,
-  //   required ProfileData profile,
-  // }) async {
-  //   try {
-  //     await _firestore
-  //         .collection('users')
-  //         .doc(uid)
-  //         .collection('socials')
-  //         .doc(network.toLowerCase())
-  //         .set(profile.toJson());
-  //   } catch (e) {
-  //     throw Exception('Error guardando red social $network: $e');
-  //   }
+  // Set<String> extractSocialKeys(List<Map<String, Map<String, dynamic>>> platforms) {
+  //   return platforms.map((m) => m.keys.first.toLowerCase()).toSet();
   // }
+
+  /// Guarda un perfil social de un usuario en Firestore
+  Future<List<Map<String, Map<String, dynamic>>>> fetchUserSocialEcosystem({
+    String? uid,
+  }) async {
+    final userId = uid ?? _auth.currentUser?.uid;
+    if (userId == null) return [];
+
+    final doc = await _firestore.collection('users').doc(userId).get();
+    final data = doc.data();
+    if (data == null) return [];
+
+    final List<Map<String, Map<String, dynamic>>> result = [];
+
+    // 1) Legacy 'socials' (map)
+    if (data['socials'] != null && data['socials'] is Map) {
+      final socialsMap = Map<String, dynamic>.from(data['socials']);
+      socialsMap.forEach((key, value) {
+        final lowerKey = key.toString().toLowerCase();
+        if (value is Map) {
+          result.add({lowerKey: Map<String, dynamic>.from(value)});
+        } else {
+          // si en el legacy guardabas solo el handle (String), lo normalizamos
+          result.add({lowerKey: <String, dynamic>{'username': value}});
+        }
+      });
+    }
+
+    // 2) Nuevo 'socialEcosystem' (lista de mapas)
+    if (data['socialEcosystem'] != null && data['socialEcosystem'] is List) {
+      final list = List.from(data['socialEcosystem']);
+      for (final item in list) {
+        try {
+          final mapItem = Map<String, dynamic>.from(item);
+          for (final key in mapItem.keys) {
+            final lowerKey = key.toString().toLowerCase();
+            final inner = mapItem[key];
+            if (inner is Map) {
+              result.add({lowerKey: Map<String, dynamic>.from(inner)});
+            } else {
+              // si por alguna razón el value no es map
+              result.add({lowerKey: <String, dynamic>{'value': inner}});
+            }
+          }
+        } catch (_) {
+          // ignora items mal formados
+          continue;
+        }
+      }
+    }
+
+    return result;
+  }
 
   // sing out
   Future<void> signOutHome() async {
