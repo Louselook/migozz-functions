@@ -61,9 +61,41 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
 
   @override
   void dispose() {
-    _audioManager.dispose();
+    _holdTimer?.cancel();
+    _tooltipEntry?.remove();
+    _tooltipEntry = null;
+
+    // ✅ Limpiar audio antes de dispose
+    _audioManager
+        .reset()
+        .then((_) {
+          _audioManager.dispose();
+        })
+        .catchError((e) {
+          debugPrint('Error en dispose: $e');
+          _audioManager.dispose();
+        });
+
     widget.controller.removeListener(() {});
     super.dispose();
+  }
+
+  void _clearInputVisual() {
+    // Si estamos en modo teléfono, limpiar el campo de teléfono
+    if (widget.showPhoneInput) {
+      setState(() {
+        _completePhoneNumber = '';
+        _isPhoneValid = false;
+      });
+    } else {
+      // Para input de texto normal, limpiar el controller
+      widget.controller.clear();
+    }
+
+    // Quitar foco / teclado para que la UI vuelva a su estado original
+    try {
+      FocusScope.of(context).unfocus();
+    } catch (_) {}
   }
 
   void _toggleAttachments() {
@@ -87,58 +119,72 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
         tempPlayer.dispose();
 
         if (durationInSeconds < 5.0) {
-          // ignore: use_build_context_synchronously
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'El audio es muy corto (${durationInSeconds.toStringAsFixed(1)} segundos). Debe durar entre 5 y 10 segundos',
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'El audio es muy corto (${durationInSeconds.toStringAsFixed(1)} segundos). Debe durar entre 5 y 10 segundos',
+                ),
+                backgroundColor: Colors.orange,
+                duration: const Duration(seconds: 3),
               ),
-              backgroundColor: Colors.orange,
-              duration: const Duration(seconds: 3),
-            ),
-          );
-          _audioManager.reset();
-          setState(() {});
+            );
+          }
+          await _audioManager.reset();
+          if (mounted) setState(() {});
           return;
         }
 
         if (durationInSeconds > 10.0) {
-          // ignore: use_build_context_synchronously
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'El audio es muy largo (${durationInSeconds.toStringAsFixed(1)} segundos). Debe durar entre 5 y 10 segundos',
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'El audio es muy largo (${durationInSeconds.toStringAsFixed(1)} segundos). Debe durar entre 5 y 10 segundos',
+                ),
+                backgroundColor: Colors.orange,
+                duration: const Duration(seconds: 3),
               ),
-              backgroundColor: Colors.orange,
-              duration: const Duration(seconds: 3),
-            ),
-          );
-          _audioManager.reset();
-          setState(() {});
+            );
+          }
+          await _audioManager.reset();
+          if (mounted) setState(() {});
           return;
         }
 
         debugPrint(
           '✅ Audio válido (${durationInSeconds.toStringAsFixed(1)}s), enviando...',
         );
+
+        // Enviar el audio
         widget.onSendAudio?.call(audioPath);
-        _audioManager.reset();
-        setState(() {});
+
+        // LIMPIAR visualmente el input (texto o teléfono) antes de resetear audio
+        _clearInputVisual();
+
+        // Resetear después de enviar
+        await _audioManager.reset();
+        if (mounted) setState(() {});
       } catch (e) {
         debugPrint('❌ Error al validar duración: $e');
-        // ignore: use_build_context_synchronously
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'No se pudo validar la duración. Enviando audio sin validar.',
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'No se pudo validar la duración. Enviando audio sin validar.',
+              ),
+              backgroundColor: Colors.blue,
+              duration: Duration(seconds: 2),
             ),
-            backgroundColor: Colors.blue,
-            duration: Duration(seconds: 2),
-          ),
-        );
+          );
+        }
         widget.onSendAudio?.call(audioPath);
-        _audioManager.reset();
-        setState(() {});
+
+        // También limpiar en el caso de fallback
+        _clearInputVisual();
+
+        await _audioManager.reset();
+        if (mounted) setState(() {});
       }
     }
   }
@@ -222,6 +268,7 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
     }
 
     // 🎵 Audio grabado listo para enviar
+    // En _buildInputArea() de ChatInputWidget
     if (_audioManager.audioPath != null) {
       return AudioPlayerDisplay(
         playerController: _audioManager.playerController,
@@ -235,10 +282,11 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
             _audioManager.playRecording();
           }
         },
-        onSeek: (position) => _audioManager.seekToPosition(position),
-        onDelete: () {
-          _audioManager.reset();
-          setState(() {});
+        onSeek: (position) =>
+            _audioManager.seekToPosition(position), // ✅ Ya está correcto
+        onDelete: () async {
+          await _audioManager.reset();
+          if (mounted) setState(() {});
         },
       );
     }

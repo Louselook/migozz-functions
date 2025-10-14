@@ -87,7 +87,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     // Parseo DOB (igual a tu implementación)
     // -------------------
     DateTime? parsedDob;
-    final dynamic rawDob = user.dob; // puede ser Timestamp, DateTime, String, int, o null
+    final dynamic rawDob =
+        user.dob; // puede ser Timestamp, DateTime, String, int, o null
 
     if (rawDob == null) {
       parsedDob = null;
@@ -130,8 +131,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     // -------------------
     birthCtrl.text = parsedDob != null
         ? "${parsedDob.year.toString().padLeft(4, '0')}-"
-          "${parsedDob.month.toString().padLeft(2, '0')}-"
-          "${parsedDob.day.toString().padLeft(2, '0')}"
+              "${parsedDob.month.toString().padLeft(2, '0')}-"
+              "${parsedDob.day.toString().padLeft(2, '0')}"
         : '';
 
     setState(() {
@@ -170,7 +171,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       // por ejemplo sincronizar un selectedSocials local desde el cubit.
       // final cubitState = context.read<AuthCubit>().state;
       // setState(() => selectedSocials = cubitState.socialKeys);
-
     } catch (e, st) {
       debugPrint('🔥 Error delegando loadSocials al cubit: $e\n$st');
       // fallback: nada o limpiar UI localmente
@@ -236,7 +236,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ).showSnackBar(SnackBar(content: Text('Error updating photo: $e')));
       }
     }
-    }
+  }
 
   Future<void> _saveChanges() async {
     if (_user == null) return;
@@ -451,7 +451,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => const MoreUserDetails(pageIndicator: 0,),
+                          builder: (_) =>
+                              const MoreUserDetails(pageIndicator: 0),
                         ),
                       );
                     },

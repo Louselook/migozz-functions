@@ -85,18 +85,17 @@ class ChatControllerTest extends ChangeNotifier {
       registerCubit: registerCubit,
       addMessage: addMessage,
       chatController: this,
+      removeTyping: _removeTypingMessage,
     );
 
+    // ✅ NO avanzar automáticamente, esperar confirmación del usuario
+    notifyListeners();
+  }
+
+  /// ✅ Helper para remover mensajes de typing
+  void _removeTypingMessage() {
     if (!_active) return;
-
-    // Establecer lastUserMessage para que el flujo continúe
-    _lastUserMessage = audioPath;
-
-    // Avanzar automáticamente al siguiente paso
-    await Future.delayed(const Duration(milliseconds: 600));
-    if (!_active) return;
-    await showNextBotMessage();
-
+    _messages.removeWhere((msg) => msg["type"] == MessageType.typing);
     notifyListeners();
   }
 
@@ -275,7 +274,7 @@ class ChatControllerTest extends ChangeNotifier {
     if (!_active) return;
     if (text.trim().isEmpty) return;
 
-    // Delegar manejo de confirmación de audio al handler
+    // ✅ Delegar manejo de confirmación de audio al handler
     final audioResponse = _audioHandler.handleAudioConfirmationResponse(text);
 
     if (audioResponse != null) {
@@ -287,10 +286,18 @@ class ChatControllerTest extends ChangeNotifier {
       });
 
       if (audioResponse == 'keep') {
+        // ✅ Guardar el audio confirmado en el cubit
+        _audioHandler.confirmAudio(registerCubit);
+
+        // ✅ CORRECCIÓN: Acceder al archivo desde el cubit, no desde el state
+        _lastUserMessage = registerCubit.voiceNoteFile?.path ?? text;
+
+        // Avanzar al siguiente paso
         await Future.delayed(const Duration(milliseconds: 600));
         if (!_active) return;
         await showNextBotMessage();
       } else if (audioResponse == 'record') {
+        // ❌ Mostrar mensaje para grabar de nuevo
         final recordMessage = _audioHandler.getRecordAgainMessage(
           registerCubit,
         );

@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_state.dart';
@@ -163,20 +161,22 @@ Future<Map<String, dynamic>?> processBotResponse(
       break;
 
     case RegisterStatusProgress.voiceNoteUrl:
-      // El audio ya se guardó como File en el handler
-      // Solo validamos que el archivo exista
+      // ✅ El audio ya fue confirmado y guardado por el handler
       if (userResponse != null && userResponse.isNotEmpty) {
-        final audioFile = File(userResponse);
-        if (await audioFile.exists()) {
-          debugPrint('✅ Audio validado: $userResponse');
-          // El archivo ya está guardado con setVoiceNoteFile
-          // El progreso se actualiza automáticamente en GeminiService
+        // ✅ CORRECCIÓN: Verificar que el archivo existe en el cubit (no en el state)
+        final voiceFile = registerCubit.voiceNoteFile;
+
+        if (voiceFile != null && await voiceFile.exists()) {
+          debugPrint('✅ Audio confirmado y validado: ${voiceFile.path}');
+          debugPrint('✅ Tamaño: ${await voiceFile.length()} bytes');
         } else {
-          debugPrint('⚠️ Archivo de audio no encontrado');
+          debugPrint('⚠️ Archivo de audio no encontrado en cubit');
+          final isSpanish = registerCubit.state.language == 'Español';
           return {
             "error": true,
-            "message":
-                "No se pudo encontrar el archivo de audio. Por favor, graba nuevamente.",
+            "message": isSpanish
+                ? "No se pudo encontrar el archivo de audio. Por favor, graba nuevamente."
+                : "Could not find the audio file. Please record again.",
           };
         }
       } else {

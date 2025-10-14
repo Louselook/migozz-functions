@@ -6,6 +6,7 @@ import 'package:migozz_app/bloc_providers.dart';
 import 'package:migozz_app/core/config/firebase_config.dart';
 import 'package:migozz_app/core/router/app_router.dart';
 import 'package:migozz_app/core/router/app_router_notifier.dart';
+import 'package:migozz_app/core/services/social_auth_service.dart';
 import 'package:migozz_app/email_otp_custom.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
@@ -14,6 +15,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await FirebaseConfig.initialize();
   await dotenv.load(fileName: ".env"); // inicialización
+  SocialAuthService().init();
 
   // Config OTP
   EmailOTP.config(
