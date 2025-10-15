@@ -8,9 +8,9 @@ import 'package:migozz_app/core/services/ai/gemini_service.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/functions/audio_chat_handler.dart';
 
-class ChatControllerTest extends ChangeNotifier {
+class ChatController extends ChangeNotifier {
   final RegisterCubit registerCubit;
-  ChatControllerTest({required this.registerCubit});
+  ChatController({required this.registerCubit});
 
   /// --- Estado activo/inactivo del chat ---
   bool _active = true;
@@ -148,7 +148,6 @@ class ChatControllerTest extends ChangeNotifier {
 
     registerCubit.setAiResponse(true);
 
-    // Añadir typing solo si sigue activo
     if (_active) {
       addMessage({
         "other": true,
@@ -162,12 +161,12 @@ class ChatControllerTest extends ChangeNotifier {
     try {
       final userInput = _lastUserMessage ?? '';
       Map<String, dynamic> botResponse;
+      
       try {
         botResponse = await GeminiService.instance
             .sendMessage(userInput, registerCubit: registerCubit)
             .timeout(const Duration(seconds: 20));
       } on TimeoutException {
-        // Quitar typing y mostrar un mensaje coherente sin alterar el flujo
         if (!_active) return;
         _messages.removeWhere((msg) => msg["type"] == MessageType.typing);
 
@@ -183,10 +182,9 @@ class ChatControllerTest extends ChangeNotifier {
           "time": getTimeNow(),
           "isError": true,
         });
-        return; // No continuar, se mantiene el mismo paso para el usuario
+        return;
       }
 
-      // Si el chat fue terminado mientras esperábamos, ignorar la respuesta
       if (!_active) return;
 
       _messages.removeWhere((msg) => msg["type"] == MessageType.typing);
@@ -213,15 +211,15 @@ class ChatControllerTest extends ChangeNotifier {
 
       // ✅ Detectar si es el paso de teléfono
       final step = botResponse["step"]?.toString() ?? '';
-      _showPhoneInput =
-          step.contains('phone') || botResponse["showPhoneCode"] == true;
+      _showPhoneInput = step.contains('phone') || botResponse["showPhoneCode"] == true;
+      
+      // ✅ Detectar si es paso de audio (solo audio permitido)
+      // _audioOnlyMode = GeminiService.instance.isOnVoiceNoteStep;
 
       addMessage(message);
 
       if (!_active) return;
 
-      // Si el bot pidió explicar y repetir, mostramos la explicación
-      // y luego repetimos la pregunta actual sin consumir el input.
       if (botResponse["explainAndRepeat"] == true) {
         await Future.delayed(const Duration(milliseconds: 900));
         if (!_active) return;
@@ -230,9 +228,7 @@ class ChatControllerTest extends ChangeNotifier {
       }
 
       if (botResponse["autoAdvance"] == true) {
-        debugPrint(
-          '🎉 Mensaje de éxito detectado, avanzando automáticamente...',
-        );
+        debugPrint('🎉 Mensaje de éxito detectado, avanzando automáticamente...');
         await Future.delayed(const Duration(milliseconds: 1500));
         if (!_active) return;
         _lastUserMessage = 'continue';
@@ -249,7 +245,6 @@ class ChatControllerTest extends ChangeNotifier {
     } catch (e) {
       debugPrint('❌ Error en showNextBotMessage: $e');
       if (!_active) return;
-      // Quitar typing y mostrar mensaje coherente
       _messages.removeWhere((msg) => msg["type"] == MessageType.typing);
       final isSpanish = registerCubit.state.language == 'Español';
       addMessage({
@@ -274,6 +269,33 @@ class ChatControllerTest extends ChangeNotifier {
     if (!_active) return;
     if (text.trim().isEmpty) return;
 
+    // ✅ VALIDAR: Si estamos en el paso de audio y NO estamos esperando confirmación
+    
+    if (GeminiService.instance.isOnVoiceNoteStep && 
+      !_audioHandler.isWaitingForAudioConfirmation) {
+        final isSpanish = registerCubit.state.language == 'Español';
+        
+        addMessage({
+          "other": false,
+          "text": text,
+          "type": MessageType.text,
+          "time": getTimeNow(),
+        });
+        
+        addMessage({
+          "other": true,
+          "type": MessageType.text,
+          "text": isSpanish
+              ? "⚠ En este paso solo puedes enviar una nota de voz.\n\nMantén pulsado el botón del micrófono 🎤 para grabar (5-10 segundos)."
+              : "⚠ In this step you can only send a voice note.\n\nHold the microphone button 🎤 to record (5-10 seconds).",
+          "name": "Migozz",
+          "time": getTimeNow(),
+          "isError": true,
+        });
+        notifyListeners();
+      return;
+    }
+
     // ✅ Delegar manejo de confirmación de audio al handler
     final audioResponse = _audioHandler.handleAudioConfirmationResponse(text);
 
@@ -289,7 +311,7 @@ class ChatControllerTest extends ChangeNotifier {
         // ✅ Guardar el audio confirmado en el cubit
         _audioHandler.confirmAudio(registerCubit);
 
-        // ✅ CORRECCIÓN: Acceder al archivo desde el cubit, no desde el state
+        // ✅ Acceder al archivo desde el cubit
         _lastUserMessage = registerCubit.voiceNoteFile?.path ?? text;
 
         // Avanzar al siguiente paso
@@ -298,9 +320,7 @@ class ChatControllerTest extends ChangeNotifier {
         await showNextBotMessage();
       } else if (audioResponse == 'record') {
         // ❌ Mostrar mensaje para grabar de nuevo
-        final recordMessage = _audioHandler.getRecordAgainMessage(
-          registerCubit,
-        );
+        final recordMessage = _audioHandler.getRecordAgainMessage(registerCubit);
         addMessage(recordMessage);
         notifyListeners();
       }

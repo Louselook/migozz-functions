@@ -8,7 +8,7 @@ class OtherMessage extends StatelessWidget {
   final String time;
   final List<Map<String, dynamic>>? platforms;
   final List<Map<String, String>>? profilePictures;
-  final ChatControllerTest? chatController; // 👈 Agregar controller
+  final ChatController? chatController; // 👈 Agregar controller
 
   const OtherMessage({
     super.key,

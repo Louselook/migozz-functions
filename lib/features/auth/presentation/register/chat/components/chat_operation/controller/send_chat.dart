@@ -5,7 +5,7 @@ import 'package:migozz_app/features/auth/presentation/register/chat/components/c
 
 Future<void> sendChat({
   required bool other,
-  required ChatControllerTest controller,
+  required ChatController controller,
   required BuildContext context,
   MessageType type = MessageType.text,
   String? text,

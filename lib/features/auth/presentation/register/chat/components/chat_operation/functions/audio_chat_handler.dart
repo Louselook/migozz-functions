@@ -55,6 +55,8 @@ class AudioChatHandler {
       );
     } catch (e) {
       debugPrint('❌ [AudioHandler] Error al crear copia: $e');
+      debugPrint('📁 Ruta de audio temporal: ${audioFile.path}');
+      debugPrint('📏 Tamaño archivo: ${await audioFile.length()} bytes');
       addMessage({
         "other": true,
         "type": MessageType.text,
@@ -163,32 +165,33 @@ class AudioChatHandler {
     return null;
   }
 
-  /// ✅ CORRECCIÓN: Confirmar y guardar el audio usando la copia permanente
-  void confirmAudio(RegisterCubit registerCubit) {
+ 
+ void confirmAudio(
+    RegisterCubit registerCubit, {
+    VoidCallback? onResetAudioUI,
+  }) {
     if (_permanentAudioPath == null) {
       debugPrint('⚠️ [AudioHandler] No hay audio permanente para confirmar');
       return;
     }
 
-    // ✅ Usar la copia permanente, no el archivo temporal original
     final audioFile = File(_permanentAudioPath!);
 
     if (!audioFile.existsSync()) {
-      debugPrint(
-        '❌ [AudioHandler] Archivo permanente no existe: $_permanentAudioPath',
-      );
+      debugPrint('❌ [AudioHandler] Archivo permanente no existe: $_permanentAudioPath');
       return;
     }
 
     registerCubit.setVoiceNoteFile(audioFile);
 
-    debugPrint(
-      '✅ [AudioHandler] Audio confirmado y guardado: $_permanentAudioPath',
-    );
+    debugPrint('✅ [AudioHandler] Audio confirmado y guardado: $_permanentAudioPath');
     debugPrint('✅ [AudioHandler] Tamaño: ${audioFile.lengthSync()} bytes');
 
-    // Limpiar solo el archivo temporal original (no la copia permanente)
+    // Limpiar el archivo temporal original
     _cleanupOriginalFile();
+
+    // ✅ Ahora sí resetear el UI del audio manager
+    onResetAudioUI?.call();
 
     _pendingAudioPath = null;
     _isWaitingForConfirmation = false;

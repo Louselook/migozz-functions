@@ -10,7 +10,7 @@ class ChatNavigationHandler {
   static void handleBotAction({
     required BuildContext context,
     required Map<String, dynamic> botResponse,
-    required ChatControllerTest chatController,
+    required ChatController chatController,
   }) async {
     final action = botResponse["action"];
     if (action == null) return;

@@ -115,7 +115,6 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
 
         final freshDurationMs = tempPlayer.maxDuration;
         final durationInSeconds = freshDurationMs / 1000.0;
-
         tempPlayer.dispose();
 
         if (durationInSeconds < 5.0) {
@@ -152,19 +151,18 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
           return;
         }
 
-        debugPrint(
-          '✅ Audio válido (${durationInSeconds.toStringAsFixed(1)}s), enviando...',
-        );
+        debugPrint('✅ Audio válido (${durationInSeconds.toStringAsFixed(1)}s), enviando...');
 
-        // Enviar el audio
+        // ✅ Enviar el audio (el handler creará la copia)
         widget.onSendAudio?.call(audioPath);
 
-        // LIMPIAR visualmente el input (texto o teléfono) antes de resetear audio
+        // ✅ Solo limpiar visual, NO resetear el audio manager todavía
         _clearInputVisual();
 
-        // Resetear después de enviar
-        await _audioManager.reset();
+        // ❌ NO RESETEAR AQUÍ - se hará después de la confirmación
+        // await _audioManager.reset();
         if (mounted) setState(() {});
+        
       } catch (e) {
         debugPrint('❌ Error al validar duración: $e');
         if (mounted) {
@@ -179,14 +177,16 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
           );
         }
         widget.onSendAudio?.call(audioPath);
-
-        // También limpiar en el caso de fallback
         _clearInputVisual();
-
-        await _audioManager.reset();
+        // ❌ NO RESETEAR AQUÍ tampoco
         if (mounted) setState(() {});
       }
     }
+  }
+
+  Future<void> resetAudioManager() async {
+    await _audioManager.reset();
+    if (mounted) setState((){});
   }
 
   void _handleMainButton() {

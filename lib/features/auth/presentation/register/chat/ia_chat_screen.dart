@@ -26,13 +26,13 @@ class IaChatScreen extends StatefulWidget {
 class _IaChatScreenState extends State<IaChatScreen> {
   static const _socialChannel = MethodChannel('socialAuth');
   final TextEditingController _controller = TextEditingController();
-  late final ChatControllerTest _chatController;
+  late final ChatController _chatController;
 
   @override
   void initState() {
     super.initState();
 
-    _chatController = ChatControllerTest(
+    _chatController = ChatController(
       registerCubit: context.read<RegisterCubit>(),
     );
 

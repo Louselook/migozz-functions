@@ -10,7 +10,7 @@ class SocialEcosystemHandler {
   static void handleReturn({
     required BuildContext context,
     required RegisterCubit cubit,
-    required ChatControllerTest chatController,
+    required ChatController chatController,
   }) {
     final socialEcosystem = cubit.state.socialEcosystem;
 
@@ -29,7 +29,7 @@ class SocialEcosystemHandler {
   /// Muestra mensaje cuando NO se vincularon redes
   static void _showNoSocialNetworksMessage(
     RegisterCubit cubit,
-    ChatControllerTest chatController,
+    ChatController chatController,
   ) {
     final isSpanish = (cubit.state.language ?? '').toLowerCase().contains('es');
 
@@ -51,7 +51,7 @@ class SocialEcosystemHandler {
   /// Muestra confirmación con tarjetas cuando SÍ se vincularon redes
   static void _showSocialNetworksConfirmation(
     RegisterCubit cubit,
-    ChatControllerTest chatController,
+    ChatController chatController,
     List<Map<String, Map<String, dynamic>>> socialEcosystem,
   ) {
     final isSpanish = (cubit.state.language ?? '').toLowerCase().contains('es');

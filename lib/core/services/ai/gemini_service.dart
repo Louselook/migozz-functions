@@ -89,6 +89,28 @@ class GeminiService {
     'category', // 13
   ];
 
+  // ✅ NUEVOS GETTERS PÚBLICOS
+  
+  /// Obtener el paso actual del flujo
+  String get currentStep {
+    if (_currentQuestionIndex >= 0 && _currentQuestionIndex < _questionFlow.length) {
+      return _questionFlow[_currentQuestionIndex];
+    }
+    return 'unknown';
+  }
+
+  /// Verificar si estamos en el paso de nota de voz
+  bool get isOnVoiceNoteStep => currentStep == 'voiceNoteUrl';
+  
+  /// Verificar si estamos en el paso de teléfono
+  bool get isOnPhoneStep => currentStep == 'phone';
+  
+  /// Verificar si estamos en el paso de avatar
+  bool get isOnAvatarStep => currentStep == 'avatarUrl';
+
+  /// Obtener el índice actual (útil para debug)
+  int get currentQuestionIndex => _currentQuestionIndex;
+
   String get currentLanguage => _language;
   void setLanguage(String lang) {
     _language = lang;

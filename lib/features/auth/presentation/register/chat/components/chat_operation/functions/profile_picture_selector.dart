@@ -5,7 +5,7 @@ import 'package:migozz_app/features/auth/presentation/register/chat/components/c
 /// Widget para mostrar fotos de perfil clickeables
 class ProfilePictureSelector extends StatelessWidget {
   final List<Map<String, String>> pictures;
-  final ChatControllerTest chatController; // 👈 Agregar controller
+  final ChatController chatController; // 👈 Agregar controller
 
   const ProfilePictureSelector({
     super.key,
