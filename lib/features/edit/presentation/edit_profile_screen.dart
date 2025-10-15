@@ -159,6 +159,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       // setState(() => _loadingSocials = true);
 
       // 1) Esperar a que el cubit termine (útil si tu UI depende de esto inmediatamente)
+      // ignore: use_build_context_synchronously
       await context.read<RegisterCubit>().loadSocialsFromFirestore(uid: uid);
 
       // 2) Si prefieres no bloquear UI, en vez de await puedes:

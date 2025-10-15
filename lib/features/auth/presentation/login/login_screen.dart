@@ -9,7 +9,9 @@ import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/features/auth/components/bottom_text.dart';
 import 'package:migozz_app/features/auth/components/google_button.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/login_cubit/login_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/functions/email_validation.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -23,6 +25,69 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   String? myOTP;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    FocusScope.of(context).unfocus();
+    LoadingOverlay.show(context);
+
+    try {
+      final authCubit = context.read<AuthCubit>();
+      final result = await authCubit
+          .signInWithGoogle(); // devuelve SocialSignInResult
+
+      if (!mounted) return;
+      LoadingOverlay.hide(context);
+
+      final email = result.credential.user?.email;
+
+      if (!result.profileExists) {
+        // Si no existe perfil en Firestore -> llevar a ia-chat para completar registro
+        if (email != null && email.isNotEmpty) {
+          // guardar email en RegisterCubit para que ia-chat pueda leerlo
+          try {
+            context.read<RegisterCubit>().setEmail(email);
+          } catch (_) {
+            // Si por alguna razón no existe el cubit, aún navegamos con extra
+          }
+
+          // Navegar a ia-chat pasando el email
+          // uso context.go para evitar problemas con el redirect/stack
+          context.go('/ia-chat', extra: email);
+          return;
+        } else {
+          CustomSnackbar.show(
+            context: context,
+            message: 'No se pudo obtener el email de Google.',
+            type: SnackbarType.error,
+          );
+          return;
+        }
+      }
+
+      // Si profileExists == true, no hacemos nada: la suscripción de AuthCubit
+      // probablemente emitirá Authenticated y el router redirigirá al profile.
+      // Si quieres forzar navegación:
+      // context.go('/profile');
+    } catch (e) {
+      if (mounted) LoadingOverlay.hide(context);
+
+      String message = 'Error al iniciar sesión con Google';
+      if (e.toString().contains('cancelled_by_user')) {
+        message = 'Inicio de sesión cancelado';
+      }
+      CustomSnackbar.show(
+        context: context,
+        message: message,
+        type: SnackbarType.error,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -146,8 +211,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 5),
 
                     // Google login button
-                    googleButton(onPressed: () {}),
-
+                    googleButton(onPressed: _handleGoogleSignIn),
                     const SizedBox(height: 50),
 
                     // Register

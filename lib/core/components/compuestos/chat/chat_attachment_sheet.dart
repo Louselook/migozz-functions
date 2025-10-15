@@ -8,34 +8,69 @@ class ChatAttachmentGrid extends StatelessWidget {
   const ChatAttachmentGrid({super.key, required this.onSendImage});
 
   Future<void> openGallery() async {
-    final status = await Permission.photos.request();
-    if (status.isGranted) {
-      final XFile? image = await ImagePicker().pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 80, // opcional para reducir tamaño
-      );
-      if (image != null) {
-        onSendImage(image.path);
-        debugPrint(image.path);
-      }
+    // Para Android 13+ (API 33+) usa READ_MEDIA_IMAGES
+    // Para versiones anteriores usa READ_EXTERNAL_STORAGE
+    PermissionStatus status;
+
+    if (await Permission.photos.isGranted) {
+      status = PermissionStatus.granted;
     } else {
-      debugPrint("Permiso de galería denegado");
+      // Intenta con photos primero (Android 13+)
+      status = await Permission.photos.request();
+
+      // Si no funciona, intenta con storage (Android < 13)
+      if (status.isDenied || status.isPermanentlyDenied) {
+        status = await Permission.storage.request();
+      }
+    }
+
+    if (status.isGranted) {
+      try {
+        final XFile? image = await ImagePicker().pickImage(
+          source: ImageSource.gallery,
+          imageQuality: 80,
+        );
+        if (image != null) {
+          onSendImage(image.path);
+          debugPrint('✅ Imagen seleccionada: ${image.path}');
+        } else {
+          debugPrint('⚠️ No se seleccionó ninguna imagen');
+        }
+      } catch (e) {
+        debugPrint('❌ Error al abrir galería: $e');
+      }
+    } else if (status.isPermanentlyDenied) {
+      debugPrint('⛔ Permiso denegado permanentemente');
+      // Opcional: mostrar diálogo para abrir configuración
+      await openAppSettings();
+    } else {
+      debugPrint('⚠️ Permiso de galería denegado');
     }
   }
 
   Future<void> openCamera() async {
     final status = await Permission.camera.request();
+
     if (status.isGranted) {
-      final XFile? photo = await ImagePicker().pickImage(
-        source: ImageSource.camera,
-        imageQuality: 80,
-      );
-      if (photo != null) {
-        onSendImage(photo.path);
-        debugPrint(photo.path);
+      try {
+        final XFile? photo = await ImagePicker().pickImage(
+          source: ImageSource.camera,
+          imageQuality: 80,
+        );
+        if (photo != null) {
+          onSendImage(photo.path);
+          debugPrint('✅ Foto capturada: ${photo.path}');
+        } else {
+          debugPrint('⚠️ No se capturó ninguna foto');
+        }
+      } catch (e) {
+        debugPrint('❌ Error al abrir cámara: $e');
       }
+    } else if (status.isPermanentlyDenied) {
+      debugPrint('⛔ Permiso de cámara denegado permanentemente');
+      await openAppSettings();
     } else {
-      debugPrint("Permiso de cámara denegado");
+      debugPrint('⚠️ Permiso de cámara denegado');
     }
   }
 
@@ -125,60 +160,3 @@ class ChatAttachmentGrid extends StatelessWidget {
     );
   }
 }
-
-
-            // _buildAttachmentOption(
-            //   context,
-            //   icon: Icons.headphones_outlined,
-            //   label: "Audio",
-            //   color: Colors.orange,
-            //   onTap: () {
-            //     // Lógica para enviar audio
-            //   },
-            // ),
-// _buildAttachmentOption(
-//               context,
-//               icon: Icons.location_on_outlined,
-//               label: "Ubicación",
-//               color: Colors.green,
-//               onTap: () {
-//                 // Lógica para enviar ubicación
-//               },
-//             ),
-//             _buildAttachmentOption(
-//               context,
-//               icon: Icons.person_outline,
-//               label: "Contacto",
-//               color: Colors.cyan,
-//               onTap: () {
-//                 // Lógica para enviar contacto
-//               },
-//             ),
-//             _buildAttachmentOption(
-//               context,
-//               icon: Icons.description_outlined,
-//               label: "Documento",
-//               color: Colors.indigo,
-//               onTap: () {
-//                 // Lógica para documentos
-//               },
-//             ),
-
-  // _buildAttachmentOption(
-  //             context,
-  //             icon: Icons.poll_outlined,
-  //             label: "Encuesta",
-  //             color: Colors.amber,
-  //             onTap: () {
-  //               // Lógica para encuesta
-  //             },
-  //           ),
-  //           _buildAttachmentOption(
-  //             context,
-  //             icon: Icons.event_outlined,
-  //             label: "Evento",
-  //             color: Colors.deepPurple,
-  //             onTap: () {
-  //               // Lógica para crear evento
-  //             },
-  //           ),

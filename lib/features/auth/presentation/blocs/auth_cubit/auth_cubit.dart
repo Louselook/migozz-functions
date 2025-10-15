@@ -23,6 +23,16 @@ class AuthCubit extends Cubit<AuthState> {
     await _authService.signOutHome();
   }
 
+  /// Llamada para iniciar sesión con Google. Devuelve el resultado con info
+  Future<SocialSignInResult> signInWithGoogle() async {
+    try {
+      final result = await _authService.signInWithGoogleCreateIfNotExists();
+      return result;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   @override
   Future<void> close() {
     _authSub.cancel();
