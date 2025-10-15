@@ -87,16 +87,15 @@ class AuthService {
 
       if (!doc.exists) {
         final baseData = <String, dynamic>{
-          'uid': uid,
           'displayName': user.displayName ?? '',
           'email': user.email ?? '',
-          'photoURL': user.photoURL ?? '',
-          'phoneNumber': user.phoneNumber ?? '',
+          'avatarUrl': user.photoURL ?? '',
+          'phone': user.phoneNumber ?? '',
           'username':
               '@${(user.displayName ?? 'user').replaceAll(' ', '').toLowerCase()}',
           'createdAt': FieldValue.serverTimestamp(),
           'updatedAt': FieldValue.serverTimestamp(),
-          'socialEcosystem': [],
+          'complete': false,
         };
 
         await docRef.set(baseData);
