@@ -1,7 +1,5 @@
 // Splash_screen.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -13,105 +11,113 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   ImageProvider get _logo => const AssetImage('assets/images/Migozz.webp');
-  late final AnimationController _bounceController;
-  late final Animation<double> _bounceAnimation;
+
+  late final AnimationController _animCtrl;
+  late final Animation<double> _pulseAnim; // controla la escala del halo
+  late final Animation<double> _logoScaleAnim; // controla la escala del logo
+  late final Animation<double> _glowBlurAnim;
+  late final Animation<double> _glowSpreadAnim;
+  late final Animation<Color?> _glowColorAnim;
 
   @override
   void initState() {
     super.initState();
-    _bounceController = AnimationController(
+
+    _animCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     );
 
-    _bounceAnimation = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween<double>(
-          begin: 0.0,
-          end: -15.0,
-        ).chain(CurveTween(curve: Curves.easeOut)),
-        weight: 30,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(
-          begin: -15.0,
-          end: 0.0,
-        ).chain(CurveTween(curve: Curves.bounceOut)),
-        weight: 70,
-      ),
-    ]).animate(_bounceController);
+    _pulseAnim = Tween<double>(
+      begin: 1.00,
+      end: 1.10,
+    ).animate(CurvedAnimation(parent: _animCtrl, curve: Curves.easeInOut));
 
-    _bounceController.repeat(reverse: false);
-  }
+    _logoScaleAnim = Tween<double>(
+      begin: 1.00,
+      end: 1.06,
+    ).animate(CurvedAnimation(parent: _animCtrl, curve: Curves.easeInOut));
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Precarga las imágenes para que aparezcan sin "salto"
-    precacheImage(const AssetImage('assets/images/loading.gif'), context);
+    _glowBlurAnim = Tween<double>(
+      begin: 12.0,
+      end: 30.0,
+    ).animate(CurvedAnimation(parent: _animCtrl, curve: Curves.easeInOut));
+
+    _glowSpreadAnim = Tween<double>(
+      begin: 2.0,
+      end: 10.0,
+    ).animate(CurvedAnimation(parent: _animCtrl, curve: Curves.easeInOut));
+
+    _glowColorAnim = ColorTween(
+      // begin: const Color(0xFFFF4DB6),
+      // end: const Color(0xFFFF8CBF),
+      begin: const Color.fromARGB(70, 69, 29, 47),
+      end: const Color(0xFFFF8CBF),
+    ).animate(_animCtrl);
+
+    _animCtrl.repeat(reverse: true);
   }
 
   @override
   void dispose() {
-    _bounceController.dispose();
+    _animCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final bottomGradientHeight = size.height * 0.22;
+    // Ajustes rápidos:
+    final baseLogoSize = 200.0; // tamaño del logo
+    final glowBoxSize = baseLogoSize * 1.1; // tamaño del halo
 
     return Scaffold(
-      body: Stack(
-        children: [
-          // Tinte inferior (ocupa ancho; ajusta a tu widget real)
-          Positioned.fill(
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: TintesGradients(
-                child: SizedBox(height: bottomGradientHeight),
-              ),
-            ),
-          ),
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: Center(
+          child: AnimatedBuilder(
+            animation: _animCtrl,
+            builder: (context, _) {
+              final glowColor = (_glowColorAnim.value ?? Colors.white)
+                  .withValues(alpha: 0.48);
 
-          // Loader centrado y un poco arriba
-          Center(
-            child: Transform.translate(
-              offset: const Offset(0, -24),
-              child: Image.asset(
-                'assets/images/loading.gif',
-                width: 150,
-                height: 150,
-                fit: BoxFit.contain,
-              ),
-            ),
-          ),
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Halo cuadrado (sin relleno, solo sombra)
+                  Transform.scale(
+                    scale: _pulseAnim.value,
+                    child: Container(
+                      width: glowBoxSize,
+                      height: glowBoxSize,
+                      decoration: BoxDecoration(
+                        // Cuadrado puro:
+                        color: Colors.transparent,
+                        boxShadow: [
+                          BoxShadow(
+                            color: glowColor,
+                            blurRadius: _glowBlurAnim.value,
+                            spreadRadius: _glowSpreadAnim.value,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
 
-          // Logo cerca del bottom con animación de rebote
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: size.height * 0.09,
-            child: Center(
-              child: AnimatedBuilder(
-                animation: _bounceAnimation,
-                builder: (context, child) {
-                  return Transform.translate(
-                    offset: Offset(0, _bounceAnimation.value),
-                    child: child,
-                  );
-                },
-                child: Image(
-                  image: _logo,
-                  width: 150,
-                  height: 150,
-                  fit: BoxFit.contain,
-                ),
-              ),
-            ),
+                  // Logo que pulsa ligeramente
+                  Transform.scale(
+                    scale: _logoScaleAnim.value,
+                    child: Image(
+                      image: _logo,
+                      width: baseLogoSize,
+                      height: baseLogoSize,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
-        ],
+        ),
       ),
     );
   }
