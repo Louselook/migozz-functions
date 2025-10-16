@@ -23,7 +23,8 @@
     <application
         android:label="migozz_app"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:enableOnBackInvokedCallback="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -72,6 +73,13 @@
             </intent-filter>
             <!-- Fin Deeplinks para redes socuales  -->
 
+            <!-- App Links to open user profiles like https://migozz.app/u/<username> -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="migozz.app" android:pathPrefix="/u/"/>
+            </intent-filter>
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
