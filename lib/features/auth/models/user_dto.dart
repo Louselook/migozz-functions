@@ -31,7 +31,7 @@ class UserDTO {
 
   UserDTO({
     // Parte 1
-    required this.email,
+    required this.email, //
     required this.lang,
     required this.displayName,
     required this.username,

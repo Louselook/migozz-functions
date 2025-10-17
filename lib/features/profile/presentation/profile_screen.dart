@@ -12,17 +12,24 @@ import 'package:migozz_app/features/profile/components/social_rail.dart';
 import 'package:migozz_app/features/profile/components/stats_helper.dart';
 import 'package:migozz_app/features/profile/presentation/profile_stats.dart';
 import 'package:migozz_app/features/search/presentation/search_screen.dart';
+import 'package:migozz_app/features/tutorial/profile_tutorial_helper.dart';
+import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String? userId;
 
-  const ProfileScreen({super.key, this.userId});
+  const ProfileScreen({
+      super.key,
+      this.userId, 
+    });
+  
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  final tutorialKeys = TutorialKeys();
   int _tab = 0;
   List<Map<String, String>> _userSocials = [];
 
@@ -30,6 +37,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     _loadUser();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await triggerProfileTutorial(context, tutorialKeys);
+    });
   }
 
   Future<void> onEditProfile() async {
@@ -137,12 +147,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return totals['followers'] ?? 0;
   }
 
-  final GlobalKey _profileScreenKey = GlobalKey();
-  final GlobalKey _editScreenKey = GlobalKey();
-  final GlobalKey _statScreenKey = GlobalKey();
-  final GlobalKey _searchScreenKey = GlobalKey();
-  final GlobalKey _playButtonKey = GlobalKey();
-  final GlobalKey _shareButtonKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
@@ -209,6 +213,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             return Scaffold(
               body: BackgroundImage(
                 avatarUrl: avatarUrl,
+                tutorialKeys: tutorialKeys,
                 name: name.isNotEmpty ? name : 'NOMBRE VACÍO',
                 displayName: finalDisplayName,
                 comunityCount: totalFollowers.toString(),
@@ -241,7 +246,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                     // Botón de búsqueda
                     Positioned(
-                      key: _searchScreenKey,
                       left: 20,
                       top: 70,
                       child: GestureDetector(
@@ -253,10 +257,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           );
                         },
-                        child: const Icon(
-                          Icons.search,
-                          color: Color(0xAAFFFFFF),
-                          size: 60,
+                        child: Container(
+                          key: tutorialKeys.searchScreenKey,  
+                          child: const Icon(
+                            Icons.search,
+                            color: Color(0xAAFFFFFF),
+                            size: 60,
+                          ),
                         ),
                       ),
                     ),
@@ -299,11 +306,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         onCenterTap: () async {
                           await FirebaseAuth.instance.signOut();
                         },
-                        onProfileUpdated: () {
-                          setState(
-                            () {},
-                          ); // refresca el FutureBuilder al volver
+                        onProfileUpdated: () {setState(() {}); // refresca el FutureBuilder al volver
                         },
+                        tutorialKeys: tutorialKeys,
                       ),
                     ),
                   ],

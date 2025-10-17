@@ -8,7 +8,10 @@ import 'package:migozz_app/features/search/components/Suggested_Reels.dart';
 import 'package:migozz_app/features/search/components/result_search.dart';
 
 class SearchScreen extends StatefulWidget {
-  const SearchScreen({super.key});
+
+  const SearchScreen({
+      super.key,
+    });
 
   @override
   State<SearchScreen> createState() => _SearchScreenState();
