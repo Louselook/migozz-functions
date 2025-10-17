@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/router/app_router_notifier.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
 import 'package:migozz_app/features/auth/presentation/login/login_screen.dart';
-import 'package:migozz_app/features/auth/presentation/login/otp_screen.dart';
+// import 'package:migozz_app/features/auth/presentation/login/otp_screen.dart';
 import 'package:migozz_app/features/auth/presentation/register/register_screen.dart';
 import 'package:migozz_app/features/auth/presentation/onboarding/onboarding_screen.dart';
 import 'package:migozz_app/features/edit/presentation/edit_profile_screen.dart';
@@ -21,13 +21,13 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         builder: (context, state) => const OnboardingScreen(),
       ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
-      GoRoute(
-        path: '/otp',
-        builder: (context, state) {
-          final data = state.extra as Map<String, dynamic>;
-          return OtpScreen(email: data['email'], userOTP: data['userOTP']);
-        },
-      ),
+      // GoRoute(
+      //   path: '/otp',
+      //   builder: (context, state) {
+      //     final data = state.extra as Map<String, dynamic>;
+      //     return OtpScreen(email: data['email'], userOTP: data['userOTP']);
+      //   },
+      // ),
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterScreen(),

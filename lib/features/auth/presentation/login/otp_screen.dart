@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/color.dart';
+import 'package:migozz_app/core/components/atomics/loading_overlay.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/core/components/compuestos/custom_snackbar.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/login_cubit/login_cubit.dart';
@@ -9,12 +10,8 @@ import 'package:migozz_app/features/auth/presentation/blocs/login_cubit/login_cu
 class OtpScreen extends StatefulWidget {
   final String email;
   final String userOTP;
-  const OtpScreen({super.key, required this.email, required this.userOTP});
 
-  factory OtpScreen.fromExtra(BuildContext context) {
-    final data = GoRouterState.of(context).extra as Map<String, dynamic>;
-    return OtpScreen(email: data['email'], userOTP: data['userOTP']);
-  }
+  const OtpScreen({super.key, required this.email, required this.userOTP});
 
   @override
   State<OtpScreen> createState() => _OtpScreenState();
@@ -23,27 +20,85 @@ class OtpScreen extends StatefulWidget {
 class _OtpScreenState extends State<OtpScreen> {
   final List<TextEditingController> _controllers = List.generate(
     6,
-    
     (_) => TextEditingController(),
-    
   );
+
+  // 🔹 Flags para evitar acciones repetidas
+  bool _hasNavigated = false;
+  bool _isLoadingVisible = false;
+
+  // 🔹 Key para acceder al estado de _OtpFields
+  final GlobalKey<_OtpFieldsState> _otpFieldsKey = GlobalKey<_OtpFieldsState>();
+
+  @override
+  void dispose() {
+    for (var c in _controllers) {
+      c.dispose();
+    }
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Ya no navegamos manualmente, GoRouter lo hará
-    return BlocListener<LoginCubit, 
-    LoginState>(
-      listener: (context, state) {
-        if (state.errorMessageOTP != null) {
-          // Limpiar error en el cubit para que no se repita
-          context.read<LoginCubit>().clearError();
-          CustomSnackbar.show(
-            context: context,
-            message: state.errorMessageOTP!,
-            type: SnackbarType.error,
-          );
-        }
-      },
+    return MultiBlocListener(
+      listeners: [
+        // 🔹 Listener para LOADING (igual que tenías)
+        BlocListener<LoginCubit, LoginState>(
+          listenWhen: (previous, current) {
+            return previous.isLoading != current.isLoading;
+          },
+          listener: (context, state) {
+            if (state.isLoading) {
+              if (!_isLoadingVisible) {
+                _isLoadingVisible = true;
+                LoadingOverlay.show(context);
+              }
+            } else {
+              if (_isLoadingVisible) {
+                _isLoadingVisible = false;
+                LoadingOverlay.hide(context);
+              }
+            }
+          },
+        ),
+
+        // 🔹 Listener para SUCCESS (sin manejar navegación aquí)
+        BlocListener<LoginCubit, LoginState>(
+          listenWhen: (previous, current) {
+            return !previous.loginSuccess && current.loginSuccess;
+          },
+          listener: (context, state) {
+            if (state.loginSuccess && !_hasNavigated) {
+              _hasNavigated = true;
+              // Limpiar el flag en el cubit para evitar futuras dobles navegaciones
+              context.read<LoginCubit>().clearLoginSuccess();
+            }
+          },
+        ),
+
+        // 🔹 Listener para ERRORES OTP
+        BlocListener<LoginCubit, LoginState>(
+          listenWhen: (previous, current) {
+            return previous.otpErrorCount != current.otpErrorCount &&
+                current.errorMessageOTP != null &&
+                current.errorMessageOTP!.isNotEmpty;
+          },
+          listener: (context, state) {
+            // Evitar apilar notificaciones
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+            // Mostrar snackbar con el error
+            CustomSnackbar.show(
+              context: context,
+              message: state.errorMessageOTP!,
+              type: SnackbarType.error,
+            );
+
+            // Borrar los campos de OTP y devolver foco al primero
+            _otpFieldsKey.currentState?.clearAll();
+          },
+        ),
+      ],
       child: Scaffold(
         resizeToAvoidBottomInset: false,
         appBar: AppBar(
@@ -52,38 +107,45 @@ class _OtpScreenState extends State<OtpScreen> {
               Icons.arrow_back_ios,
               color: AppColors.backgroundDark,
             ),
-            onPressed: () => context.pop(),
+            onPressed: () {
+              context.read<LoginCubit>().resetState();
+              context.pop();
+            },
           ),
         ),
         body: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 10.0),
-              child: Column(
-                children: [
-                  _titleSection(email: widget.email),
-                  const SizedBox(height: 40),
-                  _OtpFields(
-                    controllers: _controllers,
-                    onCompleted: (otp) {
+            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+            child: Column(
+              children: [
+                _titleSection(email: widget.email),
+                const SizedBox(height: 40),
+                // 🔹 Pasar la key al widget para poder limpiar desde el padre
+                _OtpFields(
+                  key: _otpFieldsKey,
+                  controllers: _controllers,
+                  onCompleted: (otp) {
+                    // Evitar múltiples llamadas si ya navegamos o si ya hay proceso en curso
+                    if (!_hasNavigated) {
                       context.read<LoginCubit>().validateOTPAndLogin(
-                      inputOTP: otp);
-                      // Ahora se maneja con el botón
+                        inputOTP: otp,
+                      );
                     }
-                  ),
-                  _ResendButton(email: widget.email, otp: widget.userOTP),
-                  const Spacer(),
-                  // Imagen en el medio
-                  const _ImageSection(),
-                ],
-              ),
+                  },
+                ),
+                _ResendButton(email: widget.email, otp: widget.userOTP),
+                const Spacer(),
+                const _ImageSection(),
+              ],
             ),
           ),
-      )
+        ),
+      ),
     );
   }
 }
 
-// ====== Widgets separados ======
+// ====== Widgets auxiliares ======
 
 Widget _titleSection({required String email}) {
   return Column(
@@ -102,7 +164,11 @@ Widget _titleSection({required String email}) {
 class _OtpFields extends StatefulWidget {
   final List<TextEditingController> controllers;
   final void Function(String otp) onCompleted;
-  const _OtpFields({required this.controllers, required this.onCompleted});
+  const _OtpFields({
+    super.key,
+    required this.controllers,
+    required this.onCompleted,
+  });
 
   @override
   State<_OtpFields> createState() => _OtpFieldsState();
@@ -125,27 +191,32 @@ class _OtpFieldsState extends State<_OtpFields> {
     super.dispose();
   }
 
+  // Método público que puede invocar el padre vía GlobalKey
+  void clearAll() {
+    for (var c in widget.controllers) {
+      c.clear();
+    }
+    // forzamos que el primer campo tenga foco
+    if (_focusNodes.isNotEmpty) {
+      _focusNodes[0].requestFocus();
+    } else {
+      FocusScope.of(context).unfocus();
+    }
+    setState(() {}); // actualizar UI por si acaso
+  }
+
   void _onChanged(String value, int index) {
     if (value.length > 1) {
-      // Caso PASTE (más de un dígito pegado)
-      // 1. Limpiar todo antes de repartir
-      for (int i = 0; i < widget.controllers.length; i++) {
-        widget.controllers[i].clear();
+      for (var c in widget.controllers) {
+        c.clear();
       }
-
-      // 2. Repartir caracteres en los campos
-      List<String> chars = value.split('');
-      for (int i = 0; i < chars.length; i++) {
-        if (i < widget.controllers.length) {
-          widget.controllers[i].text = chars[i];
-        }
+      final chars = value.split('');
+      for (int i = 0; i < chars.length && i < 6; i++) {
+        widget.controllers[i].text = chars[i];
       }
-
-      // 3. Posicionar foco al último caracter pegado
-      int lastIndex = (chars.length - 1).clamp(0, 5);
-      _focusNodes[lastIndex].requestFocus();
+      final nextIndex = (chars.length - 1).clamp(0, 5);
+      _focusNodes[nextIndex].requestFocus();
     } else {
-      // Caso normal (tecleo o borrar)
       if (value.isNotEmpty && index < 5) {
         _focusNodes[index + 1].requestFocus();
       } else if (value.isEmpty && index > 0) {
@@ -153,11 +224,8 @@ class _OtpFieldsState extends State<_OtpFields> {
       }
     }
 
-    // Construir OTP
-    String otp = widget.controllers.map((c) => c.text).join();
-    if (otp.length == 6) {
-      widget.onCompleted(otp);
-    }
+    final otp = widget.controllers.map((c) => c.text).join();
+    if (otp.length == 6) widget.onCompleted(otp);
   }
 
   @override
@@ -172,7 +240,7 @@ class _OtpFieldsState extends State<_OtpFields> {
           child: TextField(
             controller: widget.controllers[index],
             focusNode: _focusNodes[index],
-            autofocus: index == 0, // auto-focus en el primer campo
+            autofocus: index == 0,
             maxLength: 1,
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
@@ -184,6 +252,7 @@ class _OtpFieldsState extends State<_OtpFields> {
     );
   }
 }
+
 class _ResendButton extends StatelessWidget {
   final String email;
   final String otp;
@@ -193,8 +262,8 @@ class _ResendButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextButton(
       onPressed: () {
-        // context.read<LoginCubit>().sendOTP(email);
-        debugPrint('estado correo: $email, otp: $otp');
+        // Reenvío de OTP
+        context.read<LoginCubit>().sendOTPLoginCubit(email);
       },
       child: const SecondaryText(
         "Resend",
@@ -210,13 +279,9 @@ class _ImageSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const Image(
-          image:AssetImage('assets/images/otp_image.png'),
-          width: 300,
-          ),
-      ],
+    return const Image(
+      image: AssetImage('assets/images/otp_image.png'),
+      width: 300,
     );
   }
 }
