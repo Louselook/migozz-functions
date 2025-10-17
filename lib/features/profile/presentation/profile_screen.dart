@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:migozz_app/core/components/formart/text_formart.dart';
 import 'package:migozz_app/features/edit/presentation/edit_profile_screen.dart';
 import 'package:migozz_app/features/profile/components/draggable_social_rail.dart';
-import 'package:migozz_app/features/profile/components/ai_assistant.dart';
+// import 'package:migozz_app/features/profile/components/ai_assistant.dart';
 import 'package:migozz_app/features/profile/components/bottom_nav.dart';
 import 'package:migozz_app/features/profile/components/background_image.dart';
 import 'package:migozz_app/features/profile/components/social_rail.dart';
@@ -137,17 +137,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return totals['followers'] ?? 0;
   }
 
+  final GlobalKey _profileScreenKey = GlobalKey();
+  final GlobalKey _editScreenKey = GlobalKey();
+  final GlobalKey _statScreenKey = GlobalKey();
+  final GlobalKey _searchScreenKey = GlobalKey();
+  final GlobalKey _playButtonKey = GlobalKey();
+  final GlobalKey _shareButtonKey = GlobalKey();
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final bottomGradientHeight = size.height * 0.22;
-    final bottomPaddingForCard = size.height * 0.25;
-    final assistantSize = (size.width * 0.18).clamp(56.0, 88.0);
+    // final bottomPaddingForCard = size.height * 0.25;
+    // final assistantSize = (size.width * 0.18).clamp(56.0, 88.0);
 
-    final initialAssistantPosition = Offset(
-      size.width - assistantSize - (size.width * 0.03),
-      size.height - bottomPaddingForCard + (size.height * 0.03),
-    );
+    // final initialAssistantPosition = Offset(
+    //   size.width - assistantSize - (size.width * 0.03),
+    //   size.height - bottomPaddingForCard + (size.height * 0.03),
+    // );
     final initialSocialPosition = Offset(size.width - 65, size.height * 0.2);
 
     final current = FirebaseAuth.instance.currentUser;
@@ -234,6 +241,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                     // Botón de búsqueda
                     Positioned(
+                      key: _searchScreenKey,
                       left: 20,
                       top: 70,
                       child: GestureDetector(
@@ -254,11 +262,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
 
                     // Asistente IA
-                    AIAssistant(
-                      size: assistantSize,
-                      initialPosition: initialAssistantPosition,
-                      onTap: () => debugPrint('Asistente IA presionado'),
-                    ),
+                    // AIAssistant(
+                    //   size: assistantSize,
+                    //   initialPosition: initialAssistantPosition,
+                    //   onTap: () => debugPrint('Asistente IA presionado'),
+                    // ),
 
                     // Panel lateral
                     FutureBuilder<List<SocialStats>>(

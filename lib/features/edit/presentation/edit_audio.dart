@@ -34,6 +34,10 @@ class _EditRecordScreenState extends State<EditRecordScreen>
   late Animation<double> _scaleAnim;
   late Animation<Color?> _colorAnim;
 
+  // ✅ Subscripciones para limpiar
+  StreamSubscription? _positionSubscription;
+  StreamSubscription? _playerStateSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -51,12 +55,23 @@ class _EditRecordScreenState extends State<EditRecordScreen>
       end: const Color(0xFFFF8CBF),
     ).animate(_animCtrl);
 
-    // Sync waveform seeker with audio player's position
-    _audioPlayer.positionStream.listen((position) {
-      // playerController expects milliseconds
+    // ✅ Sync waveform seeker with audio player's position
+    _positionSubscription = _audioPlayer.positionStream.listen((position) {
       try {
         _playerController.seekTo(position.inMilliseconds);
       } catch (_) {}
+    });
+
+    // ✅ Detectar cuando el audio termina y resetear
+    _playerStateSubscription = _audioPlayer.playerStateStream.listen((state) {
+      if (state.processingState == ProcessingState.completed) {
+        // Audio terminó, resetear posición
+        _audioPlayer.seek(Duration.zero);
+        try {
+          _playerController.seekTo(0);
+        } catch (_) {}
+        if (mounted) setState(() {});
+      }
     });
   }
 
@@ -64,6 +79,8 @@ class _EditRecordScreenState extends State<EditRecordScreen>
   void dispose() {
     _timer?.cancel();
     _animCtrl.dispose();
+    _positionSubscription?.cancel();
+    _playerStateSubscription?.cancel();
     _audioPlayer.dispose();
     _playerController.dispose();
     super.dispose();
@@ -117,7 +134,11 @@ class _EditRecordScreenState extends State<EditRecordScreen>
     if (path != null && File(path).existsSync()) {
       try {
         // preparar waveform player
-        await _playerController.preparePlayer(path: path); // audio_waveforms 1.3.0
+        await _playerController.preparePlayer(
+          path: path,
+          shouldExtractWaveform: true,
+          noOfSamples: 120,
+        );
       } catch (e) {
         debugPrint('preparePlayer error: $e');
       }
@@ -139,15 +160,28 @@ class _EditRecordScreenState extends State<EditRecordScreen>
     if (_audioPath == null) return;
 
     if (_audioPlayer.playing) {
+      // ✅ Si está reproduciendo, pausar
       await _audioPlayer.pause();
       try {
         await _playerController.pausePlayer();
       } catch (_) {}
     } else {
+      // ✅ Si no está reproduciendo, verificar estado y reproducir
       try {
-        if (_audioPlayer.playerState.processingState == ProcessingState.idle) {
+        // Si está en estado idle o completed, configurar el archivo
+        if (_audioPlayer.playerState.processingState == ProcessingState.idle ||
+            _audioPlayer.playerState.processingState == ProcessingState.completed) {
           await _audioPlayer.setFilePath(_audioPath!);
         }
+        
+        // Reproducir desde el inicio si había terminado
+        if (_audioPlayer.position >= (_audioPlayer.duration ?? Duration.zero)) {
+          await _audioPlayer.seek(Duration.zero);
+          try {
+            _playerController.seekTo(0);
+          } catch (_) {}
+        }
+        
         await _audioPlayer.play();
       } catch (e) {
         debugPrint('Error playing audio: $e');
