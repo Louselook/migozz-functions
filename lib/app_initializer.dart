@@ -33,6 +33,7 @@ class AppInitializer extends StatefulWidget {
 class _AppInitializerState extends State<AppInitializer>
     with WidgetsBindingObserver {
   AppInitResult? _result;
+  bool _isInitializing = false; // ✅ Flag para evitar solicitudes concurrentes
 
   @override
   void initState() {
@@ -55,6 +56,12 @@ class _AppInitializerState extends State<AppInitializer>
   }
 
   Future<void> _checkLocationStatus() async {
+    // ✅ Evitar llamadas concurrentes
+    if (_isInitializing) {
+      debugPrint('⚠️ Ya hay una inicialización en progreso, ignorando...');
+      return;
+    }
+
     final status = await Permission.locationWhenInUse.status;
     if (!status.isGranted && mounted) {
       await _runInit();
@@ -62,68 +69,94 @@ class _AppInitializerState extends State<AppInitializer>
   }
 
   Future<void> _runInit() async {
-    // 1️⃣ Permiso de micrófono
-    final micStatus = await Permission.microphone.request();
-    final microphoneGranted = micStatus.isGranted;
-
-    bool locationGranted = false;
-    LocationDTO? locationDto;
-
-    // 🔁 Bucle hasta obtener permiso válido
-    while (!locationGranted && mounted) {
-      final locStatus = await Permission.locationWhenInUse.request();
-
-      bool permanentlyDenied = false;
-
-      switch (locStatus) {
-        case PermissionStatus.granted:
-        case PermissionStatus.limited: // iOS: solo esta vez
-          locationGranted = true;
-          break;
-        case PermissionStatus.denied:
-          locationGranted = false;
-          break;
-        case PermissionStatus.permanentlyDenied:
-          locationGranted = false;
-          permanentlyDenied = true;
-          break;
-        default:
-          break;
-      }
-
-      if (locationGranted) {
-        try {
-          final svc = LocationService();
-          locationDto = await svc.initAndFetchAddress();
-        } catch (e) {
-          debugPrint('Error al obtener ubicación: $e');
-        }
-      } else {
-        // Aquí llamamos a la versión "post-frame" del diálogo/modal
-        await _showLocationDeniedDialog(permanentlyDenied);
-        if (permanentlyDenied) {
-          // Abrir ajustes (esto abrirá la pantalla de ajustes del sistema)
-          await openAppSettings();
-        }
-      }
+    // ✅ Evitar múltiples ejecuciones simultáneas
+    if (_isInitializing) {
+      debugPrint('⚠️ _runInit ya está en ejecución, ignorando llamada duplicada');
+      return;
     }
 
-    if (!mounted) return;
+    _isInitializing = true;
+    debugPrint('🚀 Iniciando solicitud de permisos...');
 
-    setState(() {
-      _result = AppInitResult(
-        location: locationDto,
-        microphoneGranted: microphoneGranted,
-        locationGranted: locationGranted,
-      );
-    });
+    try {
+      // 1️⃣ Permiso de micrófono
+      final micStatus = await Permission.microphone.request();
+      final microphoneGranted = micStatus.isGranted;
+
+      bool locationGranted = false;
+      LocationDTO? locationDto;
+
+      // 🔁 Bucle hasta obtener permiso válido
+      while (!locationGranted && mounted) {
+        final locStatus = await Permission.locationWhenInUse.request();
+
+        bool permanentlyDenied = false;
+
+        switch (locStatus) {
+          case PermissionStatus.granted:
+          case PermissionStatus.limited: // iOS: solo esta vez
+            locationGranted = true;
+            break;
+          case PermissionStatus.denied:
+            locationGranted = false;
+            break;
+          case PermissionStatus.permanentlyDenied:
+            locationGranted = false;
+            permanentlyDenied = true;
+            break;
+          default:
+            break;
+        }
+
+        if (locationGranted) {
+          try {
+            final svc = LocationService();
+            locationDto = await svc.initAndFetchAddress();
+          } catch (e) {
+            debugPrint('❌ Error al obtener ubicación: $e');
+          }
+        } else {
+          // Mostrar modal de permiso denegado
+          await _showLocationDeniedDialog(permanentlyDenied);
+          
+          if (permanentlyDenied) {
+            // Abrir ajustes del sistema
+            await openAppSettings();
+            
+            // ✅ Esperar un poco después de abrir ajustes
+            // Esto evita solicitudes inmediatas al regresar
+            await Future.delayed(const Duration(seconds: 1));
+          } else {
+            // ✅ Pequeño delay antes de reintentar
+            await Future.delayed(const Duration(milliseconds: 500));
+          }
+        }
+      }
+
+      if (!mounted) return;
+
+      setState(() {
+        _result = AppInitResult(
+          location: locationDto,
+          microphoneGranted: microphoneGranted,
+          locationGranted: locationGranted,
+        );
+      });
+
+      debugPrint('✅ Inicialización completada');
+    } catch (e) {
+      debugPrint('❌ Error durante inicialización: $e');
+    } finally {
+      // ✅ Siempre liberar el flag
+      _isInitializing = false;
+    }
   }
 
-  /// Mostrar el modal A DESPUÉS del primer frame para evitar error
+  /// Mostrar el modal DESPUÉS del primer frame para evitar error
   Future<void> _showLocationDeniedDialog(bool permanentlyDenied) {
     final completer = Completer<void>();
 
-    // Ejecutar en el siguiente frame (ya habrá MaterialLocalizations si el build devolvió un MaterialApp)
+    // Ejecutar en el siguiente frame
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) {
         completer.complete();
@@ -170,6 +203,7 @@ class _AppInitializerState extends State<AppInitializer>
                     permanentlyDenied ? "Abrir ajustes" : "Intentar de nuevo",
                   ),
                 ),
+                const SizedBox(height: 8),
                 TextButton(
                   onPressed: () => Navigator.pop(context),
                   child: const Text("Cancelar"),
@@ -179,7 +213,7 @@ class _AppInitializerState extends State<AppInitializer>
           ),
         );
       } catch (e) {
-        debugPrint('Error mostrando modal: $e');
+        debugPrint('❌ Error mostrando modal: $e');
       } finally {
         if (!completer.isCompleted) completer.complete();
       }

@@ -263,7 +263,6 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
     if (_audioManager.isRecording) {
       return RecordingDisplay(
         duration: _audioManager.duration,
-        waveController: _audioManager.waveController,
       );
     }
 
@@ -271,23 +270,20 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
     // En _buildInputArea() de ChatInputWidget
     if (_audioManager.audioPath != null) {
       return AudioPlayerDisplay(
-        playerController: _audioManager.playerController,
+        playerController: _audioManager.waveformPlayerController,
         duration: _audioManager.duration,
         maxDuration: _audioManager.maxDuration,
         isPlaying: _audioManager.isPlaying,
-        onPlayPause: () {
+        onPlayPause: () async {
           if (_audioManager.isPlaying) {
-            _audioManager.stopPlaying();
+            await _audioManager.stopPlaying();
           } else {
-            _audioManager.playRecording();
+            await _audioManager.playRecording();
           }
-        },
-        onSeek: (position) =>
-            _audioManager.seekToPosition(position), // ✅ Ya está correcto
-        onDelete: () async {
-          await _audioManager.reset();
           if (mounted) setState(() {});
         },
+        onSeek: (pos) => _audioManager.seekToPosition(pos),
+        onDelete: () async { await _audioManager.reset(); if (mounted) setState(() {}); },
       );
     }
 

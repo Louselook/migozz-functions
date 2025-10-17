@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:migozz_app/features/edit/presentation/edit_social.dart';
 import 'package:migozz_app/features/profile/components/bottom_nav.dart';
 import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
 
@@ -154,10 +155,12 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
                             ? Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const Text('Aún no tienes socials conectadas, ¡Conéctalas!',
+                                  const Text("You don't have any social networks connected yet, connect them!",
                                       style: TextStyle(color: Colors.grey)),
                                   const SizedBox(height: 12),
-                                  ElevatedButton(onPressed: _loadData, child: const Text('Actualizar'))
+                                  ElevatedButton(
+                                    onPressed: () => Navigator.pop(EditSocialScreen() as BuildContext),
+                                    child: const Text('Add Socials'))
                                 ],
                               )
                             : Column(
@@ -179,7 +182,7 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
                                             backgroundColor: Colors.grey[800],
                                             foregroundColor: Colors.white),
                                         onPressed: _pickDateRange,
-                                        child: const Text("Seleccionar fecha"),
+                                        child: const Text("Selec date"),
                                       ),
                                       Text(rangeText, style: const TextStyle(color: Colors.grey, fontSize: 15)),
                                     ],
