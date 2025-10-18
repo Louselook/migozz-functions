@@ -2,16 +2,14 @@ import 'dart:io'; // 👈 No olvides este import para File
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/components/atomics/loading_overlay.dart';
-import 'package:migozz_app/features/auth/models/location_dto.dart';
+import 'package:migozz_app/features/auth/data/domain/models/location_dto.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/add_network.dart';
 import 'package:migozz_app/features/auth/services/add_networks/add_networks.dart';
-import 'package:migozz_app/features/auth/services/auth_service.dart';
 import 'package:migozz_app/features/auth/services/location_service.dart';
 import 'package:migozz_app/features/auth/services/media_service.dart';
 import 'register_state.dart';
 
 class RegisterCubit extends Cubit<RegisterState> {
-  final AuthService _authService;
   final LocationService _locationService;
   final UserMediaService _mediaService = UserMediaService();
   final AddNetworkService networkService = AddNetworkService();
@@ -19,8 +17,7 @@ class RegisterCubit extends Cubit<RegisterState> {
   File? avatarFile;
   File? voiceNoteFile;
 
-  RegisterCubit(this._authService, this._locationService)
-    : super(const RegisterState()) {
+  RegisterCubit(this._locationService) : super(const RegisterState()) {
     fetchLocation(); // 👈 Debe ir dentro de las llaves
   }
 
@@ -86,24 +83,6 @@ class RegisterCubit extends Cubit<RegisterState> {
   void setSocialEcosystemEmty() =>
       emit(state.copyWith(regProgress: RegisterStatusProgress.location));
 
-  Future<void> loadSocialsFromFirestore({String? uid}) async {
-    try {
-      // opcional: emitir estado de loading si tienes uno
-      final platforms = await _authService.fetchUserSocialEcosystem(uid: uid);
-
-      if (platforms.isEmpty) {
-        // no hay redes asociadas
-        setSocialEcosystemEmty();
-      } else {
-        setSocialEcosystem(platforms);
-      }
-    } catch (e, st) {
-      debugPrint('🔥 Error cargando socials en cubit: $e\n$st');
-      // fallback seguro
-      setSocialEcosystemEmty();
-    }
-  }
-  
   // location
   void setLocation(LocationDTO location) =>
       emit(state.copyWith(location: location));
@@ -184,7 +163,9 @@ class RegisterCubit extends Cubit<RegisterState> {
 
       if (voiceNoteFile != null) {
         filesToUpload[MediaType.voice] = voiceNoteFile!;
-        debugPrint('✅ [Cubit] Audio agregado para subir: ${voiceNoteFile!.path}');
+        debugPrint(
+          '✅ [Cubit] Audio agregado para subir: ${voiceNoteFile!.path}',
+        );
       }
 
       // Subir temporalmente con email
@@ -222,7 +203,7 @@ class RegisterCubit extends Cubit<RegisterState> {
 
       if (state.isComplete != complete) {
         emit(state.copyWith(isComplete: complete));
-        await completeRegistration();
+        // await completeRegistration();
       } else {
         emit(state.copyWith(status: RegisterIsLogin.initial));
       }
@@ -232,37 +213,37 @@ class RegisterCubit extends Cubit<RegisterState> {
     }
   }
 
-// ---------------------- completeRegistration ----------------------
-Future<String?> completeRegistration() async {
-  try {
-    if (!state.isComplete) {
-      throw Exception('Faltan datos para completar el registro');
-    }
+  // // ---------------------- completeRegistration ----------------------
+  // Future<String?> completeRegistration() async {
+  //   try {
+  //     if (!state.isComplete) {
+  //       throw Exception('Faltan datos para completar el registro');
+  //     }
 
-    final userDTO = state.buildUserDTO();
+  //     final userDTO = state.buildUserDTO();
 
-    // Crear usuario en Firebase
-    final userCredential = await _authService.signUpRegister(
-      email: state.email!,
-      otp: state.currentOTP!,
-      userData: userDTO,
-    );
+  //     // Crear usuario en Firebase
+  //     final userCredential = await _authService.signUpRegister(
+  //       email: state.email!,
+  //       otp: state.currentOTP!,
+  //       userData: userDTO,
+  //     );
 
-    final uid = userCredential.user!.uid;
+  //     final uid = userCredential.user!.uid;
 
-    // Asociar media (email → UID)
-    await _mediaService.associateMediaToUid(
-      uid: uid,
-      email: state.email!,
-    );
+  //     // Asociar media (email → UID)
+  //     await _mediaService.associateMediaToUid(
+  //       uid: uid,
+  //       email: state.email!,
+  //     );
 
-    return uid;
-  } catch (e) {
-    throw Exception('Error al registrar usuario: $e');
-  } finally {
-    emit(state.copyWith(status: RegisterIsLogin.success));
-  }
-}
+  //     return uid;
+  //   } catch (e) {
+  //     throw Exception('Error al registrar usuario: $e');
+  //   } finally {
+  //     emit(state.copyWith(status: RegisterIsLogin.success));
+  //   }
+  // }
 
   // ---------------------- fetch social profile ----------------------
   Future<void> fetchSocialProfile(String network, String usernameOrLink) async {

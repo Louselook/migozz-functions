@@ -10,7 +10,7 @@ plugins {
 
 android {
     namespace = "com.migozz.migozzApp"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36 //flutter.compileSdkVersion
     ndkVersion = "27.0.12077973" //flutter.ndkVersion
 
     compileOptions {
@@ -25,7 +25,7 @@ android {
     defaultConfig {
         applicationId = "com.migozz.migozzApp"
         minSdk = 24 //flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        targetSdk = 36 //flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
 

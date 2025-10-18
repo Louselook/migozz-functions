@@ -10,9 +10,11 @@ import 'package:migozz_app/core/services/social_auth_service.dart';
 import 'package:migozz_app/email_otp_custom.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
+import 'package:migozz_app/injection.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await configureDependencies();
   await FirebaseConfig.initialize();
   await dotenv.load(fileName: ".env"); // inicialización
   SocialAuthService().init();

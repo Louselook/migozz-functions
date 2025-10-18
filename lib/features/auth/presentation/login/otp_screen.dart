@@ -5,6 +5,7 @@ import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/loading_overlay.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/core/components/compuestos/custom_snackbar.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/login_cubit/login_cubit.dart';
 
 class OtpScreen extends StatefulWidget {
@@ -23,11 +24,12 @@ class _OtpScreenState extends State<OtpScreen> {
     (_) => TextEditingController(),
   );
 
-  // 🔹 Flags para evitar acciones repetidas
-  bool _hasNavigated = false;
+  // Flags para evitar acciones repetidas
+  final bool _hasNavigated = false;
   bool _isLoadingVisible = false;
+  bool _hasProcessedAuth = false;
 
-  // 🔹 Key para acceder al estado de _OtpFields
+  // Key para acceder al estado de _OtpFields
   final GlobalKey<_OtpFieldsState> _otpFieldsKey = GlobalKey<_OtpFieldsState>();
 
   @override
@@ -38,11 +40,40 @@ class _OtpScreenState extends State<OtpScreen> {
     super.dispose();
   }
 
+  Future<void> _handleOtpCompletion(String otp) async {
+    // Evitar múltiples procesamientos
+    if (_hasNavigated || _hasProcessedAuth) return;
+
+    // 1. Primero validar OTP con LoginCubit (solo validación de UI)
+    final loginCubit = context.read<LoginCubit>();
+    final isValidOTP = await loginCubit.validateOTP(inputOTP: otp);
+
+    if (!isValidOTP) {
+      // Error ya mostrado por el listener de LoginCubit
+      return;
+    }
+
+    // 2. OTP válido, ahora hacer autenticación real con AuthCubit
+    _hasProcessedAuth = true;
+
+    try {
+      // ignore: use_build_context_synchronously
+      context.read<AuthCubit>();
+
+      if (!mounted) return;
+    } catch (e) {
+      if (mounted) {
+        context.read<LoginCubit>().setAuthenticationError(e.toString());
+        _hasProcessedAuth = false;
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MultiBlocListener(
       listeners: [
-        // 🔹 Listener para LOADING (igual que tenías)
+        // Listener para LOADING del LoginCubit
         BlocListener<LoginCubit, LoginState>(
           listenWhen: (previous, current) {
             return previous.isLoading != current.isLoading;
@@ -62,21 +93,20 @@ class _OtpScreenState extends State<OtpScreen> {
           },
         ),
 
-        // 🔹 Listener para SUCCESS (sin manejar navegación aquí)
+        // Listener para SUCCESS del LoginCubit (solo limpiar flag)
         BlocListener<LoginCubit, LoginState>(
           listenWhen: (previous, current) {
             return !previous.loginSuccess && current.loginSuccess;
           },
           listener: (context, state) {
-            if (state.loginSuccess && !_hasNavigated) {
-              _hasNavigated = true;
+            if (state.loginSuccess) {
               // Limpiar el flag en el cubit para evitar futuras dobles navegaciones
               context.read<LoginCubit>().clearLoginSuccess();
             }
           },
         ),
 
-        // 🔹 Listener para ERRORES OTP
+        // Listener para ERRORES OTP del LoginCubit
         BlocListener<LoginCubit, LoginState>(
           listenWhen: (previous, current) {
             return previous.otpErrorCount != current.otpErrorCount &&
@@ -96,6 +126,9 @@ class _OtpScreenState extends State<OtpScreen> {
 
             // Borrar los campos de OTP y devolver foco al primero
             _otpFieldsKey.currentState?.clearAll();
+
+            // Reset flag de procesamiento
+            _hasProcessedAuth = false;
           },
         ),
       ],
@@ -120,18 +153,11 @@ class _OtpScreenState extends State<OtpScreen> {
               children: [
                 _titleSection(email: widget.email),
                 const SizedBox(height: 40),
-                // 🔹 Pasar la key al widget para poder limpiar desde el padre
+                // Pasar la key al widget para poder limpiar desde el padre
                 _OtpFields(
                   key: _otpFieldsKey,
                   controllers: _controllers,
-                  onCompleted: (otp) {
-                    // Evitar múltiples llamadas si ya navegamos o si ya hay proceso en curso
-                    if (!_hasNavigated) {
-                      context.read<LoginCubit>().validateOTPAndLogin(
-                        inputOTP: otp,
-                      );
-                    }
-                  },
+                  onCompleted: _handleOtpCompletion,
                 ),
                 _ResendButton(email: widget.email, otp: widget.userOTP),
                 const Spacer(),
@@ -145,7 +171,7 @@ class _OtpScreenState extends State<OtpScreen> {
   }
 }
 
-// ====== Widgets auxiliares ======
+// ====== Widgets auxiliares (sin cambios) ======
 
 Widget _titleSection({required String email}) {
   return Column(

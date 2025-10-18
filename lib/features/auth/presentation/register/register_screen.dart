@@ -1,40 +1,105 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/custom_snackbar.dart';
 import 'package:migozz_app/core/components/compuestos/custom_textfield.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
-import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
+import 'package:migozz_app/features/auth/data/datasources/auth_service.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/functions/email_validation.dart';
-import 'package:migozz_app/features/auth/services/auth_service.dart';
-import 'package:migozz_app/features/auth/services/location_service.dart';
 
-// Wrapper widget que proporciona el BlocProvider
-class RegisterScreen extends StatelessWidget {
+class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => RegisterCubit(AuthService(), LocationService()),
-      child: const _RegisterScreenContent(),
-    );
-  }
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-// Widget de contenido que puede acceder al cubit
-class _RegisterScreenContent extends StatefulWidget {
-  const _RegisterScreenContent();
-
-  @override
-  State<_RegisterScreenContent> createState() => _RegisterScreenContentState();
-}
-
-class _RegisterScreenContentState extends State<_RegisterScreenContent> {
+class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _emailController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleRegister() async {
+    final email = _emailController.text.trim();
+
+    // Cerrar teclado
+    FocusScope.of(context).unfocus();
+
+    if (email.isEmpty) {
+      CustomSnackbar.show(
+        context: context,
+        message: "Email cannot be empty",
+        type: SnackbarType.error,
+        duration: const Duration(seconds: 4),
+      );
+      return;
+    }
+
+    // Validar formato de email
+    final isValidEmail = validateCurrentField(
+      botIndex: 20, // 20 corresponde a email
+      userResponse: email,
+    );
+
+    if (!isValidEmail) {
+      CustomSnackbar.show(
+        context: context,
+        message: "Please enter a valid email",
+        type: SnackbarType.error,
+        duration: const Duration(seconds: 4),
+      );
+      return;
+    }
+
+    // Verificar si el email ya existe
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final authService = AuthService();
+      final exists = await authService.emailExists(email);
+
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (exists) {
+        CustomSnackbar.show(
+          context: context,
+          message: "This email is already registered",
+          type: SnackbarType.error,
+          duration: const Duration(seconds: 4),
+        );
+        return;
+      }
+
+      // Email válido y disponible, navegar al chat de registro
+      context.pushReplacement('/ia-chat', extra: email);
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+
+        CustomSnackbar.show(
+          context: context,
+          message: "Error verifying email: $e",
+          type: SnackbarType.error,
+          duration: const Duration(seconds: 4),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -101,56 +166,17 @@ class _RegisterScreenContentState extends State<_RegisterScreenContent> {
                       GradientButton(
                         width: double.infinity,
                         radius: 19,
-                        onPressed: () async {
-                          final email = _emailController.text.trim();
-                          // ignore: non_constant_identifier_names
-                          final Keyboardclose = FocusScope.of(context);
-                          Keyboardclose.unfocus();
-                          if (email.isEmpty) {
-                            CustomSnackbar.show(
-                              context: context,
-                              message: "Email cannot be empty",
-                              type: SnackbarType.error,
-                              duration: const Duration(seconds: 4),
-                            );
-                            return;
-                          }
-                          // Validamos usando tu función
-                          final isValidEmail = validateCurrentField(
-                            botIndex: 20, // 20 corresponde a email
-                            userResponse: email, // pasamos el valor del input
-                          );
-
-                          if (!isValidEmail) {
-                            CustomSnackbar.show(
-                              context: context,
-                              message: "Please enter a valid email",
-                              type: SnackbarType.error,
-                              duration: const Duration(seconds: 4),
-                            );
-                            return;
-                          }
-
-                          // Validar existencia (async)
-                          final exists = await AuthService().emailExists(email);
-                          if (exists) {
-                            debugPrint("Si existe :D");
-                            CustomSnackbar.show(
-                              // ignore: use_build_context_synchronously
-                              context: context,
-                              message: "This email is already registered",
-                              type: SnackbarType.error,
-                              duration: const Duration(seconds: 4),
-                            );
-                            return;
-                          }
-
-                          // Email válido, vamos al chat
-                          // ignore: use_build_context_synchronously
-                          context.pushReplacement('/ia-chat', extra: email);
-                        },
-
-                        child: const SecondaryText("Create Account"),
+                        onPressed: _isLoading ? null : _handleRegister,
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const SecondaryText("Create Account"),
                       ),
                     ],
                   ),

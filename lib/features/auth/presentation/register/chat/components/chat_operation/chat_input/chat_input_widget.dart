@@ -65,20 +65,33 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
     _tooltipEntry?.remove();
     _tooltipEntry = null;
 
-    // ✅ Limpiar audio antes de dispose
-    _audioManager
-        .reset()
-        .then((_) {
-          _audioManager.dispose();
-        })
-        .catchError((e) {
-          debugPrint('Error en dispose: $e');
-          _audioManager.dispose();
-        });
+    // Limpiar audio sin setState
+    _audioManager.dispose();
 
     widget.controller.removeListener(() {});
     super.dispose();
   }
+
+  // @override
+  // void dispose() {
+  //   _holdTimer?.cancel();
+  //   _tooltipEntry?.remove();
+  //   _tooltipEntry = null;
+
+  //   // ✅ Limpiar audio antes de dispose
+  //   _audioManager
+  //       .reset()
+  //       .then((_) {
+  //         _audioManager.dispose();
+  //       })
+  //       .catchError((e) {
+  //         debugPrint('Error en dispose: $e');
+  //         _audioManager.dispose();
+  //       });
+
+  //   widget.controller.removeListener(() {});
+  //   super.dispose();
+  // }
 
   void _clearInputVisual() {
     // Si estamos en modo teléfono, limpiar el campo de teléfono
@@ -151,7 +164,9 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
           return;
         }
 
-        debugPrint('✅ Audio válido (${durationInSeconds.toStringAsFixed(1)}s), enviando...');
+        debugPrint(
+          '✅ Audio válido (${durationInSeconds.toStringAsFixed(1)}s), enviando...',
+        );
 
         // ✅ Enviar el audio (el handler creará la copia)
         widget.onSendAudio?.call(audioPath);
@@ -162,7 +177,6 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
         // ❌ NO RESETEAR AQUÍ - se hará después de la confirmación
         // await _audioManager.reset();
         if (mounted) setState(() {});
-        
       } catch (e) {
         debugPrint('❌ Error al validar duración: $e');
         if (mounted) {
@@ -186,7 +200,7 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
 
   Future<void> resetAudioManager() async {
     await _audioManager.reset();
-    if (mounted) setState((){});
+    if (mounted) setState(() {});
   }
 
   void _handleMainButton() {
@@ -261,9 +275,7 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
   Widget _buildInputArea() {
     // 🎙️ Grabando audio
     if (_audioManager.isRecording) {
-      return RecordingDisplay(
-        duration: _audioManager.duration,
-      );
+      return RecordingDisplay(duration: _audioManager.duration);
     }
 
     // 🎵 Audio grabado listo para enviar
@@ -283,7 +295,10 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
           if (mounted) setState(() {});
         },
         onSeek: (pos) => _audioManager.seekToPosition(pos),
-        onDelete: () async { await _audioManager.reset(); if (mounted) setState(() {}); },
+        onDelete: () async {
+          await _audioManager.reset();
+          if (mounted) setState(() {});
+        },
       );
     }
 

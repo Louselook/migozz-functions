@@ -151,7 +151,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     // AQUÍ: pedir al CUBIT que cargue las socials desde Firestore
     // -------------------
     // Nota: comprobamos mounted antes de usar context después de await
-    final uid = FirebaseAuth.instance.currentUser?.uid ?? user.id;
+    // final uid = FirebaseAuth.instance.currentUser?.uid ?? user.id;
 
     try {
       // Opcional: si quieres mostrar loader local para la carga de socials,
@@ -160,7 +160,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       // 1) Esperar a que el cubit termine (útil si tu UI depende de esto inmediatamente)
       // ignore: use_build_context_synchronously
-      await context.read<RegisterCubit>().loadSocialsFromFirestore(uid: uid);
+      // await context.read<RegisterCubit>().loadSocialsFromFirestore(uid: uid);
 
       // 2) Si prefieres no bloquear UI, en vez de await puedes:
       // context.read<AuthCubit>().loadSocialsFromFirestore(uid: uid); // fire-and-forget

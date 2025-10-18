@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:location/location.dart';
 import 'package:migozz_app/core/config/api/api_config.dart';
-import 'package:migozz_app/features/auth/models/location_dto.dart';
+import 'package:migozz_app/features/auth/data/domain/models/location_dto.dart';
 
 class LocationService {
   final Location _location = Location();

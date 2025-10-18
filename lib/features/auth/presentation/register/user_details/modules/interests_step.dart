@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/color.dart';
+import 'package:migozz_app/core/components/atomics/loading_overlay.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/interest_section_model.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/user_details_button.dart';
@@ -103,7 +105,10 @@ class _InterestsStepState extends State<InterestsStep> {
               context: context,
               action: UserDetailsAction.finalRegister,
               onFinalAction: () async {
-                // Construir { sección: [opciones seleccionadas] }
+                final cubit = context.read<RegisterCubit>();
+                final authCubit = context.read<AuthCubit>();
+
+                // Construir intereses
                 final selectedBySection = <String, List<String>>{};
                 for (final section in dynamicSections) {
                   final picked = section.options
@@ -114,14 +119,35 @@ class _InterestsStepState extends State<InterestsStep> {
                   }
                 }
 
-                // Guardar en el cubit y validar completitud
-                final cubit = context.read<RegisterCubit>();
                 cubit.setInterests(selectedBySection);
                 await cubit.checkCompletion();
 
-                if (mounted) {
+                // ✅ Si está completo, registrar usuario
+                if (cubit.state.isComplete) {
+                  try {
+                    // ignore: use_build_context_synchronously
+                    LoadingOverlay.show(context);
+                    await authCubit.completeRegistration(
+                      email: cubit.state.email!,
+                      otp: cubit.state.currentOTP!,
+                      userData: cubit.state.buildUserDTO(),
+                    );
+                  } catch (e) {
+                    // ignore: use_build_context_synchronously
+                    LoadingOverlay.hide(context);
+                    debugPrint('❌ Error finalizando registro: $e');
+                    // ignore: use_build_context_synchronously
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error completando registro: $e')),
+                    );
+                  }
+                } else {
                   // ignore: use_build_context_synchronously
-                  Navigator.of(context).pop('done');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Faltan datos para completar el registro'),
+                    ),
+                  );
                 }
               },
             ),

@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:migozz_app/features/profile/presentation/profile_screen.dart';
+// import 'package:migozz_app/features/profile/presentation/profile_screen.dart';
 
 /// ResultSearch realiza una búsqueda simple en la colección `users || profiles_public`
 /// por `username` y `displayName`. Muestra los resultados en una lista.
@@ -203,12 +203,12 @@ class _ResultSearchState extends State<ResultSearch> {
             return InkWell(
               onTap: () {
                 // Navigate to ProfileScreen showing the selected user
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ProfileScreen(userId: item['id'] as String),
-                  ),
-                );
+                // Navigator.push(
+                //   context,
+                //   MaterialPageRoute(
+                //     builder: (_) => ProfileScreen(userId: item['id'] as String),
+                //   ),
+                // );
               },
               child: Container(
                 padding: EdgeInsets.all(containerPadding),

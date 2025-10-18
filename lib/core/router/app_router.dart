@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/router/app_router_notifier.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_state.dart';
 import 'package:migozz_app/features/auth/presentation/login/login_screen.dart';
 // import 'package:migozz_app/features/auth/presentation/login/otp_screen.dart';
 import 'package:migozz_app/features/auth/presentation/register/register_screen.dart';
@@ -75,7 +76,8 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       // Usuario NO autenticado
       if (status == AuthStatus.notAuthenticated) {
         if (publicRoutes.contains(goingTo)) return null;
-        if (context.read<RegisterCubit>().state.email!.isNotEmpty) {
+        if (context.read<RegisterCubit>().state.regProgress !=
+            RegisterStatusProgress.emty) {
           return '/ia-chat';
         }
         return '/login';

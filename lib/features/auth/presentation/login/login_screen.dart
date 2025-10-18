@@ -10,8 +10,8 @@ import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/features/auth/components/bottom_text.dart';
 import 'package:migozz_app/features/auth/components/google_button.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/login_cubit/login_cubit.dart';
-import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/login/otp_screen.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/functions/email_validation.dart';
 
@@ -26,7 +26,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  // 🔹 Flags para evitar acciones repetidas
   bool _hasNavigatedToOTP = false;
   bool _isLoadingVisible = false;
 
@@ -42,44 +41,24 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final authCubit = context.read<AuthCubit>();
-      final result = await authCubit.signInWithGoogle();
+      await authCubit.signInWithGoogle();
 
       if (!mounted) return;
       LoadingOverlay.hide(context);
-
-      final email = result.credential.user?.email;
-
-      if (!result.profileExists) {
-        if (email != null && email.isNotEmpty) {
-          try {
-            context.read<RegisterCubit>().setEmail(email);
-          } catch (_) {
-            // Si no existe el cubit, aún navegamos con extra
-          }
-
-          context.go('/ia-chat', extra: email);
-          return;
-        } else {
-          CustomSnackbar.show(
-            context: context,
-            message: 'No se pudo obtener el email de Google.',
-            type: SnackbarType.error,
-          );
-          return;
-        }
-      }
     } catch (e) {
+      debugPrint("error: $e");
       if (mounted) LoadingOverlay.hide(context);
 
-      String message = 'Error al iniciar sesión con Google';
-      if (e.toString().contains('cancelled_by_user')) {
-        message = 'Inicio de sesión cancelado';
+      // Evita mostrar errores genéricos o warnings de Firebase
+      final msg = e.toString();
+      if (!msg.contains("AppCheckProvider") &&
+          !msg.contains("ProviderInstaller")) {
+        CustomSnackbar.show(
+          context: context,
+          message: 'Error al iniciar sesión con Google: $e',
+          type: SnackbarType.error,
+        );
       }
-      CustomSnackbar.show(
-        context: context,
-        message: message,
-        type: SnackbarType.error,
-      );
     }
   }
 
@@ -87,7 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return MultiBlocListener(
       listeners: [
-        // 🔹 Listener para LOADING
+        // 🔹 Listener para LOADING del LoginCubit
         BlocListener<LoginCubit, LoginState>(
           listenWhen: (previous, current) {
             return previous.isLoading != current.isLoading;
@@ -140,7 +119,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                     ),
                   ).then((_) {
-                    // Resetear flag cuando regrese
                     _hasNavigatedToOTP = false;
                   });
                 }
@@ -149,10 +127,9 @@ class _LoginScreenState extends State<LoginScreen> {
           },
         ),
 
-        // 🔹 Listener para ERRORES - Controlado para evitar duplicaciones
+        // 🔹 Listener para ERRORES del LoginCubit
         BlocListener<LoginCubit, LoginState>(
           listenWhen: (previous, current) {
-            // 🔹 VOLVER a lógica que evita duplicaciones
             return previous.errorMessageLogin != current.errorMessageLogin &&
                 current.errorMessageLogin != null &&
                 current.errorMessageLogin!.isNotEmpty;
@@ -163,6 +140,20 @@ class _LoginScreenState extends State<LoginScreen> {
               message: state.errorMessageLogin!,
               type: SnackbarType.error,
             );
+          },
+        ),
+
+        // 🔹 Listener para ÉXITO en AuthCubit (cuando se complete el login real)
+        BlocListener<AuthCubit, AuthState>(
+          listenWhen: (previous, current) {
+            return current.isAuthenticated &&
+                current.userProfile != null &&
+                !previous.isAuthenticated;
+          },
+          listener: (context, state) {
+            if (state.userProfile != null) {
+              context.go('/profile', extra: state.userProfile!.email);
+            }
           },
         ),
       ],
@@ -247,9 +238,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         return;
                       }
 
-                      // 🔹 Resetear flags antes de nueva operación
+                      // Resetear flags antes de nueva operación
                       _hasNavigatedToOTP = false;
 
+                      // Solo enviar OTP con LoginCubit (no autenticación aún)
                       context.read<LoginCubit>().sendOTPLoginCubit(email);
                     },
                     child: const SecondaryText('Login', fontSize: 20),

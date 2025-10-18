@@ -6,7 +6,7 @@ import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_stat
 import 'package:migozz_app/features/splash/splash_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:migozz_app/features/auth/services/location_service.dart';
-import 'package:migozz_app/features/auth/models/location_dto.dart';
+import 'package:migozz_app/features/auth/data/domain/models/location_dto.dart';
 
 /// Resultado de inicialización global
 class AppInitResult {
@@ -69,68 +69,38 @@ class _AppInitializerState extends State<AppInitializer>
   }
 
   Future<void> _runInit() async {
-    // ✅ Evitar múltiples ejecuciones simultáneas
-    if (_isInitializing) {
-      debugPrint('⚠️ _runInit ya está en ejecución, ignorando llamada duplicada');
-      return;
-    }
-
+    if (_isInitializing) return;
     _isInitializing = true;
-    debugPrint('🚀 Iniciando solicitud de permisos...');
 
     try {
-      // 1️⃣ Permiso de micrófono
+      // 1️⃣ Permiso micro
       final micStatus = await Permission.microphone.request();
       final microphoneGranted = micStatus.isGranted;
 
+      // 2️⃣ Intentar pedir ubicación UNA vez
+      final locStatus = await Permission.locationWhenInUse.request();
       bool locationGranted = false;
       LocationDTO? locationDto;
 
-      // 🔁 Bucle hasta obtener permiso válido
-      while (!locationGranted && mounted) {
-        final locStatus = await Permission.locationWhenInUse.request();
-
-        bool permanentlyDenied = false;
-
-        switch (locStatus) {
-          case PermissionStatus.granted:
-          case PermissionStatus.limited: // iOS: solo esta vez
-            locationGranted = true;
-            break;
-          case PermissionStatus.denied:
-            locationGranted = false;
-            break;
-          case PermissionStatus.permanentlyDenied:
-            locationGranted = false;
-            permanentlyDenied = true;
-            break;
-          default:
-            break;
+      if (locStatus == PermissionStatus.granted ||
+          locStatus == PermissionStatus.limited) {
+        locationGranted = true;
+        try {
+          final svc = LocationService();
+          locationDto = await svc.initAndFetchAddress();
+        } catch (e) {
+          debugPrint('❌ Error al obtener ubicación: $e');
         }
-
-        if (locationGranted) {
-          try {
-            final svc = LocationService();
-            locationDto = await svc.initAndFetchAddress();
-          } catch (e) {
-            debugPrint('❌ Error al obtener ubicación: $e');
-          }
-        } else {
-          // Mostrar modal de permiso denegado
-          await _showLocationDeniedDialog(permanentlyDenied);
-          
-          if (permanentlyDenied) {
-            // Abrir ajustes del sistema
-            await openAppSettings();
-            
-            // ✅ Esperar un poco después de abrir ajustes
-            // Esto evita solicitudes inmediatas al regresar
-            await Future.delayed(const Duration(seconds: 1));
-          } else {
-            // ✅ Pequeño delay antes de reintentar
-            await Future.delayed(const Duration(milliseconds: 500));
-          }
-        }
+      } else {
+        // Si no concedió, mostramos un modal INFORMANDO y continuamos sin bloquear
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          _showLocationDeniedDialog(
+            locStatus == PermissionStatus.permanentlyDenied,
+          );
+        });
+        locationGranted = false;
+        locationDto = null;
       }
 
       if (!mounted) return;
@@ -143,83 +113,50 @@ class _AppInitializerState extends State<AppInitializer>
         );
       });
 
-      debugPrint('✅ Inicialización completada');
+      debugPrint('✅ Inicialización completada (no bloqueante)');
     } catch (e) {
       debugPrint('❌ Error durante inicialización: $e');
     } finally {
-      // ✅ Siempre liberar el flag
       _isInitializing = false;
     }
   }
 
   /// Mostrar el modal DESPUÉS del primer frame para evitar error
-  Future<void> _showLocationDeniedDialog(bool permanentlyDenied) {
-    final completer = Completer<void>();
-
-    // Ejecutar en el siguiente frame
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (!mounted) {
-        completer.complete();
-        return;
-      }
-
-      try {
-        await showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          backgroundColor: Colors.white,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+  Future<void> _showLocationDeniedDialog(bool permanentlyDenied) async {
+    try {
+      await showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.white,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (_) => Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.location_off, size: 60, color: Colors.redAccent),
+              const SizedBox(height: 16),
+              Text(
+                permanentlyDenied
+                    ? "Has bloqueado el permiso de ubicación permanentemente. Actívalo desde Ajustes si quieres usar funciones basadas en ubicación."
+                    : "No concediste la ubicación. Algunas funciones podrían no estar disponibles.",
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(permanentlyDenied ? "Abrir ajustes" : "Cerrar"),
+              ),
+              const SizedBox(height: 8),
+            ],
           ),
-          builder: (_) => Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.location_off,
-                  size: 60,
-                  color: Colors.redAccent,
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  "Permiso de ubicación requerido",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  permanentlyDenied
-                      ? "Has bloqueado el permiso de ubicación permanentemente. "
-                            "Por favor actívalo manualmente desde los ajustes del dispositivo."
-                      : "Necesitamos tu ubicación para mostrarte información cerca de ti. "
-                            "Por favor, concédela para continuar.",
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(
-                    permanentlyDenied ? "Abrir ajustes" : "Intentar de nuevo",
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text("Cancelar"),
-                ),
-              ],
-            ),
-          ),
-        );
-      } catch (e) {
-        debugPrint('❌ Error mostrando modal: $e');
-      } finally {
-        if (!completer.isCompleted) completer.complete();
-      }
-    });
-
-    return completer.future;
+        ),
+      );
+    } catch (e) {
+      debugPrint('❌ Error mostrando modal: $e');
+    }
   }
 
   @override

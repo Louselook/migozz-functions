@@ -1,426 +1,186 @@
-// lib/features/profile/profile_screen.dart
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+// lib/features/profile/presentation/profile_screen.dart
 import 'package:flutter/material.dart';
-import 'package:migozz_app/core/components/formart/text_formart.dart';
-import 'package:migozz_app/features/edit/presentation/edit_profile_screen.dart';
-import 'package:migozz_app/features/profile/components/draggable_social_rail.dart';
-// import 'package:migozz_app/features/profile/components/ai_assistant.dart';
-import 'package:migozz_app/features/profile/components/bottom_nav.dart';
-import 'package:migozz_app/features/profile/components/background_image.dart';
-import 'package:migozz_app/features/profile/components/social_rail.dart';
-import 'package:migozz_app/features/profile/components/stats_helper.dart';
-import 'package:migozz_app/features/profile/presentation/profile_stats.dart';
-import 'package:migozz_app/features/search/presentation/search_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:migozz_app/core/color.dart';
+import 'package:migozz_app/core/components/atomics/text.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
+// import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
 
-class ProfileScreen extends StatefulWidget {
-  final String? userId;
-
-  const ProfileScreen({super.key, this.userId});
-
-  @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
-}
-
-class _ProfileScreenState extends State<ProfileScreen> {
-  int _tab = 0;
-  List<Map<String, String>> _userSocials = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUser();
-  }
-
-  Future<void> onEditProfile() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const EditProfileScreen()),
-    );
-
-    if (result == 'updated' && mounted) {
-      setState(() {}); // recarga el FutureBuilder
-    }
-  }
-
-  Future<Map<String, dynamic>?> _fetchUserData() async {
-    final current = FirebaseAuth.instance.currentUser;
-    final targetId = widget.userId ?? current?.uid;
-    if (targetId == null) return null;
-
-    final doc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(targetId)
-        .get();
-
-    return doc.data();
-  }
-
-  Future<void> _loadUser() async {
-    final current = FirebaseAuth.instance.currentUser;
-    final targetId = widget.userId ?? current?.uid;
-    if (targetId == null) return;
-
-    final doc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(targetId)
-        .get();
-
-    final data = doc.data();
-    final username = (data?['username'] as String?) ?? '';
-    if (username.isNotEmpty) {
-      _loadUserSocials(username);
-    }
-  }
-
-  Future<void> _loadUserSocials(String username) async {
-    final u = username.replaceFirst('@', '');
-    try {
-      final q = await FirebaseFirestore.instance
-          .collection('userSocials')
-          .where('userName', isEqualTo: u)
-          .get();
-
-      final list = q.docs
-          .map((d) {
-            final m = d.data();
-            return {
-              'provider': (m['provider'] ?? '').toString(),
-              'url': (m['url'] ?? '').toString(),
-            };
-          })
-          .where((e) => e['provider']!.isNotEmpty)
-          .toList();
-
-      if (mounted) setState(() => _userSocials = list);
-    } catch (e) {
-      debugPrint('Error cargando userSocials: $e');
-    }
-  }
-
-  Future<List<SocialStats>> getUserSocialStats(String userId) async {
-    final db = FirebaseFirestore.instance;
-    final userDoc = await db.collection('users').doc(userId).get();
-    final userData = userDoc.data();
-    if (userData == null) return [];
-
-    final rawEco = userData['socialEcosystem'];
-    if (rawEco == null) return [];
-
-    final List<Map<String, dynamic>> ecosystem = [];
-    if (rawEco is List) {
-      for (final item in rawEco) {
-        if (item is Map<String, dynamic>) ecosystem.add(item);
-      }
-    } else if (rawEco is Map) {
-      for (final key in rawEco.keys) {
-        final value = rawEco[key];
-        if (value is Map<String, dynamic>) ecosystem.add(value);
-      }
-    }
-
-    final List<SocialStats> statsList = [];
-    for (final social in ecosystem) {
-      final platformName = social.keys.first;
-      final platformData = social[platformName];
-      if (platformData is Map<String, dynamic>) {
-        statsList.add(SocialStats.fromMap(platformName, platformData));
-      }
-    }
-
-    return statsList;
-  }
-
-  Future<int> getTotalFollowers(String userId) async {
-    final stats = await getUserSocialStats(userId);
-    final totals = calculateUnifiedTotals(stats);
-    return totals['followers'] ?? 0;
-  }
-
-  final GlobalKey _profileScreenKey = GlobalKey();
-  final GlobalKey _editScreenKey = GlobalKey();
-  final GlobalKey _statScreenKey = GlobalKey();
-  final GlobalKey _searchScreenKey = GlobalKey();
-  final GlobalKey _playButtonKey = GlobalKey();
-  final GlobalKey _shareButtonKey = GlobalKey();
+class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final bottomGradientHeight = size.height * 0.22;
-    // final bottomPaddingForCard = size.height * 0.25;
-    // final assistantSize = (size.width * 0.18).clamp(56.0, 88.0);
+    final authState = context.watch<AuthCubit>().state;
+    final user = authState.userProfile;
 
-    // final initialAssistantPosition = Offset(
-    //   size.width - assistantSize - (size.width * 0.03),
-    //   size.height - bottomPaddingForCard + (size.height * 0.03),
-    // );
-    final initialSocialPosition = Offset(size.width - 65, size.height * 0.2);
+    if (!authState.isAuthenticated) {
+      return const Scaffold(
+        body: Center(child: Text('No hay usuario autenticado')),
+      );
+    }
 
-    final current = FirebaseAuth.instance.currentUser;
-    final targetId = widget.userId ?? current?.uid;
-    if (targetId == null) return const SizedBox();
+    return Scaffold(
+      appBar: AppBar(title: const Text('Profile')),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: user == null
+              ? const Center(child: Text('Cargando perfil...'))
+              : SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      CircleAvatar(
+                        radius: 48,
+                        backgroundImage:
+                            user.avatarUrl != null && user.avatarUrl!.isNotEmpty
+                            ? NetworkImage(user.avatarUrl!)
+                            : null,
+                        child: user.avatarUrl == null || user.avatarUrl!.isEmpty
+                            ? const Icon(Icons.person, size: 48)
+                            : null,
+                      ),
+                      const SizedBox(height: 16),
+                      PrimaryText(
+                        user.displayName,
+                        color: AppColors.backgroundDark,
+                      ),
+                      const SizedBox(height: 8),
+                      SecondaryText(user.email, color: AppColors.grey),
+                      const SizedBox(height: 16),
 
-    // FutureBuilder
-    return FutureBuilder<Map<String, dynamic>?>(
-      future: _fetchUserData(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            backgroundColor: Colors.black,
-            body: Center(child: CircularProgressIndicator(color: Colors.white)),
-          );
-        }
+                      // Basic fields
+                      ListTile(
+                        title: const Text('Username'),
+                        subtitle: Text(user.username),
+                      ),
+                      ListTile(
+                        title: const Text('Phone'),
+                        subtitle: Text(user.phone ?? '-'),
+                      ),
+                      ListTile(
+                        title: const Text('Gender'),
+                        subtitle: Text(user.gender),
+                      ),
+                      ListTile(
+                        title: const Text('Location'),
+                        subtitle: Text(
+                          '${user.location.city}, ${user.location.state}, ${user.location.country}',
+                        ),
+                      ),
 
-        if (!snapshot.hasData || snapshot.data == null) {
-          return const Scaffold(
-            backgroundColor: Colors.black,
-            body: Center(
-              child: Text(
-                "Usuario incompleto",
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          );
-        }
-
-        final data = snapshot.data!;
-        final rawname = (data['displayName'] as String?) ?? 'Fullname';
-        final name = formatDisplayName(rawname, format: FormatName.short);
-        final username = (data['username'] as String?) ?? '@username';
-        final avatarUrl = (data['avatarUrl'] as String?);
-        final voiceNoteUrl = (data['voiceNoteUrl']?.toString() ?? '');
-        final social = _userSocials.isNotEmpty
-            ? _userSocials.map((e) => e['provider']!).toList()
-            : ((data['socialEcosystem'] as List?)
-                      ?.map((e) => e.toString())
-                      .toList() ??
-                  const []);
-
-        final finalDisplayName = username.startsWith('@')
-            ? username
-            : '@$username';
-
-        return FutureBuilder<int>(
-          future: getTotalFollowers(targetId),
-          builder: (context, snapshotFollowers) {
-            final totalFollowers = snapshotFollowers.data ?? 0;
-
-            return Scaffold(
-              body: BackgroundImage(
-                avatarUrl: avatarUrl,
-                name: name.isNotEmpty ? name : 'NOMBRE VACÍO',
-                displayName: finalDisplayName,
-                comunityCount: totalFollowers.toString(),
-                nameComunity: 'Community',
-                voiceNoteUrl: voiceNoteUrl,
-                child: Stack(
-                  children: [
-                    // Fondo degradado inferior
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      height: bottomGradientHeight,
-                      child: IgnorePointer(
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.transparent,
-                                Colors.black.withValues(alpha: 0.35),
-                                Colors.black.withValues(alpha: 0.6),
-                              ],
-                            ),
+                      // Category
+                      if (user.category != null && user.category!.isNotEmpty)
+                        ListTile(
+                          title: const Text('Category'),
+                          subtitle: Wrap(
+                            spacing: 8,
+                            children: user.category!
+                                .map((c) => Chip(label: Text(c)))
+                                .toList(),
                           ),
                         ),
-                      ),
-                    ),
 
-                    // Botón de búsqueda
-                    Positioned(
-                      key: _searchScreenKey,
-                      left: 20,
-                      top: 70,
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const SearchScreen(),
+                      // Interests (map)
+                      if (user.interests.isNotEmpty)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Interests',
+                              style: TextStyle(fontWeight: FontWeight.bold),
                             ),
-                          );
-                        },
-                        child: const Icon(
-                          Icons.search,
-                          color: Color(0xAAFFFFFF),
-                          size: 60,
+                            const SizedBox(height: 8),
+                            ...user.interests.entries.map((e) {
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 4.0,
+                                ),
+                                child: Row(
+                                  children: [
+                                    SizedBox(width: 110, child: Text(e.key)),
+                                    Expanded(child: Text(e.value.join(', '))),
+                                  ],
+                                ),
+                              );
+                            }),
+                          ],
                         ),
-                      ),
-                    ),
 
-                    // Asistente IA
-                    // AIAssistant(
-                    //   size: assistantSize,
-                    //   initialPosition: initialAssistantPosition,
-                    //   onTap: () => debugPrint('Asistente IA presionado'),
-                    // ),
+                      const SizedBox(height: 12),
 
-                    // Panel lateral
-                    FutureBuilder<List<SocialStats>>(
-                      future: getUserSocialStats(targetId),
-                      builder: (context, statsSnap) {
-                        final stats = statsSnap.data ?? [];
-                        final statsMap = {
-                          for (final s in stats) s.name.toLowerCase(): s,
-                        };
-                        return DraggableSocialRail(
-                          initialPosition: initialSocialPosition,
-                          links: _userSocials.isNotEmpty
-                              ? _mapUserSocialDocsToLinks(
-                                  _userSocials,
-                                  statsMap,
-                                )
-                              : _mapSocialToLinks(social, username, statsMap),
-                          itemSize: 50,
-                          iconSize: 45,
-                        );
-                      },
-                    ),
+                      // Social ecosystem: iterate list of maps
+                      if (user.socialEcosystem != null &&
+                          user.socialEcosystem!.isNotEmpty)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Socials',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 8),
+                            ...user.socialEcosystem!.map((map) {
+                              // cada map puede contener por ejemplo: { "tiktok": { ... } }
+                              final key = map.keys.isNotEmpty
+                                  ? map.keys.first
+                                  : 'unknown';
+                              final value = map.values.first;
+                              return Card(
+                                margin: const EdgeInsets.symmetric(vertical: 6),
+                                child: ListTile(
+                                  title: Text(key),
+                                  subtitle: value is Map
+                                      ? Text(
+                                          value.entries
+                                              .map(
+                                                (e) => '${e.key}: ${e.value}',
+                                              )
+                                              .join('\n'),
+                                        )
+                                      : Text(value.toString()),
+                                ),
+                              );
+                            }),
+                          ],
+                        ),
 
-                    // Navegación inferior
-                    Align(
-                      alignment: Alignment.bottomCenter,
-                      child: GradientBottomNav(
-                        currentIndex: _tab,
-                        onItemSelected: (i) => setState(() => _tab = i),
-                        onCenterTap: () async {
-                          await FirebaseAuth.instance.signOut();
+                      const SizedBox(height: 12),
+
+                      // voice note
+                      if (user.voiceNoteUrl != null &&
+                          user.voiceNoteUrl!.isNotEmpty)
+                        Column(
+                          children: [
+                            const Text('Voice note available'),
+                            const SizedBox(height: 8),
+                            Text(user.voiceNoteUrl!),
+                          ],
+                        ),
+
+                      const SizedBox(height: 16),
+
+                      // Timestamps
+                      // ListTile(title: const Text('Created at'), subtitle: Text(_formatDate(user.createdAt))),
+                      // ListTile(title: const Text('Updated at'), subtitle: Text(_formatDate(user.updatedAt))),
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        onPressed: () async {
+                          final authCubit = context.read<AuthCubit>();
+                          await authCubit.logout();
                         },
-                        onProfileUpdated: () {
-                          setState(
-                            () {},
-                          ); // refresca el FutureBuilder al volver
-                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                        ),
+                        child: const Text('Cerrar sesión'),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            );
-          },
-        );
-      },
+        ),
+      ),
     );
-  }
-
-  List<SocialLink> _mapSocialToLinks(
-    List<String> platforms,
-    String username,
-    Map<String, SocialStats>? statsMap,
-  ) {
-    final map = <SocialLink>[];
-    final u = username.replaceFirst('@', '');
-    for (final p in platforms) {
-      final stat = statsMap?[p.toLowerCase()];
-      switch (p.toLowerCase()) {
-        case 'tiktok':
-          map.add(
-            SocialLink(
-              asset: 'assets/icons/social_networks/TikTok.png',
-              url: Uri.parse('https://www.tiktok.com/@$u'),
-              followers: stat?.followers,
-              shares: stat?.shares,
-            ),
-          );
-          break;
-        case 'instagram':
-          map.add(
-            SocialLink(
-              asset: 'assets/icons/social_networks/Instagram.png',
-              url: Uri.parse('https://www.instagram.com/$u'),
-              followers: stat?.followers,
-              shares: stat?.shares,
-            ),
-          );
-          break;
-        case 'x':
-        case 'twitter':
-          map.add(
-            SocialLink(
-              asset: 'assets/icons/social_networks/X.png',
-              url: Uri.parse('https://x.com/$u'),
-              followers: stat?.followers,
-              shares: stat?.shares,
-            ),
-          );
-          break;
-        case 'pinterest':
-          map.add(
-            SocialLink(
-              asset: 'assets/icons/social_networks/Pinterest.png',
-              url: Uri.parse('https://www.pinterest.com/$u'),
-              followers: stat?.followers,
-              shares: stat?.shares,
-            ),
-          );
-          break;
-        case 'youtube':
-          map.add(
-            SocialLink(
-              asset: 'assets/icons/social_networks/YouTube.png',
-              url: Uri.parse('https://www.youtube.com/@$u'),
-              followers: stat?.followers,
-              shares: stat?.shares,
-            ),
-          );
-          break;
-      }
-    }
-    return map;
-  }
-
-  List<SocialLink> _mapUserSocialDocsToLinks(
-    List<Map<String, String>> docs,
-    Map<String, SocialStats>? statsMap,
-  ) {
-    final map = <SocialLink>[];
-    for (final m in docs) {
-      final provider = (m['provider'] ?? '').toLowerCase();
-      final url = m['url'] ?? '';
-      String? asset;
-      final stat = statsMap?[provider];
-      switch (provider) {
-        case 'tiktok':
-          asset = 'assets/icons/social_networks/TikTok.png';
-          break;
-        case 'instagram':
-          asset = 'assets/icons/social_networks/Instagram.png';
-          break;
-        case 'x':
-        case 'twitter':
-          asset = 'assets/icons/social_networks/X.png';
-          break;
-        case 'pinterest':
-          asset = 'assets/icons/social_networks/Pinterest.png';
-          break;
-        case 'youtube':
-          asset = 'assets/icons/social_networks/YouTube.png';
-          break;
-      }
-      if (asset != null && url.isNotEmpty) {
-        map.add(
-          SocialLink(
-            asset: asset,
-            url: Uri.parse(url),
-            followers: stat?.followers,
-            shares: stat?.shares,
-          ),
-        );
-      }
-    }
-    return map;
   }
 }
