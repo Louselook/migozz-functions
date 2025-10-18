@@ -139,6 +139,29 @@ class RegisterState extends Equatable {
     );
   }
 
+  factory RegisterState.initial() {
+    return const RegisterState(
+      loadigAiResponse: false,
+      regProgress: RegisterStatusProgress.emty,
+      status: RegisterIsLogin.initial,
+      isComplete: false,
+      email: null,
+      language: null,
+      fullName: null,
+      username: null,
+      gender: null,
+      location: null,
+      socialEcosystem: [],
+      avatarUrl: null,
+      phone: null,
+      voiceNoteUrl: null,
+      category: [],
+      interests: {},
+      emailVerification: EmailVerification.pending,
+      currentOTP: null,
+    );
+  }
+
   @override
   List<Object?> get props => [
     loadigAiResponse,

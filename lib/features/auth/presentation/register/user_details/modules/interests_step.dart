@@ -105,7 +105,7 @@ class _InterestsStepState extends State<InterestsStep> {
               context: context,
               action: UserDetailsAction.finalRegister,
               onFinalAction: () async {
-                final cubit = context.read<RegisterCubit>();
+                final registerCubit = context.read<RegisterCubit>();
                 final authCubit = context.read<AuthCubit>();
 
                 // Construir intereses
@@ -119,19 +119,21 @@ class _InterestsStepState extends State<InterestsStep> {
                   }
                 }
 
-                cubit.setInterests(selectedBySection);
-                await cubit.checkCompletion();
+                registerCubit.setInterests(selectedBySection);
+                await registerCubit.checkCompletion();
 
-                // ✅ Si está completo, registrar usuario
-                if (cubit.state.isComplete) {
+                // Si está completo, registrar usuario
+                if (registerCubit.state.isComplete) {
                   try {
                     // ignore: use_build_context_synchronously
                     LoadingOverlay.show(context);
                     await authCubit.completeRegistration(
-                      email: cubit.state.email!,
-                      otp: cubit.state.currentOTP!,
-                      userData: cubit.state.buildUserDTO(),
+                      email: registerCubit.state.email!,
+                      otp: registerCubit.state.currentOTP!,
+                      userData: registerCubit.state.buildUserDTO(),
                     );
+                    //  Reiniciar el estado del RegisterCubit
+                    registerCubit.reset();
                   } catch (e) {
                     // ignore: use_build_context_synchronously
                     LoadingOverlay.hide(context);

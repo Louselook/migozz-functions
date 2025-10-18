@@ -347,4 +347,8 @@ class RegisterCubit extends Cubit<RegisterState> {
         debugPrint('Red social no soportada: $network');
     }
   }
+
+  void reset() {
+    emit(RegisterState.initial());
+  }
 }
