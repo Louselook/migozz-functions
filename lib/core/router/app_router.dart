@@ -68,7 +68,13 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       final goingTo = state.matchedLocation;
 
       // Rutas accesibles sin autenticación
-      const publicRoutes = {'/login', '/register', '/onboarding', '/otp'};
+      const publicRoutes = {
+        '/login',
+        '/register',
+        '/onboarding',
+        '/ia-chat',
+        '/otp',
+      };
 
       // Estado inicial (aún revisando auth)
       if (status == AuthStatus.checking) return null;
@@ -85,20 +91,30 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
 
       // Usuario autenticado
       if (status == AuthStatus.authenticated) {
-        // Verificar si el usuario necesita completar su perfil
         final authState = context.read<AuthCubit>().state;
+        final registerState = context.read<RegisterCubit>().state;
 
-        // if (goingTo != '/complete-profile' && goingTo != '/ia-chat') {
-        //   return '/complete-profile';
-        // }
+        // 🔑 NUEVO: Verificar si hay un proceso de registro activo
+        final hasActiveRegistration =
+            registerState.regProgress != RegisterStatusProgress.emty &&
+            registerState.regProgress != RegisterStatusProgress.doneChat;
 
-        // Si necesita completar perfil y no está yendo a ia-chat, redirigir
-        if (authState.needsCompletion && goingTo != '/ia-chat') {
+        // Si hay un proceso de registro activo y no está yendo a ia-chat, redirigir a ia-chat
+        if (hasActiveRegistration && goingTo != '/ia-chat') {
+          return '/ia-chat';
+        }
+
+        // Si necesita completar perfil, NO hay registro activo, y no está yendo a ia-chat
+        if (authState.needsCompletion &&
+            !hasActiveRegistration &&
+            goingTo != '/ia-chat') {
           return '/complete-profile';
         }
 
-        // Si el perfil está completo y está en ia-chat, redirigir a profile
-        if (!authState.needsCompletion && goingTo == '/ia-chat') {
+        // Si el perfil está completo y está en ia-chat (sin registro activo), redirigir a profile
+        if (!authState.needsCompletion &&
+            goingTo == '/ia-chat' &&
+            !hasActiveRegistration) {
           return '/profile';
         }
 
