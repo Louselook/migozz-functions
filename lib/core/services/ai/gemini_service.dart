@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
@@ -13,12 +14,11 @@ class GeminiService {
   String _language = 'English';
   GenerativeModel? _model;
   ChatSession? _session;
-  // Timeout máximo para llamadas de enriquecimiento IA (evita que la UI quede colgada)
   static const Duration _enrichTimeout = Duration(seconds: 8);
-  String _modelName = 'gemini-2.0-flash'; // default por compatibilidad
+  String _modelName = 'gemini-2.0-flash';
   double _temperature = 0.4;
   int _maxOutputTokens = 180;
-  bool _allowRuntimeSwitch = false; // por defecto NO alterna en runtime
+  bool _allowRuntimeSwitch = false;
 
   void ensureConfigured() {
     if (_model != null) return;
@@ -30,7 +30,6 @@ class GeminiService {
       return;
     }
     try {
-      // Permitir override por .env
       final envModel = dotenv.env['GEMINI_MODEL'];
       if (envModel != null && envModel.trim().isNotEmpty) {
         _modelName = envModel.trim();
@@ -72,7 +71,8 @@ class GeminiService {
 
   int _currentQuestionIndex = 0;
 
-  final List<String> _questionFlow = [
+  // ✅ Flujo completo para usuarios NO autenticados
+  final List<String> _questionFlowNotAuth = [
     'language', // 0
     'fullName', // 1
     'username', // 2
@@ -80,35 +80,51 @@ class GeminiService {
     'socialEcosystem', // 4
     'location', // 5
     'sendOTP', // 6
-    'emailVerification', // 7 - "te envié el código" (keepTalk: true, se salta)
-    'otpInput', // 8 - Pedir código
-    'emailSuccess', // 9 - ✅ "¡Felicidades!" (ahora keepTalk: false, se muestra)
+    'emailVerification', // 7
+    'otpInput', // 8
+    'emailSuccess', // 9
     'avatarUrl', // 10
     'phone', // 11
     'voiceNoteUrl', // 12
     'category', // 13
   ];
 
-  // ✅ NUEVOS GETTERS PÚBLICOS
-  
-  /// Obtener el paso actual del flujo
+  // ✅ Flujo reducido para usuarios autenticados
+  final List<String> _questionFlowAuth = [
+    'language', // 0
+    'gender', // 1
+    'socialEcosystem', // 2
+    'location', // 3
+    'phone', // 4
+    'voiceNoteUrl', // 5
+    'category', // 6
+  ];
+
+  // ✅ Getter dinámico que devuelve el flujo correcto según auth
+  List<String> get questionFlow {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      debugPrint('🔑 Usuario autenticado - usando flujo reducido');
+      return _questionFlowAuth;
+    } else {
+      debugPrint('🆕 Usuario no autenticado - usando flujo completo');
+      return _questionFlowNotAuth;
+    }
+  }
+
+  // ✅ GETTERS PÚBLICOS
   String get currentStep {
-    if (_currentQuestionIndex >= 0 && _currentQuestionIndex < _questionFlow.length) {
-      return _questionFlow[_currentQuestionIndex];
+    if (_currentQuestionIndex >= 0 &&
+        _currentQuestionIndex < questionFlow.length) {
+      return questionFlow[_currentQuestionIndex];
     }
     return 'unknown';
   }
 
-  /// Verificar si estamos en el paso de nota de voz
   bool get isOnVoiceNoteStep => currentStep == 'voiceNoteUrl';
-  
-  /// Verificar si estamos en el paso de teléfono
   bool get isOnPhoneStep => currentStep == 'phone';
-  
-  /// Verificar si estamos en el paso de avatar
   bool get isOnAvatarStep => currentStep == 'avatarUrl';
-
-  /// Obtener el índice actual (útil para debug)
   int get currentQuestionIndex => _currentQuestionIndex;
 
   String get currentLanguage => _language;
@@ -118,9 +134,9 @@ class GeminiService {
   }
 
   void setStartIndex(int index) {
-    if (index >= 0 && index < _questionFlow.length) {
+    if (index >= 0 && index < questionFlow.length) {
       _currentQuestionIndex = index;
-      debugPrint('📍 Índice inicial: $index (${_questionFlow[index]})');
+      debugPrint('📍 Índice inicial: $index (${questionFlow[index]})');
     }
   }
 
@@ -128,8 +144,6 @@ class GeminiService {
     _currentQuestionIndex = 0;
   }
 
-  // Permite cambiar el modelo en runtime sin reiniciar la app.
-  // Reconfigura la sesión manteniendo el flujo actual.
   void setModel(String modelName, {double? temperature, int? maxTokens}) {
     if (!_allowRuntimeSwitch) {
       if (kDebugMode) {
@@ -151,7 +165,6 @@ class GeminiService {
     if (temperature != null) _temperature = temperature;
     if (maxTokens != null) _maxOutputTokens = maxTokens;
 
-    // Reiniciar modelo/sesión y reconfigurar
     _model = null;
     _session = null;
     if (kDebugMode) {
@@ -174,7 +187,7 @@ class GeminiService {
     if (userInput.trim().isEmpty) {
       return await _prepareQuestion(
         AssistantFunctions.getCurrentQuestion(
-          _questionFlow,
+          questionFlow,
           _currentQuestionIndex,
           registerCubit,
         ),
@@ -183,7 +196,7 @@ class GeminiService {
     }
 
     // === 🟡 EVALUAR RESPUESTA ===
-    final currentStepKey = _questionFlow[_currentQuestionIndex];
+    final currentStepKey = questionFlow[_currentQuestionIndex];
     final decision = AssistantFunctions.evaluateUserResponse(
       userInput,
       currentStepKey,
@@ -194,17 +207,14 @@ class GeminiService {
 
     // === 🔵 SI ES VÁLIDO → PROCESAR Y VERIFICAR ===
     if (decision['valid'] == true) {
-      // ✅ PRIMERO procesa y verifica si hay errores
       final processResult = await processBotResponse(
         decision,
         registerCubit: registerCubit,
       );
 
-      // ⚠️ MANEJO DE ERRORES (OTP incorrecto, etc.)
       if (processResult != null && processResult['error'] == true) {
         debugPrint('❌ Error en procesamiento: ${processResult['message']}');
 
-        // Si es error de OTP inválido, devolver mensaje de error
         if (processResult['invalidOTP'] == true) {
           final isSpanish = registerCubit.state.language == 'Español';
           return {
@@ -215,7 +225,7 @@ class GeminiService {
             "step": "regProgress.emailVerification",
             "keepTalk": false,
             "keyboardType": "number",
-            "isError": true, // ✅ Flag para que la UI lo muestre como error
+            "isError": true,
           };
         }
 
@@ -226,21 +236,21 @@ class GeminiService {
       _currentQuestionIndex++;
 
       var nextQuestion = AssistantFunctions.getCurrentQuestion(
-        _questionFlow,
+        questionFlow,
         _currentQuestionIndex,
         registerCubit,
       );
 
-      // ✅ Manejo de keepTalk (solo para mensajes intermedios)
+      // ✅ Manejo de keepTalk
       while (nextQuestion['keepTalk'] == true) {
         debugPrint(
-          '⏩ Saltando mensaje keepTalk: ${_questionFlow[_currentQuestionIndex]}',
+          '⏩ Saltando mensaje keepTalk: ${questionFlow[_currentQuestionIndex]}',
         );
         _currentQuestionIndex++;
-        if (_currentQuestionIndex >= _questionFlow.length) break;
+        if (_currentQuestionIndex >= questionFlow.length) break;
 
         nextQuestion = AssistantFunctions.getCurrentQuestion(
-          _questionFlow,
+          questionFlow,
           _currentQuestionIndex,
           registerCubit,
         );
@@ -250,8 +260,6 @@ class GeminiService {
     }
 
     // === 🔴 SI NO ES VÁLIDO → MENSAJE DE ERROR ===
-    // Si el usuario pidió una explicación ("why?/¿para qué?") mostramos
-    // un mensaje corto y repetimos la misma pregunta automáticamente.
     if (decision['explainWhy'] == true) {
       final isSpanish = registerCubit.state.language == 'Español';
       final explain =
@@ -263,8 +271,8 @@ class GeminiService {
         "text": explain,
         "options": const <String>[],
         "step": 'regProgress.$currentStepKey',
-        "keepTalk": true, // mensaje contextual
-        "explainAndRepeat": true, // la UI repetirá la pregunta actual
+        "keepTalk": true,
+        "explainAndRepeat": true,
       };
     }
 
@@ -275,7 +283,6 @@ class GeminiService {
         ) ??
         Map<String, dynamic>.from(decision);
 
-    // Enriquecer texto de error con IA (opcional, con timeout)
     final enriched = await _enrichTextIfPossible(
       baseText: err['text']?.toString(),
       stepKey: currentStepKey,
@@ -284,14 +291,12 @@ class GeminiService {
     );
     if (enriched != null) err['text'] = enriched;
 
-    // Fallback robusto: si por alguna razón no hay texto, proporcionar uno genérico
     if (err['text'] == null ||
         (err['text'] is String && (err['text'] as String).trim().isEmpty)) {
       final isSpanish = registerCubit.state.language == 'Español';
       err['text'] = isSpanish
           ? 'Por favor ingresa un valor válido.'
           : 'Please enter a valid value.';
-      // Asegurar que la UI no quede esperando interacción extraña
       err['keepTalk'] = false;
     }
     return err;
@@ -301,18 +306,16 @@ class GeminiService {
     Map<String, dynamic> question,
     RegisterCubit registerCubit,
   ) async {
-    // 🔹 Si la pregunta necesita fotos de perfil
     if (question['showProfilePictures'] == true) {
       final pictures = AssistantFunctions.getProfilePictures(registerCubit);
       if (pictures.isNotEmpty) {
         question['profilePictures'] = pictures;
       }
     }
-    // Enriquecer el texto de la pregunta manteniendo opciones/paso
     final enriched = await _enrichTextIfPossible(
       baseText: question['text']?.toString(),
       stepKey:
-          question['step']?.toString() ?? _questionFlow[_currentQuestionIndex],
+          question['step']?.toString() ?? questionFlow[_currentQuestionIndex],
       registerCubit: registerCubit,
       purpose: 'question',
       options: (question['options'] is List)
@@ -329,11 +332,11 @@ class GeminiService {
     required String? baseText,
     required String stepKey,
     required RegisterCubit registerCubit,
-    required String purpose, // 'question' | 'error'
+    required String purpose,
     List<String> options = const <String>[],
   }) async {
     ensureConfigured();
-    if (_session == null) return null; // IA deshabilitada
+    if (_session == null) return null;
 
     final s = registerCubit.state;
     final known = _stateSummary(s);
@@ -364,11 +367,10 @@ class GeminiService {
           .timeout(_enrichTimeout);
       final text = resp.text?.trim();
       if (text == null || text.isEmpty) return null;
-      // Limitar longitud por seguridad
       return text.length > 180 ? text.substring(0, 180) : text;
     } on TimeoutException {
       if (kDebugMode) debugPrint('Gemini enrich timeout ($_enrichTimeout)');
-      return null; // No bloquear: devolvemos null para usar el texto base
+      return null;
     } catch (e) {
       if (kDebugMode) debugPrint('Gemini enrich error: $e');
       return null;

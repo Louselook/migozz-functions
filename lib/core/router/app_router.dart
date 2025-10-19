@@ -8,9 +8,11 @@ import 'package:migozz_app/features/auth/presentation/login/login_screen.dart';
 import 'package:migozz_app/features/auth/presentation/register/register_screen.dart';
 import 'package:migozz_app/features/auth/presentation/onboarding/onboarding_screen.dart';
 import 'package:migozz_app/features/edit/presentation/edit_profile_screen.dart';
+import 'package:migozz_app/features/profile/presentation/complete_profile.dart';
 import 'package:migozz_app/features/profile/presentation/profile_screen.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/ia_chat_screen.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 
 GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
   return GoRouter(
@@ -42,10 +44,14 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         builder: (context, state) => const EditProfileScreen(),
       ),
       GoRoute(
+        path: '/complete-profile',
+        builder: (context, state) => const CompleteProfile(),
+      ),
+      GoRoute(
         path: '/ia-chat',
         builder: (context, state) {
           // Intentar tomar email desde extra
-          final email =
+          final email = //"juanes.arenilla@gmail.com";
               state.extra as String? ??
               context.read<RegisterCubit>().state.email;
 
@@ -62,13 +68,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       final goingTo = state.matchedLocation;
 
       // Rutas accesibles sin autenticación
-      const publicRoutes = {
-        '/login',
-        '/register',
-        '/onboarding',
-        '/ia-chat',
-        '/otp',
-      };
+      const publicRoutes = {'/login', '/register', '/onboarding', '/otp'};
 
       // Estado inicial (aún revisando auth)
       if (status == AuthStatus.checking) return null;
@@ -85,7 +85,27 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
 
       // Usuario autenticado
       if (status == AuthStatus.authenticated) {
-        if (publicRoutes.contains(goingTo)) return '/profile';
+        // Verificar si el usuario necesita completar su perfil
+        final authState = context.read<AuthCubit>().state;
+
+        // if (goingTo != '/complete-profile' && goingTo != '/ia-chat') {
+        //   return '/complete-profile';
+        // }
+
+        // Si necesita completar perfil y no está yendo a ia-chat, redirigir
+        if (authState.needsCompletion && goingTo != '/ia-chat') {
+          return '/complete-profile';
+        }
+
+        // Si el perfil está completo y está en ia-chat, redirigir a profile
+        if (!authState.needsCompletion && goingTo == '/ia-chat') {
+          return '/profile';
+        }
+
+        // Si está yendo a rutas públicas y tiene perfil completo, redirigir a profile
+        if (publicRoutes.contains(goingTo) && !authState.needsCompletion) {
+          return '/profile';
+        }
       }
 
       return null;

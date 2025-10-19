@@ -9,54 +9,59 @@ class AuthState extends Equatable {
   final User? firebaseUser;
   final UserDTO? userProfile;
   final bool isLoadingProfile;
+  final bool needsCompletion;
 
   const AuthState({
     required this.status,
     this.firebaseUser,
     this.userProfile,
     this.isLoadingProfile = false,
+    this.needsCompletion = false,
   });
 
-  // Factory constructors para estados específicos
+  // ===== Factories base =====
   const AuthState.checking()
     : status = AuthStatus.checking,
       firebaseUser = null,
       userProfile = null,
-      isLoadingProfile = true;
+      isLoadingProfile = true,
+      needsCompletion = false;
 
-  const AuthState.authenticated({required this.firebaseUser, this.userProfile})
-    : status = AuthStatus.authenticated,
-      isLoadingProfile = false;
+  const AuthState.authenticated({
+    required this.firebaseUser,
+    this.userProfile,
+    this.needsCompletion = false,
+  }) : status = AuthStatus.authenticated,
+       isLoadingProfile = false;
 
   const AuthState.notAuthenticated()
     : status = AuthStatus.notAuthenticated,
       firebaseUser = null,
       userProfile = null,
-      isLoadingProfile = false;
+      isLoadingProfile = false,
+      needsCompletion = false;
 
-  // copyWith para actualizaciones parciales
+  // ===== copyWith =====
   AuthState copyWith({
     AuthStatus? status,
     User? firebaseUser,
     UserDTO? userProfile,
     bool? isLoadingProfile,
+    bool? needsCompletion,
   }) {
     return AuthState(
       status: status ?? this.status,
       firebaseUser: firebaseUser ?? this.firebaseUser,
       userProfile: userProfile ?? this.userProfile,
       isLoadingProfile: isLoadingProfile ?? this.isLoadingProfile,
+      needsCompletion: needsCompletion ?? this.needsCompletion,
     );
   }
 
-  // Helper para saber si el perfil está completo
-  bool get isProfileComplete => userProfile != null;
-
-  // Helper para saber si está autenticado
+  // ===== Helpers =====
   bool get isAuthenticated => status == AuthStatus.authenticated;
-
-  // Helper para saber si está cargando
   bool get isChecking => status == AuthStatus.checking;
+  bool get isProfileComplete => userProfile != null && !needsCompletion;
 
   @override
   List<Object?> get props => [
@@ -64,5 +69,6 @@ class AuthState extends Equatable {
     firebaseUser?.uid,
     userProfile,
     isLoadingProfile,
+    needsCompletion,
   ];
 }

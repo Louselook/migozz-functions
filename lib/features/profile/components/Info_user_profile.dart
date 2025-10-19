@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:migozz_app/features/profile/presentation/share_profile.dart';
+import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 
 class InfoUserProfile extends StatefulWidget {
   final String name;
@@ -9,6 +10,7 @@ class InfoUserProfile extends StatefulWidget {
   final String comunityCount;
   final String nameComunity;
   final String voiceNoteUrl;
+  final TutorialKeys? tutorialKeys;
 
   const InfoUserProfile({
     super.key,
@@ -17,6 +19,7 @@ class InfoUserProfile extends StatefulWidget {
     required this.comunityCount,
     required this.nameComunity,
     required this.voiceNoteUrl,
+    this.tutorialKeys,
   });
 
   @override
@@ -141,6 +144,7 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
 
                   // Botón para reproducir audio
                   GestureDetector(
+                    key: widget.tutorialKeys?.playButtonKey,
                     onTap: _isLoading ? null : _togglePlay,
                     child: _isLoading
                         ? const SizedBox(
@@ -164,6 +168,7 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
 
                   // Compartir perfil
                   GestureDetector(
+                    key: widget.tutorialKeys?.shareButtonKey,
                     onTap: () {
                       Navigator.push(
                         context,

@@ -1,4 +1,3 @@
-// features/auth/presentation/blocs/auth_cubit/auth_cubit.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -16,33 +15,48 @@ class AuthCubit extends Cubit<AuthState> {
 
   AuthCubit(this._authUseCases, this._mediaService)
     : super(const AuthState.checking()) {
-    // Suscribirse al stream que viene de AuthUseCases
+    // 🔔 Suscripción a cambios de sesión de Firebase
     _authSub = _authUseCases.authStateChanges.listen(
       (user) async {
-        debugPrint(
-          '🔔 [AuthCubit] authStateChanges emitted user: ${user?.uid}',
-        );
+        debugPrint('🔔 [AuthCubit] authStateChanges: ${user?.uid ?? "null"}');
+
         if (user != null) {
-          // Mientras cargamos el perfil dejamos isLoadingProfile = true
+          // Mostrar pantalla de carga mientras se obtiene el perfil
           emit(
             state.copyWith(status: AuthStatus.checking, isLoadingProfile: true),
           );
+
           try {
-            final userProfile = await _authUseCases.getCurrentUser.run();
+            final userProfile = await _loadUserProfileWithRetry(user.uid);
+            final needsCompletion = _checkProfileIncomplete(userProfile);
+
             emit(
               AuthState.authenticated(
                 firebaseUser: user,
                 userProfile: userProfile,
+                needsCompletion: needsCompletion,
               ),
             );
-            debugPrint('✅ [AuthCubit] Perfil cargado: ${userProfile?.email}');
+
+            if (needsCompletion) {
+              debugPrint(
+                '⚠️ [AuthCubit] Perfil incompleto → necesita completarse',
+              );
+            } else {
+              debugPrint('✅ [AuthCubit] Perfil completo cargado correctamente');
+            }
           } catch (e) {
             debugPrint('❌ [AuthCubit] Error cargando perfil: $e');
-            // Aunque falle la carga, emitimos authenticated con firebaseUser para seguir el flujo
-            emit(AuthState.authenticated(firebaseUser: user));
+            emit(
+              AuthState.authenticated(
+                firebaseUser: user,
+                userProfile: null,
+                needsCompletion: true,
+              ),
+            );
           }
         } else {
-          debugPrint('🔒 [AuthCubit] No hay usuario autenticado');
+          debugPrint('🔒 [AuthCubit] Usuario no autenticado');
           emit(const AuthState.notAuthenticated());
         }
       },
@@ -53,23 +67,83 @@ class AuthCubit extends Cubit<AuthState> {
     );
   }
 
+  // ==============================
+  // 🔄 Cargar perfil con reintentos
+  // ==============================
+  Future<UserDTO?> _loadUserProfileWithRetry(
+    String uid, {
+    int maxRetries = 3,
+  }) async {
+    for (int i = 0; i < maxRetries; i++) {
+      try {
+        final userProfile = await _authUseCases.getCurrentUser.run();
+        if (userProfile != null) {
+          return userProfile;
+        }
+
+        if (i < maxRetries - 1) {
+          debugPrint(
+            '🔄 [AuthCubit] Reintentando cargar perfil (${i + 1}/$maxRetries)',
+          );
+          await Future.delayed(Duration(milliseconds: 500 * (i + 1)));
+        }
+      } catch (e) {
+        debugPrint('❌ [AuthCubit] Error intento ${i + 1}: $e');
+        if (i == maxRetries - 1) rethrow;
+        await Future.delayed(Duration(milliseconds: 300 * (i + 1)));
+      }
+    }
+    return null;
+  }
+
+  // ==============================
+  // 🧩 Verificar si el perfil está incompleto
+  // ==============================
+  bool _checkProfileIncomplete(UserDTO? profile) {
+    if (profile == null) return true;
+
+    final hasBasicInfo =
+        profile.displayName.isNotEmpty &&
+        profile.username.isNotEmpty &&
+        profile.email.isNotEmpty;
+
+    final hasLocation =
+        profile.location.country.isNotEmpty &&
+        profile.location.state.isNotEmpty &&
+        profile.location.city.isNotEmpty;
+
+    final hasGender = profile.gender.isNotEmpty;
+
+    return !(hasBasicInfo && hasLocation && hasGender);
+  }
+
+  // ==============================
+  // 🔐 Login con Google
+  // ==============================
   Future<AuthResult> signInWithGoogle() async {
     try {
-      final result = await _authUseCases.loginGoogle.run();
-      return result;
+      return await _authUseCases.loginGoogle.run();
     } catch (e) {
+      debugPrint('❌ [AuthCubit] Error en login con Google: $e');
       rethrow;
     }
   }
 
+  // ==============================
+  // 🔐 Login con email/OTP
+  // ==============================
   Future<AuthResult> login({required String email, required String otp}) async {
     try {
       return await _authUseCases.login.run(email: email, otp: otp);
     } catch (e) {
+      debugPrint('❌ [AuthCubit] Error en login: $e');
       rethrow;
     }
   }
 
+  // ==============================
+  // 🧾 Completar registro
+  // ==============================
   Future<String> completeRegistration({
     required String email,
     required String otp,
@@ -81,17 +155,19 @@ class AuthCubit extends Cubit<AuthState> {
         otp: otp,
         userData: userData,
       );
+
       if (result.user == null) {
-        throw Exception('Error: No se pudo crear el usuario');
+        throw Exception('No se pudo crear el usuario');
       }
 
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) {
-        throw Exception('Error: Usuario no autenticado después del registro');
+        throw Exception('Usuario no autenticado después del registro');
       }
 
       final uid = currentUser.uid;
       await _mediaService.associateMediaToUid(uid: uid, email: email);
+
       return uid;
     } catch (e) {
       debugPrint('❌ [AuthCubit] Error en registro: $e');
@@ -99,6 +175,41 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  // ==============================
+  // 🔁 Refrescar perfil (ej. después de editar)
+  // ==============================
+  Future<void> refreshUserProfile() async {
+    if (!state.isAuthenticated || state.firebaseUser == null) return;
+
+    try {
+      debugPrint('🔄 [AuthCubit] Refrescando perfil...');
+      final userProfile = await _authUseCases.getCurrentUser.run();
+      final needsCompletion = _checkProfileIncomplete(userProfile);
+
+      emit(
+        state.copyWith(
+          userProfile: userProfile,
+          needsCompletion: needsCompletion,
+        ),
+      );
+
+      if (userProfile != null) {
+        debugPrint('✅ [AuthCubit] Perfil actualizado');
+      } else {
+        debugPrint('⚠️ [AuthCubit] Perfil vacío al refrescar');
+      }
+    } catch (e) {
+      debugPrint('❌ [AuthCubit] Error refrescando perfil: $e');
+    }
+  }
+
+  void setNeedsCompletion(bool value) {
+    emit(state.copyWith(needsCompletion: value));
+  }
+
+  // ==============================
+  // 🚪 Logout
+  // ==============================
   Future<void> logout() async {
     await _authUseCases.signout.run();
   }
@@ -109,33 +220,3 @@ class AuthCubit extends Cubit<AuthState> {
     return super.close();
   }
 }
-
-
-  // /// Actualizar perfil del usuario
-  // Future<void> updateUserProfile(UserDTO updatedProfile) async {
-  //   if (state.firebaseUser == null) {
-  //     throw Exception('No hay usuario autenticado');
-  //   }
-
-  //   try {
-  //     // Aquí podrías tener un UpdateUserUseCase, pero por simplicidad:
-  //     final uid = state.firebaseUser!.uid;
-
-  //     // Usar Firestore directamente para actualización
-  //     // O crear un UpdateUserUseCase si prefieres mantener la arquitectura completa
-  //     await FirebaseFirestore.instance
-  //         .collection('users')
-  //         .doc(uid)
-  //         .update(updatedProfile.copyWith(updatedAt: DateTime.now()).toMap());
-
-  //     await reloadUserProfile();
-  //   } catch (e) {
-  //     throw Exception('Error actualizando perfil: $e');
-  //   }
-  // }
-
-  // @override
-  // Future<void> close() {
-  //   _authSub.cancel();
-  //   return super.close();
-  // }

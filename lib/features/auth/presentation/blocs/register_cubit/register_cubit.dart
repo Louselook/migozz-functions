@@ -213,38 +213,6 @@ class RegisterCubit extends Cubit<RegisterState> {
     }
   }
 
-  // // ---------------------- completeRegistration ----------------------
-  // Future<String?> completeRegistration() async {
-  //   try {
-  //     if (!state.isComplete) {
-  //       throw Exception('Faltan datos para completar el registro');
-  //     }
-
-  //     final userDTO = state.buildUserDTO();
-
-  //     // Crear usuario en Firebase
-  //     final userCredential = await _authService.signUpRegister(
-  //       email: state.email!,
-  //       otp: state.currentOTP!,
-  //       userData: userDTO,
-  //     );
-
-  //     final uid = userCredential.user!.uid;
-
-  //     // Asociar media (email → UID)
-  //     await _mediaService.associateMediaToUid(
-  //       uid: uid,
-  //       email: state.email!,
-  //     );
-
-  //     return uid;
-  //   } catch (e) {
-  //     throw Exception('Error al registrar usuario: $e');
-  //   } finally {
-  //     emit(state.copyWith(status: RegisterIsLogin.success));
-  //   }
-  // }
-
   // ---------------------- fetch social profile ----------------------
   Future<void> fetchSocialProfile(String network, String usernameOrLink) async {
     emit(state.copyWith(status: RegisterIsLogin.loading));
