@@ -16,6 +16,7 @@ class AuthCubit extends Cubit<AuthState> {
   AuthCubit(this._authUseCases, this._mediaService)
     : super(const AuthState.checking()) {
     // 🔔 Suscripción a cambios de sesión de Firebase
+    // Dentro del constructor, en el listener:
     _authSub = _authUseCases.authStateChanges.listen(
       (user) async {
         debugPrint('🔔 [AuthCubit] authStateChanges: ${user?.uid ?? "null"}');
@@ -28,17 +29,15 @@ class AuthCubit extends Cubit<AuthState> {
 
           try {
             final userProfile = await _loadUserProfileWithRetry(user.uid);
-            final needsCompletion = _checkProfileIncomplete(userProfile);
 
             emit(
               AuthState.authenticated(
                 firebaseUser: user,
                 userProfile: userProfile,
-                needsCompletion: needsCompletion,
               ),
             );
 
-            if (needsCompletion) {
+            if (userProfile == null || !userProfile.complete) {
               debugPrint(
                 '⚠️ [AuthCubit] Perfil incompleto → necesita completarse',
               );
@@ -48,11 +47,7 @@ class AuthCubit extends Cubit<AuthState> {
           } catch (e) {
             debugPrint('❌ [AuthCubit] Error cargando perfil: $e');
             emit(
-              AuthState.authenticated(
-                firebaseUser: user,
-                userProfile: null,
-                needsCompletion: true,
-              ),
+              AuthState.authenticated(firebaseUser: user, userProfile: null),
             );
           }
         } else {
@@ -94,27 +89,6 @@ class AuthCubit extends Cubit<AuthState> {
       }
     }
     return null;
-  }
-
-  // ==============================
-  // 🧩 Verificar si el perfil está incompleto
-  // ==============================
-  bool _checkProfileIncomplete(UserDTO? profile) {
-    if (profile == null) return true;
-
-    final hasBasicInfo =
-        profile.displayName.isNotEmpty &&
-        profile.username.isNotEmpty &&
-        profile.email.isNotEmpty;
-
-    final hasLocation =
-        profile.location.country.isNotEmpty &&
-        profile.location.state.isNotEmpty &&
-        profile.location.city.isNotEmpty;
-
-    final hasGender = profile.gender.isNotEmpty;
-
-    return !(hasBasicInfo && hasLocation && hasGender);
   }
 
   // ==============================
@@ -184,27 +158,17 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       debugPrint('🔄 [AuthCubit] Refrescando perfil...');
       final userProfile = await _authUseCases.getCurrentUser.run();
-      final needsCompletion = _checkProfileIncomplete(userProfile);
 
-      emit(
-        state.copyWith(
-          userProfile: userProfile,
-          needsCompletion: needsCompletion,
-        ),
-      );
+      emit(state.copyWith(userProfile: userProfile, isLoadingProfile: false));
 
-      if (userProfile != null) {
-        debugPrint('✅ [AuthCubit] Perfil actualizado');
+      if (userProfile != null && userProfile.complete) {
+        debugPrint('✅ [AuthCubit] Perfil actualizado y completo');
       } else {
-        debugPrint('⚠️ [AuthCubit] Perfil vacío al refrescar');
+        debugPrint('⚠️ [AuthCubit] Perfil vacío o incompleto al refrescar');
       }
     } catch (e) {
       debugPrint('❌ [AuthCubit] Error refrescando perfil: $e');
     }
-  }
-
-  void setNeedsCompletion(bool value) {
-    emit(state.copyWith(needsCompletion: value));
   }
 
   // ==============================

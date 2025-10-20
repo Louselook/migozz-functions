@@ -151,7 +151,7 @@ class RegisterCubit extends Cubit<RegisterState> {
   );
 
   // ---------------------- checkCompletion ----------------------
-  Future<void> checkCompletion() async {
+  Future<void> checkCompletion({bool forGoogle = false}) async {
     emit(state.copyWith(status: RegisterIsLogin.loading));
     try {
       final Map<MediaType, File> filesToUpload = {};
@@ -168,11 +168,11 @@ class RegisterCubit extends Cubit<RegisterState> {
         );
       }
 
-      // Subir temporalmente con email
+      // Subir temporalmente con email si hay files
       if (filesToUpload.isNotEmpty) {
         try {
           final mediaUrls = await _mediaService.uploadFilesTemporarily(
-            email: state.email!,
+            email: state.email ?? '',
             files: filesToUpload,
           );
 
@@ -187,8 +187,8 @@ class RegisterCubit extends Cubit<RegisterState> {
         }
       }
 
-      // Validar completitud
-      final complete =
+      // Validar completitud - dos sets: completo normal o incompleto (google)
+      final completeFull =
           state.email != null &&
           state.language != null &&
           state.fullName != null &&
@@ -199,11 +199,23 @@ class RegisterCubit extends Cubit<RegisterState> {
           state.category != null &&
           state.interests != null;
 
-      debugPrint('✅ [Cubit] Registro completo: $complete');
+      final completeForGoogle =
+          // no pedimos email/fullName/username si vienen desde auth
+          state.language != null &&
+          state.gender != null &&
+          state.location != null &&
+          state.phone != null &&
+          state.category != null &&
+          state.interests != null;
+
+      final complete = forGoogle ? completeForGoogle : completeFull;
+
+      debugPrint(
+        '✅ [Cubit] Registro completo (forGoogle=$forGoogle): $complete',
+      );
 
       if (state.isComplete != complete) {
         emit(state.copyWith(isComplete: complete));
-        // await completeRegistration();
       } else {
         emit(state.copyWith(status: RegisterIsLogin.initial));
       }

@@ -22,6 +22,8 @@ class UserDTO {
 
   final Map<String, List<String>> interests;
 
+  final bool complete; // <- nuevo campo
+
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -38,6 +40,7 @@ class UserDTO {
     this.voiceNoteUrl,
     this.category,
     Map<String, List<String>>? interests,
+    this.complete = true, // default false
     DateTime? createdAt,
     DateTime? updatedAt,
   }) : interests = interests ?? <String, List<String>>{},
@@ -57,6 +60,7 @@ class UserDTO {
     String? voiceNoteUrl,
     List<String>? category,
     Map<String, List<String>>? interests,
+    bool? complete,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -73,6 +77,7 @@ class UserDTO {
       voiceNoteUrl: voiceNoteUrl ?? this.voiceNoteUrl,
       category: category ?? this.category,
       interests: interests ?? this.interests,
+      complete: complete ?? this.complete,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -92,6 +97,7 @@ class UserDTO {
       'voiceNoteUrl': voiceNoteUrl,
       'category': category,
       'interests': interests,
+      'complete': complete, // <- incluir en el mapa
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
     };
@@ -212,6 +218,17 @@ class UserDTO {
       }
     }
 
+    // complete defensivo: puede venir bool, string, int
+    bool complete = false;
+    final c = map['complete'];
+    if (c is bool) {
+      complete = c;
+    } else if (c is String) {
+      complete = c.toLowerCase() == 'true';
+    } else if (c is num) {
+      complete = c != 0;
+    }
+
     return UserDTO(
       email: email,
       lang: lang,
@@ -225,6 +242,7 @@ class UserDTO {
       voiceNoteUrl: voiceNoteUrl,
       category: category,
       interests: interests,
+      complete: complete, // <- setear valor
       createdAt: createdAt,
       updatedAt: updatedAt,
     );

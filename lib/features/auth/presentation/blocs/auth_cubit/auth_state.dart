@@ -9,14 +9,12 @@ class AuthState extends Equatable {
   final User? firebaseUser;
   final UserDTO? userProfile;
   final bool isLoadingProfile;
-  final bool needsCompletion;
 
   const AuthState({
     required this.status,
     this.firebaseUser,
     this.userProfile,
     this.isLoadingProfile = false,
-    this.needsCompletion = false,
   });
 
   // ===== Factories base =====
@@ -24,22 +22,17 @@ class AuthState extends Equatable {
     : status = AuthStatus.checking,
       firebaseUser = null,
       userProfile = null,
-      isLoadingProfile = true,
-      needsCompletion = false;
+      isLoadingProfile = true;
 
-  const AuthState.authenticated({
-    required this.firebaseUser,
-    this.userProfile,
-    this.needsCompletion = false,
-  }) : status = AuthStatus.authenticated,
-       isLoadingProfile = false;
+  const AuthState.authenticated({required this.firebaseUser, this.userProfile})
+    : status = AuthStatus.authenticated,
+      isLoadingProfile = false;
 
   const AuthState.notAuthenticated()
     : status = AuthStatus.notAuthenticated,
       firebaseUser = null,
       userProfile = null,
-      isLoadingProfile = false,
-      needsCompletion = false;
+      isLoadingProfile = false;
 
   // ===== copyWith =====
   AuthState copyWith({
@@ -47,21 +40,19 @@ class AuthState extends Equatable {
     User? firebaseUser,
     UserDTO? userProfile,
     bool? isLoadingProfile,
-    bool? needsCompletion,
   }) {
     return AuthState(
       status: status ?? this.status,
       firebaseUser: firebaseUser ?? this.firebaseUser,
       userProfile: userProfile ?? this.userProfile,
       isLoadingProfile: isLoadingProfile ?? this.isLoadingProfile,
-      needsCompletion: needsCompletion ?? this.needsCompletion,
     );
   }
 
   // ===== Helpers =====
   bool get isAuthenticated => status == AuthStatus.authenticated;
   bool get isChecking => status == AuthStatus.checking;
-  bool get isProfileComplete => userProfile != null && !needsCompletion;
+  bool get isProfileComplete => userProfile != null && userProfile!.complete;
 
   @override
   List<Object?> get props => [
@@ -69,6 +60,5 @@ class AuthState extends Equatable {
     firebaseUser?.uid,
     userProfile,
     isLoadingProfile,
-    needsCompletion,
   ];
 }

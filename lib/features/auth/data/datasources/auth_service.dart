@@ -1,9 +1,13 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:migozz_app/features/auth/data/domain/models/auth_result.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user_dto.dart';
 import 'package:migozz_app/features/auth/data/domain/models/location_dto.dart';
+import 'package:migozz_app/features/auth/services/media_service.dart';
 
 class SocialSignInResult {
   // ya no lo usaremos externamente si usamos AuthResult; lo dejo por compatibilidad si quieres.
@@ -179,6 +183,59 @@ class AuthService {
       throw Exception('Error en registro: ${e.code}');
     } catch (e) {
       throw Exception('Error inesperado: $e');
+    }
+  }
+
+  // Dentro de AuthService:
+  /// Completa/actualiza el perfil de un usuario que se autenticó con Google.
+  /// - Es merge (no sobreescribe) y marca 'complete': true.
+  /// - Si se pasan files temporales, los asocia y actualiza avatarUrl / voiceNoteUrl.
+  Future<void> completeGoogleRegistration({
+    required String uid,
+    required UserDTO userData,
+    required UserMediaService mediaService,
+    Map<MediaType, File>? filesToUpload,
+    String? tempEmailForMedia,
+  }) async {
+    final docRef = _firestore.collection('users').doc(uid);
+
+    // 1) actualizar datos del perfil (merge)
+    final Map<String, dynamic> dataToSave = {
+      ...userData.toMap(), // asumo que UserDTO tiene toMap()
+      'complete': true,
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+    await docRef.set(dataToSave, SetOptions(merge: true));
+
+    // 2) si hay media temporales: subir / asociar / actualizar urls en doc
+    if (filesToUpload != null && filesToUpload.isNotEmpty) {
+      // subir temporal (ya tienes este método en media service)
+      final emailForUpload = tempEmailForMedia ?? userData.email;
+      try {
+        final mediaUrls = await mediaService.uploadFilesTemporarily(
+          email: emailForUpload,
+          files: filesToUpload,
+        );
+
+        // asociar al uid final (mueve/renombra en storage)
+        await mediaService.associateMediaToUid(uid: uid, email: emailForUpload);
+
+        // actualizar doc con urls resultantes (si las hay)
+        final Map<String, dynamic> urlsToSave = {};
+        if (mediaUrls.containsKey(MediaType.avatar)) {
+          urlsToSave['avatarUrl'] = mediaUrls[MediaType.avatar];
+        }
+        if (mediaUrls.containsKey(MediaType.voice)) {
+          urlsToSave['voiceNoteUrl'] = mediaUrls[MediaType.voice];
+        }
+        if (urlsToSave.isNotEmpty) {
+          urlsToSave['updatedAt'] = FieldValue.serverTimestamp();
+          await docRef.set(urlsToSave, SetOptions(merge: true));
+        }
+      } catch (e) {
+        // no hacemos throw para no romper el flujo; logueamos
+        debugPrint('❌ [AuthService] Error subiendo/asociando media: $e');
+      }
     }
   }
 

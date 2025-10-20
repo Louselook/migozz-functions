@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user_dto.dart';
 import 'package:migozz_app/features/auth/data/domain/models/location_dto.dart';
 
-enum RegisterIsLogin { initial, loading, success }
+enum RegisterIsLogin { initial, loading, success, googleCompleting }
 
 enum RegisterStatusProgress {
   emty,

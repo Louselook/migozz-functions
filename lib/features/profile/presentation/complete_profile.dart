@@ -87,7 +87,6 @@ class CompleteProfile extends StatelessWidget {
 
                     // Temporalmente marcar el perfil como "permitido incompleto"
                     // para que el router permita acceso al profile
-                    context.read<AuthCubit>().setNeedsCompletion(false);
                     context.go('/profile');
                   },
                   style: TextButton.styleFrom(

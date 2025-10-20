@@ -105,21 +105,21 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         }
 
         // Si necesita completar perfil, NO hay registro activo, y no está yendo a ia-chat
-        if (authState.needsCompletion &&
+        if (!authState.userProfile!.complete &&
             !hasActiveRegistration &&
             goingTo != '/ia-chat') {
           return '/complete-profile';
         }
 
         // Si el perfil está completo y está en ia-chat (sin registro activo), redirigir a profile
-        if (!authState.needsCompletion &&
+        if (authState.userProfile!.complete &&
             goingTo == '/ia-chat' &&
             !hasActiveRegistration) {
           return '/profile';
         }
 
         // Si está yendo a rutas públicas y tiene perfil completo, redirigir a profile
-        if (publicRoutes.contains(goingTo) && !authState.needsCompletion) {
+        if (publicRoutes.contains(goingTo) && authState.userProfile!.complete) {
           return '/profile';
         }
       }

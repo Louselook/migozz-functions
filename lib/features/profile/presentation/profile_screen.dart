@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:migozz_app/core/components/atomics/network_list.dart';
 import 'package:migozz_app/core/components/formart/text_formart.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
@@ -26,11 +27,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _tutorialShown = false;
 
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final bottomGradientHeight = size.height * 0.22;
@@ -39,7 +35,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return BlocBuilder<AuthCubit, AuthState>(
       builder: (context, authState) {
         // Detectar transición a perfil completo
-        if (!authState.needsCompletion && !_tutorialShown) {
+        if ((authState.userProfile?.complete ?? false) && !_tutorialShown) {
           _tutorialShown = true;
           WidgetsBinding.instance.addPostFrameCallback((_) async {
             debugPrint("🎓 Ejecutando tutorial de perfil...");
@@ -68,16 +64,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           );
         }
 
-        // NAVEGACIÓN AUTOMÁTICA: Si necesita completar perfil, navegar a IA chat
-        if (authState.needsCompletion && !_hasNavigated) {
+        // Navegación automática si no ha completado perfil
+        if ((authState.userProfile?.complete == false) && !_hasNavigated) {
           _hasNavigated = true;
           WidgetsBinding.instance.addPostFrameCallback((_) {
             debugPrint("🔀 [ProfileScreen] Navegando a completar perfil...");
-            // context.go('/ia-chat', extra: authState.firebaseUser?.email ?? '');
             context.push('/complete-profile');
-            // CompleteProfile
           });
-
           return const Scaffold(
             backgroundColor: Colors.black,
             body: Center(
@@ -89,24 +82,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
           );
         }
 
-        // Si llegamos aquí, el perfil debe estar completo
+        // Si llegamos aquí, el perfil está completo
         final user = authState.userProfile;
         if (user == null) {
           return const Scaffold(
             backgroundColor: Colors.black,
             body: Center(
               child: Text(
-                'Error: Perfil no encontrado',
+                'No hay usuario autenticado',
                 style: TextStyle(color: Colors.white),
               ),
             ),
           );
         }
 
-        // Resetear flag de navegación cuando el perfil está completo
         _hasNavigated = false;
 
-        // Preparar datos del perfil
         final rawName = user.displayName;
         final name = formatDisplayName(rawName, format: FormatName.short);
         final username = user.username.startsWith('@')
@@ -236,6 +227,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (socialEcosystem == null || socialEcosystem.isEmpty) return [];
     final links = <SocialLink>[];
     final cleanUsername = username.replaceFirst('@', '');
+
     for (final social in socialEcosystem) {
       for (final entry in social.entries) {
         final platform = entry.key.toLowerCase();
@@ -243,11 +235,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         int? followers;
         int? shares;
         String? customUrl;
+
         if (data is Map<String, dynamic>) {
           followers = _parseIntFromDynamic(data['followers']);
           shares = _parseIntFromDynamic(data['shares']);
           customUrl = data['url']?.toString();
         }
+
         final socialInfo = _getSocialInfo(platform, cleanUsername, customUrl);
         if (socialInfo != null) {
           links.add(
@@ -271,38 +265,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return null;
   }
 
+  /// Usa el mapa `iconByLabel` centralizado para obtener el asset correcto
   Map<String, String>? _getSocialInfo(
     String platform,
     String username,
     String? customUrl,
   ) {
-    String? asset;
-    String? url;
+    // Normaliza el nombre (YouTube, Instagram, etc.)
+    final normalizedLabel =
+        platform[0].toUpperCase() + platform.substring(1).toLowerCase();
+
+    final asset = iconByLabel[normalizedLabel];
+    if (asset == null) return null;
+
+    String url;
     switch (platform) {
       case 'tiktok':
-        asset = 'assets/icons/social_networks/TikTok.png';
         url = customUrl ?? 'https://www.tiktok.com/@$username';
         break;
       case 'instagram':
-        asset = 'assets/icons/social_networks/Instagram.png';
         url = customUrl ?? 'https://www.instagram.com/$username';
         break;
       case 'x':
       case 'twitter':
-        asset = 'assets/icons/social_networks/X.png';
         url = customUrl ?? 'https://x.com/$username';
         break;
       case 'pinterest':
-        asset = 'assets/icons/social_networks/Pinterest.png';
         url = customUrl ?? 'https://www.pinterest.com/$username';
         break;
       case 'youtube':
-        asset = 'assets/icons/social_networks/YouTube.png';
         url = customUrl ?? 'https://www.youtube.com/@$username';
         break;
       default:
-        return null;
+        url = customUrl ?? '';
     }
+
     return {'asset': asset, 'url': url};
   }
 }
