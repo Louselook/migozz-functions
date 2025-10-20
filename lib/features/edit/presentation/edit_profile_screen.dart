@@ -15,7 +15,6 @@ import 'package:migozz_app/features/edit/components/user_profile.dart';
 import 'package:migozz_app/features/edit/presentation/edit_audio.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
-import 'package:migozz_app/features/edit/presentation/edit_my_interest.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -438,7 +437,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => const EditInterestsScreen(),
+                          builder: (_) => 
+                            const MoreUserDetails(pageIndicator: 2),
                         ),
                       );
                     },
@@ -451,7 +451,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (_) =>
-                              const MoreUserDetails(pageIndicator: 0),
+                            const MoreUserDetails(pageIndicator: 0),
                         ),
                       );
                     },

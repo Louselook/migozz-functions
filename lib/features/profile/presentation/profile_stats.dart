@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:migozz_app/features/edit/presentation/edit_social.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
 import 'package:migozz_app/features/profile/components/bottom_nav.dart';
 import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
 
@@ -159,7 +159,7 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
                                       style: TextStyle(color: Colors.grey)),
                                   const SizedBox(height: 12),
                                   ElevatedButton(
-                                    onPressed: () => Navigator.pop(EditSocialScreen() as BuildContext),
+                                    onPressed: () => Navigator.pop(MoreUserDetails(pageIndicator: 0) as BuildContext),
                                     child: const Text('Add Socials'))
                                 ],
                               )
