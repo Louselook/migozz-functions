@@ -20,10 +20,6 @@ class ChatController extends ChangeNotifier {
   bool _showPhoneInput = false;
   bool get showPhoneInput => _showPhoneInput;
 
-  /// ✅ Nuevo: cuando el bot espera que el usuario seleccione una imagen
-  bool _imageSelectionRequired = false;
-  bool get imageSelectionRequired => _imageSelectionRequired;
-
   /// Handler opcional para acciones que requieren navegación externa
   void Function(Map<String, dynamic> botResponse)? onBotAction;
 
@@ -193,7 +189,6 @@ class ChatController extends ChangeNotifier {
 
       _messages.removeWhere((msg) => msg["type"] == MessageType.typing);
 
-      // Construir mensaje base
       final message = {
         "other": true,
         "type": MessageType.text,
@@ -214,30 +209,18 @@ class ChatController extends ChangeNotifier {
         message["profilePictures"] = botResponse["profilePictures"];
       }
 
-      // ===== Detectar pasos especiales =====
-      final step = botResponse["step"]?.toString() ?? '';
-      final stepLower = step.toLowerCase();
-
-      // Reset por defecto (se asume que no estamos en modo selección de imagen salvo que se indique)
-      _imageSelectionRequired = false;
-
-      // ✅ Detectar paso de selección de imagen
-      if (botResponse["profilePictures"] != null ||
-          stepLower.contains('picture') ||
-          stepLower.contains('photo') ||
-          botResponse["showProfilePictures"] == true) {
-        _imageSelectionRequired = true;
-      }
-
       // ✅ Detectar si es el paso de teléfono
+      final step = botResponse["step"]?.toString() ?? '';
       _showPhoneInput =
-          stepLower.contains('phone') || botResponse["showPhoneCode"] == true;
+          step.contains('phone') || botResponse["showPhoneCode"] == true;
+
+      // ✅ Detectar si es paso de audio (solo audio permitido)
+      // _audioOnlyMode = GeminiService.instance.isOnVoiceNoteStep;
 
       addMessage(message);
 
       if (!_active) return;
 
-      // Si el bot pide explicación y repetir, avanzamos sin cambiar la lógica
       if (botResponse["explainAndRepeat"] == true) {
         await Future.delayed(const Duration(milliseconds: 900));
         if (!_active) return;
@@ -245,14 +228,10 @@ class ChatController extends ChangeNotifier {
         return;
       }
 
-      // Si el bot solicita avanzar automáticamente, limpiar el flag de imagen (evita quedarse bloqueado)
       if (botResponse["autoAdvance"] == true) {
         debugPrint(
           '🎉 Mensaje de éxito detectado, avanzando automáticamente...',
         );
-        // limpiar flags antes de avanzar
-        _imageSelectionRequired = false;
-        _showPhoneInput = false;
         await Future.delayed(const Duration(milliseconds: 1500));
         if (!_active) return;
         _lastUserMessage = 'continue';

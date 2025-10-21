@@ -67,7 +67,13 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       final status = goRouterNotifier.authStatus;
       final goingTo = state.matchedLocation;
 
-      // Rutas accesibles sin autenticación
+      final authCubit = context.read<AuthCubit>();
+      final registerCubit = context.read<RegisterCubit>();
+
+      final authState = authCubit.state;
+      final registerState = registerCubit.state;
+
+      // Rutas públicas accesibles
       const publicRoutes = {
         '/login',
         '/register',
@@ -76,54 +82,66 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         '/otp',
       };
 
-      // Estado inicial (aún revisando auth)
-      if (status == AuthStatus.checking) return null;
-
-      // Usuario NO autenticado
-      if (status == AuthStatus.notAuthenticated) {
-        if (publicRoutes.contains(goingTo)) return null;
-        if (context.read<RegisterCubit>().state.regProgress !=
-            RegisterStatusProgress.emty) {
-          return '/ia-chat';
-        }
-        return '/login';
+      // Estado inicial de chequeo
+      if (status == AuthStatus.checking) {
+        return null;
       }
 
-      // Usuario autenticado
-      if (status == AuthStatus.authenticated) {
-        final authState = context.read<AuthCubit>().state;
-        final registerState = context.read<RegisterCubit>().state;
+      // ========================
+      // 🧩 1. Usuario NO autenticado
+      // ========================
+      if (status == AuthStatus.notAuthenticated) {
+        // Si está en registro activo → ir al chat
+        final isInRegisterFlow =
+            registerState.regProgress != RegisterStatusProgress.emty &&
+            registerState.regProgress != RegisterStatusProgress.doneChat;
 
-        // 🔑 NUEVO: Verificar si hay un proceso de registro activo
+        if (isInRegisterFlow) {
+          if (goingTo != '/ia-chat') return '/ia-chat';
+          return null;
+        }
+
+        // Si intenta acceder a rutas privadas → enviarlo al login
+        if (!publicRoutes.contains(goingTo)) {
+          return '/login';
+        }
+        return null;
+      }
+
+      // ========================
+      // 🧩 2. Usuario autenticado
+      // ========================
+      if (status == AuthStatus.authenticated) {
+        final userProfile = authState.userProfile;
         final hasActiveRegistration =
             registerState.regProgress != RegisterStatusProgress.emty &&
             registerState.regProgress != RegisterStatusProgress.doneChat;
 
-        // Si hay un proceso de registro activo y no está yendo a ia-chat, redirigir a ia-chat
-        if (hasActiveRegistration && goingTo != '/ia-chat') {
-          return '/ia-chat';
+        // 🟣 Caso: hay un flujo de registro activo
+        if (hasActiveRegistration) {
+          if (goingTo != '/ia-chat') return '/ia-chat';
+          return null;
         }
 
-        // Si necesita completar perfil, NO hay registro activo, y no está yendo a ia-chat
-        if (!authState.userProfile!.complete &&
-            !hasActiveRegistration &&
-            goingTo != '/ia-chat') {
-          return '/complete-profile';
+        // 🟡 Caso: perfil no completo (pero ya autenticado)
+        if (userProfile == null || !userProfile.complete) {
+          if (goingTo != '/complete-profile' && goingTo != '/ia-chat') {
+            return '/complete-profile';
+          }
+          return null;
         }
 
-        // Si el perfil está completo y está en ia-chat (sin registro activo), redirigir a profile
-        if (authState.userProfile!.complete &&
-            goingTo == '/ia-chat' &&
-            !hasActiveRegistration) {
-          return '/profile';
-        }
-
-        // Si está yendo a rutas públicas y tiene perfil completo, redirigir a profile
-        if (publicRoutes.contains(goingTo) && authState.userProfile!.complete) {
-          return '/profile';
+        // 🟢 Caso: perfil completo — siempre va al perfil
+        if (userProfile.complete) {
+          if (goingTo != '/profile') {
+            return '/profile';
+          } else {}
         }
       }
 
+      // ========================
+      // ✅ 3. Por defecto, no redirigir
+      // ========================
       return null;
     },
   );

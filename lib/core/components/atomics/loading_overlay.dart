@@ -29,8 +29,18 @@ class LoadingOverlay {
   }
 
   static void hide(BuildContext context) {
-    if (Navigator.of(context, rootNavigator: true).canPop()) {
-      Navigator.of(context, rootNavigator: true).pop();
+    // Verificar si el contexto está montado y si hay un Navigator
+    if (!context.mounted) {
+      debugPrint('⚠️ [LoadingOverlay] Context no está montado');
+      return;
+    }
+
+    try {
+      if (Navigator.of(context, rootNavigator: true).canPop()) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+    } catch (e) {
+      debugPrint('⚠️ [LoadingOverlay] Error al ocultar: $e');
     }
   }
 }

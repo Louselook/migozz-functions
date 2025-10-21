@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/loading_overlay.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
@@ -214,54 +213,52 @@ class _InterestsStepState extends State<InterestsStep> {
                       updateData['updatedAt'] = FieldValue.serverTimestamp();
 
                       try {
-                        // 1) Mergear en Firestore (no sobreescribe campos ausentes)
+                        // 1) Mergear en Firestore
                         await FirebaseFirestore.instance
                             .collection('users')
                             .doc(uid)
                             .set(updateData, SetOptions(merge: true));
-                        debugPrint(
-                          '✅ [InterestsStep] Firestore: campos actualizados con merge: $updateData',
-                        );
+                        debugPrint('✅ [InterestsStep] Firestore actualizado');
 
-                        // 2) Si subiste archivos temporales (avatar/voice) y necesitas asociarlos al uid, hazlo:
-                        //    Si tu flujo ya subió temporalmente y dejó avatarUrl/voiceNoteUrl en el state,
-                        //    entonces basta con asociar los ficheros en storage al uid.
+                        // 2) Asociar media (puede fallar por permisos, pero no detiene el flujo)
                         final mediaService = UserMediaService();
                         try {
                           await mediaService.associateMediaToUid(
                             uid: uid,
                             email: email,
                           );
-                          debugPrint(
-                            '✅ [InterestsStep] Media asociado a uid $uid',
-                          );
+                          debugPrint('✅ [InterestsStep] Media asociado');
                         } catch (e) {
                           debugPrint(
-                            '⚠️ [InterestsStep] No se pudo asociar media (puede que no haya temporales): $e',
+                            '⚠️ [InterestsStep] Error asociando media: $e',
                           );
-                          // no abortamos, porque la actualización del perfil ya fue hecha
+                          // NO abortamos - el perfil ya está actualizado
                         }
 
-                        // 3) Refrescar perfil en AuthCubit para que traiga los cambios
-                        await authCubit.refreshUserProfile();
-
+                        // 3) OCULTAR LOADING ANTES DE CAMBIAR ESTADOS
                         // ignore: use_build_context_synchronously
-                        LoadingOverlay.hide(context);
+                        if (context.mounted) {
+                          LoadingOverlay.hide(context);
+                        }
+
+                        // 4) Ahora sí, actualizar estados que pueden causar redirección
+                        await authCubit.refreshUserProfile();
+                        registerCubit.reset();
+
                         debugPrint(
-                          '🎉 [InterestsStep] Flujo Google finalizado exitosamente',
+                          '🎉 [InterestsStep] Flujo Google finalizado',
                         );
 
-                        // 4) reset y UI
-                        registerCubit.reset();
-                        // ignore: use_build_context_synchronously
-                        context.pop();
+                        // 5) NO HACER context.pop() - el router redirige automáticamente
+                        // El router detecta que el perfil está completo y va a /profile
+
                         return;
                       } catch (e) {
                         // ignore: use_build_context_synchronously
-                        LoadingOverlay.hide(context);
-                        debugPrint(
-                          '❌ [InterestsStep] Error actualizando Firestore/Media: $e',
-                        );
+                        if (context.mounted) {
+                          LoadingOverlay.hide(context);
+                        }
+                        debugPrint('❌ [InterestsStep] Error: $e');
                         rethrow;
                       }
                     } else {
@@ -272,21 +269,28 @@ class _InterestsStepState extends State<InterestsStep> {
                         '🟢 [InterestsStep] Iniciando flujo Email/OTP...',
                       );
 
+                      // 1️⃣ Completa el registro en backend
                       await authCubit.completeRegistration(
                         email: registerCubit.state.email!,
                         otp: registerCubit.state.currentOTP!,
                         userData: registerCubit.state.buildUserDTO(),
                       );
 
-                      // ignore: use_build_context_synchronously
-                      LoadingOverlay.hide(context);
+                      // 2️⃣ Reinicia el registro completamente
+                      registerCubit.reset();
+
+                      // 3️⃣ Espera brevemente a que el estado se propague (muy importante)
+                      await Future.delayed(const Duration(milliseconds: 150));
+
+                      // 4️⃣ Refresca perfil del usuario (esto disparará el router)
+                      await authCubit.refreshUserProfile();
+
+                      // 5️⃣ Oculta el loading
+                      if (context.mounted) LoadingOverlay.hide(context);
 
                       debugPrint(
                         '🎉 [InterestsStep] Flujo Email/OTP finalizado exitosamente',
                       );
-
-                      // Reiniciar el estado del RegisterCubit
-                      registerCubit.reset();
                     }
                   } catch (e) {
                     // ignore: use_build_context_synchronously
