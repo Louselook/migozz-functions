@@ -55,6 +55,62 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _loadUser();
   }
 
+  Future<bool> _promptSaveChanges() async {
+    if (!_dirty) return true; // No hay cambios, permitir salir
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false, // No cerrar tocando fuera
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Unsaved Changes'),
+          content: const Text(
+            'You have unsaved changes. Do you want to save them?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.green,
+              ),
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm == true) {
+      // ✅ Usuario quiere guardar, ejecutar lógica del botón Save
+      if (_user == null) return false;
+
+      final updatedUser = _user!.copyWith(
+        displayName: nameCtrl.text.trim(),
+        username: usernameCtrl.text.trim(),
+        email: emailCtrl.text.trim(),
+        phone: phoneCtrl.text.trim(),
+        gender: genderCtrl.text.trim(),
+        dob: _dob,
+      );
+
+      await _controller.saveUserProfile(updatedUser);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile updated successfully')),
+        );
+      }
+      
+      return true; // Permitir salir después de guardar
+    }
+
+    return false; // Usuario canceló, no salir
+  }
+
   Future<void> _pickBirthday() async {
     final DateTime now = DateTime.now();
 
@@ -318,19 +374,30 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    if (_loading) {
-      return const Scaffold(
-        backgroundColor: Colors.black,
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
+@override
+Widget build(BuildContext context) {
+  if (_loading) {
+    return const Scaffold(
+      backgroundColor: Colors.black,
+      body: Center(child: CircularProgressIndicator()),
+    );
+  }
 
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
+  final screenWidth = MediaQuery.of(context).size.width;
+  final screenHeight = MediaQuery.of(context).size.height;
 
-    return Scaffold(
+  return PopScope(
+    canPop: !_dirty, // ✅ Prevenir pop del sistema si hay cambios
+    onPopInvokedWithResult: (didPop, result) async {
+      if (didPop) return; // Ya se permitió el pop
+      
+      // Si hay cambios, preguntar si quiere guardar
+      final shouldPop = await _promptSaveChanges();
+      if (shouldPop && context.mounted) {
+        context.pop('updated'); // Siempre retornar 'updated' porque guardó
+      }
+    },
+    child: Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.black,
         elevation: 0,
@@ -338,7 +405,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.close, color: Colors.red),
-            onPressed: () => context.pop(_dirty ? 'updated' : null),
+            onPressed: () async {
+              // ✅ Preguntar si quiere guardar antes de cerrar
+              final shouldPop = await _promptSaveChanges();
+              if (shouldPop && mounted) {
+                // ignore: use_build_context_synchronously
+                context.pop('updated');
+              }
+            },
           ),
         ],
         title: const Text(
@@ -347,7 +421,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => context.pop(_dirty ? 'updated' : null),
+          onPressed: () async {
+            // ✅ Preguntar si quiere guardar antes de retroceder
+            final shouldPop = await _promptSaveChanges();
+            if (shouldPop && mounted) {
+              // ignore: use_build_context_synchronously
+              context.pop('updated');
+            }
+          },
         ),
       ),
       backgroundColor: Colors.black,
@@ -508,6 +589,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ),
         ),
       ),
+    )
     );
   }
 }
