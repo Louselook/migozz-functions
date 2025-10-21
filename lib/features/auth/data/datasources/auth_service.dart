@@ -155,25 +155,60 @@ class AuthService {
   }
 
   // REGISTER -> devuelve AuthResult (crea documento y retorna UserDTO)
+  // REGISTER -> devuelve AuthResult (crea documento, mueve media temporal y retorna UserDTO)
   Future<AuthResult> register({
     required String email,
     required String otp,
     required UserDTO userData,
+    UserMediaService? mediaService, // 🔹 servicio opcional para manejar media
   }) async {
     try {
+      // 1️⃣ Crear el usuario en Firebase Auth
       final userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: otp,
       );
       final uid = userCredential.user!.uid;
 
+      // 2️⃣ Crear documento base del usuario
       final userToSave = userData.copyWith(
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
-      await _firestore.collection('users').doc(uid).set(userToSave.toMap());
+      final docRef = _firestore.collection('users').doc(uid);
+      await docRef.set(userToSave.toMap());
 
+      // 3️⃣ Asociar media temporal (si existe)
+      if (mediaService != null) {
+        try {
+          final associatedUrls = await mediaService.associateMediaToUid(
+            uid: uid,
+            email: email, // mover desde carpeta temporal (email)
+          );
+
+          if (associatedUrls.isNotEmpty) {
+            // Actualizamos las URLs del usuario en Firestore
+            final updates = <String, dynamic>{
+              if (associatedUrls.containsKey(MediaType.avatar))
+                'avatarUrl': associatedUrls[MediaType.avatar],
+              if (associatedUrls.containsKey(MediaType.voice))
+                'voiceNoteUrl': associatedUrls[MediaType.voice],
+              'updatedAt': FieldValue.serverTimestamp(),
+            };
+
+            await docRef.update(updates);
+            debugPrint(
+              '✅ [AuthService] Archivos asociados correctamente a UID.',
+            );
+          }
+        } catch (e) {
+          debugPrint('⚠️ [AuthService] Error al asociar archivos: $e');
+        }
+      }
+
+      // 4️⃣ Obtener el usuario actualizado desde Firestore
       final savedDto = await _getUserFromFirestore(uid);
+
       return AuthResult(
         credential: userCredential,
         user: savedDto,
@@ -186,10 +221,6 @@ class AuthService {
     }
   }
 
-  // Dentro de AuthService:
-  /// Completa/actualiza el perfil de un usuario que se autenticó con Google.
-  /// - Es merge (no sobreescribe) y marca 'complete': true.
-  /// - Si se pasan files temporales, los asocia y actualiza avatarUrl / voiceNoteUrl.
   Future<void> completeGoogleRegistration({
     required String uid,
     required UserDTO userData,
