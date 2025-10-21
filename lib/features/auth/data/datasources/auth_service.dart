@@ -142,18 +142,23 @@ class AuthService {
   }
 
   // REGISTER
+  // REGISTER (FIXED)
   Future<AuthResult> register({
     required String email,
     required String otp,
     required UserDTO userData,
   }) async {
     try {
+      debugPrint('🚀 [AuthService] Iniciando registro...');
+      debugPrint('🚀 [AuthService] Email: $email');
+
       // 1️⃣ Crear usuario
       final userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: otp,
       );
       final uid = userCredential.user!.uid;
+      debugPrint('✅ [AuthService] Usuario creado con UID: $uid');
 
       // 2️⃣ Guardar documento base
       final userToSave = userData.copyWith(
@@ -162,12 +167,18 @@ class AuthService {
       );
       final docRef = _firestore.collection('users').doc(uid);
       await docRef.set(userToSave.toMap());
+      debugPrint('✅ [AuthService] Documento base guardado en Firestore');
 
-      // 3️⃣ Asociar archivos del correo → UID
+      // 3️⃣ Asociar archivos del correo → UID (SOLO UNA VEZ)
+      Map<MediaType, String> associatedUrls = {};
       try {
-        final associatedUrls = await _mediaService.associateMediaToUid(
+        debugPrint('🔄 [AuthService] Iniciando asociación de archivos...');
+        associatedUrls = await _mediaService.associateMediaToUid(
           uid: uid,
           email: email,
+        );
+        debugPrint(
+          '✅ [AuthService] Archivos asociados: ${associatedUrls.keys}',
         );
 
         if (associatedUrls.isNotEmpty) {
@@ -178,22 +189,34 @@ class AuthService {
               'voiceNoteUrl': associatedUrls[MediaType.voice],
             'updatedAt': FieldValue.serverTimestamp(),
           };
+
           await docRef.update(updates);
-          debugPrint('✅ [AuthService] Archivos asociados correctamente a UID.');
+          debugPrint(
+            '✅ [AuthService] URLs actualizadas en Firestore: $updates',
+          );
+        } else {
+          debugPrint('ℹ️ [AuthService] No hay archivos para asociar');
         }
       } catch (e) {
-        debugPrint('⚠️ [AuthService] Error al asociar archivos: $e');
+        debugPrint(
+          '⚠️ [AuthService] Error al asociar archivos (no crítico): $e',
+        );
+        // No fallar el registro por esto
       }
 
       final savedDto = await _getUserFromFirestore(uid);
+      debugPrint('✅ [AuthService] Registro completado exitosamente');
+
       return AuthResult(
         credential: userCredential,
         user: savedDto,
         profileExists: savedDto != null,
       );
     } on FirebaseAuthException catch (e) {
+      debugPrint('❌ [AuthService] FirebaseAuthException: ${e.code}');
       throw Exception('Error en registro: ${e.code}');
     } catch (e) {
+      debugPrint('❌ [AuthService] Error inesperado: $e');
       throw Exception('Error inesperado: $e');
     }
   }

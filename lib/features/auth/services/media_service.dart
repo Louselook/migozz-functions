@@ -41,37 +41,63 @@ class UserMediaService {
   }
 
   /// 🔹 Asocia los archivos temporales subidos con el email al UID final del usuario.
-  /// Usa el endpoint del backend FastAPI (`/users/associate-media`) para moverlos en el bucket.
   Future<Map<MediaType, String>> associateMediaToUid({
     required String uid,
     required String email,
   }) async {
-    final response = await http.post(
-      Uri.parse('${ApiConfig.apiBase}/users/associate-media'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'uid': uid, 'email': email}),
-    );
+    debugPrint('🔄 [MediaService] Iniciando asociación de media...');
+    debugPrint('🔄 [MediaService] UID: $uid');
+    debugPrint('🔄 [MediaService] Email: $email');
 
-    if (response.statusCode != 200) {
-      throw Exception('Error asociando archivos: ${response.body}');
-    }
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConfig.apiBase}/users/associate-media'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'uid': uid, 'email': email}),
+      );
 
-    final data = jsonDecode(response.body);
-    if (data['success'] != true) {
-      throw Exception('Error en respuesta del backend: ${data['message']}');
-    }
+      debugPrint('🔄 [MediaService] Response status: ${response.statusCode}');
+      debugPrint('🔄 [MediaService] Response body: ${response.body}');
 
-    // Si tu backend devuelve URLs, las parseamos
-    final urls = <MediaType, String>{};
-    if (data['urls'] != null) {
-      for (final url in List<String>.from(data['urls'])) {
-        if (url.contains('avatar')) urls[MediaType.avatar] = url;
-        if (url.contains('voice')) urls[MediaType.voice] = url;
+      if (response.statusCode != 200) {
+        throw Exception('Error asociando archivos: ${response.body}');
       }
-    }
 
-    debugPrint('✅ [MediaService] Archivos asociados correctamente via backend');
-    return urls;
+      final data = jsonDecode(response.body);
+      debugPrint('🔄 [MediaService] Parsed data: $data');
+
+      if (data['success'] != true) {
+        throw Exception('Error en respuesta del backend: ${data['message']}');
+      }
+
+      // Si tu backend devuelve URLs, las parseamos
+      final urls = <MediaType, String>{};
+      if (data['urls'] != null) {
+        debugPrint('🔄 [MediaService] URLs encontradas: ${data['urls']}');
+
+        for (final url in List<String>.from(data['urls'])) {
+          if (url.contains('avatar')) {
+            urls[MediaType.avatar] = url;
+            debugPrint('✅ [MediaService] Avatar URL: $url');
+          }
+          if (url.contains('voice')) {
+            urls[MediaType.voice] = url;
+            debugPrint('✅ [MediaService] Voice URL: $url');
+          }
+        }
+      } else {
+        debugPrint('⚠️ [MediaService] No URLs en la respuesta del backend');
+      }
+
+      debugPrint(
+        '✅ [MediaService] Archivos asociados correctamente via backend',
+      );
+      debugPrint('✅ [MediaService] URLs finales: $urls');
+      return urls;
+    } catch (e) {
+      debugPrint('❌ [MediaService] Error en associateMediaToUid: $e');
+      rethrow;
+    }
   }
 
   /// Método genérico para subir con UID directamente (si el usuario ya está registrado)

@@ -4,19 +4,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/data/domain/models/auth_result.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user_dto.dart';
 import 'package:migozz_app/features/auth/data/domain/use_cases/auth_use_cases.dart';
-import 'package:migozz_app/features/auth/services/media_service.dart';
 import 'auth_state.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthCubit extends Cubit<AuthState> {
   final AuthUseCases _authUseCases;
-  final UserMediaService _mediaService;
   late final StreamSubscription<User?> _authSub;
 
-  AuthCubit(this._authUseCases, this._mediaService)
-    : super(const AuthState.checking()) {
-    // 🔔 Suscripción a cambios de sesión de Firebase
-    // Dentro del constructor, en el listener:
+  AuthCubit(this._authUseCases) : super(const AuthState.checking()) {
+    // 🔔 Volver al listener original (sin flag)
     _authSub = _authUseCases.authStateChanges.listen(
       (user) async {
         debugPrint('🔔 [AuthCubit] authStateChanges: ${user?.uid ?? "null"}');
@@ -62,9 +58,6 @@ class AuthCubit extends Cubit<AuthState> {
     );
   }
 
-  // ==============================
-  // 🔄 Cargar perfil con reintentos
-  // ==============================
   Future<UserDTO?> _loadUserProfileWithRetry(
     String uid, {
     int maxRetries = 3,
@@ -91,9 +84,6 @@ class AuthCubit extends Cubit<AuthState> {
     return null;
   }
 
-  // ==============================
-  // 🔐 Login con Google
-  // ==============================
   Future<AuthResult> signInWithGoogle() async {
     try {
       return await _authUseCases.loginGoogle.run();
@@ -103,9 +93,6 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  // ==============================
-  // 🔐 Login con email/OTP
-  // ==============================
   Future<AuthResult> login({required String email, required String otp}) async {
     try {
       return await _authUseCases.login.run(email: email, otp: otp);
@@ -115,9 +102,7 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  // ==============================
-  // 🧾 Completar registro
-  // ==============================
+  // ✅ Registro sin flag - original
   Future<String> completeRegistration({
     required String email,
     required String otp,
@@ -140,8 +125,7 @@ class AuthCubit extends Cubit<AuthState> {
       }
 
       final uid = currentUser.uid;
-      await _mediaService.associateMediaToUid(uid: uid, email: email);
-
+      debugPrint('✅ [AuthCubit] Registro completado para UID: $uid');
       return uid;
     } catch (e) {
       debugPrint('❌ [AuthCubit] Error en registro: $e');
@@ -149,9 +133,6 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  // ==============================
-  // 🔁 Refrescar perfil (ej. después de editar)
-  // ==============================
   Future<void> refreshUserProfile() async {
     if (!state.isAuthenticated || state.firebaseUser == null) return;
 
@@ -179,9 +160,6 @@ class AuthCubit extends Cubit<AuthState> {
     emit(state.copyWith(userProfile: updatedProfile, isLoadingProfile: false));
   }
 
-  // ==============================
-  // 🚪 Logout
-  // ==============================
   Future<void> logout() async {
     await _authUseCases.signout.run();
   }
