@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -9,21 +7,15 @@ import 'package:migozz_app/features/auth/data/domain/models/user_dto.dart';
 import 'package:migozz_app/features/auth/data/domain/models/location_dto.dart';
 import 'package:migozz_app/features/auth/services/media_service.dart';
 
-class SocialSignInResult {
-  // ya no lo usaremos externamente si usamos AuthResult; lo dejo por compatibilidad si quieres.
-  final UserCredential credential;
-  final bool profileExists;
-  SocialSignInResult({required this.credential, required this.profileExists});
-}
-
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final UserMediaService _mediaService = UserMediaService();
 
   // Stream de auth
   Stream<User?> authStateChanges() => _auth.authStateChanges();
 
-  // Helper: obtener UserDTO desde Firestore
+  // Helper para obtener UserDTO
   Future<UserDTO?> _getUserFromFirestore(String uid) async {
     final doc = await _firestore.collection('users').doc(uid).get();
     if (!doc.exists || doc.data() == null) return null;
@@ -62,14 +54,10 @@ class AuthService {
     );
   }
 
-  // Exponer getCurrentUser que devuelve UserDTO?
   Future<UserDTO?> getCurrentUser() async {
-    final user = FirebaseAuth.instance.currentUser;
+    final user = _auth.currentUser;
     if (user == null) return null;
-    final doc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .get();
+    final doc = await _firestore.collection('users').doc(user.uid).get();
     if (!doc.exists || doc.data() == null) return null;
     return UserDTO.fromMap(Map<String, dynamic>.from(doc.data()!));
   }
@@ -83,7 +71,7 @@ class AuthService {
     return querySnapshot.docs.isNotEmpty;
   }
 
-  // LOGIN with Google -> devuelve AuthResult
+  // LOGIN con Google
   Future<AuthResult> loginWithGoogle() async {
     try {
       final googleSignIn = GoogleSignIn();
@@ -104,7 +92,7 @@ class AuthService {
       bool profileExists = doc.exists;
 
       if (!profileExists) {
-        final baseData = <String, dynamic>{
+        final baseData = {
           'displayName': user.displayName ?? '',
           'email': user.email ?? '',
           'avatarUrl': user.photoURL ?? '',
@@ -116,7 +104,6 @@ class AuthService {
           'complete': false,
         };
         await docRef.set(baseData);
-        await Future.delayed(const Duration(milliseconds: 400));
         profileExists = true;
       }
 
@@ -126,14 +113,14 @@ class AuthService {
         user: userDto,
         profileExists: profileExists,
       );
-    } on FirebaseAuthException {
-      rethrow;
+    } on FirebaseAuthException catch (e) {
+      throw Exception('Error en login con Google: ${e.code}');
     } catch (e) {
-      rethrow;
+      throw Exception('Error inesperado: $e');
     }
   }
 
-  // LOGIN email+otp -> devuelve AuthResult
+  // LOGIN con email + OTP
   Future<AuthResult> login({required String email, required String otp}) async {
     try {
       final userCredential = await _auth.signInWithEmailAndPassword(
@@ -150,27 +137,25 @@ class AuthService {
     } on FirebaseAuthException catch (e) {
       throw Exception('Error en login: ${e.code}');
     } catch (e) {
-      throw Exception('Error inesperado en login: $e');
+      throw Exception('Error inesperado: $e');
     }
   }
 
-  // REGISTER -> devuelve AuthResult (crea documento y retorna UserDTO)
-  // REGISTER -> devuelve AuthResult (crea documento, mueve media temporal y retorna UserDTO)
+  // REGISTER
   Future<AuthResult> register({
     required String email,
     required String otp,
     required UserDTO userData,
-    UserMediaService? mediaService, // 🔹 servicio opcional para manejar media
   }) async {
     try {
-      // 1️⃣ Crear el usuario en Firebase Auth
+      // 1️⃣ Crear usuario
       final userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: otp,
       );
       final uid = userCredential.user!.uid;
 
-      // 2️⃣ Crear documento base del usuario
+      // 2️⃣ Guardar documento base
       final userToSave = userData.copyWith(
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
@@ -178,37 +163,29 @@ class AuthService {
       final docRef = _firestore.collection('users').doc(uid);
       await docRef.set(userToSave.toMap());
 
-      // 3️⃣ Asociar media temporal (si existe)
-      if (mediaService != null) {
-        try {
-          final associatedUrls = await mediaService.associateMediaToUid(
-            uid: uid,
-            email: email, // mover desde carpeta temporal (email)
-          );
+      // 3️⃣ Asociar archivos del correo → UID
+      try {
+        final associatedUrls = await _mediaService.associateMediaToUid(
+          uid: uid,
+          email: email,
+        );
 
-          if (associatedUrls.isNotEmpty) {
-            // Actualizamos las URLs del usuario en Firestore
-            final updates = <String, dynamic>{
-              if (associatedUrls.containsKey(MediaType.avatar))
-                'avatarUrl': associatedUrls[MediaType.avatar],
-              if (associatedUrls.containsKey(MediaType.voice))
-                'voiceNoteUrl': associatedUrls[MediaType.voice],
-              'updatedAt': FieldValue.serverTimestamp(),
-            };
-
-            await docRef.update(updates);
-            debugPrint(
-              '✅ [AuthService] Archivos asociados correctamente a UID.',
-            );
-          }
-        } catch (e) {
-          debugPrint('⚠️ [AuthService] Error al asociar archivos: $e');
+        if (associatedUrls.isNotEmpty) {
+          final updates = {
+            if (associatedUrls.containsKey(MediaType.avatar))
+              'avatarUrl': associatedUrls[MediaType.avatar],
+            if (associatedUrls.containsKey(MediaType.voice))
+              'voiceNoteUrl': associatedUrls[MediaType.voice],
+            'updatedAt': FieldValue.serverTimestamp(),
+          };
+          await docRef.update(updates);
+          debugPrint('✅ [AuthService] Archivos asociados correctamente a UID.');
         }
+      } catch (e) {
+        debugPrint('⚠️ [AuthService] Error al asociar archivos: $e');
       }
 
-      // 4️⃣ Obtener el usuario actualizado desde Firestore
       final savedDto = await _getUserFromFirestore(uid);
-
       return AuthResult(
         credential: userCredential,
         user: savedDto,
@@ -221,59 +198,10 @@ class AuthService {
     }
   }
 
-  Future<void> completeGoogleRegistration({
-    required String uid,
-    required UserDTO userData,
-    required UserMediaService mediaService,
-    Map<MediaType, File>? filesToUpload,
-    String? tempEmailForMedia,
-  }) async {
-    final docRef = _firestore.collection('users').doc(uid);
-
-    // 1) actualizar datos del perfil (merge)
-    final Map<String, dynamic> dataToSave = {
-      ...userData.toMap(), // asumo que UserDTO tiene toMap()
-      'complete': true,
-      'updatedAt': FieldValue.serverTimestamp(),
-    };
-    await docRef.set(dataToSave, SetOptions(merge: true));
-
-    // 2) si hay media temporales: subir / asociar / actualizar urls en doc
-    if (filesToUpload != null && filesToUpload.isNotEmpty) {
-      // subir temporal (ya tienes este método en media service)
-      final emailForUpload = tempEmailForMedia ?? userData.email;
-      try {
-        final mediaUrls = await mediaService.uploadFilesTemporarily(
-          email: emailForUpload,
-          files: filesToUpload,
-        );
-
-        // asociar al uid final (mueve/renombra en storage)
-        await mediaService.associateMediaToUid(uid: uid, email: emailForUpload);
-
-        // actualizar doc con urls resultantes (si las hay)
-        final Map<String, dynamic> urlsToSave = {};
-        if (mediaUrls.containsKey(MediaType.avatar)) {
-          urlsToSave['avatarUrl'] = mediaUrls[MediaType.avatar];
-        }
-        if (mediaUrls.containsKey(MediaType.voice)) {
-          urlsToSave['voiceNoteUrl'] = mediaUrls[MediaType.voice];
-        }
-        if (urlsToSave.isNotEmpty) {
-          urlsToSave['updatedAt'] = FieldValue.serverTimestamp();
-          await docRef.set(urlsToSave, SetOptions(merge: true));
-        }
-      } catch (e) {
-        // no hacemos throw para no romper el flujo; logueamos
-        debugPrint('❌ [AuthService] Error subiendo/asociando media: $e');
-      }
-    }
-  }
-
+  // SIGN OUT
   Future<void> signOut() async {
     try {
-      final googleSignIn = GoogleSignIn();
-      await googleSignIn.signOut();
+      await GoogleSignIn().signOut();
     } catch (_) {}
     await _auth.signOut();
   }

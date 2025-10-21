@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -41,51 +40,37 @@ class UserMediaService {
     return urls;
   }
 
-  /// 🔹 Asociar archivos temporales (guardados con el email) al UID definitivo del usuario
+  /// 🔹 Asocia los archivos temporales subidos con el email al UID final del usuario.
+  /// Usa el endpoint del backend FastAPI (`/users/associate-media`) para moverlos en el bucket.
   Future<Map<MediaType, String>> associateMediaToUid({
     required String uid,
     required String email,
   }) async {
-    final storage = FirebaseStorage.instance;
+    final response = await http.post(
+      Uri.parse('${ApiConfig.apiBase}/users/associate-media'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'uid': uid, 'email': email}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Error asociando archivos: ${response.body}');
+    }
+
+    final data = jsonDecode(response.body);
+    if (data['success'] != true) {
+      throw Exception('Error en respuesta del backend: ${data['message']}');
+    }
+
+    // Si tu backend devuelve URLs, las parseamos
     final urls = <MediaType, String>{};
-
-    // carpetas que se manejan
-    const folders = {
-      MediaType.avatar: 'avatar',
-      MediaType.voice: 'voice',
-    };
-
-    for (final entry in folders.entries) {
-      final folder = entry.value;
-      final oldRef = storage.ref().child('$folder/$email');
-      final newRef = storage.ref().child('$folder/$uid');
-
-      try {
-        // Listar todos los archivos que haya en la carpeta (por si hay más de uno)
-        final oldFiles = await oldRef.listAll();
-
-        for (final item in oldFiles.items) {
-          // descargamos los bytes
-          final data = await item.getData();
-          if (data == null) continue;
-
-          // creamos el nuevo archivo con el mismo nombre
-          final newFileRef = newRef.child(item.name);
-          await newFileRef.putData(data);
-
-          // borramos el archivo viejo
-          await item.delete();
-
-          // obtenemos la nueva URL pública
-          final newUrl = await newFileRef.getDownloadURL();
-          urls[entry.key] = newUrl;
-        }
-      } catch (e) {
-        // si no existía esa carpeta o no había archivo, simplemente se ignora
-        debugPrint('No se pudo mover archivo de $folder/$email → $folder/$uid: $e');
+    if (data['urls'] != null) {
+      for (final url in List<String>.from(data['urls'])) {
+        if (url.contains('avatar')) urls[MediaType.avatar] = url;
+        if (url.contains('voice')) urls[MediaType.voice] = url;
       }
     }
 
+    debugPrint('✅ [MediaService] Archivos asociados correctamente via backend');
     return urls;
   }
 
@@ -122,4 +107,3 @@ class UserMediaService {
     return urls;
   }
 }
-
