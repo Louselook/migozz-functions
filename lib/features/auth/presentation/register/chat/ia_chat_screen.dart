@@ -40,7 +40,8 @@ class _IaChatScreenState extends State<IaChatScreen> {
       _chatController.initializeChat(onActionRequired: _handleNavigation);
     }
 
-    _chatController.addListener(_onChatStateChanged);
+    // ❌ REMOVIDO: Ya no usamos listener global que causa rebuilds constantes
+    // _chatController.addListener(_onChatStateChanged);
 
     _socialChannel.setMethodCallHandler((call) async {
       if (call.method == 'spotifySuccess') {
@@ -57,15 +58,17 @@ class _IaChatScreenState extends State<IaChatScreen> {
 
   @override
   void dispose() {
-    _chatController.removeListener(_onChatStateChanged);
+    // ❌ REMOVIDO: Ya no hay listener que remover
+    // _chatController.removeListener(_onChatStateChanged);
     _chatController.dispose();
     _controller.dispose();
     super.dispose();
   }
 
-  void _onChatStateChanged() {
-    setState(() {});
-  }
+  // ❌ REMOVIDO: Ya no necesitamos este método
+  // void _onChatStateChanged() {
+  //   setState(() {});
+  // }
 
   void _handleNavigation(Map<String, dynamic> botResponse) {
     ChatNavigationHandler.handleBotAction(
@@ -86,81 +89,90 @@ class _IaChatScreenState extends State<IaChatScreen> {
             const PrimaryText("AI ASSISTANT"),
             const SizedBox(height: 20),
 
-            // Messages List
+            // ✅ Messages List con ListenableBuilder para rebuilds selectivos
             Expanded(
-              child: ListView.builder(
-                controller: _chatController.scrollController,
-                padding: const EdgeInsets.all(10),
-                itemCount: _chatController.messages.length,
-                itemBuilder: (context, index) {
-                  final message = _chatController.messages[index];
-                  final isLastBotMsgWithOptions =
-                      message["other"] == true &&
-                      (message["options"] != null &&
-                          (message["options"] as List).isNotEmpty) &&
-                      !_chatController.messages
-                          .sublist(index + 1)
-                          .any(
-                            (m) =>
-                                m["other"] == true &&
-                                (m["options"] != null &&
-                                    (m["options"] as List).isNotEmpty),
-                          );
+              child: ListenableBuilder(
+                listenable: _chatController,
+                builder: (context, child) {
+                  return ListView.builder(
+                    controller: _chatController.scrollController,
+                    padding: const EdgeInsets.all(10),
+                    itemCount: _chatController.messages.length,
+                    itemBuilder: (context, index) {
+                      final message = _chatController.messages[index];
+                      final isLastBotMsgWithOptions =
+                          message["other"] == true &&
+                          (message["options"] != null &&
+                              (message["options"] as List).isNotEmpty) &&
+                          !_chatController.messages
+                              .sublist(index + 1)
+                              .any(
+                                (m) =>
+                                    m["other"] == true &&
+                                    (m["options"] != null &&
+                                        (m["options"] as List).isNotEmpty),
+                              );
 
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ChatMessageBuilder.buildMessage(
-                        message,
-                        chatController: _chatController,
-                      ),
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ChatMessageBuilder.buildMessage(
+                            message,
+                            chatController: _chatController,
+                          ),
 
-                      if (isLastBotMsgWithOptions)
-                        SuggestionChips(
-                          suggestions: List<String>.from(message["options"]),
-                          onSelected: (suggestion) {
-                            _chatController.onSuggestionSelected(suggestion);
-                          },
-                        ),
-                    ],
+                          if (isLastBotMsgWithOptions)
+                            SuggestionChips(
+                              suggestions: List<String>.from(message["options"]),
+                              onSelected: (suggestion) {
+                                _chatController.onSuggestionSelected(suggestion);
+                              },
+                            ),
+                        ],
+                      );
+                    },
                   );
                 },
               ),
             ),
 
-            // ✅ Input Bar con detección de teléfono
-            ChatInputWidget(
-              controller: _controller,
-              showPhoneInput:
-                  _chatController.showPhoneInput, // ✅ Nuevo parámetro
-              onSend: () {
-                sendChat(
-                  other: false,
-                  type: MessageType.text,
-                  text: _controller.text,
-                  controller: _chatController,
-                  context: context,
-                );
-                _controller.clear();
-              },
-              onSendAudio: (path) {
-                sendChat(
-                  other: false,
-                  type: MessageType.audio,
-                  audio: path,
-                  controller: _chatController,
-                  context: context,
-                );
-              },
-              onSendImage: (path) {
-                sendChat(
-                  other: false,
-                  type: MessageType.pictureCard,
-                  pictures: [
-                    {"imageUrl": path, "label": "Mi Imagen"},
-                  ],
-                  controller: _chatController,
-                  context: context,
+            // ✅ Input Bar con ListenableBuilder para detectar cambios de estado
+            ListenableBuilder(
+              listenable: _chatController,
+              builder: (context, child) {
+                return ChatInputWidget(
+                  controller: _controller,
+                  showPhoneInput: _chatController.showPhoneInput,
+                  onSend: () {
+                    sendChat(
+                      other: false,
+                      type: MessageType.text,
+                      text: _controller.text,
+                      controller: _chatController,
+                      context: context,
+                    );
+                    _controller.clear();
+                  },
+                  onSendAudio: (path) {
+                    sendChat(
+                      other: false,
+                      type: MessageType.audio,
+                      audio: path,
+                      controller: _chatController,
+                      context: context,
+                    );
+                  },
+                  onSendImage: (path) {
+                    sendChat(
+                      other: false,
+                      type: MessageType.pictureCard,
+                      pictures: [
+                        {"imageUrl": path, "label": "Mi Imagen"},
+                      ],
+                      controller: _chatController,
+                      context: context,
+                    );
+                  },
                 );
               },
             ),

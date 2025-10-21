@@ -85,13 +85,18 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<AuthResult> signInWithGoogle() async {
-    try {
-      return await _authUseCases.loginGoogle.run();
-    } catch (e) {
-      debugPrint('❌ [AuthCubit] Error en login con Google: $e');
-      rethrow;
-    }
+  try {
+    debugPrint('🔐 [AuthCubit] Iniciando login con Google...');
+    final result = await _authUseCases.loginGoogle.run();
+    debugPrint('✅ [AuthCubit] Login exitoso: ${result.user}');
+    return result;
+  } catch (e) {
+    debugPrint('❌ [AuthCubit] Error en login con Google: $e');
+    debugPrint('❌ [AuthCubit] Tipo de error: ${e.runtimeType}');
+    rethrow;
   }
+}
+
 
   Future<AuthResult> login({required String email, required String otp}) async {
     try {
