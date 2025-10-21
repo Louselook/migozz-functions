@@ -171,6 +171,14 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  void markProfileTemporarilyComplete(bool value) {
+    final currentProfile = state.userProfile;
+    if (currentProfile == null) return;
+
+    final updatedProfile = currentProfile.copyWith(complete: value);
+    emit(state.copyWith(userProfile: updatedProfile, isLoadingProfile: false));
+  }
+
   // ==============================
   // 🚪 Logout
   // ==============================

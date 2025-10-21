@@ -245,13 +245,14 @@ class _InterestsStepState extends State<InterestsStep> {
                         // 3) Refrescar perfil en AuthCubit para que traiga los cambios
                         await authCubit.refreshUserProfile();
 
-                        // 4) reset y UI
-                        registerCubit.reset();
                         // ignore: use_build_context_synchronously
                         LoadingOverlay.hide(context);
                         debugPrint(
                           '🎉 [InterestsStep] Flujo Google finalizado exitosamente',
                         );
+
+                        // 4) reset y UI
+                        registerCubit.reset();
                         // ignore: use_build_context_synchronously
                         context.pop();
                         return;
@@ -277,15 +278,15 @@ class _InterestsStepState extends State<InterestsStep> {
                         userData: registerCubit.state.buildUserDTO(),
                       );
 
-                      // Reiniciar el estado del RegisterCubit
-                      registerCubit.reset();
-
                       // ignore: use_build_context_synchronously
                       LoadingOverlay.hide(context);
 
                       debugPrint(
                         '🎉 [InterestsStep] Flujo Email/OTP finalizado exitosamente',
                       );
+
+                      // Reiniciar el estado del RegisterCubit
+                      registerCubit.reset();
                     }
                   } catch (e) {
                     // ignore: use_build_context_synchronously

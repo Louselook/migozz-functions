@@ -20,6 +20,10 @@ class ChatController extends ChangeNotifier {
   bool _showPhoneInput = false;
   bool get showPhoneInput => _showPhoneInput;
 
+  /// ✅ Nuevo: cuando el bot espera que el usuario seleccione una imagen
+  bool _imageSelectionRequired = false;
+  bool get imageSelectionRequired => _imageSelectionRequired;
+
   /// Handler opcional para acciones que requieren navegación externa
   void Function(Map<String, dynamic> botResponse)? onBotAction;
 
@@ -161,7 +165,7 @@ class ChatController extends ChangeNotifier {
     try {
       final userInput = _lastUserMessage ?? '';
       Map<String, dynamic> botResponse;
-      
+
       try {
         botResponse = await GeminiService.instance
             .sendMessage(userInput, registerCubit: registerCubit)
@@ -189,6 +193,7 @@ class ChatController extends ChangeNotifier {
 
       _messages.removeWhere((msg) => msg["type"] == MessageType.typing);
 
+      // Construir mensaje base
       final message = {
         "other": true,
         "type": MessageType.text,
@@ -209,17 +214,30 @@ class ChatController extends ChangeNotifier {
         message["profilePictures"] = botResponse["profilePictures"];
       }
 
-      // ✅ Detectar si es el paso de teléfono
+      // ===== Detectar pasos especiales =====
       final step = botResponse["step"]?.toString() ?? '';
-      _showPhoneInput = step.contains('phone') || botResponse["showPhoneCode"] == true;
-      
-      // ✅ Detectar si es paso de audio (solo audio permitido)
-      // _audioOnlyMode = GeminiService.instance.isOnVoiceNoteStep;
+      final stepLower = step.toLowerCase();
+
+      // Reset por defecto (se asume que no estamos en modo selección de imagen salvo que se indique)
+      _imageSelectionRequired = false;
+
+      // ✅ Detectar paso de selección de imagen
+      if (botResponse["profilePictures"] != null ||
+          stepLower.contains('picture') ||
+          stepLower.contains('photo') ||
+          botResponse["showProfilePictures"] == true) {
+        _imageSelectionRequired = true;
+      }
+
+      // ✅ Detectar si es el paso de teléfono
+      _showPhoneInput =
+          stepLower.contains('phone') || botResponse["showPhoneCode"] == true;
 
       addMessage(message);
 
       if (!_active) return;
 
+      // Si el bot pide explicación y repetir, avanzamos sin cambiar la lógica
       if (botResponse["explainAndRepeat"] == true) {
         await Future.delayed(const Duration(milliseconds: 900));
         if (!_active) return;
@@ -227,8 +245,14 @@ class ChatController extends ChangeNotifier {
         return;
       }
 
+      // Si el bot solicita avanzar automáticamente, limpiar el flag de imagen (evita quedarse bloqueado)
       if (botResponse["autoAdvance"] == true) {
-        debugPrint('🎉 Mensaje de éxito detectado, avanzando automáticamente...');
+        debugPrint(
+          '🎉 Mensaje de éxito detectado, avanzando automáticamente...',
+        );
+        // limpiar flags antes de avanzar
+        _imageSelectionRequired = false;
+        _showPhoneInput = false;
         await Future.delayed(const Duration(milliseconds: 1500));
         if (!_active) return;
         _lastUserMessage = 'continue';
@@ -270,29 +294,29 @@ class ChatController extends ChangeNotifier {
     if (text.trim().isEmpty) return;
 
     // ✅ VALIDAR: Si estamos en el paso de audio y NO estamos esperando confirmación
-    
-    if (GeminiService.instance.isOnVoiceNoteStep && 
-      !_audioHandler.isWaitingForAudioConfirmation) {
-        final isSpanish = registerCubit.state.language == 'Español';
-        
-        addMessage({
-          "other": false,
-          "text": text,
-          "type": MessageType.text,
-          "time": getTimeNow(),
-        });
-        
-        addMessage({
-          "other": true,
-          "type": MessageType.text,
-          "text": isSpanish
-              ? "⚠ En este paso solo puedes enviar una nota de voz.\n\nMantén pulsado el botón del micrófono 🎤 para grabar (5-10 segundos)."
-              : "⚠ In this step you can only send a voice note.\n\nHold the microphone button 🎤 to record (5-10 seconds).",
-          "name": "Migozz",
-          "time": getTimeNow(),
-          "isError": true,
-        });
-        notifyListeners();
+
+    if (GeminiService.instance.isOnVoiceNoteStep &&
+        !_audioHandler.isWaitingForAudioConfirmation) {
+      final isSpanish = registerCubit.state.language == 'Español';
+
+      addMessage({
+        "other": false,
+        "text": text,
+        "type": MessageType.text,
+        "time": getTimeNow(),
+      });
+
+      addMessage({
+        "other": true,
+        "type": MessageType.text,
+        "text": isSpanish
+            ? "⚠ En este paso solo puedes enviar una nota de voz.\n\nMantén pulsado el botón del micrófono 🎤 para grabar (5-10 segundos)."
+            : "⚠ In this step you can only send a voice note.\n\nHold the microphone button 🎤 to record (5-10 seconds).",
+        "name": "Migozz",
+        "time": getTimeNow(),
+        "isError": true,
+      });
+      notifyListeners();
       return;
     }
 
@@ -320,7 +344,9 @@ class ChatController extends ChangeNotifier {
         await showNextBotMessage();
       } else if (audioResponse == 'record') {
         // ❌ Mostrar mensaje para grabar de nuevo
-        final recordMessage = _audioHandler.getRecordAgainMessage(registerCubit);
+        final recordMessage = _audioHandler.getRecordAgainMessage(
+          registerCubit,
+        );
         addMessage(recordMessage);
         notifyListeners();
       }
