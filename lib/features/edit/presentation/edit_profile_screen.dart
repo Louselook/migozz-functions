@@ -13,6 +13,7 @@ import 'package:migozz_app/features/edit/components/profile_field.dart';
 import 'package:migozz_app/features/edit/components/profile_option_button.dart';
 import 'package:migozz_app/features/edit/components/user_profile.dart';
 import 'package:migozz_app/features/edit/presentation/edit_audio.dart';
+import 'package:migozz_app/features/edit/presentation/edit_my_interest.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 
@@ -438,7 +439,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (_) => 
-                            const MoreUserDetails(pageIndicator: 2),
+                            const EditInterestsScreen(),
                         ),
                       );
                     },
