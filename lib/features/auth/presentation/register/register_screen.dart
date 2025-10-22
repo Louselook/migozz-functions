@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/color.dart';
+import 'package:migozz_app/core/components/atomics/logo.dart';
 import 'package:migozz_app/core/components/compuestos/custom_snackbar.dart';
 import 'package:migozz_app/core/components/compuestos/custom_textfield.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
@@ -126,19 +127,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       // Logo
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          gradient: AppColors.primaryGradient,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Icon(
-                          Icons.link,
-                          color: Colors.white,
-                          size: 40,
-                        ),
-                      ),
+                      Logo(),
 
                       const SizedBox(height: 20),
 

@@ -1,5 +1,5 @@
-// Splash_screen.dart
 import 'package:flutter/material.dart';
+import 'package:migozz_app/core/components/atomics/logo.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -10,11 +10,9 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
-  ImageProvider get _logo => const AssetImage('assets/images/Migozz.webp');
-
   late final AnimationController _animCtrl;
-  late final Animation<double> _pulseAnim; // controla la escala del halo
-  late final Animation<double> _logoScaleAnim; // controla la escala del logo
+  late final Animation<double> _pulseAnim;
+  late final Animation<double> _logoScaleAnim;
   late final Animation<double> _glowBlurAnim;
   late final Animation<double> _glowSpreadAnim;
   late final Animation<Color?> _glowColorAnim;
@@ -49,8 +47,6 @@ class _SplashScreenState extends State<SplashScreen>
     ).animate(CurvedAnimation(parent: _animCtrl, curve: Curves.easeInOut));
 
     _glowColorAnim = ColorTween(
-      // begin: const Color(0xFFFF4DB6),
-      // end: const Color(0xFFFF8CBF),
       begin: const Color.fromARGB(70, 69, 29, 47),
       end: const Color(0xFFFF8CBF),
     ).animate(_animCtrl);
@@ -66,9 +62,8 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    // Ajustes rápidos:
-    final baseLogoSize = 200.0; // tamaño del logo
-    final glowBoxSize = baseLogoSize * 1.1; // tamaño del halo
+    final baseLogoSize = 130.0;
+    final glowBoxSize = baseLogoSize * 1.1;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -83,14 +78,13 @@ class _SplashScreenState extends State<SplashScreen>
               return Stack(
                 alignment: Alignment.center,
                 children: [
-                  // Halo cuadrado (sin relleno, solo sombra)
+                  // Halo animado
                   Transform.scale(
                     scale: _pulseAnim.value,
                     child: Container(
                       width: glowBoxSize,
                       height: glowBoxSize,
                       decoration: BoxDecoration(
-                        // Cuadrado puro:
                         color: Colors.transparent,
                         boxShadow: [
                           BoxShadow(
@@ -103,15 +97,9 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
                   ),
 
-                  // Logo que pulsa ligeramente
                   Transform.scale(
                     scale: _logoScaleAnim.value,
-                    child: Image(
-                      image: _logo,
-                      width: baseLogoSize,
-                      height: baseLogoSize,
-                      fit: BoxFit.contain,
-                    ),
+                    child: const Logo(width: 130, height: 130),
                   ),
                 ],
               );

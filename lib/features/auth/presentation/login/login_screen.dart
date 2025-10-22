@@ -3,12 +3,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/loading_overlay.dart';
+import 'package:migozz_app/core/components/atomics/logo.dart';
 import 'package:migozz_app/core/components/compuestos/custom_snackbar.dart';
 import 'package:migozz_app/core/components/compuestos/custom_textfield.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/features/auth/components/bottom_text.dart';
 import 'package:migozz_app/features/auth/components/google_button.dart';
+import 'package:migozz_app/features/auth/data/datasources/auth_service.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/login_cubit/login_cubit.dart';
@@ -28,11 +30,86 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _hasNavigatedToOTP = false;
   bool _isLoadingVisible = false;
+  bool _isCheckingEmail = false;
 
   @override
   void dispose() {
     _emailController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleEmailLoginCheck() async {
+    final email = _emailController.text.trim();
+
+    // Cerrar teclado
+    FocusScope.of(context).unfocus();
+
+    // Validaciones básicas
+    if (email.isEmpty) {
+      CustomSnackbar.show(
+        context: context,
+        message: "Email cannot be empty",
+        type: SnackbarType.error,
+      );
+      return;
+    }
+
+    final isValidEmail = validateCurrentField(
+      botIndex: 20,
+      userResponse: email,
+    );
+
+    if (!isValidEmail) {
+      CustomSnackbar.show(
+        context: context,
+        message: "Please enter a valid email",
+        type: SnackbarType.error,
+      );
+      return;
+    }
+
+    if (_isCheckingEmail) return; // evita reentradas
+    setState(() => _isCheckingEmail = true);
+
+    // Muestra overlay de carga (coincide con tu estilo actual)
+    LoadingOverlay.show(context);
+
+    try {
+      final authService = AuthService();
+      final exists = await authService.emailExists(email);
+
+      if (!mounted) return;
+
+      if (!exists) {
+        // Si NO existe, mostramos snackbar y NO continuamos
+        CustomSnackbar.show(
+          context: context,
+          message:
+              "This email is not registered. Please create an account first.",
+          type: SnackbarType.error,
+          duration: const Duration(seconds: 4),
+        );
+        return;
+      }
+
+      // Si existe -> continuar con el flujo de login: enviamos OTP por el LoginCubit
+      // Resetear flags por si acaso
+      _hasNavigatedToOTP = false;
+      context.read<LoginCubit>().sendOTPLoginCubit(email);
+    } catch (e) {
+      // Manejo de errores de red / firestore
+      CustomSnackbar.show(
+        context: context,
+        message: "Error verifying email: $e",
+        type: SnackbarType.error,
+      );
+    } finally {
+      // Oculta loader y libera flag
+      if (mounted) {
+        LoadingOverlay.hide(context);
+        setState(() => _isCheckingEmail = false);
+      }
+    }
   }
 
   Future<void> _handleGoogleSignIn() async {
@@ -173,14 +250,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // Logo
-                  Image.asset(
-                    'assets/icons/Migozz300x.png',
-                    width: 99,
-                    height: 98,
-                    errorBuilder: (context, error, stackTrace) {
-                      return const Icon(Icons.image, color: Colors.white);
-                    },
-                  ),
+                  Logo(),
 
                   const SizedBox(height: 16),
 
@@ -217,33 +287,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   GradientButton(
                     width: double.infinity,
                     radius: 19,
-                    onPressed: () {
-                      final email = _emailController.text.trim();
-
-                      // Valida email
-                      final isValidEmail = validateCurrentField(
-                        botIndex: 20,
-                        userResponse: email,
-                      );
-
-                      final keyboardClose = FocusScope.of(context);
-                      keyboardClose.unfocus();
-
-                      if (!isValidEmail) {
-                        CustomSnackbar.show(
-                          context: context,
-                          message: "Please enter a valid email",
-                          type: SnackbarType.error,
-                        );
-                        return;
-                      }
-
-                      // Resetear flags antes de nueva operación
-                      _hasNavigatedToOTP = false;
-
-                      // Solo enviar OTP con LoginCubit (no autenticación aún)
-                      context.read<LoginCubit>().sendOTPLoginCubit(email);
-                    },
+                    onPressed: _isCheckingEmail
+                        ? null
+                        : () {
+                            _handleEmailLoginCheck();
+                          },
                     child: const SecondaryText('Login', fontSize: 20),
                   ),
 
