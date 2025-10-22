@@ -2,27 +2,23 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:migozz_app/features/auth/data/domain/models/location_dto.dart';
 
 class UserDTO {
-  // Parte 1
   final String email;
   final String lang;
   final String displayName;
   final String username;
   final String gender;
+  final DateTime? birthDate;
 
-  /// Más flexible: acepta distintos shapes como los que tienes en Firestore
   final List<Map<String, dynamic>>? socialEcosystem;
-
   final LocationDTO location;
 
-  // new add
   final String? avatarUrl;
   final String? phone;
   final String? voiceNoteUrl;
   final List<String>? category;
 
   final Map<String, List<String>> interests;
-
-  final bool complete; // <- nuevo campo
+  final bool complete;
 
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -33,6 +29,7 @@ class UserDTO {
     required this.displayName,
     required this.username,
     required this.gender,
+    this.birthDate,
     this.socialEcosystem,
     required this.location,
     this.avatarUrl,
@@ -40,7 +37,7 @@ class UserDTO {
     this.voiceNoteUrl,
     this.category,
     Map<String, List<String>>? interests,
-    this.complete = true, // default false
+    this.complete = true,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) : interests = interests ?? <String, List<String>>{},
@@ -53,6 +50,7 @@ class UserDTO {
     String? displayName,
     String? username,
     String? gender,
+    DateTime? birthDate,
     List<Map<String, dynamic>>? socialEcosystem,
     LocationDTO? location,
     String? avatarUrl,
@@ -70,6 +68,7 @@ class UserDTO {
       displayName: displayName ?? this.displayName,
       username: username ?? this.username,
       gender: gender ?? this.gender,
+      birthDate: birthDate ?? this.birthDate,
       socialEcosystem: socialEcosystem ?? this.socialEcosystem,
       location: location ?? this.location,
       avatarUrl: avatarUrl ?? this.avatarUrl,
@@ -90,6 +89,7 @@ class UserDTO {
       'displayName': displayName,
       'username': username,
       'gender': gender,
+      'birthDate': birthDate != null ? Timestamp.fromDate(birthDate!) : null,
       'socialEcosystem': socialEcosystem,
       'location': location.toMap(),
       'avatarUrl': avatarUrl,
@@ -97,13 +97,12 @@ class UserDTO {
       'voiceNoteUrl': voiceNoteUrl,
       'category': category,
       'interests': interests,
-      'complete': complete, // <- incluir en el mapa
+      'complete': complete,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
     };
   }
 
-  /// Factory defensivo para normalizar lo que venga de Firestore
   factory UserDTO.fromMap(Map<String, dynamic> map) {
     final email = (map['email'] ?? '').toString();
     final lang = (map['lang'] ?? 'es').toString();
@@ -113,6 +112,21 @@ class UserDTO {
     final avatarUrl = map['avatarUrl']?.toString();
     final phone = map['phone']?.toString();
     final voiceNoteUrl = map['voiceNoteUrl']?.toString();
+
+    // ✅ birthDate defensivo
+    DateTime? birthDate;
+    final bd = map['birthDate'];
+    if (bd != null) {
+      if (bd is Timestamp) {
+        birthDate = bd.toDate();
+      } else if (bd is DateTime) {
+        birthDate = bd;
+      } else if (bd is String) {
+        birthDate = DateTime.tryParse(bd);
+      } else if (bd is int) {
+        birthDate = DateTime.fromMillisecondsSinceEpoch(bd);
+      }
+    }
 
     // category
     List<String>? category;
@@ -126,7 +140,7 @@ class UserDTO {
       }
     }
 
-    // interests -> Map<String, List<String>>
+    // interests
     final Map<String, List<String>> interests = {};
     if (map['interests'] is Map) {
       final raw = Map<String, dynamic>.from(map['interests'] as Map);
@@ -143,7 +157,7 @@ class UserDTO {
       });
     }
 
-    // socialEcosystem -> List<Map<String,dynamic>>
+    // socialEcosystem
     List<Map<String, dynamic>>? socialEcosystem;
     final rawSocial = map['socialEcosystem'];
     if (rawSocial != null) {
@@ -161,7 +175,7 @@ class UserDTO {
       }
     }
 
-    // location defensivo
+    // location
     LocationDTO location;
     if (map['location'] is Map) {
       try {
@@ -188,7 +202,7 @@ class UserDTO {
       );
     }
 
-    // createdAt / updatedAt defensivo
+    // createdAt / updatedAt
     DateTime createdAt = DateTime.now();
     DateTime updatedAt = DateTime.now();
 
@@ -218,7 +232,7 @@ class UserDTO {
       }
     }
 
-    // complete defensivo: puede venir bool, string, int
+    // complete defensivo
     bool complete = false;
     final c = map['complete'];
     if (c is bool) {
@@ -235,6 +249,7 @@ class UserDTO {
       displayName: displayName,
       username: username,
       gender: gender,
+      birthDate: birthDate,
       socialEcosystem: socialEcosystem,
       location: location,
       avatarUrl: avatarUrl,
@@ -242,7 +257,7 @@ class UserDTO {
       voiceNoteUrl: voiceNoteUrl,
       category: category,
       interests: interests,
-      complete: complete, // <- setear valor
+      complete: complete,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );

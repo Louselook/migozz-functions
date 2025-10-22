@@ -1,8 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:migozz_app/features/edit/presentation/edit_profile_screen.dart';
-import 'package:migozz_app/features/profile/presentation/profile_screen.dart';
-import 'package:migozz_app/features/profile/presentation/profile_stats.dart';
+import 'package:migozz_app/features/profile/presentation/edit/edit_profile_screen.dart';
+import 'package:migozz_app/features/profile/presentation/profile/profile_screen.dart';
+import 'package:migozz_app/features/profile/presentation/profile/modules/profile_stats.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 
 class GradientBottomNav extends StatelessWidget {
@@ -10,7 +10,7 @@ class GradientBottomNav extends StatelessWidget {
   final ValueChanged<int> onItemSelected;
   final VoidCallback onCenterTap;
   final VoidCallback? onProfileUpdated;
-  final TutorialKeys? tutorialKeys;  // ✅ Agregar este parámetro
+  final TutorialKeys? tutorialKeys; // ✅ Agregar este parámetro
 
   const GradientBottomNav({
     super.key,
@@ -18,7 +18,7 @@ class GradientBottomNav extends StatelessWidget {
     required this.onItemSelected,
     required this.onCenterTap,
     this.onProfileUpdated,
-    this.tutorialKeys,  // ✅ Agregar al constructor
+    this.tutorialKeys, // ✅ Agregar al constructor
   });
 
   static const double _barHeight = 64;
@@ -65,7 +65,7 @@ class GradientBottomNav extends StatelessWidget {
                   child: Row(
                     children: [
                       _NavItem(
-                        tutorialKeys: tutorialKeys?.profileScreenKey,  
+                        tutorialKeys: tutorialKeys?.profileScreenKey,
                         icon: Icons.home_outlined,
                         selected: currentIndex == 0,
                         onTap: () {
@@ -84,7 +84,7 @@ class GradientBottomNav extends StatelessWidget {
                       ),
                       const Spacer(),
                       _NavItem(
-                        tutorialKeys: tutorialKeys?.statScreenKey, 
+                        tutorialKeys: tutorialKeys?.statScreenKey,
                         icon: Icons.bar_chart_rounded,
                         selected: currentIndex == 2,
                         onTap: () {
@@ -97,7 +97,7 @@ class GradientBottomNav extends StatelessWidget {
                         },
                       ),
                       _NavItem(
-                        tutorialKeys: tutorialKeys?.editScreenKey,  
+                        tutorialKeys: tutorialKeys?.editScreenKey,
                         icon: Icons.settings_outlined,
                         selected: currentIndex == 3,
                         onTap: () async {
@@ -140,7 +140,7 @@ class _NavItem extends StatelessWidget {
   final IconData icon;
   final bool selected;
   final VoidCallback onTap;
-  final GlobalKey? tutorialKeys;  // ✅ Cambiado el nombre para mayor claridad
+  final GlobalKey? tutorialKeys; // ✅ Cambiado el nombre para mayor claridad
 
   const _NavItem({
     this.tutorialKeys,
@@ -154,7 +154,7 @@ class _NavItem extends StatelessWidget {
     final color = selected ? Colors.white : Colors.white.withValues(alpha: 0.7);
     return Expanded(
       child: InkResponse(
-        key: tutorialKeys,  // ✅ Ahora funciona correctamente
+        key: tutorialKeys, // ✅ Ahora funciona correctamente
         onTap: onTap,
         radius: 0,
         child: SizedBox(

@@ -1,4 +1,4 @@
-import 'package:migozz_app/features/profile/presentation/profile_stats.dart';
+import 'package:migozz_app/features/profile/presentation/profile/modules/profile_stats.dart';
 
 final Map<String, String> fieldRules = {
   "friends": "followers",

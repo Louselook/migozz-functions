@@ -25,16 +25,14 @@ class AudioPlayerDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ Si maxDuration es 0, intentar obtenerlo del controller
+    // ✅ Usar maxDuration del parámetro (viene de just_audio)
     Duration effectiveMaxDuration = maxDuration;
 
+    // ✅ Solo como fallback usar playerController
     if (effectiveMaxDuration == Duration.zero &&
         playerController.maxDuration > 0) {
       effectiveMaxDuration = Duration(
         milliseconds: playerController.maxDuration,
-      );
-      debugPrint(
-        '📊 [AudioPlayerDisplay] Usando maxDuration del controller: ${effectiveMaxDuration.inSeconds}s',
       );
     }
 
@@ -69,7 +67,7 @@ class AudioPlayerDisplay extends StatelessWidget {
 
               const SizedBox(width: 12),
 
-              // Waveform interactiva
+              // Waveform interactiva (SOLO visual - no reproduce audio)
               Expanded(
                 child: GestureDetector(
                   onHorizontalDragUpdate: (details) {
@@ -115,7 +113,8 @@ class AudioPlayerDisplay extends StatelessWidget {
                       playerController: playerController,
                       waveformType: WaveformType.fitWidth,
                       size: const Size(double.infinity, 36),
-                      enableSeekGesture: true,
+                      enableSeekGesture:
+                          false, // ✅ Deshabilitado para evitar conflictos
                       playerWaveStyle: PlayerWaveStyle(
                         fixedWaveColor: const Color(0xFF555555),
                         liveWaveColor: const Color(0xFFDF48A5),
@@ -156,7 +155,7 @@ class AudioPlayerDisplay extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(width: 6),
+          const SizedBox(height: 6),
 
           // ⏱️ Tiempo en esquina inferior derecha
           Row(

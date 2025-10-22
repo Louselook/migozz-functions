@@ -21,6 +21,12 @@ import 'package:migozz_app/features/auth/data/domain/use_cases/auth_use_cases.da
 import 'package:migozz_app/features/auth/services/location_service.dart'
     as _i530;
 import 'package:migozz_app/features/auth/services/media_service.dart' as _i341;
+import 'package:migozz_app/features/profile/data/datasources/user_service.dart'
+    as _i867;
+import 'package:migozz_app/features/profile/data/domain/repository/user_repository.dart'
+    as _i345;
+import 'package:migozz_app/features/profile/data/domain/use_cases/user_use_cases.dart'
+    as _i484;
 
 extension GetItInjectableX on _i174.GetIt {
   // initializes the registration of main-scope dependencies inside of GetIt
@@ -33,8 +39,11 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i315.AuthService>(() => appModule.authService);
     gh.factory<_i974.AuthRepository>(() => appModule.authRepository);
     gh.factory<_i467.AuthUseCases>(() => appModule.authUseCases);
-    gh.factory<_i341.UserMediaService>(() => appModule.userMediaService);
-    gh.factory<_i530.LocationService>(() => appModule.locationService);
+    gh.lazySingleton<_i530.LocationService>(() => appModule.locationService);
+    gh.lazySingleton<_i341.UserMediaService>(() => appModule.userMediaService);
+    gh.lazySingleton<_i867.UserService>(() => appModule.userService);
+    gh.lazySingleton<_i345.UserRepository>(() => appModule.userRepository);
+    gh.lazySingleton<_i484.UserUseCases>(() => appModule.userUseCases);
     return this;
   }
 }

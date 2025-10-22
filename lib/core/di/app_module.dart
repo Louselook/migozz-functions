@@ -10,6 +10,12 @@ import 'package:migozz_app/features/auth/data/domain/use_cases/signout_use_case.
 import 'package:migozz_app/features/auth/data/repository/auth_repository_impl.dart';
 import 'package:migozz_app/features/auth/services/media_service.dart';
 import 'package:migozz_app/features/auth/services/location_service.dart';
+import 'package:migozz_app/features/profile/data/datasources/user_service.dart';
+import 'package:migozz_app/features/profile/data/domain/repository/user_repository.dart';
+import 'package:migozz_app/features/profile/data/domain/use_cases/change_avatar_use_case.dart';
+import 'package:migozz_app/features/profile/data/domain/use_cases/update_user_profile_use_case.dart';
+import 'package:migozz_app/features/profile/data/domain/use_cases/user_use_cases.dart';
+import 'package:migozz_app/features/profile/data/repository/user_repository_impl.dart';
 
 @module
 abstract class AppModule {
@@ -29,12 +35,22 @@ abstract class AppModule {
     authStateChanges: authRepository.authStateChanges(),
   );
 
-  // 2. Services
-  // @lazySingleton
-  @injectable
+  // location
+  @lazySingleton
+  LocationService get locationService => LocationService();
+
+  @lazySingleton
   UserMediaService get userMediaService => UserMediaService();
 
-  // @lazySingleton
-  @injectable
-  LocationService get locationService => LocationService();
+  @lazySingleton
+  UserService get userService => UserService(userMediaService);
+
+  @lazySingleton
+  UserRepository get userRepository => UserRepositoryImpl(userService);
+
+  @lazySingleton
+  UserUseCases get userUseCases => UserUseCases(
+    changeAvatar: ChangeAvatarUseCase(userRepository),
+    updateUserProfile: UpdateUserProfileUseCase(userRepository),
+  );
 }
