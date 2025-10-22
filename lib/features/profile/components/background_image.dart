@@ -55,7 +55,7 @@ class BackgroundImage extends StatelessWidget {
                     comunityCount: comunityCount,
                     nameComunity: nameComunity,
                     voiceNoteUrl: voiceNoteUrl,
-                    tutorialKeys: tutorialKeys,  // ✅ Pasar aquí
+                    tutorialKeys: tutorialKeys, // ✅ Pasar aquí
                   ),
                 ),
               ];
@@ -86,7 +86,7 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
   final String displayName;
   final String comunityCount;
   final String nameComunity;
-  final TutorialKeys? tutorialKeys;  // ✅ Agregar aquí
+  final TutorialKeys? tutorialKeys; // ✅ Agregar aquí
 
   _ProfileHeaderDelegate({
     required this.maxHeight,
@@ -98,7 +98,7 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
     required this.displayName,
     required this.comunityCount,
     required this.nameComunity,
-    this.tutorialKeys,  // ✅ Agregar aquí
+    this.tutorialKeys, // ✅ Agregar aquí
   });
 
   @override
@@ -128,10 +128,26 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
         children: [
           ColorFiltered(
             colorFilter: const ColorFilter.matrix(<double>[
-              1.15, 0, 0, 0, 0,
-              0, 1.15, 0, 0, 0,
-              0, 0, 1.25, 0, 0,
-              0, 1, 1, 2, 0,
+              1.15,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1.15,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1.25,
+              0,
+              0,
+              0,
+              1,
+              1,
+              2,
+              0,
             ]),
             child: avatarUrl != null && avatarUrl!.isNotEmpty
                 ? Image.network(
@@ -191,7 +207,7 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
                     comunityCount: comunityCount,
                     nameComunity: nameComunity,
                     voiceNoteUrl: voiceNoteUrl,
-                    tutorialKeys: tutorialKeys,  // ✅ Pasar aquí
+                    tutorialKeys: tutorialKeys, // ✅ Pasar aquí
                   ),
                 ),
               ),

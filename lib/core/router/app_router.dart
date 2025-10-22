@@ -16,7 +16,7 @@ import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubi
 
 GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
   return GoRouter(
-    initialLocation: '/onboarding',
+    initialLocation: '/profile',
     refreshListenable: goRouterNotifier, // 🔑 clave
     routes: [
       GoRoute(
