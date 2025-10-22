@@ -301,13 +301,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     ProfileOptionButton(
                       icon: Icons.share_outlined,
                       text: 'Edit Socials',
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              const MoreUserDetails(pageIndicator: 0),
-                        ),
-                      ),
+                      onTap: () {
+                        final editCubit = context.read<EditCubit>();
+                        editCubit.setEditItem(EditItem.socialEcosystem);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                const MoreUserDetails(pageIndicator: 0),
+                          ),
+                        );
+                      },
                     ),
                     ProfileOptionButton(
                       icon: Icons.logout,

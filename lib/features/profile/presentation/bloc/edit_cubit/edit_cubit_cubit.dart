@@ -48,6 +48,10 @@ class EditCubit extends Cubit<EditCubitState> {
     }
   }
 
+  // void updateSocialEcosystem(List<Map<String, dynamic>> socials) {
+  //   emit(state.copyWith(socialEcosystemEdit: socials));
+  // }
+
   /// Limpiar estado
   void clear() => emit(const EditCubitState());
 }

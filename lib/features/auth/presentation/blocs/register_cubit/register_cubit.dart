@@ -150,7 +150,7 @@ class RegisterCubit extends Cubit<RegisterState> {
     ),
   );
 
-  // ---------------------- checkCompletion (FIXED) ----------------------
+  // ---------------------- checkCompletion ----------------------
   Future<void> checkCompletion({bool forGoogle = false}) async {
     emit(state.copyWith(status: RegisterIsLogin.loading));
     try {
@@ -168,40 +168,26 @@ class RegisterCubit extends Cubit<RegisterState> {
         );
       }
 
-      // 🔹 Solo subir archivos si hay archivos Y no es registro por Google
-      if (filesToUpload.isNotEmpty && !forGoogle) {
+      // Subir temporalmente con email si hay files
+      if (filesToUpload.isNotEmpty) {
         try {
-          debugPrint(
-            '📤 [Cubit] Subiendo ${filesToUpload.length} archivos temporalmente...',
-          );
-
           final mediaUrls = await _mediaService.uploadFilesTemporarily(
             email: state.email ?? '',
             files: filesToUpload,
           );
 
-          debugPrint('✅ [Cubit] Archivos subidos: ${mediaUrls.keys}');
-
-          // Actualizar URLs en el estado
           if (mediaUrls.containsKey(MediaType.avatar)) {
-            emit(state.copyWith(avatarUrl: mediaUrls[MediaType.avatar]));
-            debugPrint(
-              '✅ [Cubit] Avatar URL actualizada: ${mediaUrls[MediaType.avatar]}',
-            );
+            setAvatarUrl(mediaUrls[MediaType.avatar]!);
           }
           if (mediaUrls.containsKey(MediaType.voice)) {
-            emit(state.copyWith(voiceNoteUrl: mediaUrls[MediaType.voice]));
-            debugPrint(
-              '✅ [Cubit] Voice URL actualizada: ${mediaUrls[MediaType.voice]}',
-            );
+            setVoiceNoteUrl(mediaUrls[MediaType.voice]!);
           }
         } catch (e) {
           debugPrint('❌ [Cubit] Error subiendo archivos: $e');
-          // No fallar el registro por esto, solo log del error
         }
       }
 
-      // Validar completitud
+      // Validar completitud - dos sets: completo normal o incompleto (google)
       final completeFull =
           state.email != null &&
           state.language != null &&
@@ -214,6 +200,7 @@ class RegisterCubit extends Cubit<RegisterState> {
           state.interests != null;
 
       final completeForGoogle =
+          // no pedimos email/fullName/username si vienen desde auth
           state.language != null &&
           state.gender != null &&
           state.location != null &&
@@ -224,20 +211,17 @@ class RegisterCubit extends Cubit<RegisterState> {
       final complete = forGoogle ? completeForGoogle : completeFull;
 
       debugPrint(
-        '🔍 [Cubit] Registro completo (forGoogle=$forGoogle): $complete',
+        '✅ [Cubit] Registro completo (forGoogle=$forGoogle): $complete',
       );
 
-      // Solo cambiar el estado si hay cambio
       if (state.isComplete != complete) {
-        emit(
-          state.copyWith(isComplete: complete, status: RegisterIsLogin.success),
-        );
-        debugPrint('✅ [Cubit] Estado de completitud actualizado a: $complete');
+        emit(state.copyWith(isComplete: complete));
       } else {
         emit(state.copyWith(status: RegisterIsLogin.initial));
       }
     } catch (e) {
       debugPrint('❌ [Cubit] Error en checkCompletion: $e');
+      emit(state.copyWith(status: RegisterIsLogin.initial));
     }
   }
 

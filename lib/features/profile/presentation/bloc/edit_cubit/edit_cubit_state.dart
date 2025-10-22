@@ -19,7 +19,7 @@ class EditCubitState extends Equatable {
   final bool isSaving;
   final bool success;
   final String? error;
-  final List<Map<String, Map<String, dynamic>>>? socialEcosystemEdit;
+  final List<Map<String, dynamic>>? socialEcosystemEdit;
 
   const EditCubitState({
     this.editItem = EditItem.empty,
@@ -34,7 +34,7 @@ class EditCubitState extends Equatable {
     bool? isSaving,
     bool? success,
     String? error,
-    List<Map<String, Map<String, dynamic>>>? socialEcosystemEdit,
+    final List<Map<String, dynamic>>? socialEcosystemEdit,
   }) {
     return EditCubitState(
       editItem: editItem ?? this.editItem,
