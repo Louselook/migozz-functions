@@ -18,6 +18,13 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 
+    configurations.all {
+        resolutionStrategy {
+            force("androidx.annotation:annotation:1.6.0")
+            force("androidx.annotation:annotation-experimental:1.4.0")
+        }
+    }
+
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_11.toString()
     }

@@ -151,7 +151,10 @@ class RegisterCubit extends Cubit<RegisterState> {
   );
 
   // ---------------------- checkCompletion ----------------------
-  Future<void> checkCompletion({bool forGoogle = false}) async {
+  Future<void> checkCompletion({
+    bool forGoogle = false,
+    String? uid, // 👈 NUEVO: recibir UID si ya está auth
+  }) async {
     emit(state.copyWith(status: RegisterIsLogin.loading));
     try {
       final Map<MediaType, File> filesToUpload = {};
@@ -163,33 +166,47 @@ class RegisterCubit extends Cubit<RegisterState> {
 
       if (voiceNoteFile != null) {
         filesToUpload[MediaType.voice] = voiceNoteFile!;
-        debugPrint(
-          '✅ [Cubit] Audio agregado para subir: ${voiceNoteFile!.path}',
-        );
+        debugPrint('✅ [Cubit] Audio agregado para subir: ${voiceNoteFile!.path}');
       }
 
-      // Subir temporalmente con email si hay files
+      //  CAMBIO CLAVE: Decidir qué identificador usar
       if (filesToUpload.isNotEmpty) {
         try {
-          final mediaUrls = await _mediaService.uploadFilesTemporarily(
-            email: state.email ?? '',
-            files: filesToUpload,
-          );
+          Map<MediaType, String> mediaUrls;
 
+          if (uid != null) {
+            // Si ya tenemos UID (Google), subir directamente con UID
+            debugPrint(' [Cubit] Subiendo archivos con UID: $uid');
+            mediaUrls = await _mediaService.uploadFiles(
+              uid: uid,
+              files: filesToUpload,
+            );
+          } else {
+            //  Si no hay UID (registro tradicional), subir con email temporal
+            debugPrint(' [Cubit] Subiendo archivos con email: ${state.email}');
+            mediaUrls = await _mediaService.uploadFilesTemporarily(
+              email: state.email ?? '',
+              files: filesToUpload,
+            );
+          }
+
+          // Guardar URLs en el state
           if (mediaUrls.containsKey(MediaType.avatar)) {
             setAvatarUrl(mediaUrls[MediaType.avatar]!);
           }
           if (mediaUrls.containsKey(MediaType.voice)) {
             setVoiceNoteUrl(mediaUrls[MediaType.voice]!);
           }
+
+          debugPrint('✅ [Cubit] Archivos subidos correctamente');
         } catch (e) {
           debugPrint('❌ [Cubit] Error subiendo archivos: $e');
+          // No bloqueamos el flujo
         }
       }
 
-      // Validar completitud - dos sets: completo normal o incompleto (google)
-      final completeFull =
-          state.email != null &&
+      // Validar completitud
+      final completeFull = state.email != null &&
           state.language != null &&
           state.fullName != null &&
           state.username != null &&
@@ -199,9 +216,7 @@ class RegisterCubit extends Cubit<RegisterState> {
           state.category != null &&
           state.interests != null;
 
-      final completeForGoogle =
-          // no pedimos email/fullName/username si vienen desde auth
-          state.language != null &&
+      final completeForGoogle = state.language != null &&
           state.gender != null &&
           state.location != null &&
           state.phone != null &&
@@ -210,9 +225,7 @@ class RegisterCubit extends Cubit<RegisterState> {
 
       final complete = forGoogle ? completeForGoogle : completeFull;
 
-      debugPrint(
-        '✅ [Cubit] Registro completo (forGoogle=$forGoogle): $complete',
-      );
+      debugPrint('✅ [Cubit] Registro completo (forGoogle=$forGoogle): $complete');
 
       if (state.isComplete != complete) {
         emit(state.copyWith(isComplete: complete));
@@ -225,7 +238,7 @@ class RegisterCubit extends Cubit<RegisterState> {
     }
   }
 
-  // ---------------------- fetch social profile ----------------------
+// ---------------------- fetch social profile ----------------------
   Future<void> fetchSocialProfile(String network, String usernameOrLink) async {
     emit(state.copyWith(status: RegisterIsLogin.loading));
     try {
