@@ -51,6 +51,7 @@ dependencies:
   firebase_storage: ^12.4.10
   share_plus: ^7.2.1
   cached_network_image: ^3.4.1
+  flutter_native_splash: ^2.4.7
 
 dev_dependencies:
   flutter_test:
@@ -61,12 +62,12 @@ dev_dependencies:
   injectable_generator: ^2.9.0
   build_runner: ^2.9.0
 
-flutter_launcher_icons:
-  android: true
-  ios: true
-  image_path: "assets/icon/Migozz_SinFONDO.svg"
-  adaptive_icon_background: "#D43AB6"
-  adaptive_icon_foreground: "assets/icon/Migozz.svg"
+# flutter_launcher_icons:
+#   android: true
+#   ios: true
+#   image_path: "assets/icon/Migozz_SinFONDO.svg"
+#   adaptive_icon_background: "#0D0D0D"
+#   adaptive_icon_foreground: "assets/icon/Migozz.svg"
 
 flutter:
   uses-material-design: true
