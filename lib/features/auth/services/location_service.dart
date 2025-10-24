@@ -32,12 +32,16 @@ class LocationService {
         }
 
         if (permission == LocationPermission.deniedForever) {
-          debugPrint('🚫 Permiso de ubicación denegado permanentemente en web.');
+          debugPrint(
+            '🚫 Permiso de ubicación denegado permanentemente en web.',
+          );
           return null;
         }
 
         final pos = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high,
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+          ),
         );
         lat = pos.latitude;
         lon = pos.longitude;
