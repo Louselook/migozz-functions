@@ -7,6 +7,7 @@ import 'package:migozz_app/features/splash/splash_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:migozz_app/features/auth/services/location_service.dart';
 import 'package:migozz_app/features/auth/data/domain/models/location_dto.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 /// Resultado de inicialización global
 class AppInitResult {
@@ -60,11 +61,13 @@ class _AppInitializerState extends State<AppInitializer>
     if (_isInitializing) {
       debugPrint('⚠️ Ya hay una inicialización en progreso, ignorando...');
       return;
-    }
+    };
 
-    final status = await Permission.locationWhenInUse.status;
-    if (!status.isGranted && mounted) {
-      await _runInit();
+    if (!kIsWeb){
+      final status = await Permission.locationWhenInUse.status;
+      if (!status.isGranted && mounted) {
+        await _runInit();
+      }
     }
   }
 
@@ -73,34 +76,46 @@ class _AppInitializerState extends State<AppInitializer>
     _isInitializing = true;
 
     try {
-      // 1️⃣ Permiso micro
-      final micStatus = await Permission.microphone.request();
-      final microphoneGranted = micStatus.isGranted;
-
-      // 2️⃣ Intentar pedir ubicación UNA vez
-      final locStatus = await Permission.locationWhenInUse.request();
+      bool microphoneGranted = false;
       bool locationGranted = false;
       LocationDTO? locationDto;
 
-      if (locStatus == PermissionStatus.granted ||
-          locStatus == PermissionStatus.limited) {
+      if (!kIsWeb) {
+        // 📱 Solo en móvil o desktop
+        final micStatus = await Permission.microphone.request();
+        microphoneGranted = micStatus.isGranted;
+
+        final locStatus = await Permission.locationWhenInUse.request();
+
+        if (locStatus.isGranted || locStatus.isLimited) {
+          locationGranted = true;
+          try {
+            final svc = LocationService();
+            locationDto = await svc.initAndFetchAddress();
+          } catch (e) {
+            debugPrint('❌ Error al obtener ubicación: $e');
+          }
+        } else {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            _showLocationDeniedDialog(
+              locStatus == PermissionStatus.permanentlyDenied,
+            );
+          });
+        }
+      } else {
+        // 🌐 En web — permisos simulados o usando otra API
+        debugPrint('🌐 Web detectada — simulando permisos');
+
+        microphoneGranted = true; // si no los necesitas realmente
         locationGranted = true;
+
         try {
           final svc = LocationService();
           locationDto = await svc.initAndFetchAddress();
         } catch (e) {
-          debugPrint('❌ Error al obtener ubicación: $e');
+          debugPrint('❌ Error obteniendo ubicación en web: $e');
         }
-      } else {
-        // Si no concedió, mostramos un modal INFORMANDO y continuamos sin bloquear
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-          _showLocationDeniedDialog(
-            locStatus == PermissionStatus.permanentlyDenied,
-          );
-        });
-        locationGranted = false;
-        locationDto = null;
       }
 
       if (!mounted) return;
@@ -113,7 +128,7 @@ class _AppInitializerState extends State<AppInitializer>
         );
       });
 
-      debugPrint('✅ Inicialización completada (no bloqueante)');
+      debugPrint('✅ Inicialización completada');
     } catch (e) {
       debugPrint('❌ Error durante inicialización: $e');
     } finally {
@@ -121,7 +136,7 @@ class _AppInitializerState extends State<AppInitializer>
     }
   }
 
-  /// Mostrar el modal DESPUÉS del primer frame para evitar error
+ /// Mostrar el modal DESPUÉS del primer frame para evitar error
   Future<void> _showLocationDeniedDialog(bool permanentlyDenied) async {
     try {
       await showModalBottomSheet(
