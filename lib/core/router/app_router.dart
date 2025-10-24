@@ -3,16 +3,16 @@ import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/router/app_router_notifier.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_state.dart';
-import 'package:migozz_app/features/auth/presentation/login/login_screen.dart';
+import 'package:migozz_app/features/auth/presentation/login/login_entry.dart';
 // import 'package:migozz_app/features/auth/presentation/login/otp_screen.dart';
 import 'package:migozz_app/features/auth/presentation/register/register_screen.dart';
 import 'package:migozz_app/features/auth/presentation/onboarding/onboarding_screen.dart';
 import 'package:migozz_app/features/profile/presentation/edit/edit_profile_screen.dart';
 import 'package:migozz_app/features/profile/presentation/profile/modules/complete_profile.dart';
-import 'package:migozz_app/features/profile/presentation/profile/profile_screen.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/ia_chat_screen.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
+import 'package:migozz_app/features/profile/presentation/profile_entry.dart';
 
 GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
   return GoRouter(
@@ -23,7 +23,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         path: '/onboarding',
         builder: (context, state) => const OnboardingScreen(),
       ),
-      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+      GoRoute(path: '/login', builder: (context, state) => const LoginEntry()),
       // GoRoute(
       //   path: '/otp',
       //   builder: (context, state) {
@@ -37,7 +37,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       ),
       GoRoute(
         path: '/profile',
-        builder: (context, state) => const ProfileScreen(),
+        builder: (context, state) => const ProfileEntry(),
       ),
       GoRoute(
         path: '/edit-profile',

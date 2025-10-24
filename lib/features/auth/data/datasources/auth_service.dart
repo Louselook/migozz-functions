@@ -1,11 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:migozz_app/features/auth/data/domain/models/auth_result.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user_dto.dart';
 import 'package:migozz_app/features/auth/data/domain/models/location_dto.dart';
 import 'package:migozz_app/features/auth/services/media_service.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -74,7 +76,13 @@ class AuthService {
   // LOGIN con Google
   Future<AuthResult> loginWithGoogle() async {
     try {
-      final googleSignIn = GoogleSignIn();
+      // ✅ Detecta automáticamente si es web o no
+      final googleSignIn = GoogleSignIn(
+        clientId: kIsWeb
+            ? null // Web usa el ID desde index.html
+            : dotenv.env['GOOGLE_CLIENT_ID'], // <-- tu clientId tipo Web
+      );
+
       final googleUser = await googleSignIn.signIn();
       if (googleUser == null) throw Exception('cancelled_by_user');
 
@@ -83,14 +91,17 @@ class AuthService {
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
+
       final userCredential = await _auth.signInWithCredential(credential);
       final user = userCredential.user;
       if (user == null) throw Exception('firebase_sign_in_failed');
 
+      // 🔎 Verifica si el perfil ya existe
       final docRef = _firestore.collection('users').doc(user.uid);
       final doc = await docRef.get();
       bool profileExists = doc.exists;
 
+      // 🆕 Si el usuario no existía, creamos el documento base
       if (!profileExists) {
         final baseData = {
           'displayName': user.displayName ?? '',
@@ -108,6 +119,7 @@ class AuthService {
       }
 
       final userDto = await _getUserFromFirestore(user.uid);
+
       return AuthResult(
         credential: userCredential,
         user: userDto,

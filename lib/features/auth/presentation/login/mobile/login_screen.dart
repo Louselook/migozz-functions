@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/loading_overlay.dart';
 import 'package:migozz_app/core/components/atomics/logo.dart';
@@ -12,9 +11,8 @@ import 'package:migozz_app/features/auth/components/bottom_text.dart';
 import 'package:migozz_app/features/auth/components/google_button.dart';
 import 'package:migozz_app/features/auth/data/datasources/auth_service.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
-import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/login_cubit/login_cubit.dart';
-import 'package:migozz_app/features/auth/presentation/login/otp_screen.dart';
+import 'package:migozz_app/features/auth/presentation/login/shared/login_wrapper.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/functions/email_validation.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -28,8 +26,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  bool _hasNavigatedToOTP = false;
-  bool _isLoadingVisible = false;
   bool _isCheckingEmail = false;
 
   @override
@@ -71,7 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_isCheckingEmail) return; // evita reentradas
     setState(() => _isCheckingEmail = true);
 
-    // Muestra overlay de carga (coincide con tu estilo actual)
+    // Muestra overlay de carga (esto es para la verificación con AuthService)
     LoadingOverlay.show(context);
 
     try {
@@ -94,7 +90,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // Si existe -> continuar con el flujo de login: enviamos OTP por el LoginCubit
       // Resetear flags por si acaso
-      _hasNavigatedToOTP = false;
       context.read<LoginCubit>().sendOTPLoginCubit(email);
     } catch (e) {
       // Manejo de errores de red / firestore
@@ -121,10 +116,8 @@ class _LoginScreenState extends State<LoginScreen> {
       await authCubit.signInWithGoogle();
 
       if (!mounted) return;
-      LoadingOverlay.hide(context);
     } catch (e) {
       debugPrint("error: $e");
-      if (mounted) LoadingOverlay.hide(context);
 
       // Evita mostrar errores genéricos o warnings de Firebase
       final msg = e.toString();
@@ -136,104 +129,15 @@ class _LoginScreenState extends State<LoginScreen> {
           type: SnackbarType.error,
         );
       }
+    } finally {
+      if (mounted) LoadingOverlay.hide(context);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocListener(
-      listeners: [
-        // 🔹 Listener para LOADING del LoginCubit
-        BlocListener<LoginCubit, LoginState>(
-          listenWhen: (previous, current) {
-            return previous.isLoading != current.isLoading;
-          },
-          listener: (context, state) {
-            if (state.isLoading && !_isLoadingVisible) {
-              _isLoadingVisible = true;
-              LoadingOverlay.show(context);
-            } else if (!state.isLoading && _isLoadingVisible) {
-              _isLoadingVisible = false;
-              LoadingOverlay.hide(context);
-            }
-          },
-        ),
-
-        // 🔹 Listener para NAVEGACIÓN A OTP
-        BlocListener<LoginCubit, LoginState>(
-          listenWhen: (previous, current) {
-            return previous.currentOTP != current.currentOTP &&
-                current.currentOTP != null &&
-                current.email != null;
-          },
-          listener: (context, state) {
-            if (state.currentOTP != null &&
-                state.email != null &&
-                !_hasNavigatedToOTP) {
-              _hasNavigatedToOTP = true;
-
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) {
-                  Navigator.push(
-                    context,
-                    PageRouteBuilder(
-                      pageBuilder: (_, __, ___) => OtpScreen(
-                        email: state.email!,
-                        userOTP: state.currentOTP!,
-                      ),
-                      transitionsBuilder: (_, animation, __, child) {
-                        const begin = Offset(1.0, 0.0);
-                        const end = Offset.zero;
-                        const curve = Curves.easeInOut;
-                        var tween = Tween(
-                          begin: begin,
-                          end: end,
-                        ).chain(CurveTween(curve: curve));
-                        return SlideTransition(
-                          position: animation.drive(tween),
-                          child: child,
-                        );
-                      },
-                    ),
-                  ).then((_) {
-                    _hasNavigatedToOTP = false;
-                  });
-                }
-              });
-            }
-          },
-        ),
-
-        // 🔹 Listener para ERRORES del LoginCubit
-        BlocListener<LoginCubit, LoginState>(
-          listenWhen: (previous, current) {
-            return previous.errorMessageLogin != current.errorMessageLogin &&
-                current.errorMessageLogin != null &&
-                current.errorMessageLogin!.isNotEmpty;
-          },
-          listener: (context, state) {
-            CustomSnackbar.show(
-              context: context,
-              message: state.errorMessageLogin!,
-              type: SnackbarType.error,
-            );
-          },
-        ),
-
-        // 🔹 Listener para ÉXITO en AuthCubit (cuando se complete el login real)
-        BlocListener<AuthCubit, AuthState>(
-          listenWhen: (previous, current) {
-            return current.isAuthenticated &&
-                current.userProfile != null &&
-                !previous.isAuthenticated;
-          },
-          listener: (context, state) {
-            if (state.userProfile != null) {
-              context.go('/profile', extra: state.userProfile!.email);
-            }
-          },
-        ),
-      ],
+    // Envuelve tu layout con LoginWrapper para heredar listeners compartidos
+    return LoginWrapper(
       child: Scaffold(
         backgroundColor: AppColors.backgroundDark,
         resizeToAvoidBottomInset: false,

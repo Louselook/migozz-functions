@@ -61,9 +61,9 @@ class _AppInitializerState extends State<AppInitializer>
     if (_isInitializing) {
       debugPrint('⚠️ Ya hay una inicialización en progreso, ignorando...');
       return;
-    };
+    }
 
-    if (!kIsWeb){
+    if (!kIsWeb) {
       final status = await Permission.locationWhenInUse.status;
       if (!status.isGranted && mounted) {
         await _runInit();
@@ -136,7 +136,7 @@ class _AppInitializerState extends State<AppInitializer>
     }
   }
 
- /// Mostrar el modal DESPUÉS del primer frame para evitar error
+  /// Mostrar el modal DESPUÉS del primer frame para evitar error
   Future<void> _showLocationDeniedDialog(bool permanentlyDenied) async {
     try {
       await showModalBottomSheet(

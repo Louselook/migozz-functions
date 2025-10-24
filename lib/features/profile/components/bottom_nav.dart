@@ -1,8 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/features/profile/presentation/edit/edit_profile_screen.dart';
-import 'package:migozz_app/features/profile/presentation/profile/profile_screen.dart';
 import 'package:migozz_app/features/profile/presentation/profile/modules/profile_stats.dart';
+import 'package:migozz_app/features/profile/presentation/profile_entry.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 
 class GradientBottomNav extends StatelessWidget {
@@ -72,7 +72,7 @@ class GradientBottomNav extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute<void>(
-                              builder: (context) => const ProfileScreen(),
+                              builder: (context) => const ProfileEntry(),
                             ),
                           );
                         },
