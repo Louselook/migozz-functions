@@ -4,7 +4,8 @@ import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/core/components/compuestos/progress_indicator.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
-import 'package:migozz_app/features/auth/presentation/onboarding/components/constant.dart';
+import 'package:migozz_app/features/auth/presentation/onboarding/shared/constant.dart';
+import 'package:migozz_app/features/auth/presentation/onboarding/shared/onboarding_model.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
