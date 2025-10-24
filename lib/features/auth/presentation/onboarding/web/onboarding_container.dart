@@ -27,7 +27,6 @@ class OnboardingContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-
     final imageWidth = screenWidth * 0.5;
 
     return AnimatedBuilder(
@@ -43,35 +42,34 @@ class OnboardingContainer extends StatelessWidget {
 
         final imageParallaxX = delta * 20;
         final imageScale = 0.97 + 0.03 * t;
-
         final contentOpacity = (0.65 + 0.35 * t).clamp(0.0, 1.0);
         final contentTranslateY = (1 - t) * 12;
 
-        return Container(
-          width: double.infinity,
-          height: double.infinity,
-          decoration: BoxDecoration(
-            gradient: AppColors.verticalOnboarding, // mismo fondo que mobile
-          ),
-          child: Row(
-            children: [
-              // Imagen
-              SizedBox(
-                width: imageWidth,
-                height: screenHeight,
-                child: Transform.translate(
-                  offset: Offset(imageParallaxX, 0),
-                  child: Transform.scale(
-                    scale: imageScale,
-                    alignment: Alignment.center,
-                    child: Image.asset(data.imagePath, fit: BoxFit.contain),
+        return Row(
+          children: [
+            // imagen con fondo degradado
+            Container(
+              width: imageWidth,
+              height: screenHeight,
+              decoration: BoxDecoration(
+                gradient: AppColors.verticalOnboarding,
+              ),
+              child: Transform.translate(
+                offset: Offset(imageParallaxX, 0),
+                child: Transform.scale(
+                  scale: imageScale,
+                  alignment: Alignment.center,
+                  child: Image.asset(
+                    data.imagePath,
+                    fit: BoxFit.contain,
                   ),
                 ),
               ),
+            ),
 
             const SizedBox(width: 56),
 
-            // Contenido textual
+            // (texto y botones)
             Expanded(
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -84,7 +82,6 @@ class OnboardingContainer extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Indicadores de progreso
                         Padding(
                           padding: const EdgeInsets.only(top: 40, left: 20, right: 20),
                           child: Row(
@@ -100,7 +97,6 @@ class OnboardingContainer extends StatelessWidget {
                         ),
                         const SizedBox(height: 24),
 
-                        // Título
                         Text(
                           data.title,
                           style: TextStyle(
@@ -114,7 +110,6 @@ class OnboardingContainer extends StatelessWidget {
 
                         const SizedBox(height: 12),
 
-                        // Descripción
                         Text(
                           data.description,
                           style: TextStyle(
@@ -127,7 +122,6 @@ class OnboardingContainer extends StatelessWidget {
 
                         SizedBox(height: screenWidth < 600 ? 40 : 107),
 
-                        // Botones
                         Row(
                           children: [
                             if (!lastPage)
@@ -218,7 +212,6 @@ class OnboardingContainer extends StatelessWidget {
               ),
             ),
           ],
-          )
         );
       },
     );
