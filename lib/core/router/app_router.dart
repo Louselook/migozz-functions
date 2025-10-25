@@ -103,6 +103,8 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         '/onboarding',
         '/ia-chat',
         '/otp',
+        '/terms-privacy',
+        '/policy-deleted',
       };
 
       // Estado inicial de chequeo

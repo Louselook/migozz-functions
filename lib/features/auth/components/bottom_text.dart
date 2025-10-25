@@ -19,7 +19,8 @@ Widget bottomText({required BuildContext context}) {
         gradientTextSpan(
           "Terms and conditions",
           onTap: () {
-            debugPrint("Términos y condiciones presionados");
+            debugPrint('hola');
+            context.go('/terms-privacy');
           },
         ),
       ],
