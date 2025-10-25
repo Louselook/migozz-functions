@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/router/app_router_notifier.dart';
@@ -8,6 +9,8 @@ import 'package:migozz_app/features/auth/presentation/onboarding/onboarding_entr
 // import 'package:migozz_app/features/auth/presentation/login/otp_screen.dart';
 import 'package:migozz_app/features/auth/presentation/register/register_screen.dart';
 import 'package:migozz_app/features/profile/presentation/edit/edit_profile_screen.dart';
+import 'package:migozz_app/features/profile/presentation/profile/web/edit_profile.dart'
+    show EditProfile;
 import 'package:migozz_app/features/profile/presentation/profile/modules/complete_profile.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/ia_chat_screen.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
@@ -41,7 +44,15 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       ),
       GoRoute(
         path: '/edit-profile',
-        builder: (context, state) => const EditProfileScreen(),
+        builder: (context, state) {
+          // Decide between web and mobile edit screen using available MediaQuery size.
+          final screenWidth = MediaQuery.of(context).size.width;
+          // Breakpoint: use web edit profile when wide enough (>= 900)
+          if (screenWidth >= 900) {
+            return const EditProfile();
+          }
+          return const EditProfileScreen();
+        },
       ),
       GoRoute(
         path: '/complete-profile',
@@ -131,11 +142,14 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
           return null;
         }
 
-        // 🟢 Caso: perfil completo — siempre va al perfil
+        // 🟢 Caso: perfil completo — permitir acceder a rutas privadas útiles
         if (userProfile.complete) {
-          if (goingTo != '/profile') {
+          // Rutas permitidas cuando el perfil está completo (añadir aquí según necesites)
+          const allowedWhenComplete = {'/profile', '/edit-profile'};
+
+          if (!allowedWhenComplete.contains(goingTo)) {
             return '/profile';
-          } else {}
+          }
         }
       }
 

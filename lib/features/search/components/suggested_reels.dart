@@ -10,11 +10,11 @@ class SuggestedReels extends StatelessWidget {
   // Datos simulados para mostrar en las cards
   List<Map<String, dynamic>> get _mockItems {
     final images = [
-      'assets/images/onboarding_1.png',
-      'assets/images/onboarding_2.png',
-      'assets/images/onboarding_3.png',
-      'assets/images/profileBackground.jpg',
-      'assets/images/otp_image.png',
+      'assets/images/onboarding_1.webp',
+      'assets/images/onboarding_2.webp',
+      'assets/images/onboarding_3.webp',
+      'assets/images/profileBackground.webp',
+      'assets/images/otp_image.webp',
     ];
 
     return List.generate(12, (i) {

@@ -7,6 +7,7 @@ class EditProfileImageSection extends StatelessWidget {
   final double imageSize;
   final VoidCallback onDeleteAccount;
   final VoidCallback onSave;
+  final String? avatarUrl;
 
   const EditProfileImageSection({
     super.key,
@@ -14,6 +15,7 @@ class EditProfileImageSection extends StatelessWidget {
     required this.imageSize,
     required this.onDeleteAccount,
     required this.onSave,
+    this.avatarUrl,
   });
 
   @override
@@ -41,20 +43,35 @@ class EditProfileImageSection extends StatelessWidget {
                 ],
               ),
               child: ClipOval(
-                child: Image.asset(
-                  'assets/img/ImgPefil.webp',
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: Colors.grey[800],
-                      child: Icon(
-                        Icons.person,
-                        size: isSmallScreen ? 50 : 60,
-                        color: Colors.white.withValues(alpha: 0.5),
+                child: avatarUrl != null && avatarUrl!.isNotEmpty
+                    ? Image.network(
+                        avatarUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.grey[800],
+                            child: Icon(
+                              Icons.person,
+                              size: isSmallScreen ? 50 : 60,
+                              color: Colors.white.withValues(alpha: 0.5),
+                            ),
+                          );
+                        },
+                      )
+                    : Image.asset(
+                        'assets/image/ImgPefil.webp',
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.grey[800],
+                            child: Icon(
+                              Icons.person,
+                              size: isSmallScreen ? 50 : 60,
+                              color: Colors.white.withValues(alpha: 0.5),
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
               ),
             ),
             Positioned(

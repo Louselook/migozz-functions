@@ -6,7 +6,7 @@ class ProfileHeader extends StatelessWidget {
   final String displayName;
   final String communityCount;
   final String communityName;
-  final String imageAsset;
+  final String? avatarUrl;
 
   const ProfileHeader({
     super.key,
@@ -14,7 +14,7 @@ class ProfileHeader extends StatelessWidget {
     required this.displayName,
     required this.communityCount,
     required this.communityName,
-    this.imageAsset = 'assets/img/ImgPefil.webp',
+    this.avatarUrl,
   });
 
   @override
@@ -30,7 +30,7 @@ class ProfileHeader extends StatelessWidget {
 
         // Imagen de perfil con bordes redondeados
         _ProfileImage(
-          imageAsset: imageAsset,
+          avatarUrl: avatarUrl,
           screenWidth: screenWidth,
           isSmallScreen: isSmallScreen,
         ),
@@ -53,12 +53,12 @@ class ProfileHeader extends StatelessWidget {
 }
 
 class _ProfileImage extends StatelessWidget {
-  final String imageAsset;
+  final String? avatarUrl;
   final double screenWidth;
   final bool isSmallScreen;
 
   const _ProfileImage({
-    required this.imageAsset,
+    this.avatarUrl,
     required this.screenWidth,
     required this.isSmallScreen,
   });
@@ -68,6 +68,12 @@ class _ProfileImage extends StatelessWidget {
     final imageSize = screenWidth < 400
         ? 150.0
         : (isSmallScreen ? 180.0 : 320.0);
+
+    // ✅ Determinar si la URL es de red o es un asset local
+    final bool isNetworkImage =
+        avatarUrl != null &&
+        (avatarUrl!.startsWith('http://') || avatarUrl!.startsWith('https://'));
+    final String fallbackAsset = 'assets/image/ImgPefil.webp';
 
     return Container(
       width: imageSize,
@@ -88,23 +94,50 @@ class _ProfileImage extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(27),
-        child: Image.asset(
-          imageAsset,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            return Container(
-              decoration: BoxDecoration(
-                color: Colors.grey[800],
-                borderRadius: BorderRadius.circular(27),
+        child: isNetworkImage
+            ? Image.network(
+                avatarUrl!,
+                fit: BoxFit.cover,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Center(
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded /
+                                loadingProgress.expectedTotalBytes!
+                          : null,
+                    ),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  // Mostrar mensaje de error en consola para debug
+                  debugPrint('❌ Error cargando imagen: $error');
+                  debugPrint('📍 URL: $avatarUrl');
+                  return _buildFallback();
+                },
+              )
+            : Image.asset(
+                avatarUrl ?? fallbackAsset,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return _buildFallback();
+                },
               ),
-              child: Icon(
-                Icons.person,
-                size: isSmallScreen ? 60 : 80,
-                color: Colors.white.withValues(alpha: 0.5),
-              ),
-            );
-          },
-        ),
+      ),
+    );
+  }
+
+  Widget _buildFallback() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey[800],
+        borderRadius: BorderRadius.circular(27),
+      ),
+      child: Icon(
+        Icons.person,
+        size: isSmallScreen ? 60 : 80,
+        color: Colors.white.withValues(alpha: 0.5),
       ),
     );
   }

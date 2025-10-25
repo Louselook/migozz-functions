@@ -34,7 +34,7 @@ class BackgroundProfile extends StatelessWidget {
         // Imagen de perfil de fondo (opcional, se puede cambiar por usuario)
         Positioned.fill(
           child: Image.asset(
-            'assets/img/ImgPefil.webp',
+            'assets/image/ImgPefil.webp',
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) {
               return Container(color: Colors.black);

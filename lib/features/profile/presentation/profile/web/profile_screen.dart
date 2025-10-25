@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:migozz_app/core/components/atomics/network_list.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user_dto.dart';
 import 'package:migozz_app/features/profile/components/draggable_social_rail.dart';
+import 'package:migozz_app/features/profile/components/social_rail.dart';
 import 'package:migozz_app/features/profile/presentation/profile/web/Components/profile_background_gradients.dart';
 import 'package:migozz_app/features/profile/presentation/profile/web/components/profile_header.dart';
 import 'package:migozz_app/features/profile/presentation/profile/web/components/profile_search_button.dart';
@@ -26,6 +28,12 @@ class WebProfileContent extends StatelessWidget {
     );
     final leftMenuWidth = isSmallScreen ? 80.0 : 100.0;
 
+    // ✅ Calcular seguidores totales desde socialEcosystem
+    final totalFollowers = _calculateTotalFollowers(user.socialEcosystem);
+
+    // ✅ Construir enlaces de redes sociales
+    final socialLinks = _buildSocialLinks(user.socialEcosystem, user.username);
+
     // Pasa info real del user al ProfileHeader (adapta ProfileHeader para aceptar params)
     return Scaffold(
       backgroundColor: Colors.black,
@@ -47,11 +55,9 @@ class WebProfileContent extends StatelessWidget {
                         child: ProfileHeader(
                           name: user.displayName,
                           displayName: user.username,
-                          communityCount:
-                              '—', // calcula si tu user trae followers
+                          communityCount: totalFollowers.toString(),
                           communityName: 'Community',
-                          imageAsset:
-                              user.avatarUrl ?? 'assets/img/ImgPefil.webp',
+                          avatarUrl: user.avatarUrl,
                         ),
                       ),
                       const SliverFillRemaining(child: PublicationsContent()),
@@ -59,14 +65,12 @@ class WebProfileContent extends StatelessWidget {
                   ),
                 ),
               ),
-              const Positioned(left: 0, top: 0, bottom: 0, child: SideMenu()),
+              Positioned(left: 0, top: 0, bottom: 0, child: SideMenu()),
               const ProfileSearchButton(),
               DraggableSocialRail(
                 key: ValueKey('social_rail_${size.width}'),
                 initialPosition: initialSocialPosition,
-                links: [
-                  // construye desde user.socialEcosystem o deja placeholders
-                ],
+                links: socialLinks,
                 itemSize: socialItemSize,
                 iconSize: socialIconSize,
               ),
@@ -75,5 +79,113 @@ class WebProfileContent extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  // ===============================
+  // 🔢 Calcular total de seguidores
+  // ===============================
+  int _calculateTotalFollowers(List<Map<String, dynamic>>? socialEcosystem) {
+    if (socialEcosystem == null || socialEcosystem.isEmpty) return 0;
+    int total = 0;
+    for (final social in socialEcosystem) {
+      for (final platformData in social.values) {
+        if (platformData is Map<String, dynamic>) {
+          final followers = platformData['followers'];
+          if (followers is int) {
+            total += followers;
+          } else if (followers is String) {
+            total += int.tryParse(followers) ?? 0;
+          }
+        }
+      }
+    }
+    return total;
+  }
+
+  // ===============================
+  // 🔗 Construir enlaces de redes
+  // ===============================
+  List<SocialLink> _buildSocialLinks(
+    List<Map<String, dynamic>>? socialEcosystem,
+    String username,
+  ) {
+    if (socialEcosystem == null || socialEcosystem.isEmpty) return [];
+    final links = <SocialLink>[];
+    final cleanUsername = username.replaceFirst('@', '');
+
+    for (final social in socialEcosystem) {
+      for (final entry in social.entries) {
+        final platform = entry.key.toLowerCase();
+        final data = entry.value;
+        int? followers;
+        int? shares;
+        String? customUrl;
+
+        if (data is Map<String, dynamic>) {
+          followers = _parseIntFromDynamic(data['followers']);
+          shares = _parseIntFromDynamic(data['shares']);
+          customUrl = data['url']?.toString();
+        }
+
+        final socialInfo = _getSocialInfo(platform, cleanUsername, customUrl);
+        if (socialInfo != null) {
+          links.add(
+            SocialLink(
+              asset: socialInfo['asset']!,
+              url: Uri.parse(socialInfo['url']!),
+              followers: followers,
+              shares: shares,
+            ),
+          );
+        }
+      }
+    }
+    return links;
+  }
+
+  int? _parseIntFromDynamic(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value);
+    return null;
+  }
+
+  // ===============================
+  // 🧭 Generar URL + ícono por red
+  // ===============================
+  Map<String, String>? _getSocialInfo(
+    String platform,
+    String username,
+    String? customUrl,
+  ) {
+    final normalizedLabel =
+        platform[0].toUpperCase() + platform.substring(1).toLowerCase();
+
+    final asset = iconByLabel[normalizedLabel];
+    if (asset == null) return null;
+
+    String url;
+    switch (platform) {
+      case 'tiktok':
+        url = customUrl ?? 'https://www.tiktok.com/@$username';
+        break;
+      case 'instagram':
+        url = customUrl ?? 'https://www.instagram.com/$username';
+        break;
+      case 'x':
+      case 'twitter':
+        url = customUrl ?? 'https://x.com/$username';
+        break;
+      case 'pinterest':
+        url = customUrl ?? 'https://www.pinterest.com/$username';
+        break;
+      case 'youtube':
+        url = customUrl ?? 'https://www.youtube.com/@$username';
+        break;
+      default:
+        url = customUrl ?? '';
+    }
+
+    return {'asset': asset, 'url': url};
   }
 }
