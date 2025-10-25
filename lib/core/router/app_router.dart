@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/router/app_router_notifier.dart';
+import 'package:migozz_app/core/utils/pages/deleted_policy.dart';
+import 'package:migozz_app/core/utils/pages/terms_and_policy_screen.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_state.dart';
 import 'package:migozz_app/features/auth/presentation/login/login_entry.dart';
@@ -53,6 +55,16 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
           }
           return const EditProfileScreen();
         },
+      ),
+      GoRoute(
+        path: '/policy-deleted',
+        name: 'policyDeleted',
+        builder: (context, state) => const DataDeletionScreen(),
+      ),
+      GoRoute(
+        path: '/terms-privacy',
+        name: 'terms&Privacy',
+        builder: (context, state) => const TermsPrivacyScreen(),
       ),
       GoRoute(
         path: '/complete-profile',
