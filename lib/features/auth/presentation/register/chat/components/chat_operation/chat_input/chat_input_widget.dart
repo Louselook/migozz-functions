@@ -1,11 +1,17 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/chat/chat_attachment_sheet.dart';
 import 'package:migozz_app/core/components/compuestos/custom_textfield.dart';
 import 'package:migozz_app/core/components/compuestos/custom_tooltip.dart';
-import 'package:audio_waveforms/audio_waveforms.dart';
+
+// ✅ Import condicional para audio_waveforms
+import 'package:audio_waveforms/audio_waveforms.dart'
+    if (dart.library.html) 'audio_waveforms_web.dart';
+
+// ✅ Import del manager (selector automático)
 import 'audio_recorder_manager.dart';
 import 'recording_display.dart';
 import 'audio_player_display.dart';
@@ -72,27 +78,6 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
     super.dispose();
   }
 
-  // @override
-  // void dispose() {
-  //   _holdTimer?.cancel();
-  //   _tooltipEntry?.remove();
-  //   _tooltipEntry = null;
-
-  //   // ✅ Limpiar audio antes de dispose
-  //   _audioManager
-  //       .reset()
-  //       .then((_) {
-  //         _audioManager.dispose();
-  //       })
-  //       .catchError((e) {
-  //         debugPrint('Error en dispose: $e');
-  //         _audioManager.dispose();
-  //       });
-
-  //   widget.controller.removeListener(() {});
-  //   super.dispose();
-  // }
-
   void _clearInputVisual() {
     // Si estamos en modo teléfono, limpiar el campo de teléfono
     if (widget.showPhoneInput) {
@@ -119,6 +104,56 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
     if (_audioManager.audioPath != null) {
       final audioPath = _audioManager.audioPath!;
 
+      // ✅ En web, no podemos validar duración con PlayerController
+      if (kIsWeb) {
+        // En web, usar la duración que ya tenemos del recording
+        final durationInSeconds = _audioManager.maxDuration.inSeconds.toDouble();
+
+        if (durationInSeconds < 5.0) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'El audio es muy corto (${durationInSeconds.toStringAsFixed(1)} segundos). Debe durar entre 5 y 10 segundos',
+                ),
+                backgroundColor: Colors.orange,
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
+          await _audioManager.reset();
+          if (mounted) setState(() {});
+          return;
+        }
+
+        if (durationInSeconds > 10.0) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'El audio es muy largo (${durationInSeconds.toStringAsFixed(1)} segundos). Debe durar entre 5 y 10 segundos',
+                ),
+                backgroundColor: Colors.orange,
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
+          await _audioManager.reset();
+          if (mounted) setState(() {});
+          return;
+        }
+
+        debugPrint(
+          '✅ Audio válido (${durationInSeconds.toStringAsFixed(1)}s), enviando...',
+        );
+
+        widget.onSendAudio?.call(audioPath);
+        _clearInputVisual();
+        if (mounted) setState(() {});
+        return;
+      }
+
+      // ✅ En móvil, validar con PlayerController
       try {
         final tempPlayer = PlayerController();
         await tempPlayer.preparePlayer(
@@ -174,8 +209,6 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
         // ✅ Solo limpiar visual, NO resetear el audio manager todavía
         _clearInputVisual();
 
-        // ❌ NO RESETEAR AQUÍ - se hará después de la confirmación
-        // await _audioManager.reset();
         if (mounted) setState(() {});
       } catch (e) {
         debugPrint('❌ Error al validar duración: $e');
@@ -192,7 +225,6 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
         }
         widget.onSendAudio?.call(audioPath);
         _clearInputVisual();
-        // ❌ NO RESETEAR AQUÍ tampoco
         if (mounted) setState(() {});
       }
     }
@@ -263,7 +295,7 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
           child: Row(
             children: [
               Expanded(child: _buildInputArea()),
-              const SizedBox(width: 6),
+              const SizedBox(width: 8),
               _buildMainButton(hasText),
             ],
           ),
@@ -273,13 +305,12 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
   }
 
   Widget _buildInputArea() {
-    // 🎙️ Grabando audio
+    // 🎙️ Grabando
     if (_audioManager.isRecording) {
       return RecordingDisplay(duration: _audioManager.duration);
     }
 
     // 🎵 Audio grabado listo para enviar
-    // En _buildInputArea() de ChatInputWidget
     if (_audioManager.audioPath != null) {
       return AudioPlayerDisplay(
         playerController: _audioManager.waveformPlayerController,
