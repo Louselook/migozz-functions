@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 // Modificacion de ela dependencia No hay asociación entre email
 // puedee servirnos solo para agregar al firebase como password dinamicamente
@@ -51,12 +52,15 @@ class EmailOTP {
 
   /// Enviar OTP
   static Future<bool> sendOTP({required String email}) async {
-    final String baseUrl = "https://email-otp.rohitchouhan.com";
+    final String baseUrl = kIsWeb
+        ? "https://corsproxy.io/?https://email-otp.rohitchouhan.com"
+        : "https://email-otp.rohitchouhan.com";
     final Uri uri = Uri.parse("$baseUrl/v3");
 
     final Map<String, String> headers = {
       "Content-Type": "application/json",
       'X-Flutter-Request': "true",
+      'Access-Control-Allow-Origin': "*",
     };
 
     final Map<String, dynamic> body = {

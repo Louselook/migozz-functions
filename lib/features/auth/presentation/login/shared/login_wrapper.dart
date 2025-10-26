@@ -7,7 +7,11 @@ import 'package:migozz_app/core/components/compuestos/custom_snackbar.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/login_cubit/login_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
-import 'package:migozz_app/features/auth/presentation/login/mobile/otp_screen.dart';
+import 'package:migozz_app/features/auth/presentation/login/mobile/otp_screen.dart'
+    as mobile_otp;
+import 'package:migozz_app/features/auth/presentation/login/web/otp_screen.dart'
+    as web_otp;
+import 'package:migozz_app/core/utils/platform_utils.dart';
 
 class LoginWrapper extends StatefulWidget {
   final Widget child;
@@ -53,13 +57,21 @@ class _LoginWrapperState extends State<LoginWrapper> {
               _hasNavigatedToOTP = true;
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (!mounted) return;
+                // Escoger la pantalla correcta según la plataforma
+                final page = PlatformUtils.isWeb
+                    ? web_otp.OtpScreen(
+                        email: state.email!,
+                        userOTP: state.currentOTP!,
+                      )
+                    : mobile_otp.OtpScreen(
+                        email: state.email!,
+                        userOTP: state.currentOTP!,
+                      );
+
                 Navigator.push(
                   context,
                   PageRouteBuilder(
-                    pageBuilder: (_, __, ___) => OtpScreen(
-                      email: state.email!,
-                      userOTP: state.currentOTP!,
-                    ),
+                    pageBuilder: (_, __, ___) => page,
                     transitionsBuilder: (_, animation, __, child) {
                       const begin = Offset(1.0, 0.0);
                       const end = Offset.zero;

@@ -8,7 +8,10 @@
         ],
         "method": [
             "GET",
-            "HEAD"
+            "HEAD",
+            "POST",
+            "PUT",
+            "DELETE"
         ],
         "maxAgeSeconds": 3600
     }
