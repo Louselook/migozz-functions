@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/components/atomics/network_list.dart';
+import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user_dto.dart';
 import 'package:migozz_app/features/profile/components/draggable_social_rail.dart';
 import 'package:migozz_app/features/profile/components/social_rail.dart';
@@ -11,7 +12,12 @@ import 'package:migozz_app/features/profile/presentation/profile/web/components/
 
 class WebProfileContent extends StatelessWidget {
   final UserDTO user;
-  const WebProfileContent({super.key, required this.user});
+  final TutorialKeys tutorialKeys;
+  const WebProfileContent({
+    super.key,
+    required this.user,
+    required this.tutorialKeys,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -65,8 +71,14 @@ class WebProfileContent extends StatelessWidget {
                   ),
                 ),
               ),
-              Positioned(left: 0, top: 0, bottom: 0, child: SideMenu()),
-              const ProfileSearchButton(),
+              Positioned(
+                left: 0,
+                top: 0,
+                bottom: 0,
+                child: SideMenu(tutorialKeys: tutorialKeys),
+              ),
+              // Assign tutorial key so the tutorial can target this button
+              ProfileSearchButton(key: tutorialKeys.searchScreenKey),
               DraggableSocialRail(
                 key: ValueKey('social_rail_${size.width}'),
                 initialPosition: initialSocialPosition,

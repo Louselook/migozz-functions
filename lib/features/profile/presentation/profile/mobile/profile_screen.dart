@@ -4,14 +4,20 @@ import 'package:migozz_app/core/components/atomics/network_list.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user_dto.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/profile/components/draggable_social_rail.dart';
+import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/profile/components/bottom_nav.dart';
 import 'package:migozz_app/features/profile/components/background_image.dart';
 import 'package:migozz_app/features/profile/components/social_rail.dart';
-import 'package:migozz_app/features/search/presentation/search_screen.dart';
+import 'package:migozz_app/features/search/mobile/presentation/search_screen.dart';
 
 class MobileProfileContent extends StatefulWidget {
   final UserDTO user;
-  const MobileProfileContent({super.key, required this.user});
+  final TutorialKeys tutorialKeys;
+  const MobileProfileContent({
+    super.key,
+    required this.user,
+    required this.tutorialKeys,
+  });
 
   @override
   State<MobileProfileContent> createState() => _MobileProfileContentState();
@@ -40,7 +46,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
     return Scaffold(
       body: BackgroundImage(
         avatarUrl: avatarUrl,
-        tutorialKeys: null,
+        tutorialKeys: widget.tutorialKeys,
         name: name.isNotEmpty ? name : 'NOMBRE VACÍO',
         displayName: username,
         comunityCount: totalFollowers.toString(),
@@ -87,7 +93,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                 onProfileUpdated: () {
                   context.read<AuthCubit>().refreshUserProfile();
                 },
-                tutorialKeys: null,
+                tutorialKeys: widget.tutorialKeys,
               ),
             ),
           ],

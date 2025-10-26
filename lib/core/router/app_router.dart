@@ -19,6 +19,10 @@ import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/regis
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/profile/presentation/profile_entry.dart';
 import 'package:migozz_app/features/profile/presentation/stats/web/profile_stats.dart';
+import 'package:migozz_app/features/search/mobile/presentation/search_screen.dart'
+    as mobile_search;
+import 'package:migozz_app/features/search/web/presentation/search_screen.dart'
+    as web_search;
 
 GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
   return GoRouter(
@@ -44,6 +48,18 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       GoRoute(
         path: '/profile',
         builder: (context, state) => const ProfileEntry(),
+      ),
+      GoRoute(
+        path: '/search',
+        builder: (context, state) {
+          // Decide between web and mobile search screen using available MediaQuery size.
+          final screenWidth = MediaQuery.of(context).size.width;
+          // Breakpoint: use web search when wide enough (>= 900)
+          if (screenWidth >= 900) {
+            return const web_search.SearchScreen();
+          }
+          return const mobile_search.SearchScreen();
+        },
       ),
       GoRoute(
         path: '/edit-profile',
@@ -166,7 +182,12 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         // 🟢 Caso: perfil completo — permitir acceder a rutas privadas útiles
         if (userProfile.complete) {
           // Rutas permitidas cuando el perfil está completo (añadir aquí según necesites)
-          const allowedWhenComplete = {'/profile', '/edit-profile', '/stats'};
+          const allowedWhenComplete = {
+            '/profile',
+            '/edit-profile',
+            '/stats',
+            '/search',
+          };
 
           if (!allowedWhenComplete.contains(goingTo)) {
             return '/profile';

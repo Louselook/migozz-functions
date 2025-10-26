@@ -15,7 +15,7 @@ class ProfileEntry extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ProfileWrapper(
-      builder: (context, authState) {
+      builder: (context, authState, tutorialKeys) {
         // aquí authState.userProfile ya es seguro (no nulo)
         // pero por seguridad hacemos null-check
         final user = authState.userProfile;
@@ -33,11 +33,14 @@ class ProfileEntry extends StatelessWidget {
 
         // decide la UI
         if (PlatformUtils.isWeb) {
-          // web_profile_content.dart debe exponer WebProfileContent({required user,...})
-          return web.WebProfileContent(user: user);
+          // web_profile_content.dart debe exponer WebProfileContent({required user, required tutorialKeys})
+          return web.WebProfileContent(user: user, tutorialKeys: tutorialKeys);
         } else {
-          // mobile/mobile_profile_content.dart debe exponer MobileProfileContent({required user,...})
-          return mobile.MobileProfileContent(user: user);
+          // mobile/mobile_profile_content.dart debe exponer MobileProfileContent({required user, required tutorialKeys})
+          return mobile.MobileProfileContent(
+            user: user,
+            tutorialKeys: tutorialKeys,
+          );
         }
       },
     );

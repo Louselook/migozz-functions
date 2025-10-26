@@ -14,7 +14,12 @@ import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 ///
 /// Recibe un builder que dibuja el contenido final cuando el perfil está listo.
 class ProfileWrapper extends StatefulWidget {
-  final Widget Function(BuildContext context, AuthState authState) builder;
+  final Widget Function(
+    BuildContext context,
+    AuthState authState,
+    TutorialKeys tutorialKeys,
+  )
+  builder;
 
   const ProfileWrapper({super.key, required this.builder});
 
@@ -87,7 +92,7 @@ class _ProfileWrapperState extends State<ProfileWrapper> {
         }
 
         // Si llegamos aquí, el perfil existe y está listo -> delegamos al builder
-        return widget.builder(context, authState);
+        return widget.builder(context, authState, tutorialKeys);
       },
     );
   }

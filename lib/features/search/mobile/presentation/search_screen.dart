@@ -2,16 +2,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/features/profile/components/bottom_nav.dart';
 import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
-import 'package:migozz_app/features/search/components/input_search.dart';
-import 'package:migozz_app/features/search/components/filter_search.dart';
-import 'package:migozz_app/features/search/components/Suggested_Reels.dart';
-import 'package:migozz_app/features/search/components/result_search.dart';
+import 'package:migozz_app/features/search/mobile/components/Input_search.dart';
+import 'package:migozz_app/features/search/mobile/components/filter_search.dart';
+import 'package:migozz_app/features/search/mobile/components/result_search.dart';
+import 'package:migozz_app/features/search/mobile/components/suggested_reels.dart';
 
 class SearchScreen extends StatefulWidget {
-
-  const SearchScreen({
-      super.key,
-    });
+  const SearchScreen({super.key});
 
   @override
   State<SearchScreen> createState() => _SearchScreenState();

@@ -1,9 +1,11 @@
 // lib/features/profile/components/side_menu.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 
 class SideMenu extends StatelessWidget {
-  const SideMenu({super.key});
+  final TutorialKeys? tutorialKeys;
+  const SideMenu({super.key, this.tutorialKeys});
 
   @override
   Widget build(BuildContext context) {
@@ -74,6 +76,7 @@ class SideMenu extends StatelessWidget {
                   isSelected: true,
                   isSmallScreen: isSmallScreen,
                   isMediumScreen: isMediumScreen,
+                  tutorialKey: tutorialKeys?.profileScreenKey,
                   onTap: () {
                     // Ya estamos en el perfil
                   },
@@ -92,6 +95,7 @@ class SideMenu extends StatelessWidget {
                   label: 'My Stats juan',
                   isSmallScreen: isSmallScreen,
                   isMediumScreen: isMediumScreen,
+                  tutorialKey: tutorialKeys?.statScreenKey,
                   onTap: () {
                     debugPrint('hola');
                     context.go('/stats');
@@ -102,6 +106,7 @@ class SideMenu extends StatelessWidget {
                   label: 'Configuration',
                   isSmallScreen: isSmallScreen,
                   isMediumScreen: isMediumScreen,
+                  tutorialKey: tutorialKeys?.editScreenKey,
                   onTap: () {
                     context.go('/edit-profile');
                   },
@@ -174,6 +179,7 @@ class _MenuItem extends StatelessWidget {
   final bool isSmallScreen;
   final bool isMediumScreen;
   final VoidCallback onTap;
+  final GlobalKey? tutorialKey;
 
   const _MenuItem({
     required this.icon,
@@ -182,6 +188,7 @@ class _MenuItem extends StatelessWidget {
     required this.isSmallScreen,
     required this.isMediumScreen,
     required this.onTap,
+    this.tutorialKey,
   });
 
   @override
@@ -216,6 +223,7 @@ class _MenuItem extends StatelessWidget {
     final spacing = isSmallScreen ? 4.0 : 6.0;
 
     return InkWell(
+      key: tutorialKey,
       onTap: onTap,
       child: Container(
         padding: EdgeInsets.symmetric(
