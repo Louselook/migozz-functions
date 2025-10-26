@@ -306,7 +306,7 @@ class _ImageSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Image(
-      image: AssetImage('assets/images/otp_image.png'),
+      image: AssetImage('assets/images/otp_image.webp'),
       width: 300,
     );
   }

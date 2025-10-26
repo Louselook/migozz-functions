@@ -89,11 +89,12 @@ class SideMenu extends StatelessWidget {
                 ),
                 _MenuItem(
                   icon: Icons.bar_chart,
-                  label: 'My Stats',
+                  label: 'My Stats juan',
                   isSmallScreen: isSmallScreen,
                   isMediumScreen: isMediumScreen,
                   onTap: () {
-                    // context.go('/stats');
+                    debugPrint('hola');
+                    context.go('/stats');
                   },
                 ),
                 _MenuItem(

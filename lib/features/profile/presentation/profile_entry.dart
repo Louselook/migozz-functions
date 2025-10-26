@@ -4,7 +4,7 @@ import 'package:migozz_app/core/utils/platform_utils.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/profile_screen.dart'
     as mobile;
 import 'package:migozz_app/features/profile/presentation/profile/shared/profile_wrapper.dart';
-import 'package:migozz_app/features/profile/presentation/profile/web/Profile_screen.dart'
+import 'package:migozz_app/features/profile/presentation/profile/web/profile_page.dart'
     as web;
 
 /// Entry que decide si renderiza la UI web o mobile.

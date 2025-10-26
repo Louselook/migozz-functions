@@ -10,14 +10,15 @@ import 'package:migozz_app/features/auth/presentation/login/login_entry.dart';
 import 'package:migozz_app/features/auth/presentation/onboarding/onboarding_entry.dart';
 // import 'package:migozz_app/features/auth/presentation/login/otp_screen.dart';
 import 'package:migozz_app/features/auth/presentation/register/register_screen.dart';
-import 'package:migozz_app/features/profile/presentation/edit/edit_profile_screen.dart';
-import 'package:migozz_app/features/profile/presentation/profile/web/edit_profile.dart'
+import 'package:migozz_app/features/profile/presentation/edit/mobile/edit_profile_screen.dart';
+import 'package:migozz_app/features/profile/presentation/edit/web/edit_profile.dart'
     show EditProfile;
 import 'package:migozz_app/features/profile/presentation/profile/modules/complete_profile.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/ia_chat_screen.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/profile/presentation/profile_entry.dart';
+import 'package:migozz_app/features/profile/presentation/stats/web/profile_stats.dart';
 
 GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
   return GoRouter(
@@ -85,10 +86,16 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
           return const IaChatScreen();
         },
       ),
+      GoRoute(
+        path: '/stats',
+        name: 'stats',
+        builder: (context, state) => const ProfileStats(),
+      ),
     ],
     redirect: (context, state) {
       final status = goRouterNotifier.authStatus;
       final goingTo = state.matchedLocation;
+      debugPrint('REDIRECT -> status: $status, goingTo: $goingTo');
 
       final authCubit = context.read<AuthCubit>();
       final registerCubit = context.read<RegisterCubit>();
@@ -159,7 +166,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         // 🟢 Caso: perfil completo — permitir acceder a rutas privadas útiles
         if (userProfile.complete) {
           // Rutas permitidas cuando el perfil está completo (añadir aquí según necesites)
-          const allowedWhenComplete = {'/profile', '/edit-profile'};
+          const allowedWhenComplete = {'/profile', '/edit-profile', '/stats'};
 
           if (!allowedWhenComplete.contains(goingTo)) {
             return '/profile';

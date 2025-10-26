@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:migozz_app/features/profile/presentation/edit/edit_profile_screen.dart';
-import 'package:migozz_app/features/profile/presentation/profile/modules/profile_stats.dart';
+import 'package:migozz_app/features/profile/presentation/edit/mobile/edit_profile_screen.dart';
+import 'package:migozz_app/features/profile/presentation/stats/mobile/profile_stats.dart';
 import 'package:migozz_app/features/profile/presentation/profile_entry.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 

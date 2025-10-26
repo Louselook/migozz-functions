@@ -3,11 +3,11 @@ import 'package:migozz_app/core/components/atomics/network_list.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user_dto.dart';
 import 'package:migozz_app/features/profile/components/draggable_social_rail.dart';
 import 'package:migozz_app/features/profile/components/social_rail.dart';
-import 'package:migozz_app/features/profile/presentation/profile/web/Components/profile_background_gradients.dart';
+import 'package:migozz_app/features/profile/components/utils/side_menu.dart';
+import 'package:migozz_app/features/profile/presentation/profile/web/components/profile_background_gradients.dart';
 import 'package:migozz_app/features/profile/presentation/profile/web/components/profile_header.dart';
 import 'package:migozz_app/features/profile/presentation/profile/web/components/profile_search_button.dart';
 import 'package:migozz_app/features/profile/presentation/profile/web/components/publications_content.dart';
-import 'package:migozz_app/features/profile/presentation/profile/web/utils/side_menu.dart';
 
 class WebProfileContent extends StatelessWidget {
   final UserDTO user;
