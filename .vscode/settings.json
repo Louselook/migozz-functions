@@ -1,4 +1,3 @@
 {
-    "cmake.ignoreCMakeListsMissing": true,
-    "FSharp.suggestGitignore": false
+    "cmake.ignoreCMakeListsMissing": true
 }

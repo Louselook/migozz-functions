@@ -17,7 +17,7 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
-
+  
   get gradient => null;
 
   @override
@@ -176,10 +176,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           gradient: RadialGradient(
                             center: Alignment.bottomRight,
                             radius: 0.6,
-                            colors: [
-                              AppColors.radialEffect,
-                              Colors.transparent,
-                            ],
+                            colors: [AppColors.radialEffect, Colors.transparent],
                             stops: [0, 1],
                           ),
                         ),
