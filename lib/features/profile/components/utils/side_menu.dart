@@ -92,7 +92,7 @@ class SideMenu extends StatelessWidget {
                 ),
                 _MenuItem(
                   icon: Icons.bar_chart,
-                  label: 'My Stats juan',
+                  label: 'My Stats',
                   isSmallScreen: isSmallScreen,
                   isMediumScreen: isMediumScreen,
                   tutorialKey: tutorialKeys?.statScreenKey,

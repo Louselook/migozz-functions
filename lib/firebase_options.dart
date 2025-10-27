@@ -53,7 +53,7 @@ class DefaultFirebaseOptions {
     projectId: 'migozz-e2a21',
     authDomain: 'migozz-e2a21.firebaseapp.com',
     databaseURL: 'https://migozz-e2a21-default-rtdb.firebaseio.com',
-    storageBucket: 'migozz-e2a21.firebasestorage.app',
+    storageBucket: 'migozz-e2a21.appspot.com', // ✅ corregido
     measurementId: 'G-BFN3GXRHXM',
   );
 
@@ -63,7 +63,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '895592952324',
     projectId: 'migozz-e2a21',
     databaseURL: 'https://migozz-e2a21-default-rtdb.firebaseio.com',
-    storageBucket: 'migozz-e2a21.firebasestorage.app',
+    storageBucket: 'migozz-e2a21.appspot.com', // ✅ corregido
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
@@ -72,7 +72,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '895592952324',
     projectId: 'migozz-e2a21',
     databaseURL: 'https://migozz-e2a21-default-rtdb.firebaseio.com',
-    storageBucket: 'migozz-e2a21.firebasestorage.app',
+    storageBucket: 'migozz-e2a21.appspot.com', // ✅ corregido
     androidClientId:
         '895592952324-acochpgr4ch4o97669jjpafeosgv7khg.apps.googleusercontent.com',
     iosClientId:

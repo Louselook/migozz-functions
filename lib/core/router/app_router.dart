@@ -105,7 +105,8 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       GoRoute(
         path: '/stats',
         name: 'stats',
-        builder: (context, state) => const ProfileStats(),
+                builder: (context, state) =>  WebProfileStats(user:context.read<AuthCubit>().state.userProfile!  ),
+
       ),
     ],
     redirect: (context, state) {
