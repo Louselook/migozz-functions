@@ -1,9 +1,9 @@
+// lib/features/profile/presentation/profile/web/web_profile_stats.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user_dto.dart';
 import 'package:migozz_app/features/profile/components/draggable_social_rail.dart';
-import 'package:migozz_app/features/profile/components/social_rail.dart';
 import 'package:migozz_app/features/profile/components/utils/side_menu.dart';
 import 'package:migozz_app/features/profile/presentation/profile/web/components/profile_background_gradients.dart';
 
@@ -73,9 +73,9 @@ class _WebProfileStatsState extends State<WebProfileStats> {
         'following': s.followingCount,
         'subscribers': s.subscribers,
       };
-
       for (final entry in stats.entries) {
-        final normalizedKey = _fieldRules[entry.key.toLowerCase()] ?? entry.key;
+        final normalizedKey =
+            _fieldRules[entry.key.toLowerCase()] ?? entry.key.toLowerCase();
         totals[normalizedKey] = (totals[normalizedKey] ?? 0) + entry.value;
       }
     }
@@ -117,10 +117,7 @@ class _WebProfileStatsState extends State<WebProfileStats> {
     );
 
     final leftMenuWidth = isSmall ? 80.0 : 100.0;
-
     final totalFollowers = _totalsGlobal['followers'] ?? 0;
-    final socialLinks =
-        <SocialLink>[]; // podrías cargarlo igual que en el profile
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -146,11 +143,11 @@ class _WebProfileStatsState extends State<WebProfileStats> {
                 : SafeArea(
                     child: Center(
                       child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 900),
+                        constraints: const BoxConstraints(maxWidth: 600),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 24,
-                            vertical: 40,
+                            vertical: 30,
                           ),
                           child: SingleChildScrollView(
                             child: Column(
@@ -165,21 +162,21 @@ class _WebProfileStatsState extends State<WebProfileStats> {
                                   ),
                                 ),
                                 const SizedBox(height: 30),
+                                // Métricas principales (como mobile)
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
                                   children: [
                                     _Metric(
                                       icon: Icons.favorite,
                                       label:
                                           '${_formatNum(_totalsGlobal['likes'] ?? 0)} Likes',
                                     ),
-                                    const SizedBox(width: 50),
                                     _Metric(
                                       icon: Icons.reply,
                                       label:
                                           '${_formatNum(_totalsGlobal['shares'] ?? 0)} Shares',
                                     ),
-                                    const SizedBox(width: 50),
                                     _Metric(
                                       icon: Icons.people,
                                       label:
@@ -232,6 +229,7 @@ class _WebProfileStatsState extends State<WebProfileStats> {
                                   ],
                                 ),
                                 const SizedBox(height: 24),
+                                // Redes individuales
                                 ..._socials.map((s) {
                                   final data = s.toJson();
                                   final name = s.name;
@@ -274,11 +272,11 @@ class _WebProfileStatsState extends State<WebProfileStats> {
                     ),
                   ),
           ),
-          Positioned(left: 0, top: 0, bottom: 0, child: SideMenu()),
+          const Positioned(left: 0, top: 0, bottom: 0, child: SideMenu()),
           DraggableSocialRail(
             key: ValueKey('social_rail_${size.width}'),
             initialPosition: initialSocialPosition,
-            links: socialLinks,
+            links: const [],
             itemSize: socialItemSize,
             iconSize: socialIconSize,
           ),
@@ -293,10 +291,13 @@ final Map<String, String> _fieldRules = {
   "fans": "followers",
   "subscribers": "followers",
   "subscriber": "followers",
+  "subscriberCount": "followers",
   "followersCount": "followers",
   "hearts": "likes",
+  "likes_count": "likes",
   "favorites": "likes",
   "videos": "media",
+  "videoCount": "media",
 };
 
 String _formatKey(String key) {
@@ -310,7 +311,7 @@ String _formatKey(String key) {
 }
 
 String _formatNum(int n) {
-  if (n >= 1000000) return '${(n / 1000000).toStringAsFixed(1)}M';
+  if (n >= 1000000) return '${(n / 1000000).toStringAsFixed(2)}M';
   if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)}K';
   return n.toString();
 }
@@ -331,24 +332,80 @@ List<MapEntry<String, Map<String, dynamic>>> _parseEcosystem(
   } else if (ecosystem is Map<String, dynamic>) {
     ecosystem.forEach((k, v) {
       if (v is Map<String, dynamic>) {
-        if (v.length == 1 && v.values.first is Map<String, dynamic>) {
-          final innerKey = v.keys.first;
-          final innerVal = v[innerKey] as Map<String, dynamic>;
-          out.add(MapEntry(innerKey, innerVal));
-        } else {
-          bool added = false;
-          v.forEach((subk, subv) {
-            if (subv is Map<String, dynamic>) {
-              out.add(MapEntry(subk, subv));
-              added = true;
-            }
-          });
-          if (!added) out.add(MapEntry(k, Map<String, dynamic>.from(v)));
-        }
+        out.add(MapEntry(k, v));
       }
     });
   }
   return out;
+}
+
+class SocialStats {
+  final String name;
+  final int followers;
+  final int likes;
+  final int subscribers;
+  final int shares;
+  final int viewCount;
+  final int mediaCount;
+  final int followingCount;
+
+  SocialStats({
+    required this.name,
+    required this.subscribers,
+    required this.followers,
+    required this.likes,
+    required this.shares,
+    required this.viewCount,
+    required this.mediaCount,
+    required this.followingCount,
+  });
+
+  factory SocialStats.fromMap(String name, Map<String, dynamic> data) {
+    int parse(dynamic v) {
+      if (v == null) return 0;
+      if (v is int) return v;
+      if (v is double) return v.round();
+      return int.tryParse(v.toString().replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+    }
+
+    int extract(List<String> keys) {
+      for (final k in keys) {
+        if (data.containsKey(k)) return parse(data[k]);
+      }
+      for (final entry in data.entries) {
+        if (keys.any(
+          (k) => entry.key.toLowerCase().contains(k.toLowerCase()),
+        )) {
+          return parse(entry.value);
+        }
+      }
+      return 0;
+    }
+
+    return SocialStats(
+      name: name,
+      followers: extract(['followers']),
+      likes: extract(['likes']),
+      shares: extract(['shares']),
+      viewCount: extract(['viewCount']),
+      mediaCount: extract(['mediaCount']),
+      subscribers: extract(['subscriberCount', 'subscribers']),
+      followingCount: extract(['following']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'followers': followers,
+      'likes': likes,
+      'shares': shares,
+      'viewCount': viewCount,
+      'mediaCount': mediaCount,
+      'following': followingCount,
+      'subscribersCount': subscribers,
+    };
+  }
 }
 
 class _Metric extends StatelessWidget {
@@ -370,7 +427,6 @@ class _DataCard extends StatelessWidget {
   final String? image;
   final List<_RowData> rows;
   const _DataCard({required this.title, required this.rows, this.image});
-
   @override
   Widget build(BuildContext context) => Card(
     color: Colors.grey[900],
@@ -428,65 +484,4 @@ class _RowData extends StatelessWidget {
       ],
     ),
   );
-}
-
-/// Modelo social igual que en mobile
-class SocialStats {
-  final String name;
-  final int followers;
-  final int likes;
-  final int subscribers;
-  final int shares;
-  final int viewCount;
-  final int mediaCount;
-  final int followingCount;
-
-  SocialStats({
-    required this.name,
-    required this.followers,
-    required this.likes,
-    required this.subscribers,
-    required this.shares,
-    required this.viewCount,
-    required this.mediaCount,
-    required this.followingCount,
-  });
-
-  factory SocialStats.fromMap(String name, Map<String, dynamic> map) {
-    return SocialStats(
-      name: name,
-      followers: (map['followers'] ?? 0) is int
-          ? map['followers']
-          : int.tryParse(map['followers'].toString()) ?? 0,
-      likes: (map['likes'] ?? 0) is int
-          ? map['likes']
-          : int.tryParse(map['likes'].toString()) ?? 0,
-      subscribers: (map['subscribers'] ?? 0) is int
-          ? map['subscribers']
-          : int.tryParse(map['subscribers'].toString()) ?? 0,
-      shares: (map['shares'] ?? 0) is int
-          ? map['shares']
-          : int.tryParse(map['shares'].toString()) ?? 0,
-      viewCount: (map['viewCount'] ?? 0) is int
-          ? map['viewCount']
-          : int.tryParse(map['viewCount'].toString()) ?? 0,
-      mediaCount: (map['mediaCount'] ?? 0) is int
-          ? map['mediaCount']
-          : int.tryParse(map['mediaCount'].toString()) ?? 0,
-      followingCount: (map['followingCount'] ?? 0) is int
-          ? map['followingCount']
-          : int.tryParse(map['followingCount'].toString()) ?? 0,
-    );
-  }
-
-  Map<String, dynamic> toJson() => {
-    'name': name,
-    'followers': followers,
-    'likes': likes,
-    'subscribers': subscribers,
-    'shares': shares,
-    'viewCount': viewCount,
-    'mediaCount': mediaCount,
-    'followingCount': followingCount,
-  };
 }

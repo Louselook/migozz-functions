@@ -1,4 +1,3 @@
-// lib/features/profile/components/side_menu.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
@@ -13,17 +12,18 @@ class SideMenu extends StatelessWidget {
     final isSmallScreen = size.width < 600;
     final isMediumScreen = size.width >= 600 && size.width < 1200;
 
-    // Responsive: Menu width
+    // Ruta actual
+    final currentRoute = GoRouterState.of(context).uri.toString();
+
+    // Responsive configs
     final menuWidth = isSmallScreen
         ? 90.0
         : isMediumScreen
         ? 100.0
         : 150.0;
 
-    // Responsive: Border radius
     final borderRadius = isSmallScreen ? 15.0 : 20.0;
 
-    // Responsive: Create button size
     final createButtonSize = isSmallScreen
         ? 56.0
         : isMediumScreen
@@ -72,38 +72,43 @@ class SideMenu extends StatelessWidget {
               children: [
                 _MenuItem(
                   icon: Icons.person_outline,
-                  label: 'profile',
-                  isSelected: true,
+                  label: 'Profile',
+                  isSelected:
+                      currentRoute == '/profile' ||
+                      currentRoute == '/' ||
+                      currentRoute.contains('profile'),
                   isSmallScreen: isSmallScreen,
                   isMediumScreen: isMediumScreen,
                   tutorialKey: tutorialKeys?.profileScreenKey,
                   onTap: () {
-                    // Ya estamos en el perfil
+                    context.go('/profile');
                   },
                 ),
                 _MenuItem(
                   icon: Icons.link,
                   label: 'Feed',
+                  isSelected: currentRoute.contains('feed'),
                   isSmallScreen: isSmallScreen,
                   isMediumScreen: isMediumScreen,
                   onTap: () {
-                    // context.go('/feed');
+                    context.go('/feed');
                   },
                 ),
                 _MenuItem(
                   icon: Icons.bar_chart,
                   label: 'My Stats',
+                  isSelected: currentRoute.contains('stats'),
                   isSmallScreen: isSmallScreen,
                   isMediumScreen: isMediumScreen,
                   tutorialKey: tutorialKeys?.statScreenKey,
                   onTap: () {
-                    debugPrint('hola');
                     context.go('/stats');
                   },
                 ),
                 _MenuItem(
                   icon: Icons.settings,
                   label: 'Configuration',
+                  isSelected: currentRoute.contains('edit-profile'),
                   isSmallScreen: isSmallScreen,
                   isMediumScreen: isMediumScreen,
                   tutorialKey: tutorialKeys?.editScreenKey,
@@ -115,7 +120,7 @@ class SideMenu extends StatelessWidget {
             ),
           ),
 
-          // Botón Create en la parte inferior
+          // Botón Create
           Padding(
             padding: EdgeInsets.only(bottom: isSmallScreen ? 20.0 : 30.0),
             child: Column(
@@ -193,21 +198,18 @@ class _MenuItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Responsive: Icon size
     final iconSize = isSmallScreen
         ? 24.0
         : isMediumScreen
         ? 26.0
         : 28.0;
 
-    // Responsive: Font size
     final fontSize = isSmallScreen
         ? 9.0
         : isMediumScreen
         ? 10.0
         : 11.0;
 
-    // Responsive: Padding
     final verticalPadding = isSmallScreen
         ? 12.0
         : isMediumScreen
