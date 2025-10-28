@@ -89,7 +89,6 @@ class SuggestionCard extends StatelessWidget {
                 'assets/icons/instagram-reel.svg',
                 width: iconSize,
                 height: iconSize,
-                color: Colors.white70,
               );
             }
             // Fallback placeholder when asset is missing or still loading

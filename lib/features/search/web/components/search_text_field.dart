@@ -24,30 +24,30 @@ class SearchTextField extends StatelessWidget {
       decoration: InputDecoration(
         hintText: 'Search',
         hintStyle: TextStyle(
-          color: Colors.white.withOpacity(0.5),
+          color: Colors.white.withValues(alpha: 0.5),
           fontSize: 15,
         ),
         prefixIcon: Icon(
           Icons.search,
           size: prefixIconSize,
-          color: Colors.white.withOpacity(0.7),
+          color: Colors.white.withValues(alpha: 0.7),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(borderRadius),
           borderSide: BorderSide(
-            color: Colors.white.withOpacity(0.3),
+            color: Colors.white.withValues(alpha: 0.3),
             width: 1,
           ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(borderRadius),
           borderSide: BorderSide(
-            color: Colors.white.withOpacity(0.5),
+            color: Colors.white.withValues(alpha: 0.5),
             width: 1.5,
           ),
         ),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.1),
+        fillColor: Colors.white.withValues(alpha: 0.1),
         contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
         isDense: true,
       ),

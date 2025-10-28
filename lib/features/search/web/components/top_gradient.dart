@@ -19,7 +19,7 @@ class TopGradient extends StatelessWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              const Color(0xFF722583).withOpacity(0.3),
+              const Color(0xFF722583).withValues(alpha: 0.3),
               Colors.transparent,
             ],
           ),
