@@ -109,6 +109,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
     if (socialEcosystem == null || socialEcosystem.isEmpty) return 0;
     int total = 0;
     for (final social in socialEcosystem) {
+      debugPrint('redes $socialEcosystem');
       for (final platformData in social.values) {
         if (platformData is Map<String, dynamic>) {
           final followers = platformData['followers'];

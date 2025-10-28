@@ -13,7 +13,37 @@ class EditCubit extends Cubit<EditCubitState> {
   /// Cambiar el campo activo que se está editando
   void setEditItem(EditItem item) => emit(state.copyWith(editItem: item));
 
-  /// Guardar cambios del usuario
+  /// 🔹 Inicializar datos desde el usuario actual para edición
+  void initializeFromUser({
+    List<Map<String, dynamic>>? socialEcosystem,
+    List<String>? category,
+    Map<String, List<String>>? interests,
+  }) {
+    emit(
+      state.copyWith(
+        socialEcosystem: socialEcosystem ?? [],
+        category: category ?? [],
+        interests: interests ?? {},
+      ),
+    );
+  }
+
+  /// 🔹 Actualizar social ecosystem temporalmente
+  void updateSocialEcosystem(List<Map<String, dynamic>> socials) {
+    emit(state.copyWith(socialEcosystem: socials));
+  }
+
+  /// 🔹 Actualizar categorías temporalmente
+  void updateCategory(List<String> categories) {
+    emit(state.copyWith(category: categories));
+  }
+
+  /// 🔹 Actualizar intereses temporalmente
+  void updateInterests(Map<String, List<String>> interests) {
+    emit(state.copyWith(interests: interests));
+  }
+
+  /// 🔹 Guardar cambios del usuario
   Future<void> saveUserProfileField({
     required String userId,
     required Map<String, dynamic> updatedFields,
@@ -25,6 +55,34 @@ class EditCubit extends Cubit<EditCubitState> {
 
       // 🔄 Refresca el AuthCubit automáticamente
       await _authCubit.refreshUserProfile();
+
+      emit(state.copyWith(isSaving: false, success: true));
+    } catch (e) {
+      emit(state.copyWith(isSaving: false, error: e.toString()));
+    }
+  }
+
+  /// 🔹 Guardar todos los cambios pendientes (socialEcosystem, category, interests)
+  Future<void> saveAllPendingChanges(String userId) async {
+    try {
+      emit(state.copyWith(isSaving: true));
+
+      final Map<String, dynamic> updates = {};
+
+      if (state.socialEcosystem != null) {
+        updates['socialEcosystem'] = state.socialEcosystem;
+      }
+      if (state.category != null && state.category!.isNotEmpty) {
+        updates['category'] = state.category;
+      }
+      if (state.interests != null && state.interests!.isNotEmpty) {
+        updates['interests'] = state.interests;
+      }
+
+      if (updates.isNotEmpty) {
+        await _userService.updateUserProfile(userId, updates);
+        await _authCubit.refreshUserProfile();
+      }
 
       emit(state.copyWith(isSaving: false, success: true));
     } catch (e) {
@@ -47,10 +105,6 @@ class EditCubit extends Cubit<EditCubitState> {
       emit(state.copyWith(isSaving: false, error: e.toString()));
     }
   }
-
-  // void updateSocialEcosystem(List<Map<String, dynamic>> socials) {
-  //   emit(state.copyWith(socialEcosystemEdit: socials));
-  // }
 
   /// Limpiar estado
   void clear() => emit(const EditCubitState());

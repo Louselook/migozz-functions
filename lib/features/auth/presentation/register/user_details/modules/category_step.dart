@@ -5,10 +5,18 @@ import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/user_details_button.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
+import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 
 class CategoryStep extends StatefulWidget {
   final PageController controller;
-  const CategoryStep({super.key, required this.controller});
+  final MoreUserDetailsMode mode;
+
+  const CategoryStep({
+    super.key,
+    required this.controller,
+    this.mode = MoreUserDetailsMode.register,
+  });
 
   @override
   State<CategoryStep> createState() => _CategoryStepState();
@@ -24,6 +32,25 @@ class _CategoryStepState extends State<CategoryStep> {
     super.initState();
     // Cargar datos de Firebase al inicializar la vista
     fetchCollection();
+    // Inicializar categorías seleccionadas según el modo
+    _initializeSelectedCategories();
+  }
+
+  /// 🔹 Inicializar categorías seleccionadas según el modo
+  void _initializeSelectedCategories() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.mode == MoreUserDetailsMode.register) {
+        final registerState = context.read<RegisterCubit>().state;
+        setState(() {
+          selectedCategories = registerState.category ?? [];
+        });
+      } else {
+        final editState = context.read<EditCubit>().state;
+        setState(() {
+          selectedCategories = editState.category ?? [];
+        });
+      }
+    });
   }
 
   Future<void> fetchCollection() async {
@@ -65,10 +92,17 @@ class _CategoryStepState extends State<CategoryStep> {
     }
   }
 
+  /// 🔹 Actualizar el cubit correspondiente según el modo
+  void _updateCubit() {
+    if (widget.mode == MoreUserDetailsMode.register) {
+      context.read<RegisterCubit>().setCategories(selectedCategories);
+    } else {
+      context.read<EditCubit>().updateCategory(selectedCategories);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final cubit = context.read<RegisterCubit>();
-
     return SafeArea(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40),
@@ -119,9 +153,8 @@ class _CategoryStepState extends State<CategoryStep> {
                                           selectedCategories.add(category);
                                         }
                                       });
-                                      cubit.setCategories(
-                                        selectedCategories,
-                                      ); // actualizar cubit
+                                      // 🔹 Actualizar el cubit correspondiente
+                                      _updateCubit();
                                       debugPrint(
                                         "🏷️ Categorías seleccionadas: $selectedCategories",
                                       );
@@ -141,6 +174,7 @@ class _CategoryStepState extends State<CategoryStep> {
                 controller: widget.controller,
                 context: context,
                 action: UserDetailsAction.next,
+                mode: widget.mode,
               ),
             ),
           ],

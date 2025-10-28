@@ -3,22 +3,64 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/components/atomics/network_list.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/core/utils/responsive_utils.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/social_icon_card.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/user_details_button.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
+import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 
-class SocialEcosystemStep extends StatelessWidget {
+class SocialEcosystemStep extends StatefulWidget {
   final PageController controller;
-  const SocialEcosystemStep({super.key, required this.controller});
+  final MoreUserDetailsMode mode;
+
+  const SocialEcosystemStep({
+    super.key,
+    required this.controller,
+    this.mode = MoreUserDetailsMode.register,
+  });
+
+  @override
+  State<SocialEcosystemStep> createState() => _SocialEcosystemStepState();
+}
+
+class _SocialEcosystemStepState extends State<SocialEcosystemStep> {
+  @override
+  void initState() {
+    super.initState();
+    _initializeSocialEcosystem();
+  }
+
+  void _initializeSocialEcosystem() {
+    if (widget.mode == MoreUserDetailsMode.edit) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final editState = context.read<EditCubit>().state;
+        debugPrint(
+          '🔹 EditCubit socialEcosystem: ${editState.socialEcosystem}',
+        );
+
+        if (editState.socialEcosystem == null ||
+            editState.socialEcosystem!.isEmpty) {
+          // Si el EditCubit está vacío, cargar desde el AuthCubit
+          final authState = context.read<AuthCubit>().state;
+          if (authState.userProfile?.socialEcosystem != null) {
+            debugPrint(
+              '🔹 Cargando desde AuthCubit: ${authState.userProfile!.socialEcosystem}',
+            );
+            context.read<EditCubit>().updateSocialEcosystem(
+              authState.userProfile!.socialEcosystem!,
+            );
+          }
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Usar las utilidades responsive
     final scaleFactor = context.scaleFactor;
     final deviceType = context.deviceType;
-    final cubit = context.read<RegisterCubit>();
 
-    // Calcular paddings y espaciados responsivos usando las utilidades
     final horizontalPadding = ResponsiveUtils.scaleValue(
       24.0,
       scaleFactor,
@@ -44,7 +86,6 @@ class SocialEcosystemStep extends StatelessWidget {
       maxValue: 20.0,
     );
 
-    // Determinar número de columnas según el tipo de dispositivo
     final crossAxisCount = ResponsiveUtils.getGridColumns(deviceType);
     final mainAxisSpacing = ResponsiveUtils.scaleValue(
       16.0,
@@ -59,16 +100,12 @@ class SocialEcosystemStep extends StatelessWidget {
       maxValue: 16.0,
     );
 
-    // Calcular tamaño disponible para cada card considerando el espacio de la pantalla
     final availableWidth =
         MediaQuery.of(context).size.width - (horizontalPadding * 2);
     final cardWidth =
         (availableWidth - (crossAxisSpacing * (crossAxisCount - 1))) /
         crossAxisCount;
-    final cardSize = Size(
-      cardWidth,
-      cardWidth * 1.1,
-    ); // Proporción ligeramente rectangular
+    final cardSize = Size(cardWidth, cardWidth * 1.1);
 
     return Container(
       padding: EdgeInsets.symmetric(
@@ -79,11 +116,18 @@ class SocialEcosystemStep extends StatelessWidget {
         child: Column(
           children: [
             SizedBox(height: topSpacing),
-            const PrimaryText("Your Social Ecosystem"),
-            const SecondaryText("Add your platforms"),
+            PrimaryText(
+              widget.mode == MoreUserDetailsMode.register
+                  ? "Your Social Ecosystem"
+                  : "Edit Social Ecosystem",
+            ),
+            SecondaryText(
+              widget.mode == MoreUserDetailsMode.register
+                  ? "Add your platforms"
+                  : "Add or remove platforms",
+            ),
             SizedBox(height: contentSpacing),
 
-            // contenido
             Expanded(
               child: Center(
                 child: ConstrainedBox(
@@ -95,7 +139,7 @@ class SocialEcosystemStep extends StatelessWidget {
                         : double.infinity,
                   ),
                   child: GridView.builder(
-                    padding: EdgeInsets.symmetric(vertical: 6.0),
+                    padding: const EdgeInsets.symmetric(vertical: 6.0),
                     itemCount: socials.length,
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: crossAxisCount,
@@ -109,17 +153,29 @@ class SocialEcosystemStep extends StatelessWidget {
                       final iconSize = cardSize.width * 0.4;
                       final clampedIconSize = iconSize.clamp(24.0, 48.0);
 
-                      // Obtener la lista seleccionada del cubit
+                      // ✅ Obtener la lista según el modo
                       final selectedList =
-                          context
-                              .watch<RegisterCubit>()
-                              .state
-                              .socialEcosystem ??
-                          [];
-                      // Para saber si ya está agregada:
-                      final selected = selectedList.any(
-                        (e) => e.keys.first == label.toLowerCase(),
-                      );
+                          widget.mode == MoreUserDetailsMode.register
+                          ? context
+                                    .watch<RegisterCubit>()
+                                    .state
+                                    .socialEcosystem ??
+                                []
+                          : context.watch<EditCubit>().state.socialEcosystem ??
+                                [];
+
+                      // 🔹 CORRECCIÓN: Comparar en minúsculas (normalizar)
+                      final selected = selectedList.any((e) {
+                        final platformKey = e.keys.first.toLowerCase();
+                        final labelLower = label.toLowerCase();
+                        return platformKey == labelLower;
+                      });
+
+                      // 🔍 DEBUG
+                      if (index == 0) {
+                        debugPrint('🎨 Verificando $label: selected=$selected');
+                        debugPrint('🎨 selectedList: $selectedList');
+                      }
 
                       return SocialIconCard(
                         label: label,
@@ -127,57 +183,7 @@ class SocialEcosystemStep extends StatelessWidget {
                         iconSize: clampedIconSize,
                         sizeIcon: cardSize,
                         isSelected: selected,
-                        onTap: () async {
-                          final current =
-                              List<Map<String, Map<String, dynamic>>>.from(
-                                cubit.state.socialEcosystem ?? [],
-                              );
-                          final index = current.indexWhere(
-                            (e) => e.keys.first == label.toLowerCase(),
-                          );
-
-                          if (index == -1) {
-                            // No está vinculado → agregar
-                            await cubit.startSocialAuth(
-                              context,
-                              label,
-                              iconByLabel[label]!,
-                            );
-                            // Nota: startSocialAuth debe agregar automáticamente a socialEcosystem al terminar
-                          } else {
-                            // Ya está vinculado → confirmar eliminación
-                            final remove = await showDialog<bool>(
-                              context: context,
-                              builder: (_) => AlertDialog(
-                                title: Text("Desvincular $label?"),
-                                content: Text(
-                                  "¿Estás seguro que quieres desvincular $label?",
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(context).pop(false),
-                                    child: const Text("No"),
-                                  ),
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(context).pop(true),
-                                    child: const Text("Sí"),
-                                  ),
-                                ],
-                              ),
-                            );
-
-                            if (remove == true) {
-                              current.removeAt(index);
-                              cubit.setSocialEcosystem(current);
-                            }
-                          }
-
-                          debugPrint(
-                            "🌐 Ecosistema social: ${cubit.state.socialEcosystem}",
-                          );
-                        },
+                        onTap: () => _handleSocialTap(label),
                       );
                     },
                   ),
@@ -194,16 +200,125 @@ class SocialEcosystemStep extends StatelessWidget {
               ),
             ),
 
-            // Botones
             userDetailsButton(
-              cubit: cubit,
-              controller: controller,
+              cubit: context.read<RegisterCubit>(),
+              controller: widget.controller,
               context: context,
               action: UserDetailsAction.back,
+              mode: widget.mode,
             ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _handleSocialTap(String label) async {
+    if (widget.mode == MoreUserDetailsMode.register) {
+      final cubit = context.read<RegisterCubit>();
+      final current = List<Map<String, Map<String, dynamic>>>.from(
+        cubit.state.socialEcosystem ?? [],
+      );
+
+      // 🔹 CORRECCIÓN: Buscar en minúsculas
+      final index = current.indexWhere((e) {
+        final platformKey = e.keys.first.toLowerCase();
+        return platformKey == label.toLowerCase();
+      });
+
+      if (index == -1) {
+        await cubit.startSocialAuth(context, label, iconByLabel[label]!);
+      } else {
+        final remove = await showDialog<bool>(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: Text("Desvincular $label?"),
+            content: Text("¿Estás seguro que quieres desvincular $label?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text("No"),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text("Sí"),
+              ),
+            ],
+          ),
+        );
+
+        if (remove == true) {
+          current.removeAt(index);
+          cubit.setSocialEcosystem(current);
+        }
+      }
+
+      debugPrint(
+        "🌐 Ecosistema social (registro): ${cubit.state.socialEcosystem}",
+      );
+    } else {
+      // Modo edición - NO usar RegisterCubit para evitar redirección
+      final editCubit = context.read<EditCubit>();
+
+      final current = List<Map<String, dynamic>>.from(
+        editCubit.state.socialEcosystem ?? [],
+      );
+
+      // 🔹 CORRECCIÓN: Buscar en minúsculas
+      final index = current.indexWhere((e) {
+        final platformKey = e.keys.first.toLowerCase();
+        return platformKey == label.toLowerCase();
+      });
+
+      if (index == -1) {
+        // 🔹 NUEVO: En modo edición, agregar directamente sin usar RegisterCubit
+        // Esto evita que el router detecte cambios y redirija
+
+        // Mostrar dialog para agregar manualmente (similar a tu flow de registro)
+        final registerCubit = context.read<RegisterCubit>();
+        await registerCubit.startSocialAuth(
+          context,
+          label,
+          iconByLabel[label]!,
+        );
+
+        // Copiar SOLO el elemento nuevo, no todo el estado
+        if (registerCubit.state.socialEcosystem != null) {
+          final newItem = registerCubit.state.socialEcosystem!.last;
+          current.add(newItem);
+          editCubit.updateSocialEcosystem(current);
+
+          // Limpiar el RegisterCubit para evitar redirección
+          registerCubit.reset();
+        }
+      } else {
+        final remove = await showDialog<bool>(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: Text("Desvincular $label?"),
+            content: Text("¿Estás seguro que quieres desvincular $label?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text("No"),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text("Sí"),
+              ),
+            ],
+          ),
+        );
+
+        if (remove == true) {
+          current.removeAt(index);
+          editCubit.updateSocialEcosystem(current);
+        }
+      }
+
+      debugPrint(
+        "🌐 Ecosistema social (edición): ${editCubit.state.socialEcosystem}",
+      );
+    }
   }
 }

@@ -9,10 +9,18 @@ import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/regis
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/interest_section_model.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/user_details_button.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/interests/registration_handler.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
+import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 
 class InterestsStep extends StatefulWidget {
   final PageController controller;
-  const InterestsStep({super.key, required this.controller});
+  final MoreUserDetailsMode mode;
+
+  const InterestsStep({
+    super.key,
+    required this.controller,
+    this.mode = MoreUserDetailsMode.register,
+  });
 
   @override
   State<InterestsStep> createState() => _InterestsStepState();
@@ -27,6 +35,29 @@ class _InterestsStepState extends State<InterestsStep> {
   void initState() {
     super.initState();
     fetchCollection();
+    _initializeSelectedInterests();
+  }
+
+  /// 🔹 Inicializar intereses seleccionados según el modo
+  void _initializeSelectedInterests() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Map<String, List<String>> existingInterests = {};
+
+      if (widget.mode == MoreUserDetailsMode.register) {
+        final registerState = context.read<RegisterCubit>().state;
+        existingInterests = registerState.interests ?? {};
+      } else {
+        final editState = context.read<EditCubit>().state;
+        existingInterests = editState.interests ?? {};
+      }
+
+      // Convertir el mapa a un Set de intereses individuales
+      setState(() {
+        selectedInterests = existingInterests.values
+            .expand((list) => list)
+            .toSet();
+      });
+    });
   }
 
   Future<void> fetchCollection() async {
@@ -73,6 +104,15 @@ class _InterestsStepState extends State<InterestsStep> {
     }
   }
 
+  /// 🔹 Actualizar el cubit correspondiente
+  void _updateCubit(Map<String, List<String>> selectedBySection) {
+    if (widget.mode == MoreUserDetailsMode.register) {
+      context.read<RegisterCubit>().setInterests(selectedBySection);
+    } else {
+      context.read<EditCubit>().updateInterests(selectedBySection);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -99,52 +139,86 @@ class _InterestsStepState extends State<InterestsStep> {
 
             const SizedBox(height: 40),
             // Botones
-            userDetailsButton(
-              controller: widget.controller,
-              context: context,
-              action: UserDetailsAction.finalRegister,
-              onFinalAction: () async {
-                final registerCubit = context.read<RegisterCubit>();
-                final authCubit = context.read<AuthCubit>();
-
-                // Construir intereses por sección
-                final selectedBySection = <String, List<String>>{};
-                for (final section in dynamicSections) {
-                  final picked = section.options
-                      .where((o) => selectedInterests.contains(o))
-                      .toList();
-                  if (picked.isNotEmpty) {
-                    selectedBySection[section.title] = picked;
-                  }
-                }
-
-                // Llamar al handler centralizado (se encarga de validar, subir archivos y completar registro)
-                try {
-                  await RegistrationHandler.completeRegistration(
-                    context: context,
-                    registerCubit: registerCubit,
-                    authCubit: authCubit,
-                    selectedInterests: selectedBySection,
-                  );
-                } catch (e) {
-                  // En caso de error inesperado (el handler ya muestra snackbar en su flujo)
-                  debugPrint('❌ [InterestsStep] Error en completeRegistration: $e');
-                  if (context.mounted) {
-                    LoadingOverlay.hide(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Error completando registro: $e'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                }
-              },
-            ),
+            _buildActionButton(),
           ],
         ),
       ),
     );
+  }
+
+  /// 🔹 Construir botón de acción según el modo
+  Widget _buildActionButton() {
+    if (widget.mode == MoreUserDetailsMode.register) {
+      // En modo registro, usar el botón original con registration_handler
+      return userDetailsButton(
+        controller: widget.controller,
+        context: context,
+        action: UserDetailsAction.finalRegister,
+        onFinalAction: () async {
+          final registerCubit = context.read<RegisterCubit>();
+          final authCubit = context.read<AuthCubit>();
+
+          // Construir intereses por sección
+          final selectedBySection = <String, List<String>>{};
+          for (final section in dynamicSections) {
+            final picked = section.options
+                .where((o) => selectedInterests.contains(o))
+                .toList();
+            if (picked.isNotEmpty) {
+              selectedBySection[section.title] = picked;
+            }
+          }
+
+          // Llamar al handler centralizado
+          try {
+            await RegistrationHandler.completeRegistration(
+              context: context,
+              registerCubit: registerCubit,
+              authCubit: authCubit,
+              selectedInterests: selectedBySection,
+            );
+          } catch (e) {
+            debugPrint('❌ [InterestsStep] Error en completeRegistration: $e');
+            if (context.mounted) {
+              // ignore: use_build_context_synchronously
+              LoadingOverlay.hide(context);
+              // ignore: use_build_context_synchronously
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Error completando registro: $e'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          }
+        },
+      );
+    } else {
+      // En modo edición, simplemente guardar y volver
+      return ElevatedButton(
+        onPressed: () {
+          // Construir intereses por sección y actualizar el cubit
+          final selectedBySection = <String, List<String>>{};
+          for (final section in dynamicSections) {
+            final picked = section.options
+                .where((o) => selectedInterests.contains(o))
+                .toList();
+            if (picked.isNotEmpty) {
+              selectedBySection[section.title] = picked;
+            }
+          }
+
+          _updateCubit(selectedBySection);
+
+          // Volver (el guardado se hará desde MoreUserDetails con el botón Save)
+          Navigator.of(context).pop();
+        },
+        style: ElevatedButton.styleFrom(
+          minimumSize: const Size(double.infinity, 50),
+        ),
+        child: const Text('Done'),
+      );
+    }
   }
 
   Widget _buildSection(InterestSectionModel section, int index) {
@@ -194,6 +268,18 @@ class _InterestsStepState extends State<InterestsStep> {
                       selectedInterests.add(opt);
                     }
                   });
+
+                  // 🔹 Actualizar el cubit en tiempo real
+                  final selectedBySection = <String, List<String>>{};
+                  for (final sec in dynamicSections) {
+                    final picked = sec.options
+                        .where((o) => selectedInterests.contains(o))
+                        .toList();
+                    if (picked.isNotEmpty) {
+                      selectedBySection[sec.title] = picked;
+                    }
+                  }
+                  _updateCubit(selectedBySection);
                 },
               );
             }).toList(),

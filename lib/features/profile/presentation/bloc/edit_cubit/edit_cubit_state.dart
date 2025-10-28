@@ -19,14 +19,20 @@ class EditCubitState extends Equatable {
   final bool isSaving;
   final bool success;
   final String? error;
-  final List<Map<String, dynamic>>? socialEcosystemEdit;
+
+  // 🔹 Datos temporales para edición (antes de guardar)
+  final List<Map<String, dynamic>>? socialEcosystem;
+  final List<String>? category;
+  final Map<String, List<String>>? interests;
 
   const EditCubitState({
     this.editItem = EditItem.empty,
     this.isSaving = false,
     this.success = false,
     this.error,
-    this.socialEcosystemEdit,
+    this.socialEcosystem,
+    this.category,
+    this.interests,
   });
 
   EditCubitState copyWith({
@@ -34,14 +40,18 @@ class EditCubitState extends Equatable {
     bool? isSaving,
     bool? success,
     String? error,
-    final List<Map<String, dynamic>>? socialEcosystemEdit,
+    List<Map<String, dynamic>>? socialEcosystem,
+    List<String>? category,
+    Map<String, List<String>>? interests,
   }) {
     return EditCubitState(
       editItem: editItem ?? this.editItem,
       isSaving: isSaving ?? this.isSaving,
       success: success ?? this.success,
       error: error,
-      socialEcosystemEdit: socialEcosystemEdit ?? this.socialEcosystemEdit,
+      socialEcosystem: socialEcosystem ?? this.socialEcosystem,
+      category: category ?? this.category,
+      interests: interests ?? this.interests,
     );
   }
 
@@ -51,6 +61,8 @@ class EditCubitState extends Equatable {
     isSaving,
     success,
     error,
-    socialEcosystemEdit,
+    socialEcosystem,
+    category,
+    interests,
   ];
 }

@@ -302,13 +302,37 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       icon: Icons.share_outlined,
                       text: 'Edit Socials',
                       onTap: () {
+                        final userId = state.firebaseUser?.uid;
+                        if (userId == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Error: User not logged in'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                          return;
+                        }
+
                         final editCubit = context.read<EditCubit>();
                         editCubit.setEditItem(EditItem.socialEcosystem);
+
+                        debugPrint(
+                          '🔹 [EditProfileScreen] Navegando a MoreUserDetails en modo EDIT',
+                        );
+                        debugPrint('🔹 userId: $userId');
+
+                        // 🔹 CORRECCIÓN CRÍTICA: Pasar modo, userId y EditCubit
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) =>
-                                const MoreUserDetails(pageIndicator: 0),
+                            builder: (_) => BlocProvider.value(
+                              value: editCubit,
+                              child: MoreUserDetails(
+                                pageIndicator: 0,
+                                mode: MoreUserDetailsMode.edit, // 🔹 CRÍTICO
+                                userId: userId, // 🔹 CRÍTICO
+                              ),
+                            ),
                           ),
                         );
                       },
