@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/features/profile/components/bottom_nav.dart';
 import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
-import 'package:migozz_app/features/search/mobile/components/Input_search.dart';
+import 'package:migozz_app/features/search/mobile/components/input_search.dart';
 import 'package:migozz_app/features/search/mobile/components/filter_search.dart';
 import 'package:migozz_app/features/search/mobile/components/result_search.dart';
 import 'package:migozz_app/features/search/mobile/components/suggested_reels.dart';

@@ -3,7 +3,7 @@ import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
 import 'package:migozz_app/features/profile/components/utils/side_menu.dart';
 import 'package:migozz_app/features/search/web/components/filter_search.dart';
 import 'package:migozz_app/features/search/web/components/result_search.dart';
-import 'package:migozz_app/features/search/web/components/Input_search.dart';
+import 'package:migozz_app/features/search/web/components/input_search.dart';
 import 'package:migozz_app/features/search/web/components/bottom_gradient.dart';
 import 'package:migozz_app/features/search/web/components/search_content_container.dart';
 import 'package:migozz_app/features/search/web/components/suggested_reels.dart';
