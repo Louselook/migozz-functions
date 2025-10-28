@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/features/search/web/components/search_result_card.dart';
+
 /// ResultSearch realiza una búsqueda simple en la colección `users || profiles_public`
 /// por `username` y `displayName`. Muestra los resultados en una lista.
 class ResultSearch extends StatefulWidget {
@@ -33,46 +34,84 @@ class _ResultSearchState extends State<ResultSearch> {
   Future<List<Map<String, dynamic>>> _search(String q) async {
     if (q.isEmpty) return [];
 
-    // Búsqueda simple por prefijo. Firestore no tiene startsWith directo,
-    // usamos range query: >= q and <= q + '\uf8ff'
-    final end = '$q\uf8ff';
+    final qTrim = q.trim();
+    final qLower = qTrim.toLowerCase();
+    final end = '\$qTrim\uf8ff';
+    final endLower = '\$qLower\uf8ff';
 
-    final List<Map<String, dynamic>> results = [];
+    final List<Map<String, dynamic>> candidates = [];
+    final seen = <String>{};
 
     try {
-      // Buscar por userName en la colección 'users'
-      final uSnap = await _firestore
-          .collection('users')
-          .where('userName', isGreaterThanOrEqualTo: q)
-          .where('userName', isLessThanOrEqualTo: end)
-          .limit(50)
-          .get();
+      final queries = <Query<Map<String, dynamic>>>[
+        _firestore
+            .collection('users')
+            .where('userName', isGreaterThanOrEqualTo: qTrim)
+            .where('userName', isLessThanOrEqualTo: end)
+            .limit(50),
+        _firestore
+            .collection('users')
+            .where('displayName', isGreaterThanOrEqualTo: qTrim)
+            .where('displayName', isLessThanOrEqualTo: end)
+            .limit(50),
+        _firestore
+            .collection('users')
+            .where('userNameLower', isGreaterThanOrEqualTo: qLower)
+            .where('userNameLower', isLessThanOrEqualTo: endLower)
+            .limit(50),
+        _firestore
+            .collection('users')
+            .where('displayNameLower', isGreaterThanOrEqualTo: qLower)
+            .where('displayNameLower', isLessThanOrEqualTo: endLower)
+            .limit(50),
+      ];
 
-      for (final doc in uSnap.docs) {
-        final data = doc.data();
-        results.add({'id': doc.id, ...data});
-      }
-
-      // Buscar por displayName (evitamos duplicados por id)
-      final dSnap = await _firestore
-          .collection('users')
-          .where('displayName', isGreaterThanOrEqualTo: q)
-          .where('displayName', isLessThanOrEqualTo: end)
-          .limit(50)
-          .get();
-
-      for (final doc in dSnap.docs) {
-        if (!results.any((r) => r['id'] == doc.id)) {
-          final data = doc.data();
-          results.add({'id': doc.id, ...data});
+      for (final qRef in queries) {
+        try {
+          final snap = await qRef.get();
+          for (final doc in snap.docs) {
+            if (seen.contains(doc.id)) continue;
+            seen.add(doc.id);
+            final data = doc.data();
+            candidates.add({'id': doc.id, ...data});
+          }
+        } catch (e) {
+          // ignore this particular query failure and continue
         }
       }
     } catch (e) {
-      // En caso de error, devolver lista vacía
-      return [];
+      // ignore and continue
     }
 
-    return results;
+    final List<Map<String, dynamic>> matched = [];
+    for (final m in candidates) {
+      final uname = ((m['userName'] ?? m['username'] ?? ''))
+          .toString()
+          .toLowerCase();
+      final dname = ((m['displayName'] ?? '')).toString().toLowerCase();
+      if (uname.contains(qLower) || dname.contains(qLower)) matched.add(m);
+    }
+
+    if (matched.isNotEmpty) return matched;
+
+    // Fallback: scan limited batch
+    try {
+      final snap = await _firestore.collection('users').limit(200).get();
+      for (final doc in snap.docs) {
+        if (seen.contains(doc.id)) continue;
+        final data = doc.data();
+        final uname = ((data['userName'] ?? data['username'] ?? ''))
+            .toString()
+            .toLowerCase();
+        final dname = ((data['displayName'] ?? '')).toString().toLowerCase();
+        if (uname.contains(qLower) || dname.contains(qLower)) {
+          matched.add({'id': doc.id, ...data});
+        }
+      }
+    } catch (e) {
+      // errores ignorados
+    }
+    return matched;
   }
 
   @override

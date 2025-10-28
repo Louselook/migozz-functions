@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'dart:typed_data';
 
 /// Card individual para mostrar una sugerencia de reel
 class SuggestionCard extends StatelessWidget {
@@ -79,11 +81,24 @@ class SuggestionCard extends StatelessWidget {
           color: Colors.black54,
           borderRadius: BorderRadius.circular((4.0 * scale).clamp(3.0, 6.0)),
         ),
-        child: SvgPicture.asset(
-          'assets/icons/instagram-reel.svg',
-          width: iconSize,
-          height: iconSize,
-          color: Colors.white70,
+        child: FutureBuilder<ByteData>(
+          future: rootBundle.load('assets/icons/instagram-reel.svg'),
+          builder: (context, snap) {
+            if (snap.connectionState == ConnectionState.done && snap.hasData) {
+              return SvgPicture.asset(
+                'assets/icons/instagram-reel.svg',
+                width: iconSize,
+                height: iconSize,
+                color: Colors.white70,
+              );
+            }
+            // Fallback placeholder when asset is missing or still loading
+            return SizedBox(
+              width: iconSize,
+              height: iconSize,
+              child: Icon(Icons.movie, color: Colors.white70, size: iconSize),
+            );
+          },
         ),
       ),
     );

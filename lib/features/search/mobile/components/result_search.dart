@@ -35,73 +35,94 @@ class _ResultSearchState extends State<ResultSearch> {
   Future<List<Map<String, dynamic>>> _search(String q) async {
     if (q.isEmpty) return [];
 
-    // Búsqueda simple por prefijo. Firestore no tiene startsWith directo,
-    // usamos range query: >= q and <= q + '\uf8ff'
-    final end = '$q\uf8ff';
+    final qTrim = q.trim();
+    final qLower = qTrim.toLowerCase();
+    final end = '\$qTrim\uf8ff';
+    final endLower = '\$qLower\uf8ff';
 
-    final List<Map<String, dynamic>> results = [];
+    final List<Map<String, dynamic>> candidates = [];
+    final seen = <String>{};
 
+    // Try a few queries that may return candidates. Firestore queries are
+    // case-sensitive, so we also do client-side, case-insensitive substring
+    // filtering after collecting candidates. If nothing is found, we fall
+    // back to scanning a small batch and filtering locally.
     try {
-      // Buscar por userName en la colección 'users'
-      final uSnap = await _firestore
-          .collection('users')
-          .where('userName', isGreaterThanOrEqualTo: q)
-          .where('userName', isLessThanOrEqualTo: end)
-          .limit(50)
-          .get();
+      final queries = <Query<Map<String, dynamic>>>[
+        _firestore
+            .collection('users')
+            .where('userName', isGreaterThanOrEqualTo: qTrim)
+            .where('userName', isLessThanOrEqualTo: end)
+            .limit(50),
+        _firestore
+            .collection('users')
+            .where('displayName', isGreaterThanOrEqualTo: qTrim)
+            .where('displayName', isLessThanOrEqualTo: end)
+            .limit(50),
+        _firestore
+            .collection('users')
+            .where('userNameLower', isGreaterThanOrEqualTo: qLower)
+            .where('userNameLower', isLessThanOrEqualTo: endLower)
+            .limit(50),
+        _firestore
+            .collection('users')
+            .where('displayNameLower', isGreaterThanOrEqualTo: qLower)
+            .where('displayNameLower', isLessThanOrEqualTo: endLower)
+            .limit(50),
+      ];
 
-      for (final doc in uSnap.docs) {
-        final data = doc.data();
-        results.add({'id': doc.id, ...data});
-      }
-
-      // Debug: imprimir primeros documentos recibidos (hasta 3) para inspección
-      try {
-        for (
-          var i = 0;
-          i < (uSnap.docs.length < 3 ? uSnap.docs.length : 3);
-          i++
-        ) {
-          final d = uSnap.docs[i];
-          // ignore: avoid_print
-          print('uSnap doc ${d.id}: ${d.data()}');
-        }
-        // ignore: empty_catches
-      } catch (e) {}
-
-      // Buscar por displayName (evitamos duplicados por id)
-      final dSnap = await _firestore
-          .collection('users')
-          .where('displayName', isGreaterThanOrEqualTo: q)
-          .where('displayName', isLessThanOrEqualTo: end)
-          .limit(50)
-          .get();
-
-      for (final doc in dSnap.docs) {
-        if (!results.any((r) => r['id'] == doc.id)) {
-          final data = doc.data();
-          results.add({'id': doc.id, ...data});
+      for (final qRef in queries) {
+        try {
+          final snap = await qRef.get();
+          for (final doc in snap.docs) {
+            if (seen.contains(doc.id)) continue;
+            seen.add(doc.id);
+            final data = doc.data();
+            candidates.add({'id': doc.id, ...data});
+          }
+        } catch (e) {
+          // ignore this particular query failure and continue with others
         }
       }
-
-      try {
-        for (
-          var i = 0;
-          i < (dSnap.docs.length < 3 ? dSnap.docs.length : 3);
-          i++
-        ) {
-          final d = dSnap.docs[i];
-          // ignore: avoid_print
-          print('dSnap doc ${d.id}: ${d.data()}');
-        }
-        // ignore: empty_catches
-      } catch (e) {}
     } catch (e) {
-      // En caso de error, devolver lista vacía
-      return [];
+      // ignore and continue to client-side filtering / fallback below
     }
 
-    return results;
+    // Client-side case-insensitive substring filter (covers partial and
+    // lowercase/uppercase differences).
+    final List<Map<String, dynamic>> matched = [];
+    for (final m in candidates) {
+      final uname = ((m['userName'] ?? m['username'] ?? ''))
+          .toString()
+          .toLowerCase();
+      final dname = ((m['displayName'] ?? '')).toString().toLowerCase();
+      if (uname.contains(qLower) || dname.contains(qLower)) {
+        matched.add(m);
+      }
+    }
+
+    if (matched.isNotEmpty) return matched;
+
+    // Fallback: scan a limited batch and filter client-side. This is heavier
+    // but limited to avoid scanning the whole collection.
+    try {
+      final snap = await _firestore.collection('users').limit(200).get();
+      for (final doc in snap.docs) {
+        if (seen.contains(doc.id)) continue;
+        final data = doc.data();
+        final uname = ((data['userName'] ?? data['username'] ?? ''))
+            .toString()
+            .toLowerCase();
+        final dname = ((data['displayName'] ?? '')).toString().toLowerCase();
+        if (uname.contains(qLower) || dname.contains(qLower)) {
+          matched.add({'id': doc.id, ...data});
+        }
+      }
+    } catch (e) {
+      // ignore fallback errors
+    }
+
+    return matched;
   }
 
   @override
