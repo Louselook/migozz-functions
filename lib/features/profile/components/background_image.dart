@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:migozz_app/features/profile/components/info_user_profile.dart';
 import 'package:migozz_app/features/profile/components/scroll_sheet.dart';
@@ -55,7 +57,7 @@ class BackgroundImage extends StatelessWidget {
                     comunityCount: comunityCount,
                     nameComunity: nameComunity,
                     voiceNoteUrl: voiceNoteUrl,
-                    tutorialKeys: tutorialKeys, // ✅ Pasar aquí
+                    tutorialKeys: tutorialKeys,
                   ),
                 ),
               ];
@@ -86,7 +88,10 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
   final String displayName;
   final String comunityCount;
   final String nameComunity;
-  final TutorialKeys? tutorialKeys; // ✅ Agregar aquí
+  final TutorialKeys? tutorialKeys;
+
+  // Cacheamos el future para que no se regenere en cada build
+  Future<bool>? _imageHeightFuture;
 
   _ProfileHeaderDelegate({
     required this.maxHeight,
@@ -98,7 +103,7 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
     required this.displayName,
     required this.comunityCount,
     required this.nameComunity,
-    this.tutorialKeys, // ✅ Agregar aquí
+    this.tutorialKeys,
   });
 
   @override
@@ -111,7 +116,76 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(covariant _ProfileHeaderDelegate oldDelegate) {
     return oldDelegate.maxHeight != maxHeight ||
         oldDelegate.minHeight != minHeight ||
-        oldDelegate.bottomPaddingForCard != bottomPaddingForCard;
+        oldDelegate.bottomPaddingForCard != bottomPaddingForCard ||
+        oldDelegate.avatarUrl != avatarUrl;
+  }
+
+  /// Obtiene la ui.Image desde un ImageProvider (NetworkImage / AssetImage)
+  Future<ui.Image?> _getImageFromProvider(
+    ImageProvider provider,
+    ImageConfiguration config,
+  ) {
+    final completer = Completer<ui.Image?>();
+    final stream = provider.resolve(config);
+    late ImageStreamListener listener;
+
+    listener = ImageStreamListener(
+      (ImageInfo info, bool synchronousCall) {
+        debugPrint(
+          "🟢 _getImageFromProvider: image resolved ${info.image.width}x${info.image.height}",
+        );
+        completer.complete(info.image);
+        stream.removeListener(listener);
+      },
+      onError: (error, stack) {
+        debugPrint("❌ _getImageFromProvider: error -> $error");
+        completer.complete(null);
+        stream.removeListener(listener);
+      },
+    );
+
+    stream.addListener(listener);
+    return completer.future.timeout(
+      const Duration(seconds: 10),
+      onTimeout: () {
+        try {
+          stream.removeListener(listener);
+        } catch (_) {}
+        debugPrint("⚠️ _getImageFromProvider: timeout");
+        return null;
+      },
+    );
+  }
+
+  /// Devuelve true si la imagen tiene altura mayor que threshold (ej. 600)
+  Future<bool> _isImageTallEnough(
+    BuildContext context,
+    String? avatarUrl, {
+    int threshold = 600,
+  }) async {
+    debugPrint("➡️ Evaluando altura de imagen: $avatarUrl");
+    if (avatarUrl == null || avatarUrl.isEmpty) {
+      debugPrint("⚠️ avatarUrl vacía -> usar modo pequeño");
+      return false;
+    }
+
+    final ImageProvider provider = avatarUrl.startsWith('http')
+        ? NetworkImage(avatarUrl)
+        : AssetImage(avatarUrl) as ImageProvider;
+
+    try {
+      final config = createLocalImageConfiguration(context);
+      final ui.Image? img = await _getImageFromProvider(provider, config);
+      if (img == null) {
+        debugPrint("⚠️ Imagen no disponible o no pudo decodificarse");
+        return false;
+      }
+      debugPrint("📏 Altura imagen: ${img.height} (threshold: $threshold)");
+      return img.height > threshold;
+    } catch (e, st) {
+      debugPrint("❌ Error en _isImageTallEnough: $e\n$st");
+      return false;
+    }
   }
 
   @override
@@ -122,120 +196,149 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
   ) {
     final t = (shrinkOffset / (maxExtent - minExtent)).clamp(0.0, 1.0);
 
-    return ClipRect(
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          ColorFiltered(
-            colorFilter: const ColorFilter.matrix(<double>[
-              1.15,
-              0,
-              0,
-              0,
-              0,
-              0,
-              1.15,
-              0,
-              0,
-              0,
-              0,
-              0,
-              1.25,
-              0,
-              0,
-              0,
-              1,
-              1,
-              2,
-              0,
-            ]),
-            child: avatarUrl != null && avatarUrl!.isNotEmpty
-                ? Image.network(
-                    avatarUrl!,
-                    key: ValueKey<String>(avatarUrl!),
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Image.asset(
-                      "assets/images/profileBackground.jpg",
-                      fit: BoxFit.cover,
+    // Inicializamos el future solo una vez por instancia del delegate
+    _imageHeightFuture ??= _isImageTallEnough(context, avatarUrl);
+
+    return FutureBuilder<bool>(
+      future: _imageHeightFuture,
+      builder: (context, snapshot) {
+        final bool useFullBackground = snapshot.data ?? false;
+
+        // Opcional: mostrar logs del estado del snapshot para depuración
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          debugPrint("🕐 FutureBuilder: waiting for image size...");
+        } else if (snapshot.hasError) {
+          debugPrint("❌ FutureBuilder error: ${snapshot.error}");
+        } else {
+          debugPrint(
+            "ℹ️ FutureBuilder result: useFullBackground=$useFullBackground",
+          );
+        }
+
+        return ClipRect(
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // 🔁 Fondo según tamaño de imagen
+              useFullBackground
+                  ? _buildFullBackground()
+                  : _buildCircleAvatarBackground(context),
+
+              // 📇 Card con info del usuario
+              Positioned.fill(
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      bottom: bottomPaddingForCard * (1.2 - 0.17 * t),
+                      left: 16,
+                      right: 16,
                     ),
-                  )
-                : Image.asset(
-                    "assets/images/profileBackground.jpg",
-                    fit: BoxFit.cover,
-                  ),
-          ),
-
-          Positioned.fill(
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: EdgeInsets.only(
-                  bottom: bottomPaddingForCard * (1.2 - 0.25 * t),
-                  left: 16,
-                  right: 16,
-                ),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: MediaQuery.of(context).size.width * 0.6,
-                    minHeight: 80,
-                    maxHeight: 180,
-                  ),
-                  child: const IntrinsicHeight(child: SizedBox.shrink()),
-                ),
-              ),
-            ),
-          ),
-
-          Positioned.fill(
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: EdgeInsets.only(
-                  bottom: bottomPaddingForCard * (1.2 - 0.17 * t),
-                  left: 16,
-                  right: 16,
-                ),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: MediaQuery.of(context).size.width * 0.8,
-                    minHeight: 80,
-                    maxHeight: 180,
-                  ),
-                  child: InfoUserProfile(
-                    name: name,
-                    displayName: displayName,
-                    comunityCount: comunityCount,
-                    nameComunity: nameComunity,
-                    voiceNoteUrl: voiceNoteUrl,
-                    tutorialKeys: tutorialKeys, // ✅ Pasar aquí
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: MediaQuery.of(context).size.width * 0.8,
+                        minHeight: 80,
+                        maxHeight: 180,
+                      ),
+                      child: InfoUserProfile(
+                        name: name,
+                        displayName: displayName,
+                        comunityCount: comunityCount,
+                        nameComunity: nameComunity,
+                        voiceNoteUrl: voiceNoteUrl,
+                        tutorialKeys: tutorialKeys,
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
 
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: 80,
-            child: IgnorePointer(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withValues(alpha: 0.15 + 0.17 * t),
-                    ],
+              // 🌙 Oscurecido inferior
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: 80,
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withValues(alpha: 0.15 + 0.17 * t),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
+    );
+  }
+
+  // ✅ Modo: imagen completa
+  Widget _buildFullBackground() {
+    return ColorFiltered(
+      colorFilter: const ColorFilter.matrix(<double>[
+        1.15,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1.15,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1.25,
+        0,
+        0,
+        0,
+        1,
+        1,
+        2,
+        0,
+      ]),
+      child: avatarUrl != null && avatarUrl!.isNotEmpty
+          ? Image.network(
+              avatarUrl!,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Image.asset(
+                "assets/images/profileBackground.webp",
+                fit: BoxFit.cover,
+              ),
+            )
+          : Image.asset(
+              "assets/images/profileBackground.webp",
+              fit: BoxFit.cover,
+            ),
+    );
+  }
+
+  // ✅ Modo: imagen pequeña (CircleAvatar)
+  Widget _buildCircleAvatarBackground(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset("assets/images/profileBackground.webp", fit: BoxFit.cover),
+        Center(
+          child: CircleAvatar(
+            radius: MediaQuery.of(context).size.width * 0.25,
+            backgroundColor: Colors.black.withValues(alpha: 0.25),
+            backgroundImage: avatarUrl != null && avatarUrl!.isNotEmpty
+                ? NetworkImage(avatarUrl!)
+                : const AssetImage("assets/images/profileBackground.webp")
+                      as ImageProvider,
+          ),
+        ),
+      ],
     );
   }
 }
