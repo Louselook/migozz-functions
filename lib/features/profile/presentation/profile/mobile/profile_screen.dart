@@ -59,6 +59,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
               left: 20,
               top: 70,
               child: GestureDetector(
+                key: widget.tutorialKeys.searchScreenKey,
                 onTap: () {
                   Navigator.push(
                     context,
