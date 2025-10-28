@@ -44,7 +44,8 @@ class RegisterCubit extends Cubit<RegisterState> {
         state.copyWith(email: email, regProgress: RegisterStatusProgress.language),
       );
 
-  void setLanguage(String language) => emit(
+  void setLanguage(String language) => emit( 
+
         state.copyWith(
           language: language,
           regProgress: RegisterStatusProgress.fullName,

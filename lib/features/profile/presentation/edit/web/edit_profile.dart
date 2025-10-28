@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
+import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
+import 'package:migozz_app/features/profile/presentation/edit/modules/edit_my_interest.dart';
 import 'package:migozz_app/features/profile/presentation/profile/web/components/edit_profile_background.dart';
 import 'package:migozz_app/features/profile/presentation/profile/web/components/edit_profile_form.dart';
 import 'package:migozz_app/features/profile/presentation/profile/web/components/edit_profile_image_section.dart';
@@ -62,7 +65,7 @@ class EditProfile extends StatelessWidget {
                           children: [
                             _buildLeftColumn(isSmallScreen),
                             const SizedBox(height: 30),
-                            _buildRightColumn(),
+                            _buildRightColumn(context),
                           ],
                         )
                       : Row(
@@ -70,7 +73,7 @@ class EditProfile extends StatelessWidget {
                           children: [
                             _buildLeftColumn(isSmallScreen),
                             SizedBox(width: isSmallScreen ? 20 : 40),
-                            Expanded(child: _buildRightColumn()),
+                            Expanded(child: _buildRightColumn(context)),
                           ],
                         ),
                 ),
@@ -99,7 +102,13 @@ class EditProfile extends StatelessWidget {
 
         // Obtener avatar desde AuthCubit si está disponible
         final user = context.read<AuthCubit>().state.userProfile;
-        final avatar = user?.avatarUrl;
+        String? avatar = "";
+        if (user?.avatarUrl == null) {
+          avatar = "assets/images/Migozz.webp"; // Usa ruta correcta según pubspec.yaml
+        } else {
+          avatar = user?.avatarUrl!;
+        }
+
 
         return SizedBox(
           width: containerWidth,
@@ -119,7 +128,8 @@ class EditProfile extends StatelessWidget {
     );
   }
 
-  Widget _buildRightColumn() {
+  Widget _buildRightColumn(context) {
+    final userId = context.read<AuthCubit>().state.firebaseUser.uid;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -127,19 +137,52 @@ class EditProfile extends StatelessWidget {
         const EditProfileForm(),
 
         const SizedBox(height: 30),
-
         // Opciones de edición
         EditProfileOptions(
           onEditRecord: () {
-            // TODO: Implementar navegación a Edit Record
           },
-          onEditInterest: () {
-            // TODO: Implementar navegación a Edit My Interest
-          },
-          onEditSocials: () {
-            // TODO: Implementar navegación a Edit Socials
-          },
-        ),
+          onEditInterest: () => 
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const EditInterestsScreen(),
+              ),
+            ),
+          onEditSocials: (){
+              if (userId == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Error: User not logged in'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
+
+              final editCubit = context.read<EditCubit>();
+              editCubit.setEditItem(EditItem.socialEcosystem);
+
+              debugPrint(
+                '🔹 [EditProfileScreen] Navegando a MoreUserDetails en modo EDIT',
+              );
+              debugPrint('🔹 userId: $userId');
+
+              // 🔹 CORRECCIÓN CRÍTICA: Pasar modo, userId y EditCubit
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => BlocProvider.value(
+                    value: editCubit,
+                    child: MoreUserDetails(
+                      pageIndicator: 0,
+                      mode: MoreUserDetailsMode.edit, // 🔹 CRÍTICO
+                      userId: userId, // 🔹 CRÍTICO
+                    ),
+                  ),
+                ),
+              );
+            },
+          )
       ],
     );
   }

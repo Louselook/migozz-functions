@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -187,7 +188,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               if (state.isLoadingProfile) {
                 return const Center(child: CircularProgressIndicator());
               }
-
               final user = state.userProfile;
               if (user == null) {
                 return const Center(
@@ -197,7 +197,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ),
                 );
               }
+              String imageProfile = "";
 
+              if (user.avatarUrl == null || user.avatarUrl!.isEmpty) {
+                imageProfile = "assets/images/Migozz.webp"; // ✅ Usa ruta correcta según pubspec.yaml
+              } else {
+                imageProfile = user.avatarUrl!;
+              }
+              
               // inicializa los controladores solo una vez
               if (nameCtrl.text.isEmpty) {
                 nameCtrl.text = user.displayName;
@@ -225,10 +232,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 child: Column(
                   children: [
                     SizedBox(height: height * 0.02),
+                    
                     ProfileAvatar(
-                      avatarUrl: user.avatarUrl,
+                      avatarUrl: imageProfile,
                       uploading: _uploading,
-                      onEdit: () => _changeAvatar(state.firebaseUser!.uid),
+                      onEdit: () {
+                        if (!kIsWeb) {
+                          _changeAvatar(state.firebaseUser!.uid);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Use the app to change your audio")),
+                          );
+                        }
+                      },
                     ),
                     SizedBox(height: height * 0.025),
 
@@ -281,12 +297,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     ProfileOptionButton(
                       icon: Icons.play_circle_outline,
                       text: 'Edit Record',
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const EditRecordScreen(),
-                        ),
-                      ),
+                      onTap: () {
+                        if(!kIsWeb) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const EditRecordScreen(),
+                            ),
+                          );
+                        }
+                        {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Use the app to change your audio")),
+                          );
+                        }
+                      }
                     ),
                     ProfileOptionButton(
                       icon: Icons.handshake_outlined,
