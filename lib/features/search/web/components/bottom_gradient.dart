@@ -19,7 +19,7 @@ class BottomGradient extends StatelessWidget {
             begin: Alignment.bottomCenter,
             end: Alignment.topCenter,
             colors: [
-              const Color(0xFF722583).withOpacity(0.3),
+              const Color(0xFF722583).withValues(alpha: 0.3),
               Colors.transparent,
             ],
           ),

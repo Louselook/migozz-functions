@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:migozz_app/core/color.dart';
@@ -40,7 +41,6 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
   bool _isLongPressValid = false;
   final GlobalKey _micButtonKey = GlobalKey();
 
-  // ✅ Variables simples para el teléfono
   String _completePhoneNumber = '';
   bool _isPhoneValid = false;
 
@@ -65,60 +65,57 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
     _tooltipEntry?.remove();
     _tooltipEntry = null;
 
-    // Limpiar audio sin setState
     _audioManager.dispose();
 
     widget.controller.removeListener(() {});
     super.dispose();
   }
 
-  // @override
-  // void dispose() {
-  //   _holdTimer?.cancel();
-  //   _tooltipEntry?.remove();
-  //   _tooltipEntry = null;
-
-  //   // ✅ Limpiar audio antes de dispose
-  //   _audioManager
-  //       .reset()
-  //       .then((_) {
-  //         _audioManager.dispose();
-  //       })
-  //       .catchError((e) {
-  //         debugPrint('Error en dispose: $e');
-  //         _audioManager.dispose();
-  //       });
-
-  //   widget.controller.removeListener(() {});
-  //   super.dispose();
-  // }
-
   void _clearInputVisual() {
-    // Si estamos en modo teléfono, limpiar el campo de teléfono
     if (widget.showPhoneInput) {
       setState(() {
         _completePhoneNumber = '';
         _isPhoneValid = false;
       });
     } else {
-      // Para input de texto normal, limpiar el controller
       widget.controller.clear();
     }
-
-    // Quitar foco / teclado para que la UI vuelva a su estado original
     try {
       FocusScope.of(context).unfocus();
     } catch (_) {}
   }
 
   void _toggleAttachments() {
+    // Solo permitir abrir attachments en MOBILE
+    if (kIsWeb) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("If you'd like to add images or audio, please use the app!"),
+          backgroundColor: Colors.blue,
+        ),
+      );
+      return;
+    }
     setState(() => _showAttachments = !_showAttachments);
   }
 
   void _handleSendAudio() async {
+    // Si estamos en web, avisar y no enviar audio
+    if (kIsWeb) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("If you'd like to add images or audio, please use the app!"),
+          backgroundColor: Colors.blue,
+        ),
+      );
+      // asegurar limpiar estado local
+      await _audioManager.reset();
+      if (mounted) setState(() {});
+      return;
+    }
+
     if (_audioManager.audioPath != null) {
       final audioPath = _audioManager.audioPath!;
-
       try {
         final tempPlayer = PlayerController();
         await tempPlayer.preparePlayer(
@@ -130,69 +127,28 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
         final durationInSeconds = freshDurationMs / 1000.0;
         tempPlayer.dispose();
 
-        if (durationInSeconds < 5.0) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'El audio es muy corto (${durationInSeconds.toStringAsFixed(1)} segundos). Debe durar entre 5 y 10 segundos',
-                ),
-                backgroundColor: Colors.orange,
-                duration: const Duration(seconds: 3),
-              ),
-            );
-          }
+        if (durationInSeconds < 5.0 || durationInSeconds > 10.0) {
+          // ignore: use_build_context_synchronously
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(durationInSeconds < 5.0
+                  ? 'El audio es muy corto (${durationInSeconds.toStringAsFixed(1)}s). Debe durar entre 5 y 10 segundos'
+                  : 'El audio es muy largo (${durationInSeconds.toStringAsFixed(1)}s). Debe durar entre 5 y 10 segundos'),
+              backgroundColor: Colors.orange,
+            ),
+          );
           await _audioManager.reset();
           if (mounted) setState(() {});
           return;
         }
 
-        if (durationInSeconds > 10.0) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'El audio es muy largo (${durationInSeconds.toStringAsFixed(1)} segundos). Debe durar entre 5 y 10 segundos',
-                ),
-                backgroundColor: Colors.orange,
-                duration: const Duration(seconds: 3),
-              ),
-            );
-          }
-          await _audioManager.reset();
-          if (mounted) setState(() {});
-          return;
-        }
-
-        debugPrint(
-          '✅ Audio válido (${durationInSeconds.toStringAsFixed(1)}s), enviando...',
-        );
-
-        // ✅ Enviar el audio (el handler creará la copia)
         widget.onSendAudio?.call(audioPath);
-
-        // ✅ Solo limpiar visual, NO resetear el audio manager todavía
         _clearInputVisual();
-
-        // ❌ NO RESETEAR AQUÍ - se hará después de la confirmación
-        // await _audioManager.reset();
         if (mounted) setState(() {});
       } catch (e) {
         debugPrint('❌ Error al validar duración: $e');
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'No se pudo validar la duración. Enviando audio sin validar.',
-              ),
-              backgroundColor: Colors.blue,
-              duration: Duration(seconds: 2),
-            ),
-          );
-        }
         widget.onSendAudio?.call(audioPath);
         _clearInputVisual();
-        // ❌ NO RESETEAR AQUÍ tampoco
         if (mounted) setState(() {});
       }
     }
@@ -204,7 +160,6 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
   }
 
   void _handleMainButton() {
-    // ✅ Si es input de teléfono, usar el número completo
     if (widget.showPhoneInput) {
       if (_isPhoneValid && _completePhoneNumber.isNotEmpty) {
         widget.controller.text = _completePhoneNumber;
@@ -217,22 +172,36 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
       return;
     }
 
-    // Flujo normal para texto
     final hasText = widget.controller.text.trim().isNotEmpty;
 
     if (hasText) {
       widget.onSend();
     } else if (_audioManager.audioPath != null) {
       _handleSendAudio();
+    } else {
+      // Si no hay texto ni audio, abrir tooltip instruccional
+      _showTooltip(context, "Mantén pulsado para grabar");
     }
   }
 
   void _startRecordingPress() async {
+    // En web, no permitimos grabar (mostramos mensaje)
+    if (kIsWeb) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("If you'd like to add images or audio, please use the app!"),
+          backgroundColor: Colors.blue,
+        ),
+      );
+      return;
+    }
+
     await _audioManager.startRecording();
     setState(() {});
   }
 
   void _stopRecordingRelease() async {
+    if (kIsWeb) return;
     await _audioManager.stopRecording();
     setState(() {});
   }
@@ -246,16 +215,18 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        // attachments only on mobile
         AnimatedContainer(
           duration: const Duration(milliseconds: 300),
-          child: _showAttachments
-              ? ChatAttachmentGrid(
+          child: (!_showAttachments || kIsWeb)
+              ? null
+              : ChatAttachmentGrid(
                   onSendImage: (path) {
+                    // if web safety: won't be reachable cause _toggleAttachments blocks on web
                     widget.onSendImage?.call(path);
                     setState(() => _showAttachments = false);
                   },
-                )
-              : null,
+                ),
         ),
 
         Padding(
@@ -273,13 +244,10 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
   }
 
   Widget _buildInputArea() {
-    // 🎙️ Grabando audio
     if (_audioManager.isRecording) {
       return RecordingDisplay(duration: _audioManager.duration);
     }
 
-    // 🎵 Audio grabado listo para enviar
-    // En _buildInputArea() de ChatInputWidget
     if (_audioManager.audioPath != null) {
       return AudioPlayerDisplay(
         playerController: _audioManager.waveformPlayerController,
@@ -302,7 +270,6 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
       );
     }
 
-    // 📞 Input de teléfono con selector de país (MISMO DISEÑO que CustomTextField)
     if (widget.showPhoneInput) {
       return AnimatedSwitcher(
         duration: const Duration(milliseconds: 400),
@@ -310,13 +277,10 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
           return FadeTransition(
             opacity: animation,
             child: SlideTransition(
-              position:
-                  Tween<Offset>(
-                    begin: const Offset(0, 0.1),
-                    end: Offset.zero,
-                  ).animate(
-                    CurvedAnimation(parent: animation, curve: Curves.easeOut),
-                  ),
+              position: Tween<Offset>(
+                begin: const Offset(0, 0.1),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
               child: child,
             ),
           );
@@ -338,19 +302,14 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
             ),
             showDropdownIcon: false,
             style: const TextStyle(color: Colors.white, fontSize: 15),
-            dropdownTextStyle: const TextStyle(
-              color: Colors.white,
-              fontSize: 15,
-            ),
+            dropdownTextStyle: const TextStyle(color: Colors.white, fontSize: 15),
             onChanged: (phone) {
               setState(() {
                 _completePhoneNumber = phone.completeNumber;
                 _isPhoneValid = phone.number.length >= 4;
               });
             },
-            dropdownDecoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-            ),
+            dropdownDecoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
             keyboardType: TextInputType.phone,
             disableLengthCheck: true,
           ),
@@ -358,20 +317,16 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
       );
     }
 
-    // ⌨️ Input de texto normal
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 400),
       transitionBuilder: (child, animation) {
         return FadeTransition(
           opacity: animation,
           child: SlideTransition(
-            position:
-                Tween<Offset>(
-                  begin: const Offset(0, 0.1),
-                  end: Offset.zero,
-                ).animate(
-                  CurvedAnimation(parent: animation, curve: Curves.easeOut),
-                ),
+            position: Tween<Offset>(
+              begin: const Offset(0, 0.1),
+              end: Offset.zero,
+            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
             child: child,
           ),
         );
@@ -387,7 +342,7 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
             _showAttachments ? Icons.close : Icons.attach_file,
             color: _showAttachments ? Colors.red : Colors.grey,
           ),
-          onPressed: _toggleAttachments,
+          onPressed: _toggleAttachments, // toggle ignores on web
         ),
       ),
     );
@@ -401,7 +356,8 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
 
     final overlay = Overlay.of(context);
     final renderBox =
-        _micButtonKey.currentContext!.findRenderObject() as RenderBox;
+        _micButtonKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
     final size = renderBox.size;
     final offset = renderBox.localToGlobal(Offset.zero);
 
@@ -462,18 +418,15 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
       icon = Icons.mic;
     }
 
-    // ✅ Botón unificado para texto Y teléfono
+    // Phone input send button
     if (widget.showPhoneInput) {
-      // Para teléfono, mostrar botón de enviar cuando el número es válido
       return Container(
         height: 48,
         width: 50,
         decoration: BoxDecoration(
           gradient: hasText
               ? AppColors.verticalPinkPurple
-              : LinearGradient(
-                  colors: [Colors.grey.shade700, Colors.grey.shade600],
-                ),
+              : LinearGradient(colors: [Colors.grey.shade700, Colors.grey.shade600]),
           borderRadius: BorderRadius.circular(8),
         ),
         child: IconButton(
@@ -483,10 +436,8 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
       );
     }
 
-    // Botón normal con audio/texto
-    if (hasText ||
-        _audioManager.audioPath != null ||
-        _audioManager.isRecording) {
+    // Send / recording container
+    if (hasText || _audioManager.audioPath != null || _audioManager.isRecording) {
       return Container(
         height: 48,
         width: 50,
@@ -501,6 +452,7 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
       );
     }
 
+    // Default: long-press recording (mobile) or tooltip (web)
     return Listener(
       onPointerDown: (_) {
         _isLongPressValid = false;

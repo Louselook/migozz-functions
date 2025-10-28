@@ -62,6 +62,7 @@ class _OtpScreenState extends State<OtpScreen> {
 
     // llamar a AuthCubit para realizar la autenticación.
     try {
+      // ignore: use_build_context_synchronously
       await context.read<AuthCubit>().login(email: widget.email, otp: otp);
     } catch (e) {
       // Propagate to LoginCubit so UI shows it consistently
@@ -171,7 +172,7 @@ class _OtpScreenState extends State<OtpScreen> {
                       ),
                       const SizedBox(height: 8),
                       SecondaryText(
-                        'OTP code has been sent to ${'${widget.email}'}',
+                        'OTP code has been sent to ${widget.email}',
                         color: AppColors.backgroundGoole,
                         fontSize: 13,
                       ),
@@ -228,13 +229,15 @@ class _OtpScreenState extends State<OtpScreen> {
                                               );
                                             }
                                           } else {
-                                            if (v.isNotEmpty && i < 5)
+                                            if (v.isNotEmpty && i < 5) {
                                               _nodes[i + 1].requestFocus();
+                                            }
                                             final code = _controllers
                                                 .map((c) => c.text)
                                                 .join();
-                                            if (code.length == 6)
+                                            if (code.length == 6) {
                                               _handleOtpCompletion(code);
+                                            }
                                           }
                                         },
                                         onKey: (e) {

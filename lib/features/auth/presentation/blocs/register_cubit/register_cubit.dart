@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:io'; // 👈 No olvides este import para File
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -6,19 +8,17 @@ import 'package:migozz_app/features/auth/data/domain/models/location_dto.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/add_network.dart';
 import 'package:migozz_app/features/auth/services/add_networks/add_networks.dart';
 import 'package:migozz_app/features/auth/services/location_service.dart';
-import 'package:migozz_app/features/auth/services/media_service.dart';
 import 'register_state.dart';
 
 class RegisterCubit extends Cubit<RegisterState> {
   final LocationService _locationService;
-  final UserMediaService _mediaService = UserMediaService();
   final AddNetworkService networkService = AddNetworkService();
 
   File? avatarFile;
   File? voiceNoteFile;
 
   RegisterCubit(this._locationService) : super(const RegisterState()) {
-    fetchLocation(); // 👈 Debe ir dentro de las llaves
+    fetchLocation();
   }
 
   // respuesta de la ia
@@ -38,41 +38,31 @@ class RegisterCubit extends Cubit<RegisterState> {
     emit(state.copyWith(location: location));
   }
 
-  // ---------------------- Otros setters ----------------------
-  // email
+  // ---------------------- Otros setters (sin cambios relevantes) ----------------------
   void updateEmail(String email) => emit(state.copyWith(email: email));
   void setEmail(String email) => emit(
-    state.copyWith(email: email, regProgress: RegisterStatusProgress.language),
-  );
-  // language
+        state.copyWith(email: email, regProgress: RegisterStatusProgress.language),
+      );
+
   void setLanguage(String language) => emit(
-    state.copyWith(
-      language: language,
-      regProgress: RegisterStatusProgress.fullName,
-    ),
-  );
-  // nombre
+        state.copyWith(
+          language: language,
+          regProgress: RegisterStatusProgress.fullName,
+        ),
+      );
+
   void setFullName(String fullName) => emit(
-    state.copyWith(
-      fullName: fullName,
-      regProgress: RegisterStatusProgress.username,
-    ),
-  );
-  // username
+        state.copyWith(fullName: fullName, regProgress: RegisterStatusProgress.username),
+      );
+
   void setUsername(String username) => emit(
-    state.copyWith(
-      username: username,
-      regProgress: RegisterStatusProgress.gender,
-    ),
-  );
-  // gender
+        state.copyWith(username: username, regProgress: RegisterStatusProgress.gender),
+      );
+
   void setGender(String gender) => emit(
-    state.copyWith(
-      gender: gender,
-      regProgress: RegisterStatusProgress.socialEcosystem,
-    ),
-  );
-  // social networks
+        state.copyWith(gender: gender, regProgress: RegisterStatusProgress.socialEcosystem),
+      );
+
   void setSocialEcosystem(List<Map<String, Map<String, dynamic>>> platforms) =>
       emit(
         state.copyWith(
@@ -80,39 +70,40 @@ class RegisterCubit extends Cubit<RegisterState> {
           regProgress: RegisterStatusProgress.location,
         ),
       );
+
   void setSocialEcosystemEmty() =>
       emit(state.copyWith(regProgress: RegisterStatusProgress.location));
 
-  // location
   void setLocation(LocationDTO location) =>
       emit(state.copyWith(location: location));
+
   void setVerifyLocation() => emit(
-    state.copyWith(regProgress: RegisterStatusProgress.emailVerification),
-  );
-  // email verification
+        state.copyWith(regProgress: RegisterStatusProgress.emailVerification),
+      );
+
   void updateEmailVerification(EmailVerification status) => emit(
-    state.copyWith(
-      emailVerification: status,
-      regProgress: RegisterStatusProgress.avatarUrl,
-    ),
-  );
-  // picture profile
+        state.copyWith(
+          emailVerification: status,
+          regProgress: RegisterStatusProgress.avatarUrl,
+        ),
+      );
+
+  // picture profile helpers (no cambian el flujo de registro)
   void setAvatarFile(File file) => avatarFile = file;
   void setAvatarUrl(String avatarUrl) => emit(
-    state.copyWith(
-      avatarUrl: avatarUrl,
-      regProgress: RegisterStatusProgress.phone,
-    ),
-  );
+        state.copyWith(
+          avatarUrl: avatarUrl,
+          regProgress: RegisterStatusProgress.phone,
+        ),
+      );
   void clearAvatarUrl() => emit(state.copyWith(avatarUrl: null));
 
-  // phone
   void setPhone(String phone) => emit(
-    state.copyWith(
-      phone: phone,
-      regProgress: RegisterStatusProgress.voiceNoteUrl,
-    ),
-  );
+        state.copyWith(
+          phone: phone,
+          regProgress: RegisterStatusProgress.voiceNoteUrl,
+        ),
+      );
 
   // voice audio
   void setVoiceNoteFile(File file) {
@@ -135,77 +126,30 @@ class RegisterCubit extends Cubit<RegisterState> {
 
   //category
   void setCategories(List<String>? category) => emit(
-    state.copyWith(
-      category: category,
-      regProgress: RegisterStatusProgress.interests,
-    ),
-  );
+        state.copyWith(
+          category: category,
+          regProgress: RegisterStatusProgress.interests,
+        ),
+      );
   void setInterests(Map<String, List<String>> interests) =>
       emit(state.copyWith(interests: interests));
 
   void setCurrentOTP(String currentOTP) => emit(
-    state.copyWith(
-      currentOTP: currentOTP,
-      regProgress: RegisterStatusProgress.doneChat,
-    ),
-  );
+        state.copyWith(
+          currentOTP: currentOTP,
+          regProgress: RegisterStatusProgress.doneChat,
+        ),
+      );
 
-  // ---------------------- checkCompletion ----------------------
+  // ---------------------- checkCompletion (sin dependencias de media) ----------------------
   Future<void> checkCompletion({
     bool forGoogle = false,
-    String? uid, // 👈 NUEVO: recibir UID si ya está auth
+    String? uid,
   }) async {
     emit(state.copyWith(status: RegisterIsLogin.loading));
     try {
-      final Map<MediaType, File> filesToUpload = {};
-
-      if (avatarFile != null) {
-        filesToUpload[MediaType.avatar] = avatarFile!;
-        debugPrint('✅ [Cubit] Avatar agregado para subir: ${avatarFile!.path}');
-      }
-
-      if (voiceNoteFile != null) {
-        filesToUpload[MediaType.voice] = voiceNoteFile!;
-        debugPrint('✅ [Cubit] Audio agregado para subir: ${voiceNoteFile!.path}');
-      }
-
-      //  CAMBIO CLAVE: Decidir qué identificador usar
-      if (filesToUpload.isNotEmpty) {
-        try {
-          Map<MediaType, String> mediaUrls;
-
-          if (uid != null) {
-            // Si ya tenemos UID (Google), subir directamente con UID
-            debugPrint(' [Cubit] Subiendo archivos con UID: $uid');
-            mediaUrls = await _mediaService.uploadFiles(
-              uid: uid,
-              files: filesToUpload,
-            );
-          } else {
-            //  Si no hay UID (registro tradicional), subir con email temporal
-            debugPrint(' [Cubit] Subiendo archivos con email: ${state.email}');
-            mediaUrls = await _mediaService.uploadFilesTemporarily(
-              email: state.email ?? '',
-              files: filesToUpload,
-            );
-          }
-
-          // Guardar URLs en el state
-          if (mediaUrls.containsKey(MediaType.avatar)) {
-            setAvatarUrl(mediaUrls[MediaType.avatar]!);
-          }
-          if (mediaUrls.containsKey(MediaType.voice)) {
-            setVoiceNoteUrl(mediaUrls[MediaType.voice]!);
-          }
-
-          debugPrint('✅ [Cubit] Archivos subidos correctamente');
-        } catch (e) {
-          debugPrint('❌ [Cubit] Error subiendo archivos: $e');
-          // No bloqueamos el flujo
-        }
-      }
-
-      // Validar completitud
+      // NOTA: Ya no requerimos ni subimos archivos para completar el registro.
+      // Solo validamos los campos obligatorios del flujo.
       final completeFull = state.email != null &&
           state.language != null &&
           state.fullName != null &&
@@ -238,7 +182,7 @@ class RegisterCubit extends Cubit<RegisterState> {
     }
   }
 
-// ---------------------- fetch social profile ----------------------
+  // resto del cubit sin cambios
   Future<void> fetchSocialProfile(String network, String usernameOrLink) async {
     emit(state.copyWith(status: RegisterIsLogin.loading));
     try {
@@ -269,6 +213,7 @@ class RegisterCubit extends Cubit<RegisterState> {
     String network,
     String assetPath,
   ) async {
+    // mismo comportamiento que antes (sin cambios)
     switch (network.toLowerCase()) {
       case 'instagram':
       case 'youtube':
@@ -284,7 +229,6 @@ class RegisterCubit extends Cubit<RegisterState> {
                 LoadingOverlay.show(context);
 
                 try {
-                  // 1️⃣ Obtener los datos del perfil
                   Map<String, dynamic> profileData = {};
                   if (network.toLowerCase() == 'instagram') {
                     profileData = await networkService.getInstagramProfile(
@@ -296,24 +240,18 @@ class RegisterCubit extends Cubit<RegisterState> {
                     );
                   }
 
-                  // 2️⃣ Obtener la lista actual del cubit
                   final current = List<Map<String, Map<String, dynamic>>>.from(
                     state.socialEcosystem ?? [],
                   );
 
-                  // 3️⃣ Agregar los datos en el formato correcto
                   current.add({network.toLowerCase(): profileData});
-
-                  // 4️⃣ Actualizar el cubit
                   setSocialEcosystem(current);
                 } catch (e) {
                   debugPrint("❌ Error fetching $network profile: $e");
                 } finally {
-                  // ignore: use_build_context_synchronously
                   LoadingOverlay.hide(context);
                 }
 
-                // ignore: use_build_context_synchronously
                 Navigator.of(context).pop(value);
               },
             ),
@@ -323,7 +261,6 @@ class RegisterCubit extends Cubit<RegisterState> {
           break;
         }
 
-      // OAuth2 se manejará aparte
       case 'twitter':
         await networkService.startTwitterAuth(context);
         break;
