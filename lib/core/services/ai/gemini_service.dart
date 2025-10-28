@@ -104,13 +104,23 @@ class GeminiService {
   List<String> get questionFlow {
     final user = FirebaseAuth.instance.currentUser;
 
+    // flujo reducido si autenticado
     if (user != null) {
       debugPrint('🔑 Usuario autenticado - usando flujo reducido');
-      return _questionFlowAuth;
-    } else {
-      debugPrint('🆕 Usuario no autenticado - usando flujo completo');
-      return _questionFlowNotAuth;
+      final flow = List<String>.from(_questionFlowAuth);
+      if (kIsWeb) {
+        flow.removeWhere((step) => step == 'voiceNoteUrl' || step == 'avatarUrl');
+      }
+      return flow;
     }
+
+    // flujo completo si NO autenticado
+    debugPrint('🆕 Usuario no autenticado - usando flujo completo');
+    final flow = List<String>.from(_questionFlowNotAuth);
+    if (kIsWeb) {
+      flow.removeWhere((step) => step == 'voiceNoteUrl' || step == 'avatarUrl');
+    }
+    return flow;
   }
 
   // ✅ GETTERS PÚBLICOS
@@ -203,15 +213,53 @@ class GeminiService {
       registerCubit,
     );
 
+    
+
     debugPrint('🤖 Decisión: $decision');
 
     // === 🔵 SI ES VÁLIDO → PROCESAR Y VERIFICAR ===
     if (decision['valid'] == true) {
+      if (kIsWeb &&(currentStepKey == 'voiceNoteUrl' || currentStepKey == 'avatarUrl')) {
+        final isSpanish = registerCubit.state.language == 'Español';
+        final skipMessage = isSpanish
+            ? 'Si deseas añadir tu foto o nota de voz, usa la app móvil 😉'
+            : 'If you want to add your photo or voice note, please use the mobile app 😉';
+
+        // Mostrar mensaje y avanzar
+        _currentQuestionIndex++;
+        var nextQuestion = AssistantFunctions.getCurrentQuestion(
+          questionFlow,
+          _currentQuestionIndex,
+          registerCubit,
+        );
+
+        // Saltar posibles mensajes "keepTalk"
+        while (nextQuestion['keepTalk'] == true) {
+          debugPrint('⏩ Saltando mensaje keepTalk (web): ${questionFlow[_currentQuestionIndex]}');
+          _currentQuestionIndex++;
+          if (_currentQuestionIndex >= questionFlow.length) break;
+
+          nextQuestion = AssistantFunctions.getCurrentQuestion(
+            questionFlow,
+            _currentQuestionIndex,
+            registerCubit,
+          );
+        }
+
+        // Retornamos el mensaje indicando el salto
+        return {
+          "text": skipMessage,
+          "options": const <String>[],
+          "step": 'regProgress.$currentStepKey',
+          "keepTalk": true,
+          "explainAndRepeat": false,
+        };
+      }
       final processResult = await processBotResponse(
         decision,
         registerCubit: registerCubit,
       );
-
+      
       if (processResult != null && processResult['error'] == true) {
         debugPrint('❌ Error en procesamiento: ${processResult['message']}');
 
@@ -258,6 +306,8 @@ class GeminiService {
 
       return await _prepareQuestion(nextQuestion, registerCubit);
     }
+
+    
 
     // === 🔴 SI NO ES VÁLIDO → MENSAJE DE ERROR ===
     if (decision['explainWhy'] == true) {

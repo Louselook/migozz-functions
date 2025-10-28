@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
@@ -40,9 +41,6 @@ class _IaChatScreenState extends State<IaChatScreen> {
       _chatController.initializeChat(onActionRequired: _handleNavigation);
     }
 
-    // ❌ REMOVIDO: Ya no usamos listener global que causa rebuilds constantes
-    // _chatController.addListener(_onChatStateChanged);
-
     _socialChannel.setMethodCallHandler((call) async {
       if (call.method == 'spotifySuccess') {
         handleSpotify(call.arguments as String, context);
@@ -58,17 +56,10 @@ class _IaChatScreenState extends State<IaChatScreen> {
 
   @override
   void dispose() {
-    // ❌ REMOVIDO: Ya no hay listener que remover
-    // _chatController.removeListener(_onChatStateChanged);
     _chatController.dispose();
     _controller.dispose();
     super.dispose();
   }
-
-  // ❌ REMOVIDO: Ya no necesitamos este método
-  // void _onChatStateChanged() {
-  //   setState(() {});
-  // }
 
   void _handleNavigation(Map<String, dynamic> botResponse) {
     ChatNavigationHandler.handleBotAction(
@@ -89,7 +80,7 @@ class _IaChatScreenState extends State<IaChatScreen> {
             const PrimaryText("AI ASSISTANT"),
             const SizedBox(height: 20),
 
-            // ✅ Messages List con ListenableBuilder para rebuilds selectivos
+            // Messages list
             Expanded(
               child: ListenableBuilder(
                 listenable: _chatController,
@@ -120,7 +111,6 @@ class _IaChatScreenState extends State<IaChatScreen> {
                             message,
                             chatController: _chatController,
                           ),
-
                           if (isLastBotMsgWithOptions)
                             SuggestionChips(
                               suggestions: List<String>.from(message["options"]),
@@ -136,7 +126,7 @@ class _IaChatScreenState extends State<IaChatScreen> {
               ),
             ),
 
-            // ✅ Input Bar con ListenableBuilder para detectar cambios de estado
+            // Input bar
             ListenableBuilder(
               listenable: _chatController,
               builder: (context, child) {
@@ -153,25 +143,49 @@ class _IaChatScreenState extends State<IaChatScreen> {
                     );
                     _controller.clear();
                   },
+
+                  // Safety: if web -> send fallback text; else send audio as before
                   onSendAudio: (path) {
-                    sendChat(
-                      other: false,
-                      type: MessageType.audio,
-                      audio: path,
-                      controller: _chatController,
-                      context: context,
-                    );
+                    if (kIsWeb) {
+                      sendChat(
+                        other: false,
+                        type: MessageType.text,
+                        text: "If you'd like to add images or audio, please use the app!",
+                        controller: _chatController,
+                        context: context,
+                      );
+                    } else {
+                      sendChat(
+                        other: false,
+                        type: MessageType.audio,
+                        audio: path,
+                        controller: _chatController,
+                        context: context,
+                      );
+                    }
                   },
+
+                  // Safety: if web -> fallback text; else send image as before
                   onSendImage: (path) {
-                    sendChat(
-                      other: false,
-                      type: MessageType.pictureCard,
-                      pictures: [
-                        {"imageUrl": path, "label": "Mi Imagen"},
-                      ],
-                      controller: _chatController,
-                      context: context,
-                    );
+                    if (kIsWeb) {
+                      sendChat(
+                        other: false,
+                        type: MessageType.text,
+                        text: "If you'd like to add images or audio, please use the app!",
+                        controller: _chatController,
+                        context: context,
+                      );
+                    } else {
+                      sendChat(
+                        other: false,
+                        type: MessageType.pictureCard,
+                        pictures: [
+                          {"imageUrl": path, "label": "Mi Imagen"},
+                        ],
+                        controller: _chatController,
+                        context: context,
+                      );
+                    }
                   },
                 );
               },

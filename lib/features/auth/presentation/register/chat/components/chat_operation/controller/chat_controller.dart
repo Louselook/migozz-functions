@@ -1,6 +1,7 @@
-import 'dart:io';
+// chat_controller.dart (REEMPLAZAR)
 import 'dart:async';
-
+import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/components/atomics/get_time_now.dart';
 import 'package:migozz_app/core/components/compuestos/chat/chat_model.dart';
@@ -12,15 +13,12 @@ class ChatController extends ChangeNotifier {
   final RegisterCubit registerCubit;
   ChatController({required this.registerCubit});
 
-  /// --- Estado activo/inactivo del chat ---
   bool _active = true;
   bool get isActive => _active;
 
-  /// ✅ Nuevo: Estado para detectar si se debe mostrar input de teléfono
   bool _showPhoneInput = false;
   bool get showPhoneInput => _showPhoneInput;
 
-  /// Handler opcional para acciones que requieren navegación externa
   void Function(Map<String, dynamic> botResponse)? onBotAction;
 
   final ScrollController scrollController = ScrollController();
@@ -29,11 +27,9 @@ class ChatController extends ChangeNotifier {
   String? _lastUserMessage;
   String? get lastUserMessage => _lastUserMessage;
 
-  // Handler para toda la lógica de audio
   final AudioChatHandler _audioHandler = AudioChatHandler();
   List<String> get currentSuggestions => _audioHandler.currentSuggestions;
 
-  /// Inicializa el chat y lo marca como activo
   void initializeChat({void Function(Map<String, dynamic>)? onActionRequired}) {
     GeminiService.instance.ensureConfigured();
     onBotAction = onActionRequired;
@@ -41,31 +37,21 @@ class ChatController extends ChangeNotifier {
     showNextBotMessage();
   }
 
-  /// Termina y destruye el chat — llama esto antes de navegar fuera
   Future<void> terminateChat({bool clearMessages = false}) async {
     if (!_active) return;
     _active = false;
-
-    // Resetear audio/recorders/reproducciones
     try {
       _audioHandler.reset();
     } catch (e) {
       debugPrint('Error al resetear audioHandler: $e');
     }
-
-    // Limpiar mensajes (opcional)
     if (clearMessages) {
       _messages.clear();
     }
-
-    // Quitar callbacks y liberar recursos
     onBotAction = null;
-
-    // Notificar UI para que actualice (y deje de mostrar controls)
     notifyListeners();
   }
 
-  /// Callback cuando el audio termina de reproducirse
   void onAudioFinished() {
     if (!_active) return;
     _audioHandler.onAudioFinished(
@@ -75,11 +61,8 @@ class ChatController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Enviar audio del usuario
   Future<void> sendUserAudio(String audioPath) async {
     if (!_active) return;
-
-    // Delegar al handler para procesar el audio
     await _audioHandler.sendUserAudio(
       audioPath: audioPath,
       registerCubit: registerCubit,
@@ -87,25 +70,22 @@ class ChatController extends ChangeNotifier {
       chatController: this,
       removeTyping: _removeTypingMessage,
     );
-
-    // ✅ NO avanzar automáticamente, esperar confirmación del usuario
+    // NO avanzamos automáticamente; se espera confirmación.
     notifyListeners();
   }
 
-  /// ✅ Helper para remover mensajes de typing
   void _removeTypingMessage() {
     if (!_active) return;
     _messages.removeWhere((msg) => msg["type"] == MessageType.typing);
     notifyListeners();
   }
 
-  /// Manejar envío de foto de avatar (URL o archivo local)
+  // Ajuste: no usar File en web (evita error dart:io en compilación web)
   Future<void> sendAvatarPhoto(String photoPath) async {
     if (!_active) return;
 
     debugPrint('📸 Foto de avatar recibida: $photoPath');
 
-    // Agregar mensaje visual del usuario
     addMessage({
       "other": false,
       "type": MessageType.pictureCard,
@@ -115,34 +95,35 @@ class ChatController extends ChangeNotifier {
       "time": getTimeNow(),
     });
 
-    // Determinar si es URL o archivo local
     final isUrl = photoPath.startsWith('http');
 
     if (isUrl) {
       debugPrint('✅ URL de avatar guardada: $photoPath');
       registerCubit.setAvatarUrl(photoPath);
     } else {
-      // Es un archivo local (galería/cámara)
-      final file = File(photoPath);
-      if (await file.exists()) {
-        registerCubit.setAvatarFile(file);
-        debugPrint('✅ Archivo de avatar guardado: $photoPath');
+      if (kIsWeb) {
+        // En web no intentamos crear File local
+        debugPrint('⚠️ Web: no se puede guardar archivo local en web: $photoPath');
       } else {
-        debugPrint('❌ Archivo no encontrado: $photoPath');
-        return;
+        // Solo en mobile intentamos con File (evita dart:io en web)
+        final file = File(photoPath);
+        if (await file.exists()) {
+          registerCubit.setAvatarFile(file);
+          debugPrint('✅ Archivo de avatar guardado: $photoPath');
+        } else {
+          debugPrint('❌ Archivo no encontrado: $photoPath');
+          return;
+        }
       }
     }
 
-    // Simular respuesta para avanzar en el flujo
     _lastUserMessage = photoPath;
 
-    // Mostrar siguiente mensaje (teléfono u otro)
     await Future.delayed(const Duration(milliseconds: 600));
     if (!_active) return;
     await showNextBotMessage();
   }
 
-  /// Obtener próxima respuesta del bot (protegida por _active)
   Future<void> showNextBotMessage() async {
     if (!_active) return;
 
@@ -209,15 +190,39 @@ class ChatController extends ChangeNotifier {
         message["profilePictures"] = botResponse["profilePictures"];
       }
 
-      // ✅ Detectar si es el paso de teléfono
       final step = botResponse["step"]?.toString() ?? '';
       _showPhoneInput =
           step.contains('phone') || botResponse["showPhoneCode"] == true;
 
-      // ✅ Detectar si es paso de audio (solo audio permitido)
-      // _audioOnlyMode = GeminiService.instance.isOnVoiceNoteStep;
-
       addMessage(message);
+
+      // ---------- NEW: Auto-skip voice step on WEB ----------
+      // If backend says it's time for a voice note and we're on web, don't block — inform user and continue.
+      final isVoiceStep = GeminiService.instance.isOnVoiceNoteStep || step.contains('voice');
+      if (kIsWeb && isVoiceStep) {
+        final isSpanish = registerCubit.state.language == 'Español';
+
+        // Add bilingual informational message from bot
+        addMessage({
+          "other": true,
+          "type": MessageType.text,
+          "text": isSpanish
+              ? "Estás en la web — usa la app para grabar tu nota de presentación (5-10 segundos)."
+              : "You're on the web — please use the app to record your voice note (5-10 seconds).",
+          "name": "Migozz",
+          "time": getTimeNow(),
+        });
+
+        // Mark a placeholder last message so the flow can continue
+        _lastUserMessage = 'skipped_voice_web';
+
+        // small delay to make UX smoother, then continue the dialog
+        await Future.delayed(const Duration(milliseconds: 700));
+        if (!_active) return;
+        await showNextBotMessage();
+        return;
+      }
+      // ----------------------------------------------------
 
       if (!_active) return;
 
@@ -229,9 +234,7 @@ class ChatController extends ChangeNotifier {
       }
 
       if (botResponse["autoAdvance"] == true) {
-        debugPrint(
-          '🎉 Mensaje de éxito detectado, avanzando automáticamente...',
-        );
+        debugPrint('🎉 Mensaje de éxito detectado, avanzando automáticamente...');
         await Future.delayed(const Duration(milliseconds: 1500));
         if (!_active) return;
         _lastUserMessage = 'continue';
@@ -267,17 +270,35 @@ class ChatController extends ChangeNotifier {
     }
   }
 
-  /// Enviar mensaje de texto del usuario (protegido por _active)
   Future<void> sendUserMessage(String text) async {
     if (!_active) return;
     if (text.trim().isEmpty) return;
 
-    // ✅ VALIDAR: Si estamos en el paso de audio y NO estamos esperando confirmación
-
+    // Si estamos en el paso de audio y NO estamos esperando confirmación
     if (GeminiService.instance.isOnVoiceNoteStep &&
         !_audioHandler.isWaitingForAudioConfirmation) {
+      // NEW: On web we don't block the flow — inform + skip automatically.
       final isSpanish = registerCubit.state.language == 'Español';
+      if (kIsWeb) {
+        // Inform user (bilingual already handled by showNextBotMessage, but also here in case user types)
+        addMessage({
+          "other": true,
+          "type": MessageType.text,
+          "text": isSpanish
+              ? "Estás en la web — usa la app para grabar tu nota de presentación (5-10 segundos)."
+              : "You're on the web — please use the app to record your voice note (5-10 seconds).",
+          "name": "Migozz",
+          "time": getTimeNow(),
+        });
 
+        _lastUserMessage = 'skipped_voice_web';
+        await Future.delayed(const Duration(milliseconds: 600));
+        if (!_active) return;
+        await showNextBotMessage();
+        return;
+      }
+
+      // Mobile: keep original behavior (text blocked)
       addMessage({
         "other": false,
         "text": text,
@@ -299,7 +320,6 @@ class ChatController extends ChangeNotifier {
       return;
     }
 
-    // ✅ Delegar manejo de confirmación de audio al handler
     final audioResponse = _audioHandler.handleAudioConfirmationResponse(text);
 
     if (audioResponse != null) {
@@ -311,18 +331,12 @@ class ChatController extends ChangeNotifier {
       });
 
       if (audioResponse == 'keep') {
-        // ✅ Guardar el audio confirmado en el cubit
         _audioHandler.confirmAudio(registerCubit);
-
-        // ✅ Acceder al archivo desde el cubit
         _lastUserMessage = registerCubit.voiceNoteFile?.path ?? text;
-
-        // Avanzar al siguiente paso
         await Future.delayed(const Duration(milliseconds: 600));
         if (!_active) return;
         await showNextBotMessage();
       } else if (audioResponse == 'record') {
-        // ❌ Mostrar mensaje para grabar de nuevo
         final recordMessage = _audioHandler.getRecordAgainMessage(
           registerCubit,
         );
@@ -332,7 +346,6 @@ class ChatController extends ChangeNotifier {
       return;
     }
 
-    // Flujo normal de mensajes de texto
     _lastUserMessage = text;
 
     addMessage({
@@ -342,7 +355,6 @@ class ChatController extends ChangeNotifier {
       "time": getTimeNow(),
     });
 
-    // ✅ Resetear showPhoneInput después de enviar
     _showPhoneInput = false;
 
     await showNextBotMessage();
@@ -357,16 +369,13 @@ class ChatController extends ChangeNotifier {
 
   void onSuggestionSelected(String suggestion) {
     if (!_active) return;
-
     sendUserMessage(suggestion);
-
     for (var msg in _messages.reversed) {
       if (msg["other"] == true && msg["options"] != null) {
         msg["options"] = [];
         break;
       }
     }
-
     notifyListeners();
   }
 
@@ -385,7 +394,6 @@ class ChatController extends ChangeNotifier {
 
   @override
   void dispose() {
-    // Asegurar que el chat esté marcado como inactivo y limpiar recursos
     _active = false;
     try {
       _audioHandler.reset();
