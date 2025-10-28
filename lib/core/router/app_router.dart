@@ -10,9 +10,8 @@ import 'package:migozz_app/features/auth/presentation/login/login_entry.dart';
 import 'package:migozz_app/features/auth/presentation/onboarding/onboarding_entry.dart';
 // import 'package:migozz_app/features/auth/presentation/login/otp_screen.dart';
 import 'package:migozz_app/features/auth/presentation/register/register_screen.dart';
-import 'package:migozz_app/features/profile/presentation/edit/mobile/edit_profile_screen.dart';
-import 'package:migozz_app/features/profile/presentation/edit/web/edit_profile.dart'
-    show EditProfile;
+import 'package:migozz_app/features/profile/presentation/edit/web/edit_profile_page.dart'
+    show EditProfilePage;
 import 'package:migozz_app/features/profile/presentation/profile/modules/complete_profile.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/ia_chat_screen.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
@@ -63,15 +62,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       ),
       GoRoute(
         path: '/edit-profile',
-        builder: (context, state) {
-          // Decide between web and mobile edit screen using available MediaQuery size.
-          final screenWidth = MediaQuery.of(context).size.width;
-          // Breakpoint: use web edit profile when wide enough (>= 900)
-          if (screenWidth >= 900) {
-            return const EditProfile();
-          }
-          return const EditProfileScreen();
-        },
+        builder: (context, state) => const EditProfilePage(),
       ),
       GoRoute(
         path: '/policy-deleted',
@@ -105,8 +96,8 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       GoRoute(
         path: '/stats',
         name: 'stats',
-                builder: (context, state) =>  WebProfileStats(user:context.read<AuthCubit>().state.userProfile!  ),
-
+        builder: (context, state) =>
+            WebProfileStats(user: context.read<AuthCubit>().state.userProfile!),
       ),
     ],
     redirect: (context, state) {
