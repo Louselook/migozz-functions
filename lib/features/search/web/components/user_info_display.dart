@@ -16,7 +16,7 @@ class UserInfoDisplay extends StatelessWidget {
     required this.displayNameFont,
     required this.usernameFont,
     required this.iconSize,
-    this.showVerifiedBadge = true,
+    this.showVerifiedBadge = false,
   });
 
   @override

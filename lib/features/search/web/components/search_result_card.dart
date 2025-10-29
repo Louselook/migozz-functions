@@ -72,6 +72,7 @@ class SearchResultCard extends StatelessWidget {
                     displayNameFont: displayNameFont,
                     usernameFont: usernameFont,
                     iconSize: iconSize,
+                    showVerifiedBadge: userData['complete'] == true,
                   ),
                   // Ubicación
                   LocationDisplay(
