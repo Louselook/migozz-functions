@@ -15,6 +15,8 @@ class BackgroundImage extends StatelessWidget {
   final String comunityCount;
   final String nameComunity;
   final String voiceNoteUrl;
+  final bool isOwnProfile;
+  final String userId;
   final TutorialKeys? tutorialKeys;
 
   const BackgroundImage({
@@ -27,6 +29,8 @@ class BackgroundImage extends StatelessWidget {
     this.comunityCount = '1M',
     this.nameComunity = 'Community',
     this.voiceNoteUrl = '',
+    this.isOwnProfile = true,
+    this.userId = '',
     this.tutorialKeys,
   });
 
@@ -58,6 +62,8 @@ class BackgroundImage extends StatelessWidget {
                     nameComunity: nameComunity,
                     voiceNoteUrl: voiceNoteUrl,
                     tutorialKeys: tutorialKeys,
+                    isOwnProfile: isOwnProfile, // Nuevo
+                    userId: userId, // Nuevo
                   ),
                 ),
               ];
@@ -88,6 +94,8 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
   final String displayName;
   final String comunityCount;
   final String nameComunity;
+  final bool isOwnProfile; // Nuevo
+  final String userId; // Nuevo
   final TutorialKeys? tutorialKeys;
 
   // Cacheamos el future para que no se regenere en cada build
@@ -103,6 +111,8 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
     required this.displayName,
     required this.comunityCount,
     required this.nameComunity,
+    required this.isOwnProfile, 
+    required this.userId, 
     this.tutorialKeys,
   });
 
@@ -246,6 +256,8 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
                         comunityCount: comunityCount,
                         nameComunity: nameComunity,
                         voiceNoteUrl: voiceNoteUrl,
+                        isOwnProfile: isOwnProfile, // ✅ Agregar
+                        userId: userId, // ✅ Agregar
                         tutorialKeys: tutorialKeys,
                       ),
                     ),

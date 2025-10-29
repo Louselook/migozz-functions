@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:migozz_app/features/auth/data/domain/models/location_dto.dart';
+import 'package:migozz_app/features/auth/data/domain/models/user_dto.dart';
+import 'package:migozz_app/features/profile/presentation/profile/mobile/profile_search_screen.dart';
 // import 'package:migozz_app/features/profile/presentation/profile_screen.dart';
 
 /// ResultSearch realiza una búsqueda simple en la colección `users || profiles_public`
@@ -31,6 +34,39 @@ class _ResultSearchState extends State<ResultSearch> {
       _futureResults = _search(widget.query.trim());
     }
   }
+
+  LocationDTO _parseLocation(dynamic locationData) {
+      if (locationData is Map) {
+        try {
+          final locMap = Map<String, dynamic>.from(locationData);
+          return LocationDTO(
+            country: locMap['country']?.toString() ?? '',
+            state: locMap['state']?.toString() ?? '',
+            city: locMap['city']?.toString() ?? '',
+            lat: (locMap['lat'] is num) ? (locMap['lat'] as num).toDouble() : 0.0,
+            lng: (locMap['lng'] is num) ? (locMap['lng'] as num).toDouble() : 0.0,
+          );
+        } catch (e) {
+          // Si falla el parsing, retornar LocationDTO vacío
+          return LocationDTO(
+            country: '',
+            state: '',
+            city: '',
+            lat: 0.0,
+            lng: 0.0,
+          );
+        }
+      }
+      // Si no es un Map, retornar LocationDTO vacío
+      return LocationDTO(
+        country: '',
+        state: '',
+        city: '',
+        lat: 0.0,
+        lng: 0.0,
+      );
+    }
+  
 
   Future<List<Map<String, dynamic>>> _search(String q) async {
     if (q.isEmpty) return [];
@@ -100,6 +136,8 @@ class _ResultSearchState extends State<ResultSearch> {
         matched.add(m);
       }
     }
+
+    
 
     if (matched.isNotEmpty) return matched;
 
@@ -223,13 +261,28 @@ class _ResultSearchState extends State<ResultSearch> {
 
             return InkWell(
               onTap: () {
-                // Navigate to ProfileScreen showing the selected user
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(
-                //     builder: (_) => ProfileScreen(userId: item['id'] as String),
-                //   ),
-                // );
+                final userMap = item;
+                final user = UserDTO(
+                  displayName: userMap['displayName'] ?? '',
+                  username: userMap['userName'] ?? userMap['username'] ?? '',
+                  avatarUrl: userMap['avatarUrl'] ?? '',
+                  email: userMap['email'] ?? '',
+                  lang: userMap['lang'] ?? '',
+                  gender: userMap['gender'] ?? '',
+                  location: _parseLocation(userMap['location']),
+                  voiceNoteUrl: userMap['voiceNoteUrl'],
+                  socialEcosystem: (userMap['socialEcosystem'] as List?)
+                      ?.map((e) => Map<String, dynamic>.from(e))
+                      .toList() ??
+                  [],
+                );
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ProfileSearchScreen(user: user),
+                  ),
+                );
               },
               child: Container(
                 padding: EdgeInsets.all(containerPadding),

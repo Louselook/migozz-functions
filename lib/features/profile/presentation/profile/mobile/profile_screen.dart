@@ -39,6 +39,11 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
     final avatarUrl = user.avatarUrl;
     final voiceNoteUrl = user.voiceNoteUrl ?? '';
 
+    // ✅ Determinar si es el perfil del usuario autenticado
+    final authState = context.watch<AuthCubit>().state;
+    final currentUserEmail = authState.userProfile?.email ?? '';
+    final isOwnProfile = user.email == currentUserEmail;
+
     // ✅ Recuperamos los seguidores y redes desde el perfil
     final totalFollowers = _calculateTotalFollowers(user.socialEcosystem);
     final socialLinks = _buildSocialLinks(user.socialEcosystem, user.username);
@@ -52,27 +57,30 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
         comunityCount: totalFollowers.toString(),
         nameComunity: 'Community',
         voiceNoteUrl: voiceNoteUrl,
+        isOwnProfile: isOwnProfile, 
+        userId: user.email,
         child: Stack(
           children: [
             // 🔍 Botón de búsqueda
-            Positioned(
-              left: 20,
-              top: 70,
-              child: GestureDetector(
-                key: widget.tutorialKeys.searchScreenKey,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const SearchScreen()),
-                  );
-                },
-                child: const Icon(
-                  Icons.search,
-                  color: Color(0xAAFFFFFF),
-                  size: 60,
+            if (isOwnProfile) // Condicional para busqueda
+              Positioned(
+                left: 20,
+                top: 70,
+                child: GestureDetector(
+                  key: widget.tutorialKeys.searchScreenKey,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SearchScreen()),
+                    );
+                  },
+                  child: const Icon(
+                    Icons.search,
+                    color: Color(0xAAFFFFFF),
+                    size: 60,
+                  ),
                 ),
               ),
-            ),
 
             // 🎯 Panel lateral de redes sociales
             DraggableSocialRail(
@@ -83,6 +91,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
             ),
 
             // 🔻 Barra inferior de navegación
+            if (isOwnProfile) // Condicional
             Align(
               alignment: Alignment.bottomCenter,
               child: GradientBottomNav(
