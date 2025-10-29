@@ -61,7 +61,7 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
   @override
   void didUpdateWidget(covariant InfoUserProfile oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // ✅ Si cambia el voiceNoteUrl, detener y resetear el reproductor
+    // Si cambia el voiceNoteUrl, detener y resetear el reproductor
     if (oldWidget.voiceNoteUrl != widget.voiceNoteUrl) {
       _player.stop();
       if (mounted) {
@@ -220,30 +220,37 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
 
                   const SizedBox(width: 10),
 
-                  // Compartir perfile
-
-                 GestureDetector(
-                    key: widget.tutorialKeys?.shareButtonKey,
-                    onTap: () {
-                      if (widget.isOwnProfile) {
-                        // Perfil propio: navegar a la pantalla de QR
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute<void>(
-                            builder: (context) => const ProfileQrScreen(),
+                 // Compartir perfil - diferencia entre propio y ajeno
+                GestureDetector(
+                  key: widget.tutorialKeys?.shareButtonKey,
+                  onTap: () {
+                    if (widget.isOwnProfile) {
+                      // Perfil propio: navegar a la pantalla de QR sin parámetros
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (context) => const ProfileQrScreen(),
+                        ),
+                      );
+                    } else {
+                      // Perfil ajeno: pasar los datos del usuario para generar su QR
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (context) => ProfileQrScreen(
+                            overrideUsername: widget.userId, // El username del usuario ajeno
+                            overrideDisplayName: widget.name, // El displayName del usuario ajeno
                           ),
-                        );
-                      } else {
-                        // Perfil ajeno: compartir el link del usuario
-                        _shareExternalProfile(context);
-                      }
-                    },
-                    child: Icon(
-                      Icons.share,
-                      size: 18,
-                      color: Colors.white.withValues(alpha: 0.9),
-                    ),
+                        ),
+                      );
+                    }
+                  },
+                  child: Icon(
+                    Icons.share,
+                    size: 18,
+                    color: Colors.white.withValues(alpha: 0.9),
                   ),
+                ),
                 ],
               ),
             ],
@@ -251,29 +258,5 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
         ),
       ),
     );
-  }
-
-  // ✅ Método para compartir perfil externo
-  void _shareExternalProfile(BuildContext context) {
-    // Aquí puedes implementar tu lógica de compartir
-    // Por ejemplo: Share.share o mostrar un diálogo
-    final profileUrl = 'https://migozz.com/profile/${widget.userId}';
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Compartir perfil: $profileUrl'),
-        action: SnackBarAction(
-          label: 'Copiar',
-          onPressed: () {
-            // Aquí podrías usar Clipboard.setData
-            debugPrint('📋 Copiado: $profileUrl');
-          },
-        ),
-      ),
-    );
-    
-    debugPrint('🔗 Compartir perfil de: ${widget.userId}');
-    // TODO: Implementar share real con share_plus package
-    // Share.share(profileUrl);
   }
 }

@@ -237,13 +237,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       avatarUrl: imageProfile,
                       uploading: _uploading,
                       onEdit: () {
-                        if (!kIsWeb) {
-                          _changeAvatar(state.firebaseUser!.uid);
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Use the app to change your audio")),
-                          );
-                        }
+                        _changeAvatar(state.firebaseUser!.uid);
                       },
                     ),
                     SizedBox(height: height * 0.025),
@@ -298,21 +292,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       icon: Icons.play_circle_outline,
                       text: 'Edit Record',
                       onTap: () {
-                        if(!kIsWeb) {
-                          Navigator.push(
+                        Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (_) => const EditRecordScreen(),
                             ),
                           );
                         }
-                        {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Use the app to change your audio")),
-                          );
-                        }
-                      }
-                    ),
+                      ),
                     ProfileOptionButton(
                       icon: Icons.handshake_outlined,
                       text: 'Edit My Interests',

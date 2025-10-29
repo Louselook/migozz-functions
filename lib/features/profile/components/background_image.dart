@@ -256,8 +256,8 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
                         comunityCount: comunityCount,
                         nameComunity: nameComunity,
                         voiceNoteUrl: voiceNoteUrl,
-                        isOwnProfile: isOwnProfile, // ✅ Agregar
-                        userId: userId, // ✅ Agregar
+                        isOwnProfile: isOwnProfile, // Agregado para search
+                        userId: userId, // Agregado para search
                         tutorialKeys: tutorialKeys,
                       ),
                     ),
@@ -293,30 +293,11 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
     );
   }
 
-  // ✅ Modo: imagen completa
+  // Modo: imagen completa
   Widget _buildFullBackground() {
     return ColorFiltered(
       colorFilter: const ColorFilter.matrix(<double>[
-        1.15,
-        0,
-        0,
-        0,
-        0,
-        0,
-        1.15,
-        0,
-        0,
-        0,
-        0,
-        0,
-        1.25,
-        0,
-        0,
-        0,
-        1,
-        1,
-        2,
-        0,
+        1.15,0,0,0,0,0,1.15,0,0,0,0,0,1.25,0,0,0,1,1,2,0,
       ]),
       child: avatarUrl != null && avatarUrl!.isNotEmpty
           ? Image.network(
@@ -334,7 +315,7 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
     );
   }
 
-  // ✅ Modo: imagen pequeña (CircleAvatar)
+  // Modo: imagen pequeña (CircleAvatar)
   Widget _buildCircleAvatarBackground(BuildContext context) {
     return Stack(
       fit: StackFit.expand,
