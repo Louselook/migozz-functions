@@ -90,7 +90,7 @@ final List gender = [
 
   // Rechazo
   {
-    "text": "Por favor selecciona una opción válida: Hombre, Mujer u Otro.",
+    "text": "Por favor selecciona una opción válida.",
     "options": ["Hombre", "Mujer", "Otro"],
     "step": "regProgress.gender",
     "keepTalk": false,
@@ -133,38 +133,56 @@ final List socialEcosystem = [
 ];
 
 final List location = [
-  // Primera
+  // Primera - Pregunta de autorización
   {
-    "text": "Detecté que estás en Bogotá. ¿Es correcto?",
-    "options": ["Sí", "No"],
+    "text": "Detectamos que vives en {location}. ¿Deseas usar tu ubicación actual?",
+    "options": ["Sí", "No", "Ubicación incorrecta"],
     "step": "regProgress.location",
     "keepTalk": false,
   },
 
-  // Rechazo
+  // Válida - Usuario confirma (Sí)
   {
-    "text": "No se pudo confirmar tu ubicación, intenta de nuevo.",
-    "options": ["Sí", "No"],
-    "step": "regProgress.location",
-    "keepTalk": false,
-    "valid": false,
-  },
-
-  // Válida
-  {
-    "text":
-        "Perfecto, ubicación confirmada. Ahora verifica tu correo electrónico.",
+    "text": "Perfecto, ubicación confirmada. Ahora verifica tu correo electrónico.",
     "step": "regProgress.emailVerification",
     "keepTalk": false,
     "valid": true,
     "userResponse": "Sí",
+  },
+
+  // Válida - Usuario rechaza usar ubicación (No)
+  {
+    "text": "Entendido, continuaremos sin una ubicación específica.",
+    "step": "regProgress.emailVerification",
+    "keepTalk": false,
+    "valid": true,
+    "userResponse": "No",
+    "emptyLocation": true, // 👈 Bandera para guardar LocationDTO.empty()
+  },
+
+  // Rechazo - Ubicación incorrecta (vuelve a preguntar)
+  {
+    "text": "Entendido. Por favor, ingresa tu ubicación manualmente o intenta detectarla nuevamente.",
+    "step": "regProgress.location",
+    "keepTalk": false,
+    "valid": false,
+    "userResponse": "Ubicación incorrecta",
+  },
+
+  // Rechazo - Respuesta inválida
+  {
+    "text": "Por favor, selecciona una opción válida: Sí, No, o Ubicación incorrecta.",
+    "options": ["Sí", "No", "Ubicación incorrecta"],
+    "step": "regProgress.location",
+    "keepTalk": false,
+    "valid": false,
   },
 ];
 
 final List emailVerification = [
   // Primera
   {
-    "text": "Tu correo electrónico es juan@example.com, ¿es correcto?",
+    "text": "Tu correo electrónico es {email}, ¿es correcto?",
     "options": ["Sí", "No"],
     "step": "regProgress.emailVerification",
     "keepTalk": false,
@@ -193,7 +211,7 @@ final List avatarUrl = [
   // Primera
   {
     "text":
-        "Puedo sugerirte una foto de tus redes sociales conectadas o puedes subir una nueva. ¿Cuál prefieres?",
+        "Puedo sugerirte una foto de tus redes sociales conectadas o puedes subir una nueva. ¿Cuál prefieres? 📸",
     "step": "regProgress.avatarUrl",
     "keepTalk": false,
   },

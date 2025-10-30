@@ -1,4 +1,4 @@
-// chat_controller.dart (REEMPLAZAR)
+// chat_controller.dart (ACTUALIZADO)
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -46,13 +46,13 @@ class ChatController extends ChangeNotifier {
     try {
       _audioHandler.reset();
     } catch (e) {
-        debugPrint('Error al resetear audioHandler: $e');
-      if (clearMessages) {
-        _messages.clear();
-      }
-      onBotAction = null;
-      notifyListeners();
+      debugPrint('Error al resetear audioHandler: $e');
     }
+    if (clearMessages) {
+      _messages.clear();
+    }
+    onBotAction = null;
+    notifyListeners();
   }
 
   void onAudioFinished() {
@@ -61,6 +61,104 @@ class ChatController extends ChangeNotifier {
       registerCubit: registerCubit,
       addMessage: addMessage,
     );
+    notifyListeners();
+  }
+
+  /// Maneja la respuesta del usuario para el paso de ubicación
+  /// Opciones: "Sí", "No", "Ubicación incorrecta"
+  Future<void> handleLocationResponse(String userResponse) async {
+    if (!_active) return;
+    
+    final normalizedResponse = userResponse.trim().toLowerCase();
+    final isSpanish = registerCubit.state.language == 'Español';
+    
+    debugPrint('📍 [ChatController] Respuesta de ubicación: "$userResponse"');
+    
+    if (normalizedResponse == 'sí' || normalizedResponse == 'yes' || 
+        normalizedResponse == 'si') {
+      // ✅ Usuario acepta la ubicación detectada
+      debugPrint('📍 [ChatController] Usuario confirmó ubicación');
+      registerCubit.confirmLocation();
+      
+      // Mensaje de confirmación
+      addMessage({
+        "other": true,
+        "type": MessageType.text,
+        "text": isSpanish
+            ? "Perfecto, ubicación confirmada. ✅"
+            : "Perfect, location confirmed. ✅",
+        "name": "Migozz",
+        "time": getTimeNow(),
+      });
+      
+      await Future.delayed(const Duration(milliseconds: 800));
+      if (!_active) return;
+      _lastUserMessage = 'location_confirmed';
+      await showNextBotMessage();
+      
+    } else if (normalizedResponse == 'no') {
+      // ❌ Usuario rechaza usar ubicación (continúa sin ubicación)
+      debugPrint('📍 [ChatController] Usuario rechazó ubicación');
+      registerCubit.rejectLocation();
+      
+      // Mensaje informativo
+      addMessage({
+        "other": true,
+        "type": MessageType.text,
+        "text": isSpanish
+            ? "Entendido, continuaremos sin una ubicación específica."
+            : "Understood, we'll continue without a specific location.",
+        "name": "Migozz",
+        "time": getTimeNow(),
+      });
+      
+      await Future.delayed(const Duration(milliseconds: 800));
+      if (!_active) return;
+      _lastUserMessage = 'location_rejected';
+      await showNextBotMessage();
+      
+    } else if (normalizedResponse.contains('incorrecta') || 
+               normalizedResponse.contains('incorrect') ||
+               normalizedResponse == 'ubicación incorrecta' ||
+               normalizedResponse == 'incorrect location') {
+      // 🔄 Usuario dice que la ubicación es incorrecta
+      debugPrint('📍 [ChatController] Usuario reportó ubicación incorrecta');
+      registerCubit.requestCorrectLocation();
+      
+      // Mensaje pidiendo nueva ubicación
+      addMessage({
+        "other": true,
+        "type": MessageType.text,
+        "text": isSpanish
+            ? "Entendido. Por favor, ingresa tu ubicación manualmente o intenta detectarla nuevamente."
+            : "Understood. Please enter your location manually or try detecting it again.",
+        "name": "Migozz",
+        "time": getTimeNow(),
+      });
+      
+      await Future.delayed(const Duration(milliseconds: 800));
+      if (!_active) return;
+      _lastUserMessage = 'location_incorrect';
+      await showNextBotMessage();
+      
+    } else {
+      // ⚠️ Respuesta no válida
+      debugPrint('⚠️ [ChatController] Respuesta de ubicación no válida: $userResponse');
+      
+      addMessage({
+        "other": true,
+        "type": MessageType.text,
+        "text": isSpanish
+            ? "Por favor, selecciona una opción válida: Sí, No, o Ubicación incorrecta."
+            : "Please select a valid option: Yes, No, or Incorrect location.",
+        "options": isSpanish 
+            ? ["Sí", "No", "Ubicación incorrecta"]
+            : ["Yes", "No", "Incorrect location"],
+        "name": "Migozz",
+        "time": getTimeNow(),
+      });
+    }
+    
     notifyListeners();
   }
 
@@ -73,7 +171,6 @@ class ChatController extends ChangeNotifier {
       chatController: this,
       removeTyping: _removeTypingMessage,
     );
-    // NO avanzamos automáticamente; se espera confirmación.
     notifyListeners();
   }
 
@@ -83,7 +180,6 @@ class ChatController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Ajuste: no usar File en web (evita error dart:io en compilación web)
   Future<void> sendAvatarPhoto(String photoPath) async {
     if (!_active) return;
 
@@ -112,11 +208,10 @@ class ChatController extends ChangeNotifier {
           registerCubit.setAvatarFile(file);
           debugPrint('✅ Archivo de avatar guardado localmente: $photoPath');
 
-          // ✅ NUEVO: Subir avatar inmediatamente
+          // Subir avatar inmediatamente
           final email = registerCubit.state.email;
           if (email != null && email.isNotEmpty) {
             try {
-              // Mostrar typing mientras sube
               addMessage({
                 "other": true,
                 "type": MessageType.typing,
@@ -134,7 +229,6 @@ class ChatController extends ChangeNotifier {
 
               final avatarUrl = urls[MediaType.avatar];
 
-              // Remover typing
               _removeTypingMessage();
 
               if (avatarUrl != null) {
@@ -245,13 +339,11 @@ class ChatController extends ChangeNotifier {
 
       addMessage(message);
 
-      // ---------- NEW: Auto-skip voice step on WEB ----------
-      // If backend says it's time for a voice note and we're on web, don't block — inform user and continue.
+      // Auto-skip voice step on WEB
       final isVoiceStep = GeminiService.instance.isOnVoiceNoteStep || step.contains('voice');
       if (kIsWeb && isVoiceStep) {
         final isSpanish = registerCubit.state.language == 'Español';
 
-        // Add bilingual informational message from bot
         addMessage({
           "other": true,
           "type": MessageType.text,
@@ -262,16 +354,13 @@ class ChatController extends ChangeNotifier {
           "time": getTimeNow(),
         });
 
-        // Mark a placeholder last message so the flow can continue
         _lastUserMessage = 'skipped_voice_web';
 
-        // small delay to make UX smoother, then continue the dialog
         await Future.delayed(const Duration(milliseconds: 700));
         if (!_active) return;
         await showNextBotMessage();
         return;
       }
-      // ----------------------------------------------------
 
       if (!_active) return;
 
@@ -341,11 +430,10 @@ class ChatController extends ChangeNotifier {
       });
 
       if (audioResponse == 'keep') {
-        // ✅ ESPERAR a que termine la subida
         await _audioHandler.confirmAudio(
           registerCubit,
           onResetAudioUI: onResetAudioUI,
-          addMessage: addMessage, // ✅ Pasar addMessage
+          addMessage: addMessage,
         );
         
         _lastUserMessage = registerCubit.state.voiceNoteUrl ?? 
@@ -361,7 +449,6 @@ class ChatController extends ChangeNotifier {
         );
         addMessage(recordMessage);
 
-        // ✅ También resetear cuando se graba otro
         onResetAudioUI?.call();
 
         notifyListeners();

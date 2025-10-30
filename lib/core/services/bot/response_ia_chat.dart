@@ -5,7 +5,7 @@ final List<Map<String, Object>> questionsTopics = [
         "Pregunta inicial para definir el idioma preferido del usuario.",
     "text": {
       "en":
-          "Hello! 👋 I´m here to help you set up your profile. Let’s start: What is your preferred language?",
+          "Hello! 👋 I´m here to help you set up your profile. Let's start: What is your preferred language?",
       "es":
           "¡Hola! 👋 Estoy aquí para ayudarte a configurar tu perfil. Empecemos: ¿Cuál es tu idioma preferido?",
     },
@@ -19,7 +19,7 @@ final List<Map<String, Object>> questionsTopics = [
     "id": "fullName",
     "description": "Solicita el nombre completo del usuario.",
     "text": {
-      "en": "Great! Let’s continue in English. What is your full name?",
+      "en": "Great! Let's continue in English. What is your full name?",
       "es": "¡Genial! Continuemos en Español. ¿Cuál es tu nombre completo?",
     },
     "options": {"en": [], "es": []},
@@ -65,16 +65,16 @@ final List<Map<String, Object>> questionsTopics = [
   {
     "id": "location",
     "description":
-        "Confirma la ubicación detectada automáticamente. Solo preguntar si aún no se guardó.",
+        "Pregunta para autorizar el uso de la ubicación detectada automáticamente. El usuario puede aceptar, rechazar o reportar que es incorrecta.",
     "text": {
       "en":
-          "Perfect! Now, let me confirm your location. I detected you're in {location}. Is this correct?",
+          "We detected that you live in {location}. Do you want to use your current location?",
       "es":
-          "¡Perfecto! Ahora, déjame confirmar tu ubicación. Detecté que estás en {location}. ¿Es correcto?",
+          "Detectamos que vives en {location}. ¿Deseas usar tu ubicación actual?",
     },
     "options": {
-      "en": ["Yes", "No"],
-      "es": ["Sí", "No"],
+      "en": ["Yes", "No", "Incorrect location"],
+      "es": ["Sí", "No", "Ubicación incorrecta"],
     },
   },
   {

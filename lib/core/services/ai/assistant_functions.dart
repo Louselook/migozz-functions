@@ -69,7 +69,7 @@ class AssistantFunctions {
         };
 
       case 'location':
-        return _evaluateLocation(normalized, userInput);
+        return _evaluateLocation(normalized, userInput, cubit);
 
       case 'sendOTP': // ✅ SEPARADO de emailVerification
         return _evaluateSendOTP(normalized, userInput);
@@ -147,9 +147,22 @@ class AssistantFunctions {
 
     if (text.contains('{location}')) {
       final loc = cubit.state.location;
-      final locStr = loc != null
-          ? '${loc.city}, ${loc.country}'
-          : 'tu ubicación';
+      String locStr;
+      
+      // ✅ Manejo mejorado de ubicación
+      if (loc != null && !loc.isEmpty) {
+        // Si tiene ubicación válida, mostrarla
+        locStr = '${loc.city}, ${loc.country}';
+      } else if (loc != null && loc.isEmpty) {
+        // Si tiene ubicación vacía (usuario rechazó), usar genérico
+        final isSpanish = _getIsSpanish(cubit);
+        locStr = isSpanish ? 'tu ubicación' : 'your location';
+      } else {
+        // Si es null, también usar genérico
+        final isSpanish = _getIsSpanish(cubit);
+        locStr = isSpanish ? 'tu ubicación' : 'your location';
+      }
+      
       text = text.replaceAll('{location}', locStr);
     }
 
@@ -256,30 +269,66 @@ class AssistantFunctions {
     };
   }
 
+  // ✅ ACTUALIZADO: Evaluación de ubicación con 3 opciones
   static Map<String, dynamic> _evaluateLocation(
     String normalized,
     String original,
+    RegisterCubit cubit,
   ) {
-    if (normalized.contains('si') ||
-        normalized.contains('sí') ||
-        normalized.contains('yes') ||
+    final isSpanish = _getIsSpanish(cubit);
+    
+    // ✅ Opción 1: Usuario confirma ubicación (Sí)
+    if (normalized == 'sí' || 
+        normalized == 'si' || 
+        normalized == 'yes' ||
         normalized.contains('correcto')) {
       return {
         "step": "regProgress.location",
         "valid": true,
-        "userResponse": "yes",
-      };
-    } else if (normalized.contains('no')) {
-      return {
-        "step": "regProgress.location",
-        "valid": true,
-        "userResponse": "no",
+        "userResponse": "Sí",
+        "confirmLocation": true, // 👈 Bandera para confirmar
       };
     }
+    
+    // ✅ Opción 2: Usuario rechaza usar ubicación (No)
+    if (normalized == 'no') {
+      return {
+        "step": "regProgress.location",
+        "valid": true, // 👈 IMPORTANTE: Es válido rechazar
+        "userResponse": "No",
+        "emptyLocation": true, // 👈 Bandera para ubicación vacía
+      };
+    }
+    
+    // ✅ Opción 3: Usuario reporta ubicación incorrecta
+    if (normalized.contains('incorrecta') || 
+        normalized.contains('incorrect') ||
+        normalized == 'ubicación incorrecta' ||
+        normalized == 'incorrect location') {
+      return {
+        "step": "regProgress.location",
+        "valid": false, // 👈 No es válido, debe reintentar
+        "userResponse": original.trim(),
+        "text": isSpanish
+            ? "Entendido. Por favor, ingresa tu ubicación manualmente o intenta detectarla nuevamente."
+            : "Understood. Please enter your location manually or try detecting it again.",
+        "options": isSpanish
+            ? ["Sí", "No", "Ubicación incorrecta"]
+            : ["Yes", "No", "Incorrect location"],
+      };
+    }
+    
+    // ❌ Respuesta no válida
     return {
       "step": "regProgress.location",
       "valid": false,
       "userResponse": original.trim(),
+      "text": isSpanish
+          ? "Por favor, selecciona una opción válida: Sí, No, o Ubicación incorrecta."
+          : "Please select a valid option: Yes, No, or Incorrect location.",
+      "options": isSpanish
+          ? ["Sí", "No", "Ubicación incorrecta"]
+          : ["Yes", "No", "Incorrect location"],
     };
   }
 

@@ -90,7 +90,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         'username': usernameCtrl.text.trim(),
         'phone': phoneCtrl.text.trim(),
         'gender': genderCtrl.text.trim(),
-        // 🔹 Aquí cambia a DateTime si existe
         'birthDate': _dob != null ? Timestamp.fromDate(_dob!) : null,
       };
 
@@ -110,24 +109,51 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
+  // ✅ MÉTODO ACTUALIZADO CON GUARDADO COMPLETO
   Future<void> _confirmAndChangeLocation(String email) async {
     final svc = LocationService();
-    final newLocation = await svc.initAndFetchAddress();
-    if (newLocation == null) {
-      // ignore: use_build_context_synchronously
+    
+    // 🔄 Mostrar loading mientras detecta ubicación
+    if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not fetch current location')),
+        const SnackBar(
+          content: Text('🔍 Detecting location...'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+    }
+    
+    final newLocation = await svc.initAndFetchAddress();
+    
+    if (newLocation == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('❌ Could not fetch current location'),
+          backgroundColor: Colors.red,
+        ),
       );
       return;
     }
 
+    // 📍 Mostrar ubicación detectada
+    debugPrint('📍 [EditProfile] Ubicación detectada:');
+    debugPrint('   • City: ${newLocation.city}');
+    debugPrint('   • State: ${newLocation.state}');
+    debugPrint('   • Country: ${newLocation.country}');
+    debugPrint('   • Coords: ${newLocation.lat}, ${newLocation.lng}');
+
+    // ❓ Mostrar diálogo de confirmación
+    if (!mounted) return;
     final confirm = await showDialog<bool>(
-      // ignore: use_build_context_synchronously
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Confirm location'),
         content: Text(
-          "The current location is ${newLocation.city}, ${newLocation.country}. Is that correct?",
+          "We detected you're in:\n\n"
+          "${newLocation.city}, ${newLocation.state}\n"
+          "${newLocation.country}\n\n"
+          "Is that correct?",
         ),
         actions: [
           TextButton(
@@ -136,21 +162,80 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('OK'),
+            child: const Text('✓ Confirm'),
           ),
         ],
       ),
     );
 
+    // ✅ GUARDAR UBICACIÓN SI EL USUARIO CONFIRMÓ
     if (confirm == true) {
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Location updated to ${newLocation.city}, ${newLocation.country}',
+      if (!mounted) return;
+      
+      try {
+        final editCubit = context.read<EditCubit>();
+        final userId = context.read<AuthCubit>().state.firebaseUser?.uid;
+        
+        if (userId == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Error: User not logged in'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+
+        // 📦 Preparar datos de ubicación para Firestore
+        final locationData = {
+          'location': newLocation.toMap(), // 👈 LocationDTO tiene este método
+        };
+
+        debugPrint('💾 [EditProfile] Guardando ubicación en Firestore...');
+        debugPrint('   • UserId: $userId');
+        debugPrint('   • Data: $locationData');
+
+        // 💾 Guardar en Firestore
+        // El EditCubit automáticamente refrescará el AuthCubit después de guardar
+        await editCubit.saveUserProfileField(
+          userId: userId,
+          updatedFields: locationData,
+        );
+
+        if (!mounted) return;
+        
+        debugPrint('✅ [EditProfile] Ubicación guardada exitosamente');
+        
+        // ✅ Mostrar mensaje de éxito
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '✅ Location updated to ${newLocation.city}, ${newLocation.country}',
+            ),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
           ),
-        ),
-      );
+        );
+        
+        // 🔄 El perfil ya se refrescó automáticamente gracias al EditCubit
+        // La UI se actualizará automáticamente gracias al BlocBuilder
+        
+      } catch (e) {
+        if (!mounted) return;
+        
+        debugPrint('❌ [EditProfile] Error guardando ubicación: $e');
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Error updating location: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } else {
+      // Usuario canceló
+      debugPrint('🚫 [EditProfile] Usuario canceló el cambio de ubicación');
     }
   }
 
@@ -199,7 +284,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               String imageProfile = "";
 
               if (user.avatarUrl == null || user.avatarUrl!.isEmpty) {
-                imageProfile = "assets/images/Migozz.webp"; // ✅ Usa ruta correcta según pubspec.yaml
+                imageProfile = "assets/images/Migozz.webp";
               } else {
                 imageProfile = user.avatarUrl!;
               }
@@ -219,10 +304,27 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 }
               }
 
-              final formattedLocation = [
-                if (user.location.city.isNotEmpty) user.location.city,
-                if (user.location.country.isNotEmpty) user.location.country,
-              ].join(', ');
+              // ✅ Formatear ubicación - ahora maneja LocationDTO.empty()
+              String formattedLocation = 'Location not set';
+              
+              if (user.location.isEmpty) {
+                formattedLocation = 'Location not set';
+              } else {
+                final locationParts = <String>[];
+                if (user.location.city.isNotEmpty) {
+                  locationParts.add(user.location.city);
+                }
+                if (user.location.state.isNotEmpty) {
+                  locationParts.add(user.location.state);
+                }
+                if (user.location.country.isNotEmpty) {
+                  locationParts.add(user.location.country);
+                }
+                
+                if (locationParts.isNotEmpty) {
+                  formattedLocation = locationParts.join(', ');
+                }
+              }
 
               return SingleChildScrollView(
                 padding: EdgeInsets.symmetric(
@@ -276,9 +378,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       icon: Icons.transgender,
                     ),
                     ProfileField(
-                      hint: formattedLocation.isNotEmpty
-                          ? formattedLocation
-                          : 'Location',
+                      hint: formattedLocation,
                       icon: Icons.public,
                       readOnly: true,
                       onTap: () => _confirmAndChangeLocation(user.email),
@@ -292,13 +392,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       text: 'Edit Record',
                       onTap: () {
                         Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const EditRecordScreen(),
-                            ),
-                          );
-                        }
-                      ),
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const EditRecordScreen(),
+                          ),
+                        );
+                      },
+                    ),
                     ProfileOptionButton(
                       icon: Icons.handshake_outlined,
                       text: 'Edit My Interests',
@@ -332,7 +432,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         );
                         debugPrint('🔹 userId: $userId');
 
-                        // 🔹 CORRECCIÓN CRÍTICA: Pasar modo, userId y EditCubit
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -340,8 +439,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               value: editCubit,
                               child: MoreUserDetails(
                                 pageIndicator: 0,
-                                mode: MoreUserDetailsMode.edit, // 🔹 CRÍTICO
-                                userId: userId, // 🔹 CRÍTICO
+                                mode: MoreUserDetailsMode.edit,
+                                userId: userId,
                               ),
                             ),
                           ),
