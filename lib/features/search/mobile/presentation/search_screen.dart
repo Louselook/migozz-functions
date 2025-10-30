@@ -36,12 +36,6 @@ class _SearchScreenState extends State<SearchScreen> {
             // Tintes y gradientes
             TintesGradients(child: Container(height: bottomGradientHeight)),
 
-            // input search en top 0 y un arrow back
-            InputSearch(
-              controller: _searchController,
-              onChanged: (txt) => setState(() => _query = txt.trim()),
-            ),
-
             // filtros de busqueda ("For You", "Accounts", "Reels", "Audio", "Hashtags")
             FilterSearch(),
 
@@ -51,6 +45,12 @@ class _SearchScreenState extends State<SearchScreen> {
             else
               // ResultSearch mostrará 'no se encontraron coincidencias' cuando aplique
               Positioned.fill(top: 180, child: ResultSearch(query: _query)),
+
+            // input search en top 0 y un arrow back
+            InputSearch(
+              controller: _searchController,
+              onChanged: (txt) => setState(() => _query = txt.trim()),
+            ),
 
             // Navegación inferior
             Align(
