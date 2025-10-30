@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:migozz_app/core/components/atomics/get_time_now.dart';
 import 'package:migozz_app/core/components/compuestos/chat/chat_model.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
+import 'package:migozz_app/features/auth/services/media_service.dart';
 import 'package:path_provider/path_provider.dart';
 
 class AudioChatHandler {
   List<String> currentSuggestions = [];
+  final UserMediaService mediaService = UserMediaService();
 
   // Estado para manejar confirmación de audio
   String? _pendingAudioPath;
@@ -166,10 +168,11 @@ class AudioChatHandler {
   }
 
  
- void confirmAudio(
+ Future<void> confirmAudio(
     RegisterCubit registerCubit, {
     VoidCallback? onResetAudioUI,
-  }) {
+    Function(Map<String, dynamic>)? addMessage, // ✅ Agregar para mostrar mensajes
+  }) async { // ✅ Cambiar a Future<void>
     if (_permanentAudioPath == null) {
       debugPrint('⚠️ [AudioHandler] No hay audio permanente para confirmar');
       return;
@@ -182,15 +185,107 @@ class AudioChatHandler {
       return;
     }
 
-    registerCubit.setVoiceNoteFile(audioFile);
+    final email = registerCubit.state.email;
+    if (email == null || email.isEmpty) {
+      debugPrint('⚠️ [AudioHandler] No hay email para subir audio');
+      registerCubit.setVoiceNoteFile(audioFile);
+      onResetAudioUI?.call();
+      _pendingAudioPath = null;
+      _isWaitingForConfirmation = false;
+      return;
+    }
 
-    debugPrint('✅ [AudioHandler] Audio confirmado y guardado: $_permanentAudioPath');
-    debugPrint('✅ [AudioHandler] Tamaño: ${audioFile.lengthSync()} bytes');
+    // ✅ Mostrar mensaje de carga
+    if (addMessage != null) {
+      addMessage({
+        "other": true,
+        "type": MessageType.typing,
+        "name": "Migozz",
+        "time": getTimeNow(),
+      });
+    }
+
+    debugPrint('📤 [AudioHandler] Subiendo audio a servidor...');
+
+    try {
+      final urls = await mediaService.uploadFilesTemporarily(
+        email: email,
+        files: {MediaType.voice: audioFile},
+      );
+
+      final voiceUrl = urls[MediaType.voice];
+
+      if (voiceUrl != null) {
+        debugPrint('✅ [AudioHandler] Audio subido exitosamente: $voiceUrl');
+
+        // ✅ Guardar la URL en el cubit
+        registerCubit.setVoiceNoteUrl(voiceUrl);
+
+        // ✅ También guardar el archivo localmente por si acaso
+        registerCubit.setVoiceNoteFile(audioFile);
+
+        // ✅ Mensaje de éxito
+        if (addMessage != null) {
+          final isSpanish = registerCubit.state.language == 'Español';
+          addMessage({
+            "other": true,
+            "type": MessageType.text,
+            "text": isSpanish
+                ? "✅ Audio guardado correctamente"
+                : "✅ Audio saved successfully",
+            "name": "Migozz",
+            "time": getTimeNow(),
+          });
+        }
+      } else {
+        debugPrint('❌ [AudioHandler] No se obtuvo URL del audio');
+        
+        // Error: no se obtuvo URL
+        if (addMessage != null) {
+          final isSpanish = registerCubit.state.language == 'Español';
+          addMessage({
+            "other": true,
+            "type": MessageType.text,
+            "text": isSpanish
+                ? "❌ Error al guardar el audio. Intenta nuevamente."
+                : "❌ Error saving audio. Please try again.",
+            "name": "Migozz",
+            "time": getTimeNow(),
+            "isError": true,
+          });
+        }
+        
+        // Fallback: guardar solo el archivo local
+        registerCubit.setVoiceNoteFile(audioFile);
+      }
+    } catch (e) {
+      debugPrint('❌ [AudioHandler] Error subiendo audio: $e');
+
+      // Mostrar error al usuario
+      if (addMessage != null) {
+        final isSpanish = registerCubit.state.language == 'Español';
+        addMessage({
+          "other": true,
+          "type": MessageType.text,
+          "text": isSpanish
+              ? "❌ Error de conexión. Verifica tu internet e intenta nuevamente."
+              : "❌ Connection error. Check your internet and try again.",
+          "name": "Migozz",
+          "time": getTimeNow(),
+          "isError": true,
+        });
+      }
+
+      // Fallback: guardar solo el archivo local
+      registerCubit.setVoiceNoteFile(audioFile);
+    }
+
+    debugPrint('✅ [AudioHandler] Audio confirmado');
 
     // Limpiar el archivo temporal original
-    _cleanupOriginalFile();
+    await _cleanupOriginalFile();
 
-    // ✅ Ahora sí resetear el UI del audio manager
+    // ✅ Resetear el UI del audio manager
     onResetAudioUI?.call();
 
     _pendingAudioPath = null;

@@ -29,6 +29,9 @@ class _IaChatScreenState extends State<IaChatScreen> {
   final TextEditingController _controller = TextEditingController();
   late final ChatController _chatController;
 
+  final GlobalKey<ChatInputWidgetState> _chatInputKey = GlobalKey();
+  // Callback para eliminacion de audio al enviar
+
   @override
   void initState() {
     super.initState();
@@ -36,6 +39,10 @@ class _IaChatScreenState extends State<IaChatScreen> {
     _chatController = ChatController(
       registerCubit: context.read<RegisterCubit>(),
     );
+
+    _chatController.onResetAudioUI = () {
+      _chatInputKey.currentState?.resetAudioManager();
+    };
 
     if (_chatController.messages.isEmpty) {
       _chatController.initializeChat(onActionRequired: _handleNavigation);
@@ -131,6 +138,7 @@ class _IaChatScreenState extends State<IaChatScreen> {
               listenable: _chatController,
               builder: (context, child) {
                 return ChatInputWidget(
+                  key: _chatInputKey,
                   controller: _controller,
                   showPhoneInput: _chatController.showPhoneInput,
                   onSend: () {

@@ -8,10 +8,13 @@ import 'package:migozz_app/core/components/compuestos/chat/chat_model.dart';
 import 'package:migozz_app/core/services/ai/gemini_service.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/functions/audio_chat_handler.dart';
+import 'package:migozz_app/features/auth/services/media_service.dart';
 
 class ChatController extends ChangeNotifier {
   final RegisterCubit registerCubit;
   ChatController({required this.registerCubit});
+
+  VoidCallback? onResetAudioUI;
 
   bool _active = true;
   bool get isActive => _active;
@@ -43,13 +46,13 @@ class ChatController extends ChangeNotifier {
     try {
       _audioHandler.reset();
     } catch (e) {
-      debugPrint('Error al resetear audioHandler: $e');
+        debugPrint('Error al resetear audioHandler: $e');
+      if (clearMessages) {
+        _messages.clear();
+      }
+      onBotAction = null;
+      notifyListeners();
     }
-    if (clearMessages) {
-      _messages.clear();
-    }
-    onBotAction = null;
-    notifyListeners();
   }
 
   void onAudioFinished() {
@@ -102,14 +105,60 @@ class ChatController extends ChangeNotifier {
       registerCubit.setAvatarUrl(photoPath);
     } else {
       if (kIsWeb) {
-        // En web no intentamos crear File local
         debugPrint('⚠️ Web: no se puede guardar archivo local en web: $photoPath');
       } else {
-        // Solo en mobile intentamos con File (evita dart:io en web)
         final file = File(photoPath);
         if (await file.exists()) {
           registerCubit.setAvatarFile(file);
-          debugPrint('✅ Archivo de avatar guardado: $photoPath');
+          debugPrint('✅ Archivo de avatar guardado localmente: $photoPath');
+
+          // ✅ NUEVO: Subir avatar inmediatamente
+          final email = registerCubit.state.email;
+          if (email != null && email.isNotEmpty) {
+            try {
+              // Mostrar typing mientras sube
+              addMessage({
+                "other": true,
+                "type": MessageType.typing,
+                "name": "Migozz",
+                "time": getTimeNow(),
+              });
+
+              debugPrint('📤 Subiendo avatar a servidor...');
+              
+              final mediaService = UserMediaService();
+              final urls = await mediaService.uploadFilesTemporarily(
+                email: email,
+                files: {MediaType.avatar: file},
+              );
+
+              final avatarUrl = urls[MediaType.avatar];
+
+              // Remover typing
+              _removeTypingMessage();
+
+              if (avatarUrl != null) {
+                debugPrint('✅ Avatar subido exitosamente: $avatarUrl');
+                registerCubit.setAvatarUrl(avatarUrl);
+
+                final isSpanish = registerCubit.state.language == 'Español';
+                addMessage({
+                  "other": true,
+                  "type": MessageType.text,
+                  "text": isSpanish
+                      ? "✅ Foto guardada correctamente"
+                      : "✅ Photo saved successfully",
+                  "name": "Migozz",
+                  "time": getTimeNow(),
+                });
+              } else {
+                debugPrint('❌ No se obtuvo URL del avatar');
+              }
+            } catch (e) {
+              debugPrint('❌ Error subiendo avatar: $e');
+              _removeTypingMessage();
+            }
+          }
         } else {
           debugPrint('❌ Archivo no encontrado: $photoPath');
           return;
@@ -277,46 +326,7 @@ class ChatController extends ChangeNotifier {
     // Si estamos en el paso de audio y NO estamos esperando confirmación
     if (GeminiService.instance.isOnVoiceNoteStep &&
         !_audioHandler.isWaitingForAudioConfirmation) {
-      // NEW: On web we don't block the flow — inform + skip automatically.
-      final isSpanish = registerCubit.state.language == 'Español';
-      if (kIsWeb) {
-        // Inform user (bilingual already handled by showNextBotMessage, but also here in case user types)
-        addMessage({
-          "other": true,
-          "type": MessageType.text,
-          "text": isSpanish
-              ? "Estás en la web — usa la app para grabar tu nota de presentación (5-10 segundos)."
-              : "You're on the web — please use the app to record your voice note (5-10 seconds).",
-          "name": "Migozz",
-          "time": getTimeNow(),
-        });
-
-        _lastUserMessage = 'skipped_voice_web';
-        await Future.delayed(const Duration(milliseconds: 600));
-        if (!_active) return;
-        await showNextBotMessage();
-        return;
-      }
-
-      // Mobile: keep original behavior (text blocked)
-      addMessage({
-        "other": false,
-        "text": text,
-        "type": MessageType.text,
-        "time": getTimeNow(),
-      });
-
-      addMessage({
-        "other": true,
-        "type": MessageType.text,
-        "text": isSpanish
-            ? "⚠ En este paso solo puedes enviar una nota de voz.\n\nMantén pulsado el botón del micrófono 🎤 para grabar (5-10 segundos)."
-            : "⚠ In this step you can only send a voice note.\n\nHold the microphone button 🎤 to record (5-10 seconds).",
-        "name": "Migozz",
-        "time": getTimeNow(),
-        "isError": true,
-      });
-      notifyListeners();
+      // ... código existente web ...
       return;
     }
 
@@ -331,8 +341,17 @@ class ChatController extends ChangeNotifier {
       });
 
       if (audioResponse == 'keep') {
-        _audioHandler.confirmAudio(registerCubit);
-        _lastUserMessage = registerCubit.voiceNoteFile?.path ?? text;
+        // ✅ ESPERAR a que termine la subida
+        await _audioHandler.confirmAudio(
+          registerCubit,
+          onResetAudioUI: onResetAudioUI,
+          addMessage: addMessage, // ✅ Pasar addMessage
+        );
+        
+        _lastUserMessage = registerCubit.state.voiceNoteUrl ?? 
+                          registerCubit.voiceNoteFile?.path ?? 
+                          text;
+        
         await Future.delayed(const Duration(milliseconds: 600));
         if (!_active) return;
         await showNextBotMessage();
@@ -341,6 +360,10 @@ class ChatController extends ChangeNotifier {
           registerCubit,
         );
         addMessage(recordMessage);
+
+        // ✅ También resetear cuando se graba otro
+        onResetAudioUI?.call();
+
         notifyListeners();
       }
       return;

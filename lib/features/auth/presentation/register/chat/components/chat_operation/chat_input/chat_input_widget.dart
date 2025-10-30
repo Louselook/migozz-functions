@@ -30,10 +30,10 @@ class ChatInputWidget extends StatefulWidget {
   });
 
   @override
-  State<ChatInputWidget> createState() => _ChatInputWidgetState();
+  State<ChatInputWidget> createState() => ChatInputWidgetState();
 }
 
-class _ChatInputWidgetState extends State<ChatInputWidget> {
+class ChatInputWidgetState extends State<ChatInputWidget> {
   bool _showAttachments = false;
   late final AudioRecorderManager _audioManager;
   Timer? _holdTimer;
@@ -108,14 +108,16 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
           backgroundColor: Colors.blue,
         ),
       );
-      // asegurar limpiar estado local
-      await _audioManager.reset();
+      await _audioManager.reset(); // En web sí borrar
       if (mounted) setState(() {});
       return;
     }
 
     if (_audioManager.audioPath != null) {
       final audioPath = _audioManager.audioPath!;
+      
+      debugPrint('🎤 [ChatInput] Iniciando envío de audio: $audioPath');
+      
       try {
         final tempPlayer = PlayerController();
         await tempPlayer.preparePlayer(
@@ -137,25 +139,43 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
               backgroundColor: Colors.orange,
             ),
           );
-          await _audioManager.reset();
+          await _audioManager.reset(); // Aquí sí borrar porque no se usará
           if (mounted) setState(() {});
           return;
         }
 
+        debugPrint('📤 [ChatInput] Enviando audio...');
+        
+        // ✅ PRIMERO: Enviar el audio (AudioChatHandler creará su copia)
         widget.onSendAudio?.call(audioPath);
+        
+        debugPrint('🧹 [ChatInput] Limpiando UI (preservando archivo)...');
+        
+        // ✅ SEGUNDO: Limpiar solo las referencias del UI (NO el archivo)
+        await _audioManager.clearReferences();
         _clearInputVisual();
+        
+        debugPrint('✅ [ChatInput] UI limpiado, archivo preservado para AudioChatHandler');
+        
+        // ✅ TERCERO: Actualizar el UI
         if (mounted) setState(() {});
+        
       } catch (e) {
         debugPrint('❌ Error al validar duración: $e');
+        
+        // En caso de error, también enviar y limpiar solo el UI
         widget.onSendAudio?.call(audioPath);
+        await _audioManager.clearReferences();
         _clearInputVisual();
+        
         if (mounted) setState(() {});
       }
     }
   }
 
   Future<void> resetAudioManager() async {
-    await _audioManager.reset();
+    debugPrint('🔄 [ChatInput] resetAudioManager llamado desde controller');
+    await _audioManager.clearReferences(); // Usar clearReferences en vez de reset
     if (mounted) setState(() {});
   }
 
@@ -177,6 +197,7 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
     if (hasText) {
       widget.onSend();
     } else if (_audioManager.audioPath != null) {
+      // ✅ Llamar a _handleSendAudio que ya tiene la lógica de limpiar
       _handleSendAudio();
     } else {
       // Si no hay texto ni audio, abrir tooltip instruccional

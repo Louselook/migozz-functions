@@ -208,6 +208,49 @@ class AudioRecorderManager {
     }
   }
 
+  Future<void> clearReferences() async {
+    debugPrint('🧹 [AudioManager] Limpiando referencias (sin borrar archivo)...');
+
+    try {
+      _durationTimer?.cancel();
+
+      if (isPlaying) {
+        await _audioPlayer.stop();
+        isPlaying = false;
+      }
+
+      if (isRecording) {
+        await _recorder.stop();
+        isRecording = false;
+      }
+
+      // ✅ NO eliminar el archivo físico, solo limpiar la referencia
+      // El archivo será manejado por AudioChatHandler
+
+      try {
+        playerController.dispose();
+      } catch (_) {}
+
+      _cancelSubscriptions();
+
+      // Reset estado visual
+      audioPath = null;
+      duration = Duration.zero;
+      maxDuration = Duration.zero;
+      isRecording = false;
+      isPlaying = false;
+
+      _initializeControllers();
+      onStateChanged?.call();
+      
+      debugPrint('✅ [AudioManager] Referencias limpiadas (archivo preservado)');
+    } catch (e) {
+      debugPrint('❌ Error en clearReferences: $e');
+      _initializeControllers();
+      onStateChanged?.call();
+    }
+  }
+
   Future<void> reset() async {
     debugPrint('🔄 Reset AudioManager...');
 
@@ -224,11 +267,13 @@ class AudioRecorderManager {
         isRecording = false;
       }
 
+      // ✅ Aquí SÍ eliminar el archivo
       if (audioPath != null) {
         try {
           final file = File(audioPath!);
           if (await file.exists()) {
             await file.delete();
+            debugPrint('🗑️ [AudioManager] Archivo eliminado: $audioPath');
           }
         } catch (e) {
           debugPrint('⚠️ Error eliminando archivo: $e');
