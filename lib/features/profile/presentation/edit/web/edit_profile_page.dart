@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
@@ -10,7 +11,6 @@ import 'package:migozz_app/features/profile/presentation/profile/web/components/
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
-import 'package:migozz_app/features/profile/presentation/profile/web/components/edit_profile_navigation_bar.dart';
 import 'package:migozz_app/features/profile/presentation/profile/web/components/edit_profile_options.dart';
 
 class EditProfilePage extends StatefulWidget {
@@ -139,14 +139,28 @@ class _EditProfilePageState extends State<EditProfilePage> {
     const minWidth = 400.0;
 
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(0),
-        child: AppBar(backgroundColor: Colors.transparent, elevation: 0),
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        leading: IconButton(
+          onPressed: () => context.go('/profile'),
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+        ),
+        centerTitle: true,
+        title: const Text(
+          'Edit Profile',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        elevation: 0,
       ),
       backgroundColor: Colors.black,
       body: BlocBuilder<AuthCubit, AuthState>(
         builder: (context, authState) {
-          // Validar si hay usuario
           if (authState.isLoadingProfile) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -161,7 +175,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
             );
           }
 
-          // Inicializar controladores solo una vez
           if (nameCtrl.text.isEmpty) {
             nameCtrl.text = user.displayName;
             usernameCtrl.text = user.username;
@@ -178,16 +191,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
           return Stack(
             children: [
-              // Gradientes de fondo
               const EditProfileBackground(),
-
-              // Barra de navegación
-              EditProfileNavigationBar(
-                onBack: () => context.go('/profile'),
-                onClose: () => context.go('/profile'),
-              ),
-
-              // Contenido principal
               SafeArea(
                 child: Center(
                   child: ConstrainedBox(
@@ -201,7 +205,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       padding: EdgeInsets.only(
                         left: isSmallScreen ? 20 : 40,
                         right: isSmallScreen ? 20 : 40,
-                        top: isSmallScreen ? 150 : 180,
+                        top: isSmallScreen ? 150 : 200,
                         bottom: 20,
                       ),
                       child: isMobile
@@ -254,17 +258,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
       builder: (context) {
         final screenWidth = MediaQuery.of(context).size.width;
 
-        // Usar ancho flexible en mobile, fijo en desktop
         final containerWidth = screenWidth < 900
             ? double.infinity
             : (isSmallScreen ? 280.0 : 360.0);
 
-        // Tamaño de imagen adaptativo
         final imageSize = screenWidth < 900
             ? (screenWidth * 0.7).clamp(200.0, 320.0)
             : (isSmallScreen ? 250.0 : 320.0);
 
-        // Usar avatar desde parámetro
         String imageProfile = "";
         if (avatarUrl == null || avatarUrl.isEmpty) {
           imageProfile = "assets/images/Migozz.webp";
@@ -278,9 +279,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             isSmallScreen: isSmallScreen,
             imageSize: imageSize,
             avatarUrl: imageProfile,
-            onDeleteAccount: () {
-              // TODO: Implementar lógica de eliminación de cuenta
-            },
+            onDeleteAccount: () {},
             onSave: () => _saveProfile(authState.firebaseUser!.uid),
           ),
         );
@@ -302,7 +301,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Campos editables del perfil
         _buildTextField(
           hint: 'Full name',
           controller: nameCtrl,
@@ -348,10 +346,35 @@ class _EditProfilePageState extends State<EditProfilePage> {
           readOnly: true,
           onTap: () => _confirmAndChangeLocation(user.email),
         ),
+        const SizedBox(height: 20),
+
+        // 🔹 Botón Logout centrado y con el mismo tamaño que los inputs
+        Center(
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () async => FirebaseAuth.instance.signOut(),
+              icon: const Icon(Icons.logout, color: Colors.white),
+              label: const Text(
+                'Logout',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+        ),
 
         const SizedBox(height: 30),
-
-        // Opciones de edición (sin Edit Record/Audio)
         EditProfileOptions(
           onEditRecord: () {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -375,11 +398,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
             final editCubit = context.read<EditCubit>();
             editCubit.setEditItem(EditItem.socialEcosystem);
-
-            debugPrint(
-              '🔹 [EditProfileScreen] Navegando a MoreUserDetails en modo EDIT',
-            );
-            debugPrint('🔹 userId: $userId');
 
             Navigator.push(
               context,
