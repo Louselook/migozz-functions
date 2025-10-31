@@ -3,12 +3,14 @@ import {
   onDocumentUpdated,
 } from "firebase-functions/v2/firestore";
 import {onCall} from "firebase-functions/v2/https";
-import * as admin from "firebase-admin";
-import * as QRCode from "qrcode";
+import {initializeApp} from "firebase-admin/app";
+import {getFirestore, FieldValue} from "firebase-admin/firestore";
+import {getStorage} from "firebase-admin/storage";
+import QRCode from "qrcode";
 
-admin.initializeApp();
-const db = admin.firestore();
-const storage = admin.storage();
+initializeApp();
+const db = getFirestore();
+const storage = getStorage();
 
 
 // 1. onUserCreate → sincroniza con profiles_public
@@ -28,7 +30,7 @@ export const onUserCreate = onDocumentCreated("users/{uid}", async (event) => {
     country: userData.location?.country || "",
     totalFollowers: userData.totalFollowers || 0,
     linksCount: userData.linksCount || 0,
-    t: admin.firestore.FieldValue.serverTimestamp(),
+  t: FieldValue.serverTimestamp(),
   });
 });
 
@@ -46,7 +48,7 @@ export const verifyHandle = onCall(async (request) => {
 
   await ref.set({
     uid,
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  createdAt: FieldValue.serverTimestamp(),
   });
 
   return {success: true};
@@ -71,7 +73,7 @@ export const profilesPublicSync = onDocumentUpdated("users/{uid}",
       country: data.location?.country,
       totalFollowers: data.totalFollowers,
       linksCount: data.linksCount,
-      t: admin.firestore.FieldValue.serverTimestamp(),
+  t: FieldValue.serverTimestamp(),
     }, {merge: true});
   });
 
@@ -89,7 +91,7 @@ export const fetchSocialMetrics = onCall(async (request) => {
     .doc(linkId).update({
       followers,
       postsCount,
-      lastFetchedAt: admin.firestore.FieldValue.serverTimestamp(),
+  lastFetchedAt: FieldValue.serverTimestamp(),
     });
 
   // recalcular totalFollowers
