@@ -16,6 +16,8 @@ import 'package:migozz_app/features/auth/presentation/register/chat/deeplink_fun
 import 'package:migozz_app/features/auth/presentation/register/chat/deeplink_functions/handle_spotify.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/deeplink_functions/handle_tiktok.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/deeplink_functions/handle_twitter.dart';
+import 'package:migozz_app/features/tutorial/avatar_register_tutorial.dart';
+import 'package:migozz_app/features/tutorial/voice_register_tutorial.dart';
 
 class IaChatScreen extends StatefulWidget {
   const IaChatScreen({super.key});
@@ -30,7 +32,6 @@ class _IaChatScreenState extends State<IaChatScreen> {
   late final ChatController _chatController;
 
   final GlobalKey<ChatInputWidgetState> _chatInputKey = GlobalKey();
-  // Callback para eliminacion de audio al enviar
 
   @override
   void initState() {
@@ -40,8 +41,18 @@ class _IaChatScreenState extends State<IaChatScreen> {
       registerCubit: context.read<RegisterCubit>(),
     );
 
+    // Callback para resetear audio UI
     _chatController.onResetAudioUI = () {
       _chatInputKey.currentState?.resetAudioManager();
+    };
+
+    // Configurar callback del tutorial
+    _chatController.onShowAvatarTutorial = () {
+      _showAvatarTutorial();
+    };
+
+    _chatController.onShowVoiceNoteTutorial = () {
+      _showVoiceNoteTutorial();
     };
 
     if (_chatController.messages.isEmpty) {
@@ -73,6 +84,53 @@ class _IaChatScreenState extends State<IaChatScreen> {
       context: context,
       botResponse: botResponse,
       chatController: _chatController,
+    );
+  }
+
+  // ✅ NUEVO: Método para mostrar el tutorial de avatar
+  void _showAvatarTutorial() {
+    final chatInputState = _chatInputKey.currentState;
+    if (chatInputState == null) {
+      debugPrint('⚠️ [IaChatScreen] ChatInputWidget state no disponible');
+      return;
+    }
+
+    final attachButtonKey = chatInputState.attachButtonKey;
+    final language = context.read<RegisterCubit>().state.language ?? 'English';
+
+    debugPrint('📸 [IaChatScreen] Mostrando tutorial de avatar');
+
+    final tutorialService = AvatarTutorialService();
+    tutorialService.showTutorial(
+      context: context,
+      attachButtonKey: attachButtonKey,
+      language: language,
+      onFinish: () {
+        debugPrint('✅ [IaChatScreen] Tutorial completado, usuario puede interactuar');
+      },
+    );
+  }
+
+  void _showVoiceNoteTutorial() {
+    final chatInputState = _chatInputKey.currentState;
+    if (chatInputState == null) {
+      debugPrint('⚠️ [IaChatScreen] ChatInputWidget state no disponible');
+      return;
+    }
+
+    final micButtonKey = chatInputState.micButtonKey;
+    final language = context.read<RegisterCubit>().state.language ?? 'English';
+
+    debugPrint('🎤 [IaChatScreen] Mostrando tutorial de voice note');
+
+    final tutorialService = VoiceNoteTutorialService();
+    tutorialService.showTutorial(
+      context: context,
+      micButtonKey: micButtonKey,
+      language: language,
+      onFinish: () {
+        debugPrint('✅ [IaChatScreen] Tutorial de voice note completado');
+      },
     );
   }
 
@@ -138,7 +196,7 @@ class _IaChatScreenState extends State<IaChatScreen> {
               listenable: _chatController,
               builder: (context, child) {
                 return ChatInputWidget(
-                  key: _chatInputKey,
+                  key: _chatInputKey, // 👈 Ya estaba, perfecto
                   controller: _controller,
                   showPhoneInput: _chatController.showPhoneInput,
                   onSend: () {

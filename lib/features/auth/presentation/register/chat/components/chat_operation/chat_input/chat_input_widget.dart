@@ -40,9 +40,13 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
   OverlayEntry? _tooltipEntry;
   bool _isLongPressValid = false;
   final GlobalKey _micButtonKey = GlobalKey();
+  final GlobalKey _attachButtonKey = GlobalKey();
 
   String _completePhoneNumber = '';
   bool _isPhoneValid = false;
+
+  GlobalKey get attachButtonKey => _attachButtonKey;
+  GlobalKey get micButtonKey => _micButtonKey;
 
   @override
   void initState() {
@@ -359,6 +363,7 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
         radius: 8,
         keyboardType: widget.keyboardType,
         suffixIcon: IconButton(
+          key: _attachButtonKey,
           icon: Icon(
             _showAttachments ? Icons.close : Icons.attach_file,
             color: _showAttachments ? Colors.red : Colors.grey,

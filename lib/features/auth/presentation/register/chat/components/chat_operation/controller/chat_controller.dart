@@ -9,12 +9,21 @@ import 'package:migozz_app/core/services/ai/gemini_service.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/functions/audio_chat_handler.dart';
 import 'package:migozz_app/features/auth/services/media_service.dart';
+import 'package:migozz_app/features/tutorial/avatar_register_tutorial.dart';
+import 'package:migozz_app/features/tutorial/voice_register_tutorial.dart';
 
 class ChatController extends ChangeNotifier {
   final RegisterCubit registerCubit;
   ChatController({required this.registerCubit});
 
   VoidCallback? onResetAudioUI;
+
+  final AvatarTutorialService _avatarTutorialService = AvatarTutorialService();
+  void Function()? onShowAvatarTutorial;
+
+  final VoiceNoteTutorialService _voiceNoteTutorialService = VoiceNoteTutorialService();
+  void Function()? onShowVoiceNoteTutorial;
+
 
   bool _active = true;
   bool get isActive => _active;
@@ -338,6 +347,24 @@ class ChatController extends ChangeNotifier {
           step.contains('phone') || botResponse["showPhoneCode"] == true;
 
       addMessage(message);
+      
+      if (GeminiService.instance.isOnAvatarStep && !kIsWeb) {
+        debugPrint('📸 [ChatController] Detectado paso de avatar');
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (onShowAvatarTutorial != null) {
+            onShowAvatarTutorial!();
+          }
+        });
+      }
+
+      if (GeminiService.instance.isOnVoiceNoteStep && !kIsWeb) {
+        debugPrint('🎤 [ChatController] Detectado paso de voice note, activando tutorial');
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (onShowVoiceNoteTutorial != null && _active) {
+            onShowVoiceNoteTutorial!();
+          }
+        });
+      }
 
       // Auto-skip voice step on WEB
       final isVoiceStep = GeminiService.instance.isOnVoiceNoteStep || step.contains('voice');
@@ -405,6 +432,19 @@ class ChatController extends ChangeNotifier {
     } finally {
       if (_active) registerCubit.setAiResponse(false);
       notifyListeners();
+    }
+  }
+
+  void showAvatarTutorialIfNeeded(BuildContext context) {
+    final currentStep = GeminiService.instance.currentStep;
+    
+    if (currentStep == 'avatarUrl' && onShowAvatarTutorial != null) {
+      debugPrint('📸 [ChatController] Mostrando tutorial de avatar');
+      
+      // Pequeño delay para asegurar que el widget esté renderizado
+      Future.delayed(const Duration(milliseconds: 300), () {
+        onShowAvatarTutorial?.call();
+      });
     }
   }
 
@@ -505,6 +545,8 @@ class ChatController extends ChangeNotifier {
   @override
   void dispose() {
     _active = false;
+    _avatarTutorialService.closeTutorial();
+    _voiceNoteTutorialService.closeTutorial(); 
     try {
       _audioHandler.reset();
     } catch (e) {
