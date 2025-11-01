@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SocialLink {
@@ -138,7 +139,7 @@ class _SocialButtonState extends State<_SocialButton> {
               ),
               child: Center(
                 child: hasAsset
-                    ? Image.asset(
+                    ? SvgPicture.asset(
                         widget.link.asset,
                         width: widget.iconSize,
                         height: widget.iconSize,

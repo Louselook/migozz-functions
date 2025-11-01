@@ -23,7 +23,7 @@ class _PublicationsContentState extends State<PublicationsContent> {
     'assets/images/profileBackground.webp',
     'assets/images/Migozz.webp',
     'assets/images/otp_image.webp',
-    'assets/images/logomigozz.png',
+    'assets/images/logomigozz.webp',
     'assets/images/ImgPefil.webp',
   ];
 

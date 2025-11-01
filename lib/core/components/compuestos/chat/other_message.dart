@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/controller/chat_controller.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/functions/profile_picture_selector.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/social_cards/social_cards.dart';
@@ -38,8 +39,8 @@ class OtherMessage extends StatelessWidget {
           // 🟣 Encabezado con ícono de Migozz
           Row(
             children: [
-              const Image(
-                image: AssetImage("assets/icons/Migozz300x.png"),
+              SvgPicture.asset(
+                "assets/icons/Migozz_SinFONDO.svg",
                 width: 18,
                 height: 18,
               ),

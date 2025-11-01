@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:migozz_app/features/profile/components/info_user_profile.dart';
+import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 
 class ProfileHeader extends StatelessWidget {
   final String name;
@@ -7,6 +8,10 @@ class ProfileHeader extends StatelessWidget {
   final String communityCount;
   final String communityName;
   final String? avatarUrl;
+  final String voiceNoteUrl;
+  final TutorialKeys? tutorialKeys;
+  final bool isOwnProfile;
+  final String userId;
 
   const ProfileHeader({
     super.key,
@@ -15,6 +20,10 @@ class ProfileHeader extends StatelessWidget {
     required this.communityCount,
     required this.communityName,
     this.avatarUrl,
+    this.voiceNoteUrl = '',
+    this.tutorialKeys,
+    this.isOwnProfile = true,
+    this.userId = '',
   });
 
   @override
@@ -43,7 +52,10 @@ class ProfileHeader extends StatelessWidget {
           displayName: displayName,
           comunityCount: communityCount,
           nameComunity: communityName,
-          voiceNoteUrl: '',
+          voiceNoteUrl: voiceNoteUrl,
+          tutorialKeys: tutorialKeys,
+          isOwnProfile: isOwnProfile,
+          userId: userId,
         ),
 
         const SizedBox(height: 16),

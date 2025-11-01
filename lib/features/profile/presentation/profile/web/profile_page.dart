@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/components/atomics/network_list.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user_dto.dart';
 import 'package:migozz_app/features/profile/components/draggable_social_rail.dart';
@@ -58,12 +60,26 @@ class WebProfileContent extends StatelessWidget {
                   child: CustomScrollView(
                     slivers: [
                       SliverToBoxAdapter(
-                        child: ProfileHeader(
-                          name: user.displayName,
-                          displayName: user.username,
-                          communityCount: totalFollowers.toString(),
-                          communityName: 'Community',
-                          avatarUrl: user.avatarUrl,
+                        child: Builder(
+                          builder: (context) {
+                            // Determinar si es el perfil del usuario autenticado
+                            final authState = context.read<AuthCubit>().state;
+                            final currentUserEmail =
+                                authState.userProfile?.email ?? '';
+                            final isOwnProfile = user.email == currentUserEmail;
+
+                            return ProfileHeader(
+                              name: user.displayName,
+                              displayName: user.username,
+                              communityCount: totalFollowers.toString(),
+                              communityName: 'Community',
+                              avatarUrl: user.avatarUrl,
+                              voiceNoteUrl: user.voiceNoteUrl ?? '',
+                              tutorialKeys: tutorialKeys,
+                              isOwnProfile: isOwnProfile,
+                              userId: user.email,
+                            );
+                          },
                         ),
                       ),
                       const SliverFillRemaining(child: PublicationsContent()),

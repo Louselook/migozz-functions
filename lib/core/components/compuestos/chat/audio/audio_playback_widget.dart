@@ -1,5 +1,6 @@
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:migozz_app/core/color.dart';
 
 /// Widget horizontal para reproducir audio grabado por el usuario
@@ -110,8 +111,8 @@ class _AudioPlaybackWidgetState extends State<AudioPlaybackWidget> {
           // Header con logo y nombre (estilo OtherMessage)
           Row(
             children: [
-              Image(
-                image: AssetImage("assets/icons/Migozz300x.png"),
+              SvgPicture.asset(
+                "assets/icons/Migozz_SinFONDO.svg",
                 width: 18,
                 height: 18,
               ),

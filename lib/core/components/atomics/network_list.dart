@@ -17,17 +17,17 @@ final List<String> socials = [
 
 // Label -> path exacto
 final Map<String, String> iconByLabel = {
-  "Tiktok": "assets/icons/social_networks/TikTok.png",
-  "Instagram": "assets/icons/social_networks/Instagram.png",
-  "Facebook": "assets/icons/social_networks/Facebook.png",
-  "Youtube": "assets/icons/social_networks/Youtube.png",
-  "Telegram": "assets/icons/social_networks/Telegram.png",
-  "Whatsapp": "assets/icons/social_networks/WhatsApp.png",
-  "Pinterest": "assets/icons/social_networks/Pinterest.png",
-  "Spotify": "assets/icons/social_networks/Spotify.png",
-  "Twitter": "assets/icons/social_networks/X.png",
-  "LinkedIn": "assets/icons/social_networks/LinkedIn.png",
+  "Tiktok": "assets/icons/social_networks/TikTok.svg",
+  "Instagram": "assets/icons/social_networks/Instagram.svg",
+  "Facebook": "assets/icons/social_networks/Facebook.svg",
+  "Youtube": "assets/icons/social_networks/Youtube.svg",
+  "Telegram": "assets/icons/social_networks/Telegram.svg",
+  "Whatsapp": "assets/icons/social_networks/WhatsApp.svg",
+  "Pinterest": "assets/icons/social_networks/Pinterest.svg",
+  "Spotify": "assets/icons/social_networks/Spotify.svg",
+  "Twitter": "assets/icons/social_networks/Twitter.svg",
+  "LinkedIn": "assets/icons/social_networks/LinkedIn.svg",
   "Paypal": "assets/icons/social_networks/Paypal.svg",
   "Xbox": "assets/icons/social_networks/Xbox.svg",
-  "Other": "assets/icons/social_networks/Other.png",
+  "Other": "assets/icons/social_networks/Other.svg",
 };

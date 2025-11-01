@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:audio_waveforms/audio_waveforms.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -19,10 +20,11 @@ class EditRecordScreen extends StatefulWidget {
 }
 
 class _EditRecordScreenState extends State<EditRecordScreen>
-  with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin {
   final AudioRecorder _recorder = AudioRecorder(); // audio_waveforms
   final AudioPlayer _audioPlayer = AudioPlayer(); // just_audio
-  final PlayerController _playerController = PlayerController(); // audio_waveforms player
+  final PlayerController _playerController =
+      PlayerController(); // audio_waveforms player
 
   String? _audioPath;
   bool _isRecording = false;
@@ -47,9 +49,10 @@ class _EditRecordScreenState extends State<EditRecordScreen>
       duration: const Duration(milliseconds: 600),
       reverseDuration: const Duration(milliseconds: 350),
     );
-    _scaleAnim = Tween<double>(begin: 1.0, end: 1.12).animate(
-      CurvedAnimation(parent: _animCtrl, curve: Curves.easeInOut),
-    );
+    _scaleAnim = Tween<double>(
+      begin: 1.0,
+      end: 1.12,
+    ).animate(CurvedAnimation(parent: _animCtrl, curve: Curves.easeInOut));
     _colorAnim = ColorTween(
       begin: const Color(0xFFFF4DB6),
       end: const Color(0xFFFF8CBF),
@@ -170,10 +173,11 @@ class _EditRecordScreenState extends State<EditRecordScreen>
       try {
         // Si está en estado idle o completed, configurar el archivo
         if (_audioPlayer.playerState.processingState == ProcessingState.idle ||
-            _audioPlayer.playerState.processingState == ProcessingState.completed) {
+            _audioPlayer.playerState.processingState ==
+                ProcessingState.completed) {
           await _audioPlayer.setFilePath(_audioPath!);
         }
-        
+
         // Reproducir desde el inicio si había terminado
         if (_audioPlayer.position >= (_audioPlayer.duration ?? Duration.zero)) {
           await _audioPlayer.seek(Duration.zero);
@@ -181,7 +185,7 @@ class _EditRecordScreenState extends State<EditRecordScreen>
             _playerController.seekTo(0);
           } catch (_) {}
         }
-        
+
         await _audioPlayer.play();
       } catch (e) {
         debugPrint('Error playing audio: $e');
@@ -200,25 +204,22 @@ class _EditRecordScreenState extends State<EditRecordScreen>
 
     final uid = user.uid;
     final filename = localPath.split('/').last;
-    final storageRef = FirebaseStorage.instance
-        .ref()
-        .child('users/${user.uid}/voice/$filename');
+    final storageRef = FirebaseStorage.instance.ref().child(
+      'users/${user.uid}/voice/$filename',
+    );
 
     setState(() => _isUploading = true);
 
-    try { 
+    try {
       final uploadTask = storageRef.putFile(File(localPath));
       final snapshot = await uploadTask;
       final downloadUrl = await snapshot.ref.getDownloadURL();
 
       // Guardar en Firestore (merge para no sobreescribir)
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(uid)
-          .set({
-            'voiceNoteUrl': downloadUrl,
-            'voiceNoteUpdatedAt': FieldValue.serverTimestamp(),
-          }, SetOptions(merge: true));
+      await FirebaseFirestore.instance.collection('users').doc(uid).set({
+        'voiceNoteUrl': downloadUrl,
+        'voiceNoteUpdatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
 
       return downloadUrl;
     } catch (e) {
@@ -241,9 +242,7 @@ class _EditRecordScreenState extends State<EditRecordScreen>
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       final snack = ScaffoldMessenger.of(context);
-      snack.showSnackBar(
-        const SnackBar(content: Text('Uploading audio...')),
-      );
+      snack.showSnackBar(const SnackBar(content: Text('Uploading audio...')));
 
       final url = await _uploadToStorageAndSaveFirestore(_audioPath!);
       if (url != null) {
@@ -282,8 +281,11 @@ class _EditRecordScreenState extends State<EditRecordScreen>
         ),
         title: const Text(
           "Edit Record",
-          style:
-              TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
         ),
         centerTitle: true,
       ),
@@ -295,7 +297,11 @@ class _EditRecordScreenState extends State<EditRecordScreen>
             SizedBox(height: screenH * 0.04),
             const Text(
               "Record Your Voicenote",
-              style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 6),
             const Text(
@@ -331,8 +337,8 @@ class _EditRecordScreenState extends State<EditRecordScreen>
                             : [],
                       ),
                       child: Center(
-                        child: Image.asset(
-                          "assets/icons/Mic.png",
+                        child: SvgPicture.asset(
+                          "assets/icons/Mic.svg",
                           width: 140,
                           height: 140,
                           color: Colors.white,
@@ -386,7 +392,9 @@ class _EditRecordScreenState extends State<EditRecordScreen>
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
-                              _audioPlayer.playing ? Icons.pause : Icons.play_arrow,
+                              _audioPlayer.playing
+                                  ? Icons.pause
+                                  : Icons.play_arrow,
                               color: Colors.white,
                               size: 34,
                             ),
