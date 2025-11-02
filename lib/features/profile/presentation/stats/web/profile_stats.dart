@@ -252,7 +252,7 @@ class _WebProfileStatsState extends State<WebProfileStats> {
                                     child: _DataCard(
                                       title: name,
                                       image:
-                                          "assets/icons/social_networks/mini_icon_${name.toLowerCase()}.png",
+                                          "assets/icons/social_networks/mini_icon_${name.toLowerCase()}.svg",
                                       rows: filteredEntries
                                           .map(
                                             (e) => _RowData(

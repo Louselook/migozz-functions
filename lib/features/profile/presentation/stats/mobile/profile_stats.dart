@@ -189,7 +189,7 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
                                   ),
                                   const SizedBox(height: 20),
                                   _DataCard(
-                                    image: 'assets/icons/social_networks/mini_icon_migozz.png',
+                                    image: 'assets/icons/social_networks/mini_icon_migozz.svg',
                                     title: "Overview",
                                     rows: [
                                       _RowData(label: "Likes:", value: _formatNum(_totalsGlobal['totalLikes'] ?? 0)),
@@ -225,7 +225,7 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
                                             padding: const EdgeInsets.only(bottom: 12),
                                             child: _DataCard(
                                               image:
-                                                  "assets/icons/social_networks/mini_icon_${name.toLowerCase()}.png",
+                                                  "assets/icons/social_networks/mini_icon_${name.toLowerCase()}.svg",
                                               title: name,
                                               rows: filteredEntries.map((e) {
                                                 final displayKey = _applyFieldRules(e.key);
