@@ -1,18 +1,18 @@
 // Lista original
 final List<String> socials = [
-  "Tiktok",
-  "Instagram",
-  "Facebook",
+  // "Tiktok",
+  // "Instagram",
+  // "Facebook",
   "Youtube",
-  "Telegram",
-  "Whatsapp",
-  "Pinterest",
+  // "Telegram",
+  // "Whatsapp",
+  // "Pinterest",
   "Spotify",
   "Twitter",
-  "LinkedIn",
-  "Paypal",
-  "Xbox",
-  "Other",
+  // "LinkedIn",
+  // "Paypal",
+  // "Xbox",
+  // "Other",
 ];
 
 // Label -> path exacto
