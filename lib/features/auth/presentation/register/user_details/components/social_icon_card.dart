@@ -41,9 +41,8 @@ class SocialIconCard extends StatelessWidget {
         width: sizeIcon?.width ?? 65,
         height: sizeIcon?.height ?? 65,
         decoration: BoxDecoration(
-          gradient: isSelected
-              ? AppColors.primaryGradient : null, 
-          color: isSelected ? null : const Color(0xFF404040), 
+          gradient: isSelected ? AppColors.primaryGradient : null,
+          color: isSelected ? null : const Color(0xFF404040),
           borderRadius: BorderRadius.circular(responsiveBorderRadius),
         ),
         child: Column(

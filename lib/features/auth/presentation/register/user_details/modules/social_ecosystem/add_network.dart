@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 
@@ -48,7 +49,7 @@ class _AddNetworkBottomSheetState extends State<AddNetworkBottomSheet> {
       ),
       child: Padding(
         padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom
+          bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -63,11 +64,11 @@ class _AddNetworkBottomSheetState extends State<AddNetworkBottomSheet> {
               ),
             ),
             const SizedBox(height: 20),
-        
+
             // Logo
-            Image.asset(widget.assetPath, width: 50, height: 50),
+            SvgPicture.asset(widget.assetPath, width: 50, height: 50),
             const SizedBox(height: 20),
-        
+
             // Input
             TextField(
               controller: _controller,
@@ -87,17 +88,17 @@ class _AddNetworkBottomSheetState extends State<AddNetworkBottomSheet> {
                 ),
               ),
             ),
-        
+
             const SizedBox(height: 10),
-        
+
             // Preview URL
             Text(
               "https://www.${widget.label.toLowerCase()}.com/",
               style: const TextStyle(color: Colors.grey),
             ),
-        
+
             const SizedBox(height: 20),
-        
+
             // Botón Guardar (con degradado)
             SizedBox(
               width: double.infinity,
