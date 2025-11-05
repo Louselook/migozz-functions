@@ -24,6 +24,7 @@ class EditProfileScreen extends StatefulWidget {
   State<EditProfileScreen> createState() => _EditProfileScreenState();
 }
 
+// TODO: usar JSON
 class _EditProfileScreenState extends State<EditProfileScreen> {
   bool _uploading = false;
   final nameCtrl = TextEditingController();
@@ -162,7 +163,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('✓ Confirm'),
+            child: const Text('Confirm'),
           ),
         ],
       ),

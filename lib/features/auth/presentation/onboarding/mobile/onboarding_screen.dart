@@ -42,7 +42,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             padding: const EdgeInsets.only(top: 40, left: 20, right: 20),
             child: Row(
               children: List.generate(
-                AppConstants.onboardingPages.length,
+                AppConstants.onboardingImages.length,
                 (index) => CustomProgressIndicator(
                   index,
                   currentIndex: _currentPage,
@@ -61,7 +61,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   _currentPage = page;
                 });
               },
-              itemCount: AppConstants.onboardingPages.length,
+              itemCount: AppConstants.onboardingImages.length,
               itemBuilder: (context, index) {
                 return _buildOnboardingPage(
                   context,
@@ -99,7 +99,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 const Spacer(),
 
                 // Botones
-                _currentPage == AppConstants.onboardingPages.length - 1
+                _currentPage == AppConstants.onboardingImages.length - 1
                     ? SizedBox(
                         width: double.infinity,
                         child: GradientButton(

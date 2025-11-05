@@ -1,37 +1,33 @@
 import 'dart:async';
 import 'package:flutter/widgets.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'onboarding_model.dart';
 
 class AppConstants {
   static const String appName = 'Migozz';
 
-  /// Páginas compartidas entre mobile y web
-  static const List<OnboardingData> onboardingPages = [
-    OnboardingData(
-      imagePath: 'assets/images/onboarding_1.webp',
-      title: 'Welcome',
-      description:
-          'It is a long established fact that a reader will be distracted by the readable content',
-    ),
-    OnboardingData(
-      imagePath: 'assets/images/onboarding_2.webp',
-      title: 'Best social app to make new friends',
-      description:
-          'Integrate content from different social media platforms into one cohesive experience',
-    ),
-    OnboardingData(
-      imagePath: 'assets/images/onboarding_3.webp',
-      title: 'Create, find and join your circle now',
-      description:
-          'The platform allows content creators to share your content in various, such as text, photos, and videos, and even repost content from other platforms!',
-    ),
-  ];
+  /// Getter para obtener las páginas según el idioma actual
+  static List<OnboardingData> get onboardingPages => [
+        OnboardingData(
+          imagePath: "assets/images/onboarding_1.webp",
+          title: "onboarding.titles.onboardingTitle1".tr(),
+          description: "onboarding.descriptions.onboardingDescription1".tr(),
+        ),
+        OnboardingData(
+          imagePath: 'assets/images/onboarding_2.webp',
+          title: "onboarding.titles.onboardingTitle2".tr(),
+          description: "onboarding.descriptions.onboardingDescription2".tr(),
+        ),
+        OnboardingData(
+          imagePath: 'assets/images/onboarding_3.webp',
+          title: "onboarding.titles.onboardingTitle3".tr(),
+          description: "onboarding.descriptions.onboardingDescription3".tr(),
+        ),
+      ];
 
-  /// Lista de imágenes para precarga
   static List<String> get onboardingImages =>
       onboardingPages.map((p) => p.imagePath).toList();
 
-  /// Precache compartido
   static Future<void> precacheOnboardingImages([BuildContext? context]) async {
     for (final path in onboardingImages) {
       final provider = AssetImage(path);

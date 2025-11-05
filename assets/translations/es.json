@@ -1,0 +1,289 @@
+{
+  "onboarding": {
+    "titles": {
+      "onboardingTitle1": "Bienvenido",
+      "onboardingTitle2": "La mejor app social para hacer nuevos amigos",
+      "onboardingTitle3": "Crea, encuentra y únete a tu círculo ahora"
+    },
+    "descriptions": {
+      "onboardingDescription1": "Es un hecho establecido que un lector se distraerá con el contenido legible.",
+      "onboardingDescription2": "Integra contenido de diferentes plataformas sociales en una experiencia coherente.",
+      "onboardingDescription3": "La plataforma permite a los creadores compartir su contenido en varios formatos, como texto, fotos y videos, ¡e incluso volver a publicar contenido de otras plataformas!"
+    },
+    "buttons": {
+      "skip": "Saltar",
+      "next": "Siguiente",
+      "getStarted" : "Empecemos"
+    }
+  },
+  "login": {
+    "validations": {
+      "emptyEmail": "El correo no puede estar vacío",
+      "invalidEmail": "Por favor ingrese un correo válido",
+      "notExistEmail": "Este correo no está registrado. Por favor crea una cuenta primero.",
+      "validationEmail": "Error al verificar el correo: $e"
+    },
+    "presentation": {
+      "title": "Bienvenido a Migozz",
+      "subtitle1": "Conecta tu comunidad",
+      "inputText": "Ingresa tu correo",
+      "buttonText": "Iniciar sesión",
+      "subtitle2": "O inicia sesión con",
+      "bottonText": {
+        "Register": "¿No tienes una cuenta?",
+        "RegisterSpan": "Regístrate ahora\n",
+        "Terms&Conditions": "Al registrarte aceptas nuestros\n",
+        "Terms&ConditionsSpan": "Términos y condiciones"
+      }
+    }
+  },
+  "Register": {
+    "validations": {
+      "emptyEmail": "El correo no puede estar vacío",
+      "validationEmail": "Por favor ingrese un correo válido",
+      "registerEmail": "Este correo ya está registrado"
+    },
+    "presentation": {
+      "title": "¡Regístrate ahora!",
+      "subtitle1": "Ingresa tu información a continuación",
+      "inputText": "Ingresa tu correo",
+      "buttonText": "Crear cuenta",
+      "bottonText": {
+        "login": "¿Ya tienes una cuenta?",
+        "LoginReturn": "Inicia sesión"
+      }
+    }
+  },
+  "profile": {
+    "validations": {
+      "emptyAudio": "No hay audio disponible",
+      "errorAudio": "Error al reproducir el audio"
+    },
+    "stats": {
+      "rangeText": "No seleccionado",
+      "notSocials": "Aún no tienes redes sociales conectadas, ¡conéctalas!",
+      "addSocials": "Agregar redes sociales"
+    },
+    "tutorial": {
+      "searchStep": "Busca otros usuarios, temas y publicaciones.",
+      "audioStep": "Reproduce tu audio con este botón, ¡otros usuarios harán lo mismo!",
+      "QRStep": "Comparte tu perfil usando tu código QR o enviando tu enlace en otras apps.",
+      "homeStep": "Accede a tu perfil aquí; también sirve para recargar tu información.",
+      "statsStep": "Revisa tus estadísticas de redes sociales; si no has sincronizado ninguna, ¡hazlo!",
+      "settings": "Modifica tu información y sincroniza tus redes"
+    }
+  },
+  "search": {
+    "options": [
+      "Para ti",
+      "Cuentas",
+      "Reels",
+      "Audio",
+      "Hashtags"
+    ]
+  },
+  "edit": {
+    "validations": {
+      "updateProfilePic": "Foto de perfil actualizada",
+      "errorUpdateProfilePic": "Error al actualizar la foto: $e",
+      "updateProfile": "Perfil actualizado con éxito",
+      "errorUpdateProfile": "Error al guardar el perfil: $e",
+      "detectLocation": "🔍 Detectando ubicación...",
+      "errorDetecLocation": "❌ No se pudo obtener la ubicación actual",
+      "errorUserLogin": "Error: usuario no ha iniciado sesión",
+      "updateLocation": "✅ Ubicación actualizada a ${newLocation.city}, ${newLocation.country}",
+      "errorUpdateLocation": "❌ Error al actualizar la ubicación: $e"
+    },
+    "presentation": {
+      "title": "Editar perfil",
+      "errorUserEmpty": "Sin datos de usuario",
+      "fields": {
+        "fullName": "Nombre completo",
+        "nickname": "Apodo",
+        "email": "Correo electrónico",
+        "cellPhone": "Teléfono celular",
+        "dateOfBirth": "Fecha de nacimiento",
+        "gender": "Género"
+      },
+      "record": "Editar grabación",
+      "interest": "Editar mis intereses",
+      "socials": "Editar redes sociales",
+      "logOut": "Cerrar sesión"
+    },
+    "editAudio": {
+      "title": "Editar audio",
+      "permissionDenied": "Permiso para grabar denegado",
+      "audioSaved": "Audio subido y guardado ✅",
+      "errorUploadAudio": "Error al subir — inténtalo de nuevo",
+      "record": "Graba tu nota de voz",
+      "maxLimit": "Nota de voz: máximo 5–15 segundos.",
+      "liste": "Escucha tu audio"
+    },
+    "editLocation": {
+      "text1": "Detectamos que estás en:\n\n",
+      "text2": "${newLocation.city}, ${newLocation.state}\n",
+      "text3": "${newLocation.country}\n\n",
+      "text4": "¿Es correcto?"
+    },
+    "editInterest": {
+      "title": "Editar mis intereses",
+      "saveInterest": "Intereses guardados correctamente"
+    }
+  },
+  "share": {
+    "title": "Mira el perfil de ${data.displayName} en Migozz: ${data.link}",
+    "subject": "Perfil de ${data.displayName}",
+    "label": "Compartir perfil"
+  },
+  "buttons": {
+    "confirm": "confirmar",
+    "cancel": "cancelar",
+    "save": "guardar",
+    "continue": "continuar"
+  },
+  "category": {
+    "title": "Elige tu categoría",
+    "model": "Modelo",
+    "artist": "Artista",
+    "publicFigure": "Figura pública",
+    "streamer": "Streamer",
+    "influencer": "Influencer",
+    "sport": "Deportista",
+    "actor/Actress": "Actor/Actriz"
+  },
+  "interest": {
+    "goingOut": {
+      "title": "Salir",
+      "options": [
+        "Conciertos",
+        "Museos y galerías",
+        "Yoga",
+        "Comedia",
+        "Teatro",
+        "Clubes",
+        "Bares",
+        "Karaoke",
+        "Festivales de cine",
+        "Descansar"
+      ]
+    },
+    "sports": {
+      "title": "Deportes",
+      "options": [
+        "Fútbol americano",
+        "Fútbol",
+        "Hockey",
+        "Noticias deportivas",
+        "Pesca",
+        "Baloncesto",
+        "Críquet",
+        "Pickleball",
+        "Gimnasia",
+        "Equitación",
+        "MMA",
+        "Tenis",
+        "Natación",
+        "Snowboard",
+        "Gimnasio",
+        "Surf",
+        "Esquí",
+        "Béisbol",
+        "Golf",
+        "Boxeo"
+      ]
+    },
+    "filmAndTv": {
+      "title": "Cine y TV",
+      "options": [
+        "Drama",
+        "Suspenso",
+        "Crimen",
+        "Fantasía",
+        "Anime",
+        "Ciencia ficción",
+        "Misterio",
+        "Comedia",
+        "Romance",
+        "Acción",
+        "Terror"
+      ]
+    },
+    "valuesAndTraits": {
+      "title": "Valores y rasgos",
+      "options": [
+        "Inteligencia",
+        "Positividad",
+        "Confianza",
+        "Orientado a la familia",
+        "Ambición",
+        "Creatividad",
+        "Empatía"
+      ]
+    },
+    "traveling": {
+      "title": "Viajes",
+      "options": [
+        "Playas",
+        "Fines de semana en spa",
+        "Escapadas locales",
+        "Mochilear",
+        "Deportes de invierno",
+        "Caminatas",
+        "Viajes por carretera",
+        "Explorar nuevas ciudades",
+        "Viajes de pesca",
+        "Camping"
+      ]
+    },
+    "business": {
+      "title": "Negocios",
+      "options": [
+        "Emprendimiento",
+        "Ventas",
+        "Bienes raíces",
+        "Cripto",
+        "Marketing",
+        "Acciones"
+      ]
+    },
+    "creativity": {
+      "title": "Creatividad",
+      "options": [
+        "Escritura",
+        "Fotografía",
+        "Baile",
+        "Canto",
+        "Diseño",
+        "Creación de contenido",
+        "Arte",
+        "Maquillaje"
+      ]
+    },
+    "stayingIn": {
+      "title": "Quedarse en casa",
+      "options": [
+        "Lectura",
+        "Hornear",
+        "Comida para llevar",
+        "Cocinar",
+        "Juegos de mesa",
+        "Jardinería",
+        "Videojuegos"
+      ]
+    },
+    "pets": {
+      "title": "Mascotas",
+      "options": [
+        "Serpientes",
+        "Pájaros",
+        "Peces",
+        "Tortugas",
+        "Hámsters",
+        "Gatos",
+        "Perros",
+        "Lagartos",
+        "Conejos"
+      ]
+    }
+  }
+}

@@ -86,7 +86,7 @@ class OnboardingContainer extends StatelessWidget {
                           padding: const EdgeInsets.only(top: 40, left: 20, right: 20),
                           child: Row(
                             children: List.generate(
-                              AppConstants.onboardingPages.length,
+                              AppConstants.onboardingImages.length,
                               (index) => CustomProgressIndicator(
                                 index,
                                 currentIndex: currentPage,

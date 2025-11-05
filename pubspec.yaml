@@ -8,10 +8,14 @@ version: 1.0.0+1
 environment:
   sdk: ^3.8.1
 
-dependencies:
+dependencies: 
   qr_flutter: ^4.1.0
+
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  easy_localization: ^3.0.8
 
   get_it: ^8.2.0
   injectable: ^2.5.2
@@ -76,6 +80,7 @@ flutter:
   assets:
     - .env
     - assets/images/
+    - assets/translations/
     - assets/icons/
     - assets/icons/social_networks/
 

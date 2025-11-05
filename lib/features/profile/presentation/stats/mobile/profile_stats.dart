@@ -127,7 +127,7 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
   }
 
   String get rangeText {
-    if (selectedRange == null) return "No seleccionado";
+    if (selectedRange == null) return "No seleccionado"; //TODO: cambiar por JSON
     final s = selectedRange!;
     return "${s.start.day}/${s.start.month}/${s.start.year} → ${s.end.day}/${s.end.month}/${s.end.year}";
   }
@@ -155,7 +155,7 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
                             ? Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const Text("You don't have any social networks connected yet, connect them!",
+                                  const Text("You don't have any social networks connected yet, connect them!", //TODO: Cambiar a Json
                                       style: TextStyle(color: Colors.grey)),
                                   const SizedBox(height: 12),
                                   ElevatedButton(

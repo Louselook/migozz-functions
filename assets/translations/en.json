@@ -1,0 +1,289 @@
+{
+    "onboarding":{
+        "titles":{
+            "onboardingTitle1" : "Welcome",
+            "onboardingTitle2" : "Best social app to make new friends",
+            "onboardingTitle3" : "Create, find and join your circle now"
+        },
+        "descriptions":{
+            "onboardingDescription1" : "It is a long established fact that a reader will be distracted by the readable content",
+            "onboardingDescription2" : "Integrate content from different social media platforms into one cohesive experience",
+            "onboardingDescription3" : "The platform allows content creators to share your content in various, such as text, photos, and videos, and even repost content from other platforms!"
+        },
+        "buttons":{
+            "skip" : "Skip",
+            "next" : "Next",
+            "getStarted" : "Get Started"
+        }
+    },
+    "login":{
+        "validations":{
+            "emptyEmail" : "Email cannot be empty",
+            "invalidEmail" : "Please enter a valid email",
+            "notExistEmail" : "This email is not registered. Please create an account first.",
+            "validationEmail" : "Error verifying email: $e"
+        },
+        "presentation":{
+            "title" : "Welcome to Migozz",
+            "subtitle1" : "Connect your Community",
+            "inputText" : "Enter email",
+            "buttonText" : "Login",
+            "subtitle2" : "Or login with",
+            "bottonText" : {
+                "Register" : "Don´t have an account?",
+                "RegisterSpan" : "Register Now\n",
+                "Terms&Conditions" : "By registering you agree to our\n",
+                "Terms&ConditionsSpan" : "Terms and conditions"
+            }
+        }
+    },
+    "Register":{
+        "validations":{
+            "emptyEmail" : "Email cannot be empty",
+            "validationEmail" :"Please enter a valid Email",
+            "registerEmail" : "This email is already registered"
+        },
+        "presentation":{
+            "title" : "Register Now!",
+            "subtitle1" : "Enter your information below",
+            "inputText" : "Enter email",
+            "buttonText" : "Create Account",
+            "bottonText" : {
+                "login" : "Already a member?",
+                "LoginReturn" : "Login"
+            }   
+        }
+    },
+    "profile":{
+        "validations":{
+            "emptyAudio" : "No audio available",
+            "errorAudio" : "Error playing audio"
+        },
+        "stats":{
+            "rangeText" : "Not selected",
+            "notSocials" : "You don't have any social networks connected yet, connect them!",
+            "addSocials" : "Add Socials"
+        },
+        "tutorial":{
+            "searchStep" : "Search for other users, topics, and posts.",
+            "audioStep" : "Play your audio with this button, other users will do the same!",
+            "QRStep" : "Share your profile using your own QR code or by sharing your link on other apps.",
+            "homeStep" : "Access to your profile here, it also serves to reload your user information.",
+            "statsStep" : "Check your social media statistics; if you haven't synced any, do so!",
+            "settings" : "Modify your information and synchronize your socials"
+        }
+    },
+    "search" : {
+        "options" : [
+            "For You",
+            "Accounts",
+            "Reels",
+            "Audio",
+            "Hashtags"
+        ]
+    },
+    "edit" : {
+        "validations" : {
+            "updateProfilePic" : "Profile photo updated",
+            "errorUpdateProfilePic" : "Error updating photo: $e",
+            "updateProfile" : "Profile updated successfully",
+            "errorUpdateProfile" : "'Error saving profile: $e'",
+            "detectLocation" : "🔍 Detecting location...",
+            "errorDetecLocation" : "❌ Could not fetch current location",
+            "errorUserLogin" : "Error: User not logged in",
+            "updateLocation" : "✅ Location updated to ${newLocation.city}, ${newLocation.country}",
+            "errorUpdateLocation" : "❌ Error updating location: $e"
+        },
+        "presentation" : {
+            "title" : "Edit Profile",
+            "errorUserEmpty" : "No user data",
+            "fields" : {
+                "fullName" : "Full Name",
+                "nickname" : "Nickname",
+                "email" : "Email",
+                "cellPhone" : "Cell Phone",
+                "dateOfBirth" : "Date of birth",
+                "gender" : "Gender"
+            },
+            "record" : "Edit Record",
+            "interest" : "Edit My Interests",
+            "socials" : "Edit Socials",
+            "logOut" : "Logout"
+        },
+        "editAudio": {
+            "title" : "Edit Audio",
+            "permissionDenied" : "Permission to record denied",
+            "audioSaved" : "Audio uploaded and saved ✅",
+            "errorUploadAudio" : "Upload failed — try again",
+            "record" : "Record Your Voicenote",
+            "maxLimit" : "Voice note: 5–15 seconds max.",
+            "liste" : "Listen to your audio"
+        },
+        "editLocation" : {
+            "text1" : "We detected you're in:\n\n",
+            "text2" : "${newLocation.city}, ${newLocation.state}\n",
+            "text3" : "${newLocation.country}\n\n",
+            "text4" : "Is that correct?"
+        },
+        "editInterest" : {
+            "title" : "Edit my Interest",
+            "saveInterest" : "Interests saved successfully"
+        }
+    },
+    "share" : {
+        "title" : "Mira el perfil de ${data.displayName} en Migozz: ${data.link}",
+        "subject" : "Perfil de ${data.displayName}",
+        "label" : "Share Profile"
+    },
+    "buttons" : {
+        "confirm" : "confirm",
+        "cancel" : "cancel",
+        "save" : "save",
+        "continue" : "continue"
+    },
+    "category" : {
+        "title" : "Choose Your Category",
+        "model" : "model",
+        "artist" : "Artist",
+        "publicFigure" : "Public Figure",
+        "streamer" : "Streamer",
+        "influencer" : "Influencer",
+        "sport" : "Sport",
+        "actor/Actress" : "Actor/Actress"
+    },
+    "interest": {
+        "goingOut": {
+            "title": "Going Out",
+            "options": [
+                "Concerts",
+                "Museums & Galleries",
+                "Yoga",
+                "Comedy",
+                "Theater",
+                "Clubs",
+                "Bars",
+                "Karaoke",
+                "Film Festivals",
+                "Lounging"
+            ]
+        },
+        "sports": {
+            "title": "Sports",
+            "options": [
+                "Football",
+                "Soccer",
+                "Hockey",
+                "Sports News",
+                "Fishing",
+                "Basketball",
+                "Cricket",
+                "Pickleball",
+                "Gymnastics",
+                "Horse Riding",
+                "MMA",
+                "Tennis",
+                "Swimming",
+                "Snowboarding",
+                "Gym",
+                "Surfing",
+                "Skiing",
+                "Baseball",
+                "Golf",
+                "Boxing"
+            ]
+        },
+        "filmAndTv": {
+            "title": "Film & TV",
+            "options": [
+                "Drama",
+                "Thriller",
+                "Crime",
+                "Fantasy",
+                "Anime",
+                "Sci-fi",
+                "Mystery",
+                "Comedy",
+                "Romance",
+                "Action",
+                "Horror"
+            ]
+        },
+        "valuesAndTraits": {
+            "title": "Values & Traits",
+            "options": [
+                "Intelligence",
+                "Positivity",
+                "Confidence",
+                "Family Oriented",
+                "Ambition",
+                "Creativity",
+                "Empathy"
+            ]
+        },
+        "traveling": {
+            "title": "Traveling",
+            "options": [
+                "Beaches",
+                "Spa Weekends",
+                "Staycations",
+                "Backpacking",
+                "Winter Sports",
+                "Hiking Trips",
+                "Road Trips",
+                "Exploring New Cities",
+                "Fishing Trips",
+                "Camping"
+            ]
+        },
+        "business": {
+            "title": "Business",
+            "options": [
+                "Entrepreneurship",
+                "Sales",
+                "Real Estate",
+                "Crypto",
+                "Marketing",
+                "Stocks"
+            ]
+        },
+        "creativity": {
+            "title": "Creativity",
+            "options": [
+                "Writing",
+                "Photography",
+                "Dancing",
+                "Singing",
+                "Design",
+                "Content Creation",
+                "Art",
+                "Make-up"
+            ]
+        },
+        "stayingIn": {
+            "title": "Staying In",
+            "options": [
+                "Reading",
+                "Baking",
+                "Take Out",
+                "Cooking",
+                "Board Games",
+                "Gardening",
+                "Video Games"
+            ]
+        },
+        "pets": {
+            "title": "Pets",
+            "options": [
+                "Snakes",
+                "Birds",
+                "Fish",
+                "Turtles",
+                "Hamsters",
+                "Cats",
+                "Dogs",
+                "Lizards",
+                "Rabbits"
+            ]
+        }
+    }
+}

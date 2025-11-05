@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -14,12 +15,12 @@ import 'package:migozz_app/injection.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await EasyLocalization.ensureInitialized();
   await configureDependencies();
   await FirebaseConfig.initialize();
-  await dotenv.load(fileName: ".env"); // inicialización
+  await dotenv.load(fileName: ".env");
   SocialAuthService().init();
 
-  // Config OTP
   EmailOTP.config(
     appName: 'Migozz',
     otpType: OTPType.numeric,
@@ -29,7 +30,14 @@ Future<void> main() async {
     otpLength: 6,
   );
 
-  runApp(const MyApp());
+  runApp(
+    EasyLocalization(
+      supportedLocales: const [Locale('en'), Locale('es')],
+      path: 'assets/translations',
+      fallbackLocale: const Locale('en'),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -45,22 +53,22 @@ class MyApp extends StatelessWidget {
 
           return AppInitializer(
             builder: (context, initResult) {
-              // initResult contiene permisos y ubicación; si quieres los metes en un Cubit aquí
               if (initResult?.location != null) {
-                context.read<RegisterCubit>().updateLocation(
-                  initResult!.location,
-                );
+                context.read<RegisterCubit>().updateLocation(initResult!.location);
               }
+
               return MaterialApp.router(
                 debugShowCheckedModeBanner: false,
                 title: 'Migozz App',
-                routerConfig: createRouter(goRouterNotifier), // tu GoRouter
+                routerConfig: createRouter(goRouterNotifier),
                 theme: ThemeData(
-                  colorScheme: ColorScheme.fromSeed(
-                    seedColor: Colors.deepPurple,
-                  ),
+                  colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
                   useMaterial3: true,
                 ),
+                // 🔥 Esto es lo importante
+                localizationsDelegates: context.localizationDelegates,
+                supportedLocales: context.supportedLocales,
+                locale: context.locale,
               );
             },
           );

@@ -75,7 +75,7 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
     if (voiceNoteUrl.isEmpty) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("No hay audio disponible")));
+      ).showSnackBar(const SnackBar(content: Text("No hay audio disponible"))); //TODO: cambiar al JSON
       return;
     }
 
@@ -98,7 +98,7 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
       debugPrint('Error reproduciendo audio: $e');
       // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Error al reproducir el audio")),
+        const SnackBar(content: Text("Error al reproducir el audio")), //TODO: cambiar por JSON
       );
     } finally {
       setState(() => _isLoading = false);

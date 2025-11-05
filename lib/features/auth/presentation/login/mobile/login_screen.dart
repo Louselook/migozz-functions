@@ -125,7 +125,7 @@ class _LoginScreenState extends State<LoginScreen> {
           !msg.contains("ProviderInstaller")) {
         CustomSnackbar.show(
           context: context,
-          message: 'Error al iniciar sesión con Google: $e',
+          message: 'Error logging in with Google: $e',
           type: SnackbarType.error,
         );
       }
