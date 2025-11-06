@@ -13,6 +13,7 @@ import 'package:migozz_app/features/auth/presentation/register/chat/components/c
 import 'package:migozz_app/features/auth/presentation/register/chat/components/suggestion_chips.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/functions/chat_navigation_handler.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/deeplink_functions/handle_facebook.dart';
+import 'package:migozz_app/features/auth/presentation/register/chat/deeplink_functions/handle_instagram.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/deeplink_functions/handle_spotify.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/deeplink_functions/handle_tiktok.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/deeplink_functions/handle_twitter.dart';
@@ -68,6 +69,8 @@ class _IaChatScreenState extends State<IaChatScreen> {
         handleFacebook(call.arguments as String, context);
       } else if (call.method == 'tiktokSuccess') {
         handleTikTok(call.arguments as String, context);
+      } else if (call.method == 'instagramSuccess') {
+        handleInstagram(call.arguments as String, context);
       }
     });
   }
@@ -106,7 +109,9 @@ class _IaChatScreenState extends State<IaChatScreen> {
       attachButtonKey: attachButtonKey,
       language: language,
       onFinish: () {
-        debugPrint('✅ [IaChatScreen] Tutorial completado, usuario puede interactuar');
+        debugPrint(
+          '✅ [IaChatScreen] Tutorial completado, usuario puede interactuar',
+        );
       },
     );
   }
@@ -178,9 +183,13 @@ class _IaChatScreenState extends State<IaChatScreen> {
                           ),
                           if (isLastBotMsgWithOptions)
                             SuggestionChips(
-                              suggestions: List<String>.from(message["options"]),
+                              suggestions: List<String>.from(
+                                message["options"],
+                              ),
                               onSelected: (suggestion) {
-                                _chatController.onSuggestionSelected(suggestion);
+                                _chatController.onSuggestionSelected(
+                                  suggestion,
+                                );
                               },
                             ),
                         ],
@@ -216,7 +225,8 @@ class _IaChatScreenState extends State<IaChatScreen> {
                       sendChat(
                         other: false,
                         type: MessageType.text,
-                        text: "If you'd like to add images or audio, please use the app!",
+                        text:
+                            "If you'd like to add images or audio, please use the app!",
                         controller: _chatController,
                         context: context,
                       );
@@ -237,7 +247,8 @@ class _IaChatScreenState extends State<IaChatScreen> {
                       sendChat(
                         other: false,
                         type: MessageType.text,
-                        text: "If you'd like to add images or audio, please use the app!",
+                        text:
+                            "If you'd like to add images or audio, please use the app!",
                         controller: _chatController,
                         context: context,
                       );

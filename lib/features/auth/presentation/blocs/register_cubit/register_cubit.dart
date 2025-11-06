@@ -30,7 +30,9 @@ class RegisterCubit extends Cubit<RegisterState> {
   Future<void> fetchLocation() async {
     final location = await _locationService.initAndFetchAddress();
     if (location != null) {
-      debugPrint('📍 [Cubit] Ubicación detectada: ${location.city}, ${location.state}, ${location.country}');
+      debugPrint(
+        '📍 [Cubit] Ubicación detectada: ${location.city}, ${location.state}, ${location.country}',
+      );
       emit(state.copyWith(location: location));
     } else {
       debugPrint('📍 [Cubit] No se pudo detectar ubicación');
@@ -44,7 +46,7 @@ class RegisterCubit extends Cubit<RegisterState> {
   }
 
   // ---------------------- MÉTODOS DE UBICACIÓN ----------------------
-  
+
   // Método para cuando el usuario confirma la ubicación detectada (dice "Sí")
   void confirmLocation() {
     debugPrint('📍 [Cubit] Usuario confirmó la ubicación');
@@ -54,59 +56,62 @@ class RegisterCubit extends Cubit<RegisterState> {
   // Método para cuando el usuario rechaza usar ubicación (dice "No")
   void rejectLocation() {
     debugPrint('📍 [Cubit] Usuario rechazó usar ubicación');
-    emit(state.copyWith(
-      location: LocationDTO.empty(), // 👈 Ubicación vacía pero no null
-      regProgress: RegisterStatusProgress.emailVerification,
-    ));
+    emit(
+      state.copyWith(
+        location: LocationDTO.empty(), // 👈 Ubicación vacía pero no null
+        regProgress: RegisterStatusProgress.emailVerification,
+      ),
+    );
   }
 
   // Método para cuando la ubicación es incorrecta (pedir nueva ubicación)
   void requestCorrectLocation() {
-    debugPrint('📍 [Cubit] Usuario reportó ubicación incorrecta, solicitando nueva');
+    debugPrint(
+      '📍 [Cubit] Usuario reportó ubicación incorrecta, solicitando nueva',
+    );
     // Resetear para permitir nueva detección o ingreso manual
-    emit(state.copyWith(
-      location: null, // Permitir que se vuelva a pedir
-      regProgress: RegisterStatusProgress.location,
-    ));
+    emit(
+      state.copyWith(
+        location: null, // Permitir que se vuelva a pedir
+        regProgress: RegisterStatusProgress.location,
+      ),
+    );
   }
 
   // ---------------------- Otros setters ----------------------
   void updateEmail(String email) => emit(state.copyWith(email: email));
-  
+
   void setEmail(String email) => emit(
-        state.copyWith(
-          email: email,
-          regProgress: RegisterStatusProgress.language,
-        ),
-      );
+    state.copyWith(email: email, regProgress: RegisterStatusProgress.language),
+  );
 
   void setLanguage(String language) => emit(
-        state.copyWith(
-          language: language,
-          regProgress: RegisterStatusProgress.fullName,
-        ),
-      );
+    state.copyWith(
+      language: language,
+      regProgress: RegisterStatusProgress.fullName,
+    ),
+  );
 
   void setFullName(String fullName) => emit(
-        state.copyWith(
-          fullName: fullName,
-          regProgress: RegisterStatusProgress.username,
-        ),
-      );
+    state.copyWith(
+      fullName: fullName,
+      regProgress: RegisterStatusProgress.username,
+    ),
+  );
 
   void setUsername(String username) => emit(
-        state.copyWith(
-          username: username,
-          regProgress: RegisterStatusProgress.gender,
-        ),
-      );
+    state.copyWith(
+      username: username,
+      regProgress: RegisterStatusProgress.gender,
+    ),
+  );
 
   void setGender(String gender) => emit(
-        state.copyWith(
-          gender: gender,
-          regProgress: RegisterStatusProgress.socialEcosystem,
-        ),
-      );
+    state.copyWith(
+      gender: gender,
+      regProgress: RegisterStatusProgress.socialEcosystem,
+    ),
+  );
 
   void setSocialEcosystem(List<Map<String, Map<String, dynamic>>> platforms) =>
       emit(
@@ -126,30 +131,30 @@ class RegisterCubit extends Cubit<RegisterState> {
   void setVerifyLocation() => confirmLocation();
 
   void updateEmailVerification(EmailVerification status) => emit(
-        state.copyWith(
-          emailVerification: status,
-          regProgress: RegisterStatusProgress.avatarUrl,
-        ),
-      );
+    state.copyWith(
+      emailVerification: status,
+      regProgress: RegisterStatusProgress.avatarUrl,
+    ),
+  );
 
   // picture profile helpers
   void setAvatarFile(File file) => avatarFile = file;
-  
+
   void setAvatarUrl(String avatarUrl) => emit(
-        state.copyWith(
-          avatarUrl: avatarUrl,
-          regProgress: RegisterStatusProgress.phone,
-        ),
-      );
-  
+    state.copyWith(
+      avatarUrl: avatarUrl,
+      regProgress: RegisterStatusProgress.phone,
+    ),
+  );
+
   void clearAvatarUrl() => emit(state.copyWith(avatarUrl: null));
 
   void setPhone(String phone) => emit(
-        state.copyWith(
-          phone: phone,
-          regProgress: RegisterStatusProgress.voiceNoteUrl,
-        ),
-      );
+    state.copyWith(
+      phone: phone,
+      regProgress: RegisterStatusProgress.voiceNoteUrl,
+    ),
+  );
 
   // voice audio
   void setVoiceNoteFile(File file) {
@@ -172,33 +177,31 @@ class RegisterCubit extends Cubit<RegisterState> {
 
   // category
   void setCategories(List<String>? category) => emit(
-        state.copyWith(
-          category: category,
-          regProgress: RegisterStatusProgress.interests,
-        ),
-      );
-  
+    state.copyWith(
+      category: category,
+      regProgress: RegisterStatusProgress.interests,
+    ),
+  );
+
   void setInterests(Map<String, List<String>> interests) =>
       emit(state.copyWith(interests: interests));
 
   void setCurrentOTP(String currentOTP) => emit(
-        state.copyWith(
-          currentOTP: currentOTP,
-          regProgress: RegisterStatusProgress.doneChat,
-        ),
-      );
+    state.copyWith(
+      currentOTP: currentOTP,
+      regProgress: RegisterStatusProgress.doneChat,
+    ),
+  );
 
   // ---------------------- checkCompletion ----------------------
-  Future<void> checkCompletion({
-    bool forGoogle = false,
-    String? uid,
-  }) async {
+  Future<void> checkCompletion({bool forGoogle = false, String? uid}) async {
     emit(state.copyWith(status: RegisterIsLogin.loading));
     try {
       // La ubicación debe existir (no null), pero puede estar vacía
       final hasLocationData = state.location != null;
-      
-      final completeFull = state.email != null &&
+
+      final completeFull =
+          state.email != null &&
           state.language != null &&
           state.fullName != null &&
           state.username != null &&
@@ -208,7 +211,8 @@ class RegisterCubit extends Cubit<RegisterState> {
           state.category != null &&
           state.interests != null;
 
-      final completeForGoogle = state.language != null &&
+      final completeForGoogle =
+          state.language != null &&
           state.gender != null &&
           hasLocationData && // 👈 Lo mismo aquí
           state.phone != null &&
@@ -217,11 +221,15 @@ class RegisterCubit extends Cubit<RegisterState> {
 
       final complete = forGoogle ? completeForGoogle : completeFull;
 
-      debugPrint('✅ [Cubit] Registro completo (forGoogle=$forGoogle): $complete');
+      debugPrint(
+        '✅ [Cubit] Registro completo (forGoogle=$forGoogle): $complete',
+      );
       debugPrint('📍 [Cubit] Location exists: $hasLocationData');
       debugPrint('📍 [Cubit] Location isEmpty: ${state.location?.isEmpty}');
       if (state.location != null) {
-        debugPrint('📍 [Cubit] Location data: ${state.location!.city}, ${state.location!.state}, ${state.location!.country}');
+        debugPrint(
+          '📍 [Cubit] Location data: ${state.location!.city}, ${state.location!.state}, ${state.location!.country}',
+        );
       }
 
       if (state.isComplete != complete) {
@@ -240,11 +248,11 @@ class RegisterCubit extends Cubit<RegisterState> {
     emit(state.copyWith(status: RegisterIsLogin.loading));
     try {
       switch (network.toLowerCase()) {
-        case 'instagram':
-          await networkService.getInstagramProfile(
-            usernameOrLink: usernameOrLink,
-          );
-          break;
+        // case 'instagram':
+        //   await networkService.getInstagramProfile(
+        //     usernameOrLink: usernameOrLink,
+        //   );
+        //   break;
 
         case 'youtube':
           await networkService.getYouTubeProfile(handleOrUrl: usernameOrLink);
@@ -267,7 +275,7 @@ class RegisterCubit extends Cubit<RegisterState> {
     String assetPath,
   ) async {
     switch (network.toLowerCase()) {
-      case 'instagram':
+      // case 'instagram':
       case 'youtube':
         {
           await showModalBottomSheet<String>(
@@ -282,11 +290,12 @@ class RegisterCubit extends Cubit<RegisterState> {
 
                 try {
                   Map<String, dynamic> profileData = {};
-                  if (network.toLowerCase() == 'instagram') {
-                    profileData = await networkService.getInstagramProfile(
-                      usernameOrLink: value,
-                    );
-                  } else if (network.toLowerCase() == 'youtube') {
+                  // if (network.toLowerCase() == 'instagram') {
+                  //   profileData = await networkService.getInstagramProfile(
+                  //     usernameOrLink: value,
+                  //   );
+                  // } else
+                  if (network.toLowerCase() == 'youtube') {
                     profileData = await networkService.getYouTubeProfile(
                       handleOrUrl: value,
                     );
@@ -313,6 +322,9 @@ class RegisterCubit extends Cubit<RegisterState> {
           break;
         }
 
+      case 'instagram':
+        await networkService.startInstagramAuth(context);
+        break;
       case 'twitter':
         await networkService.startTwitterAuth(context);
         break;

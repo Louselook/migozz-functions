@@ -39,3 +39,36 @@ Map<String, dynamic> normalizeTikTok(Map<String, dynamic> data) => {
   'likes_count': int.tryParse('${data['likes_count'] ?? 0}') ?? 0,
   'mediaCount': int.tryParse('${data['mediaCount'] ?? 0}') ?? 0,
 };
+
+Map<String, dynamic> normalizeInstagram(Map<String, dynamic> data) {
+  int toInt(dynamic v) {
+    if (v == null) return 0;
+    if (v is int) return v;
+    if (v is String) return int.tryParse(v) ?? 0;
+    if (v is double) return v.toInt();
+    return 0;
+  }
+
+  return {
+    'id': data['id'],
+    'url': data['url'],
+    'username': data['username'],
+    'full_name': data['full_name'] ?? '',
+    'account_type': data['account_type'] ?? '',
+    'profile_image_url': data['profile_image_url'],
+    'followers': toInt(data['followers']),
+    'following': toInt(data['following']),
+    'mediaCount': toInt(data['mediaCount']),
+    'access_token': data['access_token'],
+    'expires_in': toInt(data['expires_in']),
+    'expires_in_days': toInt(data['expires_in_days']),
+    // recent_media puede venir como List<dynamic> de maps
+    'recent_media': (data['recent_media'] is List)
+        ? List<Map<String, dynamic>>.from(
+            (data['recent_media'] as List).map(
+              (e) => Map<String, dynamic>.from(e as Map),
+            ),
+          )
+        : <Map<String, dynamic>>[],
+  };
+}

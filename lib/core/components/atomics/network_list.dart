@@ -1,8 +1,8 @@
 // Lista original
 final List<String> socials = [
   // "Tiktok",
-  // "Instagram",
-  // "Facebook",
+  "Instagram",
+  "Facebook",
   "Youtube",
   // "Telegram",
   // "Whatsapp",
