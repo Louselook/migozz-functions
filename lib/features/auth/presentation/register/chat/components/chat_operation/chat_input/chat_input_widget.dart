@@ -94,7 +94,9 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("If you'd like to add images or audio, please use the app!"),
+          content: Text(
+            "If you'd like to add images or audio, please use the app!",
+          ),
           backgroundColor: Colors.blue,
         ),
       );
@@ -108,7 +110,9 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("If you'd like to add images or audio, please use the app!"),
+          content: Text(
+            "If you'd like to add images or audio, please use the app!",
+          ),
           backgroundColor: Colors.blue,
         ),
       );
@@ -119,9 +123,9 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
 
     if (_audioManager.audioPath != null) {
       final audioPath = _audioManager.audioPath!;
-      
+
       debugPrint('🎤 [ChatInput] Iniciando envío de audio: $audioPath');
-      
+
       try {
         final tempPlayer = PlayerController();
         await tempPlayer.preparePlayer(
@@ -137,9 +141,11 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
           // ignore: use_build_context_synchronously
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(durationInSeconds < 5.0
-                  ? 'El audio es muy corto (${durationInSeconds.toStringAsFixed(1)}s). Debe durar entre 5 y 10 segundos'
-                  : 'El audio es muy largo (${durationInSeconds.toStringAsFixed(1)}s). Debe durar entre 5 y 10 segundos'),
+              content: Text(
+                durationInSeconds < 5.0
+                    ? 'El audio es muy corto (${durationInSeconds.toStringAsFixed(1)}s). Debe durar entre 5 y 10 segundos'
+                    : 'El audio es muy largo (${durationInSeconds.toStringAsFixed(1)}s). Debe durar entre 5 y 10 segundos',
+              ),
               backgroundColor: Colors.orange,
             ),
           );
@@ -149,29 +155,30 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
         }
 
         debugPrint('📤 [ChatInput] Enviando audio...');
-        
+
         // ✅ PRIMERO: Enviar el audio (AudioChatHandler creará su copia)
         widget.onSendAudio?.call(audioPath);
-        
+
         debugPrint('🧹 [ChatInput] Limpiando UI (preservando archivo)...');
-        
+
         // ✅ SEGUNDO: Limpiar solo las referencias del UI (NO el archivo)
         await _audioManager.clearReferences();
         _clearInputVisual();
-        
-        debugPrint('✅ [ChatInput] UI limpiado, archivo preservado para AudioChatHandler');
-        
+
+        debugPrint(
+          '✅ [ChatInput] UI limpiado, archivo preservado para AudioChatHandler',
+        );
+
         // ✅ TERCERO: Actualizar el UI
         if (mounted) setState(() {});
-        
       } catch (e) {
         debugPrint('❌ Error al validar duración: $e');
-        
+
         // En caso de error, también enviar y limpiar solo el UI
         widget.onSendAudio?.call(audioPath);
         await _audioManager.clearReferences();
         _clearInputVisual();
-        
+
         if (mounted) setState(() {});
       }
     }
@@ -179,7 +186,8 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
 
   Future<void> resetAudioManager() async {
     debugPrint('🔄 [ChatInput] resetAudioManager llamado desde controller');
-    await _audioManager.clearReferences(); // Usar clearReferences en vez de reset
+    await _audioManager
+        .clearReferences(); // Usar clearReferences en vez de reset
     if (mounted) setState(() {});
   }
 
@@ -214,7 +222,9 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("If you'd like to add images or audio, please use the app!"),
+          content: Text(
+            "If you'd like to add images or audio, please use the app!",
+          ),
           backgroundColor: Colors.blue,
         ),
       );
@@ -302,10 +312,13 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
           return FadeTransition(
             opacity: animation,
             child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, 0.1),
-                end: Offset.zero,
-              ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+              position:
+                  Tween<Offset>(
+                    begin: const Offset(0, 0.1),
+                    end: Offset.zero,
+                  ).animate(
+                    CurvedAnimation(parent: animation, curve: Curves.easeOut),
+                  ),
               child: child,
             ),
           );
@@ -327,14 +340,19 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
             ),
             showDropdownIcon: false,
             style: const TextStyle(color: Colors.white, fontSize: 15),
-            dropdownTextStyle: const TextStyle(color: Colors.white, fontSize: 15),
+            dropdownTextStyle: const TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+            ),
             onChanged: (phone) {
               setState(() {
                 _completePhoneNumber = phone.completeNumber;
                 _isPhoneValid = phone.number.length >= 4;
               });
             },
-            dropdownDecoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
+            dropdownDecoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+            ),
             keyboardType: TextInputType.phone,
             disableLengthCheck: true,
           ),
@@ -348,10 +366,13 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
         return FadeTransition(
           opacity: animation,
           child: SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0, 0.1),
-              end: Offset.zero,
-            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+            position:
+                Tween<Offset>(
+                  begin: const Offset(0, 0.1),
+                  end: Offset.zero,
+                ).animate(
+                  CurvedAnimation(parent: animation, curve: Curves.easeOut),
+                ),
             child: child,
           ),
         );
@@ -362,6 +383,16 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
         hintText: "Escribe algo...",
         radius: 8,
         keyboardType: widget.keyboardType,
+        textInputAction: TextInputAction.send,
+        onSubmitted: (value) {
+          // Cuando el usuario presiona Enter (o Send en el teclado), enviar si hay texto
+          if (value.trim().isNotEmpty) {
+            widget.onSend();
+            try {
+              widget.controller.clear();
+            } catch (_) {}
+          }
+        },
         suffixIcon: IconButton(
           key: _attachButtonKey,
           icon: Icon(
@@ -452,7 +483,9 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
         decoration: BoxDecoration(
           gradient: hasText
               ? AppColors.verticalPinkPurple
-              : LinearGradient(colors: [Colors.grey.shade700, Colors.grey.shade600]),
+              : LinearGradient(
+                  colors: [Colors.grey.shade700, Colors.grey.shade600],
+                ),
           borderRadius: BorderRadius.circular(8),
         ),
         child: IconButton(
@@ -463,7 +496,9 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
     }
 
     // Send / recording container
-    if (hasText || _audioManager.audioPath != null || _audioManager.isRecording) {
+    if (hasText ||
+        _audioManager.audioPath != null ||
+        _audioManager.isRecording) {
       return Container(
         height: 48,
         width: 50,

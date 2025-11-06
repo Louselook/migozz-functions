@@ -62,7 +62,6 @@ class _LoginFormState extends State<LoginForm> {
     if (_isCheckingEmail) return;
     setState(() => _isCheckingEmail = true);
 
-    // Dejar que el LoginCubit maneje el loading/OTP (LoginWrapper escucha LoginCubit)
     try {
       final authService = AuthService();
       final exists = await authService.emailExists(email);
@@ -80,7 +79,6 @@ class _LoginFormState extends State<LoginForm> {
         return;
       }
 
-      // Si existe -> solicita el OTP (el LoginCubit debe poner isLoading=true y emitir currentOTP)
       context.read<LoginCubit>().sendOTPLoginCubit(email);
     } catch (e) {
       CustomSnackbar.show(
@@ -101,9 +99,7 @@ class _LoginFormState extends State<LoginForm> {
       await authCubit.signInWithGoogle();
     } catch (e) {
       debugPrint('error: $e');
-      // ignore: use_build_context_synchronously
       CustomSnackbar.show(
-        // ignore: use_build_context_synchronously
         context: context,
         message: 'Error al iniciar sesión con Google: $e',
         type: SnackbarType.error,
@@ -120,9 +116,9 @@ class _LoginFormState extends State<LoginForm> {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
+          mainAxisSize: MainAxisSize.min, // 👈 importante para mobile
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Email input
             CustomTextField(
               hintText: "Enter Email",
               prefixIcon: const Icon(
@@ -138,7 +134,6 @@ class _LoginFormState extends State<LoginForm> {
             ),
             const SizedBox(height: 35),
 
-            // Login button
             GradientButton(
               width: double.infinity,
               radius: 19,
@@ -150,11 +145,9 @@ class _LoginFormState extends State<LoginForm> {
             const SecondaryText('Or login with', fontSize: 16),
             const SizedBox(height: 5),
 
-            // Google login button
             googleButton(onPressed: _handleGoogleSignIn),
             const SizedBox(height: 50),
 
-            // Register
             bottomText(context: context),
           ],
         ),

@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:migozz_app/core/color.dart';
-import 'package:migozz_app/core/components/compuestos/progress_indicator.dart';
-import 'package:migozz_app/features/auth/presentation/onboarding/shared/constant.dart';
 import 'package:migozz_app/features/auth/presentation/onboarding/shared/onboarding_model.dart';
+import 'components/onboarding_image.dart';
+import 'components/onboarding_content.dart';
 
 class OnboardingContainer extends StatelessWidget {
   final OnboardingData data;
@@ -27,7 +25,7 @@ class OnboardingContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    final imageWidth = screenWidth * 0.5;
+    final isDesktop = screenWidth >= 900;
 
     return AnimatedBuilder(
       animation: controller,
@@ -40,180 +38,96 @@ class OnboardingContainer extends StatelessWidget {
         final tRaw = (1 - delta.abs()).clamp(0.0, 1.0);
         final t = Curves.easeInOutCubicEmphasized.transform(tRaw);
 
-        final imageParallaxX = delta * 20;
-        final imageScale = 0.97 + 0.03 * t;
         final contentOpacity = (0.65 + 0.35 * t).clamp(0.0, 1.0);
         final contentTranslateY = (1 - t) * 12;
 
-        return Row(
-          children: [
-            // imagen con fondo degradado
-            Container(
-              width: imageWidth,
-              height: screenHeight,
-              decoration: BoxDecoration(
-                gradient: AppColors.verticalOnboarding,
+        if (isDesktop) {
+          return Row(
+            children: [
+              // Imagen (componente)
+              OnboardingImage(
+                data: data,
+                isDesktop: true,
+                screenWidth: screenWidth,
+                screenHeight: screenHeight,
+                delta: delta,
+                t: t,
               ),
-              child: Transform.translate(
-                offset: Offset(imageParallaxX, 0),
-                child: Transform.scale(
-                  scale: imageScale,
-                  alignment: Alignment.center,
-                  child: Image.asset(
-                    data.imagePath,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-              ),
-            ),
 
-            const SizedBox(width: 56),
+              const SizedBox(width: 56),
 
-            // (texto y botones)
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                constraints: const BoxConstraints(maxWidth: 500),
-                child: Opacity(
-                  opacity: contentOpacity,
-                  child: Transform.translate(
-                    offset: Offset(0, contentTranslateY),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(top: 40, left: 20, right: 20),
-                          child: Row(
-                            children: List.generate(
-                              AppConstants.onboardingImages.length,
-                              (index) => CustomProgressIndicator(
-                                index,
-                                currentIndex: currentPage,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        Text(
-                          data.title,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: screenWidth < 600
-                                ? 24
-                                : (screenWidth < 900 ? 32 : 40),
-                          ),
-                        ),
-
-                        const SizedBox(height: 12),
-
-                        Text(
-                          data.description,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: screenWidth < 600
-                                ? 16
-                                : (screenWidth < 900 ? 20 : 24),
-                          ),
-                        ),
-
-                        SizedBox(height: screenWidth < 600 ? 40 : 107),
-
-                        Row(
-                          children: [
-                            if (!lastPage)
-                              TextButton(
-                                onPressed: () => context.go('/login'),
-                                style: TextButton.styleFrom(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: screenWidth < 600 ? 16 : 50,
-                                    vertical: screenWidth < 600 ? 8 : 23,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                child: Text(
-                                  "Skip",
-                                  style: TextStyle(
-                                    fontSize: screenWidth < 600 ? 18 : 24,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ElevatedButton(
-                              onPressed: () {
-                                if (lastPage) {
-                                  context.go('/login');
-                                } else {
-                                  controller.nextPage(
-                                    duration: const Duration(milliseconds: 460),
-                                    curve: Curves.easeInOutCubic,
-                                  );
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                padding: EdgeInsets.zero,
-                                fixedSize: Size(
-                                  lastPage
-                                      ? (screenWidth < 600 ? 200 : 260)
-                                      : (screenWidth < 600 ? 90 : 116),
-                                  screenWidth < 600 ? 40 : 50,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              child: Ink(
-                                decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    colors: [
-                                      Color(0xFFF89A44),
-                                      Color(0xFFD43AB6),
-                                      Color(0xFF9321BD),
-                                    ],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Container(
-                                  alignment: Alignment.center,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        lastPage ? 'Get Started' : 'Next',
-                                        style: TextStyle(
-                                          fontSize: screenWidth < 600 ? 18 : 24,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Icon(
-                                        Icons.arrow_forward_ios,
-                                        color: Colors.white,
-                                        size: screenWidth < 600 ? 16 : 24,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+              // Contenido (texto y botones)
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  constraints: const BoxConstraints(maxWidth: 500),
+                  child: Opacity(
+                    opacity: contentOpacity,
+                    child: Transform.translate(
+                      offset: Offset(0, contentTranslateY),
+                      child: OnboardingContent(
+                        data: data,
+                        controller: controller,
+                        lastPage: lastPage,
+                        currentPage: currentPage,
+                        totalPages: totalPages,
+                        pageIndex: pageIndex,
+                        isDesktop: isDesktop,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
-        );
+            ],
+          );
+        } else {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Parte superior → contenido (40%)
+              Expanded(
+                flex: screenHeight < 800 ? 4 : 3,
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Opacity(
+                    opacity: contentOpacity,
+                    child: Transform.translate(
+                      offset: Offset(0, contentTranslateY),
+                      child: OnboardingContent(
+                        data: data,
+                        controller: controller,
+                        lastPage: lastPage,
+                        currentPage: currentPage,
+                        totalPages: totalPages,
+                        pageIndex: pageIndex,
+                        isDesktop: isDesktop,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              // Parte inferior → imagen (60%)
+              Expanded(
+                flex: 6,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: OnboardingImage(
+                    data: data,
+                    isDesktop: false,
+                    screenWidth: screenWidth,
+                    screenHeight: screenHeight,
+                    delta: delta,
+                    t: t,
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
       },
     );
   }
+
+  // _buildContent moved to components/onboarding_content.dart
 }

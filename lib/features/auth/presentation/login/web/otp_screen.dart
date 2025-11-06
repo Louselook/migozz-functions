@@ -31,7 +31,7 @@ class _OtpScreenState extends State<OtpScreen> {
     6,
     (_) => TextEditingController(),
   );
-  final List<FocusNode> _nodes = List.generate(6, (_) => FocusNode());
+  final FocusNode _firstFocusNode = FocusNode();
 
   bool _isLoadingVisible = false;
   bool _hasProcessedAuth = false;
@@ -43,9 +43,7 @@ class _OtpScreenState extends State<OtpScreen> {
     for (final c in _controllers) {
       c.dispose();
     }
-    for (final n in _nodes) {
-      n.dispose();
-    }
+    _firstFocusNode.dispose();
     super.dispose();
   }
 
@@ -75,7 +73,8 @@ class _OtpScreenState extends State<OtpScreen> {
     for (final c in _controllers) {
       c.clear();
     }
-    _nodes.first.requestFocus();
+    // Volver a enfocar el primer campo
+    _firstFocusNode.requestFocus();
   }
 
   @override
@@ -203,8 +202,11 @@ class _OtpScreenState extends State<OtpScreen> {
                                       child: _OtpBoxField(
                                         size: computed,
                                         controller: _controllers[i],
-                                        focusNode: _nodes[i],
+                                        focusNode: i == 0
+                                            ? _firstFocusNode
+                                            : null,
                                         isFirst: i == 0,
+                                        index: i,
                                         onChanged: (v) {
                                           if (v.length > 1) {
                                             // Handle paste
@@ -230,7 +232,11 @@ class _OtpScreenState extends State<OtpScreen> {
                                             }
                                           } else {
                                             if (v.isNotEmpty && i < 5) {
-                                              _nodes[i + 1].requestFocus();
+                                              // move to next field
+                                              _controllers[i + 1].selection =
+                                                  TextSelection.fromPosition(
+                                                    TextPosition(offset: 1),
+                                                  );
                                             }
                                             final code = _controllers
                                                 .map((c) => c.text)
@@ -239,20 +245,6 @@ class _OtpScreenState extends State<OtpScreen> {
                                               _handleOtpCompletion(code);
                                             }
                                           }
-                                        },
-                                        onKey: (e) {
-                                          if (e is KeyDownEvent &&
-                                              e.logicalKey ==
-                                                  LogicalKeyboardKey
-                                                      .backspace) {
-                                            if (_controllers[i].text.isEmpty &&
-                                                i > 0) {
-                                              _nodes[i - 1].requestFocus();
-                                              _controllers[i - 1].text = '';
-                                              return KeyEventResult.handled;
-                                            }
-                                          }
-                                          return KeyEventResult.ignored;
                                         },
                                       ),
                                     );
@@ -345,62 +337,66 @@ class _OtpBoxField extends StatelessWidget {
   const _OtpBoxField({
     required this.size,
     required this.controller,
-    required this.focusNode,
+    required this.index,
     required this.isFirst,
+    this.focusNode,
     required this.onChanged,
-    required this.onKey,
   });
 
   final double size;
   final TextEditingController controller;
-  final FocusNode focusNode;
+  final int index; // posición del campo (0..5)
   final bool isFirst;
+  final FocusNode? focusNode;
   final ValueChanged<String> onChanged;
-  final KeyEventResult Function(KeyEvent) onKey;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: size,
       height: size,
-      child: Focus(
+      child: TextField(
+        controller: controller,
         focusNode: focusNode,
-        onKeyEvent: (_, e) => onKey(e),
-        child: TextField(
-          controller: controller,
-          autofocus: isFirst,
-          textAlign: TextAlign.center,
-          keyboardType: TextInputType.number,
-          showCursor: false,
-          maxLength: 1,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          style: TextStyle(
-            fontSize: size * 0.46,
-            fontWeight: FontWeight.w700,
-            color: const Color(0xFF111827),
-          ),
-          decoration: InputDecoration(
-            counterText: '',
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding: EdgeInsets.zero,
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: Color(0xFFC5CAD3),
-                width: 1.4,
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: Color(0xFF9321BD),
-                width: 1.6,
-              ),
-            ),
-          ),
-          onChanged: onChanged,
+        autofocus: isFirst, // primer campo enfocado automáticamente
+        textAlign: TextAlign.center,
+        keyboardType: TextInputType.number,
+        showCursor: false,
+        maxLength: 1,
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        style: TextStyle(
+          fontSize: size * 0.46,
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF111827),
         ),
+        decoration: InputDecoration(
+          counterText: '',
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: EdgeInsets.zero,
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFFC5CAD3), width: 1.4),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF9321BD), width: 1.6),
+          ),
+        ),
+        onChanged: (value) {
+          // 👉 Si escribió un dígito, pasa al siguiente campo
+          if (value.isNotEmpty && index < 5) {
+            FocusScope.of(context).nextFocus();
+          }
+
+          // 👉 Si borró (quedó vacío) y no es el primero, vuelve al anterior
+          if (value.isEmpty && index > 0) {
+            FocusScope.of(context).previousFocus();
+          }
+
+          // Notificamos al padre para que arme el OTP, valide, etc.
+          onChanged(value);
+        },
       ),
     );
   }

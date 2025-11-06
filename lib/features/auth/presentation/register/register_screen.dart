@@ -113,61 +113,67 @@ class _RegisterScreenState extends State<RegisterScreen> {
         child: Stack(
           children: [
             // Contenido principal centrado
-            Align(
-              alignment: Alignment.center,
+            Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.only(
-                  right: 20,
-                  left: 20,
-                  bottom: 200,
-                ),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Logo
-                      Logo(),
+                padding: const EdgeInsets.only(bottom: 200),
+                child: ConstrainedBox(
+                  // 👇 ESTE ancho es lo que hace que se vea igual al login
+                  constraints: const BoxConstraints(maxWidth: 430),
+                  child: Padding(
+                    // mismo padding horizontal que en LoginForm
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Logo
+                          Logo(),
+                          const SizedBox(height: 20),
 
-                      const SizedBox(height: 20),
+                          // Welcome text
+                          const PrimaryText('Register Now!'),
+                          const SizedBox(height: 3),
+                          const SecondaryText('Enter your information below'),
 
-                      // Welcome text
-                      const PrimaryText('Register Now!'),
-                      const SizedBox(height: 3),
-                      const SecondaryText('Enter your information below'),
+                          const SizedBox(height: 30),
 
-                      const SizedBox(height: 30),
+                          // Email input
+                          CustomTextField(
+                            hintText: "Enter Email",
+                            prefixIcon: const Icon(
+                              Icons.email_outlined,
+                              color: AppColors.secondaryText,
+                            ),
+                            controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
+                          ),
 
-                      // Email input
-                      CustomTextField(
-                        hintText: "Enter Email",
-                        prefixIcon: const Icon(
-                          Icons.email_outlined,
-                          color: AppColors.secondaryText,
-                        ),
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
+                          const SizedBox(height: 35),
+
+                          // Register button
+                          GradientButton(
+                            width: double.infinity,
+                            radius: 19,
+                            onPressed: _isLoading ? null : _handleRegister,
+                            child: _isLoading
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const SecondaryText(
+                                    "Create Account",
+                                    fontSize:
+                                        20, // 👈 igual tamaño que en Login
+                                  ),
+                          ),
+                        ],
                       ),
-
-                      const SizedBox(height: 30),
-
-                      // Register button
-                      GradientButton(
-                        width: double.infinity,
-                        radius: 19,
-                        onPressed: _isLoading ? null : _handleRegister,
-                        child: _isLoading
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const SecondaryText("Create Account"),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
