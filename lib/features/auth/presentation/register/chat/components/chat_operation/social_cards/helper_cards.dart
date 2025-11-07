@@ -7,7 +7,6 @@ class SocialCardsHelper {
     required bool isSpanish,
     required String Function() getTimeNow,
   }) {
-    // 🔹 Construir lista de todas las plataformas
     final List<Map<String, dynamic>> allPlatforms = [];
 
     for (var platform in platforms) {
@@ -30,12 +29,11 @@ class SocialCardsHelper {
       });
     }
 
-    // 🔹 Retornar UN solo mensaje con TODAS las plataformas
     return [
       {
         "other": true,
-        "type": MessageType.socialCards, // ← Plural (nuevo tipo)
-        "platforms": allPlatforms, // ← Lista completa
+        "type": MessageType.socialCards,
+        "platforms": allPlatforms,
         "time": getTimeNow(),
       },
     ];
@@ -43,20 +41,20 @@ class SocialCardsHelper {
 
   static String? _extractFollowers(String network, Map<String, dynamic> data) {
     num? count;
-    // Campos comunes devueltos por nuestros endpoints
+
+    // ✅ Actualizado: Agregar más variantes para YouTube y otras redes
     final candidateKeys = [
       'followers',
       'followers_count',
       'follower_count',
-      'edge_followed_by', // IG Graph name sometimes nested
+      'edge_followed_by',
       'subscribers',
-      'subscriberCount',
-      'statistics.subscriberCount', // YouTube API style (string)
+      'subscriberCount', // ✅ YouTube API
+      'statistics.subscriberCount', // ✅ YouTube API anidado
     ];
 
     for (final key in candidateKeys) {
       if (key.contains('.')) {
-        // Soporta un nivel de anidación simple
         final parts = key.split('.');
         final root = data[parts[0]];
         if (root is Map && root[parts[1]] != null) {
@@ -74,9 +72,10 @@ class SocialCardsHelper {
   }
 
   static num? _toNum(dynamic v) {
+    if (v == null) return null;
     if (v is num) return v;
     if (v is String) {
-      final sanitized = v.replaceAll(',', '');
+      final sanitized = v.replaceAll(',', '').trim();
       return num.tryParse(sanitized);
     }
     return null;

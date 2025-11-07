@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/components/atomics/loading_overlay.dart';
 import 'package:migozz_app/features/auth/data/domain/models/location_dto.dart';
+import 'package:migozz_app/features/auth/presentation/register/chat/deeplink_functions/social_normalizer.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/add_network.dart';
 import 'package:migozz_app/features/auth/services/add_networks/add_networks.dart';
 import 'package:migozz_app/features/auth/services/location_service.dart';
@@ -302,7 +303,6 @@ class RegisterCubit extends Cubit<RegisterState> {
     String assetPath,
   ) async {
     switch (network.toLowerCase()) {
-      // case 'instagram':
       case 'youtube':
         {
           await showModalBottomSheet<String>(
@@ -317,15 +317,19 @@ class RegisterCubit extends Cubit<RegisterState> {
 
                 try {
                   Map<String, dynamic> profileData = {};
-                  // if (network.toLowerCase() == 'instagram') {
-                  //   profileData = await networkService.getInstagramProfile(
-                  //     usernameOrLink: value,
-                  //   );
-                  // } else
+
                   if (network.toLowerCase() == 'youtube') {
-                    profileData = await networkService.getYouTubeProfile(
+                    // ✅ Obtener datos crudos
+                    final rawData = await networkService.getYouTubeProfile(
                       handleOrUrl: value,
                     );
+                    // ✅ Normalizar antes de guardar
+                    profileData = normalizeYouTube(rawData);
+
+                    debugPrint('📊 [RegisterCubit] YouTube data normalized:');
+                    debugPrint('   Username: ${profileData['username']}');
+                    debugPrint('   Followers: ${profileData['followers']}');
+                    debugPrint('   URL: ${profileData['url']}');
                   }
 
                   final current = List<Map<String, Map<String, dynamic>>>.from(

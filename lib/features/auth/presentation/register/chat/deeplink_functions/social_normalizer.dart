@@ -72,3 +72,30 @@ Map<String, dynamic> normalizeInstagram(Map<String, dynamic> data) {
         : <Map<String, dynamic>>[],
   };
 }
+
+Map<String, dynamic> normalizeYouTube(Map<String, dynamic> data) {
+  int toInt(dynamic v) {
+    if (v == null) return 0;
+    if (v is int) return v;
+    if (v is String) return int.tryParse(v) ?? 0;
+    if (v is double) return v.toInt();
+    return 0;
+  }
+
+  return {
+    'id': data['id'],
+    'username': data['username'] ?? '',
+    'full_name':
+        data['full_name'] ??
+        data['title'] ??
+        '', // Ambos campos por compatibilidad
+    'url': data['url'] ?? '',
+    'profile_image_url': data['profile_image_url'],
+    'followers': toInt(
+      data['followers'] ?? data['subscriberCount'],
+    ), // Soporta ambos nombres
+    'viewCount': toInt(data['viewCount']),
+    'mediaCount': toInt(data['mediaCount'] ?? data['videoCount']),
+    'hiddenSubscriberCount': data['hiddenSubscriberCount'] ?? false,
+  };
+}
