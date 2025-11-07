@@ -167,12 +167,12 @@ class AudioChatHandler {
     return null;
   }
 
- 
- Future<void> confirmAudio(
+  Future<void> confirmAudio(
     RegisterCubit registerCubit, {
     VoidCallback? onResetAudioUI,
-    Function(Map<String, dynamic>)? addMessage, // ✅ Agregar para mostrar mensajes
-  }) async { // ✅ Cambiar a Future<void>
+    Function(Map<String, dynamic>)? addMessage,
+    String? firebaseUid, // ✅ Agregar este parámetro
+  }) async {
     if (_permanentAudioPath == null) {
       debugPrint('⚠️ [AudioHandler] No hay audio permanente para confirmar');
       return;
@@ -181,21 +181,11 @@ class AudioChatHandler {
     final audioFile = File(_permanentAudioPath!);
 
     if (!audioFile.existsSync()) {
-      debugPrint('❌ [AudioHandler] Archivo permanente no existe: $_permanentAudioPath');
+      debugPrint('❌ [AudioHandler] Archivo permanente no existe');
       return;
     }
 
-    final email = registerCubit.state.email;
-    if (email == null || email.isEmpty) {
-      debugPrint('⚠️ [AudioHandler] No hay email para subir audio');
-      registerCubit.setVoiceNoteFile(audioFile);
-      onResetAudioUI?.call();
-      _pendingAudioPath = null;
-      _isWaitingForConfirmation = false;
-      return;
-    }
-
-    // ✅ Mostrar mensaje de carga
+    // Mostrar typing
     if (addMessage != null) {
       addMessage({
         "other": true,
@@ -205,89 +195,65 @@ class AudioChatHandler {
       });
     }
 
-    debugPrint('📤 [AudioHandler] Subiendo audio a servidor...');
+    debugPrint('📤 [AudioHandler] Subiendo audio...');
 
     try {
-      final urls = await mediaService.uploadFilesTemporarily(
-        email: email,
+      // 🔥 CAMBIO: Usar método inteligente en lugar de uploadFilesTemporarily
+      final urls = await registerCubit.uploadUserMedia(
         files: {MediaType.voice: audioFile},
+        firebaseUid: firebaseUid, // ✅ Pasar el UID
       );
 
       final voiceUrl = urls[MediaType.voice];
 
       if (voiceUrl != null) {
-        debugPrint('✅ [AudioHandler] Audio subido exitosamente: $voiceUrl');
-
-        // ✅ Guardar la URL en el cubit
+        debugPrint('✅ [AudioHandler] Audio subido: $voiceUrl');
         registerCubit.setVoiceNoteUrl(voiceUrl);
-
-        // ✅ También guardar el archivo localmente por si acaso
         registerCubit.setVoiceNoteFile(audioFile);
 
-        // ✅ Mensaje de éxito
         if (addMessage != null) {
           final isSpanish = registerCubit.state.language == 'Español';
           addMessage({
             "other": true,
             "type": MessageType.text,
-            "text": isSpanish
-                ? "✅ Audio guardado correctamente"
-                : "✅ Audio saved successfully",
+            "text": isSpanish ? "✅ Audio guardado" : "✅ Audio saved",
             "name": "Migozz",
             "time": getTimeNow(),
           });
         }
       } else {
-        debugPrint('❌ [AudioHandler] No se obtuvo URL del audio');
-        
-        // Error: no se obtuvo URL
+        debugPrint('❌ No se obtuvo URL del audio');
         if (addMessage != null) {
           final isSpanish = registerCubit.state.language == 'Español';
           addMessage({
             "other": true,
             "type": MessageType.text,
-            "text": isSpanish
-                ? "❌ Error al guardar el audio. Intenta nuevamente."
-                : "❌ Error saving audio. Please try again.",
+            "text": isSpanish ? "❌ Error al guardar" : "❌ Error saving",
             "name": "Migozz",
             "time": getTimeNow(),
             "isError": true,
           });
         }
-        
-        // Fallback: guardar solo el archivo local
         registerCubit.setVoiceNoteFile(audioFile);
       }
     } catch (e) {
-      debugPrint('❌ [AudioHandler] Error subiendo audio: $e');
-
-      // Mostrar error al usuario
+      debugPrint('❌ Error subiendo audio: $e');
       if (addMessage != null) {
         final isSpanish = registerCubit.state.language == 'Español';
         addMessage({
           "other": true,
           "type": MessageType.text,
-          "text": isSpanish
-              ? "❌ Error de conexión. Verifica tu internet e intenta nuevamente."
-              : "❌ Connection error. Check your internet and try again.",
+          "text": isSpanish ? "❌ Error de conexión" : "❌ Connection error",
           "name": "Migozz",
           "time": getTimeNow(),
           "isError": true,
         });
       }
-
-      // Fallback: guardar solo el archivo local
       registerCubit.setVoiceNoteFile(audioFile);
     }
 
-    debugPrint('✅ [AudioHandler] Audio confirmado');
-
-    // Limpiar el archivo temporal original
     await _cleanupOriginalFile();
-
-    // ✅ Resetear el UI del audio manager
     onResetAudioUI?.call();
-
     _pendingAudioPath = null;
     _isWaitingForConfirmation = false;
   }

@@ -8,6 +8,7 @@ import 'package:migozz_app/features/auth/data/domain/models/location_dto.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/add_network.dart';
 import 'package:migozz_app/features/auth/services/add_networks/add_networks.dart';
 import 'package:migozz_app/features/auth/services/location_service.dart';
+import 'package:migozz_app/features/auth/services/media_service.dart';
 import 'register_state.dart';
 
 class RegisterCubit extends Cubit<RegisterState> {
@@ -172,6 +173,32 @@ class RegisterCubit extends Cubit<RegisterState> {
         voiceNoteUrl: voiceNoteUrl,
         regProgress: RegisterStatusProgress.category,
       ),
+    );
+  }
+
+  /// 🔹 Método inteligente para subir archivos
+  Future<Map<MediaType, String>> uploadUserMedia({
+    required Map<MediaType, File> files,
+    String? firebaseUid,
+  }) async {
+    final mediaService = UserMediaService();
+
+    // Si hay UID (Google), usar directamente
+    if (firebaseUid != null && firebaseUid.isNotEmpty) {
+      debugPrint('📤 [Cubit] Google user - uploading with UID: $firebaseUid');
+      return await mediaService.uploadFiles(uid: firebaseUid, files: files);
+    }
+
+    // Registro normal - usar email temporal
+    final email = state.email;
+    if (email == null || email.isEmpty) {
+      throw Exception('Email no disponible');
+    }
+
+    debugPrint('📤 [Cubit] Normal registration - uploading with email: $email');
+    return await mediaService.uploadFilesTemporarily(
+      email: email,
+      files: files,
     );
   }
 

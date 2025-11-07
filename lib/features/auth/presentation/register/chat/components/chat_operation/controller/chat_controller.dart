@@ -14,16 +14,17 @@ import 'package:migozz_app/features/tutorial/voice_register_tutorial.dart';
 
 class ChatController extends ChangeNotifier {
   final RegisterCubit registerCubit;
-  ChatController({required this.registerCubit});
+  final String? firebaseUid;
+  ChatController({required this.registerCubit, this.firebaseUid});
 
   VoidCallback? onResetAudioUI;
 
   final AvatarTutorialService _avatarTutorialService = AvatarTutorialService();
   void Function()? onShowAvatarTutorial;
 
-  final VoiceNoteTutorialService _voiceNoteTutorialService = VoiceNoteTutorialService();
+  final VoiceNoteTutorialService _voiceNoteTutorialService =
+      VoiceNoteTutorialService();
   void Function()? onShowVoiceNoteTutorial;
-
 
   bool _active = true;
   bool get isActive => _active;
@@ -77,18 +78,19 @@ class ChatController extends ChangeNotifier {
   /// Opciones: "Sí", "No", "Ubicación incorrecta"
   Future<void> handleLocationResponse(String userResponse) async {
     if (!_active) return;
-    
+
     final normalizedResponse = userResponse.trim().toLowerCase();
     final isSpanish = registerCubit.state.language == 'Español';
-    
+
     debugPrint('📍 [ChatController] Respuesta de ubicación: "$userResponse"');
-    
-    if (normalizedResponse == 'sí' || normalizedResponse == 'yes' || 
+
+    if (normalizedResponse == 'sí' ||
+        normalizedResponse == 'yes' ||
         normalizedResponse == 'si') {
       // ✅ Usuario acepta la ubicación detectada
       debugPrint('📍 [ChatController] Usuario confirmó ubicación');
       registerCubit.confirmLocation();
-      
+
       // Mensaje de confirmación
       addMessage({
         "other": true,
@@ -99,17 +101,16 @@ class ChatController extends ChangeNotifier {
         "name": "Migozz",
         "time": getTimeNow(),
       });
-      
+
       await Future.delayed(const Duration(milliseconds: 800));
       if (!_active) return;
       _lastUserMessage = 'location_confirmed';
       await showNextBotMessage();
-      
     } else if (normalizedResponse == 'no') {
       // ❌ Usuario rechaza usar ubicación (continúa sin ubicación)
       debugPrint('📍 [ChatController] Usuario rechazó ubicación');
       registerCubit.rejectLocation();
-      
+
       // Mensaje informativo
       addMessage({
         "other": true,
@@ -120,20 +121,19 @@ class ChatController extends ChangeNotifier {
         "name": "Migozz",
         "time": getTimeNow(),
       });
-      
+
       await Future.delayed(const Duration(milliseconds: 800));
       if (!_active) return;
       _lastUserMessage = 'location_rejected';
       await showNextBotMessage();
-      
-    } else if (normalizedResponse.contains('incorrecta') || 
-               normalizedResponse.contains('incorrect') ||
-               normalizedResponse == 'ubicación incorrecta' ||
-               normalizedResponse == 'incorrect location') {
+    } else if (normalizedResponse.contains('incorrecta') ||
+        normalizedResponse.contains('incorrect') ||
+        normalizedResponse == 'ubicación incorrecta' ||
+        normalizedResponse == 'incorrect location') {
       // 🔄 Usuario dice que la ubicación es incorrecta
       debugPrint('📍 [ChatController] Usuario reportó ubicación incorrecta');
       registerCubit.requestCorrectLocation();
-      
+
       // Mensaje pidiendo nueva ubicación
       addMessage({
         "other": true,
@@ -144,30 +144,31 @@ class ChatController extends ChangeNotifier {
         "name": "Migozz",
         "time": getTimeNow(),
       });
-      
+
       await Future.delayed(const Duration(milliseconds: 800));
       if (!_active) return;
       _lastUserMessage = 'location_incorrect';
       await showNextBotMessage();
-      
     } else {
       // ⚠️ Respuesta no válida
-      debugPrint('⚠️ [ChatController] Respuesta de ubicación no válida: $userResponse');
-      
+      debugPrint(
+        '⚠️ [ChatController] Respuesta de ubicación no válida: $userResponse',
+      );
+
       addMessage({
         "other": true,
         "type": MessageType.text,
         "text": isSpanish
             ? "Por favor, selecciona una opción válida: Sí, No, o Ubicación incorrecta."
             : "Please select a valid option: Yes, No, or Incorrect location.",
-        "options": isSpanish 
+        "options": isSpanish
             ? ["Sí", "No", "Ubicación incorrecta"]
             : ["Yes", "No", "Incorrect location"],
         "name": "Migozz",
         "time": getTimeNow(),
       });
     }
-    
+
     notifyListeners();
   }
 
@@ -210,7 +211,9 @@ class ChatController extends ChangeNotifier {
       registerCubit.setAvatarUrl(photoPath);
     } else {
       if (kIsWeb) {
-        debugPrint('⚠️ Web: no se puede guardar archivo local en web: $photoPath');
+        debugPrint(
+          '⚠️ Web: no se puede guardar archivo local en web: $photoPath',
+        );
       } else {
         final file = File(photoPath);
         if (await file.exists()) {
@@ -229,7 +232,7 @@ class ChatController extends ChangeNotifier {
               });
 
               debugPrint('📤 Subiendo avatar a servidor...');
-              
+
               final mediaService = UserMediaService();
               final urls = await mediaService.uploadFilesTemporarily(
                 email: email,
@@ -347,7 +350,7 @@ class ChatController extends ChangeNotifier {
           step.contains('phone') || botResponse["showPhoneCode"] == true;
 
       addMessage(message);
-      
+
       if (GeminiService.instance.isOnAvatarStep && !kIsWeb) {
         debugPrint('📸 [ChatController] Detectado paso de avatar');
         Future.delayed(const Duration(milliseconds: 500), () {
@@ -358,7 +361,9 @@ class ChatController extends ChangeNotifier {
       }
 
       if (GeminiService.instance.isOnVoiceNoteStep && !kIsWeb) {
-        debugPrint('🎤 [ChatController] Detectado paso de voice note, activando tutorial');
+        debugPrint(
+          '🎤 [ChatController] Detectado paso de voice note, activando tutorial',
+        );
         Future.delayed(const Duration(milliseconds: 500), () {
           if (onShowVoiceNoteTutorial != null && _active) {
             onShowVoiceNoteTutorial!();
@@ -367,7 +372,8 @@ class ChatController extends ChangeNotifier {
       }
 
       // Auto-skip voice step on WEB
-      final isVoiceStep = GeminiService.instance.isOnVoiceNoteStep || step.contains('voice');
+      final isVoiceStep =
+          GeminiService.instance.isOnVoiceNoteStep || step.contains('voice');
       if (kIsWeb && isVoiceStep) {
         final isSpanish = registerCubit.state.language == 'Español';
 
@@ -399,7 +405,9 @@ class ChatController extends ChangeNotifier {
       }
 
       if (botResponse["autoAdvance"] == true) {
-        debugPrint('🎉 Mensaje de éxito detectado, avanzando automáticamente...');
+        debugPrint(
+          '🎉 Mensaje de éxito detectado, avanzando automáticamente...',
+        );
         await Future.delayed(const Duration(milliseconds: 1500));
         if (!_active) return;
         _lastUserMessage = 'continue';
@@ -437,10 +445,10 @@ class ChatController extends ChangeNotifier {
 
   void showAvatarTutorialIfNeeded(BuildContext context) {
     final currentStep = GeminiService.instance.currentStep;
-    
+
     if (currentStep == 'avatarUrl' && onShowAvatarTutorial != null) {
       debugPrint('📸 [ChatController] Mostrando tutorial de avatar');
-      
+
       // Pequeño delay para asegurar que el widget esté renderizado
       Future.delayed(const Duration(milliseconds: 300), () {
         onShowAvatarTutorial?.call();
@@ -474,12 +482,14 @@ class ChatController extends ChangeNotifier {
           registerCubit,
           onResetAudioUI: onResetAudioUI,
           addMessage: addMessage,
+          firebaseUid: firebaseUid,
         );
-        
-        _lastUserMessage = registerCubit.state.voiceNoteUrl ?? 
-                          registerCubit.voiceNoteFile?.path ?? 
-                          text;
-        
+
+        _lastUserMessage =
+            registerCubit.state.voiceNoteUrl ??
+            registerCubit.voiceNoteFile?.path ??
+            text;
+
         await Future.delayed(const Duration(milliseconds: 600));
         if (!_active) return;
         await showNextBotMessage();
@@ -546,7 +556,7 @@ class ChatController extends ChangeNotifier {
   void dispose() {
     _active = false;
     _avatarTutorialService.closeTutorial();
-    _voiceNoteTutorialService.closeTutorial(); 
+    _voiceNoteTutorialService.closeTutorial();
     try {
       _audioHandler.reset();
     } catch (e) {

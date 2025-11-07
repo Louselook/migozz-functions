@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/core/components/compuestos/chat/chat_model.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/core/components/compuestos/chat/chat_message_builder.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/chat_input/chat_input_widget.dart';
@@ -38,8 +39,15 @@ class _IaChatScreenState extends State<IaChatScreen> {
   void initState() {
     super.initState();
 
+    // ✅ Obtener el firebaseUid desde AuthCubit
+    final authState = context.read<AuthCubit>().state;
+    final firebaseUid = authState.firebaseUser?.uid;
+
+    debugPrint('🔑 [IaChatScreen] Firebase UID: $firebaseUid');
+
     _chatController = ChatController(
       registerCubit: context.read<RegisterCubit>(),
+      firebaseUid: firebaseUid, // ✅ Pasar el UID aquí
     );
 
     // Callback para resetear audio UI
