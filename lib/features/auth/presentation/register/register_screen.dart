@@ -147,6 +147,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
+                            onSubmitted: (_) => _handleRegister(),
                           ),
 
                           const SizedBox(height: 35),

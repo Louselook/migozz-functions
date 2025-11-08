@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:intl_phone_field/country_picker_dialog.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/chat/chat_attachment_sheet.dart';
 import 'package:migozz_app/core/components/compuestos/custom_textfield.dart';
@@ -264,14 +265,20 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
                 ),
         ),
 
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 5, 20, 20),
-          child: Row(
-            children: [
-              Expanded(child: _buildInputArea()),
-              const SizedBox(width: 6),
-              _buildMainButton(hasText),
-            ],
+        Center(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 500),
+            padding: const EdgeInsets.fromLTRB(20, 5, 20, 30),
+            child: Row(
+              children: [
+                Expanded(child: _buildInputArea()),
+                // Solo mostrar botón de acción en móvil o si hay texto
+                if (!kIsWeb || hasText) ...[
+                  const SizedBox(width: 6),
+                  _buildMainButton(hasText),
+                ],
+              ],
+            ),
           ),
         ),
       ],
@@ -350,11 +357,28 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
                 _isPhoneValid = phone.number.length >= 4;
               });
             },
+            onSubmitted: (value) {
+              // Cuando el usuario presiona Enter
+              if (_isPhoneValid && _completePhoneNumber.isNotEmpty) {
+                _handleMainButton();
+              }
+            },
+            textInputAction: TextInputAction.send,
             dropdownDecoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
             ),
             keyboardType: TextInputType.phone,
             disableLengthCheck: true,
+            pickerDialogStyle: PickerDialogStyle(
+              width: 350,
+              countryCodeStyle: const TextStyle(color: Colors.black),
+              countryNameStyle: const TextStyle(color: Colors.black87),
+              searchFieldInputDecoration: const InputDecoration(
+                hintText: 'Search country',
+                hintStyle: TextStyle(color: Colors.black87),
+                border: OutlineInputBorder(),
+              ),
+            ),
           ),
         ),
       );
@@ -393,14 +417,17 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
             } catch (_) {}
           }
         },
-        suffixIcon: IconButton(
-          key: _attachButtonKey,
-          icon: Icon(
-            _showAttachments ? Icons.close : Icons.attach_file,
-            color: _showAttachments ? Colors.red : Colors.grey,
-          ),
-          onPressed: _toggleAttachments, // toggle ignores on web
-        ),
+        // Solo mostrar botón de adjuntar en móvil
+        suffixIcon: !kIsWeb
+            ? IconButton(
+                key: _attachButtonKey,
+                icon: Icon(
+                  _showAttachments ? Icons.close : Icons.attach_file,
+                  color: _showAttachments ? Colors.red : Colors.grey,
+                ),
+                onPressed: _toggleAttachments,
+              )
+            : null,
       ),
     );
   }

@@ -54,7 +54,9 @@ class MyApp extends StatelessWidget {
           return AppInitializer(
             builder: (context, initResult) {
               if (initResult?.location != null) {
-                context.read<RegisterCubit>().updateLocation(initResult!.location);
+                context.read<RegisterCubit>().updateLocation(
+                  initResult!.location,
+                );
               }
 
               return MaterialApp.router(
@@ -62,7 +64,9 @@ class MyApp extends StatelessWidget {
                 title: 'Migozz App',
                 routerConfig: createRouter(goRouterNotifier),
                 theme: ThemeData(
-                  colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+                  colorScheme: ColorScheme.fromSeed(
+                    seedColor: Colors.deepPurple,
+                  ),
                   useMaterial3: true,
                 ),
                 // 🔥 Esto es lo importante

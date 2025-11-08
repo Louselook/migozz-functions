@@ -1,5 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:migozz_app/features/auth/data/domain/models/location_dto.dart';
+import 'package:migozz_app/features/auth/data/domain/models/user_dto.dart';
 import 'package:migozz_app/features/search/web/components/search_result_card.dart';
 
 /// ResultSearch realiza una búsqueda simple en la colección `users || profiles_public`
@@ -29,6 +32,33 @@ class _ResultSearchState extends State<ResultSearch> {
     if (oldWidget.query != widget.query) {
       _futureResults = _search(widget.query.trim());
     }
+  }
+
+  /// Helper para parsear LocationDTO desde los datos dinámicos
+  LocationDTO _parseLocation(dynamic locationData) {
+    if (locationData is Map) {
+      try {
+        final locMap = Map<String, dynamic>.from(locationData);
+        return LocationDTO(
+          country: locMap['country']?.toString() ?? '',
+          state: locMap['state']?.toString() ?? '',
+          city: locMap['city']?.toString() ?? '',
+          lat: (locMap['lat'] is num) ? (locMap['lat'] as num).toDouble() : 0.0,
+          lng: (locMap['lng'] is num) ? (locMap['lng'] as num).toDouble() : 0.0,
+        );
+      } catch (e) {
+        // Si falla el parsing, retornar LocationDTO vacío
+        return LocationDTO(
+          country: '',
+          state: '',
+          city: '',
+          lat: 0.0,
+          lng: 0.0,
+        );
+      }
+    }
+    // Si no es un Map, retornar LocationDTO vacío
+    return LocationDTO(country: '', state: '', city: '', lat: 0.0, lng: 0.0);
   }
 
   Future<List<Map<String, dynamic>>> _search(String q) async {
@@ -164,13 +194,25 @@ class _ResultSearchState extends State<ResultSearch> {
           userData: item,
           scale: scale,
           onTap: () {
-            // Navigate to ProfileScreen showing the selected user
-            // Navigator.push(
-            //   context,
-            //   MaterialPageRoute(
-            //     builder: (_) => ProfileScreen(userId: item['id'] as String),
-            //   ),
-            // );
+            // Convertir los datos del usuario a UserDTO
+            final user = UserDTO(
+              displayName: item['displayName'] ?? '',
+              username: item['userName'] ?? item['username'] ?? '',
+              avatarUrl: item['avatarUrl'] ?? '',
+              email: item['email'] ?? '',
+              lang: item['lang'] ?? '',
+              gender: item['gender'] ?? '',
+              location: _parseLocation(item['location']),
+              voiceNoteUrl: item['voiceNoteUrl'],
+              socialEcosystem:
+                  (item['socialEcosystem'] as List?)
+                      ?.map((e) => Map<String, dynamic>.from(e))
+                      .toList() ??
+                  [],
+            );
+
+            // Navegar a la pantalla de perfil con el usuario buscado
+            context.push('/profile-view', extra: user);
           },
         );
       },

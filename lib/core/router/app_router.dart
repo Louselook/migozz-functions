@@ -18,6 +18,11 @@ import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/regis
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/profile/presentation/profile_entry.dart';
 import 'package:migozz_app/features/profile/presentation/stats/web/profile_stats.dart';
+import 'package:migozz_app/features/profile/presentation/profile/web/profile_search_screen.dart'
+    as web_profile;
+import 'package:migozz_app/features/profile/presentation/profile/mobile/profile_search_screen.dart'
+    as mobile_profile;
+import 'package:migozz_app/features/auth/data/domain/models/user_dto.dart';
 import 'package:migozz_app/features/search/mobile/presentation/search_screen.dart'
     as mobile_search;
 import 'package:migozz_app/features/search/web/presentation/search_screen.dart'
@@ -47,6 +52,23 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       GoRoute(
         path: '/profile',
         builder: (context, state) => const ProfileEntry(),
+      ),
+      GoRoute(
+        path: '/profile-view',
+        builder: (context, state) {
+          final user = state.extra as UserDTO?;
+          if (user == null) {
+            // Si no hay usuario, redirigir al perfil propio
+            return const ProfileEntry();
+          }
+
+          // Decidir entre web y mobile según el ancho de pantalla
+          final screenWidth = MediaQuery.of(context).size.width;
+          if (screenWidth >= 900) {
+            return web_profile.ProfileSearchScreen(user: user);
+          }
+          return mobile_profile.ProfileSearchScreen(user: user);
+        },
       ),
       GoRoute(
         path: '/search',
@@ -176,6 +198,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
           // Rutas permitidas cuando el perfil está completo (añadir aquí según necesites)
           const allowedWhenComplete = {
             '/profile',
+            '/profile-view',
             '/edit-profile',
             '/stats',
             '/search',

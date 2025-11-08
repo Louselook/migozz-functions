@@ -116,31 +116,50 @@ class _InterestsStepState extends State<InterestsStep> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40),
-        child: Column(
-          children: [
-            const SizedBox(height: 10),
-            const PrimaryText('Choose Your Interest'),
-            const SizedBox(height: 20),
+      child: ScrollbarTheme(
+        data: ScrollbarThemeData(
+          thumbColor: WidgetStateProperty.all(Colors.grey[400]),
+          thickness: WidgetStateProperty.all(8.0),
+          radius: const Radius.circular(10),
+          thumbVisibility: WidgetStateProperty.all(true),
+        ),
+        child: Scrollbar(
+          child: isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                  child: Center(
+                    child: Container(
+                      constraints: const BoxConstraints(maxWidth: 600),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 20,
+                        horizontal: 40,
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const SizedBox(height: 10),
+                          const PrimaryText('Choose Your Interest'),
+                          const SizedBox(height: 20),
 
-            // secciones
-            Expanded(
-              child: isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : ListView.builder(
-                      itemCount: dynamicSections.length,
-                      itemBuilder: (context, index) {
-                        final section = dynamicSections[index];
-                        return _buildSection(section, index);
-                      },
+                          // secciones
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: dynamicSections.length,
+                            itemBuilder: (context, index) {
+                              final section = dynamicSections[index];
+                              return _buildSection(section, index);
+                            },
+                          ),
+
+                          const SizedBox(height: 40),
+                          // Botones
+                          _buildActionButton(),
+                        ],
+                      ),
                     ),
-            ),
-
-            const SizedBox(height: 40),
-            // Botones
-            _buildActionButton(),
-          ],
+                  ),
+                ),
         ),
       ),
     );

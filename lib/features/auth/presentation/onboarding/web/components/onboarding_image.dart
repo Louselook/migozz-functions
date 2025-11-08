@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/features/auth/presentation/onboarding/shared/onboarding_model.dart';
+import 'cached_onboarding_image.dart';
 
 class OnboardingImage extends StatelessWidget {
   final OnboardingData data;
@@ -36,7 +37,10 @@ class OnboardingImage extends StatelessWidget {
           child: Transform.scale(
             scale: imageScale,
             alignment: Alignment.center,
-            child: Image.asset(data.imagePath, fit: BoxFit.fitHeight),
+            child: CachedOnboardingImage(
+              imagePath: data.imagePath,
+              fit: BoxFit.fitHeight,
+            ),
           ),
         ),
       );
@@ -61,10 +65,11 @@ class OnboardingImage extends StatelessWidget {
               Positioned.fill(
                 child: Align(
                   alignment: Alignment.bottomCenter,
-                  child: Image.asset(
-                    data.imagePath,
+                  child: CachedOnboardingImage(
+                    imagePath: data.imagePath,
                     fit: BoxFit.contain,
                     scale: screenHeight < 800 ? 1.5 : 1,
+                    alignment: Alignment.bottomCenter,
                   ),
                 ),
               ),

@@ -192,7 +192,8 @@ class _CategoryStepState extends State<CategoryStep> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        width: double.infinity,
+        // ajustar el width a un tamaño más ajustado pero responsive
+        width: 350,
         constraints: const BoxConstraints(minHeight: 50),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
         decoration: BoxDecoration(

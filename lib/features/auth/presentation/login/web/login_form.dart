@@ -131,6 +131,7 @@ class _LoginFormState extends State<LoginForm> {
               ),
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
+              onSubmitted: (_) => _handleEmailLoginCheck(),
             ),
             const SizedBox(height: 35),
 

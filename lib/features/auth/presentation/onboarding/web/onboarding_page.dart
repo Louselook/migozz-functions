@@ -12,14 +12,37 @@ class OnboardingPage extends StatefulWidget {
 class OnboardingPageState extends State<OnboardingPage> {
   late final PageController controller;
   int currentPage = 0;
+  bool _imagesLoaded = false;
 
   @override
   void initState() {
     super.initState();
     controller = PageController();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      AppConstants.precacheOnboardingImages(context);
-    });
+    _preloadImages();
+  }
+
+  Future<void> _preloadImages() async {
+    // Esperar un frame para que el contexto esté disponible
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    if (!mounted) return;
+
+    try {
+      await AppConstants.precacheOnboardingImages(context);
+      if (mounted) {
+        setState(() {
+          _imagesLoaded = true;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error preloading images: $e');
+      // Mostrar la UI de todos modos después de un tiempo
+      if (mounted) {
+        setState(() {
+          _imagesLoaded = true;
+        });
+      }
+    }
   }
 
   @override
@@ -34,21 +57,23 @@ class OnboardingPageState extends State<OnboardingPage> {
 
     return Scaffold(
       backgroundColor: Colors.black,
-      body: PageView.builder(
-        controller: controller,
-        onPageChanged: (index) => setState(() => currentPage = index),
-        itemCount: pages.length,
-        itemBuilder: (context, index) {
-          return OnboardingContainer(
-            data: pages[index],
-            controller: controller,
-            currentPage: currentPage,
-            totalPages: pages.length,
-            pageIndex: index,
-            lastPage: index == pages.length - 1,
-          );
-        },
-      ),
+      body: !_imagesLoaded
+          ? const Center(child: CircularProgressIndicator(color: Colors.white))
+          : PageView.builder(
+              controller: controller,
+              onPageChanged: (index) => setState(() => currentPage = index),
+              itemCount: pages.length,
+              itemBuilder: (context, index) {
+                return OnboardingContainer(
+                  data: pages[index],
+                  controller: controller,
+                  currentPage: currentPage,
+                  totalPages: pages.length,
+                  pageIndex: index,
+                  lastPage: index == pages.length - 1,
+                );
+              },
+            ),
     );
   }
 }
