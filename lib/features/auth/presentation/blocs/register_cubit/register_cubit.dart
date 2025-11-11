@@ -4,8 +4,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/components/atomics/loading_overlay.dart';
-import 'package:migozz_app/features/auth/data/domain/models/location_dto.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/deeplink_functions/social_normalizer.dart';
+import 'package:migozz_app/features/auth/data/domain/models/user/location_dto.dart';
+import 'package:migozz_app/features/auth/data/domain/models/deeplink_functions/social_normalizer.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/add_network.dart';
 import 'package:migozz_app/features/auth/services/add_networks/add_networks.dart';
 import 'package:migozz_app/features/auth/services/location_service.dart';
@@ -115,6 +115,7 @@ class RegisterCubit extends Cubit<RegisterState> {
     ),
   );
 
+  // 🔹 MÉTODO ORIGINAL: Para registro - CAMBIA el regProgress
   void setSocialEcosystem(List<Map<String, Map<String, dynamic>>> platforms) =>
       emit(
         state.copyWith(
@@ -122,6 +123,16 @@ class RegisterCubit extends Cubit<RegisterState> {
           regProgress: RegisterStatusProgress.location,
         ),
       );
+
+  // 🔹 NUEVO MÉTODO: Para edición - NO cambia el regProgress
+  void updateSocialEcosystemOnly(
+    List<Map<String, Map<String, dynamic>>> platforms,
+  ) {
+    debugPrint(
+      '🔧 [RegisterCubit] Actualizando socialEcosystem SIN cambiar regProgress',
+    );
+    emit(state.copyWith(socialEcosystem: platforms));
+  }
 
   void setSocialEcosystemEmty() =>
       emit(state.copyWith(regProgress: RegisterStatusProgress.location));
@@ -276,12 +287,6 @@ class RegisterCubit extends Cubit<RegisterState> {
     emit(state.copyWith(status: RegisterIsLogin.loading));
     try {
       switch (network.toLowerCase()) {
-        // case 'instagram':
-        //   await networkService.getInstagramProfile(
-        //     usernameOrLink: usernameOrLink,
-        //   );
-        //   break;
-
         case 'youtube':
           await networkService.getYouTubeProfile(handleOrUrl: usernameOrLink);
           break;
@@ -297,11 +302,13 @@ class RegisterCubit extends Cubit<RegisterState> {
     }
   }
 
+  // 🔹 NUEVO PARÁMETRO: inEditMode para saber si estamos editando
   Future<void> startSocialAuth(
     BuildContext context,
     String network,
-    String assetPath,
-  ) async {
+    String assetPath, {
+    bool inEditMode = false, // 👈 NUEVO
+  }) async {
     switch (network.toLowerCase()) {
       case 'youtube':
         {
@@ -319,11 +326,9 @@ class RegisterCubit extends Cubit<RegisterState> {
                   Map<String, dynamic> profileData = {};
 
                   if (network.toLowerCase() == 'youtube') {
-                    // ✅ Obtener datos crudos
                     final rawData = await networkService.getYouTubeProfile(
                       handleOrUrl: value,
                     );
-                    // ✅ Normalizar antes de guardar
                     profileData = normalizeYouTube(rawData);
 
                     debugPrint('📊 [RegisterCubit] YouTube data normalized:');
@@ -337,7 +342,13 @@ class RegisterCubit extends Cubit<RegisterState> {
                   );
 
                   current.add({network.toLowerCase(): profileData});
-                  setSocialEcosystem(current);
+
+                  // 🔹 Usar el método correcto según el modo
+                  if (inEditMode) {
+                    updateSocialEcosystemOnly(current);
+                  } else {
+                    setSocialEcosystem(current);
+                  }
                 } catch (e) {
                   debugPrint("❌ Error fetching $network profile: $e");
                 } finally {

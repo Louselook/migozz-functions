@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:migozz_app/features/auth/data/domain/models/location_dto.dart';
+import 'package:migozz_app/features/auth/data/domain/models/user/location_dto.dart';
 
 class UserDTO {
   final String email;

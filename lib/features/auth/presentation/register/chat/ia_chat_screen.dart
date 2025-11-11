@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/color.dart';
@@ -13,11 +12,6 @@ import 'package:migozz_app/features/auth/presentation/register/chat/components/c
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/controller/send_chat.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/suggestion_chips.dart';
 import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/functions/chat_navigation_handler.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/deeplink_functions/handle_facebook.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/deeplink_functions/handle_instagram.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/deeplink_functions/handle_spotify.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/deeplink_functions/handle_tiktok.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/deeplink_functions/handle_twitter.dart';
 import 'package:migozz_app/features/tutorial/avatar_register_tutorial.dart';
 import 'package:migozz_app/features/tutorial/voice_register_tutorial.dart';
 
@@ -29,7 +23,6 @@ class IaChatScreen extends StatefulWidget {
 }
 
 class _IaChatScreenState extends State<IaChatScreen> {
-  static const _socialChannel = MethodChannel('socialAuth');
   final TextEditingController _controller = TextEditingController();
   late final ChatController _chatController;
 
@@ -67,20 +60,6 @@ class _IaChatScreenState extends State<IaChatScreen> {
     if (_chatController.messages.isEmpty) {
       _chatController.initializeChat(onActionRequired: _handleNavigation);
     }
-
-    _socialChannel.setMethodCallHandler((call) async {
-      if (call.method == 'spotifySuccess') {
-        handleSpotify(call.arguments as String, context);
-      } else if (call.method == 'twitterSuccess') {
-        handleTwitter(call.arguments as String, context);
-      } else if (call.method == 'facebookSuccess') {
-        handleFacebook(call.arguments as String, context);
-      } else if (call.method == 'tiktokSuccess') {
-        handleTikTok(call.arguments as String, context);
-      } else if (call.method == 'instagramSuccess') {
-        handleInstagram(call.arguments as String, context);
-      }
-    });
   }
 
   @override

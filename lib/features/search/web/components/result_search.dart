@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:migozz_app/features/auth/data/domain/models/location_dto.dart';
-import 'package:migozz_app/features/auth/data/domain/models/user_dto.dart';
+import 'package:migozz_app/features/auth/data/domain/models/user/location_dto.dart';
+import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/features/search/web/components/search_result_card.dart';
 
 /// ResultSearch realiza una búsqueda simple en la colección `users || profiles_public`

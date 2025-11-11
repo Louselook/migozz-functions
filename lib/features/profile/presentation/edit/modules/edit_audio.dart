@@ -341,7 +341,6 @@ class _EditRecordScreenState extends State<EditRecordScreen>
                           "assets/icons/Mic.svg",
                           width: 140,
                           height: 140,
-                          color: Colors.white,
                         ),
                       ),
                     ),

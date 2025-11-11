@@ -1,6 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:migozz_app/features/auth/data/domain/models/user_dto.dart';
-import '../models/auth_result.dart';
+import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
+import '../models/user/auth_result.dart';
 
 abstract class AuthRepository {
   Stream<User?> authStateChanges();

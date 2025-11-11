@@ -9,6 +9,7 @@ import 'package:migozz_app/core/router/app_router.dart';
 import 'package:migozz_app/core/router/app_router_notifier.dart';
 import 'package:migozz_app/core/services/social_auth_service.dart';
 import 'package:migozz_app/email_otp_custom.dart';
+import 'package:migozz_app/core/services/deeplink_service.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/injection.dart';
@@ -50,6 +51,11 @@ class MyApp extends StatelessWidget {
       child: Builder(
         builder: (context) {
           final goRouterNotifier = GoRouterNotifier(context.read<AuthCubit>());
+
+          // 🔹 Inicializar deeplinks después del primer frame
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            DeeplinkService.initialize(context);
+          });
 
           return AppInitializer(
             builder: (context, initResult) {

@@ -164,18 +164,12 @@ class _SocialEcosystemStepState extends State<SocialEcosystemStep> {
                           : context.watch<EditCubit>().state.socialEcosystem ??
                                 [];
 
-                      // 🔹 CORRECCIÓN: Comparar en minúsculas (normalizar)
+                      // 🔹 Comparar en minúsculas (normalizar)
                       final selected = selectedList.any((e) {
                         final platformKey = e.keys.first.toLowerCase();
                         final labelLower = label.toLowerCase();
                         return platformKey == labelLower;
                       });
-
-                      // 🔍 DEBUG
-                      if (index == 0) {
-                        debugPrint('🎨 Verificando $label: selected=$selected');
-                        debugPrint('🎨 selectedList: $selectedList');
-                      }
 
                       return SocialIconCard(
                         label: label,
@@ -215,38 +209,28 @@ class _SocialEcosystemStepState extends State<SocialEcosystemStep> {
 
   Future<void> _handleSocialTap(String label) async {
     if (widget.mode == MoreUserDetailsMode.register) {
+      // ========== MODO REGISTRO ==========
       final cubit = context.read<RegisterCubit>();
       final current = List<Map<String, Map<String, dynamic>>>.from(
         cubit.state.socialEcosystem ?? [],
       );
 
-      // 🔹 CORRECCIÓN: Buscar en minúsculas
       final index = current.indexWhere((e) {
         final platformKey = e.keys.first.toLowerCase();
         return platformKey == label.toLowerCase();
       });
 
       if (index == -1) {
-        await cubit.startSocialAuth(context, label, iconByLabel[label]!);
-      } else {
-        final remove = await showDialog<bool>(
-          context: context,
-          builder: (_) => AlertDialog(
-            title: Text("Desvincular $label?"),
-            content: Text("¿Estás seguro que quieres desvincular $label?"),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text("No"),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text("Sí"),
-              ),
-            ],
-          ),
+        // Agregar nueva red - Modo registro
+        await cubit.startSocialAuth(
+          context,
+          label,
+          iconByLabel[label]!,
+          inEditMode: false, // 👈 IMPORTANTE: Modo registro
         );
-
+      } else {
+        // Eliminar red existente
+        final remove = await _showRemoveDialog(label);
         if (remove == true) {
           current.removeAt(index);
           cubit.setSocialEcosystem(current);
@@ -257,59 +241,34 @@ class _SocialEcosystemStepState extends State<SocialEcosystemStep> {
         "🌐 Ecosistema social (registro): ${cubit.state.socialEcosystem}",
       );
     } else {
-      // Modo edición - NO usar RegisterCubit para evitar redirección
+      // ========== MODO EDICIÓN ==========
       final editCubit = context.read<EditCubit>();
+      final registerCubit = context.read<RegisterCubit>();
 
       final current = List<Map<String, dynamic>>.from(
         editCubit.state.socialEcosystem ?? [],
       );
 
-      // 🔹 CORRECCIÓN: Buscar en minúsculas
       final index = current.indexWhere((e) {
         final platformKey = e.keys.first.toLowerCase();
         return platformKey == label.toLowerCase();
       });
 
       if (index == -1) {
-        // 🔹 NUEVO: En modo edición, agregar directamente sin usar RegisterCubit
-        // Esto evita que el router detecte cambios y redirija
-
-        // Mostrar dialog para agregar manualmente (similar a tu flow de registro)
-        final registerCubit = context.read<RegisterCubit>();
+        // 🔹 Agregar nueva red - Modo edición
+        // El DeeplinkService sincronizará automáticamente con EditCubit
         await registerCubit.startSocialAuth(
           context,
           label,
           iconByLabel[label]!,
+          inEditMode:
+              true, // 👈 IMPORTANTE: Modo edición (NO cambia regProgress)
         );
 
-        // Copiar SOLO el elemento nuevo, no todo el estado
-        if (registerCubit.state.socialEcosystem != null) {
-          final newItem = registerCubit.state.socialEcosystem!.last;
-          current.add(newItem);
-          editCubit.updateSocialEcosystem(current);
-
-          // Limpiar el RegisterCubit para evitar redirección
-          registerCubit.reset();
-        }
+        debugPrint('🌐 Esperando sincronización de deeplink...');
       } else {
-        final remove = await showDialog<bool>(
-          context: context,
-          builder: (_) => AlertDialog(
-            title: Text("Desvincular $label?"),
-            content: Text("¿Estás seguro que quieres desvincular $label?"),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text("No"),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text("Sí"),
-              ),
-            ],
-          ),
-        );
-
+        // Eliminar red existente
+        final remove = await _showRemoveDialog(label);
         if (remove == true) {
           current.removeAt(index);
           editCubit.updateSocialEcosystem(current);
@@ -320,5 +279,25 @@ class _SocialEcosystemStepState extends State<SocialEcosystemStep> {
         "🌐 Ecosistema social (edición): ${editCubit.state.socialEcosystem}",
       );
     }
+  }
+
+  Future<bool?> _showRemoveDialog(String label) {
+    return showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text("Desvincular $label?"),
+        content: Text("¿Estás seguro que quieres desvincular $label?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text("No"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text("Sí"),
+          ),
+        ],
+      ),
+    );
   }
 }

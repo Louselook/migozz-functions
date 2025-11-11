@@ -1,4 +1,4 @@
-import 'package:migozz_app/features/auth/data/domain/models/auth_result.dart';
+import 'package:migozz_app/features/auth/data/domain/models/user/auth_result.dart';
 import 'package:migozz_app/features/auth/data/domain/repository/auth_repository.dart';
 
 class LoginGoogleUseCase {

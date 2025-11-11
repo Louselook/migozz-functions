@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:migozz_app/features/auth/data/domain/models/user_dto.dart';
+import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/features/profile/presentation/profile/web/profile_page.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 

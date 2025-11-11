@@ -64,7 +64,7 @@ class OnboardingContent extends StatelessWidget {
           child: Text(
             data.description,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.7),
+              color: Colors.white.withValues(alpha: 0.7),
               fontSize: screenWidth < 600 ? 16 : (screenWidth < 900 ? 20 : 24),
             ),
           ),

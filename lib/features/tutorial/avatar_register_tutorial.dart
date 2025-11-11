@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+// ignore: depend_on_referenced_packages
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class AvatarTutorialService {
   TutorialCoachMark? _tutorialCoachMark;
-  
+
   /// Crear y mostrar el tutorial
   void showTutorial({
     required BuildContext context,
@@ -12,7 +13,7 @@ class AvatarTutorialService {
     required String language, // 'Español' o 'English'
   }) {
     final isSpanish = language == 'Español';
-    
+
     final targets = [
       TargetFocus(
         identify: "attach_button",
@@ -100,6 +101,7 @@ class AvatarTutorialService {
     );
 
     Future.delayed(const Duration(milliseconds: 500), () {
+      // ignore: use_build_context_synchronously
       _tutorialCoachMark?.show(context: context);
     });
   }

@@ -22,7 +22,7 @@ import 'package:migozz_app/features/profile/presentation/profile/web/profile_sea
     as web_profile;
 import 'package:migozz_app/features/profile/presentation/profile/mobile/profile_search_screen.dart'
     as mobile_profile;
-import 'package:migozz_app/features/auth/data/domain/models/user_dto.dart';
+import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/features/search/mobile/presentation/search_screen.dart'
     as mobile_search;
 import 'package:migozz_app/features/search/web/presentation/search_screen.dart'

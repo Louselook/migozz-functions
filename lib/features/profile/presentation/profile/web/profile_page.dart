@@ -3,7 +3,7 @@ import 'package:migozz_app/core/components/atomics/network_list.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
-import 'package:migozz_app/features/auth/data/domain/models/user_dto.dart';
+import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/features/profile/components/draggable_social_rail.dart';
 import 'package:migozz_app/features/profile/components/social_rail.dart';
 import 'package:migozz_app/features/profile/components/utils/side_menu.dart';

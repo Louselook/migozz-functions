@@ -100,6 +100,7 @@ class _LoginFormState extends State<LoginForm> {
     } catch (e) {
       debugPrint('error: $e');
       CustomSnackbar.show(
+        // ignore: use_build_context_synchronously
         context: context,
         message: 'Error al iniciar sesión con Google: $e',
         type: SnackbarType.error,

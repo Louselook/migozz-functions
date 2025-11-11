@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:migozz_app/features/auth/data/domain/models/auth_result.dart';
-import 'package:migozz_app/features/auth/data/domain/models/user_dto.dart';
+import 'package:migozz_app/features/auth/data/domain/models/user/auth_result.dart';
+import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/features/auth/data/domain/use_cases/auth_use_cases.dart';
 import 'auth_state.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -85,18 +85,17 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<AuthResult> signInWithGoogle() async {
-  try {
-    debugPrint('🔐 [AuthCubit] Iniciando login con Google...');
-    final result = await _authUseCases.loginGoogle.run();
-    debugPrint('✅ [AuthCubit] Login exitoso: ${result.user}');
-    return result;
-  } catch (e) {
-    debugPrint('❌ [AuthCubit] Error en login con Google: $e');
-    debugPrint('❌ [AuthCubit] Tipo de error: ${e.runtimeType}');
-    rethrow;
+    try {
+      debugPrint('🔐 [AuthCubit] Iniciando login con Google...');
+      final result = await _authUseCases.loginGoogle.run();
+      debugPrint('✅ [AuthCubit] Login exitoso: ${result.user}');
+      return result;
+    } catch (e) {
+      debugPrint('❌ [AuthCubit] Error en login con Google: $e');
+      debugPrint('❌ [AuthCubit] Tipo de error: ${e.runtimeType}');
+      rethrow;
+    }
   }
-}
-
 
   Future<AuthResult> login({required String email, required String otp}) async {
     try {

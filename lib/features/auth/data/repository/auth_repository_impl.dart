@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:migozz_app/features/auth/data/datasources/auth_service.dart';
-import 'package:migozz_app/features/auth/data/domain/models/auth_result.dart';
-import 'package:migozz_app/features/auth/data/domain/models/user_dto.dart';
+import 'package:migozz_app/features/auth/data/domain/models/user/auth_result.dart';
+import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/features/auth/data/domain/repository/auth_repository.dart';
 
 class AuthRepositoryImpl implements AuthRepository {

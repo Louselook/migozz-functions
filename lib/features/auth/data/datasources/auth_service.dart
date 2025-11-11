@@ -3,9 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:migozz_app/features/auth/data/domain/models/auth_result.dart';
-import 'package:migozz_app/features/auth/data/domain/models/user_dto.dart';
-import 'package:migozz_app/features/auth/data/domain/models/location_dto.dart';
+import 'package:migozz_app/features/auth/data/domain/models/user/auth_result.dart';
+import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
+import 'package:migozz_app/features/auth/data/domain/models/user/location_dto.dart';
 import 'package:migozz_app/features/auth/services/media_service.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 

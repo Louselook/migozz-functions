@@ -49,7 +49,7 @@ class _CachedOnboardingImageState extends State<CachedOnboardingImage> {
   Widget build(BuildContext context) {
     if (_hasError) {
       return Container(
-        color: Colors.grey.withOpacity(0.3),
+        color: Colors.grey.withValues(alpha: 0.3),
         child: const Center(
           child: Icon(
             Icons.image_not_supported,
@@ -87,7 +87,7 @@ class _CachedOnboardingImageState extends State<CachedOnboardingImage> {
         });
         debugPrint('Error loading image ${widget.imagePath}: $error');
         return Container(
-          color: Colors.grey.withOpacity(0.3),
+          color: Colors.grey.withValues(alpha: 0.3),
           child: const Center(
             child: Icon(
               Icons.image_not_supported,

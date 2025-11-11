@@ -6,7 +6,7 @@ import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_stat
 import 'package:migozz_app/features/splash/splash_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:migozz_app/features/auth/services/location_service.dart';
-import 'package:migozz_app/features/auth/data/domain/models/location_dto.dart';
+import 'package:migozz_app/features/auth/data/domain/models/user/location_dto.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 /// Resultado de inicialización global

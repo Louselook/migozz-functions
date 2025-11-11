@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/components/atomics/network_list.dart';
-import 'package:migozz_app/features/auth/data/domain/models/user_dto.dart';
+import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/profile/components/draggable_social_rail.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
@@ -57,7 +57,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
         comunityCount: totalFollowers.toString(),
         nameComunity: 'Community',
         voiceNoteUrl: voiceNoteUrl,
-        isOwnProfile: isOwnProfile, 
+        isOwnProfile: isOwnProfile,
         userId: user.email,
         child: Stack(
           children: [
@@ -92,20 +92,20 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
 
             // 🔻 Barra inferior de navegación
             if (isOwnProfile) // Condicional
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: GradientBottomNav(
-                currentIndex: _tab,
-                onItemSelected: (i) => setState(() => _tab = i),
-                onCenterTap: () async {
-                  await context.read<AuthCubit>().logout();
-                },
-                onProfileUpdated: () {
-                  context.read<AuthCubit>().refreshUserProfile();
-                },
-                tutorialKeys: widget.tutorialKeys,
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: GradientBottomNav(
+                  currentIndex: _tab,
+                  onItemSelected: (i) => setState(() => _tab = i),
+                  onCenterTap: () async {
+                    await context.read<AuthCubit>().logout();
+                  },
+                  onProfileUpdated: () {
+                    context.read<AuthCubit>().refreshUserProfile();
+                  },
+                  tutorialKeys: widget.tutorialKeys,
+                ),
               ),
-            ),
           ],
         ),
       ),
