@@ -3,7 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/components/atomics/network_list.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
+import 'package:migozz_app/features/chat/presentation/user/list/chats_list_screen.dart';
+import 'package:migozz_app/features/chat/presentation/user/user_chat_screen.dart';
 import 'package:migozz_app/features/profile/components/draggable_social_rail.dart';
+import 'package:migozz_app/features/profile/presentation/profile/mobile/components/profile_top_actions.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/profile/components/bottom_nav.dart';
 import 'package:migozz_app/features/profile/components/background_image.dart';
@@ -64,8 +67,8 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
             // 🔍 Botón de búsqueda
             if (isOwnProfile) // Condicional para busqueda
               Positioned(
-                left: 20,
-                top: 70,
+                left: 10,
+                top: 45,
                 child: GestureDetector(
                   key: widget.tutorialKeys.searchScreenKey,
                   onTap: () {
@@ -77,18 +80,49 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                   child: const Icon(
                     Icons.search,
                     color: Color(0xAAFFFFFF),
-                    size: 60,
+                    size: 45,
                   ),
                 ),
               ),
 
-            // 🎯 Panel lateral de redes sociales
-            DraggableSocialRail(
-              initialPosition: initialSocialPosition,
-              links: socialLinks,
-              itemSize: 50,
-              iconSize: 45,
+            ProfileTopActions(
+              isOwnProfile: isOwnProfile,
+              onChatTap: () {
+                if (!isOwnProfile) {
+                  // ✅ Navegar al chat con este usuario
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => UserChatScreen(
+                        otherUser: user,
+                        currentUserId: currentUserEmail,
+                      ),
+                    ),
+                  );
+                } else {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ChatsListScreen(
+                        username: user.username.replaceFirst('@', ''),
+                      ),
+                    ),
+                  );
+                }
+              },
+              onNotificationsTap: () {
+                debugPrint('Abrir notificaciones');
+              },
             ),
+
+            // 🎯 Panel lateral de redes sociales
+            if (socialLinks.isNotEmpty)
+              DraggableSocialRail(
+                initialPosition: initialSocialPosition,
+                links: socialLinks,
+                itemSize: 50,
+                iconSize: 45,
+              ),
 
             // 🔻 Barra inferior de navegación
             if (isOwnProfile) // Condicional

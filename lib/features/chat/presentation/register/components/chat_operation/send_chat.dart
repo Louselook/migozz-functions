@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/components/compuestos/chat/chat_model.dart';
 import 'package:migozz_app/core/components/atomics/get_time_now.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/controller/chat_controller.dart';
+import 'package:migozz_app/features/chat/controllers/register_chat_controller.dart';
 
+/// Función auxiliar para enviar mensajes en el chat de registro
+/// Maneja diferentes tipos de mensajes: texto, audio, imágenes
 Future<void> sendChat({
   required bool other,
-  required ChatController controller,
+  required RegisterChatController controller,
   required BuildContext context,
   MessageType type = MessageType.text,
   String? text,
@@ -13,7 +15,7 @@ Future<void> sendChat({
   List<Map<String, String>>? pictures,
   List<String>? options,
 }) async {
-  // 🎵 Manejar audio del usuario con el AudioHandler
+  // 🎵 Manejar audio del usuario
   if (!other && type == MessageType.audio && audio != null) {
     await controller.sendUserAudio(audio);
     return;
@@ -32,7 +34,8 @@ Future<void> sendChat({
   }
 
   if (other) {
-    // Mensaje del bot → agregar directamente
+    // ✅ Mensaje del bot → agregar directamente
+    // (Esto normalmente se hace desde showNextBotMessage)
     controller.addMessage({
       "other": true,
       "type": type,
@@ -43,9 +46,10 @@ Future<void> sendChat({
       "time": getTimeNow(),
     });
   } else {
-    // ⚠️ MENSAJE DEL USUARIO → NO agregar aquí, delegar al controller
+    // ✅ Mensaje del usuario → delegar al controller
+    // El controller maneja toda la lógica de validación y respuesta de IA
     if (type == MessageType.text && (text?.trim().isNotEmpty ?? false)) {
-      await controller.sendUserMessage(text!);
+      await controller.sendTextMessage(text!);
     }
   }
 }

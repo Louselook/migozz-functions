@@ -13,7 +13,7 @@ import 'package:migozz_app/features/auth/data/datasources/auth_service.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/login_cubit/login_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/login/shared/login_wrapper.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/functions/email_validation.dart';
+import 'package:migozz_app/features/chat/presentation/register/components/chat_operation/functions/email_validation.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

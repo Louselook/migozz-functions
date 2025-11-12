@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/color.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/controller/chat_controller.dart';
+import 'package:migozz_app/features/chat/controllers/register_chat_controller.dart';
 
 /// Widget para mostrar fotos de perfil clickeables
 class ProfilePictureSelector extends StatelessWidget {
   final List<Map<String, String>> pictures;
-  final ChatController chatController; // 👈 Agregar controller
+  final RegisterChatController chatController; // 👈 Agregar controller
 
   const ProfilePictureSelector({
     super.key,

@@ -7,11 +7,11 @@ import 'package:migozz_app/core/components/compuestos/chat/chat_model.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/core/components/compuestos/chat/chat_message_builder.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/chat_input/chat_input_widget.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/controller/chat_controller.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/controller/send_chat.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/components/suggestion_chips.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/functions/chat_navigation_handler.dart';
+import 'package:migozz_app/features/chat/presentation/components/chat_input/chat_input_widget.dart';
+import 'package:migozz_app/features/chat/controllers/register_chat_controller.dart';
+import 'package:migozz_app/features/chat/presentation/register/components/chat_operation/send_chat.dart';
+import 'package:migozz_app/features/chat/presentation/register/components/suggestion_chips.dart';
+import 'package:migozz_app/features/chat/presentation/register/components/chat_operation/functions/chat_navigation_handler.dart';
 import 'package:migozz_app/features/tutorial/avatar_register_tutorial.dart';
 import 'package:migozz_app/features/tutorial/voice_register_tutorial.dart';
 
@@ -24,7 +24,7 @@ class IaChatScreen extends StatefulWidget {
 
 class _IaChatScreenState extends State<IaChatScreen> {
   final TextEditingController _controller = TextEditingController();
-  late final ChatController _chatController;
+  late final RegisterChatController _chatController;
 
   final GlobalKey<ChatInputWidgetState> _chatInputKey = GlobalKey();
 
@@ -38,7 +38,7 @@ class _IaChatScreenState extends State<IaChatScreen> {
 
     debugPrint('🔑 [IaChatScreen] Firebase UID: $firebaseUid');
 
-    _chatController = ChatController(
+    _chatController = RegisterChatController(
       registerCubit: context.read<RegisterCubit>(),
       firebaseUid: firebaseUid, // ✅ Pasar el UID aquí
     );

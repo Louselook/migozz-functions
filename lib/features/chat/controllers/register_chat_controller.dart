@@ -1,4 +1,3 @@
-// chat_controller.dart (ACTUALIZADO)
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -7,66 +6,71 @@ import 'package:migozz_app/core/components/atomics/get_time_now.dart';
 import 'package:migozz_app/core/components/compuestos/chat/chat_model.dart';
 import 'package:migozz_app/core/services/ai/gemini_service.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/functions/audio_chat_handler.dart';
+import 'package:migozz_app/features/chat/controllers/generic_chat_controller.dart';
+import 'package:migozz_app/features/chat/presentation/register/components/chat_operation/functions/audio_chat_handler.dart';
 import 'package:migozz_app/features/auth/services/media_service.dart';
 import 'package:migozz_app/features/tutorial/avatar_register_tutorial.dart';
 import 'package:migozz_app/features/tutorial/voice_register_tutorial.dart';
 
-class ChatController extends ChangeNotifier {
+/// Controlador específico para el chat de registro con IA
+/// Extiende GenericChatController y agrega funcionalidad de Gemini AI
+class RegisterChatController extends GenericChatController {
   final RegisterCubit registerCubit;
   final String? firebaseUid;
-  ChatController({required this.registerCubit, this.firebaseUid});
 
+  // Callbacks específicos del registro
   VoidCallback? onResetAudioUI;
-
-  final AvatarTutorialService _avatarTutorialService = AvatarTutorialService();
   void Function()? onShowAvatarTutorial;
+  void Function()? onShowVoiceNoteTutorial;
+  void Function(Map<String, dynamic> botResponse)? onBotAction;
 
+  // Servicios específicos del registro
+  final AvatarTutorialService _avatarTutorialService = AvatarTutorialService();
   final VoiceNoteTutorialService _voiceNoteTutorialService =
       VoiceNoteTutorialService();
-  void Function()? onShowVoiceNoteTutorial;
+  final AudioChatHandler _audioHandler = AudioChatHandler();
 
-  bool _active = true;
-  bool get isActive => _active;
-
+  // Estado específico del registro
   bool _showPhoneInput = false;
   bool get showPhoneInput => _showPhoneInput;
 
-  void Function(Map<String, dynamic> botResponse)? onBotAction;
-
-  final ScrollController scrollController = ScrollController();
-  final List<Map<String, dynamic>> _messages = [];
-  List<Map<String, dynamic>> get messages => _messages;
   String? _lastUserMessage;
   String? get lastUserMessage => _lastUserMessage;
 
-  final AudioChatHandler _audioHandler = AudioChatHandler();
   List<String> get currentSuggestions => _audioHandler.currentSuggestions;
 
+  RegisterChatController({required this.registerCubit, this.firebaseUid});
+
+  /// Inicializar el chat de registro con IA
   void initializeChat({void Function(Map<String, dynamic>)? onActionRequired}) {
     GeminiService.instance.ensureConfigured();
     onBotAction = onActionRequired;
-    _active = true;
+    reactivateChat(); // Usar método heredado
     showNextBotMessage();
   }
 
+  /// Terminar el chat de registro
+  @override
   Future<void> terminateChat({bool clearMessages = false}) async {
-    if (!_active) return;
-    _active = false;
+    if (!isActive) return;
+
     try {
       _audioHandler.reset();
     } catch (e) {
       debugPrint('Error al resetear audioHandler: $e');
     }
+
     if (clearMessages) {
-      _messages.clear();
+      clearMessages;
     }
+
     onBotAction = null;
-    notifyListeners();
+    super.terminateChat(); // Usar método heredado
   }
 
+  /// Callback cuando el audio termina de reproducirse
   void onAudioFinished() {
-    if (!_active) return;
+    if (!isActive) return;
     _audioHandler.onAudioFinished(
       registerCubit: registerCubit,
       addMessage: addMessage,
@@ -77,53 +81,45 @@ class ChatController extends ChangeNotifier {
   /// Maneja la respuesta del usuario para el paso de ubicación
   /// Opciones: "Sí", "No", "Ubicación incorrecta"
   Future<void> handleLocationResponse(String userResponse) async {
-    if (!_active) return;
+    if (!isActive) return;
 
     final normalizedResponse = userResponse.trim().toLowerCase();
     final isSpanish = registerCubit.state.language == 'Español';
 
-    debugPrint('📍 [ChatController] Respuesta de ubicación: "$userResponse"');
+    debugPrint('📍 [RegisterChat] Respuesta de ubicación: "$userResponse"');
 
     if (normalizedResponse == 'sí' ||
         normalizedResponse == 'yes' ||
         normalizedResponse == 'si') {
       // ✅ Usuario acepta la ubicación detectada
-      debugPrint('📍 [ChatController] Usuario confirmó ubicación');
+      debugPrint('📍 [RegisterChat] Usuario confirmó ubicación');
       registerCubit.confirmLocation();
 
-      // Mensaje de confirmación
-      addMessage({
-        "other": true,
-        "type": MessageType.text,
-        "text": isSpanish
+      addOtherMessage(
+        text: isSpanish
             ? "Perfecto, ubicación confirmada. ✅"
             : "Perfect, location confirmed. ✅",
-        "name": "Migozz",
-        "time": getTimeNow(),
-      });
+        name: "Migozz",
+      );
 
       await Future.delayed(const Duration(milliseconds: 800));
-      if (!_active) return;
+      if (!isActive) return;
       _lastUserMessage = 'location_confirmed';
       await showNextBotMessage();
     } else if (normalizedResponse == 'no') {
-      // ❌ Usuario rechaza usar ubicación (continúa sin ubicación)
-      debugPrint('📍 [ChatController] Usuario rechazó ubicación');
+      // ❌ Usuario rechaza usar ubicación
+      debugPrint('📍 [RegisterChat] Usuario rechazó ubicación');
       registerCubit.rejectLocation();
 
-      // Mensaje informativo
-      addMessage({
-        "other": true,
-        "type": MessageType.text,
-        "text": isSpanish
+      addOtherMessage(
+        text: isSpanish
             ? "Entendido, continuaremos sin una ubicación específica."
             : "Understood, we'll continue without a specific location.",
-        "name": "Migozz",
-        "time": getTimeNow(),
-      });
+        name: "Migozz",
+      );
 
       await Future.delayed(const Duration(milliseconds: 800));
-      if (!_active) return;
+      if (!isActive) return;
       _lastUserMessage = 'location_rejected';
       await showNextBotMessage();
     } else if (normalizedResponse.contains('incorrecta') ||
@@ -131,28 +127,24 @@ class ChatController extends ChangeNotifier {
         normalizedResponse == 'ubicación incorrecta' ||
         normalizedResponse == 'incorrect location') {
       // 🔄 Usuario dice que la ubicación es incorrecta
-      debugPrint('📍 [ChatController] Usuario reportó ubicación incorrecta');
+      debugPrint('📍 [RegisterChat] Usuario reportó ubicación incorrecta');
       registerCubit.requestCorrectLocation();
 
-      // Mensaje pidiendo nueva ubicación
-      addMessage({
-        "other": true,
-        "type": MessageType.text,
-        "text": isSpanish
+      addOtherMessage(
+        text: isSpanish
             ? "Entendido. Por favor, ingresa tu ubicación manualmente o intenta detectarla nuevamente."
             : "Understood. Please enter your location manually or try detecting it again.",
-        "name": "Migozz",
-        "time": getTimeNow(),
-      });
+        name: "Migozz",
+      );
 
       await Future.delayed(const Duration(milliseconds: 800));
-      if (!_active) return;
+      if (!isActive) return;
       _lastUserMessage = 'location_incorrect';
       await showNextBotMessage();
     } else {
       // ⚠️ Respuesta no válida
       debugPrint(
-        '⚠️ [ChatController] Respuesta de ubicación no válida: $userResponse',
+        '⚠️ [RegisterChat] Respuesta de ubicación no válida: $userResponse',
       );
 
       addMessage({
@@ -172,8 +164,9 @@ class ChatController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Enviar audio del usuario
   Future<void> sendUserAudio(String audioPath) async {
-    if (!_active) return;
+    if (!isActive) return;
     await _audioHandler.sendUserAudio(
       audioPath: audioPath,
       registerCubit: registerCubit,
@@ -184,14 +177,15 @@ class ChatController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Remover mensaje de "escribiendo..."
   void _removeTypingMessage() {
-    if (!_active) return;
-    _messages.removeWhere((msg) => msg["type"] == MessageType.typing);
-    notifyListeners();
+    if (!isActive) return;
+    removeTypingIndicator(); // Usar método heredado
   }
 
+  /// Enviar foto de avatar
   Future<void> sendAvatarPhoto(String photoPath) async {
-    if (!_active) return;
+    if (!isActive) return;
 
     debugPrint('📸 Foto de avatar recibida: $photoPath');
 
@@ -224,12 +218,7 @@ class ChatController extends ChangeNotifier {
           final email = registerCubit.state.email;
           if (email != null && email.isNotEmpty) {
             try {
-              addMessage({
-                "other": true,
-                "type": MessageType.typing,
-                "name": "Migozz",
-                "time": getTimeNow(),
-              });
+              showTypingIndicator(name: "Migozz"); // Usar método heredado
 
               debugPrint('📤 Subiendo avatar a servidor...');
 
@@ -241,28 +230,25 @@ class ChatController extends ChangeNotifier {
 
               final avatarUrl = urls[MediaType.avatar];
 
-              _removeTypingMessage();
+              removeTypingIndicator(); // Usar método heredado
 
               if (avatarUrl != null) {
                 debugPrint('✅ Avatar subido exitosamente: $avatarUrl');
                 registerCubit.setAvatarUrl(avatarUrl);
 
                 final isSpanish = registerCubit.state.language == 'Español';
-                addMessage({
-                  "other": true,
-                  "type": MessageType.text,
-                  "text": isSpanish
+                addOtherMessage(
+                  text: isSpanish
                       ? "✅ Foto guardada correctamente"
                       : "✅ Photo saved successfully",
-                  "name": "Migozz",
-                  "time": getTimeNow(),
-                });
+                  name: "Migozz",
+                );
               } else {
                 debugPrint('❌ No se obtuvo URL del avatar');
               }
             } catch (e) {
               debugPrint('❌ Error subiendo avatar: $e');
-              _removeTypingMessage();
+              removeTypingIndicator();
             }
           }
         } else {
@@ -275,23 +261,18 @@ class ChatController extends ChangeNotifier {
     _lastUserMessage = photoPath;
 
     await Future.delayed(const Duration(milliseconds: 600));
-    if (!_active) return;
+    if (!isActive) return;
     await showNextBotMessage();
   }
 
+  /// Mostrar siguiente mensaje del bot (IA)
   Future<void> showNextBotMessage() async {
-    if (!_active) return;
+    if (!isActive) return;
 
     registerCubit.setAiResponse(true);
 
-    if (_active) {
-      addMessage({
-        "other": true,
-        "type": MessageType.typing,
-        "name": "Migozz",
-        "time": getTimeNow(),
-      });
-      notifyListeners();
+    if (isActive) {
+      showTypingIndicator(name: "Migozz"); // Usar método heredado
     }
 
     try {
@@ -303,8 +284,8 @@ class ChatController extends ChangeNotifier {
             .sendMessage(userInput, registerCubit: registerCubit)
             .timeout(const Duration(seconds: 20));
       } on TimeoutException {
-        if (!_active) return;
-        _messages.removeWhere((msg) => msg["type"] == MessageType.typing);
+        if (!isActive) return;
+        removeTypingIndicator(); // Usar método heredado
 
         final isSpanish = registerCubit.state.language == 'Español';
         addMessage({
@@ -321,9 +302,9 @@ class ChatController extends ChangeNotifier {
         return;
       }
 
-      if (!_active) return;
+      if (!isActive) return;
 
-      _messages.removeWhere((msg) => msg["type"] == MessageType.typing);
+      removeTypingIndicator(); // Usar método heredado
 
       final message = {
         "other": true,
@@ -351,8 +332,9 @@ class ChatController extends ChangeNotifier {
 
       addMessage(message);
 
+      // Mostrar tutorial de avatar si es necesario
       if (GeminiService.instance.isOnAvatarStep && !kIsWeb) {
-        debugPrint('📸 [ChatController] Detectado paso de avatar');
+        debugPrint('📸 [RegisterChat] Detectado paso de avatar');
         Future.delayed(const Duration(milliseconds: 500), () {
           if (onShowAvatarTutorial != null) {
             onShowAvatarTutorial!();
@@ -360,46 +342,43 @@ class ChatController extends ChangeNotifier {
         });
       }
 
+      // Mostrar tutorial de voice note si es necesario
       if (GeminiService.instance.isOnVoiceNoteStep && !kIsWeb) {
-        debugPrint(
-          '🎤 [ChatController] Detectado paso de voice note, activando tutorial',
-        );
+        debugPrint('🎤 [RegisterChat] Detectado paso de voice note');
         Future.delayed(const Duration(milliseconds: 500), () {
-          if (onShowVoiceNoteTutorial != null && _active) {
+          if (onShowVoiceNoteTutorial != null && isActive) {
             onShowVoiceNoteTutorial!();
           }
         });
       }
 
-      // Auto-skip voice step on WEB
+      // Auto-skip voice step en WEB
       final isVoiceStep =
           GeminiService.instance.isOnVoiceNoteStep || step.contains('voice');
       if (kIsWeb && isVoiceStep) {
         final isSpanish = registerCubit.state.language == 'Español';
 
-        addMessage({
-          "other": true,
-          "type": MessageType.text,
-          "text": isSpanish
+        addOtherMessage(
+          text: isSpanish
               ? "Estás en la web — usa la app para grabar tu nota de presentación (5-10 segundos)."
               : "You're on the web — please use the app to record your voice note (5-10 seconds).",
-          "name": "Migozz",
-          "time": getTimeNow(),
-        });
+          name: "Migozz",
+        );
 
         _lastUserMessage = 'skipped_voice_web';
 
         await Future.delayed(const Duration(milliseconds: 700));
-        if (!_active) return;
+        if (!isActive) return;
         await showNextBotMessage();
         return;
       }
 
-      if (!_active) return;
+      if (!isActive) return;
 
+      // Auto-avanzar si el bot lo indica
       if (botResponse["explainAndRepeat"] == true) {
         await Future.delayed(const Duration(milliseconds: 900));
-        if (!_active) return;
+        if (!isActive) return;
         await showNextBotMessage();
         return;
       }
@@ -409,22 +388,23 @@ class ChatController extends ChangeNotifier {
           '🎉 Mensaje de éxito detectado, avanzando automáticamente...',
         );
         await Future.delayed(const Duration(milliseconds: 1500));
-        if (!_active) return;
+        if (!isActive) return;
         _lastUserMessage = 'continue';
         await showNextBotMessage();
         return;
       }
 
+      // Ejecutar acción del bot si existe callback
       if (onBotAction != null) {
         Future.delayed(const Duration(milliseconds: 850), () {
-          if (!_active) return;
+          if (!isActive) return;
           onBotAction!(botResponse);
         });
       }
     } catch (e) {
       debugPrint('❌ Error en showNextBotMessage: $e');
-      if (!_active) return;
-      _messages.removeWhere((msg) => msg["type"] == MessageType.typing);
+      if (!isActive) return;
+      removeTypingIndicator();
       final isSpanish = registerCubit.state.language == 'Español';
       addMessage({
         "other": true,
@@ -438,35 +418,46 @@ class ChatController extends ChangeNotifier {
         "isError": true,
       });
     } finally {
-      if (_active) registerCubit.setAiResponse(false);
+      if (isActive) registerCubit.setAiResponse(false);
       notifyListeners();
     }
   }
 
+  /// Mostrar tutorial de avatar si es necesario
   void showAvatarTutorialIfNeeded(BuildContext context) {
     final currentStep = GeminiService.instance.currentStep;
 
     if (currentStep == 'avatarUrl' && onShowAvatarTutorial != null) {
-      debugPrint('📸 [ChatController] Mostrando tutorial de avatar');
-
-      // Pequeño delay para asegurar que el widget esté renderizado
+      debugPrint('📸 [RegisterChat] Mostrando tutorial de avatar');
       Future.delayed(const Duration(milliseconds: 300), () {
         onShowAvatarTutorial?.call();
       });
     }
   }
 
-  Future<void> sendUserMessage(String text) async {
-    if (!_active) return;
+  /// Sobrescribir método de envío de mensajes para incluir lógica de IA
+  @override
+  Future<void> sendTextMessage(String text, {String? userId}) async {
+    if (!isActive) return;
     if (text.trim().isEmpty) return;
 
     // Si estamos en el paso de audio y NO estamos esperando confirmación
     if (GeminiService.instance.isOnVoiceNoteStep &&
         !_audioHandler.isWaitingForAudioConfirmation) {
-      // ... código existente web ...
+      // En web, mostrar mensaje de que debe usar la app
+      if (kIsWeb) {
+        addMessage({
+          "other": false,
+          "text": text,
+          "type": MessageType.text,
+          "time": getTimeNow(),
+        });
+        return;
+      }
       return;
     }
 
+    // Manejar respuesta de confirmación de audio
     final audioResponse = _audioHandler.handleAudioConfirmationResponse(text);
 
     if (audioResponse != null) {
@@ -491,21 +482,20 @@ class ChatController extends ChangeNotifier {
             text;
 
         await Future.delayed(const Duration(milliseconds: 600));
-        if (!_active) return;
+        if (!isActive) return;
         await showNextBotMessage();
       } else if (audioResponse == 'record') {
         final recordMessage = _audioHandler.getRecordAgainMessage(
           registerCubit,
         );
         addMessage(recordMessage);
-
         onResetAudioUI?.call();
-
         notifyListeners();
       }
       return;
     }
 
+    // Mensaje normal de texto
     _lastUserMessage = text;
 
     addMessage({
@@ -520,17 +510,13 @@ class ChatController extends ChangeNotifier {
     await showNextBotMessage();
   }
 
-  void addMessage(Map<String, dynamic> message) {
-    if (!_active) return;
-    _messages.add(message);
-    notifyListeners();
-    _scrollToBottom();
-  }
-
+  /// Manejar selección de sugerencias (chips)
   void onSuggestionSelected(String suggestion) {
-    if (!_active) return;
-    sendUserMessage(suggestion);
-    for (var msg in _messages.reversed) {
+    if (!isActive) return;
+    sendTextMessage(suggestion);
+
+    // Limpiar opciones del último mensaje del bot
+    for (var msg in messages.reversed) {
       if (msg["other"] == true && msg["options"] != null) {
         msg["options"] = [];
         break;
@@ -539,22 +525,8 @@ class ChatController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_active) return;
-      if (scrollController.hasClients) {
-        scrollController.animateTo(
-          scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
-    });
-  }
-
   @override
   void dispose() {
-    _active = false;
     _avatarTutorialService.closeTutorial();
     _voiceNoteTutorialService.closeTutorial();
     try {
@@ -562,7 +534,6 @@ class ChatController extends ChangeNotifier {
     } catch (e) {
       debugPrint('Error al resetear audioHandler en dispose: $e');
     }
-    scrollController.dispose();
-    super.dispose();
+    super.dispose(); // Llamar al dispose del padre
   }
 }

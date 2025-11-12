@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:migozz_app/core/components/atomics/get_time_now.dart';
 import 'package:migozz_app/core/components/compuestos/chat/chat_model.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/controller/chat_controller.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/social_cards/helper_cards.dart';
+import 'package:migozz_app/features/chat/controllers/register_chat_controller.dart';
+import 'package:migozz_app/features/chat/presentation/register/components/chat_operation/social_cards/helper_cards.dart';
 
 /// Maneja la lógica de confirmación cuando el usuario regresa de vincular redes sociales
 class SocialEcosystemHandler {
   static void handleReturn({
     required BuildContext context,
     required RegisterCubit cubit,
-    required ChatController chatController,
+    required RegisterChatController chatController,
   }) {
     final socialEcosystem = cubit.state.socialEcosystem;
 
@@ -29,7 +29,7 @@ class SocialEcosystemHandler {
   /// Muestra mensaje cuando NO se vincularon redes
   static void _showNoSocialNetworksMessage(
     RegisterCubit cubit,
-    ChatController chatController,
+    RegisterChatController chatController,
   ) {
     final isSpanish = (cubit.state.language ?? '').toLowerCase().contains('es');
 
@@ -51,7 +51,7 @@ class SocialEcosystemHandler {
   /// Muestra confirmación con tarjetas cuando SÍ se vincularon redes
   static void _showSocialNetworksConfirmation(
     RegisterCubit cubit,
-    ChatController chatController,
+    RegisterChatController chatController,
     List<Map<String, Map<String, dynamic>>> socialEcosystem,
   ) {
     final isSpanish = (cubit.state.language ?? '').toLowerCase().contains('es');

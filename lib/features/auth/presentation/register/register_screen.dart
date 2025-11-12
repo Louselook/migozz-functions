@@ -7,7 +7,7 @@ import 'package:migozz_app/core/components/compuestos/custom_textfield.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/features/auth/data/datasources/auth_service.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/functions/email_validation.dart';
+import 'package:migozz_app/features/chat/presentation/register/components/chat_operation/functions/email_validation.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});

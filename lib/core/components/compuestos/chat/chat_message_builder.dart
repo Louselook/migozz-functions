@@ -5,7 +5,7 @@ import 'package:migozz_app/core/components/compuestos/chat/other_message.dart';
 import 'package:migozz_app/core/components/compuestos/chat/other_typing.dart';
 import 'package:migozz_app/core/components/compuestos/chat/user_message.dart';
 import 'package:migozz_app/core/components/compuestos/chat/picture_options.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/social_cards/social_cards.dart';
+import 'package:migozz_app/features/chat/presentation/register/components/chat_operation/social_cards/social_cards.dart';
 
 class ChatMessageBuilder {
   static Widget buildMessage(

@@ -13,7 +13,7 @@ import 'package:migozz_app/features/auth/presentation/register/register_screen.d
 import 'package:migozz_app/features/profile/presentation/edit/web/edit_profile_page.dart'
     show EditProfilePage;
 import 'package:migozz_app/features/profile/presentation/profile/modules/complete_profile.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/ia_chat_screen.dart';
+import 'package:migozz_app/features/chat/presentation/register/ia_chat_screen.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/profile/presentation/profile_entry.dart';

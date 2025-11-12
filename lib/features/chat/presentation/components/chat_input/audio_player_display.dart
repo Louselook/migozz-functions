@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:migozz_app/core/color.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/chat_input/audio_utils.dart';
+import 'package:migozz_app/features/chat/presentation/components/chat_input/audio_utils.dart';
 
 class AudioPlayerDisplay extends StatelessWidget {
   final PlayerController playerController;

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/controller/chat_controller.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/functions/social_ecosystem_handler.dart';
+import 'package:migozz_app/features/chat/controllers/register_chat_controller.dart';
+import 'package:migozz_app/features/chat/presentation/register/components/chat_operation/functions/social_ecosystem_handler.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
 
 /// Maneja las acciones que el bot indica en su respuesta
@@ -10,7 +10,7 @@ class ChatNavigationHandler {
   static void handleBotAction({
     required BuildContext context,
     required Map<String, dynamic> botResponse,
-    required ChatController chatController,
+    required RegisterChatController chatController,
   }) async {
     final action = botResponse["action"];
     if (action == null) return;

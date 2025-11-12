@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/controller/chat_controller.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/functions/profile_picture_selector.dart';
-import 'package:migozz_app/features/auth/presentation/register/chat/components/chat_operation/social_cards/social_cards.dart';
+import 'package:migozz_app/features/chat/controllers/register_chat_controller.dart';
+import 'package:migozz_app/features/chat/presentation/register/components/chat_operation/functions/profile_picture_selector.dart';
+import 'package:migozz_app/features/chat/presentation/register/components/chat_operation/social_cards/social_cards.dart';
 
 class OtherMessage extends StatelessWidget {
   final String text;
   final String time;
   final List<Map<String, dynamic>>? platforms;
   final List<Map<String, String>>? profilePictures;
-  final ChatController? chatController; // 👈 Agregar controller
+  final RegisterChatController? chatController; // 👈 Agregar controller
 
   const OtherMessage({
     super.key,
