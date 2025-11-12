@@ -1,7 +1,9 @@
+// main.dart (modificado)
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:go_router/go_router.dart';
 import 'package:migozz_app/app_initializer.dart';
 import 'package:migozz_app/core/config/firebase_config.dart';
 import 'package:migozz_app/core/router/app_router.dart';
@@ -32,10 +34,13 @@ Future<void> main() async {
     otpLength: 6,
   );
 
-  // 🧠 Creamos instancias persistentes
+  // 🧠 Crear instancias persistentes ANTES del runApp
   final authCubit = AuthCubit(locator.get());
   final registerCubit = RegisterCubit(locator.get());
   final goRouterNotifier = GoRouterNotifier(authCubit);
+
+  // ← Crear el GoRouter una sola vez y reutilizarlo
+  final router = createRouter(goRouterNotifier);
 
   runApp(
     EasyLocalization(
@@ -44,26 +49,27 @@ Future<void> main() async {
       fallbackLocale: const Locale('en'),
       child: MultiBlocProvider(
         providers: [
-          // Reusamos las instancias persistentes
           BlocProvider.value(value: authCubit),
           BlocProvider.value(value: registerCubit),
-
-          // Reagregamos los demás blocProviders excepto esos dos
-          // (copiados de tu bloc_providers.dart)
           BlocProvider<LoginCubit>(create: (_) => LoginCubit()),
           BlocProvider<EditCubit>(
             create: (context) => EditCubit(locator.get(), authCubit),
           ),
         ],
-        child: MyApp(goRouterNotifier: goRouterNotifier),
+        child: MyApp(goRouter: router, goRouterNotifier: goRouterNotifier),
       ),
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
+  final GoRouter goRouter;
   final GoRouterNotifier goRouterNotifier;
-  const MyApp({super.key, required this.goRouterNotifier});
+  const MyApp({
+    super.key,
+    required this.goRouter,
+    required this.goRouterNotifier,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +86,8 @@ class MyApp extends StatelessWidget {
         return MaterialApp.router(
           debugShowCheckedModeBanner: false,
           title: 'Migozz App',
-          routerConfig: createRouter(goRouterNotifier),
+          // ← usar la instancia creada arriba (no llamar createRouter aquí)
+          routerConfig: goRouter,
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
             useMaterial3: true,

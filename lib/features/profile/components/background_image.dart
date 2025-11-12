@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:migozz_app/features/profile/components/info_user_profile.dart';
-import 'package:migozz_app/features/profile/components/scroll_sheet.dart';
+// import 'package:migozz_app/features/profile/components/scroll_sheet.dart';
 import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 
@@ -45,6 +45,9 @@ class BackgroundImage extends StatelessWidget {
       children: [
         SafeArea(
           bottom: false,
+
+          // 🚫 Desactivamos scroll y generación de contenido
+          /*
           child: NestedScrollView(
             physics: const BouncingScrollPhysics(),
             headerSliverBuilder: (context, innerBoxIsScrolled) {
@@ -62,8 +65,8 @@ class BackgroundImage extends StatelessWidget {
                     nameComunity: nameComunity,
                     voiceNoteUrl: voiceNoteUrl,
                     tutorialKeys: tutorialKeys,
-                    isOwnProfile: isOwnProfile, // Nuevo
-                    userId: userId, // Nuevo
+                    isOwnProfile: isOwnProfile,
+                    userId: userId,
                   ),
                 ),
               ];
@@ -75,9 +78,29 @@ class BackgroundImage extends StatelessWidget {
               bottomExtraPadding: bottomGradientHeight,
             ),
           ),
+          */
+
+          // ✅ Reemplazo temporal sin scroll
+          child: _ProfileHeaderDelegate(
+            maxHeight: size.height,
+            minHeight: size.height * minHeaderFraction,
+            bottomPaddingForCard: bottomPaddingForCard,
+            avatarUrl: avatarUrl,
+            name: name,
+            displayName: displayName,
+            comunityCount: comunityCount,
+            nameComunity: nameComunity,
+            voiceNoteUrl: voiceNoteUrl,
+            tutorialKeys: tutorialKeys,
+            isOwnProfile: isOwnProfile,
+            userId: userId,
+          ).build(context, 0, false),
         ),
 
+        // 🌈 Gradiente inferior
         TintesGradients(child: Container(height: bottomGradientHeight)),
+
+        // 🧩 Overlay de contenido dinámico (botones, acciones, etc.)
         child,
       ],
     );
@@ -94,11 +117,10 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
   final String displayName;
   final String comunityCount;
   final String nameComunity;
-  final bool isOwnProfile; // Nuevo
-  final String userId; // Nuevo
+  final bool isOwnProfile;
+  final String userId;
   final TutorialKeys? tutorialKeys;
 
-  // Cacheamos el future para que no se regenere en cada build
   Future<bool>? _imageHeightFuture;
 
   _ProfileHeaderDelegate({
@@ -111,8 +133,8 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
     required this.displayName,
     required this.comunityCount,
     required this.nameComunity,
-    required this.isOwnProfile, 
-    required this.userId, 
+    required this.isOwnProfile,
+    required this.userId,
     this.tutorialKeys,
   });
 
@@ -130,7 +152,6 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
         oldDelegate.avatarUrl != avatarUrl;
   }
 
-  /// Obtiene la ui.Image desde un ImageProvider (NetworkImage / AssetImage)
   Future<ui.Image?> _getImageFromProvider(
     ImageProvider provider,
     ImageConfiguration config,
@@ -141,14 +162,10 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
 
     listener = ImageStreamListener(
       (ImageInfo info, bool synchronousCall) {
-        debugPrint(
-          "🟢 _getImageFromProvider: image resolved ${info.image.width}x${info.image.height}",
-        );
         completer.complete(info.image);
         stream.removeListener(listener);
       },
       onError: (error, stack) {
-        debugPrint("❌ _getImageFromProvider: error -> $error");
         completer.complete(null);
         stream.removeListener(listener);
       },
@@ -161,41 +178,24 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
         try {
           stream.removeListener(listener);
         } catch (_) {}
-        debugPrint("⚠️ _getImageFromProvider: timeout");
         return null;
       },
     );
   }
 
-  /// Devuelve true si la imagen tiene altura mayor que threshold (ej. 600)
   Future<bool> _isImageTallEnough(
     BuildContext context,
     String? avatarUrl, {
     int threshold = 600,
   }) async {
-    debugPrint("➡️ Evaluando altura de imagen: $avatarUrl");
-    if (avatarUrl == null || avatarUrl.isEmpty) {
-      debugPrint("⚠️ avatarUrl vacía -> usar modo pequeño");
-      return false;
-    }
-
+    if (avatarUrl == null || avatarUrl.isEmpty) return false;
     final ImageProvider provider = avatarUrl.startsWith('http')
         ? NetworkImage(avatarUrl)
         : AssetImage(avatarUrl) as ImageProvider;
-
-    try {
-      final config = createLocalImageConfiguration(context);
-      final ui.Image? img = await _getImageFromProvider(provider, config);
-      if (img == null) {
-        debugPrint("⚠️ Imagen no disponible o no pudo decodificarse");
-        return false;
-      }
-      debugPrint("📏 Altura imagen: ${img.height} (threshold: $threshold)");
-      return img.height > threshold;
-    } catch (e, st) {
-      debugPrint("❌ Error en _isImageTallEnough: $e\n$st");
-      return false;
-    }
+    final config = createLocalImageConfiguration(context);
+    final ui.Image? img = await _getImageFromProvider(provider, config);
+    if (img == null) return false;
+    return img.height > threshold;
   }
 
   @override
@@ -205,8 +205,6 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
     bool overlapsContent,
   ) {
     final t = (shrinkOffset / (maxExtent - minExtent)).clamp(0.0, 1.0);
-
-    // Inicializamos el future solo una vez por instancia del delegate
     _imageHeightFuture ??= _isImageTallEnough(context, avatarUrl);
 
     return FutureBuilder<bool>(
@@ -214,27 +212,14 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
       builder: (context, snapshot) {
         final bool useFullBackground = snapshot.data ?? false;
 
-        // Opcional: mostrar logs del estado del snapshot para depuración
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          debugPrint("🕐 FutureBuilder: waiting for image size...");
-        } else if (snapshot.hasError) {
-          debugPrint("❌ FutureBuilder error: ${snapshot.error}");
-        } else {
-          debugPrint(
-            "ℹ️ FutureBuilder result: useFullBackground=$useFullBackground",
-          );
-        }
-
         return ClipRect(
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // 🔁 Fondo según tamaño de imagen
               useFullBackground
                   ? _buildFullBackground()
                   : _buildCircleAvatarBackground(context),
 
-              // 📇 Card con info del usuario
               Positioned.fill(
                 child: Align(
                   alignment: Alignment.bottomCenter,
@@ -256,8 +241,8 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
                         comunityCount: comunityCount,
                         nameComunity: nameComunity,
                         voiceNoteUrl: voiceNoteUrl,
-                        isOwnProfile: isOwnProfile, // Agregado para search
-                        userId: userId, // Agregado para search
+                        isOwnProfile: isOwnProfile,
+                        userId: userId,
                         tutorialKeys: tutorialKeys,
                       ),
                     ),
@@ -265,7 +250,6 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
                 ),
               ),
 
-              // 🌙 Oscurecido inferior
               Positioned(
                 left: 0,
                 right: 0,
@@ -293,11 +277,29 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
     );
   }
 
-  // Modo: imagen completa
   Widget _buildFullBackground() {
     return ColorFiltered(
       colorFilter: const ColorFilter.matrix(<double>[
-        1.15,0,0,0,0,0,1.15,0,0,0,0,0,1.25,0,0,0,1,1,2,0,
+        1.15,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1.15,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1.25,
+        0,
+        0,
+        0,
+        1,
+        1,
+        2,
+        0,
       ]),
       child: avatarUrl != null && avatarUrl!.isNotEmpty
           ? Image.network(
@@ -315,7 +317,6 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
     );
   }
 
-  // Modo: imagen pequeña (CircleAvatar)
   Widget _buildCircleAvatarBackground(BuildContext context) {
     return Stack(
       fit: StackFit.expand,

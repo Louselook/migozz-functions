@@ -103,7 +103,7 @@ final Map<String, Map<String, dynamic>> questionsEs = {
 
   "voiceNoteUrl": {
     "text":
-        "¡Genial! Ahora añadamos un toque personal. Por favor, graba una nota de voz corta (5-10 segundos) presentándote 🎤",
+        "¡Genial! Ahora añadamos un toque personal. Por favor, graba una nota de voz corta (1-10 segundos) presentándote 🎤",
     "options": [],
     "step": "regProgress.voiceNoteUrl",
     "keepTalk": false,
@@ -217,7 +217,7 @@ final Map<String, Map<String, dynamic>> questionsEn = {
 
   "voiceNoteUrl": {
     "text":
-        "Great! Now let's add a personal touch. Please record a short voice note (5-10 seconds) introducing yourself! 🎤",
+        "Great! Now let's add a personal touch. Please record a short voice note (1-10 seconds) introducing yourself! 🎤",
     "options": [],
     "step": "regProgress.voiceNoteUrl",
     "keepTalk": false,

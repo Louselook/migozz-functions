@@ -118,9 +118,9 @@ final List<Map<String, Object>> questionsTopics = [
         "Pide al usuario grabar una nota de voz corta como presentación.",
     "text": {
       "en":
-          "Great! Now let's add a personal touch. Please record a short voice note (5-10 seconds) introducing yourself! 🎤",
+          "Great! Now let's add a personal touch. Please record a short voice note (1-10 seconds) introducing yourself! 🎤",
       "es":
-          "¡Genial! Ahora añadamos un toque personal. Por favor, graba una nota de voz corta (5-10 segundos) presentándote 🎤",
+          "¡Genial! Ahora añadamos un toque personal. Por favor, graba una nota de voz corta (1-10 segundos) presentándote 🎤",
     },
     "options": {"en": [], "es": []},
   },

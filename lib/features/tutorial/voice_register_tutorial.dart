@@ -4,7 +4,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class VoiceNoteTutorialService {
   TutorialCoachMark? _tutorialCoachMark;
-  
+
   /// Crear y mostrar el tutorial para el botón del micrófono
   void showTutorial({
     required BuildContext context,
@@ -13,7 +13,7 @@ class VoiceNoteTutorialService {
     required String language, // 'Español' o 'English'
   }) {
     final isSpanish = language == 'Español';
-    
+
     final targets = [
       TargetFocus(
         identify: "mic_button",
@@ -31,10 +31,7 @@ class VoiceNoteTutorialService {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [
-                      Colors.deepOrange.shade900,
-                      Colors.red.shade800,
-                    ],
+                    colors: [Colors.deepOrange.shade900, Colors.red.shade800],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -84,11 +81,11 @@ class VoiceNoteTutorialService {
                     Text(
                       isSpanish
                           ? '✋ Mantén presionado el botón del micrófono 🎤 para grabar.\n\n'
-                            '⏱️ Duración: entre 5 y 10 segundos.\n\n'
-                            '💡 Preséntate: quién eres, qué te gusta, qué buscas en Migozz.'
+                                '⏱️ Duración: entre 1 y 10 segundos.\n\n'
+                                '💡 Preséntate: quién eres, qué te gusta, qué buscas en Migozz.'
                           : '✋ Press and hold the microphone button 🎤 to record.\n\n'
-                            '⏱️ Duration: between 5 and 10 seconds.\n\n'
-                            '💡 Introduce yourself: who you are, what you like, what you\'re looking for on Migozz.',
+                                '⏱️ Duration: between 1 and 10 seconds.\n\n'
+                                '💡 Introduce yourself: who you are, what you like, what you\'re looking for on Migozz.',
                       style: const TextStyle(
                         fontSize: 15,
                         color: Colors.white,
@@ -141,7 +138,9 @@ class VoiceNoteTutorialService {
         onFinish();
       },
       onClickTarget: (target) {
-        debugPrint('👆 [VoiceNoteTutorial] Usuario tocó el target: ${target.identify}');
+        debugPrint(
+          '👆 [VoiceNoteTutorial] Usuario tocó el target: ${target.identify}',
+        );
         _tutorialCoachMark?.finish();
         onFinish();
       },

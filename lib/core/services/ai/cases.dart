@@ -267,7 +267,7 @@ final List voiceNoteUrl = [
   // Primera
   {
     "text":
-        "Por favor graba una nota de voz corta (5-10 segundos) presentándote. 🎤",
+        "Por favor graba una nota de voz corta (1-10 segundos) presentándote. 🎤",
     "step": "regProgress.voiceNoteUrl",
     "keepTalk": false,
   },
