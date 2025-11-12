@@ -360,8 +360,8 @@ class RegisterChatController extends GenericChatController {
 
         addOtherMessage(
           text: isSpanish
-              ? "Estás en la web — usa la app para grabar tu nota de presentación (5-10 segundos)."
-              : "You're on the web — please use the app to record your voice note (5-10 seconds).",
+              ? "Estás en la web — usa la app para grabar tu nota de presentación (1-10 segundos)."
+              : "You're on the web — please use the app to record your voice note (1-10 seconds).",
           name: "Migozz",
         );
 

@@ -138,14 +138,14 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
         final durationInSeconds = freshDurationMs / 1000.0;
         tempPlayer.dispose();
 
-        if (durationInSeconds < 5.0 || durationInSeconds > 10.0) {
+        if (durationInSeconds < 1.0 || durationInSeconds > 10.0) {
           // ignore: use_build_context_synchronously
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                durationInSeconds < 5.0
-                    ? 'El audio es muy corto (${durationInSeconds.toStringAsFixed(1)}s). Debe durar entre 5 y 10 segundos'
-                    : 'El audio es muy largo (${durationInSeconds.toStringAsFixed(1)}s). Debe durar entre 5 y 10 segundos',
+                durationInSeconds < 1.0
+                    ? 'El audio es muy corto (${durationInSeconds.toStringAsFixed(1)}s). Debe durar entre 1 y 10 segundos'
+                    : 'El audio es muy largo (${durationInSeconds.toStringAsFixed(1)}s). Debe durar entre 1 y 10 segundos',
               ),
               backgroundColor: Colors.orange,
             ),
