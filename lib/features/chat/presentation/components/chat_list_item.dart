@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:migozz_app/features/chat/data/domain/models/chat_preview.dart';
 
-/// Widget individual para mostrar un chat en la lista
+/// Widget individual para mostrar un chat en la lista (con badge de no leídos)
 class ChatListItem extends StatelessWidget {
   final ChatPreview chat;
   final VoidCallback onTap;
@@ -72,10 +72,13 @@ class ChatListItem extends StatelessWidget {
                       Flexible(
                         child: Text(
                           chat.displayName,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
                             fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: chat.unreadCount > 0
+                                ? FontWeight
+                                      .w700 // Bold si hay no leídos
+                                : FontWeight.w600,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -111,9 +114,15 @@ class ChatListItem extends StatelessWidget {
                         child: Text(
                           chat.lastMessage,
                           style: TextStyle(
-                            color: Colors.grey[500],
+                            color: chat.unreadCount > 0
+                                ? Colors
+                                      .white // Más visible si hay no leídos
+                                : Colors.grey[500],
                             fontSize: 14,
-                            fontWeight: FontWeight.normal,
+                            fontWeight: chat.unreadCount > 0
+                                ? FontWeight
+                                      .w600 // Bold si hay no leídos
+                                : FontWeight.normal,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -122,7 +131,17 @@ class ChatListItem extends StatelessWidget {
                       const SizedBox(width: 8),
                       Text(
                         chat.timeAgo,
-                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                        style: TextStyle(
+                          color: chat.unreadCount > 0
+                              ? const Color(
+                                  0xFF00D4FF,
+                                ) // Destacar si hay no leídos
+                              : Colors.grey[600],
+                          fontSize: 12,
+                          fontWeight: chat.unreadCount > 0
+                              ? FontWeight.w600
+                              : FontWeight.normal,
+                        ),
                       ),
                     ],
                   ),
@@ -132,15 +151,43 @@ class ChatListItem extends StatelessWidget {
 
             const SizedBox(width: 12),
 
-            // Botón de cámara
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.grey[900],
-                shape: BoxShape.circle,
+            // Badge de mensajes no leídos o botón de cámara
+            if (chat.unreadCount > 0)
+              // 🔔 Badge de no leídos
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFFE91E63), Color(0xFF9C27B0)],
+                  ),
+                  shape: BoxShape.circle,
+                ),
+                constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                child: Center(
+                  child: Text(
+                    chat.unreadCount > 99 ? '99+' : '${chat.unreadCount}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              )
+            else
+              // 📷 Botón de cámara (solo si no hay no leídos)
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.grey[900],
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.camera_alt,
+                  color: Colors.grey[400],
+                  size: 20,
+                ),
               ),
-              child: Icon(Icons.camera_alt, color: Colors.grey[400], size: 20),
-            ),
           ],
         ),
       ),

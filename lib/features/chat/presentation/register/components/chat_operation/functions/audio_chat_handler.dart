@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/components/atomics/get_time_now.dart';
-import 'package:migozz_app/core/components/compuestos/chat/chat_model.dart';
+import 'package:migozz_app/features/chat/data/domain/models/chat_model.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/services/media_service.dart';
 import 'package:path_provider/path_provider.dart';
@@ -78,7 +78,7 @@ class AudioChatHandler {
     // 4️⃣ Agregar mensaje visual del audio en el chat
     addMessage({
       "other": false,
-      "type": MessageType.audioPlayback,
+      "type": MessageType.audio,
       "audio": _permanentAudioPath, // Usar la copia permanente
       "chatController": chatController,
       "time": getTimeNow(),

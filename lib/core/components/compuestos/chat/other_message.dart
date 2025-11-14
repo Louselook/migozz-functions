@@ -8,7 +8,9 @@ class OtherMessage extends StatelessWidget {
   final String time;
   final List<Map<String, dynamic>>? platforms;
   final List<Map<String, String>>? profilePictures;
-  final RegisterChatController? chatController; // 👈 Agregar controller
+  final RegisterChatController? chatController;
+  final String? otherUserName; // 👈 NUEVO
+  final String? otherUserAvatar; // 👈 NUEVO
 
   const OtherMessage({
     super.key,
@@ -16,7 +18,9 @@ class OtherMessage extends StatelessWidget {
     required this.time,
     this.platforms,
     this.profilePictures,
-    this.chatController, // 👈 Opcional
+    this.chatController,
+    this.otherUserName, // 👈 NUEVO
+    this.otherUserAvatar, // 👈 NUEVO
   });
 
   @override
@@ -24,6 +28,11 @@ class OtherMessage extends StatelessWidget {
     final hasPlatforms = platforms != null && platforms!.isNotEmpty;
     final hasProfilePictures =
         profilePictures != null && profilePictures!.isNotEmpty;
+
+    // Determinar nombre y avatar a mostrar
+    final displayName = otherUserName ?? "Migozz";
+    final hasCustomAvatar =
+        otherUserAvatar != null && otherUserAvatar!.isNotEmpty;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -35,14 +44,38 @@ class OtherMessage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 🟣 Encabezado con ícono de Migozz
+          // 🟣 Encabezado con avatar y nombre
           Row(
             children: [
-              Image.asset("assets/images/Migozz.webp", width: 18, height: 18),
+              // Avatar personalizado o logo de Migozz
+              if (hasCustomAvatar)
+                CircleAvatar(
+                  radius: 9,
+                  backgroundImage: NetworkImage(otherUserAvatar!),
+                  backgroundColor: Colors.grey[800],
+                )
+              else if (otherUserName != null && otherUserName!.isNotEmpty)
+                CircleAvatar(
+                  radius: 9,
+                  backgroundColor: Colors.grey[800],
+                  child: Text(
+                    otherUserName![0].toUpperCase(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                )
+              else
+                // Fallback: logo de Migozz (para chat de IA)
+                Image.asset("assets/images/Migozz.webp", width: 18, height: 18),
+
               const SizedBox(width: 6),
-              const Text(
-                "Migozz",
-                style: TextStyle(
+
+              Text(
+                displayName,
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,

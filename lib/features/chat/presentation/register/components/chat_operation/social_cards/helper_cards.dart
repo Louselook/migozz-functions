@@ -1,5 +1,5 @@
 import 'package:migozz_app/core/components/atomics/network_list.dart';
-import 'package:migozz_app/core/components/compuestos/chat/chat_model.dart';
+import 'package:migozz_app/features/chat/data/domain/models/chat_model.dart';
 
 class SocialCardsHelper {
   static List<Map<String, dynamic>> generateSocialCards({

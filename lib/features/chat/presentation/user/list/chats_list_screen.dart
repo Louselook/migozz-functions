@@ -1,12 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:migozz_app/features/chat/data/datasources/chat_service.dart';
 import 'package:migozz_app/features/chat/data/domain/models/chat_preview.dart';
+import 'package:migozz_app/features/chat/data/domain/models/chat_rooms.dart';
 import 'package:migozz_app/features/chat/presentation/components/chat_list_item.dart';
+import 'package:migozz_app/features/chat/presentation/user/user_chat_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-/// Pantalla de lista de chats - SOLO UI (sin lógica de backend)
+/// Pantalla de lista de chats - VERSIÓN FINAL
 class ChatsListScreen extends StatefulWidget {
   final String username;
+  final String currentUserId;
 
-  const ChatsListScreen({super.key, required this.username});
+  const ChatsListScreen({
+    super.key,
+    required this.username,
+    required this.currentUserId,
+  });
 
   @override
   State<ChatsListScreen> createState() => _ChatsListScreenState();
@@ -16,12 +25,13 @@ class _ChatsListScreenState extends State<ChatsListScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
+  final ChatService _chatService = ChatService();
   String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
     _searchController.addListener(() {
       setState(() {
         _searchQuery = _searchController.text.toLowerCase();
@@ -36,86 +46,56 @@ class _ChatsListScreenState extends State<ChatsListScreen>
     super.dispose();
   }
 
-  // 🎨 Datos mock solo para visualización
-  List<ChatPreview> _getMockChats() {
-    return [
-      ChatPreview(
-        userId: '1',
-        displayName: 'Javier Cole',
-        username: 'javicole',
-        lastMessage: 'He liked a message',
-        timeAgo: '2h',
-        isVerified: true,
-        isOnline: true,
-      ),
-      ChatPreview(
-        userId: '2',
-        displayName: 'Emily Dawson',
-        username: 'emidawson',
-        lastMessage: 'Sent ago a H',
-        timeAgo: '4h',
-        isVerified: true,
+  /// Convertir ChatRoom a ChatPreview
+  Future<ChatPreview?> _chatRoomToPreview(ChatRoom chatRoom) async {
+    try {
+      final otherUserId = chatRoom.getOtherParticipant(widget.currentUserId);
+
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .where('email', isEqualTo: otherUserId)
+          .limit(1)
+          .get();
+
+      if (userDoc.docs.isEmpty) return null;
+
+      final userData = userDoc.docs.first.data();
+
+      return ChatPreview(
+        userId: otherUserId,
+        displayName: userData['displayName'] ?? 'Usuario',
+        username: userData['userName'] ?? userData['username'] ?? 'user',
+        avatarUrl: userData['avatarUrl'],
+        lastMessage: chatRoom.lastMessage ?? 'Nuevo chat',
+        timeAgo: _formatTime(chatRoom.lastMessageTime),
+        isVerified: userData['isVerified'] ?? false,
         isOnline: false,
-      ),
-      ChatPreview(
-        userId: '3',
-        displayName: 'Eli West',
-        username: 'westview',
-        lastMessage: 'Sent ago a T',
-        timeAgo: '3h',
-        isVerified: true,
-        isOnline: false,
-      ),
-      ChatPreview(
-        userId: '4',
-        displayName: 'André Knox',
-        username: 'andreknox',
-        lastMessage: 'Sent a photo · 13 hrs',
-        timeAgo: '13h',
-        isVerified: true,
-        isOnline: false,
-      ),
-      ChatPreview(
-        userId: '5',
-        displayName: 'Cameron Lane',
-        username: 'camcam',
-        lastMessage: 'I have an update i wanted',
-        timeAgo: '1d',
-        isVerified: true,
-        isOnline: true,
-      ),
-      ChatPreview(
-        userId: '6',
-        displayName: 'Hailey Morgan',
-        username: 'hailey',
-        lastMessage: 'That sounds great!',
-        timeAgo: '2d',
-        isVerified: true,
-        isOnline: false,
-      ),
-      ChatPreview(
-        userId: '7',
-        displayName: 'Madison Clarke',
-        username: 'madcl',
-        lastMessage: 'She reacted to your story. Amazing photo',
-        timeAgo: '2d',
-        isVerified: false,
-        isOnline: false,
-      ),
-      ChatPreview(
-        userId: '8',
-        displayName: 'Taylor Grant',
-        username: 'tgrant',
-        lastMessage: 'I will be attentive',
-        timeAgo: '1w',
-        isVerified: true,
-        isOnline: false,
-      ),
-    ];
+        unreadCount: chatRoom.getUnreadCount(widget.currentUserId),
+      );
+    } catch (e) {
+      debugPrint('❌ Error al convertir ChatRoom: $e');
+      return null;
+    }
   }
 
-  List<ChatPreview> _getFilteredChats() {
-    final chats = _getMockChats();
+  String _formatTime(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.inMinutes < 1) {
+      return 'Ahora';
+    } else if (difference.inMinutes < 60) {
+      return '${difference.inMinutes}m';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours}h';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays}d';
+    } else {
+      return '${difference.inDays ~/ 7}w';
+    }
+  }
+
+  List<ChatPreview> _filterChats(List<ChatPreview> chats) {
     if (_searchQuery.isEmpty) return chats;
 
     return chats.where((chat) {
@@ -132,30 +112,79 @@ class _ChatsListScreenState extends State<ChatsListScreen>
       appBar: _buildAppBar(),
       body: Column(
         children: [
-          // Barra de búsqueda
           _buildSearchBar(),
-
-          // Tabs
           _buildTabs(),
-
-          // Lista de chats
           Expanded(
             child: TabBarView(
               controller: _tabController,
               children: [
-                // Tab Main
-                _buildChatList(_getFilteredChats()),
-
-                // Tab Requests
-                _buildEmptyState('No message requests'),
-
-                // Tab General
-                _buildEmptyState('No general messages'),
+                _buildChatStream(isActive: true),
+                _buildChatStream(isActive: false),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  /// Stream de chats
+  Widget _buildChatStream({required bool isActive}) {
+    final stream = isActive
+        ? _chatService.getActiveChatsStream(widget.currentUserId)
+        : _chatService.getNewChatsStream(widget.currentUserId);
+
+    return StreamBuilder<List<ChatRoom>>(
+      stream: stream,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(color: Color(0xFFE91E63)),
+          );
+        }
+
+        if (snapshot.hasError) {
+          // Mostrar error de forma amigable
+          return _buildEmptyState(
+            'Oops! Algo salió mal',
+            icon: Icons.error_outline,
+          );
+        }
+
+        final chatRooms = snapshot.data ?? [];
+
+        if (chatRooms.isEmpty) {
+          return _buildEmptyState(
+            isActive ? 'No messages yet' : 'No new messages',
+          );
+        }
+
+        return FutureBuilder<List<ChatPreview?>>(
+          future: Future.wait(
+            chatRooms.map((room) => _chatRoomToPreview(room)),
+          ),
+          builder: (context, previewSnapshot) {
+            if (!previewSnapshot.hasData) {
+              return const Center(
+                child: CircularProgressIndicator(color: Color(0xFFE91E63)),
+              );
+            }
+
+            final allPreviews = previewSnapshot.data!
+                .where((p) => p != null)
+                .cast<ChatPreview>()
+                .toList();
+
+            final filteredChats = _filterChats(allPreviews);
+
+            if (filteredChats.isEmpty) {
+              return _buildEmptyState('No results found');
+            }
+
+            return _buildChatList(filteredChats);
+          },
+        );
+      },
     );
   }
 
@@ -176,14 +205,6 @@ class _ChatsListScreenState extends State<ChatsListScreen>
         ),
       ),
       centerTitle: true,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.edit_square, color: Colors.white),
-          onPressed: () {
-            debugPrint('Nuevo mensaje');
-          },
-        ),
-      ],
     );
   }
 
@@ -216,42 +237,21 @@ class _ChatsListScreenState extends State<ChatsListScreen>
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Row(
         children: [
-          // 🔧 Dropdown de filtros (sin cambios)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-            decoration: BoxDecoration(
-              color: const Color(0xFF2C2C2E),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.tune, color: Colors.grey[400], size: 18),
-                const SizedBox(width: 4),
-                Icon(Icons.arrow_drop_down, color: Colors.grey[400], size: 18),
-              ],
-            ),
-          ),
-
           const SizedBox(width: 12),
-
           Expanded(
             child: SizedBox(
-              height: 38, // altura del tab (ajusta si quieres más/menos)
+              height: 38,
               child: TabBar(
                 controller: _tabController,
-                // clave: usar TabBarIndicatorSize.tab
                 indicatorSize: TabBarIndicatorSize.tab,
-                // quitar paddings para que la BoxDecoration ocupe todo el tab
                 indicatorPadding: EdgeInsets.zero,
                 labelPadding: EdgeInsets.zero,
-                // indicador como "pill" que ocupa todo el tab
                 indicator: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [Color(0xFFE91E63), Color(0xFF9C27B0)],
                   ),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                // estilos de texto
                 dividerColor: Colors.transparent,
                 labelColor: Colors.white,
                 unselectedLabelColor: Colors.grey[400],
@@ -260,10 +260,8 @@ class _ChatsListScreenState extends State<ChatsListScreen>
                   fontWeight: FontWeight.w600,
                 ),
                 tabs: const [
-                  // Si quieres algo de padding interior al texto, envolver cada Tab
-                  Tab(child: Center(child: Text('Main'))),
-                  Tab(child: Center(child: Text('Requests'))),
-                  Tab(child: Center(child: Text('General'))),
+                  Tab(child: Center(child: Text('Chat'))),
+                  Tab(child: Center(child: Text('New'))),
                 ],
               ),
             ),
@@ -274,10 +272,6 @@ class _ChatsListScreenState extends State<ChatsListScreen>
   }
 
   Widget _buildChatList(List<ChatPreview> chats) {
-    if (chats.isEmpty) {
-      return _buildEmptyState('No messages yet');
-    }
-
     return ListView.builder(
       itemCount: chats.length,
       itemBuilder: (context, index) {
@@ -285,25 +279,39 @@ class _ChatsListScreenState extends State<ChatsListScreen>
         return ChatListItem(
           chat: chat,
           onTap: () {
-            // 🎨 Solo imprimir por ahora
-            debugPrint('Abrir chat con: ${chat.displayName}');
-            // Navigator.push(...);
+            // 🎯 Navegar al chat pasando solo datos básicos
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => UserChatScreen(
+                  otherUserId: chat.userId,
+                  otherUserName: chat.displayName,
+                  otherUserAvatar: chat.avatarUrl,
+                  currentUserId: widget.currentUserId,
+                ),
+              ),
+            );
           },
         );
       },
     );
   }
 
-  Widget _buildEmptyState(String message) {
+  Widget _buildEmptyState(String message, {IconData? icon}) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.chat_bubble_outline, size: 64, color: Colors.grey[700]),
+          Icon(
+            icon ?? Icons.chat_bubble_outline,
+            size: 64,
+            color: Colors.grey[700],
+          ),
           const SizedBox(height: 16),
           Text(
             message,
             style: TextStyle(color: Colors.grey[600], fontSize: 16),
+            textAlign: TextAlign.center,
           ),
         ],
       ),

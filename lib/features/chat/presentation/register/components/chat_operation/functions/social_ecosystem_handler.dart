@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/components/atomics/get_time_now.dart';
-import 'package:migozz_app/core/components/compuestos/chat/chat_model.dart';
+import 'package:migozz_app/features/chat/data/domain/models/chat_model.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/chat/controllers/register_chat_controller.dart';
 import 'package:migozz_app/features/chat/presentation/register/components/chat_operation/social_cards/helper_cards.dart';

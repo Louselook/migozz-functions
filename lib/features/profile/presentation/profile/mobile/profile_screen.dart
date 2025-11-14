@@ -89,22 +89,28 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
               isOwnProfile: isOwnProfile,
               onChatTap: () {
                 if (!isOwnProfile) {
-                  // ✅ Navegar al chat con este usuario
+                  // ✅ Chat con otro usuario - Pasar datos básicos
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) => UserChatScreen(
-                        otherUser: user,
+                        otherUserId: user.email,
+                        otherUserName: user.displayName.isNotEmpty
+                            ? user.displayName
+                            : user.username,
+                        otherUserAvatar: user.avatarUrl,
                         currentUserId: currentUserEmail,
                       ),
                     ),
                   );
                 } else {
+                  // ✅ Mis chats - Ir a la lista
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) => ChatsListScreen(
                         username: user.username.replaceFirst('@', ''),
+                        currentUserId: currentUserEmail, // ← Usar email, NO uid
                       ),
                     ),
                   );
