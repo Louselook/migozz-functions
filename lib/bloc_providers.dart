@@ -12,7 +12,8 @@ import 'package:migozz_app/injection.dart'; // Tu archivo de inyección de depen
 final List<BlocProvider> blocProviders = [
   // AuthCubit con arquitectura limpia
   BlocProvider<AuthCubit>(
-    create: (context) => AuthCubit(locator<AuthUseCases>()),
+    create: (context) =>
+        AuthCubit(locator<AuthUseCases>(), locator<UserService>()),
   ),
 
   // LoginCubit - mantener como está por ahora

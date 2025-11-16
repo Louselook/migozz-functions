@@ -4,19 +4,19 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
-import 'package:migozz_app/features/profile/components/draggable_social_rail.dart';
 import 'package:migozz_app/features/profile/components/profile_version_button.dart';
 import 'package:migozz_app/features/profile/components/social_rail.dart';
 import 'package:migozz_app/features/profile/components/utils/side_menu.dart';
 import 'package:migozz_app/features/profile/presentation/profile/web/components/profile_background_gradients.dart';
-import 'package:migozz_app/features/profile/presentation/profile/web/components/profile_header.dart';
 import 'package:migozz_app/features/profile/presentation/profile/web/components/profile_search_button.dart';
-// import 'package:migozz_app/features/profile/presentation/profile/web/components/publications_content.dart';
+import 'package:migozz_app/features/profile/presentation/profile/web/v2/components/profile_header_v2.dart';
+import 'package:migozz_app/features/profile/presentation/profile/web/v2/components/social_bars_v2.dart';
 
-class WebProfileContent extends StatelessWidget {
+class WebProfileContentV2 extends StatelessWidget {
   final UserDTO user;
   final TutorialKeys tutorialKeys;
-  const WebProfileContent({
+
+  const WebProfileContentV2({
     super.key,
     required this.user,
     required this.tutorialKeys,
@@ -26,24 +26,14 @@ class WebProfileContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isSmallScreen = size.width < 600;
-    final socialItemSize = isSmallScreen ? 35.0 : 45.0;
-    final socialIconSize = isSmallScreen ? 30.0 : 40.0;
-    final socialRailWidth = socialItemSize + 16;
-    final socialPadding = isSmallScreen ? 20.0 : 30.0;
-    final socialRailHeight = (socialItemSize * 4) + (8.0 * 3) + 16.0;
-    final initialSocialPosition = Offset(
-      size.width - socialRailWidth - socialPadding,
-      (size.height - socialRailHeight) / 2,
-    );
     final leftMenuWidth = isSmallScreen ? 80.0 : 100.0;
 
-    // ✅ Calcular seguidores totales desde socialEcosystem
+    // Calcular seguidores totales desde socialEcosystem
     final totalFollowers = _calculateTotalFollowers(user.socialEcosystem);
 
-    // ✅ Construir enlaces de redes sociales
+    // Construir enlaces de redes sociales
     final socialLinks = _buildSocialLinks(user.socialEcosystem, user.username);
 
-    // Pasa info real del user al ProfileHeader (adapta ProfileHeader para aceptar params)
     return Scaffold(
       backgroundColor: Colors.black,
       body: Center(
@@ -54,22 +44,25 @@ class WebProfileContent extends StatelessWidget {
           ),
           child: Stack(
             children: [
+              // Fondo con gradientes
               const ProfileBackgroundGradients(),
+
+              // Contenido principal con scroll
               Positioned.fill(
                 child: Padding(
                   padding: EdgeInsets.only(left: leftMenuWidth),
                   child: CustomScrollView(
                     slivers: [
+                      // Header con avatar y nombre
                       SliverToBoxAdapter(
                         child: Builder(
                           builder: (context) {
-                            // Determinar si es el perfil del usuario autenticado
                             final authState = context.read<AuthCubit>().state;
                             final currentUserEmail =
                                 authState.userProfile?.email ?? '';
                             final isOwnProfile = user.email == currentUserEmail;
 
-                            return ProfileHeader(
+                            return ProfileHeaderV2(
                               name: user.displayName,
                               displayName: user.username,
                               communityCount: totalFollowers.toString(),
@@ -83,26 +76,40 @@ class WebProfileContent extends StatelessWidget {
                           },
                         ),
                       ),
-                      // const SliverFillRemaining(child: PublicationsContent()),
+
+                      // Barras de redes sociales (versión 2)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isSmallScreen ? 20 : 40,
+                            vertical: 20,
+                          ),
+                          child: Center(
+                            child: SocialBarsV2(links: socialLinks),
+                          ),
+                        ),
+                      ),
+
+                      // Espacio para futuras publicaciones u otro contenido
+                      SliverToBoxAdapter(
+                        child: SizedBox(height: isSmallScreen ? 40 : 60),
+                      ),
                     ],
                   ),
                 ),
               ),
+
+              // Menú lateral izquierdo (se mantiene igual)
               Positioned(
                 left: 0,
                 top: 0,
                 bottom: 0,
                 child: SideMenu(tutorialKeys: tutorialKeys),
               ),
-              // Assign tutorial key so the tutorial can target this button
+
+              // Botón de búsqueda (se mantiene igual)
               ProfileSearchButton(key: tutorialKeys.searchScreenKey),
-              DraggableSocialRail(
-                key: ValueKey('social_rail_${size.width}'),
-                initialPosition: initialSocialPosition,
-                links: socialLinks,
-                itemSize: socialItemSize,
-                iconSize: socialIconSize,
-              ),
+
               // Botón para cambiar versión de perfil
               ProfileVersionButton(currentVersion: user.profileVersion),
             ],
@@ -207,11 +214,26 @@ class WebProfileContent extends StatelessWidget {
       case 'twitter':
         url = customUrl ?? 'https://x.com/$username';
         break;
+      case 'facebook':
+        url = customUrl ?? 'https://www.facebook.com/$username';
+        break;
       case 'pinterest':
         url = customUrl ?? 'https://www.pinterest.com/$username';
         break;
       case 'youtube':
         url = customUrl ?? 'https://www.youtube.com/@$username';
+        break;
+      case 'telegram':
+        url = customUrl ?? 'https://t.me/$username';
+        break;
+      case 'whatsapp':
+        url = customUrl ?? 'https://wa.me/$username';
+        break;
+      case 'spotify':
+        url = customUrl ?? 'https://open.spotify.com/user/$username';
+        break;
+      case 'linkedin':
+        url = customUrl ?? 'https://www.linkedin.com/in/$username';
         break;
       default:
         url = customUrl ?? '';

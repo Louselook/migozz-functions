@@ -1,0 +1,315 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:migozz_app/core/components/atomics/network_list.dart';
+import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
+import 'package:migozz_app/features/chat/presentation/user/list/chats_list_screen.dart';
+import 'package:migozz_app/features/chat/presentation/user/user_chat_screen.dart';
+import 'package:migozz_app/features/profile/components/bottom_nav.dart';
+import 'package:migozz_app/features/profile/components/profile_version_button.dart';
+import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
+import 'package:migozz_app/features/profile/components/social_rail.dart';
+import 'package:migozz_app/features/profile/presentation/profile/mobile/components/profile_top_actions.dart';
+import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/profile_header_mobile_v3.dart';
+import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/social_circles_mobile_v3.dart';
+import 'package:migozz_app/features/search/mobile/presentation/search_screen.dart';
+import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
+
+class MobileProfileContentV3 extends StatefulWidget {
+  final UserDTO user;
+  final TutorialKeys tutorialKeys;
+
+  const MobileProfileContentV3({
+    super.key,
+    required this.user,
+    required this.tutorialKeys,
+  });
+
+  @override
+  State<MobileProfileContentV3> createState() => _MobileProfileContentV3State();
+}
+
+class _MobileProfileContentV3State extends State<MobileProfileContentV3> {
+  int _tab = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final user = widget.user;
+    final size = MediaQuery.of(context).size;
+
+    final name = user.displayName;
+    final username = user.username.startsWith('@')
+        ? user.username
+        : '@${user.username}';
+    final avatarUrl = user.avatarUrl;
+    final voiceNoteUrl = user.voiceNoteUrl ?? '';
+
+    // Determinar si es el perfil del usuario autenticado
+    final authState = context.watch<AuthCubit>().state;
+    final currentUserEmail = authState.userProfile?.email ?? '';
+    final isOwnProfile = user.email == currentUserEmail;
+
+    // Recuperamos los seguidores y redes desde el perfil
+    final totalFollowers = _calculateTotalFollowers(user.socialEcosystem);
+    final socialLinks = _buildSocialLinks(user.socialEcosystem, user.username);
+
+    debugPrint('====== MOBILE V3 DEBUG ======');
+    debugPrint('Total followers: $totalFollowers');
+    debugPrint('Social links count: ${socialLinks.length}');
+    debugPrint('Social ecosystem: ${user.socialEcosystem}');
+
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          // Gradientes de fondo
+          TintesGradients(child: Container()),
+
+          // Contenido principal con scroll
+          SafeArea(
+            child: CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                // Header con avatar y nombre
+                SliverToBoxAdapter(
+                  child: ProfileHeaderMobileV3(
+                    name: name.isNotEmpty ? name : 'NOMBRE VACÍO',
+                    displayName: username,
+                    communityCount: totalFollowers.toString(),
+                    communityName: 'Community',
+                    avatarUrl: avatarUrl,
+                    voiceNoteUrl: voiceNoteUrl,
+                    tutorialKeys: widget.tutorialKeys,
+                    isOwnProfile: isOwnProfile,
+                    userId: user.email,
+                  ),
+                ),
+
+                // Iconos circulares de redes sociales (versión 3)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: SocialCirclesMobileV3(links: socialLinks),
+                  ),
+                ),
+
+                // Espacio adicional al final
+                SliverToBoxAdapter(child: SizedBox(height: size.height * 0.15)),
+              ],
+            ),
+          ),
+
+          // Botón de búsqueda (solo si es el propio perfil)
+          if (isOwnProfile)
+            Positioned(
+              left: 10,
+              top: 45,
+              child: GestureDetector(
+                key: widget.tutorialKeys.searchScreenKey,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SearchScreen()),
+                  );
+                },
+                child: const Icon(
+                  Icons.search,
+                  color: Color(0xAAFFFFFF),
+                  size: 45,
+                ),
+              ),
+            ),
+
+          // Acciones superiores (chat, notificaciones, etc.)
+          ProfileTopActions(
+            isOwnProfile: isOwnProfile,
+            onChatTap: () {
+              if (!isOwnProfile) {
+                // Chat con otro usuario
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => UserChatScreen(
+                      otherUserId: user.email,
+                      otherUserName: user.displayName.isNotEmpty
+                          ? user.displayName
+                          : user.username,
+                      otherUserAvatar: user.avatarUrl,
+                      currentUserId: currentUserEmail,
+                    ),
+                  ),
+                );
+              } else {
+                // Mis chats - Ir a la lista
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ChatsListScreen(
+                      username: user.username.replaceFirst('@', ''),
+                      currentUserId: currentUserEmail,
+                    ),
+                  ),
+                );
+              }
+            },
+            onNotificationsTap: () {
+              debugPrint('Abrir notificaciones');
+            },
+          ),
+
+          // Barra inferior de navegación (solo si es el propio perfil)
+          if (isOwnProfile)
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: GradientBottomNav(
+                currentIndex: _tab,
+                onItemSelected: (i) => setState(() => _tab = i),
+                onCenterTap: () async {
+                  await context.read<AuthCubit>().logout();
+                },
+                onProfileUpdated: () {
+                  context.read<AuthCubit>().refreshUserProfile();
+                },
+                tutorialKeys: widget.tutorialKeys,
+              ),
+            ),
+
+          // Botón para cambiar versión de perfil
+          ProfileVersionButton(currentVersion: user.profileVersion),
+        ],
+      ),
+    );
+  }
+
+  int _calculateTotalFollowers(List<Map<String, dynamic>>? socialEcosystem) {
+    if (socialEcosystem == null || socialEcosystem.isEmpty) return 0;
+    int total = 0;
+    for (final social in socialEcosystem) {
+      for (final platformData in social.values) {
+        if (platformData is Map<String, dynamic>) {
+          final followers = platformData['followers'];
+          if (followers is int) {
+            total += followers;
+          } else if (followers is String) {
+            total += int.tryParse(followers) ?? 0;
+          }
+        }
+      }
+    }
+    return total;
+  }
+
+  List<SocialLink> _buildSocialLinks(
+    List<Map<String, dynamic>>? socialEcosystem,
+    String username,
+  ) {
+    if (socialEcosystem == null || socialEcosystem.isEmpty) return [];
+    final links = <SocialLink>[];
+    final cleanUsername = username.replaceFirst('@', '');
+
+    debugPrint('====== Building social links ======');
+    debugPrint('Social ecosystem: $socialEcosystem');
+
+    for (final social in socialEcosystem) {
+      debugPrint('Processing social: $social');
+      for (final entry in social.entries) {
+        final platform = entry.key.toLowerCase();
+        final data = entry.value;
+        int? followers;
+        int? shares;
+        String? customUrl;
+
+        if (data is Map<String, dynamic>) {
+          followers = _parseIntFromDynamic(data['followers']);
+          shares = _parseIntFromDynamic(data['shares']);
+          customUrl = data['url']?.toString();
+        }
+
+        debugPrint(
+          'Platform: $platform, Followers: $followers, CustomUrl: $customUrl',
+        );
+
+        final socialInfo = _getSocialInfo(platform, cleanUsername, customUrl);
+        if (socialInfo != null) {
+          debugPrint(
+            'Adding link: ${socialInfo['asset']} - ${socialInfo['url']}',
+          );
+          links.add(
+            SocialLink(
+              asset: socialInfo['asset']!,
+              url: Uri.parse(socialInfo['url']!),
+              followers: followers,
+              shares: shares,
+            ),
+          );
+        }
+      }
+    }
+
+    debugPrint('Total links created: ${links.length}');
+    return links;
+  }
+
+  int? _parseIntFromDynamic(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value);
+    return null;
+  }
+
+  Map<String, String>? _getSocialInfo(
+    String platform,
+    String username,
+    String? customUrl,
+  ) {
+    final normalizedLabel =
+        platform[0].toUpperCase() + platform.substring(1).toLowerCase();
+
+    final asset = iconByLabel[normalizedLabel];
+    if (asset == null) {
+      debugPrint(
+        'No asset found for platform: $platform (normalized: $normalizedLabel)',
+      );
+      return null;
+    }
+
+    String url;
+    switch (platform) {
+      case 'tiktok':
+        url = customUrl ?? 'https://www.tiktok.com/@$username';
+        break;
+      case 'instagram':
+        url = customUrl ?? 'https://www.instagram.com/$username';
+        break;
+      case 'x':
+      case 'twitter':
+        url = customUrl ?? 'https://x.com/$username';
+        break;
+      case 'facebook':
+        url = customUrl ?? 'https://www.facebook.com/$username';
+        break;
+      case 'pinterest':
+        url = customUrl ?? 'https://www.pinterest.com/$username';
+        break;
+      case 'youtube':
+        url = customUrl ?? 'https://www.youtube.com/@$username';
+        break;
+      case 'telegram':
+        url = customUrl ?? 'https://t.me/$username';
+        break;
+      case 'whatsapp':
+        url = customUrl ?? 'https://wa.me/$username';
+        break;
+      case 'spotify':
+        url = customUrl ?? 'https://open.spotify.com/user/$username';
+        break;
+      case 'linkedin':
+        url = customUrl ?? 'https://www.linkedin.com/in/$username';
+        break;
+      default:
+        url = customUrl ?? '';
+    }
+
+    return {'asset': asset, 'url': url};
+  }
+}

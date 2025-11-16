@@ -6,6 +6,7 @@ import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubi
 import 'package:migozz_app/features/chat/presentation/user/list/chats_list_screen.dart';
 import 'package:migozz_app/features/chat/presentation/user/user_chat_screen.dart';
 import 'package:migozz_app/features/profile/components/draggable_social_rail.dart';
+import 'package:migozz_app/features/profile/components/profile_version_button.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/components/profile_top_actions.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/profile/components/bottom_nav.dart';
@@ -146,6 +147,9 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                   tutorialKeys: widget.tutorialKeys,
                 ),
               ),
+
+            // Botón para cambiar versión de perfil
+            ProfileVersionButton(currentVersion: user.profileVersion),
           ],
         ),
       ),

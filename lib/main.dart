@@ -35,7 +35,7 @@ Future<void> main() async {
   );
 
   // 🧠 Crear instancias persistentes ANTES del runApp
-  final authCubit = AuthCubit(locator.get());
+  final authCubit = AuthCubit(locator.get(), locator.get());
   final registerCubit = RegisterCubit(locator.get());
   final goRouterNotifier = GoRouterNotifier(authCubit);
 

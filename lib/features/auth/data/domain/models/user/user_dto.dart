@@ -16,6 +16,7 @@ class UserDTO {
   final String? phone;
   final String? voiceNoteUrl;
   final List<String>? category;
+  final int profileVersion; // 1, 2 o 3 - versión del diseño de perfil
 
   final Map<String, List<String>> interests;
   final bool complete;
@@ -36,6 +37,7 @@ class UserDTO {
     this.phone,
     this.voiceNoteUrl,
     this.category,
+    this.profileVersion = 1, // Por defecto versión 1
     Map<String, List<String>>? interests,
     this.complete = true,
     DateTime? createdAt,
@@ -57,6 +59,7 @@ class UserDTO {
     String? phone,
     String? voiceNoteUrl,
     List<String>? category,
+    int? profileVersion,
     Map<String, List<String>>? interests,
     bool? complete,
     DateTime? createdAt,
@@ -75,6 +78,7 @@ class UserDTO {
       phone: phone ?? this.phone,
       voiceNoteUrl: voiceNoteUrl ?? this.voiceNoteUrl,
       category: category ?? this.category,
+      profileVersion: profileVersion ?? this.profileVersion,
       interests: interests ?? this.interests,
       complete: complete ?? this.complete,
       createdAt: createdAt ?? this.createdAt,
@@ -96,6 +100,7 @@ class UserDTO {
       'phone': phone,
       'voiceNoteUrl': voiceNoteUrl,
       'category': category,
+      'profileVersion': profileVersion,
       'interests': interests,
       'complete': complete,
       'createdAt': Timestamp.fromDate(createdAt),
@@ -243,6 +248,21 @@ class UserDTO {
       complete = c != 0;
     }
 
+    // profileVersion defensivo
+    int profileVersion = 1; // Por defecto versión 1
+    final pv = map['profileVersion'];
+    if (pv is int) {
+      profileVersion = pv;
+    } else if (pv is String) {
+      profileVersion = int.tryParse(pv) ?? 1;
+    } else if (pv is num) {
+      profileVersion = pv.toInt();
+    }
+    // Validar que esté entre 1 y 3
+    if (profileVersion < 1 || profileVersion > 3) {
+      profileVersion = 1;
+    }
+
     return UserDTO(
       email: email,
       lang: lang,
@@ -256,6 +276,7 @@ class UserDTO {
       phone: phone,
       voiceNoteUrl: voiceNoteUrl,
       category: category,
+      profileVersion: profileVersion,
       interests: interests,
       complete: complete,
       createdAt: createdAt,

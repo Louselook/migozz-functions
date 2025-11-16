@@ -4,14 +4,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/auth_result.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/features/auth/data/domain/use_cases/auth_use_cases.dart';
+import 'package:migozz_app/features/profile/data/datasources/user_service.dart';
 import 'auth_state.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthCubit extends Cubit<AuthState> {
   final AuthUseCases _authUseCases;
+  final UserService _userService;
   late final StreamSubscription<User?> _authSub;
 
-  AuthCubit(this._authUseCases) : super(const AuthState.checking()) {
+  AuthCubit(this._authUseCases, this._userService)
+    : super(const AuthState.checking()) {
     // 🔔 Volver al listener original (sin flag)
     _authSub = _authUseCases.authStateChanges.listen(
       (user) async {
@@ -162,6 +165,47 @@ class AuthCubit extends Cubit<AuthState> {
 
     final updatedProfile = currentProfile.copyWith(complete: value);
     emit(state.copyWith(userProfile: updatedProfile, isLoadingProfile: false));
+  }
+
+  /// Actualiza la versión de perfil preferida del usuario
+  Future<void> updateProfileVersion(int version) async {
+    if (!state.isAuthenticated ||
+        state.firebaseUser == null ||
+        state.userProfile == null) {
+      throw Exception('Usuario no autenticado');
+    }
+
+    if (version < 1 || version > 3) {
+      throw Exception('Versión inválida. Debe ser 1, 2 o 3');
+    }
+
+    try {
+      final uid = state.firebaseUser!.uid;
+      debugPrint(
+        '🔄 [AuthCubit] Actualizando versión de perfil a: $version para UID: $uid',
+      );
+
+      // Actualizar en Firebase usando UserService con el UID correcto
+      await _userService.updateUserProfile(
+        uid, // ← Usar UID en lugar de email
+        {'profileVersion': version},
+      );
+
+      // Actualizar estado local
+      final updatedProfile = state.userProfile!.copyWith(
+        profileVersion: version,
+        updatedAt: DateTime.now(),
+      );
+
+      emit(state.copyWith(userProfile: updatedProfile));
+
+      debugPrint(
+        '✅ [AuthCubit] Versión de perfil actualizada exitosamente en Firebase',
+      );
+    } catch (e) {
+      debugPrint('❌ [AuthCubit] Error actualizando versión de perfil: $e');
+      rethrow;
+    }
   }
 
   Future<void> logout() async {

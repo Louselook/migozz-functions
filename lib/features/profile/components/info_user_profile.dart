@@ -11,8 +11,8 @@ class InfoUserProfile extends StatefulWidget {
   final String nameComunity;
   final String voiceNoteUrl;
   final TutorialKeys? tutorialKeys;
-  final bool isOwnProfile; 
-  final String userId; 
+  final bool isOwnProfile;
+  final String userId;
 
   const InfoUserProfile({
     super.key,
@@ -73,9 +73,9 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
   Future<void> _togglePlay() async {
     final voiceNoteUrl = widget.voiceNoteUrl;
     if (voiceNoteUrl.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("No hay audio disponible"))); //TODO: cambiar al JSON
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("No hay audio disponible")),
+      ); //TODO: cambiar al JSON
       return;
     }
 
@@ -86,7 +86,7 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
         await _player.pause();
       } else {
         // Solo carga la URL si no está ya cargada o si cambió
-        if (_player.audioSource == null || 
+        if (_player.audioSource == null ||
             _player.audioSource.toString() != voiceNoteUrl) {
           await _player.setUrl(voiceNoteUrl);
         }
@@ -98,7 +98,9 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
       debugPrint('Error reproduciendo audio: $e');
       // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Error al reproducir el audio")), //TODO: cambiar por JSON
+        const SnackBar(
+          content: Text("Error al reproducir el audio"),
+        ), //TODO: cambiar por JSON
       );
     } finally {
       setState(() => _isLoading = false);
@@ -118,7 +120,6 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
           decoration: BoxDecoration(
             color: const Color.fromARGB(176, 0, 0, 0).withValues(alpha: 0.05),
             borderRadius: borderRadius,
-            border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
             boxShadow: [
               BoxShadow(
                 blurRadius: 18,
@@ -220,37 +221,39 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
 
                   const SizedBox(width: 10),
 
-                 // Compartir perfil - diferencia entre propio y ajeno
-                GestureDetector(
-                  key: widget.tutorialKeys?.shareButtonKey,
-                  onTap: () {
-                    if (widget.isOwnProfile) {
-                      // Perfil propio: navegar a la pantalla de QR sin parámetros
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute<void>(
-                          builder: (context) => const ProfileQrScreen(),
-                        ),
-                      );
-                    } else {
-                      // Perfil ajeno: pasar los datos del usuario para generar su QR
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute<void>(
-                          builder: (context) => ProfileQrScreen(
-                            overrideUsername: widget.userId, // El username del usuario ajeno
-                            overrideDisplayName: widget.name, // El displayName del usuario ajeno
+                  // Compartir perfil - diferencia entre propio y ajeno
+                  GestureDetector(
+                    key: widget.tutorialKeys?.shareButtonKey,
+                    onTap: () {
+                      if (widget.isOwnProfile) {
+                        // Perfil propio: navegar a la pantalla de QR sin parámetros
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (context) => const ProfileQrScreen(),
                           ),
-                        ),
-                      );
-                    }
-                  },
-                  child: Icon(
-                    Icons.share,
-                    size: 18,
-                    color: Colors.white.withValues(alpha: 0.9),
+                        );
+                      } else {
+                        // Perfil ajeno: pasar los datos del usuario para generar su QR
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (context) => ProfileQrScreen(
+                              overrideUsername: widget
+                                  .userId, // El username del usuario ajeno
+                              overrideDisplayName: widget
+                                  .name, // El displayName del usuario ajeno
+                            ),
+                          ),
+                        );
+                      }
+                    },
+                    child: Icon(
+                      Icons.share,
+                      size: 18,
+                      color: Colors.white.withValues(alpha: 0.9),
+                    ),
                   ),
-                ),
                 ],
               ),
             ],
