@@ -117,18 +117,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             text: 'Skip',
                             onPressed: () => context.go('/login'),
                           ),
-                          GradientButton(
-                            child: const TextWithIcon(
-                              "Next",
-                              spacing: 20,
-                              icon: Icons.arrow_forward_ios_rounded,
+                          Expanded(
+                            child: GradientButton(
+                              child: const TextWithIcon(
+                                "Next",
+                                spacing: 20,
+                                icon: Icons.arrow_forward_ios_rounded,
+                              ),
+                              onPressed: () {
+                                _pageController.nextPage(
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                );
+                              },
                             ),
-                            onPressed: () {
-                              _pageController.nextPage(
-                                duration: const Duration(milliseconds: 300),
-                                curve: Curves.easeInOut,
-                              );
-                            },
                           ),
                         ],
                       ),

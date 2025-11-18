@@ -176,9 +176,15 @@ class _AppInitializerState extends State<AppInitializer>
 
   @override
   Widget build(BuildContext context) {
+    final authStatus = context.read<AuthCubit>().state.status;
+
+    // Debug logging
+    debugPrint('🔍 [AppInitializer] _result: ${_result != null ? "✅" : "❌"}');
+    debugPrint('🔍 [AppInitializer] authStatus: $authStatus');
+
     // Mientras no haya permisos, muestra el splash
-    if (_result == null ||
-        context.read<AuthCubit>().state.status == AuthStatus.checking) {
+    if (_result == null) {
+      debugPrint('⏳ [AppInitializer] Esperando permisos...');
       return const MaterialApp(
         debugShowCheckedModeBanner: false,
         home: SplashScreen(),
@@ -186,6 +192,7 @@ class _AppInitializerState extends State<AppInitializer>
     }
 
     // ✅ Solo avanza si ya tiene permiso de ubicación
+    debugPrint('✅ [AppInitializer] Permisos OK, construyendo app...');
     return widget.builder(context, _result);
   }
 }
