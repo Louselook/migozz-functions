@@ -1,9 +1,17 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:ui' as ui;
+import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:flutter/rendering.dart';
+import 'package:path_provider/path_provider.dart';
 
 /// Pantalla que muestra un QR y permite compartir el enlace del perfil
 /// de un usuario. Si no se pasa [userId], se usa el usuario logueado.
@@ -26,19 +34,161 @@ class ProfileQrScreen extends StatefulWidget {
   State<ProfileQrScreen> createState() => _ProfileQrScreenState();
 }
 
+enum BackgroundMode { emoji, colors, image }
+
 class _ProfileQrScreenState extends State<ProfileQrScreen> {
   late Future<_ProfileData> _futureProfile;
+  String? _selectedEmoji; // Track selected emoji
+  Color _qrColor = const Color(0xFFD43AB6); // Default QR color
+  BackgroundMode _currentMode = BackgroundMode.emoji; // Current mode
+  List<Color>? _selectedGradient; // Track selected gradient
+  String? _selectedImagePath; // Track selected image
+  final GlobalKey _screenshotKey = GlobalKey(); // Key for screenshot
 
   static const String _baseProfileUrl =
       'https://migozz.app/u'; // Cambia a tu dominio real
+
+  static const List<String> _emojiImages = [
+    'assets/emojis/emoji_1.png',
+    'assets/emojis/emoji_2.png'
+  ];
+
+  static const List<List<Color>> _gradientOptions = [
+    [Color(0xFFD43AB6), Color(0xFFFF6B9D)], // Pink gradient
+    [Color(0xFFFF6B6B), Color(0xFFFF8E53)], // Red-Orange gradient
+    [Color(0xFF4ECDC4), Color(0xFF44A08D)], // Teal gradient
+    [Color(0xFFFFE66D), Color(0xFFFFAF40)], // Yellow-Orange gradient
+    [Color(0xFF95E1D3), Color(0xFF38EF7D)], // Mint-Green gradient
+    [Color(0xFFF38181), Color(0xFFFCE38A)], // Coral-Yellow gradient
+    [Color(0xFFAA96DA), Color(0xFFFCBF49)], // Purple-Gold gradient
+    [Color(0xFF667EEA), Color(0xFF764BA2)], // Blue-Purple gradient
+    [Color(0xFF06FFA5), Color(0xFF00D4FF)], // Green-Cyan gradient
+    [Color(0xFFFF0844), Color(0xFFFFB199)], // Red-Pink gradient
+  ];
 
   @override
   void initState() {
     super.initState();
     _futureProfile = _loadProfileData();
+    _loadSavedState();
   }
 
-  
+  // Load all saved state from SharedPreferences
+  Future<void> _loadSavedState() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // Load saved mode
+    final savedMode = prefs.getString('background_mode');
+    if (savedMode != null) {
+      setState(() {
+        _currentMode = BackgroundMode.values.firstWhere(
+          (mode) => mode.toString() == savedMode,
+          orElse: () => BackgroundMode.emoji,
+        );
+      });
+    }
+
+    // Load saved emoji
+    final savedEmoji = prefs.getString('selected_emoji_background');
+    if (savedEmoji != null) {
+      setState(() {
+        _selectedEmoji = savedEmoji;
+      });
+      await _extractColorFromEmoji(savedEmoji);
+    }
+
+    // Load saved gradient
+    final savedGradient = prefs.getStringList('selected_gradient');
+    if (savedGradient != null && savedGradient.length == 2) {
+      final gradient = [
+        Color(int.parse(savedGradient[0])),
+        Color(int.parse(savedGradient[1])),
+      ];
+      setState(() {
+        _selectedGradient = gradient;
+        _qrColor = gradient[0];
+      });
+    }
+
+    // Load saved image path
+    final savedImage = prefs.getString('selected_image_path');
+    if (savedImage != null && File(savedImage).existsSync()) {
+      setState(() {
+        _selectedImagePath = savedImage;
+      });
+      await _extractColorFromImage(savedImage);
+    }
+  }
+
+  // Save current mode
+  Future<void> _saveMode(BackgroundMode mode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('background_mode', mode.toString());
+  }
+
+  // Extract dominant color from emoji image
+  Future<void> _extractColorFromEmoji(String emojiPath) async {
+    try {
+      final ByteData data = await rootBundle.load(emojiPath);
+      final Uint8List bytes = data.buffer.asUint8List();
+      final ui.Codec codec = await ui.instantiateImageCodec(bytes);
+      final ui.FrameInfo frameInfo = await codec.getNextFrame();
+      final ui.Image image = frameInfo.image;
+
+      // Sample pixels from the center of the image
+      final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+      if (byteData == null) return;
+
+      // Get center pixel color
+      final int width = image.width;
+      final int height = image.height;
+      final int centerX = width ~/ 2;
+      final int centerY = height ~/ 2;
+      final int pixelIndex = (centerY * width + centerX) * 4;
+
+      final int r = byteData.getUint8(pixelIndex);
+      final int g = byteData.getUint8(pixelIndex + 1);
+      final int b = byteData.getUint8(pixelIndex + 2);
+
+      setState(() {
+        _qrColor = Color.fromRGBO(r, g, b, 1.0);
+      });
+    } catch (e) {
+      debugPrint('Error extracting color: $e');
+      // Keep default color on error
+    }
+  }
+
+  // Save selected emoji to SharedPreferences
+  Future<void> _saveSelectedEmoji(String? emojiPath) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (emojiPath == null) {
+      await prefs.remove('selected_emoji_background');
+    } else {
+      await prefs.setString('selected_emoji_background', emojiPath);
+    }
+  }
+
+  // Save selected gradient
+  Future<void> _saveSelectedGradient(List<Color>? gradient) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (gradient == null) {
+      await prefs.remove('selected_gradient');
+    } else {
+      final gradientStrings = gradient.map((c) => c.value.toString()).toList();
+      await prefs.setStringList('selected_gradient', gradientStrings);
+    }
+  }
+
+  // Save selected image path
+  Future<void> _saveSelectedImage(String? imagePath) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (imagePath == null) {
+      await prefs.remove('selected_image_path');
+    } else {
+      await prefs.setString('selected_image_path', imagePath);
+    }
+  }
 
   Future<_ProfileData> _loadProfileData() async {
     // Si ya vienen los datos, retornarlos sin ir a Firestore
@@ -96,17 +246,550 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
     );
   }
 
+  // Toggle between modes
+  void _toggleMode() {
+    setState(() {
+      switch (_currentMode) {
+        case BackgroundMode.emoji:
+          _currentMode = BackgroundMode.colors;
+          break;
+        case BackgroundMode.colors:
+          _currentMode = BackgroundMode.image;
+          break;
+        case BackgroundMode.image:
+          _currentMode = BackgroundMode.emoji;
+          break;
+      }
+    });
+    _saveMode(_currentMode);
+  }
+
+  // Get button label based on current mode
+  String _getButtonLabel() {
+    switch (_currentMode) {
+      case BackgroundMode.emoji:
+        return 'Emoji';
+      case BackgroundMode.colors:
+        return 'Colors';
+      case BackgroundMode.image:
+        return 'Image';
+    }
+  }
+
+  // Handle background tap based on current mode
+  void _handleBackgroundTap() {
+    switch (_currentMode) {
+      case BackgroundMode.emoji:
+        _showEmojiPicker();
+        break;
+      case BackgroundMode.colors:
+        _showColorPicker();
+        break;
+      case BackgroundMode.image:
+        _showImagePicker();
+        break;
+    }
+  }
+
+  void _showEmojiPicker() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: 400,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 16),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Emoji',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: GridView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 1,
+                ),
+                itemCount: _emojiImages.length + 1, // +1 for default option
+                itemBuilder: (context, index) {
+                  // First item is "Default"
+                  if (index == 0) {
+                    final isSelected = _selectedEmoji == null;
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedEmoji = null;
+                          _selectedGradient = null;
+                          _selectedImagePath = null;
+                          _qrColor = const Color(0xFFD43AB6); // Reset to default color
+                        });
+                        _saveSelectedEmoji(null);
+                        _saveSelectedGradient(null);
+                        _saveSelectedImage(null);
+                        Navigator.pop(context);
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isSelected
+                                ? const Color(0xFFD43AB6)
+                                : Colors.grey.shade300,
+                            width: 3,
+                          ),
+                          gradient: const RadialGradient(
+                            center: Alignment(-0.5, -0.5),
+                            radius: 1.2,
+                            colors: [
+                              Color.fromARGB(255, 184, 107, 255),
+                              Color.fromARGB(255, 243, 198, 35),
+                            ],
+                          ),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'Default',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+
+                  // Emoji items
+                  final emojiPath = _emojiImages[index - 1];
+                  final isSelected = _selectedEmoji == emojiPath;
+
+                  return GestureDetector(
+                    onTap: () async {
+                      setState(() {
+                        _selectedEmoji = emojiPath;
+                        _selectedGradient = null;
+                        _selectedImagePath = null;
+                      });
+                      _saveSelectedEmoji(emojiPath);
+                      _saveSelectedGradient(null);
+                      _saveSelectedImage(null);
+                      await _extractColorFromEmoji(emojiPath);
+                      Navigator.pop(context);
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: isSelected
+                              ? const Color(0xFFD43AB6)
+                              : Colors.transparent,
+                          width: 3,
+                        ),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(13),
+                        child: Image.asset(emojiPath, fit: BoxFit.cover),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showColorPicker() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: 350,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 16),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Colors',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: GridView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 5,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 1,
+                ),
+                itemCount: _gradientOptions.length + 1,
+                itemBuilder: (context, index) {
+                  if (index == 0) {
+                    final isSelected = _selectedGradient == null;
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedGradient = null;
+                          _selectedEmoji = null;
+                          _selectedImagePath = null;
+                          _qrColor = const Color(0xFFD43AB6);
+                        });
+                        _saveSelectedGradient(null);
+                        _saveSelectedEmoji(null);
+                        _saveSelectedImage(null);
+                        Navigator.pop(context);
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isSelected ? const Color(0xFFD43AB6) : Colors.grey.shade300,
+                            width: 3,
+                          ),
+                          gradient: const RadialGradient(
+                            colors: [
+                              Color.fromARGB(255, 184, 107, 255),
+                              Color.fromARGB(255, 243, 198, 35),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+
+                  final gradient = _gradientOptions[index - 1];
+                  final isSelected = _selectedGradient == gradient;
+
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedGradient = gradient;
+                        _selectedEmoji = null;
+                        _selectedImagePath = null;
+                        _qrColor = gradient[0]; // Use first color for QR
+                      });
+                      _saveSelectedGradient(gradient);
+                      _saveSelectedEmoji(null);
+                      _saveSelectedImage(null);
+                      Navigator.pop(context);
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: gradient,
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        border: Border.all(
+                          color: isSelected ? Colors.white : Colors.transparent,
+                          width: 3,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showImagePicker() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: 200,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 16),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Choose Image',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildImageSourceButton(
+                  icon: Icons.camera_alt,
+                  label: 'Camera',
+                  onTap: () => _pickImage(ImageSource.camera),
+                ),
+                _buildImageSourceButton(
+                  icon: Icons.photo_library,
+                  label: 'Gallery',
+                  onTap: () => _pickImage(ImageSource.gallery),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImageSourceButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 120,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.grey[100],
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, size: 40, color: const Color(0xFFD43AB6)),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    Navigator.pop(context);
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: source);
+
+    if (pickedFile != null) {
+      setState(() {
+        _selectedImagePath = pickedFile.path;
+        _selectedEmoji = null;
+        _selectedGradient = null;
+      });
+      _saveSelectedImage(pickedFile.path);
+      _saveSelectedEmoji(null);
+      _saveSelectedGradient(null);
+      await _extractColorFromImage(pickedFile.path);
+    }
+  }
+
+  Future<void> _extractColorFromImage(String imagePath) async {
+    try {
+      final File imageFile = File(imagePath);
+      final Uint8List bytes = await imageFile.readAsBytes();
+      final ui.Codec codec = await ui.instantiateImageCodec(bytes);
+      final ui.FrameInfo frameInfo = await codec.getNextFrame();
+      final ui.Image image = frameInfo.image;
+
+      final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+      if (byteData == null) return;
+
+      final int width = image.width;
+      final int height = image.height;
+      final int centerX = width ~/ 2;
+      final int centerY = height ~/ 2;
+      final int pixelIndex = (centerY * width + centerX) * 4;
+
+      final int r = byteData.getUint8(pixelIndex);
+      final int g = byteData.getUint8(pixelIndex + 1);
+      final int b = byteData.getUint8(pixelIndex + 2);
+
+      setState(() {
+        _qrColor = Color.fromRGBO(r, g, b, 1.0);
+      });
+    } catch (e) {
+      debugPrint('Error extracting color from image: $e');
+    }
+  }
+
+  Future<void> _captureAndSaveScreenshot() async {
+    try {
+      // Capture the screenshot
+      RenderRepaintBoundary boundary = _screenshotKey.currentContext!
+          .findRenderObject() as RenderRepaintBoundary;
+      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      Uint8List pngBytes = byteData!.buffer.asUint8List();
+
+      // Save to app directory first
+      final directory = await getApplicationDocumentsDirectory();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final imagePath = '${directory.path}/migozz_qr_$timestamp.png';
+      final imageFile = File(imagePath);
+      await imageFile.writeAsBytes(pngBytes);
+
+      // Try to save to Downloads folder (Android/iOS)
+      try {
+        Directory? downloadsDir;
+        if (Platform.isAndroid) {
+          downloadsDir = Directory('/storage/emulated/0/Download');
+          if (!await downloadsDir.exists()) {
+            downloadsDir = await getExternalStorageDirectory();
+          }
+        } else if (Platform.isIOS) {
+          downloadsDir = await getApplicationDocumentsDirectory();
+        }
+
+        if (downloadsDir != null) {
+          final downloadPath = '${downloadsDir.path}/migozz_qr_$timestamp.png';
+          final downloadFile = File(downloadPath);
+          await downloadFile.writeAsBytes(pngBytes);
+          debugPrint('Saved to: $downloadPath');
+        }
+      } catch (e) {
+        debugPrint('Could not save to downloads: $e');
+      }
+
+      // Share the image
+      await Share.shareXFiles(
+        [XFile(imagePath)],
+        text: 'Check out my Migozz profile!',
+      );
+
+      // Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('QR Code saved and shared!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error capturing screenshot: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to save QR Code'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final bottomGradientHeight = size.height * 0.22;
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Stack(
-        // Tintes y gradientes
-        alignment: Alignment.center,
-        children: [
-        TintesGradients(child: Container(height: bottomGradientHeight)),
+      body: GestureDetector(
+        onTap: _handleBackgroundTap,
+        child: Stack(
+          // Tintes y gradientes
+          fit: StackFit.expand,
+          children: [
+            // Wrap the content to be captured in RepaintBoundary
+            RepaintBoundary(
+              key: _screenshotKey,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // Show background based on selection
+                  if (_selectedImagePath != null)
+              Opacity(
+                opacity: 0.6,
+                child: Image.file(
+                  File(_selectedImagePath!),
+                  fit: BoxFit.cover,
+                ),
+              )
+            else if (_selectedGradient != null)
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: _selectedGradient!,
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+              )
+            else if (_selectedEmoji != null)
+              Opacity(
+                opacity: 0.6,
+                child: Image.asset(
+                  _selectedEmoji!,
+                  fit: BoxFit.cover,
+                ),
+              )
+            else
+              TintesGradients(child: Container(height: bottomGradientHeight)),
           FutureBuilder<_ProfileData>(
             future: _futureProfile,
             builder: (context, snap) {
@@ -137,12 +820,29 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          QrImageView(
-                            data: data.link,
-                            eyeStyle: QrEyeStyle(eyeShape: QrEyeShape.square, color: Color(0xFFD43AB6)),
-                            dataModuleStyle: QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: Color(0xFFD43AB6)),
-                            version: QrVersions.auto,
-                            size: 256,
+                          Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              QrImageView(
+                                data: data.link,
+                                eyeStyle: QrEyeStyle(
+                                  eyeShape: QrEyeShape.square,
+                                  color: _qrColor,
+                                ),
+                                dataModuleStyle: QrDataModuleStyle(
+                                  dataModuleShape: QrDataModuleShape.square,
+                                  color: _qrColor,
+                                ),
+                                version: QrVersions.auto,
+                                size: 256,
+                              ),
+                              // Center logo
+                              Image.asset(
+                                'assets/images/Migozz.webp',
+                                width: 50,
+                                height: 50,
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 10),
                           Text(
@@ -166,7 +866,25 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
                     ),
                   ),
                   const SizedBox(height: 40),
-                  ElevatedButton.icon(
+                ],
+              );
+            },
+          ),
+                ],
+              ),
+            ),
+          // Share Profile button positioned outside the screenshot area
+          FutureBuilder<_ProfileData>(
+            future: _futureProfile,
+            builder: (context, snap) {
+              if (!snap.hasData) return const SizedBox.shrink();
+              final data = snap.data!;
+              return Positioned(
+                bottom: 100,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: ElevatedButton.icon(
                     onPressed: () => _shareProfile(data),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
@@ -182,19 +900,45 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
                     icon: const Icon(Icons.share),
                     label: const Text('Share Profile'),
                   ),
-                ],
+                ),
               );
             },
           ),
+          // Top buttons positioned outside the screenshot area
           Positioned(
             top: 40,
+            left: 20,
             right: 20,
-            child: IconButton(
-              icon: const Icon(Icons.close, color: Colors.white),
-              onPressed: () => Navigator.pop(context),
+
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  icon: Icon(Icons.save_alt, color: Colors.white),
+                  onPressed: _captureAndSaveScreenshot,
+                ),
+                GestureDetector(
+                  onTap: _toggleMode,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(_getButtonLabel(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
             ),
           ),
-        ],
+          ],
+        ),
       ),
     );
   }

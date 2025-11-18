@@ -181,6 +181,7 @@ class _AppInitializerState extends State<AppInitializer>
     }
 
     // ✅ Solo avanza si ya tiene permiso de ubicación
+    debugPrint('✅ [AppInitializer] Permisos OK, construyendo app...');
     return widget.builder(context, _result);
   }
 }
