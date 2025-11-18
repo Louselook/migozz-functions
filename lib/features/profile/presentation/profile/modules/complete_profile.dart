@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -16,7 +17,6 @@ class CompleteProfile extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Icono o ilustración
               const Icon(
                 Icons.person_add_rounded,
                 color: Colors.white,
@@ -24,10 +24,9 @@ class CompleteProfile extends StatelessWidget {
               ),
               const SizedBox(height: 32),
 
-              // Título
-              const Text(
-                'Completa tu Perfil',
-                style: TextStyle(
+              Text(
+                'complete_profile.title'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
@@ -36,10 +35,9 @@ class CompleteProfile extends StatelessWidget {
               ),
               const SizedBox(height: 16),
 
-              // Descripción
-              const Text(
-                'Para aprovechar al máximo Migozz,\ncompleta tu información de perfil',
-                style: TextStyle(
+              Text(
+                'complete_profile.description'.tr(),
+                style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 16,
                   height: 1.5,
@@ -48,7 +46,6 @@ class CompleteProfile extends StatelessWidget {
               ),
               const SizedBox(height: 48),
 
-              // Botón principal: Completar Ahora
               SizedBox(
                 width: double.infinity,
                 height: 56,
@@ -69,24 +66,23 @@ class CompleteProfile extends StatelessWidget {
                     ),
                     elevation: 0,
                   ),
-                  child: const Text(
-                    'Completar Ahora',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  child: Text(
+                    'complete_profile.buttons.completeNow'.tr(),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
               const SizedBox(height: 16),
 
-              // Botón secundario: Completar Más Tarde
               SizedBox(
                 width: double.infinity,
                 height: 56,
                 child: TextButton(
                   onPressed: () {
                     debugPrint('⏭️ Completar más tarde - Ir al perfil');
-
-                    // Temporalmente marcar el perfil como "permitido incompleto"
-                    // para que el router permita acceso al profile
                     context.read<AuthCubit>().markProfileTemporarilyComplete(
                       true,
                     );
@@ -99,9 +95,12 @@ class CompleteProfile extends StatelessWidget {
                       side: const BorderSide(color: Colors.white24, width: 1),
                     ),
                   ),
-                  child: const Text(
-                    'Completar Más Tarde',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  child: Text(
+                    'complete_profile.buttons.completeLater'.tr(),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ),

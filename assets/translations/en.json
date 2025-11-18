@@ -54,6 +54,14 @@
             }   
         }
     },
+    "complete_profile": {
+        "title": "Complete Your Profile",
+        "description": "To get the most out of Migozz,\ncomplete your profile information",
+        "buttons": {
+            "completeNow": "Complete Now",
+            "completeLater": "Complete Later"
+        }
+    },
     "profile":{
         "validations":{
             "emptyAudio" : "No audio available",

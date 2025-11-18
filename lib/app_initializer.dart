@@ -34,7 +34,7 @@ class AppInitializer extends StatefulWidget {
 class _AppInitializerState extends State<AppInitializer>
     with WidgetsBindingObserver {
   AppInitResult? _result;
-  bool _isInitializing = false; // ✅ Flag para evitar solicitudes concurrentes
+  bool _isInitializing = false;
 
   @override
   void initState() {
@@ -57,7 +57,6 @@ class _AppInitializerState extends State<AppInitializer>
   }
 
   Future<void> _checkLocationStatus() async {
-    // ✅ Evitar llamadas concurrentes
     if (_isInitializing) {
       debugPrint('⚠️ Ya hay una inicialización en progreso, ignorando...');
       return;
@@ -81,7 +80,6 @@ class _AppInitializerState extends State<AppInitializer>
       LocationDTO? locationDto;
 
       if (!kIsWeb) {
-        // 📱 Solo en móvil o desktop
         final micStatus = await Permission.microphone.request();
         microphoneGranted = micStatus.isGranted;
 
@@ -104,10 +102,8 @@ class _AppInitializerState extends State<AppInitializer>
           });
         }
       } else {
-        // 🌐 En web — permisos simulados o usando otra API
         debugPrint('🌐 Web detectada — simulando permisos');
-
-        microphoneGranted = true; // si no los necesitas realmente
+        microphoneGranted = true;
         locationGranted = true;
 
         try {
@@ -136,7 +132,6 @@ class _AppInitializerState extends State<AppInitializer>
     }
   }
 
-  /// Mostrar el modal DESPUÉS del primer frame para evitar error
   Future<void> _showLocationDeniedDialog(bool permanentlyDenied) async {
     try {
       await showModalBottomSheet(
@@ -176,12 +171,12 @@ class _AppInitializerState extends State<AppInitializer>
 
   @override
   Widget build(BuildContext context) {
-    // Mientras no haya permisos, muestra el splash
+    // ✅ Mientras no haya permisos, muestra el splash con Directionality
     if (_result == null ||
         context.read<AuthCubit>().state.status == AuthStatus.checking) {
-      return const MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: SplashScreen(),
+      return const Directionality(
+        textDirection: TextDirection.ltr,
+        child: SplashScreen(),
       );
     }
 
