@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:migozz_app/features/auth/data/domain/models/user/location_dto.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
 import 'package:migozz_app/features/splash/splash_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:migozz_app/features/auth/services/location_service.dart';
-import 'package:migozz_app/features/auth/data/domain/models/user/location_dto.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 /// Resultado de inicialización global
@@ -34,7 +34,7 @@ class AppInitializer extends StatefulWidget {
 class _AppInitializerState extends State<AppInitializer>
     with WidgetsBindingObserver {
   AppInitResult? _result;
-  bool _isInitializing = false;
+  bool _isInitializing = false; // ✅ Flag para evitar solicitudes concurrentes
 
   @override
   void initState() {
@@ -57,6 +57,7 @@ class _AppInitializerState extends State<AppInitializer>
   }
 
   Future<void> _checkLocationStatus() async {
+    // ✅ Evitar llamadas concurrentes
     if (_isInitializing) {
       debugPrint('⚠️ Ya hay una inicialización en progreso, ignorando...');
       return;
@@ -80,6 +81,7 @@ class _AppInitializerState extends State<AppInitializer>
       LocationDTO? locationDto;
 
       if (!kIsWeb) {
+        // 📱 Solo en móvil o desktop
         final micStatus = await Permission.microphone.request();
         microphoneGranted = micStatus.isGranted;
 
@@ -102,8 +104,10 @@ class _AppInitializerState extends State<AppInitializer>
           });
         }
       } else {
+        // 🌐 En web — permisos simulados o usando otra API
         debugPrint('🌐 Web detectada — simulando permisos');
-        microphoneGranted = true;
+
+        microphoneGranted = true; // si no los necesitas realmente
         locationGranted = true;
 
         try {
@@ -132,6 +136,7 @@ class _AppInitializerState extends State<AppInitializer>
     }
   }
 
+  /// Mostrar el modal DESPUÉS del primer frame para evitar error
   Future<void> _showLocationDeniedDialog(bool permanentlyDenied) async {
     try {
       await showModalBottomSheet(
@@ -171,17 +176,16 @@ class _AppInitializerState extends State<AppInitializer>
 
   @override
   Widget build(BuildContext context) {
-    // ✅ Mientras no haya permisos, muestra el splash con Directionality
+    // Mientras no haya permisos, muestra el splash
     if (_result == null ||
         context.read<AuthCubit>().state.status == AuthStatus.checking) {
-      return const Directionality(
-        textDirection: TextDirection.ltr,
-        child: SplashScreen(),
+      return const MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: SplashScreen(),
       );
     }
 
     // ✅ Solo avanza si ya tiene permiso de ubicación
-    debugPrint('✅ [AppInitializer] Permisos OK, construyendo app...');
     return widget.builder(context, _result);
   }
 }

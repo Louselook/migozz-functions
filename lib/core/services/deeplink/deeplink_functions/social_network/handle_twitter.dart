@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
-import 'package:migozz_app/features/auth/data/domain/models/deeplink_functions/social_normalizer.dart';
+import 'package:migozz_app/core/services/deeplink/deeplink_functions/social_network/social_normalizer.dart';
 
 void handleTwitter(String queryString, BuildContext context) {
   try {

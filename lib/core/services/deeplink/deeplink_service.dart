@@ -4,11 +4,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_state.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
-import 'package:migozz_app/features/auth/data/domain/models/deeplink_functions/handle_facebook.dart';
-import 'package:migozz_app/features/auth/data/domain/models/deeplink_functions/handle_instagram.dart';
-import 'package:migozz_app/features/auth/data/domain/models/deeplink_functions/handle_spotify.dart';
-import 'package:migozz_app/features/auth/data/domain/models/deeplink_functions/handle_tiktok.dart';
-import 'package:migozz_app/features/auth/data/domain/models/deeplink_functions/handle_twitter.dart';
+import 'package:migozz_app/core/services/deeplink/deeplink_functions/social_network/handle_facebook.dart';
+import 'package:migozz_app/core/services/deeplink/deeplink_functions/social_network/handle_instagram.dart';
+import 'package:migozz_app/core/services/deeplink/deeplink_functions/social_network/handle_spotify.dart';
+import 'package:migozz_app/core/services/deeplink/deeplink_functions/social_network/handle_tiktok.dart';
+import 'package:migozz_app/core/services/deeplink/deeplink_functions/social_network/handle_twitter.dart';
 
 class DeeplinkService {
   static const _socialChannel = MethodChannel('socialAuth');
