@@ -9,9 +9,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:universal_io/io.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:universal_html/html.dart' as html;
+import 'dart:convert';
 
 /// Pantalla que muestra un QR y permite compartir el enlace del perfil
 /// de un usuario. Si no se pasa [userId], se usa el usuario logueado.
@@ -42,7 +45,8 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
   Color _qrColor = const Color(0xFFD43AB6); // Default QR color
   BackgroundMode _currentMode = BackgroundMode.emoji; // Current mode
   List<Color>? _selectedGradient; // Track selected gradient
-  String? _selectedImagePath; // Track selected image
+  String? _selectedImagePath; // Track selected image (file path for mobile, base64 for web)
+  Uint8List? _selectedImageBytes; // Store image bytes for web
   final GlobalKey _screenshotKey = GlobalKey(); // Key for screenshot
 
   static const String _baseProfileUrl =
@@ -112,11 +116,28 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
 
     // Load saved image path
     final savedImage = prefs.getString('selected_image_path');
-    if (savedImage != null && File(savedImage).existsSync()) {
-      setState(() {
-        _selectedImagePath = savedImage;
-      });
-      await _extractColorFromImage(savedImage);
+    if (savedImage != null) {
+      if (kIsWeb) {
+        // For web, savedImage is base64 encoded
+        try {
+          final bytes = base64Decode(savedImage);
+          setState(() {
+            _selectedImagePath = savedImage;
+            _selectedImageBytes = bytes;
+          });
+          await _extractColorFromImageBytes(bytes);
+        } catch (e) {
+          debugPrint('Error loading saved image on web: $e');
+        }
+      } else {
+        // For mobile, check if file exists
+        if (File(savedImage).existsSync()) {
+          setState(() {
+            _selectedImagePath = savedImage;
+          });
+          await _extractColorFromImage(savedImage);
+        }
+      }
     }
   }
 
@@ -634,22 +655,42 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
     final pickedFile = await picker.pickImage(source: source);
 
     if (pickedFile != null) {
-      setState(() {
-        _selectedImagePath = pickedFile.path;
-        _selectedEmoji = null;
-        _selectedGradient = null;
-      });
-      _saveSelectedImage(pickedFile.path);
-      _saveSelectedEmoji(null);
-      _saveSelectedGradient(null);
-      await _extractColorFromImage(pickedFile.path);
+      if (kIsWeb) {
+        // For web, read and save image bytes as base64
+        final bytes = await pickedFile.readAsBytes();
+        final base64Image = base64Encode(bytes);
+
+        setState(() {
+          _selectedImagePath = base64Image; // Store base64 for web
+          _selectedImageBytes = bytes;
+          _selectedEmoji = null;
+          _selectedGradient = null;
+        });
+
+        _saveSelectedImage(base64Image);
+        _saveSelectedEmoji(null);
+        _saveSelectedGradient(null);
+        await _extractColorFromImageBytes(bytes);
+      } else {
+        // For mobile, save file path
+        final imagePath = pickedFile.path;
+        setState(() {
+          _selectedImagePath = imagePath;
+          _selectedImageBytes = null;
+          _selectedEmoji = null;
+          _selectedGradient = null;
+        });
+
+        _saveSelectedImage(imagePath);
+        _saveSelectedEmoji(null);
+        _saveSelectedGradient(null);
+        await _extractColorFromImage(imagePath);
+      }
     }
   }
 
-  Future<void> _extractColorFromImage(String imagePath) async {
+  Future<void> _extractColorFromImageBytes(Uint8List bytes) async {
     try {
-      final File imageFile = File(imagePath);
-      final Uint8List bytes = await imageFile.readAsBytes();
       final ui.Codec codec = await ui.instantiateImageCodec(bytes);
       final ui.FrameInfo frameInfo = await codec.getNextFrame();
       final ui.Image image = frameInfo.image;
@@ -671,6 +712,17 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
         _qrColor = Color.fromRGBO(r, g, b, 1.0);
       });
     } catch (e) {
+      debugPrint('Error extracting color from image bytes: $e');
+    }
+  }
+
+  Future<void> _extractColorFromImage(String imagePath) async {
+    try {
+      // For mobile, read from file
+      final File imageFile = File(imagePath);
+      final bytes = await imageFile.readAsBytes();
+      await _extractColorFromImageBytes(bytes);
+    } catch (e) {
       debugPrint('Error extracting color from image: $e');
     }
   }
@@ -684,50 +736,71 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
       ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       Uint8List pngBytes = byteData!.buffer.asUint8List();
 
-      // Save to app directory first
-      final directory = await getApplicationDocumentsDirectory();
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final imagePath = '${directory.path}/migozz_qr_$timestamp.png';
-      final imageFile = File(imagePath);
-      await imageFile.writeAsBytes(pngBytes);
+      if (kIsWeb) {
+        // For web, trigger download
+        final blob = html.Blob([pngBytes]);
+        final url = html.Url.createObjectUrlFromBlob(blob);
+        html.AnchorElement(href: url)
+          ..setAttribute('download', 'migozz_qr_${DateTime.now().millisecondsSinceEpoch}.png')
+          ..click();
+        html.Url.revokeObjectUrl(url);
 
-      // Try to save to Downloads folder (Android/iOS)
-      try {
-        Directory? downloadsDir;
-        if (Platform.isAndroid) {
-          downloadsDir = Directory('/storage/emulated/0/Download');
-          if (!await downloadsDir.exists()) {
-            downloadsDir = await getExternalStorageDirectory();
+        // Show success message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('QR Code downloaded!'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      } else {
+        // Mobile: Save to app directory first
+        final directory = await getApplicationDocumentsDirectory();
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        final imagePath = '${directory.path}/migozz_qr_$timestamp.png';
+        final imageFile = File(imagePath);
+        await imageFile.writeAsBytes(pngBytes);
+
+        // Try to save to Downloads folder (Android/iOS)
+        try {
+          Directory? downloadsDir;
+          if (Platform.isAndroid) {
+            downloadsDir = Directory('/storage/emulated/0/Download');
+            if (!await downloadsDir.exists()) {
+              downloadsDir = await getExternalStorageDirectory();
+            }
+          } else if (Platform.isIOS) {
+            downloadsDir = await getApplicationDocumentsDirectory();
           }
-        } else if (Platform.isIOS) {
-          downloadsDir = await getApplicationDocumentsDirectory();
+
+          if (downloadsDir != null) {
+            final downloadPath = '${downloadsDir.path}/migozz_qr_$timestamp.png';
+            final downloadFile = File(downloadPath);
+            await downloadFile.writeAsBytes(pngBytes);
+            debugPrint('Saved to: $downloadPath');
+          }
+        } catch (e) {
+          debugPrint('Could not save to downloads: $e');
         }
 
-        if (downloadsDir != null) {
-          final downloadPath = '${downloadsDir.path}/migozz_qr_$timestamp.png';
-          final downloadFile = File(downloadPath);
-          await downloadFile.writeAsBytes(pngBytes);
-          debugPrint('Saved to: $downloadPath');
-        }
-      } catch (e) {
-        debugPrint('Could not save to downloads: $e');
-      }
-
-      // Share the image
-      await Share.shareXFiles(
-        [XFile(imagePath)],
-        text: 'Check out my Migozz profile!',
-      );
-
-      // Show success message
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('QR Code saved and shared!'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
+        // Share the image
+        await Share.shareXFiles(
+          [XFile(imagePath)],
+          text: 'Check out my Migozz profile!',
         );
+
+        // Show success message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('QR Code saved and shared!'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
       }
     } catch (e) {
       debugPrint('Error capturing screenshot: $e');
@@ -749,26 +822,39 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
     final bottomGradientHeight = size.height * 0.22;
     return Scaffold(
       backgroundColor: Colors.black,
-      body: GestureDetector(
-        onTap: _handleBackgroundTap,
-        child: Stack(
-          // Tintes y gradientes
-          fit: StackFit.expand,
-          children: [
-            // Wrap the content to be captured in RepaintBoundary
-            RepaintBoundary(
-              key: _screenshotKey,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  // Show background based on selection
-                  if (_selectedImagePath != null)
+      body: Stack(
+        // Tintes y gradientes
+        fit: StackFit.expand,
+        children: [
+          // Wrap the content to be captured in RepaintBoundary
+          RepaintBoundary(
+            key: _screenshotKey,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                // Background with GestureDetector
+                GestureDetector(
+                  onTap: _handleBackgroundTap,
+                  child: Container(
+                    color: Colors.transparent,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        // Show background based on selection
+                        if (_selectedImagePath != null)
               Opacity(
                 opacity: 0.6,
-                child: Image.file(
-                  File(_selectedImagePath!),
-                  fit: BoxFit.cover,
-                ),
+                child: kIsWeb
+                    ? (_selectedImageBytes != null
+                        ? Image.memory(
+                            _selectedImageBytes!,
+                            fit: BoxFit.cover,
+                          )
+                        : const SizedBox())
+                    : Image.file(
+                        File(_selectedImagePath!),
+                        fit: BoxFit.cover,
+                      ),
               )
             else if (_selectedGradient != null)
               Container(
@@ -790,7 +876,14 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
               )
             else
               TintesGradients(child: Container(height: bottomGradientHeight)),
-          FutureBuilder<_ProfileData>(
+                      ],
+                    ),
+                  ),
+                ),
+                // Foreground content (QR code, profile info) - doesn't block background taps
+                IgnorePointer(
+                  ignoring: false,
+                  child: FutureBuilder<_ProfileData>(
             future: _futureProfile,
             builder: (context, snap) {
               if (snap.connectionState == ConnectionState.waiting) {
@@ -869,10 +962,11 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
                 ],
               );
             },
-          ),
-                ],
-              ),
+                  ),
+                ),
+              ],
             ),
+          ),
           // Share Profile button positioned outside the screenshot area
           FutureBuilder<_ProfileData>(
             future: _futureProfile,
@@ -937,8 +1031,7 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
               ],
             ),
           ),
-          ],
-        ),
+        ],
       ),
     );
   }
