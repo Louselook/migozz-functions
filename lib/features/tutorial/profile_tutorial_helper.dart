@@ -80,16 +80,16 @@ Future<void> triggerProfileTutorial(
 ) async {
   debugPrint('🎓 Verificando estado del tutorial...');
 
-  // ✅ 1. Verificar si ya completó el tutorial
+  // 1. Verificar si ya completó el tutorial
   final alreadyCompleted = await hasCompletedTutorial();
   if (alreadyCompleted) {
-    debugPrint('✅ Tutorial ya fue completado, saltando...');
+    debugPrint('Tutorial ya fue completado, saltando...');
     return; // No mostrar el tutorial
   }
 
   debugPrint('🎓 Iniciando espera de keys para tutorial...');
 
-  // ✅ 2. Esperar a que todos los keys estén listos
+  // 2. Esperar a que todos los keys estén listos
   await Future.wait([
     waitForKey(tutorialKeys.searchScreenKey),
     waitForKey(tutorialKeys.playButtonKey),
@@ -109,7 +109,7 @@ Future<void> triggerProfileTutorial(
 
   debugPrint('🎓 Mostrando tutorial...');
 
-  // ✅ 3. Mostrar el tutorial con callback al finalizar
+  // 3. Mostrar el tutorial con callback al finalizar
   ProfileTutorial.showTutorial(
     context,
     tutorialKeys,

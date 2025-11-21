@@ -27,7 +27,7 @@ class AudioChatHandler {
   }) async {
     debugPrint('🎤 [AudioHandler] Procesando audio: $audioPath');
 
-    // 1️⃣ Verificar que el archivo existe
+    // Verificar que el archivo existe
     final audioFile = File(audioPath);
     if (!await audioFile.exists()) {
       debugPrint('❌ [AudioHandler] Archivo no encontrado: $audioPath');
@@ -42,7 +42,7 @@ class AudioChatHandler {
       return;
     }
 
-    // 2️⃣ ✅ Crear una copia permanente del audio para reproducción y guardado
+    // Crear una copia permanente del audio para reproducción y guardado
     try {
       final dir = await getApplicationDocumentsDirectory();
       final timestamp = DateTime.now().millisecondsSinceEpoch;
@@ -70,12 +70,12 @@ class AudioChatHandler {
       return;
     }
 
-    // 3️⃣ Marcar que estamos esperando confirmación
+    // Marcar que estamos esperando confirmación
     _isWaitingForConfirmation = true;
 
     debugPrint('📝 [AudioHandler] Audio pendiente de confirmación');
 
-    // 4️⃣ Agregar mensaje visual del audio en el chat
+    // Agregar mensaje visual del audio en el chat
     addMessage({
       "other": false,
       "type": MessageType.audio,
@@ -84,10 +84,10 @@ class AudioChatHandler {
       "time": getTimeNow(),
     });
 
-    // 5️⃣ Pequeño delay antes del typing
+    // Pequeño delay antes del typing
     await Future.delayed(const Duration(milliseconds: 400));
 
-    // 6️⃣ Agregar indicador de typing
+    // Agregar indicador de typing
     addMessage({
       "other": true,
       "type": MessageType.typing,
@@ -95,19 +95,19 @@ class AudioChatHandler {
       "time": getTimeNow(),
     });
 
-    // 7️⃣ Simular que "está pensando"
+    // Simular que "está pensando"
     await Future.delayed(const Duration(milliseconds: 1200));
 
-    // 8️⃣ Remover el typing
+    // Remover el typing
     removeTyping();
 
-    // 9️⃣ Preparar opciones según idioma
+    // Preparar opciones según idioma
     final isSpanish = registerCubit.state.language == 'Español';
     currentSuggestions = isSpanish
         ? ["Sí, conservar", "No, grabar otro"]
         : ["Yes, keep it", "No, record again"];
 
-    // 🔟 Mostrar mensaje de confirmación
+    // Mostrar mensaje de confirmación
     addMessage({
       "other": true,
       "type": MessageType.text,
@@ -171,7 +171,7 @@ class AudioChatHandler {
     RegisterCubit registerCubit, {
     VoidCallback? onResetAudioUI,
     Function(Map<String, dynamic>)? addMessage,
-    String? firebaseUid, // ✅ Agregar este parámetro
+    String? firebaseUid, // Agregar este parámetro
   }) async {
     if (_permanentAudioPath == null) {
       debugPrint('⚠️ [AudioHandler] No hay audio permanente para confirmar');
@@ -198,10 +198,10 @@ class AudioChatHandler {
     debugPrint('📤 [AudioHandler] Subiendo audio...');
 
     try {
-      // 🔥 CAMBIO: Usar método inteligente en lugar de uploadFilesTemporarily
+      // Usar método inteligente en lugar de uploadFilesTemporarily
       final urls = await registerCubit.uploadUserMedia(
         files: {MediaType.voice: audioFile},
-        firebaseUid: firebaseUid, // ✅ Pasar el UID
+        firebaseUid: firebaseUid, // Pasar el UID
       );
 
       final voiceUrl = urls[MediaType.voice];
@@ -258,7 +258,7 @@ class AudioChatHandler {
     _isWaitingForConfirmation = false;
   }
 
-  /// ✅ Limpiar solo el archivo temporal original
+  /// Limpiar solo el archivo temporal original
   Future<void> _cleanupOriginalFile() async {
     try {
       if (_pendingAudioPath != null) {

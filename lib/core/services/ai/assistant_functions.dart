@@ -49,8 +49,8 @@ class AssistantFunctions {
         normalized.contains('para que');
 
     switch (stepKey) {
-      case 'language':
-        return _evaluateLanguage(normalized, userInput);
+      // case 'language':
+      //   return _evaluateLanguage(normalized, userInput);
 
       case 'fullName':
         return _evaluateFullName(normalized, userInput);
@@ -71,10 +71,10 @@ class AssistantFunctions {
       case 'location':
         return _evaluateLocation(normalized, userInput, cubit);
 
-      case 'sendOTP': // ✅ SEPARADO de emailVerification
+      case 'sendOTP': //  SEPARADO de emailVerification
         return _evaluateSendOTP(normalized, userInput);
 
-      case 'otpInput': // ✅ AGREGADO: Validar código OTP
+      case 'otpInput': // AGREGADO: Validar código OTP
         return _evaluateOTP(normalized, userInput, cubit);
 
       case 'avatarUrl':
@@ -97,7 +97,7 @@ class AssistantFunctions {
     }
   }
 
-  // ✅ NUEVO: Evaluación específica para sendOTP
+  // Evaluación específica para sendOTP
   static Map<String, dynamic> _evaluateSendOTP(
     String normalized,
     String original,
@@ -128,7 +128,7 @@ class AssistantFunctions {
   /// Obtiene mensaje de error desde list_questions
   static Map<String, dynamic>? getErrorMessageForStep(
     String stepKey,
-    RegisterCubit cubit, // ✅ Agregar parámetro cubit
+    RegisterCubit cubit, // Agregar parámetro cubit
   ) {
     return getErrorMessage(stepKey, _getIsSpanish(cubit));
   }
@@ -149,7 +149,7 @@ class AssistantFunctions {
       final loc = cubit.state.location;
       String locStr;
       
-      // ✅ Manejo mejorado de ubicación
+      // Manejo mejorado de ubicación
       if (loc != null && !loc.isEmpty) {
         // Si tiene ubicación válida, mostrarla
         locStr = '${loc.city}, ${loc.country}';
@@ -181,31 +181,29 @@ class AssistantFunctions {
     return question;
   }
 
-  // ==================== VALIDACIONES ====================
-
-  static Map<String, dynamic> _evaluateLanguage(
-    String normalized,
-    String original,
-  ) {
-    if (normalized.contains('es') || normalized.contains('español')) {
-      return {
-        "step": "regProgress.language",
-        "valid": true,
-        "userResponse": "Español",
-      };
-    } else if (normalized.contains('en') || normalized.contains('english')) {
-      return {
-        "step": "regProgress.language",
-        "valid": true,
-        "userResponse": "English",
-      };
-    }
-    return {
-      "step": "regProgress.language",
-      "valid": false,
-      "userResponse": original.trim(),
-    };
-  }
+  // static Map<String, dynamic> _evaluateLanguage(
+  //   String normalized,
+  //   String original,
+  // ) {
+  //   if (normalized.contains('es') || normalized.contains('español')) {
+  //     return {
+  //       "step": "regProgress.language",
+  //       "valid": true,
+  //       "userResponse": "Español",
+  //     };
+  //   } else if (normalized.contains('en') || normalized.contains('english')) {
+  //     return {
+  //       "step": "regProgress.language",
+  //       "valid": true,
+  //       "userResponse": "English",
+  //     };
+  //   }
+  //   return {
+  //     "step": "regProgress.language",
+  //     "valid": false,
+  //     "userResponse": original.trim(),
+  //   };
+  // }
 
   static Map<String, dynamic> _evaluateFullName(
     String normalized,
@@ -269,7 +267,7 @@ class AssistantFunctions {
     };
   }
 
-  // ✅ ACTUALIZADO: Evaluación de ubicación con 3 opciones
+  // ACTUALIZADO: Evaluación de ubicación con 3 opciones
   static Map<String, dynamic> _evaluateLocation(
     String normalized,
     String original,
@@ -277,7 +275,7 @@ class AssistantFunctions {
   ) {
     final isSpanish = _getIsSpanish(cubit);
     
-    // ✅ Opción 1: Usuario confirma ubicación (Sí)
+    // Opción 1: Usuario confirma ubicación (Sí)
     if (normalized == 'sí' || 
         normalized == 'si' || 
         normalized == 'yes' ||
@@ -286,28 +284,28 @@ class AssistantFunctions {
         "step": "regProgress.location",
         "valid": true,
         "userResponse": "Sí",
-        "confirmLocation": true, // 👈 Bandera para confirmar
+        "confirmLocation": true, //  Bandera para confirmar
       };
     }
     
-    // ✅ Opción 2: Usuario rechaza usar ubicación (No)
+    // Opción 2: Usuario rechaza usar ubicación (No)
     if (normalized == 'no') {
       return {
         "step": "regProgress.location",
-        "valid": true, // 👈 IMPORTANTE: Es válido rechazar
+        "valid": true, //  IMPORTANTE: Es válido rechazar
         "userResponse": "No",
-        "emptyLocation": true, // 👈 Bandera para ubicación vacía
+        "emptyLocation": true, //  Bandera para ubicación vacía
       };
     }
     
-    // ✅ Opción 3: Usuario reporta ubicación incorrecta
+    // Opción 3: Usuario reporta ubicación incorrecta
     if (normalized.contains('incorrecta') || 
         normalized.contains('incorrect') ||
         normalized == 'ubicación incorrecta' ||
         normalized == 'incorrect location') {
       return {
         "step": "regProgress.location",
-        "valid": false, // 👈 No es válido, debe reintentar
+        "valid": false, //  No es válido, debe reintentar
         "userResponse": original.trim(),
         "text": isSpanish
             ? "Entendido. Por favor, ingresa tu ubicación manualmente o intenta detectarla nuevamente."
@@ -318,7 +316,7 @@ class AssistantFunctions {
       };
     }
     
-    // ❌ Respuesta no válida
+    // Respuesta no válida
     return {
       "step": "regProgress.location",
       "valid": false,

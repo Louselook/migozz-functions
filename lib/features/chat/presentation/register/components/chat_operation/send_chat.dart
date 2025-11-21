@@ -15,13 +15,13 @@ Future<void> sendChat({
   List<Map<String, String>>? pictures,
   List<String>? options,
 }) async {
-  // 🎵 Manejar audio del usuario
+  // Manejar audio del usuario
   if (!other && type == MessageType.audio && audio != null) {
     await controller.sendUserAudio(audio);
     return;
   }
 
-  // 📸 Manejar foto de avatar
+  // Manejar foto de avatar
   if (!other &&
       type == MessageType.pictureCard &&
       pictures != null &&
@@ -34,7 +34,7 @@ Future<void> sendChat({
   }
 
   if (other) {
-    // ✅ Mensaje del bot → agregar directamente
+    // Mensaje del bot → agregar directamente
     // (Esto normalmente se hace desde showNextBotMessage)
     controller.addMessage({
       "other": true,
@@ -46,7 +46,7 @@ Future<void> sendChat({
       "time": getTimeNow(),
     });
   } else {
-    // ✅ Mensaje del usuario → delegar al controller
+    // Mensaje del usuario → delegar al controller
     // El controller maneja toda la lógica de validación y respuesta de IA
     if (type == MessageType.text && (text?.trim().isNotEmpty ?? false)) {
       await controller.sendTextMessage(text!);

@@ -11,8 +11,8 @@ class ChatMessageBuilder {
   static Widget buildMessage(
     Map<String, dynamic> message, {
     dynamic chatController,
-    String? otherUserName, // 👈 NUEVO
-    String? otherUserAvatar, // 👈 NUEVO
+    String? otherUserName, 
+    String? otherUserAvatar, 
   }) {
     if (message["type"] == MessageType.typing) {
       return Padding(
@@ -28,7 +28,7 @@ class ChatMessageBuilder {
       final pics = List<Map<String, String>>.from(message["pictures"]);
       final isFromOther = message["other"] == true;
 
-      // ✅ Determinar nombre y avatar del remitente
+      //  Determinar nombre y avatar del remitente
       String? senderName;
       String? senderAvatar;
 
@@ -46,8 +46,8 @@ class ChatMessageBuilder {
         pictures: pics,
         time: message["time"],
         sender: isFromOther,
-        senderName: senderName, // 👈 NUEVO
-        senderAvatar: senderAvatar, // 👈 NUEVO
+        senderName: senderName, 
+        senderAvatar: senderAvatar, 
       );
     }
 
@@ -76,7 +76,7 @@ class ChatMessageBuilder {
               audioPath: audioPath,
               other: other,
               chatController: controller,
-              // ✅ NUEVO: Pasar info del otro usuario para audio
+              // Pasar info del otro usuario para audio
               otherUserName: other ? otherUserName : null,
               otherUserAvatar: other ? otherUserAvatar : null,
             ),
@@ -101,7 +101,7 @@ class ChatMessageBuilder {
             ? List<Map<String, String>>.from(message["profilePictures"])
             : null,
         chatController: chatController,
-        // ✅ NUEVO: Pasar nombre y avatar del otro usuario
+        //  Pasar nombre y avatar del otro usuario
         otherUserName: otherUserName,
         otherUserAvatar: otherUserAvatar,
       );

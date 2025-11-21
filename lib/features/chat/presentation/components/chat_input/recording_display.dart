@@ -5,7 +5,7 @@ import 'package:migozz_app/core/color.dart';
 
 class RecordingDisplay extends StatelessWidget {
   final Duration duration;
-  // ❌ Ya no necesitas waveController aquí
+  //  Ya no necesitas waveController aquí
 
   const RecordingDisplay({
     super.key,
@@ -30,7 +30,7 @@ class RecordingDisplay extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // 🔴 Indicador de grabación (pulsante)
+          //  Indicador de grabación (pulsante)
           Container(
             width: 12,
             height: 12,
@@ -41,7 +41,7 @@ class RecordingDisplay extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           
-          // ⏱️ Duración
+          // Duración
           Text(
             _formatDuration(duration),
             style: const TextStyle(
@@ -53,7 +53,7 @@ class RecordingDisplay extends StatelessWidget {
           
           const SizedBox(width: 12),
           
-          // 📊 Barras animadas simples (sin waveform real)
+          // Barras animadas simples (sin waveform real)
           Expanded(
             child: _AnimatedBars(),
           ),

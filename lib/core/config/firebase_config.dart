@@ -3,7 +3,7 @@ import 'package:migozz_app/firebase_options.dart';
 
 class FirebaseConfig {
   static Future<void> initialize() async {
-    // 🔹 Verificar si Firebase ya está inicializado
+    // Verificar si Firebase ya está inicializado
     try {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,

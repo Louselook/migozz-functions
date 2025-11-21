@@ -13,7 +13,7 @@ class EditCubit extends Cubit<EditCubitState> {
   /// Cambiar el campo activo que se está editando
   void setEditItem(EditItem item) => emit(state.copyWith(editItem: item));
 
-  /// 🔹 Inicializar datos desde el usuario actual para edición
+  // Inicializar datos desde el usuario actual para edición
   void initializeFromUser({
     List<Map<String, dynamic>>? socialEcosystem,
     List<String>? category,
@@ -28,22 +28,22 @@ class EditCubit extends Cubit<EditCubitState> {
     );
   }
 
-  /// 🔹 Actualizar social ecosystem temporalmente
+  // Actualizar social ecosystem temporalmente
   void updateSocialEcosystem(List<Map<String, dynamic>> socials) {
     emit(state.copyWith(socialEcosystem: socials));
   }
 
-  /// 🔹 Actualizar categorías temporalmente
+  // Actualizar categorías temporalmente
   void updateCategory(List<String> categories) {
     emit(state.copyWith(category: categories));
   }
 
-  /// 🔹 Actualizar intereses temporalmente
+  // Actualizar intereses temporalmente
   void updateInterests(Map<String, List<String>> interests) {
     emit(state.copyWith(interests: interests));
   }
 
-  /// 🔹 Guardar cambios del usuario
+  // Guardar cambios del usuario
   Future<void> saveUserProfileField({
     required String userId,
     required Map<String, dynamic> updatedFields,
@@ -53,7 +53,7 @@ class EditCubit extends Cubit<EditCubitState> {
 
       await _userService.updateUserProfile(userId, updatedFields);
 
-      // 🔄 Refresca el AuthCubit automáticamente
+      //  Refresca el AuthCubit automáticamente
       await _authCubit.refreshUserProfile();
 
       emit(state.copyWith(isSaving: false, success: true));
@@ -62,7 +62,7 @@ class EditCubit extends Cubit<EditCubitState> {
     }
   }
 
-  /// 🔹 Guardar todos los cambios pendientes (socialEcosystem, category, interests)
+  // Guardar todos los cambios pendientes (socialEcosystem, category, interests)
   Future<void> saveAllPendingChanges(String userId) async {
     try {
       emit(state.copyWith(isSaving: true));

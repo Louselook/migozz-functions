@@ -37,10 +37,10 @@ class WebProfileContent extends StatelessWidget {
     );
     final leftMenuWidth = isSmallScreen ? 80.0 : 100.0;
 
-    // ✅ Calcular seguidores totales desde socialEcosystem
+    // Calcular seguidores totales desde socialEcosystem
     final totalFollowers = _calculateTotalFollowers(user.socialEcosystem);
 
-    // ✅ Construir enlaces de redes sociales
+    // Construir enlaces de redes sociales
     final socialLinks = _buildSocialLinks(user.socialEcosystem, user.username);
 
     // Pasa info real del user al ProfileHeader (adapta ProfileHeader para aceptar params)
@@ -112,9 +112,8 @@ class WebProfileContent extends StatelessWidget {
     );
   }
 
-  // ===============================
-  // 🔢 Calcular total de seguidores
-  // ===============================
+  // Calcular total de seguidores
+  
   int _calculateTotalFollowers(List<Map<String, dynamic>>? socialEcosystem) {
     if (socialEcosystem == null || socialEcosystem.isEmpty) return 0;
     int total = 0;
@@ -133,9 +132,9 @@ class WebProfileContent extends StatelessWidget {
     return total;
   }
 
-  // ===============================
-  // 🔗 Construir enlaces de redes
-  // ===============================
+  
+  // Construir enlaces de redes
+  
   List<SocialLink> _buildSocialLinks(
     List<Map<String, dynamic>>? socialEcosystem,
     String username,
@@ -181,9 +180,9 @@ class WebProfileContent extends StatelessWidget {
     return null;
   }
 
-  // ===============================
-  // 🧭 Generar URL + ícono por red
-  // ===============================
+  
+  // Generar URL + ícono por red
+  
   Map<String, String>? _getSocialInfo(
     String platform,
     String username,

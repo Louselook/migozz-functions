@@ -5,13 +5,13 @@ import 'package:migozz_app/core/services/deeplink/deeplink_functions/social_netw
 
 void handleTwitter(String queryString, BuildContext context) {
   try {
-    // 1️⃣ Parsear la query del deeplink
+    //  Parsear la query del deeplink
     final params = Uri.splitQueryString(queryString);
 
-    // 2️⃣ Normalizar los datos
+    // Normalizar los datos
     final normalized = normalizeTwitter(params);
 
-    // 3️⃣ Guardar en el cubit
+    // Guardar en el cubit
     final registerCubit = context.read<RegisterCubit>();
     final current = List<Map<String, Map<String, dynamic>>>.from(
       registerCubit.state.socialEcosystem ?? [],

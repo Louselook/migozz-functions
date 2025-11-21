@@ -1,20 +1,20 @@
 final List<Map<String, Object>> questionsTopics = [
-  {
-    "id": "language",
-    "description":
-        "Pregunta inicial para definir el idioma preferido del usuario.",
-    "text": {
-      "en":
-          "Hello! 👋 I´m here to help you set up your profile. Let's start: What is your preferred language?",
-      "es":
-          "¡Hola! 👋 Estoy aquí para ayudarte a configurar tu perfil. Empecemos: ¿Cuál es tu idioma preferido?",
-    },
-    "options": {
-      "en": ["English", "Español"],
-      "es": ["Español", "English"],
-    },
-    "keyboardType": "text",
-  },
+  // {
+  //   "id": "language",
+  //   "description":
+  //       "Pregunta inicial para definir el idioma preferido del usuario.",
+  //   "text": {
+  //     "en":
+  //         "Hello! 👋 I´m here to help you set up your profile. Let's start: What is your preferred language?",
+  //     "es":
+  //         "¡Hola! 👋 Estoy aquí para ayudarte a configurar tu perfil. Empecemos: ¿Cuál es tu idioma preferido?",
+  //   },
+  //   "options": {
+  //     "en": ["English", "Español"],
+  //     "es": ["Español", "English"],
+  //   },
+  //   "keyboardType": "text",
+  // },
   {
     "id": "fullName",
     "description": "Solicita el nombre completo del usuario.",

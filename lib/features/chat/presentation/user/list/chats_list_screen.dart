@@ -279,7 +279,7 @@ class _ChatsListScreenState extends State<ChatsListScreen>
         return ChatListItem(
           chat: chat,
           onTap: () {
-            // 🎯 Navegar al chat pasando solo datos básicos
+            // Navegar al chat pasando solo datos básicos
             Navigator.push(
               context,
               MaterialPageRoute(

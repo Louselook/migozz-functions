@@ -11,7 +11,7 @@ class LayoutStep extends StatelessWidget {
     return SafeArea(
       child: Stack(
         children: [
-          // 🔹 Contenido scrolleable
+          //  Contenido scrolleable
           SingleChildScrollView(
             padding: const EdgeInsets.symmetric(vertical: 20),
             child: Column(
@@ -27,13 +27,13 @@ class LayoutStep extends StatelessWidget {
                 // Grid
                 layerDesing(),
 
-                // 👇 espacio para que el scroll no tape el botón
+                // espacio para que el scroll no tape el botón
                 const SizedBox(height: 50),
               ],
             ),
           ),
 
-          // 🔹 Botón fijo abajo
+          // Botón fijo abajo
           Positioned(
             left: 20,
             right: 20,

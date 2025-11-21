@@ -24,7 +24,7 @@ class VoiceNoteTutorialService {
         enableOverlayTab: true, // Permite interactuar con el botón
         contents: [
           TargetContent(
-            align: ContentAlign.top, // 👈 Mostrar arriba del botón
+            align: ContentAlign.top, //  Mostrar arriba del botón
             builder: (context, controller) {
               return Container(
                 margin: const EdgeInsets.only(top: 20),

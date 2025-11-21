@@ -15,7 +15,7 @@ class LocationService {
 
     try {
       if (kIsWeb) {
-        // 🌐 WEB: usar Geolocator
+        // WEB: usar Geolocator
         bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
         if (!serviceEnabled) {
           debugPrint('❌ Servicios de ubicación deshabilitados en web.');
@@ -46,7 +46,7 @@ class LocationService {
         lat = pos.latitude;
         lon = pos.longitude;
       } else {
-        // 📱 MÓVIL: usar paquete location
+        // MÓVIL: usar paquete location
         bool serviceEnabled = await _location.serviceEnabled();
         if (!serviceEnabled) {
           serviceEnabled = await _location.requestService();
@@ -66,7 +66,7 @@ class LocationService {
 
       if (lat == null || lon == null) return null;
 
-      // 🔗 Llamar a tu API
+      // Llamar a tu API
       final uri = Uri.parse(
         "${ApiConfig.apiBase}/users/location?lat=$lat&lon=$lon",
       );

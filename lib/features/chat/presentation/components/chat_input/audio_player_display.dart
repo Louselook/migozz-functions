@@ -25,10 +25,10 @@ class AudioPlayerDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ Usar maxDuration del parámetro (viene de just_audio)
+    // Usar maxDuration del parámetro (viene de just_audio)
     Duration effectiveMaxDuration = maxDuration;
 
-    // ✅ Solo como fallback usar playerController
+    // Solo como fallback usar playerController
     if (effectiveMaxDuration == Duration.zero &&
         playerController.maxDuration > 0) {
       effectiveMaxDuration = Duration(
@@ -114,7 +114,7 @@ class AudioPlayerDisplay extends StatelessWidget {
                       waveformType: WaveformType.fitWidth,
                       size: const Size(double.infinity, 36),
                       enableSeekGesture:
-                          false, // ✅ Deshabilitado para evitar conflictos
+                          false, // Deshabilitado para evitar conflictos
                       playerWaveStyle: PlayerWaveStyle(
                         fixedWaveColor: const Color(0xFF555555),
                         liveWaveColor: const Color(0xFFDF48A5),

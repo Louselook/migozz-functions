@@ -19,7 +19,7 @@ class CustomTooltip extends StatelessWidget {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        // 👉 Ahora todo el tooltip es clickable
+        //  Ahora todo el tooltip es clickable
         GestureDetector(
           onTap: onClose,
           child: Container(
@@ -51,13 +51,13 @@ class CustomTooltip extends StatelessWidget {
           ),
         ),
 
-        // 🔻 Flecha más grande y visible
+        //  Flecha más grande y visible
         Positioned(
           top: showAbove ? null : -10, // si está abajo, flecha arriba
           bottom: showAbove ? -10 : null, // si está arriba, flecha abajo
           left: arrowOffset - 8, // centrar mejor
           child: CustomPaint(
-            size: const Size(16, 10), // 👈 más grande
+            size: const Size(16, 10), //  más grande
             painter: _TrianglePainter(
               color: Colors.deepPurple,
               invert: !showAbove,
@@ -80,12 +80,12 @@ class _TrianglePainter extends CustomPainter {
     final Paint paint = Paint()..color = color;
     final Path path = Path();
     if (invert) {
-      // 🔼 Flecha hacia arriba
+      // Flecha hacia arriba
       path.moveTo(0, size.height);
       path.lineTo(size.width / 2, 0);
       path.lineTo(size.width, size.height);
     } else {
-      // 🔽 Flecha hacia abajo
+      // Flecha hacia abajo
       path.moveTo(0, 0);
       path.lineTo(size.width / 2, size.height);
       path.lineTo(size.width, 0);

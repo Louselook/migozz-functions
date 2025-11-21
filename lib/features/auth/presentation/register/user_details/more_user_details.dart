@@ -9,7 +9,7 @@ import 'package:migozz_app/features/auth/presentation/register/user_details/modu
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/social_ecosystem_step.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 
-/// 🔹 Modo de operación del componente
+//  Modo de operación del componente
 enum MoreUserDetailsMode { register, edit }
 
 class MoreUserDetails extends StatefulWidget {
@@ -36,7 +36,7 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
     super.initState();
     pageController = PageController(initialPage: widget.pageIndicator);
 
-    // 🔹 Si estamos en modo edición, inicializar los datos del usuario
+    // Si estamos en modo edición, inicializar los datos del usuario
     if (widget.mode == MoreUserDetailsMode.edit) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _initializeEditMode();
@@ -44,7 +44,7 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
     }
   }
 
-  /// 🔹 Inicializar datos del usuario en modo edición
+  // Inicializar datos del usuario en modo edición
   void _initializeEditMode() {
     debugPrint('🔹 [MoreUserDetails] Intentando inicializar modo edición');
 
@@ -74,7 +74,7 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
       interests: userProfile.interests,
     );
 
-    // 🔹 Verificar que se haya guardado
+    // Verificar que se haya guardado
     debugPrint(
       '🔹 EditCubit después de init: ${editCubit.state.socialEcosystem}',
     );
@@ -102,7 +102,7 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
               title: const Text('Edit Profile'),
               elevation: 0,
               actions: [
-                // 🔹 Botón para guardar cambios en modo edición
+                // Botón para guardar cambios en modo edición
                 if (widget.mode == MoreUserDetailsMode.edit)
                   BlocBuilder<EditCubit, EditCubitState>(
                     builder: (context, state) {
@@ -145,7 +145,7 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
     );
   }
 
-  /// 🔹 Guardar cambios en Firestore
+  /// Guardar cambios en Firestore
   Future<void> _saveChanges(BuildContext context) async {
     if (widget.userId == null) return;
 

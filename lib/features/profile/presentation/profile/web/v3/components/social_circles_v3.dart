@@ -72,8 +72,7 @@ class SocialCirclesV3 extends StatelessWidget {
               .map(
                 (link) =>
                     _CustomLinkButton(link: link, isSmallScreen: isSmallScreen),
-              )
-              .toList(),
+              ),
         ],
       ),
     );

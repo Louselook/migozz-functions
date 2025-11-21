@@ -10,7 +10,7 @@ class GradientBottomNav extends StatelessWidget {
   final ValueChanged<int> onItemSelected;
   final VoidCallback onCenterTap;
   final VoidCallback? onProfileUpdated;
-  final TutorialKeys? tutorialKeys; // ✅ Agregar este parámetro
+  final TutorialKeys? tutorialKeys; // Agregar este parámetro
 
   const GradientBottomNav({
     super.key,
@@ -18,7 +18,7 @@ class GradientBottomNav extends StatelessWidget {
     required this.onItemSelected,
     required this.onCenterTap,
     this.onProfileUpdated,
-    this.tutorialKeys, // ✅ Agregar al constructor
+    this.tutorialKeys, // Agregar al constructor
   });
 
   static const double _barHeight = 64;
@@ -140,7 +140,7 @@ class _NavItem extends StatelessWidget {
   final IconData icon;
   final bool selected;
   final VoidCallback onTap;
-  final GlobalKey? tutorialKeys; // ✅ Cambiado el nombre para mayor claridad
+  final GlobalKey? tutorialKeys; // Cambiado el nombre para mayor claridad
 
   const _NavItem({
     this.tutorialKeys,
@@ -154,7 +154,7 @@ class _NavItem extends StatelessWidget {
     final color = selected ? Colors.white : Colors.white.withValues(alpha: 0.7);
     return Expanded(
       child: InkResponse(
-        key: tutorialKeys, // ✅ Ahora funciona correctamente
+        key: tutorialKeys, // Ahora funciona correctamente
         onTap: onTap,
         radius: 0,
         child: SizedBox(

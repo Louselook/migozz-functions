@@ -20,7 +20,7 @@ class AudioRecorderManager {
   final AudioPlayer _audioPlayer = AudioPlayer();
   late PlayerController playerController;
 
-  // ✅ SOLO 2 subscripciones necesarias (como EditRecordScreen)
+  // SOLO 2 subscripciones necesarias (como EditRecordScreen)
   StreamSubscription? _positionSubscription;
   StreamSubscription? _playerStateSubscription;
 
@@ -39,11 +39,11 @@ class AudioRecorderManager {
   }
 
   void _setupSubscriptions() {
-    // ✅ Sincronización simple (como EditRecordScreen)
+    // Sincronización simple (como EditRecordScreen)
     _positionSubscription = _audioPlayer.positionStream.listen((position) {
       if (!isRecording) {
         duration = position;
-        // ✅ SOLO sincronizar visual, SIN interferir con reproducción
+        // SOLO sincronizar visual, SIN interferir con reproducción
         try {
           playerController.seekTo(position.inMilliseconds);
         } catch (_) {}
@@ -51,7 +51,7 @@ class AudioRecorderManager {
       }
     });
 
-    // ✅ Detectar fin de reproducción
+    // Detectar fin de reproducción
     _playerStateSubscription = _audioPlayer.playerStateStream.listen((state) {
       final wasPlaying = isPlaying;
       isPlaying = state.playing;
@@ -80,7 +80,7 @@ class AudioRecorderManager {
     final path =
         '${dir.path}/voice_note_${DateTime.now().millisecondsSinceEpoch}.m4a';
 
-    // ✅ Configuración SIMPLE como EditRecordScreen
+    // Configuración SIMPLE como EditRecordScreen
     await _recorder.start(const RecordConfig(), path: path);
 
     isRecording = true;
@@ -88,7 +88,7 @@ class AudioRecorderManager {
     audioPath = path;
     onStateChanged?.call();
 
-    // ✅ Timer manual para duración (más confiable)
+    // Timer manual para duración (más confiable)
     _startDurationTimer();
   }
 
@@ -116,14 +116,14 @@ class AudioRecorderManager {
 
     if (path != null && File(path).existsSync()) {
       try {
-        // ✅ Preparar waveform SOLO para visualización
+        // Preparar waveform SOLO para visualización
         await playerController.preparePlayer(
           path: path,
           shouldExtractWaveform: true,
           noOfSamples: 120,
         );
 
-        // ✅ Configurar just_audio para reproducción
+        // Configurar just_audio para reproducción
         await _audioPlayer.setFilePath(path);
         final d = await _audioPlayer.load();
         if (d != null) {
@@ -143,14 +143,14 @@ class AudioRecorderManager {
     if (audioPath == null) return;
 
     try {
-      // ✅ Configurar estado igual que EditRecordScreen
+      // Configurar estado igual que EditRecordScreen
       if (_audioPlayer.playerState.processingState == ProcessingState.idle ||
           _audioPlayer.playerState.processingState ==
               ProcessingState.completed) {
         await _audioPlayer.setFilePath(audioPath!);
       }
 
-      // ✅ Resetear si llegó al final
+      // Resetear si llegó al final
       if (_audioPlayer.position >= (_audioPlayer.duration ?? Duration.zero)) {
         await _audioPlayer.seek(Duration.zero);
         try {
@@ -160,7 +160,7 @@ class AudioRecorderManager {
 
       await _audioPlayer.play();
 
-      // ✅ EXPERIMENTAL: Probar si startPlayer ayuda (como EditRecordScreen)
+      // EXPERIMENTAL: Probar si startPlayer ayuda (como EditRecordScreen)
       try {
         await playerController.startPlayer();
       } catch (_) {}
@@ -175,7 +175,7 @@ class AudioRecorderManager {
     try {
       await _audioPlayer.pause();
 
-      // ✅ También pausar PlayerController (como EditRecordScreen)
+      // También pausar PlayerController (como EditRecordScreen)
       try {
         await playerController.pausePlayer();
       } catch (_) {}
@@ -197,7 +197,7 @@ class AudioRecorderManager {
         playerController.seekTo(position.inMilliseconds);
       } catch (_) {}
 
-      // ✅ Continuar reproduciendo si estaba sonando
+      // Continuar reproduciendo si estaba sonando
       if (wasPlaying) {
         await _audioPlayer.play();
       }
@@ -224,7 +224,7 @@ class AudioRecorderManager {
         isRecording = false;
       }
 
-      // ✅ NO eliminar el archivo físico, solo limpiar la referencia
+      // NO eliminar el archivo físico, solo limpiar la referencia
       // El archivo será manejado por AudioChatHandler
 
       try {
@@ -267,7 +267,7 @@ class AudioRecorderManager {
         isRecording = false;
       }
 
-      // ✅ Aquí SÍ eliminar el archivo
+      // Aquí SÍ eliminar el archivo
       if (audioPath != null) {
         try {
           final file = File(audioPath!);

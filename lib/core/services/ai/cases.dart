@@ -1,30 +1,30 @@
-final List language = [
-  // Primera
-  {
-    "text": "👋 ¡Hola! Soy Migozz. ¿En qué idioma prefieres continuar?",
-    "options": ["Español", "English"],
-    "step": "regProgress.language",
-    "keepTalk": false,
-  },
+// final List language = [
+//   // Primera
+//   {
+//     "text": "👋 ¡Hola! Soy Migozz. ¿En qué idioma prefieres continuar?",
+//     "options": ["Español", "English"],
+//     "step": "regProgress.language",
+//     "keepTalk": false,
+//   },
 
-  // Rechazo
-  {
-    "text": "Respuesta no válida, por favor elige un idioma.",
-    "options": ["Español", "English"],
-    "step": "regProgress.language",
-    "keepTalk": false,
-    "valid": false,
-  },
+//   // Rechazo
+//   {
+//     "text": "Respuesta no válida, por favor elige un idioma.",
+//     "options": ["Español", "English"],
+//     "step": "regProgress.language",
+//     "keepTalk": false,
+//     "valid": false,
+//   },
 
-  // Válida
-  {
-    "text": "Perfecto seguiremos en Español, ¿cuál es tu nombre completo?",
-    "step": "regProgress.fullName",
-    "keepTalk": false,
-    "valid": true,
-    "userResponse": "Español",
-  },
-];
+//   // Válida
+//   {
+//     "text": "Perfecto seguiremos en Español, ¿cuál es tu nombre completo?",
+//     "step": "regProgress.fullName",
+//     "keepTalk": false,
+//     "valid": true,
+//     "userResponse": "Español",
+//   },
+// ];
 
 final List fullName = [
   // Primera
@@ -157,7 +157,7 @@ final List location = [
     "keepTalk": false,
     "valid": true,
     "userResponse": "No",
-    "emptyLocation": true, // 👈 Bandera para guardar LocationDTO.empty()
+    "emptyLocation": true, //  Bandera para guardar LocationDTO.empty()
   },
 
   // Rechazo - Ubicación incorrecta (vuelve a preguntar)

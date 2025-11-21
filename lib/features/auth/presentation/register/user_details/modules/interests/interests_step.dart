@@ -38,7 +38,7 @@ class _InterestsStepState extends State<InterestsStep> {
     _initializeSelectedInterests();
   }
 
-  /// 🔹 Inicializar intereses seleccionados según el modo
+  // Inicializar intereses seleccionados según el modo
   void _initializeSelectedInterests() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Map<String, List<String>> existingInterests = {};
@@ -104,7 +104,7 @@ class _InterestsStepState extends State<InterestsStep> {
     }
   }
 
-  /// 🔹 Actualizar el cubit correspondiente
+  // Actualizar el cubit correspondiente
   void _updateCubit(Map<String, List<String>> selectedBySection) {
     if (widget.mode == MoreUserDetailsMode.register) {
       context.read<RegisterCubit>().setInterests(selectedBySection);
@@ -165,7 +165,7 @@ class _InterestsStepState extends State<InterestsStep> {
     );
   }
 
-  /// 🔹 Construir botón de acción según el modo
+  // Construir botón de acción según el modo
   Widget _buildActionButton() {
     if (widget.mode == MoreUserDetailsMode.register) {
       // En modo registro, usar el botón original con registration_handler
@@ -288,7 +288,7 @@ class _InterestsStepState extends State<InterestsStep> {
                     }
                   });
 
-                  // 🔹 Actualizar el cubit en tiempo real
+                  // Actualizar el cubit en tiempo real
                   final selectedBySection = <String, List<String>>{};
                   for (final sec in dynamicSections) {
                     final picked = sec.options

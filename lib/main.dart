@@ -13,6 +13,8 @@ import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubi
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/injection.dart';
 
+import 'core/services/ai/gemini_service.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
@@ -58,6 +60,13 @@ class MyApp extends StatelessWidget {
                   initResult!.location,
                 );
               }
+              final deviceLocale = context.locale;
+              final deviceLang = deviceLocale.languageCode; // 'es' o 'en'
+              final langLabel = deviceLang == 'es' ? 'Español' : 'English';
+
+              // context.read<RegisterCubit>().setLanguage(langLabel);
+
+              GeminiService.instance.setLanguage(langLabel);
 
               return MaterialApp.router(
                 debugShowCheckedModeBanner: false,
@@ -69,7 +78,7 @@ class MyApp extends StatelessWidget {
                   ),
                   useMaterial3: true,
                 ),
-                // 🔥 Esto es lo importante
+                //  Esto es lo importante
                 localizationsDelegates: context.localizationDelegates,
                 supportedLocales: context.supportedLocales,
                 locale: context.locale,

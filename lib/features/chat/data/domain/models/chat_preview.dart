@@ -8,7 +8,7 @@ class ChatPreview {
   final String timeAgo;
   final bool isVerified;
   final bool isOnline;
-  final int unreadCount; // 👈 NUEVO: Contador de mensajes no leídos
+  final int unreadCount; //  Contador de mensajes no leídos
 
   ChatPreview({
     required this.userId,
@@ -19,6 +19,6 @@ class ChatPreview {
     required this.timeAgo,
     this.isVerified = false,
     this.isOnline = false,
-    this.unreadCount = 0, // 👈 NUEVO
+    this.unreadCount = 0, 
   });
 }

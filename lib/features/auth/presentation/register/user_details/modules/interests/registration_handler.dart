@@ -5,17 +5,17 @@ import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubi
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 
 class RegistrationHandler {
-  /// Completa el registro según el tipo de autenticación
+  // Completa el registro según el tipo de autenticación
   static Future<void> completeRegistration({
     required BuildContext context,
     required RegisterCubit registerCubit,
     required AuthCubit authCubit,
     required Map<String, List<String>> selectedInterests,
   }) async {
-    // 1️⃣ Guardar intereses en el cubit
+    //  Guardar intereses en el cubit
     registerCubit.setInterests(selectedInterests);
 
-    // 2️⃣ Verificar si está autenticado con Google
+    // Verificar si está autenticado con Google
     final firebaseUser = authCubit.state.firebaseUser;
     final isAuthWithGoogle =
         authCubit.state.isAuthenticated && firebaseUser != null;
@@ -23,13 +23,13 @@ class RegistrationHandler {
     debugPrint('🔍 [RegistrationHandler] isAuthWithGoogle: $isAuthWithGoogle');
     debugPrint('🔍 [RegistrationHandler] UID: ${firebaseUser?.uid}');
 
-    // 3️⃣ Verificar completitud pasando el UID si está disponible
+    // Verificar completitud pasando el UID si está disponible
     await registerCubit.checkCompletion(
       forGoogle: isAuthWithGoogle,
-      uid: isAuthWithGoogle ? firebaseUser.uid : null, // 👈 Pasar UID
+      uid: isAuthWithGoogle ? firebaseUser.uid : null, //  Pasar UID
     );
 
-    // 4️⃣ Si no está completo, mostrar error
+    // Si no está completo, mostrar error
     if (!registerCubit.state.isComplete) {
       debugPrint('⚠ [RegistrationHandler] Registro incompleto');
       if (context.mounted) {
@@ -43,7 +43,7 @@ class RegistrationHandler {
       return;
     }
 
-    // 5️⃣ Proceder con el registro según el flujo
+    // Proceder con el registro según el flujo
     try {
       if (!context.mounted) return;
       LoadingOverlay.show(context);
@@ -119,7 +119,7 @@ class RegistrationHandler {
       updateData['socialEcosystem'] = registerCubit.state.socialEcosystem;
     }
 
-    // 🎯 URLs de media (ya vienen con UID correcto desde checkCompletion)
+    // URLs de media (ya vienen con UID correcto desde checkCompletion)
     if (registerCubit.state.avatarUrl != null) {
       updateData['avatarUrl'] = registerCubit.state.avatarUrl;
     }
@@ -181,23 +181,23 @@ class RegistrationHandler {
     debugPrint('🟢 [RegistrationHandler] Flujo Email/OTP iniciado');
 
     try {
-      // 1️⃣ Completar registro en backend
+      // Completar registro en backend
       await authCubit.completeRegistration(
         email: registerCubit.state.email!,
         otp: registerCubit.state.currentOTP!,
         userData: registerCubit.state.buildUserDTO(),
       );
 
-      // 2️⃣ Resetear el cubit
+      // Resetear el cubit
       registerCubit.reset();
 
-      // 3️⃣ Esperar propagación del estado
+      // Esperar propagación del estado
       await Future.delayed(const Duration(milliseconds: 150));
 
-      // 4️⃣ Refrescar perfil (dispara redirección del router)
+      // Refrescar perfil (dispara redirección del router)
       await authCubit.refreshUserProfile();
 
-      // 5️⃣ Ocultar loading
+      // Ocultar loading
       if (context.mounted) {
         LoadingOverlay.hide(context);
       }

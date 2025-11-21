@@ -157,12 +157,12 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
 
         debugPrint('📤 [ChatInput] Enviando audio...');
 
-        // ✅ PRIMERO: Enviar el audio (AudioChatHandler creará su copia)
+        // PRIMERO: Enviar el audio (AudioChatHandler creará su copia)
         widget.onSendAudio?.call(audioPath);
 
         debugPrint('🧹 [ChatInput] Limpiando UI (preservando archivo)...');
 
-        // ✅ SEGUNDO: Limpiar solo las referencias del UI (NO el archivo)
+        // SEGUNDO: Limpiar solo las referencias del UI (NO el archivo)
         await _audioManager.clearReferences();
         _clearInputVisual();
 
@@ -170,7 +170,7 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
           '✅ [ChatInput] UI limpiado, archivo preservado para AudioChatHandler',
         );
 
-        // ✅ TERCERO: Actualizar el UI
+        // TERCERO: Actualizar el UI
         if (mounted) setState(() {});
       } catch (e) {
         debugPrint('❌ Error al validar duración: $e');
@@ -210,7 +210,7 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
     if (hasText) {
       widget.onSend();
     } else if (_audioManager.audioPath != null) {
-      // ✅ Llamar a _handleSendAudio que ya tiene la lógica de limpiar
+      // Llamar a _handleSendAudio que ya tiene la lógica de limpiar
       _handleSendAudio();
     } else {
       // Si no hay texto ni audio, abrir tooltip instruccional

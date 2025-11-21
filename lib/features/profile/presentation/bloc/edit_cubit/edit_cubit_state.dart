@@ -20,7 +20,7 @@ class EditCubitState extends Equatable {
   final bool success;
   final String? error;
 
-  // 🔹 Datos temporales para edición (antes de guardar)
+  /// Datos temporales para edición (antes de guardar)
   final List<Map<String, dynamic>>? socialEcosystem;
   final List<String>? category;
   final Map<String, List<String>>? interests;

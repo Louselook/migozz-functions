@@ -82,8 +82,7 @@ class SocialCirclesMobileV3 extends StatelessWidget {
 
           // Enlaces personalizados (website, etc.)
           ...displayCustomLinks
-              .map((link) => _CustomLinkButton(link: link))
-              .toList(),
+              .map((link) => _CustomLinkButton(link: link)),
         ],
       ),
     );

@@ -19,7 +19,7 @@ class ChatNavigationHandler {
 
     switch (action) {
       case 0:
-        // 🔹 Navegar a SocialEcosystemStep y esperar resultado
+        // Navegar a SocialEcosystemStep y esperar resultado
         final result = await Navigator.push<String>(
           context,
           MaterialPageRoute(
@@ -30,7 +30,7 @@ class ChatNavigationHandler {
           ),
         );
 
-        // 🔹 Manejar retorno de redes sociales (delegado a handler específico)
+        // Manejar retorno de redes sociales (delegado a handler específico)
         if (result == 'done' && context.mounted) {
           SocialEcosystemHandler.handleReturn(
             context: context,
@@ -41,7 +41,7 @@ class ChatNavigationHandler {
         break;
 
       case 1:
-        // 🔹 Otro paso (CategoryStep)
+        // Otro paso (CategoryStep)
         await Navigator.push(
           context,
           MaterialPageRoute(
@@ -54,7 +54,7 @@ class ChatNavigationHandler {
         break;
 
       case 2:
-        // 🔹 Último paso (InterestsStep)
+        // Último paso (InterestsStep)
         await Navigator.push(
           context,
           MaterialPageRoute(

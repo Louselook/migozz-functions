@@ -34,7 +34,7 @@ class AppInitializer extends StatefulWidget {
 class _AppInitializerState extends State<AppInitializer>
     with WidgetsBindingObserver {
   AppInitResult? _result;
-  bool _isInitializing = false; // ✅ Flag para evitar solicitudes concurrentes
+  bool _isInitializing = false; //  Flag para evitar solicitudes concurrentes
 
   @override
   void initState() {
@@ -57,7 +57,7 @@ class _AppInitializerState extends State<AppInitializer>
   }
 
   Future<void> _checkLocationStatus() async {
-    // ✅ Evitar llamadas concurrentes
+    //  Evitar llamadas concurrentes
     if (_isInitializing) {
       debugPrint('⚠️ Ya hay una inicialización en progreso, ignorando...');
       return;
@@ -81,7 +81,7 @@ class _AppInitializerState extends State<AppInitializer>
       LocationDTO? locationDto;
 
       if (!kIsWeb) {
-        // 📱 Solo en móvil o desktop
+        //  Solo en móvil o desktop
         final micStatus = await Permission.microphone.request();
         microphoneGranted = micStatus.isGranted;
 
@@ -104,7 +104,7 @@ class _AppInitializerState extends State<AppInitializer>
           });
         }
       } else {
-        // 🌐 En web — permisos simulados o usando otra API
+        // En web — permisos simulados o usando otra API
         debugPrint('🌐 Web detectada — simulando permisos');
 
         microphoneGranted = true; // si no los necesitas realmente
@@ -128,7 +128,7 @@ class _AppInitializerState extends State<AppInitializer>
         );
       });
 
-      debugPrint('✅ Inicialización completada');
+      debugPrint(' Inicialización completada');
     } catch (e) {
       debugPrint('❌ Error durante inicialización: $e');
     } finally {
@@ -185,7 +185,7 @@ class _AppInitializerState extends State<AppInitializer>
       );
     }
 
-    // ✅ Solo avanza si ya tiene permiso de ubicación
+    //  Solo avanza si ya tiene permiso de ubicación
     return widget.builder(context, _result);
   }
 }

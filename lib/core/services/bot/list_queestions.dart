@@ -3,13 +3,13 @@
 
 /// Preguntas en ESPAÑOL
 final Map<String, Map<String, dynamic>> questionsEs = {
-  "language": {
-    "text": "👋 ¡Hola! Soy Migozz. ¿En qué idioma prefieres continuar?",
-    "options": ["Español", "English"],
-    "step": "regProgress.language",
-    "keepTalk": false,
-    "keyboardType": "text",
-  },
+  // "language": {
+  //   "text": "👋 ¡Hola! Soy Migozz. ¿En qué idioma prefieres continuar?",
+  //   "options": ["Español", "English"],
+  //   "step": "regProgress.language",
+  //   "keepTalk": false,
+  //   "keyboardType": "text",
+  // },
 
   "fullName": {
     "text": "¡Genial! Continuemos en Español. ¿Cuál es tu nombre completo?",
@@ -119,13 +119,13 @@ final Map<String, Map<String, dynamic>> questionsEs = {
 
 /// Preguntas en INGLÉS
 final Map<String, Map<String, dynamic>> questionsEn = {
-  "language": {
-    "text": "👋 Hello! I'm Migozz. What language do you prefer?",
-    "options": ["English", "Español"],
-    "step": "regProgress.language",
-    "keepTalk": false,
-    "keyboardType": "text",
-  },
+  // "language": {
+  //   "text": "👋 Hello! I'm Migozz. What language do you prefer?",
+  //   "options": ["English", "Español"],
+  //   "step": "regProgress.language",
+  //   "keepTalk": false,
+  //   "keyboardType": "text",
+  // },
 
   "fullName": {
     "text": "Great! Let's continue in English. What is your full name?",
@@ -233,12 +233,12 @@ final Map<String, Map<String, dynamic>> questionsEn = {
 
 /// MENSAJES DE ERROR (respuestas inválidas)
 final Map<String, Map<String, dynamic>> errorMessagesEs = {
-  "language": {
-    "text": "Por favor, elige un idioma válido de las opciones.",
-    "options": ["Español", "English"],
-    "step": "regProgress.language",
-    "keepTalk": false,
-  },
+  // "language": {
+  //   "text": "Por favor, elige un idioma válido de las opciones.",
+  //   "options": ["Español", "English"],
+  //   "step": "regProgress.language",
+  //   "keepTalk": false,
+  // },
 
   "fullName": {
     "text": "Por favor ingresa tu nombre completo (nombre y apellido).",
@@ -300,12 +300,12 @@ final Map<String, Map<String, dynamic>> errorMessagesEs = {
 };
 
 final Map<String, Map<String, dynamic>> errorMessagesEn = {
-  "language": {
-    "text": "Please choose a valid language from the options.",
-    "options": ["English", "Español"],
-    "step": "regProgress.language",
-    "keepTalk": false,
-  },
+  // "language": {
+  //   "text": "Please choose a valid language from the options.",
+  //   "options": ["English", "Español"],
+  //   "step": "regProgress.language",
+  //   "keepTalk": false,
+  // },
 
   "fullName": {
     "text": "Please enter your full name (first and last name).",

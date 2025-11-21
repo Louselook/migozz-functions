@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
+import 'package:migozz_app/core/services/ai/gemini_service.dart';
 import 'package:migozz_app/features/chat/data/domain/models/chat_model.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
@@ -32,7 +33,6 @@ class _IaChatScreenState extends State<IaChatScreen> {
   void initState() {
     super.initState();
 
-    // ✅ Obtener el firebaseUid desde AuthCubit
     final authState = context.read<AuthCubit>().state;
     final firebaseUid = authState.firebaseUser?.uid;
 
@@ -40,25 +40,35 @@ class _IaChatScreenState extends State<IaChatScreen> {
 
     _chatController = RegisterChatController(
       registerCubit: context.read<RegisterCubit>(),
-      firebaseUid: firebaseUid, // ✅ Pasar el UID aquí
+      firebaseUid: firebaseUid,
     );
 
-    // Callback para resetear audio UI
     _chatController.onResetAudioUI = () {
       _chatInputKey.currentState?.resetAudioManager();
     };
 
-    // Configurar callback del tutorial
-    _chatController.onShowAvatarTutorial = () {
-      _showAvatarTutorial();
-    };
-
-    _chatController.onShowVoiceNoteTutorial = () {
-      _showVoiceNoteTutorial();
-    };
+    _chatController.onShowAvatarTutorial = () => _showAvatarTutorial();
+    _chatController.onShowVoiceNoteTutorial = () => _showVoiceNoteTutorial();
 
     if (_chatController.messages.isEmpty) {
       _chatController.initializeChat(onActionRequired: _handleNavigation);
+    }
+  }
+
+  bool _initializedLanguage = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    if (!_initializedLanguage) {
+      final deviceLangCode = Localizations.localeOf(context).languageCode;
+      final deviceLangLabel = deviceLangCode == 'es' ? 'Español' : 'English';
+
+      context.read<RegisterCubit>().setLanguage(deviceLangLabel);
+      GeminiService.instance.setLanguage(deviceLangLabel);
+
+      _initializedLanguage = true;
     }
   }
 
@@ -77,7 +87,7 @@ class _IaChatScreenState extends State<IaChatScreen> {
     );
   }
 
-  // ✅ NUEVO: Método para mostrar el tutorial de avatar
+  // Método para mostrar el tutorial de avatar
   void _showAvatarTutorial() {
     final chatInputState = _chatInputKey.currentState;
     if (chatInputState == null) {
@@ -192,7 +202,7 @@ class _IaChatScreenState extends State<IaChatScreen> {
               listenable: _chatController,
               builder: (context, child) {
                 return ChatInputWidget(
-                  key: _chatInputKey, // 👈 Ya estaba, perfecto
+                  key: _chatInputKey, //  Ya estaba, perfecto
                   controller: _controller,
                   showPhoneInput: _chatController.showPhoneInput,
                   onSend: () {

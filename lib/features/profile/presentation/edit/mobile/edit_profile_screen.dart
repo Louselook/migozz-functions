@@ -110,11 +110,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
-  // ✅ MÉTODO ACTUALIZADO CON GUARDADO COMPLETO
+  // MÉTODO ACTUALIZADO CON GUARDADO COMPLETO
   Future<void> _confirmAndChangeLocation(String email) async {
     final svc = LocationService();
     
-    // 🔄 Mostrar loading mientras detecta ubicación
+    // Mostrar loading mientras detecta ubicación
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -137,14 +137,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       return;
     }
 
-    // 📍 Mostrar ubicación detectada
+    // Mostrar ubicación detectada
     debugPrint('📍 [EditProfile] Ubicación detectada:');
     debugPrint('   • City: ${newLocation.city}');
     debugPrint('   • State: ${newLocation.state}');
     debugPrint('   • Country: ${newLocation.country}');
     debugPrint('   • Coords: ${newLocation.lat}, ${newLocation.lng}');
 
-    // ❓ Mostrar diálogo de confirmación
+    // Mostrar diálogo de confirmación
     if (!mounted) return;
     final confirm = await showDialog<bool>(
       context: context,
@@ -169,7 +169,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       ),
     );
 
-    // ✅ GUARDAR UBICACIÓN SI EL USUARIO CONFIRMÓ
+    // GUARDAR UBICACIÓN SI EL USUARIO CONFIRMÓ
     if (confirm == true) {
       if (!mounted) return;
       
@@ -187,16 +187,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           return;
         }
 
-        // 📦 Preparar datos de ubicación para Firestore
+        // Preparar datos de ubicación para Firestore
         final locationData = {
-          'location': newLocation.toMap(), // 👈 LocationDTO tiene este método
+          'location': newLocation.toMap(), //  LocationDTO tiene este método
         };
 
         debugPrint('💾 [EditProfile] Guardando ubicación en Firestore...');
         debugPrint('   • UserId: $userId');
         debugPrint('   • Data: $locationData');
 
-        // 💾 Guardar en Firestore
+        // Guardar en Firestore
         // El EditCubit automáticamente refrescará el AuthCubit después de guardar
         await editCubit.saveUserProfileField(
           userId: userId,
@@ -207,7 +207,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         
         debugPrint('✅ [EditProfile] Ubicación guardada exitosamente');
         
-        // ✅ Mostrar mensaje de éxito
+        // Mostrar mensaje de éxito
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -218,7 +218,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ),
         );
         
-        // 🔄 El perfil ya se refrescó automáticamente gracias al EditCubit
+        // El perfil ya se refrescó automáticamente gracias al EditCubit
         // La UI se actualizará automáticamente gracias al BlocBuilder
         
       } catch (e) {
@@ -305,7 +305,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 }
               }
 
-              // ✅ Formatear ubicación - ahora maneja LocationDTO.empty()
+              // Formatear ubicación - ahora maneja LocationDTO.empty()
               String formattedLocation = 'Location not set';
               
               if (user.location.isEmpty) {

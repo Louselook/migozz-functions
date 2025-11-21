@@ -17,7 +17,7 @@ class _ProfileVersionSelectorState extends State<ProfileVersionSelector> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: Colors.black.withOpacity(0.9),
+      backgroundColor: Colors.black.withValues(alpha:0.9),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Container(
         padding: const EdgeInsets.all(24),
@@ -142,7 +142,7 @@ class _VersionOption extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.purple.withOpacity(0.3) : Colors.white10,
+          color: isSelected ? Colors.purple.withValues(alpha:0.3) : Colors.white10,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? Colors.purple : Colors.transparent,

@@ -144,7 +144,7 @@ class _UserChatScreenState extends State<UserChatScreen> {
     }
   }
 
-  /// ✨ Enviar audio - CORREGIDO
+  // Enviar audio - CORREGIDO
   Future<void> _sendAudioMessage(String audioPath) async {
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -159,10 +159,10 @@ class _UserChatScreenState extends State<UserChatScreen> {
     try {
       debugPrint('🎤 [UserChat] Enviando audio a ${widget.otherUserName}');
 
-      // ✅ Agregar mensaje visual inmediatamente (TUYO)
+      // Agregar mensaje visual inmediatamente (TUYO)
       _chatController.addMessage({
         'other': false, // TÚ lo enviaste
-        'type': MessageType.audio, // 👈 CRÍTICO: audioPlayback, NO audio
+        'type': MessageType.audio, //  CRÍTICO: audioPlayback, NO audio
         'audio': audioPath,
         'time': 'Enviando...',
         'chatController': _chatController,
@@ -192,7 +192,7 @@ class _UserChatScreenState extends State<UserChatScreen> {
     }
   }
 
-  /// ✨ Enviar imagen - MEJORADO
+  // Enviar imagen - MEJORADO
   Future<void> _sendImageMessage(String imagePath) async {
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -207,7 +207,7 @@ class _UserChatScreenState extends State<UserChatScreen> {
     try {
       debugPrint('📸 [UserChat] Enviando imagen a ${widget.otherUserName}');
 
-      // ✅ Agregar mensaje visual con información del usuario
+      // Agregar mensaje visual con información del usuario
       _chatController.addMessage({
         'other': false,
         'type': MessageType.pictureCard,
@@ -215,7 +215,7 @@ class _UserChatScreenState extends State<UserChatScreen> {
           {'imageUrl': imagePath, 'label': 'Imagen'},
         ],
         'time': 'Enviando...',
-        'senderName': 'Tú', // 👈 Info del remitente
+        'senderName': 'Tú', //  Info del remitente
         'senderAvatar': null,
       });
 
@@ -259,7 +259,7 @@ class _UserChatScreenState extends State<UserChatScreen> {
       appBar: _buildAppBar(),
       body: Column(
         children: [
-          // 💬 Lista de mensajes
+          // Lista de mensajes
           Expanded(
             child: ListenableBuilder(
               listenable: _chatController,
@@ -273,7 +273,7 @@ class _UserChatScreenState extends State<UserChatScreen> {
                     return ChatMessageBuilder.buildMessage(
                       message,
                       chatController: null,
-                      // ✅ NUEVO: Pasar info del otro usuario
+                      // Pasar info del otro usuario
                       otherUserName: widget.otherUserName,
                       otherUserAvatar: widget.otherUserAvatar,
                     );
@@ -283,7 +283,7 @@ class _UserChatScreenState extends State<UserChatScreen> {
             ),
           ),
 
-          // ⌨️ Input con audio e imágenes
+          // Input con audio e imágenes
           ChatInputWidget(
             controller: _textController,
             onSend: () {

@@ -384,12 +384,12 @@ class _OtpBoxField extends StatelessWidget {
           ),
         ),
         onChanged: (value) {
-          // 👉 Si escribió un dígito, pasa al siguiente campo
+          // Si escribió un dígito, pasa al siguiente campo
           if (value.isNotEmpty && index < 5) {
             FocusScope.of(context).nextFocus();
           }
 
-          // 👉 Si borró (quedó vacío) y no es el primero, vuelve al anterior
+          // Si borró (quedó vacío) y no es el primero, vuelve al anterior
           if (value.isEmpty && index > 0) {
             FocusScope.of(context).previousFocus();
           }

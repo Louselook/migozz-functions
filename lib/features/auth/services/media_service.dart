@@ -7,7 +7,7 @@ import 'package:migozz_app/core/config/api/api_config.dart';
 enum MediaType { avatar, voice, video, document }
 
 class UserMediaService {
-  /// 🔹 Sube archivos (usando el email como identificador temporal)
+  // Sube archivos (usando el email como identificador temporal)
   Future<Map<MediaType, String>> uploadFilesTemporarily({
     required String email,
     required Map<MediaType, File> files,
@@ -24,7 +24,7 @@ class UserMediaService {
 
       request.files.add(await http.MultipartFile.fromPath('file', file.path));
       request.fields['folder'] = entry.key.name; // avatar, voice, etc.
-      request.fields['user_id'] = email; // 🔹 email temporal
+      request.fields['user_id'] = email; // email temporal
 
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
@@ -40,7 +40,7 @@ class UserMediaService {
     return urls;
   }
 
-  /// 🔹 Asocia los archivos temporales subidos con el email al UID final del usuario.
+  // Asocia los archivos temporales subidos con el email al UID final del usuario.
   Future<Map<MediaType, String>> associateMediaToUid({
     required String uid,
     required String email,
@@ -117,7 +117,7 @@ class UserMediaService {
 
       request.files.add(await http.MultipartFile.fromPath('file', file.path));
       request.fields['folder'] = entry.key.name;
-      request.fields['user_id'] = uid; // 🔹 ahora usamos UID
+      request.fields['user_id'] = uid; // ahora usamos UID
 
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);

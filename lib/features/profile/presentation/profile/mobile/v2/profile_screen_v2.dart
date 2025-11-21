@@ -177,9 +177,9 @@ class _MobileProfileContentV2State extends State<MobileProfileContentV2> {
     );
   }
 
-  // ===============================
-  // 🔢 Calcular total de seguidores
-  // ===============================
+  
+  //Calcular total de seguidores
+  
   int _calculateTotalFollowers(List<Map<String, dynamic>>? socialEcosystem) {
     if (socialEcosystem == null || socialEcosystem.isEmpty) return 0;
     int total = 0;
@@ -198,9 +198,9 @@ class _MobileProfileContentV2State extends State<MobileProfileContentV2> {
     return total;
   }
 
-  // ===============================
+  
   // 🔗 Construir enlaces de redes
-  // ===============================
+  
   List<SocialLink> _buildSocialLinks(
     List<Map<String, dynamic>>? socialEcosystem,
     String username,
@@ -246,9 +246,9 @@ class _MobileProfileContentV2State extends State<MobileProfileContentV2> {
     return null;
   }
 
-  // ===============================
+  
   // 🧭 Generar URL + ícono por red
-  // ===============================
+  
   Map<String, String>? _getSocialInfo(
     String platform,
     String username,

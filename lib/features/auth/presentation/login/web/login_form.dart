@@ -117,7 +117,7 @@ class _LoginFormState extends State<LoginForm> {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
-          mainAxisSize: MainAxisSize.min, // 👈 importante para mobile
+          mainAxisSize: MainAxisSize.min, //  importante para mobile
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CustomTextField(

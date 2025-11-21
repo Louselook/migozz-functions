@@ -81,7 +81,7 @@ class _ProfileImage extends StatelessWidget {
         ? 150.0
         : (isSmallScreen ? 180.0 : 320.0);
 
-    // ✅ Determinar si la URL es de red o es un asset local
+    // Determinar si la URL es de red o es un asset local
     final bool isNetworkImage =
         avatarUrl != null &&
         (avatarUrl!.startsWith('http://') || avatarUrl!.startsWith('https://'));

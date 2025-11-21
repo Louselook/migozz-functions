@@ -43,12 +43,12 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
     final avatarUrl = user.avatarUrl;
     final voiceNoteUrl = user.voiceNoteUrl ?? '';
 
-    // ✅ Determinar si es el perfil del usuario autenticado
+    // Determinar si es el perfil del usuario autenticado
     final authState = context.watch<AuthCubit>().state;
     final currentUserEmail = authState.userProfile?.email ?? '';
     final isOwnProfile = user.email == currentUserEmail;
 
-    // ✅ Recuperamos los seguidores y redes desde el perfil
+    // Recuperamos los seguidores y redes desde el perfil
     final totalFollowers = _calculateTotalFollowers(user.socialEcosystem);
     final socialLinks = _buildSocialLinks(user.socialEcosystem, user.username);
 
@@ -65,7 +65,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
         userId: user.email,
         child: Stack(
           children: [
-            // 🔍 Botón de búsqueda
+            // Botón de búsqueda
             if (isOwnProfile) // Condicional para busqueda
               Positioned(
                 left: 10,
@@ -90,7 +90,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
               isOwnProfile: isOwnProfile,
               onChatTap: () {
                 if (!isOwnProfile) {
-                  // ✅ Chat con otro usuario - Pasar datos básicos
+                  // Chat con otro usuario - Pasar datos básicos
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -105,7 +105,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                     ),
                   );
                 } else {
-                  // ✅ Mis chats - Ir a la lista
+                  // Mis chats - Ir a la lista
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -122,7 +122,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
               },
             ),
 
-            // 🎯 Panel lateral de redes sociales
+            // Panel lateral de redes sociales
             if (socialLinks.isNotEmpty)
               DraggableSocialRail(
                 initialPosition: initialSocialPosition,
@@ -131,7 +131,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                 iconSize: 45,
               ),
 
-            // 🔻 Barra inferior de navegación
+            // Barra inferior de navegación
             if (isOwnProfile) // Condicional
               Align(
                 alignment: Alignment.bottomCenter,
@@ -156,9 +156,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
     );
   }
 
-  // ===============================
-  // 🔢 Calcular total de seguidores
-  // ===============================
+  // Calcular total de seguidores
   int _calculateTotalFollowers(List<Map<String, dynamic>>? socialEcosystem) {
     if (socialEcosystem == null || socialEcosystem.isEmpty) return 0;
     int total = 0;
@@ -178,9 +176,8 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
     return total;
   }
 
-  // ===============================
-  // 🔗 Construir enlaces de redes
-  // ===============================
+
+  // Construir enlaces de redes
   List<SocialLink> _buildSocialLinks(
     List<Map<String, dynamic>>? socialEcosystem,
     String username,
@@ -226,9 +223,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
     return null;
   }
 
-  // ===============================
-  // 🧭 Generar URL + ícono por red
-  // ===============================
+  // Generar URL + ícono por red
   Map<String, String>? _getSocialInfo(
     String platform,
     String username,

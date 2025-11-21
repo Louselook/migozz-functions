@@ -20,7 +20,7 @@ class ProfileVersionButton extends StatelessWidget {
                 ProfileVersionSelector(currentVersion: currentVersion),
           );
         },
-        backgroundColor: Colors.purple.withOpacity(0.9),
+        backgroundColor: Colors.purple.withValues(alpha: 0.9),
         icon: const Icon(Icons.palette, color: Colors.white),
         label: const Text(
           'Diseño',

@@ -36,7 +36,7 @@ class _CategoryStepState extends State<CategoryStep> {
     _initializeSelectedCategories();
   }
 
-  /// 🔹 Inicializar categorías seleccionadas según el modo
+  // Inicializar categorías seleccionadas según el modo
   void _initializeSelectedCategories() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.mode == MoreUserDetailsMode.register) {
@@ -92,7 +92,7 @@ class _CategoryStepState extends State<CategoryStep> {
     }
   }
 
-  /// 🔹 Actualizar el cubit correspondiente según el modo
+  // Actualizar el cubit correspondiente según el modo
   void _updateCubit() {
     if (widget.mode == MoreUserDetailsMode.register) {
       context.read<RegisterCubit>().setCategories(selectedCategories);
@@ -153,7 +153,7 @@ class _CategoryStepState extends State<CategoryStep> {
                                           selectedCategories.add(category);
                                         }
                                       });
-                                      // 🔹 Actualizar el cubit correspondiente
+                                      //  Actualizar el cubit correspondiente
                                       _updateCubit();
                                       debugPrint(
                                         "🏷️ Categorías seleccionadas: $selectedCategories",

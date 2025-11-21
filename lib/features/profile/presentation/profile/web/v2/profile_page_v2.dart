@@ -119,9 +119,8 @@ class WebProfileContentV2 extends StatelessWidget {
     );
   }
 
-  // ===============================
-  // 🔢 Calcular total de seguidores
-  // ===============================
+  // Calcular total de seguidores
+  
   int _calculateTotalFollowers(List<Map<String, dynamic>>? socialEcosystem) {
     if (socialEcosystem == null || socialEcosystem.isEmpty) return 0;
     int total = 0;
@@ -140,9 +139,9 @@ class WebProfileContentV2 extends StatelessWidget {
     return total;
   }
 
-  // ===============================
-  // 🔗 Construir enlaces de redes
-  // ===============================
+  
+  // Construir enlaces de redes
+  
   List<SocialLink> _buildSocialLinks(
     List<Map<String, dynamic>>? socialEcosystem,
     String username,
@@ -188,9 +187,9 @@ class WebProfileContentV2 extends StatelessWidget {
     return null;
   }
 
-  // ===============================
-  // 🧭 Generar URL + ícono por red
-  // ===============================
+  
+  // Generar URL + ícono por red
+  
   Map<String, String>? _getSocialInfo(
     String platform,
     String username,

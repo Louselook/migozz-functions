@@ -61,11 +61,16 @@ class RegisterChatController extends GenericChatController {
     }
 
     if (clearMessages) {
-      clearMessages;
+      clearMessages; // <- CORREGIDO: llamamos el método
     }
 
+    // limpiar callbacks
     onBotAction = null;
-    super.terminateChat(); // Usar método heredado
+    onResetAudioUI = null;
+    onShowAvatarTutorial = null;
+    onShowVoiceNoteTutorial = null;
+
+    super.terminateChat(); // esperar al padre si hace async
   }
 
   /// Callback cuando el audio termina de reproducirse
@@ -75,7 +80,7 @@ class RegisterChatController extends GenericChatController {
       registerCubit: registerCubit,
       addMessage: addMessage,
     );
-    notifyListeners();
+    if (isActive) notifyListeners();
   }
 
   /// Maneja la respuesta del usuario para el paso de ubicación
@@ -91,7 +96,7 @@ class RegisterChatController extends GenericChatController {
     if (normalizedResponse == 'sí' ||
         normalizedResponse == 'yes' ||
         normalizedResponse == 'si') {
-      // ✅ Usuario acepta la ubicación detectada
+      // Usuario acepta la ubicación detectada
       debugPrint('📍 [RegisterChat] Usuario confirmó ubicación');
       registerCubit.confirmLocation();
 
@@ -107,7 +112,7 @@ class RegisterChatController extends GenericChatController {
       _lastUserMessage = 'location_confirmed';
       await showNextBotMessage();
     } else if (normalizedResponse == 'no') {
-      // ❌ Usuario rechaza usar ubicación
+      // Usuario rechaza usar ubicación
       debugPrint('📍 [RegisterChat] Usuario rechazó ubicación');
       registerCubit.rejectLocation();
 
@@ -126,7 +131,7 @@ class RegisterChatController extends GenericChatController {
         normalizedResponse.contains('incorrect') ||
         normalizedResponse == 'ubicación incorrecta' ||
         normalizedResponse == 'incorrect location') {
-      // 🔄 Usuario dice que la ubicación es incorrecta
+      // Usuario dice que la ubicación es incorrecta
       debugPrint('📍 [RegisterChat] Usuario reportó ubicación incorrecta');
       registerCubit.requestCorrectLocation();
 
@@ -142,7 +147,7 @@ class RegisterChatController extends GenericChatController {
       _lastUserMessage = 'location_incorrect';
       await showNextBotMessage();
     } else {
-      // ⚠️ Respuesta no válida
+      // Respuesta no válida
       debugPrint(
         '⚠️ [RegisterChat] Respuesta de ubicación no válida: $userResponse',
       );
@@ -161,7 +166,7 @@ class RegisterChatController extends GenericChatController {
       });
     }
 
-    notifyListeners();
+    if (isActive) notifyListeners();
   }
 
   /// Enviar audio del usuario
@@ -174,7 +179,7 @@ class RegisterChatController extends GenericChatController {
       chatController: this,
       removeTyping: _removeTypingMessage,
     );
-    notifyListeners();
+    if (isActive) notifyListeners();
   }
 
   /// Remover mensaje de "escribiendo..."
@@ -418,8 +423,15 @@ class RegisterChatController extends GenericChatController {
         "isError": true,
       });
     } finally {
-      if (isActive) registerCubit.setAiResponse(false);
-      notifyListeners();
+      if (isActive) {
+        registerCubit.setAiResponse(false);
+        notifyListeners();
+      } else {
+        // Si ya no está activo, solo limpia estado si el cubit lo requiere
+        try {
+          registerCubit.setAiResponse(false);
+        } catch (_) {}
+      }
     }
   }
 
@@ -490,7 +502,7 @@ class RegisterChatController extends GenericChatController {
         );
         addMessage(recordMessage);
         onResetAudioUI?.call();
-        notifyListeners();
+        if (isActive) notifyListeners();
       }
       return;
     }
@@ -522,7 +534,7 @@ class RegisterChatController extends GenericChatController {
         break;
       }
     }
-    notifyListeners();
+    if (isActive) notifyListeners();
   }
 
   @override
@@ -534,6 +546,13 @@ class RegisterChatController extends GenericChatController {
     } catch (e) {
       debugPrint('Error al resetear audioHandler en dispose: $e');
     }
-    super.dispose(); // Llamar al dispose del padre
+
+    // limpiar cualquier referencia/callback para evitar llamadas luego de dispose
+    onBotAction = null;
+    onResetAudioUI = null;
+    onShowAvatarTutorial = null;
+    onShowVoiceNoteTutorial = null;
+
+    super.dispose(); // Llamar al dispose del padre al final
   }
 }

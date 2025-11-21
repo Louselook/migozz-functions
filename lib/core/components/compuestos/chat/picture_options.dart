@@ -22,8 +22,8 @@ class PictureOptions extends StatelessWidget {
   Widget build(BuildContext context) {
     if (pictures.isEmpty) return const SizedBox.shrink();
 
-    // 🔹 sender=true significa que el OTRO lo envió (izquierda, gris)
-    // 🔹 sender=false significa que YO lo envié (derecha, con gradiente)
+    // sender=true significa que el OTRO lo envió (izquierda, gris)
+    // sender=false significa que YO lo envié (derecha, con gradiente)
 
     return Align(
       alignment: sender ? Alignment.centerLeft : Alignment.centerRight,
@@ -148,7 +148,7 @@ class _FramedImage extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(3),
         decoration: BoxDecoration(
-          // 🎨 Gradiente si es MÍO, gris si es del OTRO
+          // Gradiente si es MÍO, gris si es del OTRO
           gradient: isFromOther
               ? null
               : LinearGradient(

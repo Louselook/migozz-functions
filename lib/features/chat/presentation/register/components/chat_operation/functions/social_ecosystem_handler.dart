@@ -62,7 +62,7 @@ class SocialEcosystemHandler {
         .toList();
     final namesText = _formatNetworkNames(networkNames, isSpanish);
 
-    // 1️⃣ Mensaje de texto de confirmación
+    // Mensaje de texto de confirmación
     final confirmationText = isSpanish
         ? '¡Genial! Veo que conectaste $namesText 🎉'
         : 'Great! I see you connected $namesText 🎉';
@@ -74,7 +74,7 @@ class SocialEcosystemHandler {
       "time": getTimeNow(),
     });
 
-    // 2️⃣ Generar y mostrar las tarjetas de redes sociales
+    // Generar y mostrar las tarjetas de redes sociales
     Future.delayed(const Duration(milliseconds: 500), () {
       final socialCardsMessages = SocialCardsHelper.generateSocialCards(
         platforms: socialEcosystem,

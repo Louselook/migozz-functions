@@ -5,12 +5,12 @@ import 'package:migozz_app/features/chat/controllers/register_chat_controller.da
 /// Widget para mostrar fotos de perfil clickeables
 class ProfilePictureSelector extends StatelessWidget {
   final List<Map<String, String>> pictures;
-  final RegisterChatController chatController; // 👈 Agregar controller
+  final RegisterChatController chatController; //  Agregar controller
 
   const ProfilePictureSelector({
     super.key,
     required this.pictures,
-    required this.chatController, // 👈 Requerido
+    required this.chatController, //  Requerido
   });
 
   @override
@@ -92,7 +92,7 @@ class ProfilePictureSelector extends StatelessWidget {
   }
 
   void _selectPhoto(BuildContext context, Map<String, String> photo) {
-    // 📸 Enviar la foto usando el controller
+    // Enviar la foto usando el controller
     chatController.sendAvatarPhoto(photo["imageUrl"]!);
 
     // Mostrar confirmación
@@ -124,7 +124,7 @@ class _PhotoPreviewDialog extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // 🔹 Foto grande con marco gradiente
+              // Foto grande con marco gradiente
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -164,7 +164,7 @@ class _PhotoPreviewDialog extends StatelessWidget {
 
               const SizedBox(height: 24),
 
-              // 🔹 Botón "Usar esta foto"
+              // Botón "Usar esta foto"
               GestureDetector(
                 onTap: onConfirm,
                 child: Container(
@@ -210,7 +210,7 @@ class _PhotoPreviewDialog extends StatelessWidget {
 
               const SizedBox(height: 16),
 
-              // 🔹 Texto: nombre de la plataforma
+              // Texto: nombre de la plataforma
               Text(
                 'Foto de ${photo["label"] ?? photo["platform"] ?? "red social"}',
                 style: const TextStyle(color: Colors.white70, fontSize: 14),
@@ -218,7 +218,7 @@ class _PhotoPreviewDialog extends StatelessWidget {
 
               const SizedBox(height: 16),
 
-              // 🔹 Botón cerrar
+              // Botón cerrar
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
                 child: const Text(

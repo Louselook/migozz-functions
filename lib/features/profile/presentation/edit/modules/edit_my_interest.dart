@@ -29,7 +29,7 @@ class _EditInterestsScreenState extends State<EditInterestsScreen> {
         isLoading = true;
       });
 
-      // 1️⃣ Cargar catálogo
+      // Cargar catálogo
       final catalogSnapshot = await FirebaseFirestore.instance
           .collection('interests_catalog')
           .get();
@@ -50,7 +50,7 @@ class _EditInterestsScreenState extends State<EditInterestsScreen> {
         });
       }
 
-      // 2️⃣ Obtener UID actual
+      // Obtener UID actual
       final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid == null) {
         debugPrint('No user logged in');
@@ -61,7 +61,7 @@ class _EditInterestsScreenState extends State<EditInterestsScreen> {
         return;
       }
 
-      // 3️⃣ Cargar intereses del usuario
+      // Cargar intereses del usuario
       final userDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(uid)
@@ -71,19 +71,19 @@ class _EditInterestsScreenState extends State<EditInterestsScreen> {
       final userInterests =
           userData?['interests'] as Map<String, dynamic>? ?? {};
 
-      // 4️⃣ Convertir el mapa a un set plano
+      // Convertir el mapa a un set plano
       final selected = userInterests.values
           .expand((value) => List<String>.from(value))
           .toSet();
 
-      // 5️⃣ Expandir las secciones donde el usuario tenga algo seleccionado
+      // Expandir las secciones donde el usuario tenga algo seleccionado
       for (final section in fetchedSections) {
         if (userInterests[section.title] != null) {
           section.expanded = true;
         }
       }
 
-      // 6️⃣ Actualizar el estado
+      // Actualizar el estado
       setState(() {
         sections = fetchedSections;
         selectedInterests = selected;

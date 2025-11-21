@@ -9,8 +9,8 @@ class OtherMessage extends StatelessWidget {
   final List<Map<String, dynamic>>? platforms;
   final List<Map<String, String>>? profilePictures;
   final RegisterChatController? chatController;
-  final String? otherUserName; // 👈 NUEVO
-  final String? otherUserAvatar; // 👈 NUEVO
+  final String? otherUserName; 
+  final String? otherUserAvatar; 
 
   const OtherMessage({
     super.key,
@@ -19,8 +19,8 @@ class OtherMessage extends StatelessWidget {
     this.platforms,
     this.profilePictures,
     this.chatController,
-    this.otherUserName, // 👈 NUEVO
-    this.otherUserAvatar, // 👈 NUEVO
+    this.otherUserName, 
+    this.otherUserAvatar, 
   });
 
   @override
@@ -44,7 +44,7 @@ class OtherMessage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 🟣 Encabezado con avatar y nombre
+          // Encabezado con avatar y nombre
           Row(
             children: [
               // Avatar personalizado o logo de Migozz
@@ -85,10 +85,10 @@ class OtherMessage extends StatelessWidget {
           ),
           const SizedBox(height: 8),
 
-          // 🟢 Texto del mensaje
+          // Texto del mensaje
           Text(text, style: const TextStyle(color: Colors.white, fontSize: 14)),
 
-          // 🔹 Fotos de perfil (para selección de avatar)
+          // Fotos de perfil (para selección de avatar)
           if (hasProfilePictures && chatController != null) ...[
             const SizedBox(height: 12),
             ProfilePictureSelector(
@@ -97,7 +97,7 @@ class OtherMessage extends StatelessWidget {
             ),
           ],
 
-          // 🔹 Social Cards (para otras cosas)
+          // Social Cards (para otras cosas)
           if (hasPlatforms) ...[
             const SizedBox(height: 12),
             SizedBox(
@@ -115,7 +115,7 @@ class OtherMessage extends StatelessWidget {
 
           const SizedBox(height: 6),
 
-          // 🕒 Hora
+          // Hora
           Align(
             alignment: Alignment.bottomLeft,
             child: Text(

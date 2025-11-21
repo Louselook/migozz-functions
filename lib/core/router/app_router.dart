@@ -149,9 +149,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         return null;
       }
 
-      // ========================
-      // 🧩 1. Usuario NO autenticado
-      // ========================
+      // 1. Usuario NO autenticado
       if (status == AuthStatus.notAuthenticated) {
         // Si está en registro activo → ir al chat
         final isInRegisterFlow =
@@ -170,22 +168,21 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         return null;
       }
 
-      // ========================
-      // 🧩 2. Usuario autenticado
-      // ========================
+      // 2. Usuario autenticado
+
       if (status == AuthStatus.authenticated) {
         final userProfile = authState.userProfile;
         final hasActiveRegistration =
             registerState.regProgress != RegisterStatusProgress.emty &&
             registerState.regProgress != RegisterStatusProgress.doneChat;
 
-        // 🟣 Caso: hay un flujo de registro activo
+        // Caso: hay un flujo de registro activo
         if (hasActiveRegistration) {
           if (goingTo != '/ia-chat') return '/ia-chat';
           return null;
         }
 
-        // 🟡 Caso: perfil no completo (pero ya autenticado)
+        // Caso: perfil no completo (pero ya autenticado)
         if (userProfile == null || !userProfile.complete) {
           if (goingTo != '/complete-profile' && goingTo != '/ia-chat') {
             return '/complete-profile';
@@ -193,7 +190,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
           return null;
         }
 
-        // 🟢 Caso: perfil completo — permitir acceder a rutas privadas útiles
+        // Caso: perfil completo — permitir acceder a rutas privadas útiles
         if (userProfile.complete) {
           // Rutas permitidas cuando el perfil está completo (añadir aquí según necesites)
           const allowedWhenComplete = {
@@ -210,9 +207,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         }
       }
 
-      // ========================
-      // ✅ 3. Por defecto, no redirigir
-      // ========================
+      //  3. Por defecto, no redirigir
       return null;
     },
   );

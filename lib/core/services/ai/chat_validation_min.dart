@@ -23,12 +23,12 @@ Future<Map<String, dynamic>?> processBotResponse(
   debugPrint('----------------------------------------');
 
   switch (step) {
-    case RegisterStatusProgress.language:
-      if (isValid == true && userResponse != null) {
-        registerCubit.setLanguage(userResponse);
-        debugPrint('✅ Idioma guardado: $userResponse');
-      }
-      break;
+    // case RegisterStatusProgress.language:
+    //   if (isValid == true && userResponse != null) {
+    //     registerCubit.setLanguage(userResponse);
+    //     debugPrint(' Idioma guardado: $userResponse');
+    //   }
+    //   break;
 
     case RegisterStatusProgress.fullName:
       if (isValid == true && userResponse != null) {
@@ -61,7 +61,7 @@ Future<Map<String, dynamic>?> processBotResponse(
       debugPrint('📍 [processBotResponse] confirmLocation: ${resp['confirmLocation']}');
       debugPrint('📍 [processBotResponse] emptyLocation: ${resp['emptyLocation']}');
       
-      // ✅ Opción 1: Usuario confirmó ubicación (Sí)
+      // Opción 1: Usuario confirmó ubicación (Sí)
       if (resp['confirmLocation'] == true && isValid == true) {
         if (registerCubit.state.location != null) {
           registerCubit.confirmLocation();
@@ -79,14 +79,14 @@ Future<Map<String, dynamic>?> processBotResponse(
         }
       }
       
-      // ✅ Opción 2: Usuario rechazó usar ubicación (No)
+      // Opción 2: Usuario rechazó usar ubicación (No)
       else if (resp['emptyLocation'] == true && isValid == true) {
         registerCubit.rejectLocation();
         debugPrint('✅ Usuario rechazó ubicación - guardando LocationDTO.empty()');
         return null; // Sin errores, avanza al siguiente paso
       }
       
-      // ❌ Opción 3: Ubicación incorrecta o respuesta inválida
+      // Opción 3: Ubicación incorrecta o respuesta inválida
       else if (isValid == false) {
         debugPrint('⚠️ Ubicación incorrecta o respuesta inválida');
         // El mensaje de error ya viene en resp['text'] desde _evaluateLocation
@@ -94,7 +94,7 @@ Future<Map<String, dynamic>?> processBotResponse(
         return null;
       }
       
-      // ⚠️ Caso inesperado
+      // Caso inesperado
       else {
         debugPrint('⚠️ Caso de ubicación no manejado');
         final isSpanish = registerCubit.state.language == 'Español';
@@ -145,7 +145,7 @@ Future<Map<String, dynamic>?> processBotResponse(
 
     case RegisterStatusProgress.emailVerification:
       if (isValid == true && userResponse != null) {
-        // ✅ Si es "continue", solo es confirmación del mensaje de éxito
+        // Si es "continue", solo es confirmación del mensaje de éxito
         if (userResponse.toLowerCase() == 'continue') {
           debugPrint('✅ Usuario confirmó mensaje de éxito, avanzando...');
           return null; // No hacer nada, solo permitir avanzar
@@ -194,9 +194,9 @@ Future<Map<String, dynamic>?> processBotResponse(
       break;
 
     case RegisterStatusProgress.voiceNoteUrl:
-      // ✅ El audio ya fue confirmado y guardado por el handler
+      // El audio ya fue confirmado y guardado por el handler
       if (userResponse != null && userResponse.isNotEmpty) {
-        // ✅ Verificar que el archivo existe en el cubit
+        // Verificar que el archivo existe en el cubit
         final voiceFile = registerCubit.voiceNoteFile;
 
         if (voiceFile != null && await voiceFile.exists()) {
@@ -241,7 +241,7 @@ RegisterStatusProgress _parseStep(String raw) {
   if (raw.contains('location')) return RegisterStatusProgress.location;
   if (raw.contains('sendotp')) return RegisterStatusProgress.sendOTP;
 
-  // ✅ IMPORTANTE: emailSuccess también mapea a emailVerification
+  // IMPORTANTE: emailSuccess también mapea a emailVerification
   // porque ambos manejan el flujo de verificación de email
   if (raw.contains('emailsuccess') ||
       raw.contains('otpinput') ||

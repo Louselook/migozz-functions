@@ -46,7 +46,7 @@ class BackgroundImage extends StatelessWidget {
         SafeArea(
           bottom: false,
 
-          // 🚫 Desactivamos scroll y generación de contenido
+          // Desactivamos scroll y generación de contenido
           /*
           child: NestedScrollView(
             physics: const BouncingScrollPhysics(),
@@ -80,7 +80,7 @@ class BackgroundImage extends StatelessWidget {
           ),
           */
 
-          // ✅ Reemplazo temporal sin scroll
+          // Reemplazo temporal sin scroll
           child: _ProfileHeaderDelegate(
             maxHeight: size.height,
             minHeight: size.height * minHeaderFraction,
@@ -97,10 +97,10 @@ class BackgroundImage extends StatelessWidget {
           ).build(context, 0, false),
         ),
 
-        // 🌈 Gradiente inferior
+        // Gradiente inferior
         TintesGradients(child: Container(height: bottomGradientHeight)),
 
-        // 🧩 Overlay de contenido dinámico (botones, acciones, etc.)
+        // Overlay de contenido dinámico (botones, acciones, etc.)
         child,
       ],
     );

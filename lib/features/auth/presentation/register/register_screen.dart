@@ -117,7 +117,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: SingleChildScrollView(
                 padding: const EdgeInsets.only(bottom: 200),
                 child: ConstrainedBox(
-                  // 👇 ESTE ancho es lo que hace que se vea igual al login
+                  // ESTE ancho es lo que hace que se vea igual al login
                   constraints: const BoxConstraints(maxWidth: 430),
                   child: Padding(
                     // mismo padding horizontal que en LoginForm
@@ -169,7 +169,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 : const SecondaryText(
                                     "Create Account",
                                     fontSize:
-                                        20, // 👈 igual tamaño que en Login
+                                        20, //  igual tamaño que en Login
                                   ),
                           ),
                         ],

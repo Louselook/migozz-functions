@@ -7,7 +7,7 @@ class ProfileTutorial {
   static void showTutorial(
     BuildContext context,
     TutorialKeys keys, {
-    VoidCallback? onFinish,  // ✅ Agregar callback opcional
+    VoidCallback? onFinish,  // Agregar callback opcional
   }) {
     const tutorialTextStyle = TextStyle(color: Colors.white, fontSize: 16);
     final targets = <TargetFocus>[
@@ -135,11 +135,11 @@ class ProfileTutorial {
       opacityShadow: 0.8,
       onFinish: () {
         debugPrint("🎉 Tutorial finalizado");
-        onFinish?.call();  // ✅ Llamar al callback si existe
+        onFinish?.call();  // Llamar al callback si existe
       },
       onSkip: () {
         debugPrint("⏭️ Tutorial saltado");
-        onFinish?.call();  // ✅ También marcar como completado si lo salta
+        onFinish?.call();  // También marcar como completado si lo salta
         return true;
       },
       onClickTarget: (target) {

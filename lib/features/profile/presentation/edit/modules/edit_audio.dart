@@ -36,7 +36,7 @@ class _EditRecordScreenState extends State<EditRecordScreen>
   late Animation<double> _scaleAnim;
   late Animation<Color?> _colorAnim;
 
-  // ✅ Subscripciones para limpiar
+  // Subscripciones para limpiar
   StreamSubscription? _positionSubscription;
   StreamSubscription? _playerStateSubscription;
 
@@ -58,14 +58,14 @@ class _EditRecordScreenState extends State<EditRecordScreen>
       end: const Color(0xFFFF8CBF),
     ).animate(_animCtrl);
 
-    // ✅ Sync waveform seeker with audio player's position
+    // Sync waveform seeker with audio player's position
     _positionSubscription = _audioPlayer.positionStream.listen((position) {
       try {
         _playerController.seekTo(position.inMilliseconds);
       } catch (_) {}
     });
 
-    // ✅ Detectar cuando el audio termina y resetear
+    // Detectar cuando el audio termina y resetear
     _playerStateSubscription = _audioPlayer.playerStateStream.listen((state) {
       if (state.processingState == ProcessingState.completed) {
         // Audio terminó, resetear posición
@@ -163,13 +163,13 @@ class _EditRecordScreenState extends State<EditRecordScreen>
     if (_audioPath == null) return;
 
     if (_audioPlayer.playing) {
-      // ✅ Si está reproduciendo, pausar
+      // Si está reproduciendo, pausar
       await _audioPlayer.pause();
       try {
         await _playerController.pausePlayer();
       } catch (_) {}
     } else {
-      // ✅ Si no está reproduciendo, verificar estado y reproducir
+      // Si no está reproduciendo, verificar estado y reproducir
       try {
         // Si está en estado idle o completed, configurar el archivo
         if (_audioPlayer.playerState.processingState == ProcessingState.idle ||

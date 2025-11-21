@@ -34,7 +34,7 @@ Widget userDetailsButton({
           break;
 
         case UserDetailsAction.back:
-          // 🔹 MODIFICADO: Comportamiento diferente según el modo
+          //  MODIFICADO: Comportamiento diferente según el modo
           if (mode == MoreUserDetailsMode.register) {
             // Modo registro: limpiar y cerrar
             cubit?.setSocialEcosystemEmty();
@@ -50,14 +50,14 @@ Widget userDetailsButton({
       }
     },
     child: SecondaryText(
-      // 🔹 NUEVO: Texto diferente según el modo y acción
+      // Texto diferente según el modo y acción
       _getButtonText(action, mode),
       fontSize: 20,
     ),
   );
 }
 
-/// 🔹 NUEVO: Obtener texto del botón según el modo
+// Obtener texto del botón según el modo
 String _getButtonText(UserDetailsAction action, MoreUserDetailsMode mode) {
   if (mode == MoreUserDetailsMode.edit) {
     return action == UserDetailsAction.back ? 'Back' : 'Continue';

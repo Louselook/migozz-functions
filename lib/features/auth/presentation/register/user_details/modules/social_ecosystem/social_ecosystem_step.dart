@@ -153,7 +153,7 @@ class _SocialEcosystemStepState extends State<SocialEcosystemStep> {
                       final iconSize = cardSize.width * 0.4;
                       final clampedIconSize = iconSize.clamp(24.0, 48.0);
 
-                      // ✅ Obtener la lista según el modo
+                      // Obtener la lista según el modo
                       final selectedList =
                           widget.mode == MoreUserDetailsMode.register
                           ? context
@@ -164,7 +164,7 @@ class _SocialEcosystemStepState extends State<SocialEcosystemStep> {
                           : context.watch<EditCubit>().state.socialEcosystem ??
                                 [];
 
-                      // 🔹 Comparar en minúsculas (normalizar)
+                      // Comparar en minúsculas (normalizar)
                       final selected = selectedList.any((e) {
                         final platformKey = e.keys.first.toLowerCase();
                         final labelLower = label.toLowerCase();
@@ -226,7 +226,7 @@ class _SocialEcosystemStepState extends State<SocialEcosystemStep> {
           context,
           label,
           iconByLabel[label]!,
-          inEditMode: false, // 👈 IMPORTANTE: Modo registro
+          inEditMode: false, //  IMPORTANTE: Modo registro
         );
       } else {
         // Eliminar red existente
@@ -241,7 +241,6 @@ class _SocialEcosystemStepState extends State<SocialEcosystemStep> {
         "🌐 Ecosistema social (registro): ${cubit.state.socialEcosystem}",
       );
     } else {
-      // ========== MODO EDICIÓN ==========
       final editCubit = context.read<EditCubit>();
       final registerCubit = context.read<RegisterCubit>();
 
@@ -255,14 +254,14 @@ class _SocialEcosystemStepState extends State<SocialEcosystemStep> {
       });
 
       if (index == -1) {
-        // 🔹 Agregar nueva red - Modo edición
+        // Agregar nueva red - Modo edición
         // El DeeplinkService sincronizará automáticamente con EditCubit
         await registerCubit.startSocialAuth(
           context,
           label,
           iconByLabel[label]!,
           inEditMode:
-              true, // 👈 IMPORTANTE: Modo edición (NO cambia regProgress)
+              true, //  IMPORTANTE: Modo edición (NO cambia regProgress)
         );
 
         debugPrint('🌐 Esperando sincronización de deeplink...');

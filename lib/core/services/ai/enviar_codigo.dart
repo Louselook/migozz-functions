@@ -15,7 +15,7 @@ class GeminiService {
   }) async {
     await Future.delayed(const Duration(milliseconds: 400));
 
-    // === 🟢 Etapa 1: mensaje inicial ===
+    //  Etapa 1: mensaje inicial 
     if (userInput.trim().isEmpty) {
       final jsonString =
           '''
@@ -32,7 +32,7 @@ class GeminiService {
       return initial;
     }
 
-    // === 🟡 Etapa 2: Decisión del usuario ===
+    //  Etapa 2: Decisión del usuario 
     final normalized = userInput.trim().toLowerCase();
     Map<String, dynamic> decision;
 
@@ -65,7 +65,7 @@ class GeminiService {
     debugPrint('🤖 Decisión IA: $decision');
     await processBotResponse(decision, registerCubit: registerCubit);
 
-    // === 🟣 Etapa 3: Si dijo “Sí” → siguiente paso (ingreso de OTP)
+    //  Etapa 3: Si dijo “Sí” → siguiente paso (ingreso de OTP)
     if (decision["valid"] == true &&
         decision["step"] == "regProgress.sendOTP") {
       final nextMessage = {

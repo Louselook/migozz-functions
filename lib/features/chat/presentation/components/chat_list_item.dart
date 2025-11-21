@@ -153,7 +153,7 @@ class ChatListItem extends StatelessWidget {
 
             // Badge de mensajes no leídos o botón de cámara
             if (chat.unreadCount > 0)
-              // 🔔 Badge de no leídos
+              // Badge de no leídos
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: const BoxDecoration(
@@ -175,7 +175,7 @@ class ChatListItem extends StatelessWidget {
                 ),
               )
             else
-              // 📷 Botón de cámara (solo si no hay no leídos)
+              // Botón de cámara (solo si no hay no leídos)
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(

@@ -14,7 +14,7 @@ class DeeplinkService {
   static const _socialChannel = MethodChannel('socialAuth');
   static bool _isInitialized = false;
 
-  /// 🔹 Inicializar el canal UNA SOLA VEZ en toda la app
+  //  Inicializar el canal UNA SOLA VEZ en toda la app
   static void initialize(BuildContext context) {
     if (_isInitialized) return;
 
@@ -53,7 +53,7 @@ class DeeplinkService {
     _isInitialized = true;
   }
 
-  // 🔹 Handlers que actualizan AMBOS cubits según el contexto
+  //  Handlers que actualizan AMBOS cubits según el contexto
   static Future<void> _handleSpotify(String data, BuildContext context) async {
     handleSpotify(data, context);
     await _syncToEditCubit(context, 'spotify');
@@ -82,7 +82,7 @@ class DeeplinkService {
     await _syncToEditCubit(context, 'instagram');
   }
 
-  /// 🔹 Sincronizar el último item de RegisterCubit a EditCubit
+  /// Sincronizar el último item de RegisterCubit a EditCubit
   static Future<void> _syncToEditCubit(
     BuildContext context,
     String platform,
@@ -126,7 +126,7 @@ class DeeplinkService {
         '🔹 EditCubit socialEcosystem: ${editCubit.state.socialEcosystem}',
       );
 
-      // 🔹 NUEVA LÓGICA: Verificar si hay un registro REAL activo
+      //  NUEVA LÓGICA: Verificar si hay un registro REAL activo
       final regProgress = registerCubit.state.regProgress;
 
       // Un registro está activo si tiene email Y está en progreso (no vacío ni completo)

@@ -42,15 +42,15 @@ class SocialCardsHelper {
   static String? _extractFollowers(String network, Map<String, dynamic> data) {
     num? count;
 
-    // ✅ Actualizado: Agregar más variantes para YouTube y otras redes
+    // Actualizado: Agregar más variantes para YouTube y otras redes
     final candidateKeys = [
       'followers',
       'followers_count',
       'follower_count',
       'edge_followed_by',
       'subscribers',
-      'subscriberCount', // ✅ YouTube API
-      'statistics.subscriberCount', // ✅ YouTube API anidado
+      'subscriberCount', // YouTube API
+      'statistics.subscriberCount', // YouTube API anidado
     ];
 
     for (final key in candidateKeys) {

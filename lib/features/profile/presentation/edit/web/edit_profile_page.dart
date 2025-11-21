@@ -348,7 +348,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ),
         const SizedBox(height: 20),
 
-        // 🔹 Botón Logout centrado y con el mismo tamaño que los inputs
+        // Botón Logout centrado y con el mismo tamaño que los inputs
         Center(
           child: SizedBox(
             width: double.infinity,

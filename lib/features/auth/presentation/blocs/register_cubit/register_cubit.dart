@@ -60,7 +60,7 @@ class RegisterCubit extends Cubit<RegisterState> {
     debugPrint('📍 [Cubit] Usuario rechazó usar ubicación');
     emit(
       state.copyWith(
-        location: LocationDTO.empty(), // 👈 Ubicación vacía pero no null
+        location: LocationDTO.empty(), //  Ubicación vacía pero no null
         regProgress: RegisterStatusProgress.emailVerification,
       ),
     );
@@ -115,7 +115,7 @@ class RegisterCubit extends Cubit<RegisterState> {
     ),
   );
 
-  // 🔹 MÉTODO ORIGINAL: Para registro - CAMBIA el regProgress
+  // Para registro - CAMBIA el regProgress
   void setSocialEcosystem(List<Map<String, Map<String, dynamic>>> platforms) =>
       emit(
         state.copyWith(
@@ -124,7 +124,7 @@ class RegisterCubit extends Cubit<RegisterState> {
         ),
       );
 
-  // 🔹 NUEVO MÉTODO: Para edición - NO cambia el regProgress
+   // Para edición - NO cambia el regProgress
   void updateSocialEcosystemOnly(
     List<Map<String, Map<String, dynamic>>> platforms,
   ) {
@@ -140,7 +140,7 @@ class RegisterCubit extends Cubit<RegisterState> {
   void setLocation(LocationDTO location) =>
       emit(state.copyWith(location: location));
 
-  // 👇 Mantener este método por compatibilidad, pero ahora usa confirmLocation
+  // Mantener este método por compatibilidad, pero ahora usa confirmLocation
   void setVerifyLocation() => confirmLocation();
 
   void updateEmailVerification(EmailVerification status) => emit(
@@ -188,7 +188,7 @@ class RegisterCubit extends Cubit<RegisterState> {
     );
   }
 
-  /// 🔹 Método inteligente para subir archivos
+  // Método inteligente para subir archivos
   Future<Map<MediaType, String>> uploadUserMedia({
     required Map<MediaType, File> files,
     String? firebaseUid,
@@ -245,7 +245,7 @@ class RegisterCubit extends Cubit<RegisterState> {
           state.fullName != null &&
           state.username != null &&
           state.gender != null &&
-          hasLocationData && // 👈 Solo verificamos que exista el objeto
+          hasLocationData && //  Solo verificamos que exista el objeto
           state.phone != null &&
           state.category != null &&
           state.interests != null;
@@ -253,7 +253,7 @@ class RegisterCubit extends Cubit<RegisterState> {
       final completeForGoogle =
           state.language != null &&
           state.gender != null &&
-          hasLocationData && // 👈 Lo mismo aquí
+          hasLocationData && //  Lo mismo aquí
           state.phone != null &&
           state.category != null &&
           state.interests != null;
@@ -302,12 +302,12 @@ class RegisterCubit extends Cubit<RegisterState> {
     }
   }
 
-  // 🔹 NUEVO PARÁMETRO: inEditMode para saber si estamos editando
+   // inEditMode para saber si estamos editando
   Future<void> startSocialAuth(
     BuildContext context,
     String network,
     String assetPath, {
-    bool inEditMode = false, // 👈 NUEVO
+    bool inEditMode = false, 
   }) async {
     switch (network.toLowerCase()) {
       case 'youtube':
@@ -343,7 +343,7 @@ class RegisterCubit extends Cubit<RegisterState> {
 
                   current.add({network.toLowerCase(): profileData});
 
-                  // 🔹 Usar el método correcto según el modo
+                  // Usar el método correcto según el modo
                   if (inEditMode) {
                     updateSocialEcosystemOnly(current);
                   } else {
