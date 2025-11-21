@@ -12,6 +12,7 @@ import 'package:migozz_app/features/profile/components/social_rail.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/components/profile_top_actions.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v2/components/profile_header_mobile_v2.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v2/components/social_bars_mobile_v2.dart';
+import 'package:migozz_app/features/profile/presentation/profile/modules/qr_scanner_screen.dart';
 import 'package:migozz_app/features/search/mobile/presentation/search_screen.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 
@@ -119,6 +120,14 @@ class _MobileProfileContentV2State extends State<MobileProfileContentV2> {
           // Acciones superiores (chat, notificaciones, etc.)
           ProfileTopActions(
             isOwnProfile: isOwnProfile,
+            onQrScanTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const QrScannerScreen(),
+                ),
+              );
+            },
             onChatTap: () {
               if (!isOwnProfile) {
                 // Chat con otro usuario
