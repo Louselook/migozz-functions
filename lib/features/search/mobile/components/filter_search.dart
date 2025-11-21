@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 class FilterSearch extends StatefulWidget {
@@ -12,11 +13,11 @@ class FilterSearch extends StatefulWidget {
 
 class _FilterSearchState extends State<FilterSearch> {
   final List<String> _options = [
-    'For You',
-    'Accounts',
-    'Reels',
-    'Audio',
-    'Hashtags',
+    "search.options.forYou".tr(),
+    "search.options.accounts".tr(),
+    "search.options.reels".tr(),
+    "search.options.audio".tr(),
+    "search.options.hashtags".tr(),
   ];
   int _selectedIndex = 0;
 

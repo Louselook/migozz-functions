@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 // ignore: depend_on_referenced_packages
@@ -7,7 +8,7 @@ class ProfileTutorial {
   static void showTutorial(
     BuildContext context,
     TutorialKeys keys, {
-    VoidCallback? onFinish,  // Agregar callback opcional
+    VoidCallback? onFinish, // Agregar callback opcional
   }) {
     const tutorialTextStyle = TextStyle(color: Colors.white, fontSize: 16);
     final targets = <TargetFocus>[
@@ -20,9 +21,9 @@ class ProfileTutorial {
             align: ContentAlign.bottom,
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: const [
+              children: [
                 Text(
-                  "Search for other users, topics, and posts.",
+                  "profile.tutorial.searchStep".tr(),
                   style: tutorialTextStyle,
                 ),
               ],
@@ -39,9 +40,9 @@ class ProfileTutorial {
             align: ContentAlign.bottom,
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: const [
+              children: [
                 Text(
-                  "Play your audio with this button, other users will do the same!",
+                  "profile.tutorial.audioStep".tr(),
                   style: tutorialTextStyle,
                 ),
               ],
@@ -58,11 +59,8 @@ class ProfileTutorial {
             align: ContentAlign.top,
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: const [
-                Text(
-                  "Share your profile using your own QR code or by sharing your link on other apps.",
-                  style: tutorialTextStyle,
-                ),
+              children: [
+                Text("profile.tutorial.QRStep".tr(), style: tutorialTextStyle),
               ],
             ),
           ),
@@ -77,9 +75,9 @@ class ProfileTutorial {
             align: ContentAlign.top,
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: const [
+              children: [
                 Text(
-                  "Access to your profile here, it also serves to reload your user information.",
+                  "profile.tutorial.homeStep".tr(),
                   style: tutorialTextStyle,
                 ),
               ],
@@ -96,9 +94,9 @@ class ProfileTutorial {
             align: ContentAlign.top,
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: const [
+              children: [
                 Text(
-                  "Check your social media statistics; if you haven't synced any, do so!",
+                  "profile.tutorial.statsStep".tr(),
                   style: tutorialTextStyle,
                 ),
               ],
@@ -115,9 +113,9 @@ class ProfileTutorial {
             align: ContentAlign.top,
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: const [
+              children: [
                 Text(
-                  "Modify your information and synchronize your socials",
+                  "profile.tutorial.settings".tr(),
                   style: tutorialTextStyle,
                 ),
               ],
@@ -135,11 +133,11 @@ class ProfileTutorial {
       opacityShadow: 0.8,
       onFinish: () {
         debugPrint("🎉 Tutorial finalizado");
-        onFinish?.call();  // Llamar al callback si existe
+        onFinish?.call(); // Llamar al callback si existe
       },
       onSkip: () {
         debugPrint("⏭️ Tutorial saltado");
-        onFinish?.call();  // También marcar como completado si lo salta
+        onFinish?.call(); // También marcar como completado si lo salta
         return true;
       },
       onClickTarget: (target) {

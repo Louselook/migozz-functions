@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -68,15 +69,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     try {
       await editCubit.changeAvatar(userId);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Profile photo updated')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("edit.validations.updateProfilePic".tr())),
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error updating photo: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("${"edit.validations.updateProfilePic".tr()} $e"),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _uploading = false);
@@ -98,14 +101,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile updated successfully')),
+          SnackBar(content: Text("edit.validations.updateProfile".tr())),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error saving profile: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${"edit.validations.errorUpdateProfile".tr()} $e'),
+          ),
+        );
       }
     }
   }
@@ -113,36 +118,29 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   // MÉTODO ACTUALIZADO CON GUARDADO COMPLETO
   Future<void> _confirmAndChangeLocation(String email) async {
     final svc = LocationService();
-    
+
     // Mostrar loading mientras detecta ubicación
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('🔍 Detecting location...'),
+        SnackBar(
+          content: Text("edit.validations.detectLocation".tr()),
           duration: Duration(seconds: 1),
         ),
       );
     }
-    
+
     final newLocation = await svc.initAndFetchAddress();
-    
+
     if (newLocation == null) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('❌ Could not fetch current location'),
+        SnackBar(
+          content: Text("edit.validations.errorDetecLocation".tr()),
           backgroundColor: Colors.red,
         ),
       );
       return;
     }
-
-    // Mostrar ubicación detectada
-    debugPrint('📍 [EditProfile] Ubicación detectada:');
-    debugPrint('   • City: ${newLocation.city}');
-    debugPrint('   • State: ${newLocation.state}');
-    debugPrint('   • Country: ${newLocation.country}');
-    debugPrint('   • Coords: ${newLocation.lat}, ${newLocation.lng}');
 
     // Mostrar diálogo de confirmación
     if (!mounted) return;
@@ -172,11 +170,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     // GUARDAR UBICACIÓN SI EL USUARIO CONFIRMÓ
     if (confirm == true) {
       if (!mounted) return;
-      
+
       try {
         final editCubit = context.read<EditCubit>();
         final userId = context.read<AuthCubit>().state.firebaseUser?.uid;
-        
+
         if (userId == null) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -204,9 +202,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         );
 
         if (!mounted) return;
-        
+
         debugPrint('✅ [EditProfile] Ubicación guardada exitosamente');
-        
+
         // Mostrar mensaje de éxito
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -217,15 +215,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             duration: const Duration(seconds: 2),
           ),
         );
-        
+
         // El perfil ya se refrescó automáticamente gracias al EditCubit
         // La UI se actualizará automáticamente gracias al BlocBuilder
-        
       } catch (e) {
         if (!mounted) return;
-        
+
         debugPrint('❌ [EditProfile] Error guardando ubicación: $e');
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('❌ Error updating location: $e'),
@@ -289,7 +286,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               } else {
                 imageProfile = user.avatarUrl!;
               }
-              
+
               // inicializa los controladores solo una vez
               if (nameCtrl.text.isEmpty) {
                 nameCtrl.text = user.displayName;
@@ -307,7 +304,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
               // Formatear ubicación - ahora maneja LocationDTO.empty()
               String formattedLocation = 'Location not set';
-              
+
               if (user.location.isEmpty) {
                 formattedLocation = 'Location not set';
               } else {
@@ -321,7 +318,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 if (user.location.country.isNotEmpty) {
                   locationParts.add(user.location.country);
                 }
-                
+
                 if (locationParts.isNotEmpty) {
                   formattedLocation = locationParts.join(', ');
                 }
@@ -334,7 +331,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 child: Column(
                   children: [
                     SizedBox(height: height * 0.02),
-                    
+
                     ProfileAvatar(
                       avatarUrl: imageProfile,
                       uploading: _uploading,

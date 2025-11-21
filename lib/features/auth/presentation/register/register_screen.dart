@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/color.dart';
@@ -36,7 +37,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (email.isEmpty) {
       CustomSnackbar.show(
         context: context,
-        message: "Email cannot be empty",
+        message: "Register.validations.emptyEmail".tr(),
         type: SnackbarType.error,
         duration: const Duration(seconds: 4),
       );
@@ -52,7 +53,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!isValidEmail) {
       CustomSnackbar.show(
         context: context,
-        message: "Please enter a valid email",
+        message: "Register.validations.validationEmail".tr(),
         type: SnackbarType.error,
         duration: const Duration(seconds: 4),
       );
@@ -77,7 +78,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (exists) {
         CustomSnackbar.show(
           context: context,
-          message: "This email is already registered",
+          message: "Register.validations.registerEmail".tr(),
           type: SnackbarType.error,
           duration: const Duration(seconds: 4),
         );
@@ -132,15 +133,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           const SizedBox(height: 20),
 
                           // Welcome text
-                          const PrimaryText('Register Now!'),
+                          PrimaryText("Register.presentation.title".tr()),
                           const SizedBox(height: 3),
-                          const SecondaryText('Enter your information below'),
+                          SecondaryText("Register.presentation.subtitle1".tr()),
 
                           const SizedBox(height: 30),
 
                           // Email input
                           CustomTextField(
-                            hintText: "Enter Email",
+                            hintText: "Register.presentation.inputText".tr(),
                             prefixIcon: const Icon(
                               Icons.email_outlined,
                               color: AppColors.secondaryText,
@@ -166,10 +167,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       strokeWidth: 2,
                                     ),
                                   )
-                                : const SecondaryText(
-                                    "Create Account",
-                                    fontSize:
-                                        20, //  igual tamaño que en Login
+                                : SecondaryText(
+                                    "Register.presentation.buttonText".tr(),
+                                    fontSize: 20, //  igual tamaño que en Login
                                   ),
                           ),
                         ],
@@ -192,9 +192,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   text: TextSpan(
                     style: const TextStyle(fontSize: 13, color: Colors.grey),
                     children: [
-                      const TextSpan(text: "Already a member? "),
+                      TextSpan(
+                        text: "Register.presentation.bottonText.login".tr(),
+                      ),
                       gradientTextSpan(
-                        "Login",
+                        "Register.presentation.bottonText.LoginReturn".tr(),
                         onTap: () {
                           context.go('/login');
                         },

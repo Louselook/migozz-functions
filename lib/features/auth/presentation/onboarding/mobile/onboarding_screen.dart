@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/color.dart';
@@ -104,8 +105,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         width: double.infinity,
                         child: GradientButton(
                           onPressed: () => context.go('/login'),
-                          child: const TextWithIcon(
-                            "Get Started",
+                          child: TextWithIcon(
+                            "onboarding.buttons.getStarted".tr(),
                             icon: Icons.arrow_forward_ios_rounded,
                           ),
                         ),
@@ -114,13 +115,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           ButtonText(
-                            text: 'Skip',
+                            text: "onboarding.buttons.skip".tr(),
                             onPressed: () => context.go('/login'),
                           ),
-                          Expanded(
+                          SizedBox(
+                            width: 110,
                             child: GradientButton(
-                              child: const TextWithIcon(
-                                "Next",
+                              child: TextWithIcon(
+                                "onboarding.buttons.next".tr(),
                                 spacing: 20,
                                 icon: Icons.arrow_forward_ios_rounded,
                               ),

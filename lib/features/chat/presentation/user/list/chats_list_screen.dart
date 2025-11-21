@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/features/chat/data/datasources/chat_service.dart';
 import 'package:migozz_app/features/chat/data/domain/models/chat_preview.dart';
@@ -197,7 +198,7 @@ class _ChatsListScreenState extends State<ChatsListScreen>
         onPressed: () => Navigator.of(context).pop(),
       ),
       title: Text(
-        '@${widget.username}',
+        widget.username,
         style: const TextStyle(
           color: Colors.white,
           fontSize: 18,
@@ -219,7 +220,7 @@ class _ChatsListScreenState extends State<ChatsListScreen>
         controller: _searchController,
         style: const TextStyle(color: Colors.white),
         decoration: InputDecoration(
-          hintText: 'Search',
+          hintText: "profile.chat.search".tr(),
           hintStyle: TextStyle(color: Colors.grey[600]),
           prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
           border: InputBorder.none,
@@ -259,9 +260,9 @@ class _ChatsListScreenState extends State<ChatsListScreen>
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
-                tabs: const [
+                tabs: [
                   Tab(child: Center(child: Text('Chat'))),
-                  Tab(child: Center(child: Text('New'))),
+                  Tab(child: Center(child: Text("profile.chat.filter".tr()))),
                 ],
               ),
             ),

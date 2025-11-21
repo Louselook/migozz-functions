@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/color.dart';
@@ -44,7 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (email.isEmpty) {
       CustomSnackbar.show(
         context: context,
-        message: "Email cannot be empty",
+        message: "login.validations.emptyEmail".tr(),
         type: SnackbarType.error,
       );
       return;
@@ -58,7 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!isValidEmail) {
       CustomSnackbar.show(
         context: context,
-        message: "Please enter a valid email",
+        message: "login.validations.invalidEmail".tr(),
         type: SnackbarType.error,
       );
       return;
@@ -80,8 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
         // Si NO existe, mostramos snackbar y NO continuamos
         CustomSnackbar.show(
           context: context,
-          message:
-              "This email is not registered. Please create an account first.",
+          message: "login.validations.notExistEmail".tr(),
           type: SnackbarType.error,
           duration: const Duration(seconds: 4),
         );
@@ -95,7 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
       // Manejo de errores de red / firestore
       CustomSnackbar.show(
         context: context,
-        message: "Error verifying email: $e",
+        message: "${"login.validations.validationEmail".tr()}$e",
         type: SnackbarType.error,
       );
     } finally {
@@ -159,12 +159,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 16),
 
                   // Welcome text
-                  const PrimaryText('Welcome to Migozz!'),
+                  // "login.presentation.title".tr()
+                  PrimaryText("login.presentation.title".tr()),
 
                   const SizedBox(height: 3),
 
-                  const Text(
-                    'Connect your Community',
+                  Text(
+                    "login.presentation.subtitle1".tr(),
                     style: TextStyle(color: AppColors.grey, fontSize: 14),
                   ),
 
@@ -172,7 +173,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   // Email input
                   CustomTextField(
-                    hintText: "Enter Email",
+                    hintText: "login.presentation.inputText".tr(),
                     prefixIcon: const Icon(
                       Icons.email,
                       color: AppColors.secondaryText,
@@ -196,12 +197,18 @@ class _LoginScreenState extends State<LoginScreen> {
                         : () {
                             _handleEmailLoginCheck();
                           },
-                    child: const SecondaryText('Login', fontSize: 20),
+                    child: SecondaryText(
+                      "login.presentation.buttonText".tr(),
+                      fontSize: 20,
+                    ),
                   ),
 
                   const SizedBox(height: 40),
 
-                  const SecondaryText('Or login with', fontSize: 16),
+                  SecondaryText(
+                    "login.presentation.subtitle2".tr(),
+                    fontSize: 16,
+                  ),
 
                   const SizedBox(height: 5),
 

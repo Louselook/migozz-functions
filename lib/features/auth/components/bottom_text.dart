@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
@@ -8,18 +9,17 @@ Widget bottomText({required BuildContext context}) {
     text: TextSpan(
       style: const TextStyle(fontSize: 13, color: Colors.grey),
       children: [
-        const TextSpan(text: "Don't have an account? "),
+        TextSpan(text: "login.presentation.bottonText.Register".tr()),
         gradientTextSpan(
-          "Register Now\n",
+          "login.presentation.bottonText.RegisterSpan".tr(),
           onTap: () {
             context.go('/register');
           },
         ),
-        const TextSpan(text: " By registering you agree to our\n"),
+        TextSpan(text: "login.presentation.bottonText.Terms&Conditions".tr()),
         gradientTextSpan(
-          "Terms and conditions",
+          "login.presentation.bottonText.Terms&ConditionsSpan".tr(),
           onTap: () {
-            debugPrint('hola');
             context.go('/terms-privacy');
           },
         ),

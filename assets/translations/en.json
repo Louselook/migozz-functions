@@ -21,7 +21,7 @@
             "emptyEmail" : "Email cannot be empty",
             "invalidEmail" : "Please enter a valid email",
             "notExistEmail" : "This email is not registered. Please create an account first.",
-            "validationEmail" : "Error verifying email: $e"
+            "validationEmail" : "Error verifying email: "
         },
         "presentation":{
             "title" : "Welcome to Migozz",
@@ -30,7 +30,7 @@
             "buttonText" : "Login",
             "subtitle2" : "Or login with",
             "bottonText" : {
-                "Register" : "Don´t have an account?",
+                "Register" : "Don´t have an account? ",
                 "RegisterSpan" : "Register Now\n",
                 "Terms&Conditions" : "By registering you agree to our\n",
                 "Terms&ConditionsSpan" : "Terms and conditions"
@@ -63,6 +63,30 @@
         }
     },
     "profile":{
+        "chat": {
+            "filter":"New",
+            "search":"Search"
+        },
+        "design":{
+            "buttonText": "Design",
+            "title": "Choose your profile design",
+            "subtitle": "Select the style you like the most",
+            "versions": {
+                "classic": {
+                    "name": "Version 1 - Classic",
+                    "description": "Floating social media on the side"
+                },
+                "modern": {
+                    "name": "Version 2 - Modern",
+                    "description": "Horizontal social media bars"
+                },
+                "minimalist": {
+                    "name": "Version 3 - Minimalist",
+                    "description": "Circles with social media icons"
+                }
+            },
+            "cancelButton": "Cancel"
+        },
         "validations":{
             "emptyAudio" : "No audio available",
             "errorAudio" : "Error playing audio"
@@ -82,13 +106,13 @@
         }
     },
     "search" : {
-        "options" : [
-            "For You",
-            "Accounts",
-            "Reels",
-            "Audio",
-            "Hashtags"
-        ]
+        "options": {
+            "forYou": "For You",
+            "accounts": "Accounts",
+            "reels": "Reels",
+            "audio": "Audio",
+            "hashtags": "Hashtags"
+        }
     },
     "edit" : {
         "validations" : {

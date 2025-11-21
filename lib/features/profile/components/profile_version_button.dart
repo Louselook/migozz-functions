@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/features/profile/components/profile_version_selector.dart';
 
@@ -22,8 +23,8 @@ class ProfileVersionButton extends StatelessWidget {
         },
         backgroundColor: Colors.purple.withValues(alpha: 0.9),
         icon: const Icon(Icons.palette, color: Colors.white),
-        label: const Text(
-          'Diseño',
+        label: Text(
+          "profile.design.buttonText".tr(),
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),

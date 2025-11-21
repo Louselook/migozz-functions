@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:migozz_app/features/profile/presentation/profile/modules/share_profile.dart';
@@ -74,8 +75,8 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
     final voiceNoteUrl = widget.voiceNoteUrl;
     if (voiceNoteUrl.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("No hay audio disponible")),
-      ); //TODO: cambiar al JSON
+        SnackBar(content: Text("profile.validations.emptyAudio".tr())),
+      );
       return;
     }
 
@@ -95,12 +96,9 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
 
       setState(() => _isPlaying = !_isPlaying);
     } catch (e) {
-      debugPrint('Error reproduciendo audio: $e');
       // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Error al reproducir el audio"),
-        ), //TODO: cambiar por JSON
+        SnackBar(content: Text("profile.validations.errorAudio".tr())),
       );
     } finally {
       setState(() => _isLoading = false);

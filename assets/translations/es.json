@@ -63,6 +63,30 @@
       }
   },
   "profile": {
+    "chat": {
+      "filter":"Nuevo",
+      "search":"Buscar"
+    },
+    "design": {
+      "buttonText": "Diseño",
+      "title": "Elige tu diseño de perfil",
+      "subtitle": "Selecciona el estilo que más te guste",
+      "versions": {
+          "classic": {
+              "name": "Versión 1 - Clásico",
+              "description": "Redes sociales flotantes en el lateral"
+          },
+          "modern": {
+              "name": "Versión 2 - Moderno",
+              "description": "Barras horizontales de redes sociales"
+          },
+          "minimalist": {
+              "name": "Versión 3 - Minimalista",
+              "description": "Círculos con iconos de redes"
+          }
+      },
+      "cancelButton": "Cancelar"
+    },
     "validations": {
       "emptyAudio": "No hay audio disponible",
       "errorAudio": "Error al reproducir el audio"
@@ -82,13 +106,13 @@
     }
   },
   "search": {
-    "options": [
-      "Para ti",
-      "Cuentas",
-      "Reels",
-      "Audio",
-      "Hashtags"
-    ]
+      "options": {
+          "forYou": "Para ti",
+          "accounts": "Cuentas",
+          "reels": "Reels",
+          "audio": "Audio",
+          "hashtags": "Hashtags"
+      }
   },
   "edit": {
     "validations": {

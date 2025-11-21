@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
@@ -17,7 +18,7 @@ class _ProfileVersionSelectorState extends State<ProfileVersionSelector> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: Colors.black.withValues(alpha:0.9),
+      backgroundColor: Colors.black.withValues(alpha: 0.9),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Container(
         padding: const EdgeInsets.all(24),
@@ -26,8 +27,8 @@ class _ProfileVersionSelectorState extends State<ProfileVersionSelector> {
           mainAxisSize: MainAxisSize.min,
           children: [
             // Título
-            const Text(
-              'Elige tu diseño de perfil',
+            Text(
+              "profile.design.title".tr(),
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 24,
@@ -36,8 +37,8 @@ class _ProfileVersionSelectorState extends State<ProfileVersionSelector> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Selecciona el estilo que más te guste',
+            Text(
+              "profile.design.subtitle".tr(),
               style: TextStyle(color: Colors.white70, fontSize: 14),
               textAlign: TextAlign.center,
             ),
@@ -46,24 +47,25 @@ class _ProfileVersionSelectorState extends State<ProfileVersionSelector> {
             // Opciones de versión
             _VersionOption(
               version: 1,
-              title: 'Versión 1 - Clásico',
-              description: 'Redes sociales flotantes en el lateral',
+              title: "profile.design.versions.classic.name".tr(),
+              description: "profile.design.versions.classic.description".tr(),
               isSelected: widget.currentVersion == 1,
               onTap: () => _selectVersion(context, 1),
             ),
             const SizedBox(height: 16),
             _VersionOption(
               version: 2,
-              title: 'Versión 2 - Moderno',
-              description: 'Barras horizontales de redes sociales',
+              title: "profile.design.versions.modern.name".tr(),
+              description: "profile.design.versions.modern.description".tr(),
               isSelected: widget.currentVersion == 2,
               onTap: () => _selectVersion(context, 2),
             ),
             const SizedBox(height: 16),
             _VersionOption(
               version: 3,
-              title: 'Versión 3 - Minimalista',
-              description: 'Círculos con iconos de redes',
+              title: "profile.design.versions.minimalist.name".tr(),
+              description: "profile.design.versions.minimalist.description"
+                  .tr(),
               isSelected: widget.currentVersion == 3,
               onTap: () => _selectVersion(context, 3),
             ),
@@ -72,8 +74,8 @@ class _ProfileVersionSelectorState extends State<ProfileVersionSelector> {
             // Botón cerrar
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text(
-                'Cancelar',
+              child: Text(
+                "profile.design.cancelButton".tr(),
                 style: TextStyle(color: Colors.white70),
               ),
             ),
@@ -142,7 +144,9 @@ class _VersionOption extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.purple.withValues(alpha:0.3) : Colors.white10,
+          color: isSelected
+              ? Colors.purple.withValues(alpha: 0.3)
+              : Colors.white10,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? Colors.purple : Colors.transparent,
