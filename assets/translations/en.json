@@ -117,9 +117,9 @@
     "edit" : {
         "validations" : {
             "updateProfilePic" : "Profile photo updated",
-            "errorUpdateProfilePic" : "Error updating photo: $e",
+            "errorUpdateProfilePic" : "Error updating photo:",
             "updateProfile" : "Profile updated successfully",
-            "errorUpdateProfile" : "'Error saving profile: $e'",
+            "errorUpdateProfile" : "'Error saving profile:'",
             "detectLocation" : "🔍 Detecting location...",
             "errorDetecLocation" : "❌ Could not fetch current location",
             "errorUserLogin" : "Error: User not logged in",

@@ -25,7 +25,6 @@ class EditProfileScreen extends StatefulWidget {
   State<EditProfileScreen> createState() => _EditProfileScreenState();
 }
 
-// TODO: usar JSON
 class _EditProfileScreenState extends State<EditProfileScreen> {
   bool _uploading = false;
   final nameCtrl = TextEditingController();
@@ -77,7 +76,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("${"edit.validations.updateProfilePic".tr()} $e"),
+            content: Text(
+              "${"edit.validations.errorUpdateProfilePic".tr()} $e",
+            ),
           ),
         );
       }
@@ -115,16 +116,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
-  // MÉTODO ACTUALIZADO CON GUARDADO COMPLETO
   Future<void> _confirmAndChangeLocation(String email) async {
     final svc = LocationService();
 
-    // Mostrar loading mientras detecta ubicación
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("edit.validations.detectLocation".tr()),
-          duration: Duration(seconds: 1),
+          duration: const Duration(seconds: 1),
         ),
       );
     }
@@ -142,32 +141,30 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       return;
     }
 
-    // Mostrar diálogo de confirmación
     if (!mounted) return;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirm location'),
+        title: Text('buttons.confirm'.tr()),
         content: Text(
-          "We detected you're in:\n\n"
+          "${"edit.editLocation.text1".tr()}"
           "${newLocation.city}, ${newLocation.state}\n"
           "${newLocation.country}\n\n"
-          "Is that correct?",
+          "${"edit.editLocation.text4".tr()}",
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text('buttons.cancel'.tr()),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Confirm'),
+            child: Text('buttons.confirm'.tr()),
           ),
         ],
       ),
     );
 
-    // GUARDAR UBICACIÓN SI EL USUARIO CONFIRMÓ
     if (confirm == true) {
       if (!mounted) return;
 
@@ -177,25 +174,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
         if (userId == null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Error: User not logged in'),
+            SnackBar(
+              content: Text('edit.validations.errorUserLogin'.tr()),
               backgroundColor: Colors.red,
             ),
           );
           return;
         }
 
-        // Preparar datos de ubicación para Firestore
-        final locationData = {
-          'location': newLocation.toMap(), //  LocationDTO tiene este método
-        };
+        final locationData = {'location': newLocation.toMap()};
 
         debugPrint('💾 [EditProfile] Guardando ubicación en Firestore...');
         debugPrint('   • UserId: $userId');
         debugPrint('   • Data: $locationData');
 
-        // Guardar en Firestore
-        // El EditCubit automáticamente refrescará el AuthCubit después de guardar
         await editCubit.saveUserProfileField(
           userId: userId,
           updatedFields: locationData,
@@ -205,19 +197,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
         debugPrint('✅ [EditProfile] Ubicación guardada exitosamente');
 
-        // Mostrar mensaje de éxito
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '✅ Location updated to ${newLocation.city}, ${newLocation.country}',
+              '✅ ${"edit.validations.updateLocation".tr().replaceAll("\${newLocation.city}", newLocation.city).replaceAll("\${newLocation.country}", newLocation.country)}',
             ),
             backgroundColor: Colors.green,
             duration: const Duration(seconds: 2),
           ),
         );
-
-        // El perfil ya se refrescó automáticamente gracias al EditCubit
-        // La UI se actualizará automáticamente gracias al BlocBuilder
       } catch (e) {
         if (!mounted) return;
 
@@ -225,14 +213,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('❌ Error updating location: $e'),
+            content: Text(
+              "edit.validations.errorUpdateLocation".tr().replaceAll(
+                "\$e",
+                e.toString(),
+              ),
+            ),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 3),
           ),
         );
       }
     } else {
-      // Usuario canceló
       debugPrint('🚫 [EditProfile] Usuario canceló el cambio de ubicación');
     }
   }
@@ -243,9 +235,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
-        title: const Text(
-          'Edit Profile',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          'edit.presentation.title'.tr(),
+          style: const TextStyle(color: Colors.white),
         ),
         centerTitle: true,
         leading: IconButton(
@@ -272,10 +264,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               }
               final user = state.userProfile;
               if (user == null) {
-                return const Center(
+                return Center(
                   child: Text(
-                    'No user data',
-                    style: TextStyle(color: Colors.white),
+                    'edit.presentation.errorUserEmpty'.tr(),
+                    style: const TextStyle(color: Colors.white),
                   ),
                 );
               }
@@ -287,7 +279,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 imageProfile = user.avatarUrl!;
               }
 
-              // inicializa los controladores solo una vez
               if (nameCtrl.text.isEmpty) {
                 nameCtrl.text = user.displayName;
                 usernameCtrl.text = user.username;
@@ -302,7 +293,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 }
               }
 
-              // Formatear ubicación - ahora maneja LocationDTO.empty()
               String formattedLocation = 'Location not set';
 
               if (user.location.isEmpty) {
@@ -341,37 +331,36 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     ),
                     SizedBox(height: height * 0.025),
 
-                    /// Campos del perfil
                     ProfileField(
-                      hint: 'Full name',
+                      hint: 'edit.presentation.fields.fullName'.tr(),
                       controller: nameCtrl,
                       icon: Icons.account_box,
                     ),
                     ProfileField(
-                      hint: 'Nickname',
+                      hint: 'edit.presentation.fields.nickname'.tr(),
                       controller: usernameCtrl,
                       icon: Icons.alternate_email,
                     ),
                     ProfileField(
-                      hint: 'Email',
+                      hint: 'edit.presentation.fields.email'.tr(),
                       controller: emailCtrl,
                       icon: Icons.mail,
                       readOnly: true,
                     ),
                     ProfileField(
-                      hint: 'Cell Phone',
+                      hint: 'edit.presentation.fields.cellPhone'.tr(),
                       controller: phoneCtrl,
                       icon: Icons.phone,
                     ),
                     ProfileField(
-                      hint: 'Date of birth',
+                      hint: 'edit.presentation.fields.dateOfBirth'.tr(),
                       controller: birthCtrl,
                       icon: Icons.calendar_today,
                       readOnly: true,
                       onTap: _pickBirthday,
                     ),
                     ProfileField(
-                      hint: 'Gender',
+                      hint: 'edit.presentation.fields.gender'.tr(),
                       controller: genderCtrl,
                       icon: Icons.transgender,
                     ),
@@ -384,10 +373,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
                     SizedBox(height: height * 0.025),
 
-                    /// Botones
                     ProfileOptionButton(
                       icon: Icons.play_circle_outline,
-                      text: 'Edit Record',
+                      text: 'edit.presentation.record'.tr(),
                       onTap: () {
                         Navigator.push(
                           context,
@@ -399,7 +387,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     ),
                     ProfileOptionButton(
                       icon: Icons.handshake_outlined,
-                      text: 'Edit My Interests',
+                      text: 'edit.presentation.interest'.tr(),
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -409,13 +397,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     ),
                     ProfileOptionButton(
                       icon: Icons.share_outlined,
-                      text: 'Edit Socials',
+                      text: 'edit.presentation.socials'.tr(),
                       onTap: () {
                         final userId = state.firebaseUser?.uid;
                         if (userId == null) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Error: User not logged in'),
+                            SnackBar(
+                              content: Text(
+                                'edit.validations.errorUserLogin'.tr(),
+                              ),
                               backgroundColor: Colors.red,
                             ),
                           );
@@ -447,7 +437,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     ),
                     ProfileOptionButton(
                       icon: Icons.logout,
-                      text: 'Logout',
+                      text: 'edit.presentation.logOut'.tr(),
                       onTap: () async => FirebaseAuth.instance.signOut(),
                     ),
 
@@ -484,9 +474,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       width: double.infinity,
                       height: height * 0.065,
                       radius: width * 0.02,
-                      child: const Text(
-                        'Save',
-                        style: TextStyle(
+                      child: Text(
+                        'buttons.save'.tr(),
+                        style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
