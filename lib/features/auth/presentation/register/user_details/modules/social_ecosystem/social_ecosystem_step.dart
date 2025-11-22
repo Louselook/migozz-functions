@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:migozz_app/core/components/atomics/network_list.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/core/utils/responsive_utils.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
@@ -8,6 +7,7 @@ import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/regis
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/social_icon_card.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/user_details_button.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
+import 'package:migozz_app/features/auth/services/add_networks/network_config.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 
 class SocialEcosystemStep extends StatefulWidget {
@@ -29,6 +29,13 @@ class _SocialEcosystemStepState extends State<SocialEcosystemStep> {
   void initState() {
     super.initState();
     _initializeSocialEcosystem();
+
+    // ✅ Configurar sincronización en modo edición
+    if (widget.mode == MoreUserDetailsMode.edit) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _setupSyncCallback();
+      });
+    }
   }
 
   void _initializeSocialEcosystem() {
@@ -54,6 +61,28 @@ class _SocialEcosystemStepState extends State<SocialEcosystemStep> {
         }
       });
     }
+  }
+
+  // ✅ Nuevo método para configurar callback de sincronización
+  void _setupSyncCallback() {
+    final registerCubit = context.read<RegisterCubit>();
+    final editCubit = context.read<EditCubit>();
+
+    registerCubit.onSocialEcosystemUpdated = (platforms) {
+      debugPrint(
+        '🔄 [SocialEcosystem] Sincronizando RegisterCubit → EditCubit',
+      );
+      editCubit.updateSocialEcosystem(platforms);
+    };
+  }
+
+  @override
+  void dispose() {
+    // ✅ Limpiar callback al salir
+    // if (widget.mode == MoreUserDetailsMode.edit) {
+    //   context.read<RegisterCubit>().onSocialEcosystemUpdated = null;
+    // }
+    super.dispose();
   }
 
   @override
@@ -140,7 +169,7 @@ class _SocialEcosystemStepState extends State<SocialEcosystemStep> {
                   ),
                   child: GridView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 6.0),
-                    itemCount: socials.length,
+                    itemCount: SocialNetworks.enabledNetworks.length,
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: crossAxisCount,
                       mainAxisSpacing: mainAxisSpacing,
@@ -148,8 +177,7 @@ class _SocialEcosystemStepState extends State<SocialEcosystemStep> {
                       childAspectRatio: cardSize.width / cardSize.height,
                     ),
                     itemBuilder: (context, index) {
-                      final label = socials[index];
-                      final assetPath = iconByLabel[label];
+                      final config = SocialNetworks.enabledNetworks[index];
                       final iconSize = cardSize.width * 0.4;
                       final clampedIconSize = iconSize.clamp(24.0, 48.0);
 
@@ -164,20 +192,20 @@ class _SocialEcosystemStepState extends State<SocialEcosystemStep> {
                           : context.watch<EditCubit>().state.socialEcosystem ??
                                 [];
 
-                      // Comparar en minúsculas (normalizar)
+                      // Comparar en minúsculas
                       final selected = selectedList.any((e) {
                         final platformKey = e.keys.first.toLowerCase();
-                        final labelLower = label.toLowerCase();
+                        final labelLower = config.name.toLowerCase();
                         return platformKey == labelLower;
                       });
 
                       return SocialIconCard(
-                        label: label,
-                        assetPath: assetPath,
+                        label: config.displayName,
+                        assetPath: config.iconPath,
                         iconSize: clampedIconSize,
                         sizeIcon: cardSize,
                         isSelected: selected,
-                        onTap: () => _handleSocialTap(label),
+                        onTap: () => _handleSocialTap(config),
                       );
                     },
                   ),
@@ -207,7 +235,7 @@ class _SocialEcosystemStepState extends State<SocialEcosystemStep> {
     );
   }
 
-  Future<void> _handleSocialTap(String label) async {
+  Future<void> _handleSocialTap(NetworkConfig config) async {
     if (widget.mode == MoreUserDetailsMode.register) {
       // ========== MODO REGISTRO ==========
       final cubit = context.read<RegisterCubit>();
@@ -217,20 +245,20 @@ class _SocialEcosystemStepState extends State<SocialEcosystemStep> {
 
       final index = current.indexWhere((e) {
         final platformKey = e.keys.first.toLowerCase();
-        return platformKey == label.toLowerCase();
+        return platformKey == config.name.toLowerCase();
       });
 
       if (index == -1) {
         // Agregar nueva red - Modo registro
         await cubit.startSocialAuth(
           context,
-          label,
-          iconByLabel[label]!,
-          inEditMode: false, //  IMPORTANTE: Modo registro
+          config.name,
+          config.iconPath,
+          inEditMode: false,
         );
       } else {
         // Eliminar red existente
-        final remove = await _showRemoveDialog(label);
+        final remove = await _showRemoveDialog(config.displayName);
         if (remove == true) {
           current.removeAt(index);
           cubit.setSocialEcosystem(current);
@@ -241,6 +269,7 @@ class _SocialEcosystemStepState extends State<SocialEcosystemStep> {
         "🌐 Ecosistema social (registro): ${cubit.state.socialEcosystem}",
       );
     } else {
+      // ========== MODO EDICIÓN ==========
       final editCubit = context.read<EditCubit>();
       final registerCubit = context.read<RegisterCubit>();
 
@@ -250,24 +279,22 @@ class _SocialEcosystemStepState extends State<SocialEcosystemStep> {
 
       final index = current.indexWhere((e) {
         final platformKey = e.keys.first.toLowerCase();
-        return platformKey == label.toLowerCase();
+        return platformKey == config.name.toLowerCase();
       });
 
       if (index == -1) {
         // Agregar nueva red - Modo edición
-        // El DeeplinkService sincronizará automáticamente con EditCubit
         await registerCubit.startSocialAuth(
           context,
-          label,
-          iconByLabel[label]!,
-          inEditMode:
-              true, //  IMPORTANTE: Modo edición (NO cambia regProgress)
+          config.name,
+          config.iconPath,
+          inEditMode: true,
         );
 
         debugPrint('🌐 Esperando sincronización de deeplink...');
       } else {
         // Eliminar red existente
-        final remove = await _showRemoveDialog(label);
+        final remove = await _showRemoveDialog(config.displayName);
         if (remove == true) {
           current.removeAt(index);
           editCubit.updateSocialEcosystem(current);

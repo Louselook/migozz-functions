@@ -7,14 +7,20 @@ import 'package:migozz_app/core/components/atomics/loading_overlay.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/location_dto.dart';
 import 'package:migozz_app/core/services/deeplink/deeplink_functions/social_network/social_normalizer.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/add_network.dart';
-import 'package:migozz_app/features/auth/services/add_networks/add_networks.dart';
+import 'package:migozz_app/features/auth/services/add_networks/add_network_service_click.dart';
+import 'package:migozz_app/features/auth/services/add_networks/add_network_service_user.dart';
+import 'package:migozz_app/features/auth/services/add_networks/network_config.dart';
 import 'package:migozz_app/features/auth/services/location_service.dart';
 import 'package:migozz_app/features/auth/services/media_service.dart';
 import 'register_state.dart';
 
 class RegisterCubit extends Cubit<RegisterState> {
   final LocationService _locationService;
-  final AddNetworkService networkService = AddNetworkService();
+  final AddNetworkServiceClick _clickService = AddNetworkServiceClick();
+  final AddNetworkServiceUser _userService = AddNetworkServiceUser();
+
+  // ✅ Callback para sincronización con EditCubit
+  Function(List<Map<String, Map<String, dynamic>>>)? onSocialEcosystemUpdated;
 
   File? avatarFile;
   File? voiceNoteFile;
@@ -23,12 +29,12 @@ class RegisterCubit extends Cubit<RegisterState> {
     fetchLocation();
   }
 
-  // respuesta de la ia
+  // ==================== RESPUESTA IA ====================
   void setAiResponse(bool value) {
     emit(state.copyWith(loadigAiResponse: value));
   }
 
-  // Método para obtener ubicación
+  // ==================== UBICACIÓN ====================
   Future<void> fetchLocation() async {
     final location = await _locationService.initAndFetchAddress();
     if (location != null) {
@@ -38,7 +44,6 @@ class RegisterCubit extends Cubit<RegisterState> {
       emit(state.copyWith(location: location));
     } else {
       debugPrint('📍 [Cubit] No se pudo detectar ubicación');
-      // Establecer una ubicación vacía para que se pregunte manualmente
       emit(state.copyWith(location: LocationDTO.empty()));
     }
   }
@@ -47,40 +52,39 @@ class RegisterCubit extends Cubit<RegisterState> {
     emit(state.copyWith(location: location));
   }
 
-  // ---------------------- MÉTODOS DE UBICACIÓN ----------------------
-
-  // Método para cuando el usuario confirma la ubicación detectada (dice "Sí")
   void confirmLocation() {
     debugPrint('📍 [Cubit] Usuario confirmó la ubicación');
     emit(state.copyWith(regProgress: RegisterStatusProgress.emailVerification));
   }
 
-  // Método para cuando el usuario rechaza usar ubicación (dice "No")
   void rejectLocation() {
     debugPrint('📍 [Cubit] Usuario rechazó usar ubicación');
     emit(
       state.copyWith(
-        location: LocationDTO.empty(), //  Ubicación vacía pero no null
+        location: LocationDTO.empty(),
         regProgress: RegisterStatusProgress.emailVerification,
       ),
     );
   }
 
-  // Método para cuando la ubicación es incorrecta (pedir nueva ubicación)
   void requestCorrectLocation() {
     debugPrint(
       '📍 [Cubit] Usuario reportó ubicación incorrecta, solicitando nueva',
     );
-    // Resetear para permitir nueva detección o ingreso manual
     emit(
       state.copyWith(
-        location: null, // Permitir que se vuelva a pedir
+        location: null,
         regProgress: RegisterStatusProgress.location,
       ),
     );
   }
 
-  // ---------------------- Otros setters ----------------------
+  void setLocation(LocationDTO location) =>
+      emit(state.copyWith(location: location));
+
+  void setVerifyLocation() => confirmLocation();
+
+  // ==================== SETTERS DE REGISTRO ====================
   void updateEmail(String email) => emit(state.copyWith(email: email));
 
   void setEmail(String email) => emit(
@@ -115,7 +119,33 @@ class RegisterCubit extends Cubit<RegisterState> {
     ),
   );
 
-  // Para registro - CAMBIA el regProgress
+  void setPhone(String phone) => emit(
+    state.copyWith(
+      phone: phone,
+      regProgress: RegisterStatusProgress.voiceNoteUrl,
+    ),
+  );
+
+  void setCategories(List<String>? category) => emit(
+    state.copyWith(
+      category: category,
+      regProgress: RegisterStatusProgress.interests,
+    ),
+  );
+
+  void setInterests(Map<String, List<String>> interests) =>
+      emit(state.copyWith(interests: interests));
+
+  void setCurrentOTP(String currentOTP) => emit(
+    state.copyWith(
+      currentOTP: currentOTP,
+      regProgress: RegisterStatusProgress.doneChat,
+    ),
+  );
+
+  // ==================== SOCIAL ECOSYSTEM ====================
+
+  /// Para registro - CAMBIA el regProgress
   void setSocialEcosystem(List<Map<String, Map<String, dynamic>>> platforms) =>
       emit(
         state.copyWith(
@@ -124,7 +154,7 @@ class RegisterCubit extends Cubit<RegisterState> {
         ),
       );
 
-   // Para edición - NO cambia el regProgress
+  /// Para edición - NO cambia el regProgress
   void updateSocialEcosystemOnly(
     List<Map<String, Map<String, dynamic>>> platforms,
   ) {
@@ -132,17 +162,170 @@ class RegisterCubit extends Cubit<RegisterState> {
       '🔧 [RegisterCubit] Actualizando socialEcosystem SIN cambiar regProgress',
     );
     emit(state.copyWith(socialEcosystem: platforms));
+
+    // ✅ Notificar al callback si existe (para sincronizar con EditCubit)
+    if (onSocialEcosystemUpdated != null) {
+      debugPrint('🔄 [RegisterCubit] Sincronizando con EditCubit');
+      onSocialEcosystemUpdated!(platforms);
+    }
   }
 
   void setSocialEcosystemEmty() =>
       emit(state.copyWith(regProgress: RegisterStatusProgress.location));
 
-  void setLocation(LocationDTO location) =>
-      emit(state.copyWith(location: location));
+  /// Inicia el flujo de vinculación de red social
+  Future<void> startSocialAuth(
+    BuildContext context,
+    String network,
+    String assetPath, {
+    bool inEditMode = false,
+  }) async {
+    final config = SocialNetworks.getConfig(network);
 
-  // Mantener este método por compatibilidad, pero ahora usa confirmLocation
-  void setVerifyLocation() => confirmLocation();
+    if (config == null) {
+      debugPrint('❌ Red social no encontrada: $network');
+      return;
+    }
 
+    if (!config.isEnabled) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${config.displayName} no está disponible aún'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => AddNetworkBottomSheet(
+        networkConfig: config,
+        onOptionSelected: (mode, value) async {
+          if (mode == NetworkAuthMode.click) {
+            Navigator.of(context).pop();
+            await _handleClickAuth(context, network, inEditMode);
+          } else if (mode == NetworkAuthMode.manual && value != null) {
+            LoadingOverlay.show(context);
+
+            try {
+              await _handleManualAuth(context, network, value, inEditMode);
+              Navigator.of(context).pop();
+            } catch (e) {
+              debugPrint('❌ Error en manual auth: $e');
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Error: ${e.toString()}'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            } finally {
+              LoadingOverlay.hide(context);
+            }
+          }
+        },
+      ),
+    );
+  }
+
+  /// Manejar autenticación por click (OAuth)
+  Future<void> _handleClickAuth(
+    BuildContext context,
+    String network,
+    bool inEditMode,
+  ) async {
+    try {
+      await _clickService.startOAuthAuth(context: context, network: network);
+
+      debugPrint('✅ OAuth iniciado para $network');
+      // El deeplink manejará la sincronización automáticamente
+    } catch (e) {
+      debugPrint('❌ Error en OAuth: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error connecting to $network'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  /// Manejar autenticación manual (username/link)
+  Future<void> _handleManualAuth(
+    BuildContext context,
+    String network,
+    String usernameOrLink,
+    bool inEditMode,
+  ) async {
+    try {
+      // Obtener datos del perfil
+      final rawData = await _userService.getProfileByUsernameOrLink(
+        network: network,
+        usernameOrLink: usernameOrLink,
+      );
+
+      // Normalizar según la red
+      final profileData = _normalizeProfile(network, rawData);
+
+      debugPrint('📊 [$network] Data normalized:');
+      debugPrint('   Username: ${profileData['username']}');
+      debugPrint('   Followers: ${profileData['followers']}');
+      debugPrint('   URL: ${profileData['url']}');
+
+      // Actualizar el ecosistema social
+      final current = List<Map<String, Map<String, dynamic>>>.from(
+        state.socialEcosystem ?? [],
+      );
+
+      current.add({network.toLowerCase(): profileData});
+
+      // Usar el método correcto según el modo
+      if (inEditMode) {
+        updateSocialEcosystemOnly(current);
+      } else {
+        setSocialEcosystem(current);
+      }
+
+      debugPrint('✅ $network agregada al ecosistema');
+    } catch (e) {
+      debugPrint('❌ Error obteniendo perfil de $network: $e');
+      rethrow;
+    }
+  }
+
+  /// Normalizar datos del perfil según la red social
+  Map<String, dynamic> _normalizeProfile(
+    String network,
+    Map<String, dynamic> rawData,
+  ) {
+    switch (network.toLowerCase()) {
+      case 'youtube':
+        return normalizeYouTube(rawData);
+      case 'instagram':
+        return normalizeInstagram(rawData);
+      case 'twitter':
+        return normalizeTwitter(rawData);
+      case 'tiktok':
+        return normalizeTikTok(rawData);
+      case 'spotify':
+        return normalizeSpotify(rawData);
+      case 'facebook':
+        return normalizeFacebook(rawData);
+      case 'linkedin':
+        return normalizeLinkedIn(rawData);
+      default:
+        // Normalización genérica
+        return {
+          'username': rawData['username'] ?? rawData['name'] ?? '',
+          'followers': rawData['followers'] ?? rawData['follower_count'] ?? 0,
+          'url': rawData['url'] ?? rawData['profile_url'] ?? '',
+        };
+    }
+  }
+
+  // ==================== EMAIL VERIFICATION ====================
   void updateEmailVerification(EmailVerification status) => emit(
     state.copyWith(
       emailVerification: status,
@@ -150,7 +333,7 @@ class RegisterCubit extends Cubit<RegisterState> {
     ),
   );
 
-  // picture profile helpers
+  // ==================== AVATAR ====================
   void setAvatarFile(File file) => avatarFile = file;
 
   void setAvatarUrl(String avatarUrl) => emit(
@@ -162,14 +345,7 @@ class RegisterCubit extends Cubit<RegisterState> {
 
   void clearAvatarUrl() => emit(state.copyWith(avatarUrl: null));
 
-  void setPhone(String phone) => emit(
-    state.copyWith(
-      phone: phone,
-      regProgress: RegisterStatusProgress.voiceNoteUrl,
-    ),
-  );
-
-  // voice audio
+  // ==================== VOICE NOTE ====================
   void setVoiceNoteFile(File file) {
     voiceNoteFile = file;
     debugPrint('🎤 [Cubit] setVoiceNoteFile llamado');
@@ -188,20 +364,18 @@ class RegisterCubit extends Cubit<RegisterState> {
     );
   }
 
-  // Método inteligente para subir archivos
+  // ==================== MEDIA UPLOAD ====================
   Future<Map<MediaType, String>> uploadUserMedia({
     required Map<MediaType, File> files,
     String? firebaseUid,
   }) async {
     final mediaService = UserMediaService();
 
-    // Si hay UID (Google), usar directamente
     if (firebaseUid != null && firebaseUid.isNotEmpty) {
       debugPrint('📤 [Cubit] Google user - uploading with UID: $firebaseUid');
       return await mediaService.uploadFiles(uid: firebaseUid, files: files);
     }
 
-    // Registro normal - usar email temporal
     final email = state.email;
     if (email == null || email.isEmpty) {
       throw Exception('Email no disponible');
@@ -214,29 +388,10 @@ class RegisterCubit extends Cubit<RegisterState> {
     );
   }
 
-  // category
-  void setCategories(List<String>? category) => emit(
-    state.copyWith(
-      category: category,
-      regProgress: RegisterStatusProgress.interests,
-    ),
-  );
-
-  void setInterests(Map<String, List<String>> interests) =>
-      emit(state.copyWith(interests: interests));
-
-  void setCurrentOTP(String currentOTP) => emit(
-    state.copyWith(
-      currentOTP: currentOTP,
-      regProgress: RegisterStatusProgress.doneChat,
-    ),
-  );
-
-  // ---------------------- checkCompletion ----------------------
+  // ==================== CHECK COMPLETION ====================
   Future<void> checkCompletion({bool forGoogle = false, String? uid}) async {
     emit(state.copyWith(status: RegisterIsLogin.loading));
     try {
-      // La ubicación debe existir (no null), pero puede estar vacía
       final hasLocationData = state.location != null;
 
       final completeFull =
@@ -245,7 +400,7 @@ class RegisterCubit extends Cubit<RegisterState> {
           state.fullName != null &&
           state.username != null &&
           state.gender != null &&
-          hasLocationData && //  Solo verificamos que exista el objeto
+          hasLocationData &&
           state.phone != null &&
           state.category != null &&
           state.interests != null;
@@ -253,7 +408,7 @@ class RegisterCubit extends Cubit<RegisterState> {
       final completeForGoogle =
           state.language != null &&
           state.gender != null &&
-          hasLocationData && //  Lo mismo aquí
+          hasLocationData &&
           state.phone != null &&
           state.category != null &&
           state.interests != null;
@@ -282,108 +437,7 @@ class RegisterCubit extends Cubit<RegisterState> {
     }
   }
 
-  // resto del cubit sin cambios
-  Future<void> fetchSocialProfile(String network, String usernameOrLink) async {
-    emit(state.copyWith(status: RegisterIsLogin.loading));
-    try {
-      switch (network.toLowerCase()) {
-        case 'youtube':
-          await networkService.getYouTubeProfile(handleOrUrl: usernameOrLink);
-          break;
-
-        default:
-          debugPrint("Red social no soportada: $network");
-          return;
-      }
-    } catch (e) {
-      debugPrint('Error fetching $network: $e');
-    } finally {
-      emit(state.copyWith(status: RegisterIsLogin.initial));
-    }
-  }
-
-   // inEditMode para saber si estamos editando
-  Future<void> startSocialAuth(
-    BuildContext context,
-    String network,
-    String assetPath, {
-    bool inEditMode = false, 
-  }) async {
-    switch (network.toLowerCase()) {
-      case 'youtube':
-        {
-          await showModalBottomSheet<String>(
-            context: context,
-            isScrollControlled: true,
-            backgroundColor: Colors.transparent,
-            builder: (_) => AddNetworkBottomSheet(
-              label: network,
-              assetPath: assetPath,
-              onSaved: (value) async {
-                LoadingOverlay.show(context);
-
-                try {
-                  Map<String, dynamic> profileData = {};
-
-                  if (network.toLowerCase() == 'youtube') {
-                    final rawData = await networkService.getYouTubeProfile(
-                      handleOrUrl: value,
-                    );
-                    profileData = normalizeYouTube(rawData);
-
-                    debugPrint('📊 [RegisterCubit] YouTube data normalized:');
-                    debugPrint('   Username: ${profileData['username']}');
-                    debugPrint('   Followers: ${profileData['followers']}');
-                    debugPrint('   URL: ${profileData['url']}');
-                  }
-
-                  final current = List<Map<String, Map<String, dynamic>>>.from(
-                    state.socialEcosystem ?? [],
-                  );
-
-                  current.add({network.toLowerCase(): profileData});
-
-                  // Usar el método correcto según el modo
-                  if (inEditMode) {
-                    updateSocialEcosystemOnly(current);
-                  } else {
-                    setSocialEcosystem(current);
-                  }
-                } catch (e) {
-                  debugPrint("❌ Error fetching $network profile: $e");
-                } finally {
-                  LoadingOverlay.hide(context);
-                }
-
-                Navigator.of(context).pop(value);
-              },
-            ),
-          );
-
-          debugPrint("✅ $network agregada: ${state.socialEcosystem}");
-          break;
-        }
-
-      case 'instagram':
-        await networkService.startInstagramAuth(context);
-        break;
-      case 'twitter':
-        await networkService.startTwitterAuth(context);
-        break;
-      case 'spotify':
-        await networkService.startSpotifyAuth(context);
-        break;
-      case 'tiktok':
-        await networkService.startTikTokAuth(context);
-        break;
-      case 'facebook':
-        await networkService.startFacebookAuth(context);
-        break;
-      default:
-        debugPrint('Red social no soportada: $network');
-    }
-  }
-
+  // ==================== RESET ====================
   void reset() {
     emit(RegisterState.initial());
   }

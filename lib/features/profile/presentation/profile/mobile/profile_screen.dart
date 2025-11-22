@@ -176,7 +176,6 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
     return total;
   }
 
-
   // Construir enlaces de redes
   List<SocialLink> _buildSocialLinks(
     List<Map<String, dynamic>>? socialEcosystem,
@@ -201,6 +200,9 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
         }
 
         final socialInfo = _getSocialInfo(platform, cleanUsername, customUrl);
+        debugPrint(
+          "lista: $platform\ncleanUsername: $cleanUsername\ncustomUrl: $customUrl",
+        );
         if (socialInfo != null) {
           links.add(
             SocialLink(
@@ -232,7 +234,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
     final normalizedLabel =
         platform[0].toUpperCase() + platform.substring(1).toLowerCase();
 
-    final asset = iconByLabel[normalizedLabel];
+    final asset = iconByLabel[normalizedLabel]; // ✅ Ahora encuentra "Linkedin"
     if (asset == null) return null;
 
     String url;
@@ -252,6 +254,9 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
         break;
       case 'youtube':
         url = customUrl ?? 'https://www.youtube.com/@$username';
+        break;
+      case 'linkedin':
+        url = customUrl ?? '';
         break;
       default:
         url = customUrl ?? '';

@@ -1,6 +1,6 @@
 // Lista original
 final List<String> socials = [
-  // "Tiktok",
+  "Tiktok",
   "Instagram",
   "Facebook",
   "Youtube",
@@ -9,7 +9,7 @@ final List<String> socials = [
   // "Pinterest",
   "Spotify",
   "Twitter",
-  // "LinkedIn",
+  "Linkedin",
   // "Paypal",
   // "Xbox",
   // "Other",
@@ -26,7 +26,7 @@ final Map<String, String> iconByLabel = {
   "Pinterest": "assets/icons/social_networks/Pinterest.svg",
   "Spotify": "assets/icons/social_networks/Spotify.svg",
   "Twitter": "assets/icons/social_networks/Twitter.svg",
-  "LinkedIn": "assets/icons/social_networks/LinkedIn.svg",
+  "Linkedin": "assets/icons/social_networks/LinkedIn.svg",
   "Paypal": "assets/icons/social_networks/Paypal.svg",
   "Xbox": "assets/icons/social_networks/Xbox.svg",
   "Other": "assets/icons/social_networks/Other.svg",
