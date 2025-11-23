@@ -13,6 +13,7 @@ import 'package:migozz_app/email_otp_custom.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/injection.dart';
+import 'package:url_strategy/url_strategy.dart';
 
 import 'core/services/ai/gemini_service.dart';
 
@@ -33,6 +34,7 @@ Future<void> main() async {
     otpLength: 6,
   );
 
+  setPathUrlStrategy();
   runApp(
     EasyLocalization(
       supportedLocales: const [Locale('en'), Locale('es')],
@@ -59,6 +61,8 @@ class MyApp extends StatelessWidget {
             DeeplinkService.initialize(context);
           });
 
+          final router = createRouter(goRouterNotifier);
+
           return AppInitializer(
             builder: (context, initResult) {
               if (initResult?.location != null) {
@@ -75,9 +79,9 @@ class MyApp extends StatelessWidget {
               GeminiService.instance.setLanguage(langLabel);
 
               return MaterialApp.router(
+                routerConfig: router,
                 debugShowCheckedModeBanner: false,
                 title: 'Migozz App',
-                routerConfig: createRouter(goRouterNotifier),
                 theme: ThemeData(
                   colorScheme: ColorScheme.fromSeed(
                     seedColor: Colors.deepPurple,

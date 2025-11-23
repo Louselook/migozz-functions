@@ -36,5 +36,16 @@
         "npm --prefix \"$RESOURCE_DIR\" run build"
       ]
     }
+  ],
+    "hosting": [
+    {
+      "site": "migozz-app",
+      "public": "build/web",
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "rewrites": [
+        { "source": "/terms-privacy", "destination": "/index.html" },
+        { "source": "**", "destination": "/index.html" }
+      ]
+    }
   ]
 }

@@ -28,10 +28,18 @@ import 'package:migozz_app/features/search/mobile/presentation/search_screen.dar
 import 'package:migozz_app/features/search/web/presentation/search_screen.dart'
     as web_search;
 
+bool isPublicRoute(String path) {
+return path == '/login' ||
+  path == '/register' ||
+  path == '/onboarding' ||
+  path == '/policy-deleted' ||
+  path == '/terms-privacy';
+}
+
 GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
   return GoRouter(
-    initialLocation: '/profile',
     refreshListenable: goRouterNotifier, // 🔑 clave
+    routerNeglect: true, 
     routes: [
       GoRoute(
         path: '/onboarding',
@@ -124,8 +132,15 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
     ],
     redirect: (context, state) {
       final status = goRouterNotifier.authStatus;
-      final goingTo = state.matchedLocation;
+      final goingTo = state.uri.path;
+
       debugPrint('REDIRECT -> status: $status, goingTo: $goingTo');
+
+      if (isPublicRoute(goingTo)) {
+        return null;
+      }
+
+      if (status == AuthStatus.checking) return null;
 
       final authCubit = context.read<AuthCubit>();
       final registerCubit = context.read<RegisterCubit>();
@@ -133,25 +148,8 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       final authState = authCubit.state;
       final registerState = registerCubit.state;
 
-      // Rutas públicas accesibles
-      const publicRoutes = {
-        '/login',
-        '/register',
-        '/onboarding',
-        '/ia-chat',
-        '/otp',
-        '/terms-privacy',
-        '/policy-deleted',
-      };
-
-      // Estado inicial de chequeo
-      if (status == AuthStatus.checking) {
-        return null;
-      }
-
-      // 1. Usuario NO autenticado
       if (status == AuthStatus.notAuthenticated) {
-        // Si está en registro activo → ir al chat
+
         final isInRegisterFlow =
             registerState.regProgress != RegisterStatusProgress.emty &&
             registerState.regProgress != RegisterStatusProgress.doneChat;
@@ -161,54 +159,29 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
           return null;
         }
 
-        // Si intenta acceder a rutas privadas → enviarlo al login
-        if (!publicRoutes.contains(goingTo)) {
-          return '/login';
+        // ❗ usuario no logueado, pero la ruta no es pública → a login
+        return '/login';
+      }
+
+      // Usuario autenticado
+      final userProfile = authState.userProfile;
+      final hasActiveRegistration =
+          registerState.regProgress != RegisterStatusProgress.emty &&
+          registerState.regProgress != RegisterStatusProgress.doneChat;
+
+      if (hasActiveRegistration) {
+        if (goingTo != '/ia-chat') return '/ia-chat';
+        return null;
+      }
+
+      if (userProfile == null || !userProfile.complete) {
+        if (goingTo != '/complete-profile' && goingTo != '/ia-chat') {
+          return '/complete-profile';
         }
         return null;
       }
 
-      // 2. Usuario autenticado
-
-      if (status == AuthStatus.authenticated) {
-        final userProfile = authState.userProfile;
-        final hasActiveRegistration =
-            registerState.regProgress != RegisterStatusProgress.emty &&
-            registerState.regProgress != RegisterStatusProgress.doneChat;
-
-        // Caso: hay un flujo de registro activo
-        if (hasActiveRegistration) {
-          if (goingTo != '/ia-chat') return '/ia-chat';
-          return null;
-        }
-
-        // Caso: perfil no completo (pero ya autenticado)
-        if (userProfile == null || !userProfile.complete) {
-          if (goingTo != '/complete-profile' && goingTo != '/ia-chat') {
-            return '/complete-profile';
-          }
-          return null;
-        }
-
-        // Caso: perfil completo — permitir acceder a rutas privadas útiles
-        if (userProfile.complete) {
-          // Rutas permitidas cuando el perfil está completo (añadir aquí según necesites)
-          const allowedWhenComplete = {
-            '/profile',
-            '/profile-view',
-            '/edit-profile',
-            '/stats',
-            '/search',
-          };
-
-          if (!allowedWhenComplete.contains(goingTo)) {
-            return '/profile';
-          }
-        }
-      }
-
-      //  3. Por defecto, no redirigir
       return null;
-    },
+    }
   );
 }
