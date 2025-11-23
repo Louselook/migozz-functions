@@ -445,10 +445,12 @@ List<MapEntry<String, Map<String, dynamic>>> _parseEcosystem(
 }
 
 String _formatNum(int n) {
-  if (n >= 1000000)
+  if (n >= 1000000) {
     return '${(n / 1000000).toStringAsFixed(2).replaceAll(RegExp(r'\.?0+$'), '')}M';
-  if (n >= 1000)
+  }
+  if (n >= 1000) {
     return '${(n / 1000).toStringAsFixed(1).replaceAll(RegExp(r'\.?0+$'), '')}K';
+  }
   return n.toString();
 }
 

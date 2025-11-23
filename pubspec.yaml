@@ -48,6 +48,7 @@ dependencies:
   firebase_core: ^3.4.0 # necesaria para firebase
   cloud_firestore: ^5.6.0 # necesaria para firestore
   google_sign_in: ^6.2.1 # necesario para el inicio con google
+  url_strategy: ^0.3.0 # Elimina los numerales en las rutas
   firebase_auth: ^5.1.4 # para auth
 
   cloud_functions: ^5.6.2

@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -46,7 +45,7 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
   final GlobalKey _screenshotKey = GlobalKey(); // Key for screenshot
 
   static const String _baseProfileUrl =
-      'https://migozz.app/u'; // Cambia a tu dominio real
+      'https://migozz-e2a21.web.app/'; 
 
   static const List<String> _emojiImages = [
     'assets/emojis/emoji_1.png',

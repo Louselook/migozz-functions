@@ -118,10 +118,10 @@ class _EditRecordScreenState extends State<EditRecordScreen>
 
     _animCtrl.repeat(reverse: true);
 
-    // timer: cuenta y corta en 15s
+    // timer: cuenta y corta en 10s
     _timer = Timer.periodic(const Duration(seconds: 1), (t) async {
       setState(() => _seconds++);
-      if (_seconds >= 15) {
+      if (_seconds >= 10) {
         await _stopRecord();
       }
     });
@@ -305,7 +305,7 @@ class _EditRecordScreenState extends State<EditRecordScreen>
             ),
             const SizedBox(height: 6),
             const Text(
-              "Voice note: 5–15 seconds max.",
+              "Voice note: 1–10 seconds max.",
               style: TextStyle(color: Colors.grey, fontSize: 14),
             ),
             SizedBox(height: screenH * 0.05),

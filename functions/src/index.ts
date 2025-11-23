@@ -30,7 +30,7 @@ export const onUserCreate = onDocumentCreated("users/{uid}", async (event) => {
     country: userData.location?.country || "",
     totalFollowers: userData.totalFollowers || 0,
     linksCount: userData.linksCount || 0,
-  t: FieldValue.serverTimestamp(),
+    t: FieldValue.serverTimestamp(),
   });
 });
 
@@ -48,7 +48,7 @@ export const verifyHandle = onCall(async (request) => {
 
   await ref.set({
     uid,
-  createdAt: FieldValue.serverTimestamp(),
+    createdAt: FieldValue.serverTimestamp(),
   });
 
   return {success: true};
@@ -73,7 +73,7 @@ export const profilesPublicSync = onDocumentUpdated("users/{uid}",
       country: data.location?.country,
       totalFollowers: data.totalFollowers,
       linksCount: data.linksCount,
-  t: FieldValue.serverTimestamp(),
+      t: FieldValue.serverTimestamp(),
     }, {merge: true});
   });
 
@@ -91,7 +91,7 @@ export const fetchSocialMetrics = onCall(async (request) => {
     .doc(linkId).update({
       followers,
       postsCount,
-  lastFetchedAt: FieldValue.serverTimestamp(),
+      lastFetchedAt: FieldValue.serverTimestamp(),
     });
 
   // recalcular totalFollowers
