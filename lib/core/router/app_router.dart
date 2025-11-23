@@ -30,7 +30,7 @@ import 'package:migozz_app/features/search/web/presentation/search_screen.dart'
 
 GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
   return GoRouter(
-    initialLocation: '/profile',
+    initialLocation: '/onboarding',
     refreshListenable: goRouterNotifier, // 🔑 clave
     routes: [
       GoRoute(
