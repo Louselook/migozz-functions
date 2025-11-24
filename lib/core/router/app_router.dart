@@ -40,7 +40,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
   return GoRouter(
     initialLocation: '/onboarding',
     refreshListenable: goRouterNotifier, // 🔑 clave
-    routerNeglect: true,
+    // routerNeglect: true,
     routes: [
       GoRoute(
         path: '/onboarding',
@@ -133,13 +133,9 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
     ],
     redirect: (context, state) {
       final status = goRouterNotifier.authStatus;
-      final goingTo = state.uri.path;
+      final goingTo = state.matchedLocation;
 
       debugPrint('REDIRECT -> status: $status, goingTo: $goingTo');
-
-      if (isPublicRoute(goingTo)) {
-        return null;
-      }
 
       if (status == AuthStatus.checking) return null;
 
@@ -149,6 +145,17 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       final authState = authCubit.state;
       final registerState = registerCubit.state;
 
+      final isPublic = isPublicRoute(goingTo);
+
+      // 🚨 1️⃣ -> SI EL USUARIO ESTÁ AUTENTICADO NO PUEDE IR A RUTAS PÚBLICAS
+      if (status == AuthStatus.authenticated && isPublic) {
+        return '/profile'; // o la ruta principal de tu app
+      }
+
+      // Si la ruta es pública y NO está autenticado → permitir
+      if (isPublic) return null;
+
+      // 🚨 2️⃣ -> Si NO está autenticado y la ruta no es pública → login
       if (status == AuthStatus.notAuthenticated) {
         final isInRegisterFlow =
             registerState.regProgress != RegisterStatusProgress.emty &&
@@ -159,11 +166,10 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
           return null;
         }
 
-        // ❗ usuario no logueado, pero la ruta no es pública → a login
         return '/login';
       }
 
-      // Usuario autenticado
+      // 🚨 3️⃣ -> Usuario autenticado PERO registro incompleto
       final userProfile = authState.userProfile;
       final hasActiveRegistration =
           registerState.regProgress != RegisterStatusProgress.emty &&
@@ -174,6 +180,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         return null;
       }
 
+      // 🚨 4️⃣ -> Perfil incompleto
       if (userProfile == null || !userProfile.complete) {
         if (goingTo != '/complete-profile' && goingTo != '/ia-chat') {
           return '/complete-profile';
