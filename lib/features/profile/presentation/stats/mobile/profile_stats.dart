@@ -233,172 +233,175 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  Text(
-                    "Stats.title".tr(),
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
+              child: Center(
+                child: Column(
+                  children: [
+                    Text(
+                      "stats.title".tr(),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  Expanded(
-                    child: _loading
-                        ? const Center(
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                            ),
-                          )
-                        : _socials.isEmpty
-                        ? Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                "stats.noStats.notSocials".tr(),
-                                style: const TextStyle(color: Colors.grey),
+                    const SizedBox(height: 20),
+                    Expanded(
+                      child: _loading
+                          ? const Center(
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
                               ),
-                              const SizedBox(height: 12),
-                              ElevatedButton(
-                                onPressed: _navigateToEditSocials,
-                                child: Text("stats.noStats.addSocials".tr()),
-                              ),
-                            ],
-                          )
-                        : Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceAround,
-                                children: [
-                                  _Metric(
-                                    icon: Icons.favorite,
-                                    label:
-                                        '${_formatNum(_totalsGlobal['likes'] ?? 0)} likes',
-                                  ),
-                                  _Metric(
-                                    icon: Icons.reply,
-                                    label:
-                                        '${_formatNum(_totalsGlobal['shares'] ?? 0)} shares',
-                                  ),
-                                  _Metric(
-                                    icon: Icons.people,
-                                    label:
-                                        '${_formatNum(_totalsGlobal['followers'] ?? 0)} followers',
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 20),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.grey[800],
-                                      foregroundColor: Colors.white,
+                            )
+                          : _socials.isEmpty
+                          ? Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  "stats.noStats.notSocials".tr(),
+                                  style: const TextStyle(color: Colors.grey),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 12),
+                                ElevatedButton(
+                                  onPressed: _navigateToEditSocials,
+                                  child: Text("stats.noStats.addButton".tr()),
+                                ),
+                              ],
+                            )
+                          : Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceAround,
+                                  children: [
+                                    _Metric(
+                                      icon: Icons.favorite,
+                                      label:
+                                          '${_formatNum(_totalsGlobal['likes'] ?? 0)} likes',
                                     ),
-                                    onPressed: _pickDateRange,
-                                    child: Text("stats.date".tr()),
-                                  ),
-                                  Text(
-                                    rangeText,
-                                    style: const TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 15,
+                                    _Metric(
+                                      icon: Icons.reply,
+                                      label:
+                                          '${_formatNum(_totalsGlobal['shares'] ?? 0)} shares',
                                     ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 20),
-                              _DataCard(
-                                image:
-                                    'assets/icons/social_networks/mini_icon_migozz.svg',
-                                title: "Overview",
-                                rows: [
-                                  _RowData(
-                                    label: "stats.dataCardLabel.likes".tr(),
-                                    value: _formatNum(
-                                      _totalsGlobal['likes'] ?? 0,
+                                    _Metric(
+                                      icon: Icons.people,
+                                      label:
+                                          '${_formatNum(_totalsGlobal['followers'] ?? 0)} followers',
                                     ),
-                                  ),
-                                  _RowData(
-                                    label: "stats.dataCardLabel.shares".tr(),
-                                    value: _formatNum(
-                                      _totalsGlobal['shares'] ?? 0,
+                                  ],
+                                ),
+                                const SizedBox(height: 20),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.grey[800],
+                                        foregroundColor: Colors.white,
+                                      ),
+                                      onPressed: _pickDateRange,
+                                      child: Text("stats.date".tr()),
                                     ),
-                                  ),
-                                  _RowData(
-                                    label: "stats.dataCardLabel.followers".tr(),
-                                    value: _formatNum(
-                                      _totalsGlobal['followers'] ?? 0,
+                                    Text(
+                                      rangeText,
+                                      style: const TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 15,
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 16),
-                              Expanded(
-                                child: Padding(
-                                  padding: EdgeInsets.only(
-                                    bottom: bottomPadding,
-                                  ),
-                                  child: ListView.builder(
-                                    physics: const BouncingScrollPhysics(),
-                                    itemCount: _socials.length,
-                                    itemBuilder: (context, i) {
-                                      final s = _socials[i];
-                                      final data = s.toJson();
-                                      final name = s.name;
+                                  ],
+                                ),
+                                const SizedBox(height: 20),
+                                _DataCard(
+                                  image:
+                                      'assets/icons/social_networks/mini_icon_migozz.svg',
+                                  title: "Overview",
+                                  rows: [
+                                    _RowData(
+                                      label: "stats.dataCardLabel.likes".tr(),
+                                      value: _formatNum(
+                                        _totalsGlobal['likes'] ?? 0,
+                                      ),
+                                    ),
+                                    _RowData(
+                                      label: "stats.dataCardLabel.shares".tr(),
+                                      value: _formatNum(
+                                        _totalsGlobal['shares'] ?? 0,
+                                      ),
+                                    ),
+                                    _RowData(
+                                      label: "stats.dataCardLabel.followers"
+                                          .tr(),
+                                      value: _formatNum(
+                                        _totalsGlobal['followers'] ?? 0,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                Expanded(
+                                  child: Padding(
+                                    padding: EdgeInsets.only(
+                                      bottom: bottomPadding,
+                                    ),
+                                    child: ListView.builder(
+                                      physics: const BouncingScrollPhysics(),
+                                      itemCount: _socials.length,
+                                      itemBuilder: (context, i) {
+                                        final s = _socials[i];
+                                        final data = s.toJson();
+                                        final name = s.name;
 
-                                      final filteredEntries = data.entries
-                                          .where((e) {
-                                            final key = e.key.toLowerCase();
-                                            final value = e.value;
-                                            return value != null &&
-                                                value
-                                                    .toString()
-                                                    .trim()
-                                                    .isNotEmpty &&
-                                                value != 0 &&
-                                                key != "id" &&
-                                                key != "name" &&
-                                                key != "iconpath" &&
-                                                key != "label";
-                                          })
-                                          .toList();
+                                        final filteredEntries = data.entries
+                                            .where((e) {
+                                              final key = e.key.toLowerCase();
+                                              final value = e.value;
+                                              return value != null &&
+                                                  value
+                                                      .toString()
+                                                      .trim()
+                                                      .isNotEmpty &&
+                                                  value != 0 &&
+                                                  key != "id" &&
+                                                  key != "name" &&
+                                                  key != "iconpath" &&
+                                                  key != "label";
+                                            })
+                                            .toList();
 
-                                      return Padding(
-                                        padding: const EdgeInsets.only(
-                                          bottom: 12,
-                                        ),
-                                        child: _DataCard(
-                                          // TODO: Resolver este problema, miniicon tiktok pero no existe, ni este ni mas rutas en assets
-                                          image:
-                                              "assets/icons/social_networks/mini_icon_${name.toLowerCase()}.svg",
-                                          title: name,
-                                          rows: filteredEntries.map((e) {
-                                            final displayKey = _applyFieldRules(
-                                              e.key,
-                                            );
-                                            final formatted = _formatKey(
-                                              displayKey,
-                                            );
-                                            return _RowData(
-                                              label: "$formatted:",
-                                              value: e.value.toString(),
-                                            );
-                                          }).toList(),
-                                        ),
-                                      );
-                                    },
+                                        return Padding(
+                                          padding: const EdgeInsets.only(
+                                            bottom: 12,
+                                          ),
+                                          child: _DataCard(
+                                            // TODO: Resolver este problema, miniicon tiktok pero no existe, ni este ni mas rutas en assets
+                                            image:
+                                                "assets/icons/social_networks/mini_icon_${name.toLowerCase()}.svg",
+                                            title: name,
+                                            rows: filteredEntries.map((e) {
+                                              final displayKey =
+                                                  _applyFieldRules(e.key);
+                                              final formatted = _formatKey(
+                                                displayKey,
+                                              );
+                                              return _RowData(
+                                                label: "$formatted:",
+                                                value: e.value.toString(),
+                                              );
+                                            }).toList(),
+                                          ),
+                                        );
+                                      },
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                  ),
-                ],
+                              ],
+                            ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

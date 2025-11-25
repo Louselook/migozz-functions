@@ -119,13 +119,29 @@
         "rangeText" : "Not selected",
         "noStats":{
             "notSocials" : "You don't have any social networks connected yet, connect them!",
-            "addSocials" : "Add Socials"
+            "addButton" : "Add Socials"
         },
         "date": "Selec date",
         "dataCardLabel": {
             "likes" : "Likes:",
             "shares" : "Shares:",
             "followers" : "Followers:"
+        }
+    },
+    "addSocials": {
+        "register": {
+            "title": "Your Social Ecosystem",
+            "subtitle": "Add your platforms"
+        },
+        "edit": {
+            "title": "Edit Social Ecosystem",
+            "subtitle": "Add or remove platforms"
+        },
+        "popUp":{
+            "title": "Unlink ",
+            "subtitle": "Are you sure you want to unlink ",
+            "yes": "Yes",
+            "no": "No"
         }
     },
     "edit" : {

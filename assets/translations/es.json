@@ -119,13 +119,29 @@
     "rangeText": "No seleccionado",
     "noStats":{
       "notSocials": "Aún no tienes redes sociales conectadas, ¡conéctalas!",
-      "addSocials": "Agregar redes sociales"
+      "addButton": "Agregar redes"
     },
     "date": "Selec date",
     "dataCardLabel": {
       "likes" : "Me gustas:",
       "shares" : "Compartidos:",
       "followers" : "Seguidores:"
+    }
+  },
+  "addSocials": {
+    "register": {
+      "title": "Tu Ecosistema Social",
+      "subtitle": "Agrega tus plataformas"
+    },
+    "edit": {
+        "title": "Editar Ecosistema Social",
+        "subtitle": "Agrega o elimina plataformas"
+    },
+    "popUp":{
+        "title": "Desvincular ",
+        "subtitle": "¿Estás seguro que quieres desvincular ",
+        "yes": "Si",
+        "no": "No"
     }
   },
   "edit": {

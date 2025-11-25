@@ -84,7 +84,7 @@ class _InputSearchState extends State<InputSearch> {
               child: TextField(
                 controller: _controller,
                 keyboardType: TextInputType.text,
-                autofocus: true,
+                // autofocus: true,
                 cursorColor: Theme.of(context).primaryColor,
                 decoration: InputDecoration(
                   hintText: "search.searchText".tr(),
