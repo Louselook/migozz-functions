@@ -7,6 +7,7 @@ import 'package:migozz_app/features/chat/presentation/user/list/chats_list_scree
 import 'package:migozz_app/features/chat/presentation/user/user_chat_screen.dart';
 import 'package:migozz_app/features/profile/components/draggable_social_rail.dart';
 import 'package:migozz_app/features/profile/components/profile_version_selector.dart';
+import 'package:migozz_app/features/profile/presentation/profile/modules/qr_scanner_screen.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/components/profile_top_actions.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/profile/components/background_image.dart';
@@ -102,6 +103,14 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
 
             ProfileTopActions(
               isOwnProfile: isOwnProfile,
+              onQrScanTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const QrScannerScreen(),
+                  ),
+                );
+              },
               onChatTap: () {
                 if (!isOwnProfile) {
                   // Chat con otro usuario - Pasar datos básicos

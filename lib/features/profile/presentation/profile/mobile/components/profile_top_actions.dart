@@ -4,12 +4,14 @@ class ProfileTopActions extends StatelessWidget {
   final bool isOwnProfile;
   final VoidCallback onChatTap;
   final VoidCallback? onNotificationsTap;
+  final VoidCallback? onQrScanTap;
 
   const ProfileTopActions({
     super.key,
     required this.isOwnProfile,
     required this.onChatTap,
     this.onNotificationsTap,
+    this.onQrScanTap,
   });
 
   @override
@@ -26,6 +28,17 @@ class ProfileTopActions extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (isOwnProfile && onQrScanTap != null) ...[
+              GestureDetector(
+                onTap: onQrScanTap,
+                child: const Icon(
+                  Icons.qr_code_scanner,
+                  color: Colors.white,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: 14),
+            ],
             GestureDetector(
               onTap: onChatTap,
               child: const Icon(
