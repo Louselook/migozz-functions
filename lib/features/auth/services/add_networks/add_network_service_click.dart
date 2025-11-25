@@ -22,10 +22,12 @@ class AddNetworkServiceClick {
         debugPrint('✅ [$network] OAuth iniciado correctamente');
       } else {
         debugPrint('❌ [$network] Error al obtener URL: ${response.body}');
+        // ignore: use_build_context_synchronously
         _showErrorSnackbar(context, network);
       }
     } catch (e) {
       debugPrint('❌ [$network] No se pudo abrir la URL\nError: $e');
+      // ignore: use_build_context_synchronously
       _showErrorSnackbar(context, network);
     }
   }

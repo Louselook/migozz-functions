@@ -91,11 +91,6 @@
             "emptyAudio" : "No audio available",
             "errorAudio" : "Error playing audio"
         },
-        "stats":{
-            "rangeText" : "Not selected",
-            "notSocials" : "You don't have any social networks connected yet, connect them!",
-            "addSocials" : "Add Socials"
-        },
         "tutorial":{
             "searchStep" : "Search for other users, topics, and posts.",
             "audioStep" : "Play your audio with this button, other users will do the same!",
@@ -106,12 +101,31 @@
         }
     },
     "search" : {
+        "searchText": "Search...",
+        "notFound": {
+            "searchNoResult": "No matches were found",
+            "suggestedNoResult": "No users found"
+        },
         "options": {
             "forYou": "For You",
             "accounts": "Accounts",
             "reels": "Reels",
             "audio": "Audio",
             "hashtags": "Hashtags"
+        }
+    },
+    "stats":{
+        "title":"My Stats",
+        "rangeText" : "Not selected",
+        "noStats":{
+            "notSocials" : "You don't have any social networks connected yet, connect them!",
+            "addSocials" : "Add Socials"
+        },
+        "date": "Selec date",
+        "dataCardLabel": {
+            "likes" : "Likes:",
+            "shares" : "Shares:",
+            "followers" : "Followers:"
         }
     },
     "edit" : {

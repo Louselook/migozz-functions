@@ -21,11 +21,11 @@ import 'package:migozz_app/features/profile/presentation/profile_entry.dart';
 import 'package:migozz_app/features/profile/presentation/stats/web/profile_stats.dart';
 import 'package:migozz_app/features/profile/presentation/profile/web/profile_search_screen.dart'
     as web_profile;
-import 'package:migozz_app/features/profile/presentation/profile/mobile/profile_search_screen.dart'
-    as mobile_profile;
+// import 'package:migozz_app/features/profile/presentation/profile/mobile/profile_search_screen.dart'
+//     as mobile_profile;
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
-import 'package:migozz_app/features/search/mobile/presentation/search_screen.dart'
-    as mobile_search;
+// import 'package:migozz_app/features/search/mobile/presentation/search_screen.dart'
+//     as mobile_search;
 import 'package:migozz_app/features/search/web/presentation/search_screen.dart'
     as web_search;
 
@@ -77,7 +77,8 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
           if (screenWidth >= 900) {
             return web_profile.ProfileSearchScreen(user: user);
           }
-          return mobile_profile.ProfileSearchScreen(user: user);
+          // return mobile_profile.ProfileSearchScreen(user: user);
+          return MainNavigation(initialIndex: 0, targetUser: user);
         },
       ),
       GoRoute(
@@ -89,7 +90,8 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
           if (screenWidth >= 900) {
             return const web_search.SearchScreen();
           }
-          return const mobile_search.SearchScreen();
+          // return const mobile_search.SearchScreen();
+          return const MainNavigation(initialIndex: 1);
         },
       ),
       GoRoute(

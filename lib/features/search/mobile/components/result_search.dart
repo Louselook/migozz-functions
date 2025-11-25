@@ -1,13 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:go_router/go_router.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/location_dto.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
-import 'package:migozz_app/features/profile/presentation/profile/mobile/profile_search_screen.dart';
 // import 'package:migozz_app/features/profile/presentation/profile_screen.dart';
 
-/// ResultSearch realiza una búsqueda simple en la colección `users || profiles_public`
-/// por `username` y `displayName`. Muestra los resultados en una lista.
 class ResultSearch extends StatefulWidget {
   final String query;
 
@@ -62,20 +62,18 @@ class _ResultSearchState extends State<ResultSearch> {
   }
 
   Future<List<Map<String, dynamic>>> _search(String q) async {
+    final currentUserId = FirebaseAuth.instance.currentUser!.uid;
+
     if (q.isEmpty) return [];
 
     final qTrim = q.trim();
     final qLower = qTrim.toLowerCase();
-    final end = '\$qTrim\uf8ff';
-    final endLower = '\$qLower\uf8ff';
+    final end = '$qTrim\uf8ff';
+    final endLower = '$qLower\uf8ff';
 
     final List<Map<String, dynamic>> candidates = [];
     final seen = <String>{};
 
-    // Try a few queries that may return candidates. Firestore queries are
-    // case-sensitive, so we also do client-side, case-insensitive substring
-    // filtering after collecting candidates. If nothing is found, we fall
-    // back to scanning a small batch and filtering locally.
     try {
       final queries = <Query<Map<String, dynamic>>>[
         _firestore
@@ -104,27 +102,27 @@ class _ResultSearchState extends State<ResultSearch> {
         try {
           final snap = await qRef.get();
           for (final doc in snap.docs) {
+            if (doc.id == currentUserId) continue; // 🔥 evitarme a mí mismo
             if (seen.contains(doc.id)) continue;
+
             seen.add(doc.id);
             final data = doc.data();
+
             candidates.add({'id': doc.id, ...data});
           }
-        } catch (e) {
-          // ignore this particular query failure and continue with others
-        }
+        } catch (_) {}
       }
-    } catch (e) {
-      // ignore and continue to client-side filtering / fallback below
-    }
+    } catch (_) {}
 
-    // Client-side case-insensitive substring filter (covers partial and
-    // lowercase/uppercase differences).
+    // --- Filtrado client-side (case insensitive) ---
     final List<Map<String, dynamic>> matched = [];
+
     for (final m in candidates) {
       final uname = ((m['userName'] ?? m['username'] ?? ''))
           .toString()
           .toLowerCase();
       final dname = ((m['displayName'] ?? '')).toString().toLowerCase();
+
       if (uname.contains(qLower) || dname.contains(qLower)) {
         matched.add(m);
       }
@@ -132,24 +130,24 @@ class _ResultSearchState extends State<ResultSearch> {
 
     if (matched.isNotEmpty) return matched;
 
-    // Fallback: scan a limited batch and filter client-side. This is heavier
-    // but limited to avoid scanning the whole collection.
+    // --- Fallback buscando más documentos ---
     try {
       final snap = await _firestore.collection('users').limit(200).get();
       for (final doc in snap.docs) {
+        if (doc.id == currentUserId) continue; // 🔥 evitarme también aquí
         if (seen.contains(doc.id)) continue;
+
         final data = doc.data();
         final uname = ((data['userName'] ?? data['username'] ?? ''))
             .toString()
             .toLowerCase();
         final dname = ((data['displayName'] ?? '')).toString().toLowerCase();
+
         if (uname.contains(qLower) || dname.contains(qLower)) {
           matched.add({'id': doc.id, ...data});
         }
       }
-    } catch (e) {
-      // ignore fallback errors
-    }
+    } catch (_) {}
 
     return matched;
   }
@@ -196,7 +194,7 @@ class _ResultSearchState extends State<ResultSearch> {
             child: Padding(
               padding: EdgeInsets.all((24.0 * scale).clamp(12.0, 40.0)),
               child: Text(
-                'No se encontraron coincidencias',
+                "search.notFound.searchNoResult".tr(),
                 style: TextStyle(
                   color: Colors.white70,
                   fontSize: (16.0 * scale).clamp(12.0, 20.0),
@@ -269,12 +267,7 @@ class _ResultSearchState extends State<ResultSearch> {
                       [],
                 );
 
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ProfileSearchScreen(user: user),
-                  ),
-                );
+                context.push('/profile-view', extra: user);
               },
               child: Container(
                 padding: EdgeInsets.all(containerPadding),

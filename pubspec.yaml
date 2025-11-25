@@ -8,7 +8,7 @@ version: 1.0.0+1
 environment:
   sdk: ^3.8.1
 
-dependencies: 
+dependencies:
   qr_flutter: ^4.1.0
 
   flutter:

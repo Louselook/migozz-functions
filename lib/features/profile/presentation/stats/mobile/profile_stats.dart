@@ -175,7 +175,7 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
 
   String get rangeText {
     if (selectedRange == null) {
-      return "profile.stats.rangeText".tr();
+      return "stats.rangeText".tr();
     }
     final s = selectedRange!;
     return "${s.start.day}/${s.start.month}/${s.start.year} → ${s.end.day}/${s.end.month}/${s.end.year}";
@@ -235,8 +235,8 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                  const Text(
-                    'My Stats',
+                  Text(
+                    "Stats.title".tr(),
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 22,
@@ -256,13 +256,13 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                "profile.stats.notSocials".tr(),
+                                "stats.noStats.notSocials".tr(),
                                 style: const TextStyle(color: Colors.grey),
                               ),
                               const SizedBox(height: 12),
                               ElevatedButton(
                                 onPressed: _navigateToEditSocials,
-                                child: Text("profile.stats.addSocials".tr()),
+                                child: Text("stats.noStats.addSocials".tr()),
                               ),
                             ],
                           )
@@ -300,7 +300,7 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
                                       foregroundColor: Colors.white,
                                     ),
                                     onPressed: _pickDateRange,
-                                    child: const Text("Selec date"),
+                                    child: Text("stats.date".tr()),
                                   ),
                                   Text(
                                     rangeText,
@@ -318,19 +318,19 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
                                 title: "Overview",
                                 rows: [
                                   _RowData(
-                                    label: "Likes:",
+                                    label: "stats.dataCardLabel.likes".tr(),
                                     value: _formatNum(
                                       _totalsGlobal['likes'] ?? 0,
                                     ),
                                   ),
                                   _RowData(
-                                    label: "Shares:",
+                                    label: "stats.dataCardLabel.shares".tr(),
                                     value: _formatNum(
                                       _totalsGlobal['shares'] ?? 0,
                                     ),
                                   ),
                                   _RowData(
-                                    label: "Followers:",
+                                    label: "stats.dataCardLabel.followers".tr(),
                                     value: _formatNum(
                                       _totalsGlobal['followers'] ?? 0,
                                     ),
@@ -373,6 +373,7 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
                                           bottom: 12,
                                         ),
                                         child: _DataCard(
+                                          // TODO: Resolver este problema, miniicon tiktok pero no existe, ni este ni mas rutas en assets
                                           image:
                                               "assets/icons/social_networks/mini_icon_${name.toLowerCase()}.svg",
                                           title: name,

@@ -15,9 +15,7 @@ class ChatService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
-  
   // CHAT ROOMS
-  
 
   Future<String> getOrCreateChatRoom({
     required String currentUserId,
@@ -73,9 +71,7 @@ class ChatService {
         userId,
       ).map((chats) => chats.where((c) => c.userHasResponded(userId)).toList());
 
-  
   // MENSAJES
-  
 
   Future<void> sendTextMessage({
     required String chatRoomId,
@@ -288,9 +284,7 @@ class ChatService {
     }
   }
 
-  
   // HELPERS PRIVADOS
-  
 
   /// Sube archivo a: chat/{chatRoomId}/{subfolder}/{timestamp_filename.ext}
   Future<String> _uploadFileToChatFolder({
@@ -383,9 +377,7 @@ class ChatService {
     }
   }
 
-  
   // UTILIDADES
-  
 
   Future<void> deleteMessage({
     required String chatRoomId,
@@ -435,14 +427,14 @@ class ChatService {
   Stream<int> getTotalUnreadCountStream(String userId) {
     // ignore: avoid_types_as_parameter_names
     return getUserChatsStream(userId).map(
+      // ignore: avoid_types_as_parameter_names
       (chats) => chats.fold<int>(0, (sum, c) => sum + c.getUnreadCount(userId)),
     );
   }
 
-  
   // (Opcional) helper: descargar URL remota a archivo temporal
   // útil si tu reproductor necesita ruta local
-  
+
   Future<File> downloadUrlToTempFile(String url, {String? filename}) async {
     final resp = await http.get(Uri.parse(url));
     if (resp.statusCode != 200) {

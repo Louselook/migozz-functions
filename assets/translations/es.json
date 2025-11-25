@@ -91,11 +91,6 @@
       "emptyAudio": "No hay audio disponible",
       "errorAudio": "Error al reproducir el audio"
     },
-    "stats": {
-      "rangeText": "No seleccionado",
-      "notSocials": "Aún no tienes redes sociales conectadas, ¡conéctalas!",
-      "addSocials": "Agregar redes sociales"
-    },
     "tutorial": {
       "searchStep": "Busca otros usuarios, temas y publicaciones.",
       "audioStep": "Reproduce tu audio con este botón, ¡otros usuarios harán lo mismo!",
@@ -106,6 +101,11 @@
     }
   },
   "search": {
+      "searchText": "Buscar...",
+      "notFound": {
+        "searchNoResult": "No se encontraron coincidencias",
+        "suggestedNoResult": "No se encontraron usuarios"
+      },
       "options": {
           "forYou": "Para ti",
           "accounts": "Cuentas",
@@ -113,6 +113,20 @@
           "audio": "Audio",
           "hashtags": "Hashtags"
       }
+  },
+  "stats":{
+    "title":"My Stats",
+    "rangeText": "No seleccionado",
+    "noStats":{
+      "notSocials": "Aún no tienes redes sociales conectadas, ¡conéctalas!",
+      "addSocials": "Agregar redes sociales"
+    },
+    "date": "Selec date",
+    "dataCardLabel": {
+      "likes" : "Me gustas:",
+      "shares" : "Compartidos:",
+      "followers" : "Seguidores:"
+    }
   },
   "edit": {
     "validations": {

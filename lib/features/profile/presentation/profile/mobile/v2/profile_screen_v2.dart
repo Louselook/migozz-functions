@@ -91,28 +91,44 @@ class _MobileProfileContentV2State extends State<MobileProfileContentV2> {
             ),
           ),
 
-          // Botón de búsqueda (solo si es el propio perfil)
-          if (isOwnProfile)
-            Positioned(
-              left: 10,
-              top: 45,
-              child: GestureDetector(
-                // key: widget.tutorialKeys.searchScreenKey,
-                onTap: () {
+          // ✅ Botón superior izquierdo (menú o regresar)
+          Positioned(
+            left: 10,
+            top: 45,
+            child: GestureDetector(
+              onTap: () {
+                if (isOwnProfile) {
+                  // Tu perfil: mostrar selector de versión
                   showDialog(
                     context: context,
                     builder: (context) => ProfileVersionSelector(
                       currentVersion: user.profileVersion,
                     ),
                   );
-                },
-                child: const Icon(
-                  Icons.more_vert,
-                  color: Color(0xAAFFFFFF),
-                  size: 45,
+                } else {
+                  // Perfil de otro: regresar
+                  Navigator.of(context).pop();
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    width: 1,
+                  ),
+                ),
+                child: Icon(
+                  // ✅ Ícono condicional
+                  isOwnProfile ? Icons.more_vert : Icons.arrow_back,
+                  color: const Color(0xFFFFFFFF),
+                  size: 28,
                 ),
               ),
             ),
+          ),
 
           // Acciones superiores (chat, notificaciones, etc.)
           ProfileTopActions(

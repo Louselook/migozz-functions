@@ -27,44 +27,46 @@ class _SearchScreenState extends State<SearchScreen> {
     final bottomGradientHeight = size.height * 0.22;
 
     return Scaffold(
-      body: Center(
-        child: Stack(
-          children: [
-            // dar un color de fondo
-            Container(color: Color.fromARGB(223, 0, 0, 0)),
+      body: Stack(
+        children: [
+          // Fondo oscuro
+          Container(color: const Color.fromARGB(223, 0, 0, 0)),
 
-            // Tintes y gradientes
-            TintesGradients(child: Container(height: bottomGradientHeight)),
+          // Tintes y gradientes en la parte inferior
+          TintesGradients(child: Container(height: bottomGradientHeight)),
 
-            // filtros de busqueda ("For You", "Accounts", "Reels", "Audio", "Hashtags")
-            FilterSearch(),
+          // Contenido principal: Column con InputSearch, FilterSearch y contenido
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 1) Barra de búsqueda (top)
+                  InputSearch(
+                    controller: _searchController,
+                    onChanged: (txt) => setState(() => _query = txt.trim()),
+                  ),
 
-            // Contenido: mostramos sugerencias si no hay texto, o resultados cuando el usuario escribe
-            if (_query.isEmpty)
-              SuggestedReels(topPadding: 140)
-            else
-              // ResultSearch mostrará 'no se encontraron coincidencias' cuando aplique
-              Positioned.fill(top: 180, child: ResultSearch(query: _query)),
+                  // 2) Filtros de búsqueda
+                  FilterSearch(topPadding: 0),
 
-            // input search en top 0 y un arrow back
-            InputSearch(
-              controller: _searchController,
-              onChanged: (txt) => setState(() => _query = txt.trim()),
+                  // 3) Contenido que ocupa el resto de la pantalla
+                  Expanded(
+                    child: _query.isEmpty
+                        // Muestra sugerencias cuando no hay texto
+                        ? SuggestedReels(topPadding: 0)
+                        // Muestra resultados cuando hay query
+                        : ResultSearch(query: _query),
+                  ),
+                ],
+              ),
             ),
+          ),
 
-            // // Navegación inferior
-            // Align(
-            //   alignment: Alignment.bottomCenter,
-            //   child: GradientBottomNav(
-            //     currentIndex: _tab,
-            //     onItemSelected: (i) => setState(() => _tab = i),
-            //     onCenterTap: () async {
-            //       await FirebaseAuth.instance.signOut();
-            //     },
-            //   ),
-            // ),
-          ],
-        ),
+          // (Opcional) Si quieres mantener algo absolutamente posicionado
+          // como un botón flotante, añádelo aquí a la Stack.
+        ],
       ),
     );
   }

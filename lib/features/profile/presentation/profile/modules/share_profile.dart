@@ -44,12 +44,11 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
   String? _selectedImagePath; // Track selected image
   final GlobalKey _screenshotKey = GlobalKey(); // Key for screenshot
 
-  static const String _baseProfileUrl =
-      'https://migozz-e2a21.web.app/'; 
+  static const String _baseProfileUrl = 'https://migozz-e2a21.web.app/';
 
   static const List<String> _emojiImages = [
     'assets/emojis/emoji_1.png',
-    'assets/emojis/emoji_2.png'
+    'assets/emojis/emoji_2.png',
   ];
 
   static const List<List<Color>> _gradientOptions = [
@@ -135,7 +134,9 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
       final ui.Image image = frameInfo.image;
 
       // Sample pixels from the center of the image
-      final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+      final ByteData? byteData = await image.toByteData(
+        format: ui.ImageByteFormat.rawRgba,
+      );
       if (byteData == null) return;
 
       // Get center pixel color
@@ -174,6 +175,7 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
     if (gradient == null) {
       await prefs.remove('selected_gradient');
     } else {
+      // ignore: deprecated_member_use
       final gradientStrings = gradient.map((c) => c.value.toString()).toList();
       await prefs.setStringList('selected_gradient', gradientStrings);
     }
@@ -341,7 +343,9 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
                           _selectedEmoji = null;
                           _selectedGradient = null;
                           _selectedImagePath = null;
-                          _qrColor = const Color(0xFFD43AB6); // Reset to default color
+                          _qrColor = const Color(
+                            0xFFD43AB6,
+                          ); // Reset to default color
                         });
                         _saveSelectedEmoji(null);
                         _saveSelectedGradient(null);
@@ -395,6 +399,7 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
                       _saveSelectedGradient(null);
                       _saveSelectedImage(null);
                       await _extractColorFromEmoji(emojiPath);
+                      // ignore: use_build_context_synchronously
                       Navigator.pop(context);
                     },
                     child: Container(
@@ -483,7 +488,9 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: isSelected ? const Color(0xFFD43AB6) : Colors.grey.shade300,
+                            color: isSelected
+                                ? const Color(0xFFD43AB6)
+                                : Colors.grey.shade300,
                             width: 3,
                           ),
                           gradient: const RadialGradient(
@@ -616,10 +623,7 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
             const SizedBox(height: 8),
             Text(
               label,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
           ],
         ),
@@ -653,7 +657,9 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
       final ui.FrameInfo frameInfo = await codec.getNextFrame();
       final ui.Image image = frameInfo.image;
 
-      final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+      final ByteData? byteData = await image.toByteData(
+        format: ui.ImageByteFormat.rawRgba,
+      );
       if (byteData == null) return;
 
       final int width = image.width;
@@ -677,10 +683,13 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
   Future<void> _captureAndSaveScreenshot() async {
     try {
       // Capture the screenshot
-      RenderRepaintBoundary boundary = _screenshotKey.currentContext!
-          .findRenderObject() as RenderRepaintBoundary;
+      RenderRepaintBoundary boundary =
+          _screenshotKey.currentContext!.findRenderObject()
+              as RenderRepaintBoundary;
       ui.Image image = await boundary.toImage(pixelRatio: 3.0);
-      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      ByteData? byteData = await image.toByteData(
+        format: ui.ImageByteFormat.png,
+      );
       Uint8List pngBytes = byteData!.buffer.asUint8List();
 
       // Save to app directory first
@@ -713,10 +722,9 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
       }
 
       // Share the image
-      await Share.shareXFiles(
-        [XFile(imagePath)],
-        text: 'Check out my Migozz profile!',
-      );
+      await Share.shareXFiles([
+        XFile(imagePath),
+      ], text: 'Check out my Migozz profile!');
 
       // Show success message
       if (mounted) {
@@ -762,180 +770,187 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
                 children: [
                   // Show background based on selection
                   if (_selectedImagePath != null)
-              Opacity(
-                opacity: 0.6,
-                child: Image.file(
-                  File(_selectedImagePath!),
-                  fit: BoxFit.cover,
-                ),
-              )
-            else if (_selectedGradient != null)
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: _selectedGradient!,
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-              )
-            else if (_selectedEmoji != null)
-              Opacity(
-                opacity: 0.6,
-                child: Image.asset(
-                  _selectedEmoji!,
-                  fit: BoxFit.cover,
-                ),
-              )
-            else
-              TintesGradients(child: Container(height: bottomGradientHeight)),
-          FutureBuilder<_ProfileData>(
-            future: _futureProfile,
-            builder: (context, snap) {
-              if (snap.connectionState == ConnectionState.waiting) {
-                return const Center(
-                  child: CircularProgressIndicator(color: Colors.white),
-                );
-              }
-              if (!snap.hasData) {
-                return const Text(
-                  'No data',
-                  style: TextStyle(color: Colors.white),
-                );
-              }
-              final data = snap.data!;
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: EdgeInsets.fromLTRB(22, 10, 22, 0),
-                    width: 301,
-                    height: 372,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              QrImageView(
-                                data: data.link,
-                                eyeStyle: QrEyeStyle(
-                                  eyeShape: QrEyeShape.square,
-                                  color: _qrColor,
-                                ),
-                                dataModuleStyle: QrDataModuleStyle(
-                                  dataModuleShape: QrDataModuleShape.square,
-                                  color: _qrColor,
-                                ),
-                                version: QrVersions.auto,
-                                size: 256,
-                              ),
-                              // Center logo
-                              Image.asset(
-                                'assets/images/Migozz.webp',
-                                width: 50,
-                                height: 50,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            data.displayName,
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '@${data.username}',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
+                    Opacity(
+                      opacity: 0.6,
+                      child: Image.file(
+                        File(_selectedImagePath!),
+                        fit: BoxFit.cover,
                       ),
+                    )
+                  else if (_selectedGradient != null)
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: _selectedGradient!,
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                    )
+                  else if (_selectedEmoji != null)
+                    Opacity(
+                      opacity: 0.6,
+                      child: Image.asset(_selectedEmoji!, fit: BoxFit.cover),
+                    )
+                  else
+                    TintesGradients(
+                      child: Container(height: bottomGradientHeight),
                     ),
+                  FutureBuilder<_ProfileData>(
+                    future: _futureProfile,
+                    builder: (context, snap) {
+                      if (snap.connectionState == ConnectionState.waiting) {
+                        return const Center(
+                          child: CircularProgressIndicator(color: Colors.white),
+                        );
+                      }
+                      if (!snap.hasData) {
+                        return const Text(
+                          'No data',
+                          style: TextStyle(color: Colors.white),
+                        );
+                      }
+                      final data = snap.data!;
+                      return Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: EdgeInsets.fromLTRB(22, 10, 22, 0),
+                            width: 301,
+                            height: 372,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      QrImageView(
+                                        data: data.link,
+                                        eyeStyle: QrEyeStyle(
+                                          eyeShape: QrEyeShape.square,
+                                          color: _qrColor,
+                                        ),
+                                        dataModuleStyle: QrDataModuleStyle(
+                                          dataModuleShape:
+                                              QrDataModuleShape.square,
+                                          color: _qrColor,
+                                        ),
+                                        version: QrVersions.auto,
+                                        size: 256,
+                                      ),
+                                      // Center logo
+                                      Image.asset(
+                                        'assets/images/Migozz.webp',
+                                        width: 50,
+                                        height: 50,
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    data.displayName,
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '@${data.username}',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 40),
+                        ],
+                      );
+                    },
                   ),
-                  const SizedBox(height: 40),
-                ],
-              );
-            },
-          ),
                 ],
               ),
             ),
-          // Share Profile button positioned outside the screenshot area
-          FutureBuilder<_ProfileData>(
-            future: _futureProfile,
-            builder: (context, snap) {
-              if (!snap.hasData) return const SizedBox.shrink();
-              final data = snap.data!;
-              return Positioned(
-                bottom: 100,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _shareProfile(data),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
+            // Share Profile button positioned outside the screenshot area
+            FutureBuilder<_ProfileData>(
+              future: _futureProfile,
+              builder: (context, snap) {
+                if (!snap.hasData) return const SizedBox.shrink();
+                final data = snap.data!;
+                return Positioned(
+                  bottom: 100,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _shareProfile(data),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      icon: const Icon(Icons.share),
+                      label: const Text('Share Profile'),
                     ),
-                    icon: const Icon(Icons.share),
-                    label: const Text('Share Profile'),
                   ),
-                ),
-              );
-            },
-          ),
-          // Top buttons positioned outside the screenshot area
-          Positioned(
-            top: 40,
-            left: 20,
-            right: 20,
-
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  icon: Icon(Icons.save_alt, color: Colors.white),
-                  onPressed: _captureAndSaveScreenshot,
-                ),
-                GestureDetector(
-                  onTap: _toggleMode,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20,
-                      vertical: 5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(_getButtonLabel(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
+                );
+              },
             ),
-          ),
+            // Top buttons positioned outside the screenshot area
+            Positioned(
+              top: 40,
+              left: 20,
+              right: 20,
+
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.save_alt, color: Colors.white),
+                    onPressed: _captureAndSaveScreenshot,
+                  ),
+                  GestureDetector(
+                    onTap: _toggleMode,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        _getButtonLabel(),
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
