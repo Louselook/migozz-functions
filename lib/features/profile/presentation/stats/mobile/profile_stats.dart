@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -5,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
-import 'package:migozz_app/features/profile/components/bottom_nav.dart';
+// import 'package:migozz_app/features/profile/components/bottom_nav.dart';
 import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 
@@ -19,49 +20,86 @@ class ProfileStatsScreen extends StatefulWidget {
 class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
   DateTimeRange? selectedRange;
   bool _loading = true;
-  int _tab = 1;
+  // int _tab = 1;
 
   List<SocialStats> _socials = [];
   Map<String, int> _totalsGlobal = {};
 
+  // Stream subscription para escuchar cambios en tiempo real
+  StreamSubscription<DocumentSnapshot>? _userDataSubscription;
+
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _setupRealtimeListener();
   }
 
-  Future<void> _loadData() async {
-    setState(() => _loading = true);
-    final socials = await _loadUserSocials();
+  @override
+  void dispose() {
+    _userDataSubscription?.cancel();
+    super.dispose();
+  }
+
+  /// Configurar listener en tiempo real para cambios en Firestore
+  void _setupRealtimeListener() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      setState(() => _loading = false);
+      return;
+    }
+
+    // Escuchar cambios en tiempo real del documento del usuario
+    _userDataSubscription = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .snapshots()
+        .listen(
+          (docSnapshot) {
+            if (docSnapshot.exists) {
+              _processUserData(docSnapshot.data());
+            } else {
+              setState(() {
+                _socials = [];
+                _totalsGlobal = {};
+                _loading = false;
+              });
+            }
+          },
+          onError: (error) {
+            debugPrint('❌ Error en listener de Firestore: $error');
+            setState(() => _loading = false);
+          },
+        );
+  }
+
+  /// Procesar datos del usuario y actualizar la UI
+  void _processUserData(Map<String, dynamic>? data) {
+    if (data == null) {
+      setState(() {
+        _socials = [];
+        _totalsGlobal = {};
+        _loading = false;
+      });
+      return;
+    }
+
+    final dynamic ecosystem = data['socialEcosystem'];
+    final socials = <SocialStats>[];
+
+    for (final e in _parseEcosystem(ecosystem)) {
+      socials.add(SocialStats.fromMap(e.key, e.value));
+    }
+
     final globalTotals = _calculateTotals(socials);
     _calculateNetworkTotals(socials);
+
     setState(() {
       _socials = socials;
       _totalsGlobal = globalTotals;
       _loading = false;
     });
-  }
 
-  Future<List<SocialStats>> _loadUserSocials() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return [];
-    try {
-      final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
-      if (!doc.exists) return [];
-      final data = doc.data();
-      final dynamic ecosystem = data?['socialEcosystem'];
-      final out = <SocialStats>[];
-      for (final e in _parseEcosystem(ecosystem)) {
-        out.add(SocialStats.fromMap(e.key, e.value));
-      }
-      return out;
-    } catch (e) {
-      debugPrint('Error cargando socials: $e');
-      return [];
-    }
+    debugPrint('✅ Datos actualizados: ${socials.length} redes sociales');
   }
 
   String normalizeStatKey(String key) {
@@ -143,6 +181,45 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
     return "${s.start.day}/${s.start.month}/${s.start.year} → ${s.end.day}/${s.end.month}/${s.end.year}";
   }
 
+  /// Navegar a edición de redes sociales
+  Future<void> _navigateToEditSocials() async {
+    final authCubit = context.read<AuthCubit>();
+    final userId = authCubit.state.firebaseUser?.uid;
+
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error: User not logged in'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final editCubit = context.read<EditCubit>();
+    editCubit.setEditItem(EditItem.socialEcosystem);
+
+    debugPrint('🔹 Navegando a MoreUserDetails en modo EDIT');
+
+    // Navegar y esperar el resultado
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BlocProvider.value(
+          value: editCubit,
+          child: MoreUserDetails(
+            pageIndicator: 0,
+            mode: MoreUserDetailsMode.edit,
+            userId: userId,
+          ),
+        ),
+      ),
+    );
+
+    // La actualización será automática gracias al StreamSubscription
+    debugPrint('✅ Regresó de edición - Stream manejará la actualización');
+  }
+
   @override
   Widget build(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).size.height * 0.12;
@@ -180,50 +257,11 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
                             children: [
                               Text(
                                 "profile.stats.notSocials".tr(),
-                                style: TextStyle(color: Colors.grey),
+                                style: const TextStyle(color: Colors.grey),
                               ),
                               const SizedBox(height: 12),
                               ElevatedButton(
-                                onPressed: () {
-                                  final authCubit = context.read<AuthCubit>();
-                                  final userId =
-                                      authCubit.state.firebaseUser?.uid;
-                                  if (userId == null) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Error: User not logged in',
-                                        ),
-                                        backgroundColor: Colors.red,
-                                      ),
-                                    );
-                                    return;
-                                  }
-
-                                  final editCubit = context.read<EditCubit>();
-                                  editCubit.setEditItem(
-                                    EditItem.socialEcosystem,
-                                  );
-
-                                  debugPrint(
-                                    '🔹 [MoreUserDetails] Navegando a MoreUserDetails en modo EDIT',
-                                  );
-                                  debugPrint('🔹 userId: $userId');
-
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => BlocProvider.value(
-                                        value: editCubit,
-                                        child: MoreUserDetails(
-                                          pageIndicator: 0,
-                                          mode: MoreUserDetailsMode.edit,
-                                          userId: userId,
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
+                                onPressed: _navigateToEditSocials,
                                 child: Text("profile.stats.addSocials".tr()),
                               ),
                             ],
@@ -282,7 +320,7 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
                                   _RowData(
                                     label: "Likes:",
                                     value: _formatNum(
-                                      _totalsGlobal['totalLikes'] ?? 0,
+                                      _totalsGlobal['likes'] ?? 0,
                                     ),
                                   ),
                                   _RowData(
@@ -363,14 +401,14 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
               ),
             ),
           ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: GradientBottomNav(
-              currentIndex: _tab,
-              onItemSelected: (i) => setState(() => _tab = i),
-              onCenterTap: () async => await FirebaseAuth.instance.signOut(),
-            ),
-          ),
+          // Align(
+          //   alignment: Alignment.bottomCenter,
+          //   child: GradientBottomNav(
+          //     currentIndex: _tab,
+          //     onItemSelected: (i) => setState(() => _tab = i),
+          //     onCenterTap: () async => await FirebaseAuth.instance.signOut(),
+          //   ),
+          // ),
         ],
       ),
     );

@@ -6,13 +6,11 @@ import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubi
 import 'package:migozz_app/features/chat/presentation/user/list/chats_list_screen.dart';
 import 'package:migozz_app/features/chat/presentation/user/user_chat_screen.dart';
 import 'package:migozz_app/features/profile/components/draggable_social_rail.dart';
-import 'package:migozz_app/features/profile/components/profile_version_button.dart';
+import 'package:migozz_app/features/profile/components/profile_version_selector.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/components/profile_top_actions.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
-import 'package:migozz_app/features/profile/components/bottom_nav.dart';
 import 'package:migozz_app/features/profile/components/background_image.dart';
 import 'package:migozz_app/features/profile/components/social_rail.dart';
-import 'package:migozz_app/features/search/mobile/presentation/search_screen.dart';
 
 class MobileProfileContent extends StatefulWidget {
   final UserDTO user;
@@ -28,8 +26,6 @@ class MobileProfileContent extends StatefulWidget {
 }
 
 class _MobileProfileContentState extends State<MobileProfileContent> {
-  int _tab = 0;
-
   @override
   Widget build(BuildContext context) {
     final user = widget.user;
@@ -71,15 +67,17 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                 left: 10,
                 top: 45,
                 child: GestureDetector(
-                  key: widget.tutorialKeys.searchScreenKey,
+                  // key: widget.tutorialKeys.searchScreenKey,
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const SearchScreen()),
+                    showDialog(
+                      context: context,
+                      builder: (context) => ProfileVersionSelector(
+                        currentVersion: user.profileVersion,
+                      ),
                     );
                   },
                   child: const Icon(
-                    Icons.search,
+                    Icons.more_vert,
                     color: Color(0xAAFFFFFF),
                     size: 45,
                   ),
@@ -130,26 +128,6 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                 itemSize: 50,
                 iconSize: 45,
               ),
-
-            // Barra inferior de navegación
-            if (isOwnProfile) // Condicional
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: GradientBottomNav(
-                  currentIndex: _tab,
-                  onItemSelected: (i) => setState(() => _tab = i),
-                  onCenterTap: () async {
-                    await context.read<AuthCubit>().logout();
-                  },
-                  onProfileUpdated: () {
-                    context.read<AuthCubit>().refreshUserProfile();
-                  },
-                  tutorialKeys: widget.tutorialKeys,
-                ),
-              ),
-
-            // Botón para cambiar versión de perfil
-            ProfileVersionButton(currentVersion: user.profileVersion),
           ],
         ),
       ),

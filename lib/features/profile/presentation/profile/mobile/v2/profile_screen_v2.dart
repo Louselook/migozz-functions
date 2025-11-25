@@ -5,14 +5,12 @@ import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/chat/presentation/user/list/chats_list_screen.dart';
 import 'package:migozz_app/features/chat/presentation/user/user_chat_screen.dart';
-import 'package:migozz_app/features/profile/components/bottom_nav.dart';
-import 'package:migozz_app/features/profile/components/profile_version_button.dart';
+import 'package:migozz_app/features/profile/components/profile_version_selector.dart';
 import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
 import 'package:migozz_app/features/profile/components/social_rail.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/components/profile_top_actions.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v2/components/profile_header_mobile_v2.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v2/components/social_bars_mobile_v2.dart';
-import 'package:migozz_app/features/search/mobile/presentation/search_screen.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 
 class MobileProfileContentV2 extends StatefulWidget {
@@ -30,8 +28,6 @@ class MobileProfileContentV2 extends StatefulWidget {
 }
 
 class _MobileProfileContentV2State extends State<MobileProfileContentV2> {
-  int _tab = 0;
-
   @override
   Widget build(BuildContext context) {
     final user = widget.user;
@@ -101,15 +97,17 @@ class _MobileProfileContentV2State extends State<MobileProfileContentV2> {
               left: 10,
               top: 45,
               child: GestureDetector(
-                key: widget.tutorialKeys.searchScreenKey,
+                // key: widget.tutorialKeys.searchScreenKey,
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const SearchScreen()),
+                  showDialog(
+                    context: context,
+                    builder: (context) => ProfileVersionSelector(
+                      currentVersion: user.profileVersion,
+                    ),
                   );
                 },
                 child: const Icon(
-                  Icons.search,
+                  Icons.more_vert,
                   color: Color(0xAAFFFFFF),
                   size: 45,
                 ),
@@ -152,34 +150,13 @@ class _MobileProfileContentV2State extends State<MobileProfileContentV2> {
               debugPrint('Abrir notificaciones');
             },
           ),
-
-          // Barra inferior de navegación (solo si es el propio perfil)
-          if (isOwnProfile)
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: GradientBottomNav(
-                currentIndex: _tab,
-                onItemSelected: (i) => setState(() => _tab = i),
-                onCenterTap: () async {
-                  await context.read<AuthCubit>().logout();
-                },
-                onProfileUpdated: () {
-                  context.read<AuthCubit>().refreshUserProfile();
-                },
-                tutorialKeys: widget.tutorialKeys,
-              ),
-            ),
-
-          // Botón para cambiar versión de perfil
-          ProfileVersionButton(currentVersion: user.profileVersion),
         ],
       ),
     );
   }
 
-  
   //Calcular total de seguidores
-  
+
   int _calculateTotalFollowers(List<Map<String, dynamic>>? socialEcosystem) {
     if (socialEcosystem == null || socialEcosystem.isEmpty) return 0;
     int total = 0;
@@ -198,9 +175,8 @@ class _MobileProfileContentV2State extends State<MobileProfileContentV2> {
     return total;
   }
 
-  
   // 🔗 Construir enlaces de redes
-  
+
   List<SocialLink> _buildSocialLinks(
     List<Map<String, dynamic>>? socialEcosystem,
     String username,
@@ -246,9 +222,8 @@ class _MobileProfileContentV2State extends State<MobileProfileContentV2> {
     return null;
   }
 
-  
   // 🧭 Generar URL + ícono por red
-  
+
   Map<String, String>? _getSocialInfo(
     String platform,
     String username,

@@ -1,11 +1,10 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/category_step.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/interests/interests_step.dart';
+// import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/save_changes_social.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/social_ecosystem_step.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 
@@ -101,29 +100,29 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
               backgroundColor: AppColors.backgroundDark,
               title: const Text('Edit Profile'),
               elevation: 0,
-              actions: [
-                // Botón para guardar cambios en modo edición
-                if (widget.mode == MoreUserDetailsMode.edit)
-                  BlocBuilder<EditCubit, EditCubitState>(
-                    builder: (context, state) {
-                      return IconButton(
-                        icon: state.isSaving
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Icon(Icons.save),
-                        onPressed: state.isSaving
-                            ? null
-                            : () => _saveChanges(context),
-                      );
-                    },
-                  ),
-              ],
+              // actions: [
+              //   // Botón para guardar cambios en modo edición
+              //   if (widget.mode == MoreUserDetailsMode.edit)
+              //     BlocBuilder<EditCubit, EditCubitState>(
+              //       builder: (context, state) {
+              //         return IconButton(
+              //           icon: state.isSaving
+              //               ? const SizedBox(
+              //                   width: 20,
+              //                   height: 20,
+              //                   child: CircularProgressIndicator(
+              //                     strokeWidth: 2,
+              //                     color: Colors.white,
+              //                   ),
+              //                 )
+              //               : const Icon(Icons.save),
+              //           onPressed: state.isSaving || widget.userId == null
+              //               ? null
+              //               : () => saveSocialChanges(context, widget.userId!),
+              //         );
+              //       },
+              //     ),
+              // ],
             )
           : null,
       body: Stack(
@@ -143,29 +142,5 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
         ],
       ),
     );
-  }
-
-  /// Guardar cambios en Firestore
-  Future<void> _saveChanges(BuildContext context) async {
-    if (widget.userId == null) return;
-
-    final editCubit = context.read<EditCubit>();
-
-    debugPrint('🔹 [MoreUserDetails] Guardando cambios...');
-    debugPrint('🔹 socialEcosystem: ${editCubit.state.socialEcosystem}');
-
-    await editCubit.saveAllPendingChanges(widget.userId!);
-
-    if (!mounted) return;
-
-    // Mostrar confirmación y cerrar
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Changes saved successfully!'),
-        backgroundColor: Colors.green,
-      ),
-    );
-
-    Navigator.of(context).pop();
   }
 }

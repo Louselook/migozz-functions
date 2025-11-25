@@ -12,8 +12,11 @@ Widget userDetailsButton({
   required BuildContext context,
   UserDetailsAction action = UserDetailsAction.back,
   RegisterCubit? cubit,
-  MoreUserDetailsMode mode = MoreUserDetailsMode.register, // 🔹 NUEVO
+  MoreUserDetailsMode mode = MoreUserDetailsMode.register,
   Future<void> Function()? onFinalAction,
+
+  /// parámetro opcional
+  bool? hasChanges,
 }) {
   return GradientButton(
     width: double.infinity,
@@ -51,16 +54,24 @@ Widget userDetailsButton({
     },
     child: SecondaryText(
       // Texto diferente según el modo y acción
-      _getButtonText(action, mode),
+      _getButtonText(action, mode, hasChanges),
       fontSize: 20,
     ),
   );
 }
 
 // Obtener texto del botón según el modo
-String _getButtonText(UserDetailsAction action, MoreUserDetailsMode mode) {
+String _getButtonText(
+  UserDetailsAction action,
+  MoreUserDetailsMode mode,
+  bool? hasChanges,
+) {
+  // 🔹 Solo afecta en EDIT MODE
   if (mode == MoreUserDetailsMode.edit) {
-    return action == UserDetailsAction.back ? 'Back' : 'Continue';
+    if (hasChanges == true) return "Save";
+    return "Back"; // hasChanges false o null → Back
   }
-  return 'Continue';
+
+  // 🔹 Modo registro → siempre Continue
+  return "Continue";
 }

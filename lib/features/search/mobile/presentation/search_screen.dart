@@ -1,6 +1,6 @@
-import 'package:firebase_auth/firebase_auth.dart';
+// import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:migozz_app/features/profile/components/bottom_nav.dart';
+// import 'package:migozz_app/features/profile/components/bottom_nav.dart';
 import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
 import 'package:migozz_app/features/search/mobile/components/input_search.dart';
 import 'package:migozz_app/features/search/mobile/components/filter_search.dart';
@@ -15,7 +15,7 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  int _tab = 0;
+  // int _tab = 0;
   final TextEditingController _searchController = TextEditingController();
   String _query = '';
 
@@ -52,17 +52,17 @@ class _SearchScreenState extends State<SearchScreen> {
               onChanged: (txt) => setState(() => _query = txt.trim()),
             ),
 
-            // Navegación inferior
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: GradientBottomNav(
-                currentIndex: _tab,
-                onItemSelected: (i) => setState(() => _tab = i),
-                onCenterTap: () async {
-                  await FirebaseAuth.instance.signOut();
-                },
-              ),
-            ),
+            // // Navegación inferior
+            // Align(
+            //   alignment: Alignment.bottomCenter,
+            //   child: GradientBottomNav(
+            //     currentIndex: _tab,
+            //     onItemSelected: (i) => setState(() => _tab = i),
+            //     onCenterTap: () async {
+            //       await FirebaseAuth.instance.signOut();
+            //     },
+            //   ),
+            // ),
           ],
         ),
       ),

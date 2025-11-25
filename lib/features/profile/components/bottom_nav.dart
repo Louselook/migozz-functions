@@ -1,8 +1,5 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:migozz_app/features/profile/presentation/edit/mobile/edit_profile_screen.dart';
-import 'package:migozz_app/features/profile/presentation/stats/mobile/profile_stats.dart';
-import 'package:migozz_app/features/profile/presentation/profile_entry.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 
 class GradientBottomNav extends StatelessWidget {
@@ -10,7 +7,7 @@ class GradientBottomNav extends StatelessWidget {
   final ValueChanged<int> onItemSelected;
   final VoidCallback onCenterTap;
   final VoidCallback? onProfileUpdated;
-  final TutorialKeys? tutorialKeys; // Agregar este parámetro
+  final TutorialKeys? tutorialKeys;
 
   const GradientBottomNav({
     super.key,
@@ -18,7 +15,7 @@ class GradientBottomNav extends StatelessWidget {
     required this.onItemSelected,
     required this.onCenterTap,
     this.onProfileUpdated,
-    this.tutorialKeys, // Agregar al constructor
+    this.tutorialKeys,
   });
 
   static const double _barHeight = 64;
@@ -33,7 +30,6 @@ class GradientBottomNav extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Barra con blur + gradiente
           ClipRRect(
             borderRadius: BorderRadius.vertical(top: Radius.circular(_radius)),
             child: BackdropFilter(
@@ -65,53 +61,29 @@ class GradientBottomNav extends StatelessWidget {
                   child: Row(
                     children: [
                       _NavItem(
-                        tutorialKeys: tutorialKeys?.profileScreenKey,
+                        tutorialKey: tutorialKeys?.profileScreenKey,
                         icon: Icons.home_outlined,
                         selected: currentIndex == 0,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute<void>(
-                              builder: (context) => const ProfileEntry(),
-                            ),
-                          );
-                        },
+                        onTap: () => onItemSelected(0), // ✅ Solo callback
                       ),
                       _NavItem(
-                        icon: Icons.link,
+                        tutorialKey: tutorialKeys?.searchScreenKey,
+                        icon: Icons.search,
                         selected: currentIndex == 1,
-                        onTap: () => onItemSelected(1),
+                        onTap: () => onItemSelected(1), // ✅ Solo callback
                       ),
                       const Spacer(),
                       _NavItem(
-                        tutorialKeys: tutorialKeys?.statScreenKey,
+                        tutorialKey: tutorialKeys?.statScreenKey,
                         icon: Icons.bar_chart_rounded,
                         selected: currentIndex == 2,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute<void>(
-                              builder: (context) => const ProfileStatsScreen(),
-                            ),
-                          );
-                        },
+                        onTap: () => onItemSelected(2), // ✅ Solo callback
                       ),
                       _NavItem(
-                        tutorialKeys: tutorialKeys?.editScreenKey,
+                        tutorialKey: tutorialKeys?.editScreenKey,
                         icon: Icons.settings_outlined,
                         selected: currentIndex == 3,
-                        onTap: () async {
-                          final result = await Navigator.push<String?>(
-                            context,
-                            MaterialPageRoute<String?>(
-                              builder: (context) => const EditProfileScreen(),
-                            ),
-                          );
-
-                          if (result == 'updated' && onProfileUpdated != null) {
-                            onProfileUpdated!();
-                          }
-                        },
+                        onTap: () => onItemSelected(3), // ✅ Solo callback
                       ),
                     ],
                   ),
@@ -119,10 +91,8 @@ class GradientBottomNav extends StatelessWidget {
               ),
             ),
           ),
-
-          // Botón central flotante
           Positioned(
-            top: 05,
+            top: -20,
             left: 0,
             right: 0,
             child: Align(
@@ -140,10 +110,10 @@ class _NavItem extends StatelessWidget {
   final IconData icon;
   final bool selected;
   final VoidCallback onTap;
-  final GlobalKey? tutorialKeys; // Cambiado el nombre para mayor claridad
+  final GlobalKey? tutorialKey;
 
   const _NavItem({
-    this.tutorialKeys,
+    this.tutorialKey,
     required this.icon,
     required this.selected,
     required this.onTap,
@@ -154,7 +124,7 @@ class _NavItem extends StatelessWidget {
     final color = selected ? Colors.white : Colors.white.withValues(alpha: 0.7);
     return Expanded(
       child: InkResponse(
-        key: tutorialKeys, // Ahora funciona correctamente
+        key: tutorialKey,
         onTap: onTap,
         radius: 0,
         child: SizedBox(

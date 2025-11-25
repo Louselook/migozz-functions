@@ -10,6 +10,7 @@ import 'package:migozz_app/features/auth/presentation/login/login_entry.dart';
 import 'package:migozz_app/features/auth/presentation/onboarding/onboarding_entry.dart';
 // import 'package:migozz_app/features/auth/presentation/login/otp_screen.dart';
 import 'package:migozz_app/features/auth/presentation/register/register_screen.dart';
+import 'package:migozz_app/features/profile/components/main_navigation.dart';
 import 'package:migozz_app/features/profile/presentation/edit/web/edit_profile_page.dart'
     show EditProfilePage;
 import 'package:migozz_app/features/profile/presentation/profile/modules/complete_profile.dart';
@@ -38,7 +39,7 @@ bool isPublicRoute(String path) {
 
 GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
   return GoRouter(
-    initialLocation: '/onboarding',
+    initialLocation: '/profile',
     refreshListenable: goRouterNotifier, // 🔑 clave
     // routerNeglect: true,
     routes: [
@@ -60,7 +61,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       ),
       GoRoute(
         path: '/profile',
-        builder: (context, state) => const ProfileEntry(),
+        builder: (context, state) => const MainNavigation(initialIndex: 0),
       ),
       GoRoute(
         path: '/profile-view',

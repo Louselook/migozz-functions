@@ -6,6 +6,7 @@ import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubi
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/social_icon_card.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/user_details_button.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/save_changes_social.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
 import 'package:migozz_app/features/auth/services/add_networks/network_config.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
@@ -87,6 +88,8 @@ class _SocialEcosystemStepState extends State<SocialEcosystemStep> {
 
   @override
   Widget build(BuildContext context) {
+    final isEditMode = widget.mode == MoreUserDetailsMode.edit;
+    final editState = isEditMode ? context.watch<EditCubit>().state : null;
     final scaleFactor = context.scaleFactor;
     final deviceType = context.deviceType;
 
@@ -226,8 +229,24 @@ class _SocialEcosystemStepState extends State<SocialEcosystemStep> {
               cubit: context.read<RegisterCubit>(),
               controller: widget.controller,
               context: context,
-              action: UserDetailsAction.back,
+              // en modo registro: Back, en modo edición: finalRegister (para que ejecute onFinalAction)
+              action: isEditMode
+                  ? UserDetailsAction.finalRegister
+                  : UserDetailsAction.back,
               mode: widget.mode,
+              hasChanges: isEditMode ? editState?.hasChanges : null,
+              onFinalAction: isEditMode
+                  ? () async {
+                      final userId = context
+                          .read<AuthCubit>()
+                          .state
+                          .firebaseUser
+                          ?.uid;
+                      if (userId != null) {
+                        await saveSocialChanges(context, userId);
+                      }
+                    }
+                  : null,
             ),
           ],
         ),

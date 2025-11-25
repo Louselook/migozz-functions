@@ -20,6 +20,9 @@ class EditCubitState extends Equatable {
   final bool success;
   final String? error;
 
+  /// Marca si hay cambios sin guardar
+  final bool hasChanges;
+
   /// Datos temporales para edición (antes de guardar)
   final List<Map<String, dynamic>>? socialEcosystem;
   final List<String>? category;
@@ -30,6 +33,7 @@ class EditCubitState extends Equatable {
     this.isSaving = false,
     this.success = false,
     this.error,
+    this.hasChanges = false,
     this.socialEcosystem,
     this.category,
     this.interests,
@@ -40,6 +44,7 @@ class EditCubitState extends Equatable {
     bool? isSaving,
     bool? success,
     String? error,
+    bool? hasChanges,
     List<Map<String, dynamic>>? socialEcosystem,
     List<String>? category,
     Map<String, List<String>>? interests,
@@ -49,6 +54,7 @@ class EditCubitState extends Equatable {
       isSaving: isSaving ?? this.isSaving,
       success: success ?? this.success,
       error: error,
+      hasChanges: hasChanges ?? this.hasChanges,
       socialEcosystem: socialEcosystem ?? this.socialEcosystem,
       category: category ?? this.category,
       interests: interests ?? this.interests,
@@ -61,6 +67,7 @@ class EditCubitState extends Equatable {
     isSaving,
     success,
     error,
+    hasChanges,
     socialEcosystem,
     category,
     interests,

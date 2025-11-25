@@ -5,14 +5,12 @@ import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/chat/presentation/user/list/chats_list_screen.dart';
 import 'package:migozz_app/features/chat/presentation/user/user_chat_screen.dart';
-import 'package:migozz_app/features/profile/components/bottom_nav.dart';
-import 'package:migozz_app/features/profile/components/profile_version_button.dart';
+import 'package:migozz_app/features/profile/components/profile_version_selector.dart';
 import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
 import 'package:migozz_app/features/profile/components/social_rail.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/components/profile_top_actions.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/profile_header_mobile_v3.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/social_circles_mobile_v3.dart';
-import 'package:migozz_app/features/search/mobile/presentation/search_screen.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 
 class MobileProfileContentV3 extends StatefulWidget {
@@ -30,8 +28,6 @@ class MobileProfileContentV3 extends StatefulWidget {
 }
 
 class _MobileProfileContentV3State extends State<MobileProfileContentV3> {
-  int _tab = 0;
-
   @override
   Widget build(BuildContext context) {
     final user = widget.user;
@@ -105,15 +101,17 @@ class _MobileProfileContentV3State extends State<MobileProfileContentV3> {
               left: 10,
               top: 45,
               child: GestureDetector(
-                key: widget.tutorialKeys.searchScreenKey,
+                // key: widget.tutorialKeys.searchScreenKey,
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const SearchScreen()),
+                  showDialog(
+                    context: context,
+                    builder: (context) => ProfileVersionSelector(
+                      currentVersion: user.profileVersion,
+                    ),
                   );
                 },
                 child: const Icon(
-                  Icons.search,
+                  Icons.more_vert,
                   color: Color(0xAAFFFFFF),
                   size: 45,
                 ),
@@ -156,26 +154,8 @@ class _MobileProfileContentV3State extends State<MobileProfileContentV3> {
               debugPrint('Abrir notificaciones');
             },
           ),
-
-          // Barra inferior de navegación (solo si es el propio perfil)
-          if (isOwnProfile)
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: GradientBottomNav(
-                currentIndex: _tab,
-                onItemSelected: (i) => setState(() => _tab = i),
-                onCenterTap: () async {
-                  await context.read<AuthCubit>().logout();
-                },
-                onProfileUpdated: () {
-                  context.read<AuthCubit>().refreshUserProfile();
-                },
-                tutorialKeys: widget.tutorialKeys,
-              ),
-            ),
-
           // Botón para cambiar versión de perfil
-          ProfileVersionButton(currentVersion: user.profileVersion),
+          // ProfileVersionButton(currentVersion: user.profileVersion),
         ],
       ),
     );

@@ -19,31 +19,34 @@ class EditCubit extends Cubit<EditCubitState> {
     List<String>? category,
     Map<String, List<String>>? interests,
   }) {
+    // Cuando inicializamos desde el usuario, no hay cambios pendientes
     emit(
       state.copyWith(
         socialEcosystem: socialEcosystem ?? [],
         category: category ?? [],
         interests: interests ?? {},
+        hasChanges: false,
       ),
     );
   }
 
   // Actualizar social ecosystem temporalmente
   void updateSocialEcosystem(List<Map<String, dynamic>> socials) {
-    emit(state.copyWith(socialEcosystem: socials));
+    // Marca cambios (simple): cuando el usuario modifica la lista
+    emit(state.copyWith(socialEcosystem: socials, hasChanges: true));
   }
 
   // Actualizar categorías temporalmente
   void updateCategory(List<String> categories) {
-    emit(state.copyWith(category: categories));
+    emit(state.copyWith(category: categories, hasChanges: true));
   }
 
   // Actualizar intereses temporalmente
   void updateInterests(Map<String, List<String>> interests) {
-    emit(state.copyWith(interests: interests));
+    emit(state.copyWith(interests: interests, hasChanges: true));
   }
 
-  // Guardar cambios del usuario
+  // Guardar cambios del usuario (campo específico)
   Future<void> saveUserProfileField({
     required String userId,
     required Map<String, dynamic> updatedFields,
@@ -56,7 +59,8 @@ class EditCubit extends Cubit<EditCubitState> {
       //  Refresca el AuthCubit automáticamente
       await _authCubit.refreshUserProfile();
 
-      emit(state.copyWith(isSaving: false, success: true));
+      // Al guardar, no quedan cambios pendientes
+      emit(state.copyWith(isSaving: false, success: true, hasChanges: false));
     } catch (e) {
       emit(state.copyWith(isSaving: false, error: e.toString()));
     }
@@ -84,7 +88,8 @@ class EditCubit extends Cubit<EditCubitState> {
         await _authCubit.refreshUserProfile();
       }
 
-      emit(state.copyWith(isSaving: false, success: true));
+      // Reset hasChanges al finalizar exitosamente
+      emit(state.copyWith(isSaving: false, success: true, hasChanges: false));
     } catch (e) {
       emit(state.copyWith(isSaving: false, error: e.toString()));
     }
