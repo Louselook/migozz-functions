@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
@@ -150,13 +151,13 @@ class _SocialEcosystemStepState extends State<SocialEcosystemStep> {
             SizedBox(height: topSpacing),
             PrimaryText(
               widget.mode == MoreUserDetailsMode.register
-                  ? "Your Social Ecosystem"
-                  : "Edit Social Ecosystem",
+                  ? "addSocials.register.title".tr()
+                  : "addSocials.edit.title".tr(),
             ),
             SecondaryText(
               widget.mode == MoreUserDetailsMode.register
-                  ? "Add your platforms"
-                  : "Add or remove platforms",
+                  ? "addSocials.register.subtitle".tr()
+                  : "addSocials.edit.subtitle".tr(),
             ),
             SizedBox(height: contentSpacing),
 
@@ -330,16 +331,16 @@ class _SocialEcosystemStepState extends State<SocialEcosystemStep> {
     return showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text("Desvincular $label?"),
-        content: Text("¿Estás seguro que quieres desvincular $label?"),
+        title: Text("${"addSocials.popUp.title".tr()} $label?"),
+        content: Text("${"addSocials.popUp.subtitle".tr()} $label?"),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text("No"),
+            child: Text("addSocials.popUp.no".tr()),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text("Sí"),
+            child: Text("addSocials.popUp.yes".tr()),
           ),
         ],
       ),

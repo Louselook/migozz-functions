@@ -39,7 +39,7 @@ bool isPublicRoute(String path) {
 
 GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
   return GoRouter(
-    initialLocation: '/profile',
+    initialLocation: '/onboarding',
     refreshListenable: goRouterNotifier, // 🔑 clave
     // routerNeglect: true,
     routes: [
