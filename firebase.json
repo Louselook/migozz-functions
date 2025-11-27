@@ -39,7 +39,7 @@
   ],
     "hosting": [
     {
-      "site": "migozz-app",
+      "site": "migozz-e2a21",
       "public": "build/web",
       "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
       "rewrites": [

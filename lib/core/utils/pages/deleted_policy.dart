@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
+
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
@@ -27,7 +29,7 @@ class DataDeletionScreen extends StatelessWidget {
                     onPressed: () => context.pop(),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(child: PrimaryText('Data Deletion')),
+                  Expanded(child: PrimaryText('dataDeletion.header'.tr())),
                 ],
               ),
             ),
@@ -39,7 +41,7 @@ class DataDeletionScreen extends StatelessWidget {
                 child: Center(
                   child: ConstrainedBox(
                     constraints: BoxConstraints(maxWidth: maxWidth),
-                    child: _DataDeletionContent(),
+                    child: const _DataDeletionContent(),
                   ),
                 ),
               ),
@@ -54,12 +56,12 @@ class DataDeletionScreen extends StatelessWidget {
                   width: double.infinity,
                   radius: 19,
                   onPressed: () => context.go('/login'),
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.login, color: Colors.white, size: 20),
-                      SizedBox(width: 8),
-                      SecondaryText("Back to Login"),
+                      const Icon(Icons.login, color: Colors.white, size: 20),
+                      const SizedBox(width: 8),
+                      SecondaryText('dataDeletion.button.backToLogin'.tr()),
                     ],
                   ),
                 ),
@@ -73,6 +75,8 @@ class DataDeletionScreen extends StatelessWidget {
 }
 
 class _DataDeletionContent extends StatelessWidget {
+  const _DataDeletionContent();
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -94,14 +98,14 @@ class _DataDeletionContent extends StatelessWidget {
                 top: Radius.circular(16),
               ),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.delete_forever, color: Colors.white, size: 24),
-                SizedBox(width: 12),
+                const Icon(Icons.delete_forever, color: Colors.white, size: 24),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Instrucciones de Eliminación de Datos',
-                    style: TextStyle(
+                    'dataDeletion.title'.tr(),
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -121,65 +125,18 @@ class _DataDeletionContent extends StatelessWidget {
                 _buildIntro(),
                 const SizedBox(height: 24),
 
-                _buildSection(
-                  '1. Ámbito',
-                  'Estas instrucciones aplican a la información recopilada por Migozz a través de Facebook Login y otras integraciones de Meta, incluyendo: nombre público, ID de usuario, foto de perfil, correo electrónico (si lo autorizaste), y cualquier permiso adicional que hayas otorgado a la app.',
-                ),
-
-                _buildSection(
-                  '2. Cómo solicitar la eliminación',
-                  'Tienes tres opciones:',
-                ),
-
-                _buildOptionCard(
-                  icon: Icons.account_circle,
-                  title: 'Desde tu cuenta',
-                  description:
-                      'Ve a Perfil > Configuración > Privacidad > Eliminar mi cuenta y datos, o accede a https://migozz.com/account/delete y sigue los pasos en pantalla.',
-                ),
+                _buildSection('section1'),
+                _buildSection('section2'),
 
                 const SizedBox(height: 12),
-
-                _buildOptionCard(
-                  icon: Icons.web,
-                  title: 'Formulario web',
-                  description:
-                      'Completa el formulario en https://migozz.com/legal/data-deletion indicando tu correo y el ID con el que te registraste (si lo conoces).',
-                ),
-
-                const SizedBox(height: 12),
-
-                _buildOptionCard(
-                  icon: Icons.email,
-                  title: 'Correo electrónico',
-                  description:
-                      'Escríbenos a privacy@migozz.com con el asunto "Eliminar mis datos – Migozz" y desde el mismo correo asociado a tu cuenta.',
-                ),
+                _buildOptions(),
 
                 const SizedBox(height: 24),
+                _buildSection('section3'),
+                _buildSection('section4'),
 
-                _buildSection(
-                  '3. Qué ocurre después',
-                  '• Confirmaremos la recepción en 48–72 horas.\n'
-                      '• Completaremos la eliminación o anonimización en un plazo máximo de 30 días.\n'
-                      '• Te enviaremos un comprobante de eliminación cuando finalice el proceso.',
-                ),
-
-                _buildSection(
-                  '4. Alcance de la eliminación',
-                  'Eliminamos datos obtenidos vía Facebook Login y datos generados en el uso de Migozz (perfiles, sesiones, preferencias, contenido no sujeto a obligaciones legales).\n\n'
-                      'Podrían conservarse por tiempo limitado ciertos registros mínimos necesarios para:\n'
-                      '• Cumplimiento de la ley\n'
-                      '• Prevención de fraude/abuso\n'
-                      '• Obligaciones fiscales/contables\n'
-                      '• Defensa de reclamaciones\n\n'
-                      'Dichos registros se retienen de forma segura y se eliminan al expirar la obligación.',
-                ),
-
-                _buildWarningBox(
-                  '⚠️ Efectos',
-                  'La eliminación es irreversible y puede implicar la desactivación o cierre de tu cuenta y la pérdida de acceso a tus contenidos o funciones asociadas.',
-                ),
+                const SizedBox(height: 12),
+                _buildWarningBox(),
               ],
             ),
           ),
@@ -203,7 +160,7 @@ class _DataDeletionContent extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Si deseas eliminar tus datos personales de Migozz, sigue las instrucciones a continuación.',
+              'dataDeletion.intro'.tr(),
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.95),
                 fontSize: 14,
@@ -216,14 +173,14 @@ class _DataDeletionContent extends StatelessWidget {
     );
   }
 
-  Widget _buildSection(String title, String content) {
+  Widget _buildSection(String key) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            title,
+            'dataDeletion.$key.title'.tr(),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 18,
@@ -232,7 +189,7 @@ class _DataDeletionContent extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            content,
+            'dataDeletion.$key.content'.tr(),
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.85),
               fontSize: 14,
@@ -241,6 +198,30 @@ class _DataDeletionContent extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildOptions() {
+    return Column(
+      children: [
+        _buildOptionCard(
+          icon: Icons.account_circle,
+          title: 'dataDeletion.option1.title'.tr(),
+          description: 'dataDeletion.option1.description'.tr(),
+        ),
+        const SizedBox(height: 12),
+        _buildOptionCard(
+          icon: Icons.web,
+          title: 'dataDeletion.option2.title'.tr(),
+          description: 'dataDeletion.option2.description'.tr(),
+        ),
+        const SizedBox(height: 12),
+        _buildOptionCard(
+          icon: Icons.email,
+          title: 'dataDeletion.option3.title'.tr(),
+          description: 'dataDeletion.option3.description'.tr(),
+        ),
+      ],
     );
   }
 
@@ -262,9 +243,7 @@ class _DataDeletionContent extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.primaryGradient.colors.first.withValues(
-                alpha: 0.2,
-              ),
+              color: AppColors.primaryGradient.colors.first.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, color: Colors.white, size: 20),
@@ -299,7 +278,7 @@ class _DataDeletionContent extends StatelessWidget {
     );
   }
 
-  Widget _buildWarningBox(String title, String content) {
+  Widget _buildWarningBox() {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -319,7 +298,7 @@ class _DataDeletionContent extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                title,
+                'dataDeletion.warning.title'.tr(),
                 style: TextStyle(
                   color: Colors.red.shade300,
                   fontSize: 16,
@@ -330,7 +309,7 @@ class _DataDeletionContent extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            content,
+            'dataDeletion.warning.content'.tr(),
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.9),
               fontSize: 14,

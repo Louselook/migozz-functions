@@ -62,6 +62,128 @@
         "completeLater": "Completar Más Tarde"
       }
   },
+  "termsPrivacy": {
+    "header": "Términos y Privacidad",
+    "button": {
+      "backToLogin": "Volver al inicio de sesión"
+    },
+    "terms": {
+      "title": "Términos de Servicio",
+      "intro": "Bienvenido a Migozz, el primer ecosistema de redes sociales impulsado por inteligencia artificial. Al acceder o utilizar nuestros servicios, aceptas cumplir con los siguientes términos y condiciones.",
+      "section1": {
+        "title": "1. Aceptación de los Términos",
+        "content": "Al registrarte, acceder o utilizar Migozz, aceptas estos Términos de Servicio y nuestra Política de Privacidad. Si no estás de acuerdo, no debes utilizar la plataforma."
+      },
+      "section2": {
+        "title": "2. Descripción del Servicio",
+        "content": "Migozz permite a los usuarios conectar múltiples redes sociales, publicar contenido de forma cruzada, monetizar su presencia digital, recibir regalos, y acceder a herramientas de análisis impulsadas por IA."
+      },
+      "section3": {
+        "title": "3. Elegibilidad",
+        "content": "Debes tener al menos 13 años para usar Migozz. Si eres menor de edad, necesitas el consentimiento de tus padres o tutores legales."
+      },
+      "section4": {
+        "title": "4. Uso Aceptable",
+        "content": "No puedes utilizar Migozz para:\n\n• Publicar contenido ilegal, ofensivo o que infrinja derechos de terceros.\n• Suplantar identidades o manipular estadísticas.\n• Realizar actividades fraudulentas o engañosas."
+      },
+      "section5": {
+        "title": "5. Propiedad Intelectual",
+        "content": "Todo el contenido generado por Migozz, incluyendo diseño, algoritmos y funcionalidades, es propiedad de Migozz Inc. Los usuarios conservan los derechos sobre el contenido que suben, pero otorgan a Migozz una licencia para mostrarlo y distribuirlo dentro del ecosistema."
+      },
+      "section6": {
+        "title": "6. Monetización y Pagos",
+        "content": "Los ingresos generados por publicidad, regalos o ventas de contenido están sujetos a comisiones establecidas por Migozz. Los pagos se procesan de forma segura y pueden estar sujetos a impuestos locales."
+      },
+      "section7": {
+        "title": "7. Cancelación y Suspensión",
+        "content": "Migozz se reserva el derecho de suspender o cancelar cuentas que violen estos términos, sin previo aviso. Los usuarios pueden eliminar su cuenta en cualquier momento desde el panel de configuración."
+      },
+      "section8": {
+        "title": "8. Limitación de Responsabilidad",
+        "content": "Migozz no se hace responsable por pérdidas de ingresos, interrupciones del servicio o daños derivados del uso de la plataforma."
+      },
+      "section9": {
+        "title": "9. Modificaciones",
+        "content": "Nos reservamos el derecho de modificar estos términos en cualquier momento. Las actualizaciones se publicarán en esta página y se considerarán vigentes desde su publicación."
+      }
+    },
+    "privacy": {
+      "title": "Política de Privacidad",
+      "intro": "En Migozz, valoramos tu privacidad y nos comprometemos a proteger tus datos personales. Esta política describe cómo recopilamos, usamos, almacenamos y compartimos tu información.",
+      "section1": {
+        "title": "1. Información que Recopilamos",
+        "content": "• Datos de registro: nombre, correo electrónico, número de teléfono.\n• Redes sociales conectadas: estadísticas de seguidores, publicaciones, interacciones.\n• Información de uso: actividad dentro de la plataforma, clics, tiempo de sesión.\n• Datos de monetización: ingresos generados, regalos recibidos, transacciones."
+      },
+      "section2": {
+        "title": "2. Cómo Usamos Tu Información",
+        "content": "• Para personalizar tu experiencia en Migozz.\n• Para mostrar estadísticas y análisis de tu comunidad.\n• Para facilitar la publicación cruzada y la monetización.\n• Para enviarte notificaciones relevantes y soporte técnico."
+      },
+      "section3": {
+        "title": "3. Compartir Información",
+        "content": "No vendemos tus datos. Podemos compartir información con:\n\n• Proveedores de servicios (como procesadores de pago).\n• Autoridades legales si es requerido por ley.\n• Socios estratégicos, solo con tu consentimiento."
+      },
+      "section4": {
+        "title": "4. Seguridad",
+        "content": "Utilizamos cifrado, autenticación y servidores seguros para proteger tu información. Sin embargo, ningún sistema es 100% infalible."
+      },
+      "section5": {
+        "title": "5. Tus Derechos",
+        "content": "• Acceder a tus datos.\n• Rectificar información incorrecta.\n• Eliminar tu cuenta y tus datos.\n• Solicitar una copia de tu información."
+      },
+      "section6": {
+        "title": "6. Cookies y Tecnologías de Rastreo",
+        "content": "Usamos cookies para mejorar la experiencia del usuario, analizar el tráfico y personalizar contenido. Puedes gestionar tus preferencias desde tu navegador."
+      },
+      "section7": {
+        "title": "7. Retención de Datos",
+        "content": "Conservamos tu información mientras tu cuenta esté activa o sea necesario para cumplir con obligaciones legales."
+      },
+      "section8": {
+        "title": "8. Cambios en la Política",
+        "content": "Podemos actualizar esta política periódicamente. Te notificaremos sobre cambios importantes por correo o dentro de la plataforma."
+      }
+    }
+  },
+  "dataDeletion": {
+    "header": "Eliminación de Datos",
+    "title": "Instrucciones de Eliminación de Datos",
+    "intro": "Si deseas eliminar tus datos personales de Migozz, sigue las instrucciones a continuación.",
+    "section1": {
+      "title": "1. Ámbito",
+      "content": "Estas instrucciones aplican a la información recopilada por Migozz a través de Facebook Login y otras integraciones de Meta, incluyendo: nombre público, ID de usuario, foto de perfil, correo electrónico (si lo autorizaste), y cualquier permiso adicional que hayas otorgado a la app."
+    },
+    "section2": {
+      "title": "2. Cómo solicitar la eliminación",
+      "content": "Tienes tres opciones:"
+    },
+    "section3": {
+      "title": "3. Qué ocurre después",
+      "content": "• Confirmaremos la recepción en 48–72 horas.\n• Completaremos la eliminación o anonimización en un plazo máximo de 30 días.\n• Te enviaremos un comprobante de eliminación cuando finalice el proceso."
+    },
+    "section4": {
+      "title": "4. Alcance de la eliminación",
+      "content": "Eliminamos datos obtenidos vía Facebook Login y datos generados en el uso de Migozz (perfiles, sesiones, preferencias, contenido no sujeto a obligaciones legales).\n\nPodrían conservarse por tiempo limitado ciertos registros mínimos necesarios para:\n• Cumplimiento de la ley\n• Prevención de fraude o abuso\n• Obligaciones fiscales o contables\n• Defensa de reclamaciones\n\nDichos registros se retienen de forma segura y se eliminan al expirar la obligación."
+    },
+    "option1": {
+      "title": "Desde tu cuenta",
+      "description": "Ve a Perfil > Configuración > Privacidad > Eliminar mi cuenta y datos, o accede a https://migozz.com/account/delete y sigue los pasos en pantalla."
+    },
+    "option2": {
+      "title": "Formulario web",
+      "description": "Completa el formulario en https://migozz.com/legal/data-deletion indicando tu correo y el ID con el que te registraste (si lo conoces)."
+    },
+    "option3": {
+      "title": "Correo electrónico",
+      "description": "Escríbenos a privacy@migozz.com con el asunto \"Eliminar mis datos – Migozz\" y desde el mismo correo asociado a tu cuenta."
+    },
+    "warning": {
+      "title": "⚠️ Efectos",
+      "content": "La eliminación es irreversible y puede implicar la desactivación o cierre de tu cuenta y la pérdida de acceso a tus contenidos o funciones asociadas."
+    },
+    "button": {
+      "backToLogin": "Volver al inicio de sesión"
+    }
+  },
   "profile": {
     "chat": {
       "filter":"Nuevo",

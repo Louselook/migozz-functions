@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
+
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
@@ -28,7 +30,9 @@ class TermsPrivacyScreen extends StatelessWidget {
                     onPressed: () => context.pop(),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(child: PrimaryText('Terms & Privacy')),
+                  Expanded(
+                    child: PrimaryText('termsPrivacy.header'.tr()),
+                  ),
                 ],
               ),
             ),
@@ -49,12 +53,12 @@ class TermsPrivacyScreen extends StatelessWidget {
                   width: double.infinity,
                   radius: 19,
                   onPressed: () => context.go('/login'),
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.login, color: Colors.white, size: 20),
-                      SizedBox(width: 8),
-                      SecondaryText("Back to Login"),
+                      const Icon(Icons.login, color: Colors.white, size: 20),
+                      const SizedBox(width: 8),
+                      SecondaryText("termsPrivacy.button.backToLogin".tr()),
                     ],
                   ),
                 ),
@@ -126,14 +130,14 @@ class _TermsSection extends StatelessWidget {
                 top: Radius.circular(16),
               ),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.description, color: Colors.white, size: 24),
-                SizedBox(width: 12),
+                const Icon(Icons.description, color: Colors.white, size: 24),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Términos de Servicio',
-                    style: TextStyle(
+                    'termsPrivacy.terms.title'.tr(),
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -146,77 +150,74 @@ class _TermsSection extends StatelessWidget {
 
           // Contenido scrolleable (o no, dependiendo de isMobile)
           if (isMobile)
-            _buildMobileContent()
+            _buildMobileContent(context)
           else
-            Expanded(child: _buildDesktopContent()),
+            Expanded(child: _buildDesktopContent(context)),
         ],
       ),
     );
   }
 
-  Widget _buildDesktopContent() {
+  Widget _buildDesktopContent(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
-      child: _buildContent(),
+      child: _buildContent(context),
     );
   }
 
-  Widget _buildMobileContent() {
-    return Padding(padding: const EdgeInsets.all(20), child: _buildContent());
+  Widget _buildMobileContent(BuildContext context) {
+    return Padding(padding: const EdgeInsets.all(20), child: _buildContent(context));
   }
 
-  Widget _buildContent() {
+  Widget _buildContent(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildIntro(),
+        _buildIntro(context),
         const SizedBox(height: 20),
         _buildSection(
-          '1. Aceptación de los Términos',
-          'Al registrarte, acceder o utilizar Migozz, aceptas estos Términos de Servicio y nuestra Política de Privacidad. Si no estás de acuerdo, no debes utilizar la plataforma.',
+          'termsPrivacy.terms.section1.title'.tr(),
+          'termsPrivacy.terms.section1.content'.tr(),
         ),
         _buildSection(
-          '2. Descripción del Servicio',
-          'Migozz permite a los usuarios conectar múltiples redes sociales, publicar contenido de forma cruzada, monetizar su presencia digital, recibir regalos, y acceder a herramientas de análisis impulsadas por IA.',
+          'termsPrivacy.terms.section2.title'.tr(),
+          'termsPrivacy.terms.section2.content'.tr(),
         ),
         _buildSection(
-          '3. Elegibilidad',
-          'Debes tener al menos 13 años para usar Migozz. Si eres menor de edad, necesitas el consentimiento de tus padres o tutores legales.',
+          'termsPrivacy.terms.section3.title'.tr(),
+          'termsPrivacy.terms.section3.content'.tr(),
         ),
         _buildSection(
-          '4. Uso Aceptable',
-          'No puedes utilizar Migozz para:\n\n'
-              '• Publicar contenido ilegal, ofensivo o que infrinja derechos de terceros.\n'
-              '• Suplantar identidades o manipular estadísticas.\n'
-              '• Realizar actividades fraudulentas o engañosas.',
+          'termsPrivacy.terms.section4.title'.tr(),
+          'termsPrivacy.terms.section4.content'.tr(),
         ),
         _buildSection(
-          '5. Propiedad Intelectual',
-          'Todo el contenido generado por Migozz, incluyendo diseño, algoritmos y funcionalidades, es propiedad de Migozz Inc. Los usuarios conservan los derechos sobre el contenido que suben, pero otorgan a Migozz una licencia para mostrarlo y distribuirlo dentro del ecosistema.',
+          'termsPrivacy.terms.section5.title'.tr(),
+          'termsPrivacy.terms.section5.content'.tr(),
         ),
         _buildSection(
-          '6. Monetización y Pagos',
-          'Los ingresos generados por publicidad, regalos o ventas de contenido están sujetos a comisiones establecidas por Migozz. Los pagos se procesan de forma segura y pueden estar sujetos a impuestos locales.',
+          'termsPrivacy.terms.section6.title'.tr(),
+          'termsPrivacy.terms.section6.content'.tr(),
         ),
         _buildSection(
-          '7. Cancelación y Suspensión',
-          'Migozz se reserva el derecho de suspender o cancelar cuentas que violen estos términos, sin previo aviso. Los usuarios pueden eliminar su cuenta en cualquier momento desde el panel de configuración.',
+          'termsPrivacy.terms.section7.title'.tr(),
+          'termsPrivacy.terms.section7.content'.tr(),
         ),
         _buildSection(
-          '8. Limitación de Responsabilidad',
-          'Migozz no se hace responsable por pérdidas de ingresos, interrupciones del servicio o daños derivados del uso de la plataforma.',
+          'termsPrivacy.terms.section8.title'.tr(),
+          'termsPrivacy.terms.section8.content'.tr(),
         ),
         _buildSection(
-          '9. Modificaciones',
-          'Nos reservamos el derecho de modificar estos términos en cualquier momento. Las actualizaciones se publicarán en esta página y se considerarán vigentes desde su publicación.',
+          'termsPrivacy.terms.section9.title'.tr(),
+          'termsPrivacy.terms.section9.content'.tr(),
         ),
       ],
     );
   }
 
-  Widget _buildIntro() {
+  Widget _buildIntro(BuildContext context) {
     return Text(
-      'Bienvenido a Migozz, el primer ecosistema de redes sociales impulsado por inteligencia artificial. Al acceder o utilizar nuestros servicios, aceptas cumplir con los siguientes términos y condiciones.',
+      'termsPrivacy.terms.intro'.tr(),
       style: TextStyle(
         color: Colors.white.withValues(alpha: 0.9),
         fontSize: 14,
@@ -282,14 +283,14 @@ class _PrivacySection extends StatelessWidget {
                 top: Radius.circular(16),
               ),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.privacy_tip, color: Colors.white, size: 24),
-                SizedBox(width: 12),
+                const Icon(Icons.privacy_tip, color: Colors.white, size: 24),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Política de Privacidad',
-                    style: TextStyle(
+                    'termsPrivacy.privacy.title'.tr(),
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -302,82 +303,70 @@ class _PrivacySection extends StatelessWidget {
 
           // Contenido scrolleable (o no, dependiendo de isMobile)
           if (isMobile)
-            _buildMobileContent()
+            _buildMobileContent(context)
           else
-            Expanded(child: _buildDesktopContent()),
+            Expanded(child: _buildDesktopContent(context)),
         ],
       ),
     );
   }
 
-  Widget _buildDesktopContent() {
+  Widget _buildDesktopContent(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
-      child: _buildContent(),
+      child: _buildContent(context),
     );
   }
 
-  Widget _buildMobileContent() {
-    return Padding(padding: const EdgeInsets.all(20), child: _buildContent());
+  Widget _buildMobileContent(BuildContext context) {
+    return Padding(padding: const EdgeInsets.all(20), child: _buildContent(context));
   }
 
-  Widget _buildContent() {
+  Widget _buildContent(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildIntro(),
+        _buildIntro(context),
         const SizedBox(height: 20),
         _buildSection(
-          '1. Información que Recopilamos',
-          '• Datos de registro: nombre, correo electrónico, número de teléfono.\n'
-              '• Redes sociales conectadas: estadísticas de seguidores, publicaciones, interacciones.\n'
-              '• Información de uso: actividad dentro de la plataforma, clics, tiempo de sesión.\n'
-              '• Datos de monetización: ingresos generados, regalos recibidos, transacciones.',
+          'termsPrivacy.privacy.section1.title'.tr(),
+          'termsPrivacy.privacy.section1.content'.tr(),
         ),
         _buildSection(
-          '2. Cómo Usamos Tu Información',
-          '• Para personalizar tu experiencia en Migozz.\n'
-              '• Para mostrar estadísticas y análisis de tu comunidad.\n'
-              '• Para facilitar la publicación cruzada y la monetización.\n'
-              '• Para enviarte notificaciones relevantes y soporte técnico.',
+          'termsPrivacy.privacy.section2.title'.tr(),
+          'termsPrivacy.privacy.section2.content'.tr(),
         ),
         _buildSection(
-          '3. Compartir Información',
-          'No vendemos tus datos. Podemos compartir información con:\n\n'
-              '• Proveedores de servicios (como procesadores de pago).\n'
-              '• Autoridades legales si es requerido por ley.\n'
-              '• Socios estratégicos, solo con tu consentimiento.',
+          'termsPrivacy.privacy.section3.title'.tr(),
+          'termsPrivacy.privacy.section3.content'.tr(),
         ),
         _buildSection(
-          '4. Seguridad',
-          'Utilizamos cifrado, autenticación y servidores seguros para proteger tu información. Sin embargo, ningún sistema es 100% infalible.',
+          'termsPrivacy.privacy.section4.title'.tr(),
+          'termsPrivacy.privacy.section4.content'.tr(),
         ),
         _buildSection(
-          '5. Tus Derechos',
-          '• Acceder a tus datos.\n'
-              '• Rectificar información incorrecta.\n'
-              '• Eliminar tu cuenta y tus datos.\n'
-              '• Solicitar una copia de tu información.',
+          'termsPrivacy.privacy.section5.title'.tr(),
+          'termsPrivacy.privacy.section5.content'.tr(),
         ),
         _buildSection(
-          '6. Cookies y Tecnologías de Rastreo',
-          'Usamos cookies para mejorar la experiencia del usuario, analizar el tráfico y personalizar contenido. Puedes gestionar tus preferencias desde tu navegador.',
+          'termsPrivacy.privacy.section6.title'.tr(),
+          'termsPrivacy.privacy.section6.content'.tr(),
         ),
         _buildSection(
-          '7. Retención de Datos',
-          'Conservamos tu información mientras tu cuenta esté activa o sea necesario para cumplir con obligaciones legales.',
+          'termsPrivacy.privacy.section7.title'.tr(),
+          'termsPrivacy.privacy.section7.content'.tr(),
         ),
         _buildSection(
-          '8. Cambios en la Política',
-          'Podemos actualizar esta política periódicamente. Te notificaremos sobre cambios importantes por correo o dentro de la plataforma.',
+          'termsPrivacy.privacy.section8.title'.tr(),
+          'termsPrivacy.privacy.section8.content'.tr(),
         ),
       ],
     );
   }
 
-  Widget _buildIntro() {
+  Widget _buildIntro(BuildContext context) {
     return Text(
-      'En Migozz, valoramos tu privacidad y nos comprometemos a proteger tus datos personales. Esta política describe cómo recopilamos, usamos, almacenamos y compartimos tu información.',
+      'termsPrivacy.privacy.intro'.tr(),
       style: TextStyle(
         color: Colors.white.withValues(alpha: 0.9),
         fontSize: 14,
