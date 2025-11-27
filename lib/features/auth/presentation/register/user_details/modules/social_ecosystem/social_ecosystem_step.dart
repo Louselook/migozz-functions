@@ -65,16 +65,43 @@ class _SocialEcosystemStepState extends State<SocialEcosystemStep> {
     }
   }
 
-  // ✅ Nuevo método para configurar callback de sincronización
+  // ✅ ARREGLADO: Hacer merge manualmente antes de actualizar
   void _setupSyncCallback() {
     final registerCubit = context.read<RegisterCubit>();
     final editCubit = context.read<EditCubit>();
 
-    registerCubit.onSocialEcosystemUpdated = (platforms) {
+    registerCubit.onSocialEcosystemUpdated = (newPlatforms) {
       debugPrint(
         '🔄 [SocialEcosystem] Sincronizando RegisterCubit → EditCubit',
       );
-      editCubit.updateSocialEcosystem(platforms);
+      debugPrint('   Nuevas plataformas: ${newPlatforms.length}');
+
+      // ✅ Obtener lista actual del EditCubit
+      final currentList = List<Map<String, dynamic>>.from(
+        editCubit.state.socialEcosystem ?? [],
+      );
+
+      // ✅ Hacer MERGE manualmente: agregar o actualizar
+      for (final newSocial in newPlatforms) {
+        final platform = newSocial.keys.first;
+
+        final existingIndex = currentList.indexWhere(
+          (item) => item.keys.first.toLowerCase() == platform.toLowerCase(),
+        );
+
+        if (existingIndex != -1) {
+          debugPrint('   ✏️ Actualizando $platform');
+          currentList[existingIndex] = newSocial;
+        } else {
+          debugPrint('   ➕ Agregando $platform');
+          currentList.add(newSocial);
+        }
+      }
+
+      debugPrint('   ✅ Total final: ${currentList.length} redes');
+
+      // Ahora sí, actualizar con la lista completa (mergeada)
+      editCubit.updateSocialEcosystem(currentList);
     };
   }
 

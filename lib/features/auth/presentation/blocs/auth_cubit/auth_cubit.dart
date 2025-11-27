@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/auth_result.dart';
@@ -12,16 +13,15 @@ class AuthCubit extends Cubit<AuthState> {
   final AuthUseCases _authUseCases;
   final UserService _userService;
   late final StreamSubscription<User?> _authSub;
+  StreamSubscription<DocumentSnapshot>? _userProfileSub; // ✅ Nuevo listener
 
   AuthCubit(this._authUseCases, this._userService)
     : super(const AuthState.checking()) {
-    // 🔔 Volver al listener original (sin flag)
     _authSub = _authUseCases.authStateChanges.listen(
       (user) async {
         debugPrint('🔔 [AuthCubit] authStateChanges: ${user?.uid ?? "null"}');
 
         if (user != null) {
-          // Mostrar pantalla de carga mientras se obtiene el perfil
           emit(
             state.copyWith(status: AuthStatus.checking, isLoadingProfile: true),
           );
@@ -35,6 +35,9 @@ class AuthCubit extends Cubit<AuthState> {
                 userProfile: userProfile,
               ),
             );
+
+            // ✅ Iniciar listener de Firestore para el perfil del usuario
+            _setupUserProfileListener(user.uid);
 
             if (userProfile == null || !userProfile.complete) {
               debugPrint(
@@ -51,6 +54,7 @@ class AuthCubit extends Cubit<AuthState> {
           }
         } else {
           debugPrint('🔒 [AuthCubit] Usuario no autenticado');
+          _cancelUserProfileListener(); // ✅ Cancelar listener si no hay usuario
           emit(const AuthState.notAuthenticated());
         }
       },
@@ -59,6 +63,48 @@ class AuthCubit extends Cubit<AuthState> {
         emit(const AuthState.notAuthenticated());
       },
     );
+  }
+
+  /// ✅ Configurar listener en tiempo real para el perfil del usuario
+  void _setupUserProfileListener(String uid) {
+    // Cancelar listener anterior si existe
+    _cancelUserProfileListener();
+
+    debugPrint('🔄 [AuthCubit] Configurando listener de perfil para UID: $uid');
+
+    _userProfileSub = FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .snapshots()
+        .listen(
+          (snapshot) {
+            if (snapshot.exists && state.isAuthenticated) {
+              final data = snapshot.data();
+              if (data != null) {
+                final updatedProfile = UserDTO.fromMap(data);
+
+                debugPrint('✨ [AuthCubit] Perfil actualizado en tiempo real');
+
+                // Emitir nuevo estado con el perfil actualizado
+                emit(
+                  state.copyWith(
+                    userProfile: updatedProfile,
+                    isLoadingProfile: false,
+                  ),
+                );
+              }
+            }
+          },
+          onError: (error) {
+            debugPrint('❌ [AuthCubit] Error en listener de perfil: $error');
+          },
+        );
+  }
+
+  /// ✅ Cancelar listener del perfil
+  void _cancelUserProfileListener() {
+    _userProfileSub?.cancel();
+    _userProfileSub = null;
   }
 
   Future<UserDTO?> _loadUserProfileWithRetry(
@@ -109,7 +155,6 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  // ✅ Registro sin flag - original
   Future<String> completeRegistration({
     required String email,
     required String otp,
@@ -140,17 +185,18 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  /// ✅ Ahora es opcional - el listener se encarga automáticamente
   Future<void> refreshUserProfile() async {
     if (!state.isAuthenticated || state.firebaseUser == null) return;
 
     try {
-      debugPrint('🔄 [AuthCubit] Refrescando perfil...');
+      debugPrint('🔄 [AuthCubit] Refrescando perfil manualmente...');
       final userProfile = await _authUseCases.getCurrentUser.run();
 
       emit(state.copyWith(userProfile: userProfile, isLoadingProfile: false));
 
       if (userProfile != null && userProfile.complete) {
-        debugPrint('✅ [AuthCubit] Perfil actualizado y completo');
+        debugPrint('✅ [AuthCubit] Perfil actualizado manualmente');
       } else {
         debugPrint('⚠️ [AuthCubit] Perfil vacío o incompleto al refrescar');
       }
@@ -167,7 +213,6 @@ class AuthCubit extends Cubit<AuthState> {
     emit(state.copyWith(userProfile: updatedProfile, isLoadingProfile: false));
   }
 
-  /// Actualiza la versión de perfil preferida del usuario
   Future<void> updateProfileVersion(int version) async {
     if (!state.isAuthenticated ||
         state.firebaseUser == null ||
@@ -185,22 +230,11 @@ class AuthCubit extends Cubit<AuthState> {
         '🔄 [AuthCubit] Actualizando versión de perfil a: $version para UID: $uid',
       );
 
-      // Actualizar en Firebase usando UserService con el UID correcto
-      await _userService.updateUserProfile(
-        uid, // ← Usar UID en lugar de email
-        {'profileVersion': version},
-      );
+      await _userService.updateUserProfile(uid, {'profileVersion': version});
 
-      // Actualizar estado local
-      final updatedProfile = state.userProfile!.copyWith(
-        profileVersion: version,
-        updatedAt: DateTime.now(),
-      );
-
-      emit(state.copyWith(userProfile: updatedProfile));
-
+      // ✅ Ya no es necesario actualizar manualmente - el listener lo hará
       debugPrint(
-        '✅ [AuthCubit] Versión de perfil actualizada exitosamente en Firebase',
+        '✅ [AuthCubit] Versión de perfil actualizada - listener actualizará el estado',
       );
     } catch (e) {
       debugPrint('❌ [AuthCubit] Error actualizando versión de perfil: $e');
@@ -209,12 +243,14 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> logout() async {
+    _cancelUserProfileListener(); // ✅ Cancelar listener al cerrar sesión
     await _authUseCases.signout.run();
   }
 
   @override
   Future<void> close() {
     _authSub.cancel();
+    _cancelUserProfileListener(); // ✅ Limpiar al cerrar el cubit
     return super.close();
   }
 }

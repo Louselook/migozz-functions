@@ -16,6 +16,7 @@ import 'package:migozz_app/features/profile/components/social_rail.dart';
 class MobileProfileContent extends StatefulWidget {
   final UserDTO user;
   final TutorialKeys tutorialKeys;
+
   const MobileProfileContent({
     super.key,
     required this.user,
@@ -29,7 +30,16 @@ class MobileProfileContent extends StatefulWidget {
 class _MobileProfileContentState extends State<MobileProfileContent> {
   @override
   Widget build(BuildContext context) {
-    final user = widget.user;
+    final authState = context.watch<AuthCubit>().state;
+    final currentUserEmail = authState.userProfile?.email ?? '';
+    final isOwnProfile = widget.user.email == currentUserEmail;
+
+    // ✅ Si es perfil propio, usar datos actualizados del AuthCubit
+    // ✅ Si es perfil ajeno, usar los datos del widget (estáticos)
+    final user = isOwnProfile && authState.userProfile != null
+        ? authState.userProfile!
+        : widget.user;
+
     final size = MediaQuery.of(context).size;
     final initialSocialPosition = Offset(size.width - 65, size.height * 0.2);
 
@@ -39,11 +49,6 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
         : '@${user.username}';
     final avatarUrl = user.avatarUrl;
     final voiceNoteUrl = user.voiceNoteUrl ?? '';
-
-    // Determinar si es el perfil del usuario autenticado
-    final authState = context.watch<AuthCubit>().state;
-    final currentUserEmail = authState.userProfile?.email ?? '';
-    final isOwnProfile = user.email == currentUserEmail;
 
     // Recuperamos los seguidores y redes desde el perfil
     final totalFollowers = _calculateTotalFollowers(user.socialEcosystem);
@@ -69,7 +74,6 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
               child: GestureDetector(
                 onTap: () {
                   if (isOwnProfile) {
-                    // Tu perfil: mostrar selector de versión
                     showDialog(
                       context: context,
                       builder: (context) => ProfileVersionSelector(
@@ -77,7 +81,6 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                       ),
                     );
                   } else {
-                    // Perfil de otro: regresar
                     Navigator.of(context).pop();
                   }
                 },
@@ -92,7 +95,6 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                     ),
                   ),
                   child: Icon(
-                    // ✅ Ícono condicional
                     isOwnProfile ? Icons.more_vert : Icons.arrow_back,
                     color: const Color(0xFFFFFFFF),
                     size: 28,
@@ -106,14 +108,11 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
               onQrScanTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) => const QrScannerScreen(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const QrScannerScreen()),
                 );
               },
               onChatTap: () {
                 if (!isOwnProfile) {
-                  // Chat con otro usuario - Pasar datos básicos
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -128,13 +127,12 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                     ),
                   );
                 } else {
-                  // Mis chats - Ir a la lista
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) => ChatsListScreen(
                         username: user.username.replaceFirst('@', ''),
-                        currentUserId: currentUserEmail, // ← Usar email, NO uid
+                        currentUserId: currentUserEmail,
                       ),
                     ),
                   );
@@ -164,7 +162,6 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
     if (socialEcosystem == null || socialEcosystem.isEmpty) return 0;
     int total = 0;
     for (final social in socialEcosystem) {
-      debugPrint('redes $socialEcosystem');
       for (final platformData in social.values) {
         if (platformData is Map<String, dynamic>) {
           final followers = platformData['followers'];
@@ -203,9 +200,6 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
         }
 
         final socialInfo = _getSocialInfo(platform, cleanUsername, customUrl);
-        debugPrint(
-          "lista: $platform\ncleanUsername: $cleanUsername\ncustomUrl: $customUrl",
-        );
         if (socialInfo != null) {
           links.add(
             SocialLink(
@@ -237,7 +231,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
     final normalizedLabel =
         platform[0].toUpperCase() + platform.substring(1).toLowerCase();
 
-    final asset = iconByLabel[normalizedLabel]; // ✅ Ahora encuentra "Linkedin"
+    final asset = iconByLabel[normalizedLabel];
     if (asset == null) return null;
 
     String url;

@@ -6,7 +6,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/location_dto.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
-// import 'package:migozz_app/features/profile/presentation/profile_screen.dart';
 
 class ResultSearch extends StatefulWidget {
   final String query;
@@ -25,13 +24,18 @@ class _ResultSearchState extends State<ResultSearch> {
   void initState() {
     super.initState();
     _futureResults = _search(widget.query.trim());
+    debugPrint('🔍 [ResultSearch] Búsqueda inicial: "${widget.query}"');
   }
 
   @override
   void didUpdateWidget(covariant ResultSearch oldWidget) {
     super.didUpdateWidget(oldWidget);
+    // Buscar de nuevo cada vez que cambia la query
     if (oldWidget.query != widget.query) {
-      _futureResults = _search(widget.query.trim());
+      debugPrint('🔄 [ResultSearch] Nueva búsqueda: "${widget.query}"');
+      setState(() {
+        _futureResults = _search(widget.query.trim());
+      });
     }
   }
 
@@ -47,7 +51,6 @@ class _ResultSearchState extends State<ResultSearch> {
           lng: (locMap['lng'] is num) ? (locMap['lng'] as num).toDouble() : 0.0,
         );
       } catch (e) {
-        // Si falla el parsing, retornar LocationDTO vacío
         return LocationDTO(
           country: '',
           state: '',
@@ -57,7 +60,6 @@ class _ResultSearchState extends State<ResultSearch> {
         );
       }
     }
-    // Si no es un Map, retornar LocationDTO vacío
     return LocationDTO(country: '', state: '', city: '', lat: 0.0, lng: 0.0);
   }
 
@@ -75,6 +77,7 @@ class _ResultSearchState extends State<ResultSearch> {
     final seen = <String>{};
 
     try {
+      // Queries optimizadas de Firestore
       final queries = <Query<Map<String, dynamic>>>[
         _firestore
             .collection('users')
@@ -102,19 +105,18 @@ class _ResultSearchState extends State<ResultSearch> {
         try {
           final snap = await qRef.get();
           for (final doc in snap.docs) {
-            if (doc.id == currentUserId) continue; // 🔥 evitarme a mí mismo
+            if (doc.id == currentUserId) continue;
             if (seen.contains(doc.id)) continue;
 
             seen.add(doc.id);
             final data = doc.data();
-
             candidates.add({'id': doc.id, ...data});
           }
         } catch (_) {}
       }
     } catch (_) {}
 
-    // --- Filtrado client-side (case insensitive) ---
+    // Filtrado client-side
     final List<Map<String, dynamic>> matched = [];
 
     for (final m in candidates) {
@@ -128,13 +130,16 @@ class _ResultSearchState extends State<ResultSearch> {
       }
     }
 
-    if (matched.isNotEmpty) return matched;
+    if (matched.isNotEmpty) {
+      debugPrint('✅ [ResultSearch] ${matched.length} resultados encontrados');
+      return matched;
+    }
 
-    // --- Fallback buscando más documentos ---
+    // Fallback
     try {
       final snap = await _firestore.collection('users').limit(200).get();
       for (final doc in snap.docs) {
-        if (doc.id == currentUserId) continue; // 🔥 evitarme también aquí
+        if (doc.id == currentUserId) continue;
         if (seen.contains(doc.id)) continue;
 
         final data = doc.data();
@@ -149,6 +154,7 @@ class _ResultSearchState extends State<ResultSearch> {
       }
     } catch (_) {}
 
+    debugPrint('✅ [ResultSearch] ${matched.length} resultados totales');
     return matched;
   }
 
@@ -163,27 +169,27 @@ class _ResultSearchState extends State<ResultSearch> {
     final locationFont = (12.0 * scale).clamp(10.0, 14.0);
     final iconSize = (14.0 * scale).clamp(12.0, 18.0);
     final borderRadius = (12.0 * scale).clamp(8.0, 20.0);
+
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: _futureResults,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(
+            child: CircularProgressIndicator(color: Colors.white),
+          );
         }
 
         final items = snapshot.data ?? [];
 
-        // Prefetch avatar images to improve perceived loading speed.
-        // Use a short circuit to avoid doing this repeatedly for identical snapshots.
+        // Prefetch avatar images
         if (items.isNotEmpty) {
           for (final item in items) {
             final avatar = item['avatarUrl'] as String?;
             if (avatar != null && avatar.isNotEmpty) {
-              // Use Flutter precache with CachedNetworkImageProvider so images
-              // are downloaded into the image cache ahead of time.
               try {
                 precacheImage(CachedNetworkImageProvider(avatar), context);
               } catch (e) {
-                // ignore prefetch errors
+                // ignore
               }
             }
           }
@@ -214,7 +220,6 @@ class _ResultSearchState extends State<ResultSearch> {
             final item = items[index];
             final avatar = item['avatarUrl'] as String?;
 
-            // Helper local para leer distintos posibles nombres de campo
             String? pickString(Map m, List<String> keys) {
               for (final k in keys) {
                 final v = m[k];
@@ -277,7 +282,7 @@ class _ResultSearchState extends State<ResultSearch> {
                 ),
                 child: Row(
                   children: [
-                    // Avatar: use CachedNetworkImage with placeholder and errorWidget
+                    // Avatar
                     Container(
                       width: avatarRadius * 2,
                       height: avatarRadius * 2,
@@ -293,6 +298,7 @@ class _ResultSearchState extends State<ResultSearch> {
                                     height: avatarRadius,
                                     child: const CircularProgressIndicator(
                                       strokeWidth: 2,
+                                      color: Colors.white,
                                     ),
                                   ),
                                 ),
@@ -302,7 +308,11 @@ class _ResultSearchState extends State<ResultSearch> {
                                   color: Colors.white70,
                                 ),
                               )
-                            : Icon(Icons.person, size: avatarRadius),
+                            : Icon(
+                                Icons.person,
+                                size: avatarRadius,
+                                color: Colors.white70,
+                              ),
                       ),
                     ),
                     SizedBox(width: 12 * scale),
@@ -310,7 +320,6 @@ class _ResultSearchState extends State<ResultSearch> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // displayName y username pegados (como en el prototipo)
                           Text.rich(
                             TextSpan(
                               children: [
@@ -336,7 +345,6 @@ class _ResultSearchState extends State<ResultSearch> {
                             overflow: TextOverflow.ellipsis,
                           ),
                           SizedBox(height: 6 * scale),
-                          // location line: join available parts with a pin icon
                           Builder(
                             builder: (_) {
                               final parts = <String>[];

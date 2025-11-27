@@ -11,9 +11,15 @@ class AddNetworkServiceUser {
     required String usernameOrLink,
   }) async {
     final endpoint = _getProfileEndpoint(network);
+
+    // ✅ FIX: YouTube usa 'query', las demás usan 'username_or_link'
+    final queryParamName = network.toLowerCase() == 'youtube'
+        ? 'query'
+        : 'username_or_link';
+
     final uri = Uri.parse(
       '${ApiConfig.apiBase}$endpoint',
-    ).replace(queryParameters: {'username_or_link': usernameOrLink});
+    ).replace(queryParameters: {queryParamName: usernameOrLink});
 
     debugPrint('🔍 [$network] Fetching profile: $usernameOrLink');
     debugPrint('🔍 URL: $uri');

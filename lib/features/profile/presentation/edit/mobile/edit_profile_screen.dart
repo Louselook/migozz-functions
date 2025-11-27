@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
+// import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:migozz_app/core/color.dart';
@@ -240,16 +240,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           style: const TextStyle(color: Colors.white),
         ),
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => context.pop(),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.close, color: Colors.red),
-            onPressed: () => context.pop(),
-          ),
-        ],
+        // leading: IconButton(
+        //   icon: const Icon(Icons.arrow_back, color: Colors.white),
+        //   onPressed: () => context.pop(),
+        // ),
+        // actions: [
+        //   IconButton(
+        //     icon: const Icon(Icons.close, color: Colors.red),
+        //     onPressed: () => context.pop(),
+        //   ),
+        // ],
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -413,12 +413,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         }
 
                         final editCubit = context.read<EditCubit>();
-                        editCubit.setEditItem(EditItem.socialEcosystem);
 
+                        // ✅ CLAVE: Inicializar con datos actuales del AuthCubit
+                        final currentSocials =
+                            state.userProfile?.socialEcosystem ?? [];
                         debugPrint(
-                          '🔹 [EditProfileScreen] Navegando a MoreUserDetails en modo EDIT',
+                          '📱 [EditProfile] Inicializando con ${currentSocials.length} redes',
                         );
-                        debugPrint('🔹 userId: $userId');
+
+                        editCubit.initializeFromUser(
+                          socialEcosystem: currentSocials,
+                          category: state.userProfile?.category,
+                          interests: state.userProfile?.interests,
+                        );
+
+                        editCubit.setEditItem(EditItem.socialEcosystem);
 
                         Navigator.push(
                           context,

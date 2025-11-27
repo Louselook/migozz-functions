@@ -1,6 +1,4 @@
-// import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-// import 'package:migozz_app/features/profile/components/bottom_nav.dart';
 import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
 import 'package:migozz_app/features/search/mobile/components/input_search.dart';
 import 'package:migozz_app/features/search/mobile/components/filter_search.dart';
@@ -15,57 +13,57 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  // int _tab = 0;
   final TextEditingController _searchController = TextEditingController();
   String _query = '';
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-
-    // Alturas base (mantenemos tus proporciones)
     final bottomGradientHeight = size.height * 0.22;
 
     return Scaffold(
       body: Stack(
         children: [
-          // Fondo oscuro
           Container(color: const Color.fromARGB(223, 0, 0, 0)),
-
-          // Tintes y gradientes en la parte inferior
           TintesGradients(child: Container(height: bottomGradientHeight)),
 
-          // Contenido principal: Column con InputSearch, FilterSearch y contenido
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 1) Barra de búsqueda (top)
+                  // Barra de búsqueda
                   InputSearch(
                     controller: _searchController,
-                    onChanged: (txt) => setState(() => _query = txt.trim()),
+                    onChanged: (txt) {
+                      setState(() {
+                        _query = txt.trim();
+                      });
+                    },
                   ),
 
-                  // 2) Filtros de búsqueda
+                  // Filtros
                   FilterSearch(topPadding: 0),
 
-                  // 3) Contenido que ocupa el resto de la pantalla
+                  // Contenido dinámico (sin wrapper de pull-to-refresh)
                   Expanded(
                     child: _query.isEmpty
-                        // Muestra sugerencias cuando no hay texto
-                        ? SuggestedReels(topPadding: 0)
-                        // Muestra resultados cuando hay query
-                        : ResultSearch(query: _query),
+                        ? const SuggestedReels(
+                            topPadding: 0,
+                          ) // Con pull-to-refresh interno
+                        : ResultSearch(query: _query), // Sin pull-to-refresh
                   ),
                 ],
               ),
             ),
           ),
-
-          // (Opcional) Si quieres mantener algo absolutamente posicionado
-          // como un botón flotante, añádelo aquí a la Stack.
         ],
       ),
     );

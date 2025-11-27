@@ -222,7 +222,6 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomPadding = MediaQuery.of(context).size.height * 0.12;
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
@@ -342,59 +341,55 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
                                 ),
                                 const SizedBox(height: 16),
                                 Expanded(
-                                  child: Padding(
-                                    padding: EdgeInsets.only(
-                                      bottom: bottomPadding,
-                                    ),
-                                    child: ListView.builder(
-                                      physics: const BouncingScrollPhysics(),
-                                      itemCount: _socials.length,
-                                      itemBuilder: (context, i) {
-                                        final s = _socials[i];
-                                        final data = s.toJson();
-                                        final name = s.name;
+                                  child: ListView.builder(
+                                    physics: const BouncingScrollPhysics(),
+                                    itemCount: _socials.length,
+                                    itemBuilder: (context, i) {
+                                      final s = _socials[i];
+                                      final data = s.toJson();
+                                      final name = s.name;
 
-                                        final filteredEntries = data.entries
-                                            .where((e) {
-                                              final key = e.key.toLowerCase();
-                                              final value = e.value;
-                                              return value != null &&
-                                                  value
-                                                      .toString()
-                                                      .trim()
-                                                      .isNotEmpty &&
-                                                  value != 0 &&
-                                                  key != "id" &&
-                                                  key != "name" &&
-                                                  key != "iconpath" &&
-                                                  key != "label";
-                                            })
-                                            .toList();
+                                      final filteredEntries = data.entries
+                                          .where((e) {
+                                            final key = e.key.toLowerCase();
+                                            final value = e.value;
+                                            return value != null &&
+                                                value
+                                                    .toString()
+                                                    .trim()
+                                                    .isNotEmpty &&
+                                                value != 0 &&
+                                                key != "id" &&
+                                                key != "name" &&
+                                                key != "iconpath" &&
+                                                key != "label";
+                                          })
+                                          .toList();
 
-                                        return Padding(
-                                          padding: const EdgeInsets.only(
-                                            bottom: 12,
-                                          ),
-                                          child: _DataCard(
-                                            // TODO: Resolver este problema, miniicon tiktok pero no existe, ni este ni mas rutas en assets
-                                            image:
-                                                "assets/icons/social_networks/mini_icon_${name.toLowerCase()}.svg",
-                                            title: name,
-                                            rows: filteredEntries.map((e) {
-                                              final displayKey =
-                                                  _applyFieldRules(e.key);
-                                              final formatted = _formatKey(
-                                                displayKey,
-                                              );
-                                              return _RowData(
-                                                label: "$formatted:",
-                                                value: e.value.toString(),
-                                              );
-                                            }).toList(),
-                                          ),
-                                        );
-                                      },
-                                    ),
+                                      return Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: 12,
+                                        ),
+                                        child: _DataCard(
+                                          // TODO: Resolver este problema, miniicon tiktok pero no existe, ni este ni mas rutas en assets
+                                          image:
+                                              "assets/icons/social_networks/mini_icon_${name.toLowerCase()}.svg",
+                                          title: name,
+                                          rows: filteredEntries.map((e) {
+                                            final displayKey = _applyFieldRules(
+                                              e.key,
+                                            );
+                                            final formatted = _formatKey(
+                                              displayKey,
+                                            );
+                                            return _RowData(
+                                              label: "$formatted:",
+                                              value: e.value.toString(),
+                                            );
+                                          }).toList(),
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ),
                               ],
