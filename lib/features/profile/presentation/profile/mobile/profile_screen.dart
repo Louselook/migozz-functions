@@ -72,6 +72,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
               left: 10,
               top: 45,
               child: GestureDetector(
+                key: widget.tutorialKeys.searchScreenKey,
                 onTap: () {
                   if (isOwnProfile) {
                     showDialog(
