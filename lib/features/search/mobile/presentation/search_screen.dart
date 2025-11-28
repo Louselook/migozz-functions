@@ -4,9 +4,11 @@ import 'package:migozz_app/features/search/mobile/components/input_search.dart';
 import 'package:migozz_app/features/search/mobile/components/filter_search.dart';
 import 'package:migozz_app/features/search/mobile/components/result_search.dart';
 import 'package:migozz_app/features/search/mobile/components/suggested_reels.dart';
+import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 
 class SearchScreen extends StatefulWidget {
-  const SearchScreen({super.key});
+  final TutorialKeys tutorialKeys;
+  const SearchScreen({super.key, required this.tutorialKeys,});
 
   @override
   State<SearchScreen> createState() => _SearchScreenState();

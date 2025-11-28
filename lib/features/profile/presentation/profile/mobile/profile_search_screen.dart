@@ -6,7 +6,7 @@ import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 class ProfileSearchScreen extends StatelessWidget {
   final UserDTO user;
 
-  const ProfileSearchScreen({super.key, required this.user});
+  const ProfileSearchScreen({super.key, required this.user, required TutorialKeys tutorialKeys});
 
   @override
   Widget build(BuildContext context) {

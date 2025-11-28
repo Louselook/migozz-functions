@@ -8,7 +8,7 @@ class ProfileTutorial {
   static void showTutorial(
     BuildContext context,
     TutorialKeys keys, {
-    VoidCallback? onFinish, // Agregar callback opcional
+    VoidCallback? onFinish, required Map<String, bool> includedTargets, // Agregar callback opcional
   }) {
     const tutorialTextStyle = TextStyle(color: Colors.white, fontSize: 16);
     final targets = <TargetFocus>[

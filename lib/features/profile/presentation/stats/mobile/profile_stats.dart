@@ -9,9 +9,10 @@ import 'package:migozz_app/features/auth/presentation/register/user_details/more
 // import 'package:migozz_app/features/profile/components/bottom_nav.dart';
 import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
+import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 
 class ProfileStatsScreen extends StatefulWidget {
-  const ProfileStatsScreen({super.key});
+  const ProfileStatsScreen({super.key, required TutorialKeys tutorialKeys});
 
   @override
   State<ProfileStatsScreen> createState() => _ProfileStatsScreenState();

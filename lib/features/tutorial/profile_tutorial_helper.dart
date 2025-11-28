@@ -25,7 +25,7 @@ Future<bool> hasCompletedTutorial() async {
 
     final data = doc.data();
     final completed = data?['tutorialComplete'] as bool? ?? false;
-    
+
     debugPrint('✅ Tutorial completado: $completed');
     return completed;
   } catch (e) {
@@ -58,7 +58,8 @@ Future<void> markTutorialAsComplete() async {
 }
 
 /// Espera hasta que un widget con la [key] haya sido montado en el árbol.
-Future<void> waitForKey(GlobalKey key, {int maxRetries = 30}) async {
+/// Devuelve true si se encontró, false si no (después de timeout).
+Future<bool> waitForKey(GlobalKey key, {int maxRetries = 60}) async {
   int retries = 0;
   while (key.currentContext == null && retries < maxRetries) {
     await Future.delayed(const Duration(milliseconds: 100));
@@ -66,56 +67,86 @@ Future<void> waitForKey(GlobalKey key, {int maxRetries = 30}) async {
   }
 
   if (key.currentContext == null) {
-    debugPrint('⚠️ Key no encontrado después de $maxRetries intentos');
+    debugPrint('⚠️ Key no encontrado después de $maxRetries intentos: ${key.toString()}');
+    return false;
   } else {
     debugPrint('✅ Key encontrado: ${key.toString()}');
+    return true;
   }
 }
 
 /// Muestra el tutorial del perfil una vez los elementos están listos.
-/// Verifica primero si el usuario ya completó el tutorial.
+/// Esta versión:
+///  - espera cada key individualmente (secuencial)
+///  - registra qué keys están disponibles
+///  - llama al tutorial con UN subconjunto de targets (solo los montados)
 Future<void> triggerProfileTutorial(
   BuildContext context,
-  TutorialKeys tutorialKeys,
-) async {
+  TutorialKeys tutorialKeys, {
+  int initialDelayMs = 200,
+  int perKeyRetries = 30,
+}) async {
   debugPrint('🎓 Verificando estado del tutorial...');
 
-  // 1. Verificar si ya completó el tutorial
   final alreadyCompleted = await hasCompletedTutorial();
   if (alreadyCompleted) {
-    debugPrint('Tutorial ya fue completado, saltando...');
-    return; // No mostrar el tutorial
-  }
-
-  debugPrint('🎓 Iniciando espera de keys para tutorial...');
-
-  // 2. Esperar a que todos los keys estén listos
-  await Future.wait([
-    waitForKey(tutorialKeys.searchScreenKey),
-    waitForKey(tutorialKeys.playButtonKey),
-    waitForKey(tutorialKeys.shareButtonKey),
-    waitForKey(tutorialKeys.profileScreenKey),
-    waitForKey(tutorialKeys.statScreenKey),
-    waitForKey(tutorialKeys.editScreenKey),
-  ]);
-
-  // Delay adicional para asegurar renderizado completo
-  await Future.delayed(const Duration(milliseconds: 500));
-
-  if (!context.mounted) {
-    debugPrint('⚠️ Context ya no está montado, cancelando tutorial');
+    debugPrint('🎓 Tutorial ya completado; no se mostrará.');
     return;
   }
 
-  debugPrint('🎓 Mostrando tutorial...');
+  // Pequeño delay inicial para dejar que la pantalla arranque.
+  await Future.delayed(Duration(milliseconds: initialDelayMs));
 
-  // 3. Mostrar el tutorial con callback al finalizar
-  ProfileTutorial.showTutorial(
-    context,
-    tutorialKeys,
-    onFinish: () async {
-      debugPrint('🎉 Tutorial finalizado, guardando estado...');
-      await markTutorialAsComplete();
-    },
-  );
+  // Lista de pares: nombre amigable + key
+  final keyPairs = <String, GlobalKey>{
+    'search': tutorialKeys.searchScreenKey,
+    'play': tutorialKeys.playButtonKey,
+    'share': tutorialKeys.shareButtonKey,
+    'profile': tutorialKeys.profileScreenKey,
+    'stat': tutorialKeys.statScreenKey,
+    'edit': tutorialKeys.editScreenKey,
+  };
+
+  // Intentamos esperar cada key, y registramos cuáles se encontraron.
+  final Map<String, bool> found = {};
+  for (final entry in keyPairs.entries) {
+    final name = entry.key;
+    final key = entry.value;
+    // Si el key ya tiene contexto al inicio, no esperamos.
+    if (key.currentContext != null) {
+      debugPrint('🔎 Key "$name" ya montada: ${key.toString()}');
+      found[name] = true;
+      continue;
+    }
+
+    // Esperar hasta perKeyRetries (más corto que antes)
+    final ok = await waitForKey(key, maxRetries: perKeyRetries);
+    found[name] = ok;
+  }
+
+  // Mostrar resumen
+  debugPrint('📋 Keys encontradas summary: ${found.map((k, v) => MapEntry(k, v ? "OK" : "missing"))}');
+
+  // Si ninguna key fue encontrada, abortamos con log claro
+  final anyFound = found.values.any((v) => v == true);
+  if (!anyFound) {
+    debugPrint('⚠️ Ningún target del tutorial montado. Abortando tutorial.');
+    return;
+  }
+
+  // Esperar un frame extra y un pequeño delay para estabilizar layout
+  await Future.delayed(const Duration(milliseconds: 150));
+  WidgetsBinding.instance.addPostFrameCallback((_) async {
+    if (!context.mounted) return;
+
+    debugPrint('🎓 Mostrando tutorial con keys encontradas...');
+    ProfileTutorial.showTutorial(
+      context,
+      tutorialKeys,
+      includedTargets: found, // pasamos mapa para que el tutorial filtre targets
+      onFinish: () async {
+        await markTutorialAsComplete();
+      },
+    );
+  });
 }

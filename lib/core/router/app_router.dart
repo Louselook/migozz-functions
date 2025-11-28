@@ -24,6 +24,7 @@ import 'package:migozz_app/features/profile/presentation/profile/web/profile_sea
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/features/search/web/presentation/search_screen.dart'
     as web_search;
+import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 
 GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
   return GoRouter(
@@ -56,7 +57,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
           final user = state.extra as UserDTO?;
           if (user == null) {
             // Si no hay usuario, redirigir al perfil propio
-            return const ProfileEntry();
+            return ProfileEntry(tutorialKeys: TutorialKeys(),);
           }
 
           // Decidir entre web y mobile según el ancho de pantalla

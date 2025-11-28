@@ -70,7 +70,6 @@ class GeminiService {
   }
 
   int _currentQuestionIndex = 0;
-  final Map<int, Set<String>> _consumedCommands = {};
 
   // Flujo completo para usuarios NO autenticados
   final List<String> _questionFlowNotAuth = [
@@ -200,28 +199,6 @@ class GeminiService {
       setLanguage(rcLang);
     }
 
-    final normalized = userInput.trim().toLowerCase();
-    final negativeTokens = <String>[
-      'no', 'n', 'nope', 'nah', // inglés
-      'no gracias', 'nop', 'negativo' // español
-    ];
-    final skipTokens = <String>[
-      'omitir', 'skip', 'omit', 'saltar'
-    ];
-    final retryTokens = <String>[
-      'reintentar', 'intentar de nuevo', 'try again', 'retry'
-    ];
-
-    // Helper: obtener primer token coincidente de una lista (o null)
-    String? firstMatchingToken(List<String> tokens) {
-      for (final t in tokens) {
-        if (normalized == t || normalized.contains(t)) return t;
-      }
-      return null;
-    }
-
-    final consumedForStep = _consumedCommands[_currentQuestionIndex] ?? <String>{};
-
     if (userInput.trim().isEmpty) {
       return await _prepareQuestion(
         AssistantFunctions.getCurrentQuestion(
@@ -249,99 +226,6 @@ class GeminiService {
     // Evaluar respuesta
     final currentStepKey = questionFlow[_currentQuestionIndex];
 
-    // Definir pasos que no se pueden saltar
-    final nonSkippableSteps = <String>{
-      'fullName', 'username', 'sendOTP', 'emailVerification', 'otpInput', 'emailSuccess', 'category'
-    };
-
-    final isSkippable = !nonSkippableSteps.contains(currentStepKey);
-    if (skipTokens.any((t) => normalized.contains(t))) {
-      if (!isSkippable) {
-        final isSpanish = registerCubit.state.language == 'Español';
-        return {
-          "text": isSpanish
-              ? "No puedes omitir este paso. Por favor ingresa un valor válido."
-              : "You can't skip this step. Please provide a valid value.",
-          "options": const <String>[],
-          "step": 'regProgress.$currentStepKey',
-          "keepTalk": false,
-          "isError": true,
-        };
-      }
-      // marcar como omitido y avanzar
-      _consumedCommands.remove(_currentQuestionIndex - 1);
-      _currentQuestionIndex++;
-      final nextQ = AssistantFunctions.getCurrentQuestion(
-        questionFlow,
-        _currentQuestionIndex,
-        registerCubit,
-      );
-      return await _prepareQuestion(nextQ, registerCubit);
-    }
-
-    final matchedSkip = firstMatchingToken(skipTokens);
-    if (matchedSkip != null && !consumedForStep.contains(matchedSkip)) {
-      // marcar como consumido
-      _consumedCommands.putIfAbsent(_currentQuestionIndex, () => <String>{}).add(matchedSkip);
-
-      if (!isSkippable) {
-        final isSpanish = registerCubit.state.language == 'Español';
-        return {
-          "text": isSpanish
-              ? "No puedes omitir este paso. Por favor ingresa un valor válido."
-              : "You can't skip this step. Please provide a valid value.",
-          "options": const <String>[],
-          "step": 'regProgress.$currentStepKey',
-          "keepTalk": false,
-          "isError": true,
-        };
-      }
-      // marcar como omitido y avanzar
-      _consumedCommands.remove(_currentQuestionIndex - 1);
-      _currentQuestionIndex++;
-      final nextQ = AssistantFunctions.getCurrentQuestion(
-        questionFlow,
-        _currentQuestionIndex,
-        registerCubit,
-      );
-      return await _prepareQuestion(nextQ, registerCubit);
-    }
-
-    final matchedNo = firstMatchingToken(negativeTokens);
-    if (matchedNo != null && !consumedForStep.contains(matchedNo) && isSkippable) {
-      // marcar como consumido para evitar re-loop
-      _consumedCommands.putIfAbsent(_currentQuestionIndex, () => <String>{}).add(matchedNo);
-
-      final isSpanish = registerCubit.state.language == 'Español';
-      return {
-        "text": isSpanish
-            ? '¿Deseas omitir este paso o prefieres intentarlo de nuevo?'
-            : 'Would you like to skip this step or try again?',
-        "options": isSpanish
-            ? ["Omitir", "Reintentar"]
-            : ["Skip", "Try again"],
-        "step": 'regProgress.$currentStepKey',
-        "keepTalk": false,
-        "explainAndRepeat": false,
-      };
-    }
-
-    final matchedRetry = firstMatchingToken(retryTokens);
-    if (matchedRetry != null && !consumedForStep.contains(matchedRetry)) {
-      // marcar como consumido para evitar procesarlo otra vez
-      _consumedCommands.putIfAbsent(_currentQuestionIndex, () => <String>{}).add(matchedRetry);
-
-      // Re-preguntar el mismo paso (no avanzar índice)
-      final currentQuestion = AssistantFunctions.getCurrentQuestion(
-        questionFlow,
-        _currentQuestionIndex,
-        registerCubit,
-      );
-
-      // Retornamos la pregunta de nuevo (sin interpretarla como respuesta)
-      return await _prepareQuestion(currentQuestion, registerCubit);
-    }
-
     final decision = AssistantFunctions.evaluateUserResponse(
       userInput,
       currentStepKey,
@@ -359,7 +243,6 @@ class GeminiService {
             : 'If you want to add your photo or voice note, please use the mobile app 😉';
 
         // Mostrar mensaje y avanzar
-        _consumedCommands.remove(_currentQuestionIndex - 1);
         _currentQuestionIndex++;
         var nextQuestion = AssistantFunctions.getCurrentQuestion(
           questionFlow,
@@ -370,7 +253,6 @@ class GeminiService {
         // Saltar posibles mensajes "keepTalk"
         while (nextQuestion['keepTalk'] == true) {
           debugPrint('⏩ Saltando mensaje keepTalk (web): ${questionFlow[_currentQuestionIndex]}');
-          _consumedCommands.remove(_currentQuestionIndex - 1);
           _currentQuestionIndex++;
           if (_currentQuestionIndex >= questionFlow.length) break;
 
@@ -380,7 +262,6 @@ class GeminiService {
             registerCubit,
           );
         }
-
         // Retornamos el mensaje indicando el salto
         return {
           "text": skipMessage,
@@ -416,7 +297,6 @@ class GeminiService {
       }
 
       // Si no hubo errores, AHORA SÍ avanzar
-      _consumedCommands.remove(_currentQuestionIndex - 1);
       _currentQuestionIndex++;
 
       var nextQuestion = AssistantFunctions.getCurrentQuestion(

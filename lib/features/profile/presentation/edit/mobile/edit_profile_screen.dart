@@ -17,9 +17,10 @@ import 'package:migozz_app/features/profile/presentation/edit/components/profile
 import 'package:migozz_app/features/profile/presentation/edit/modules/edit_audio.dart';
 import 'package:migozz_app/features/profile/presentation/edit/modules/edit_my_interest.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
+import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 
 class EditProfileScreen extends StatefulWidget {
-  const EditProfileScreen({super.key});
+  const EditProfileScreen({super.key, required TutorialKeys tutorialKeys});
 
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();

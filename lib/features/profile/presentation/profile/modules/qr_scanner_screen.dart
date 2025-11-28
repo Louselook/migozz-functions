@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
@@ -151,7 +152,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => mobile_profile.ProfileSearchScreen(user: user),
+              builder: (context) => mobile_profile.ProfileSearchScreen(user: user, tutorialKeys: TutorialKeys(),),
             ),
           );
         }
@@ -234,7 +235,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               margin: const EdgeInsets.symmetric(horizontal: 32),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.7),
+                color: Colors.black.withValues(alpha: 0.7),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Text(
@@ -259,7 +260,7 @@ class ScannerOverlayPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.black.withOpacity(0.5)
+      ..color = Colors.black.withValues(alpha: 0.5)
       ..style = PaintingStyle.fill;
 
     final scanAreaSize = size.width * 0.7;

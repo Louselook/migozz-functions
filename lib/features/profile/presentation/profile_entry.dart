@@ -14,11 +14,12 @@ import 'package:migozz_app/features/profile/presentation/profile/web/v2/profile_
     as web_v2;
 import 'package:migozz_app/features/profile/presentation/profile/web/v3/profile_page_v3.dart'
     as web_v3;
+import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 
 /// Entry que decide si renderiza la UI web o mobile y qué versión según preferencia del usuario.
 /// Ambos contenidos deben ser *presentational* y recibir los datos del usuario.
 class ProfileEntry extends StatelessWidget {
-  const ProfileEntry({super.key});
+  const ProfileEntry({super.key, required TutorialKeys tutorialKeys});
 
   @override
   Widget build(BuildContext context) {

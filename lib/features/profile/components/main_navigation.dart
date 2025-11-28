@@ -9,6 +9,7 @@ import 'package:migozz_app/features/profile/presentation/profile_entry.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/profile_search_screen.dart';
 import 'package:migozz_app/features/profile/presentation/stats/mobile/profile_stats.dart';
 import 'package:migozz_app/features/search/mobile/presentation/search_screen.dart';
+import 'package:migozz_app/features/tutorial/profile_tutorial_helper.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 
 class MainNavigation extends StatefulWidget {
@@ -29,16 +30,54 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   late int _currentIndex;
+  bool _tutorialScheduled = false;
 
-  @override
+  late final TutorialKeys _tutorialKeys = widget.tutorialKeys ?? TutorialKeys();
+
+   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
     debugPrint('🚀 [MainNavigation] Inicializado con index: $_currentIndex');
-    if (widget.targetUser != null) {
-      debugPrint(
-        '👤 [MainNavigation] Mostrando perfil de: ${widget.targetUser!.username}',
-      );
+  }
+
+ @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    if (!_tutorialScheduled && widget.tutorialKeys != null && _currentIndex == 0) {
+      _tutorialScheduled = true;
+
+      // Espera a que el build ACTUAL termine
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+
+        // Espera otro frame más para asegurar que BottomNav existe
+        Future.delayed(const Duration(milliseconds: 200), () {
+
+          if (!mounted) return;
+
+          triggerProfileTutorial(context, widget.tutorialKeys!);
+        });
+      });
+    }
+    if (!_tutorialScheduled && widget.tutorialKeys != null) {
+      _tutorialScheduled = true;
+
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        // 1. Asegurar el tab correcto
+        if (_currentIndex != 0) {
+          setState(() => _currentIndex = 0);
+          await Future.delayed(const Duration(milliseconds: 300));
+        }
+
+        // 2. Esperar un frame extra
+        await Future.delayed(const Duration(milliseconds: 200));
+
+        // 3. Ahora sí lanzar tutorial
+        if (mounted) {
+          triggerProfileTutorial(context, widget.tutorialKeys!);
+        }
+      });
     }
   }
 
@@ -88,40 +127,28 @@ class _MainNavigationState extends State<MainNavigation> {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('🏗️ [MainNavigation] Building con index: $_currentIndex');
-
-    // ✅ Si hay targetUser, mostrar su perfil en lugar del propio
     final isViewingOtherProfile = widget.targetUser != null;
 
     final screens = [
-      // 0: Home - ProfileEntry propio o perfil de otro usuario
       isViewingOtherProfile
-          ? ProfileSearchScreen(user: widget.targetUser!)
-          : const ProfileEntry(),
-
-      // 1: Search
-      const SearchScreen(),
-
-      // 2: Stats - Solo para perfil propio
-      const ProfileStatsScreen(),
-
-      // 3: Settings - Solo para perfil propio
-      const EditProfileScreen(),
-    ];
+          ? ProfileSearchScreen(user: widget.targetUser!, tutorialKeys: _tutorialKeys)
+          : ProfileEntry(tutorialKeys: _tutorialKeys), // <- PASAR
+      SearchScreen(tutorialKeys: _tutorialKeys),         // <- PASAR si aplica
+      ProfileStatsScreen(tutorialKeys: _tutorialKeys),
+      EditProfileScreen(tutorialKeys: _tutorialKeys),
+    ];  
 
     return Scaffold(
       extendBody: true,
       body: IndexedStack(index: _currentIndex, children: screens),
-
-      // ✅ Solo mostrar bottom nav si es perfil propio
       bottomNavigationBar: isViewingOtherProfile
-          ? null // No mostrar nav al ver perfil de otro
+          ? null
           : GradientBottomNav(
               currentIndex: _currentIndex,
               onItemSelected: _onItemSelected,
               onCenterTap: _onCenterTap,
               onProfileUpdated: _onProfileUpdated,
-              tutorialKeys: widget.tutorialKeys,
+              tutorialKeys: _tutorialKeys, // <- PASAR la MISMA instancia
             ),
     );
   }

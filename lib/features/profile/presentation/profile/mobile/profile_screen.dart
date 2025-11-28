@@ -13,6 +13,7 @@ import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/profile/components/background_image.dart';
 import 'package:migozz_app/features/profile/components/social_rail.dart';
 
+
 class MobileProfileContent extends StatefulWidget {
   final UserDTO user;
   final TutorialKeys tutorialKeys;
@@ -34,8 +35,6 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
     final currentUserEmail = authState.userProfile?.email ?? '';
     final isOwnProfile = widget.user.email == currentUserEmail;
 
-    // ✅ Si es perfil propio, usar datos actualizados del AuthCubit
-    // ✅ Si es perfil ajeno, usar los datos del widget (estáticos)
     final user = isOwnProfile && authState.userProfile != null
         ? authState.userProfile!
         : widget.user;
@@ -50,7 +49,6 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
     final avatarUrl = user.avatarUrl;
     final voiceNoteUrl = user.voiceNoteUrl ?? '';
 
-    // Recuperamos los seguidores y redes desde el perfil
     final totalFollowers = _calculateTotalFollowers(user.socialEcosystem);
     final socialLinks = _buildSocialLinks(user.socialEcosystem, user.username);
 
@@ -67,12 +65,10 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
         userId: user.email,
         child: Stack(
           children: [
-            // ✅ Botón superior izquierdo (menú o regresar)
             Positioned(
               left: 10,
               top: 45,
               child: GestureDetector(
-                key: widget.tutorialKeys.searchScreenKey,
                 onTap: () {
                   if (isOwnProfile) {
                     showDialog(
@@ -144,7 +140,6 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
               },
             ),
 
-            // Panel lateral de redes sociales
             if (socialLinks.isNotEmpty)
               DraggableSocialRail(
                 initialPosition: initialSocialPosition,
@@ -158,7 +153,6 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
     );
   }
 
-  // Calcular total de seguidores
   int _calculateTotalFollowers(List<Map<String, dynamic>>? socialEcosystem) {
     if (socialEcosystem == null || socialEcosystem.isEmpty) return 0;
     int total = 0;
@@ -177,7 +171,6 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
     return total;
   }
 
-  // Construir enlaces de redes
   List<SocialLink> _buildSocialLinks(
     List<Map<String, dynamic>>? socialEcosystem,
     String username,
@@ -223,7 +216,6 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
     return null;
   }
 
-  // Generar URL + ícono por red
   Map<String, String>? _getSocialInfo(
     String platform,
     String username,
