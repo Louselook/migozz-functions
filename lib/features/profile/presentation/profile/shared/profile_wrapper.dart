@@ -6,14 +6,8 @@ import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_stat
 import 'package:migozz_app/features/tutorial/profile_tutorial_helper.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 
-/// ProfileWrapper centraliza:
-/// - validación de estado de auth
-/// - loading
-/// - redirección a completar perfil
-/// - trigger del tutorial (solo una vez)
-///
-/// Recibe un builder que dibuja el contenido final cuando el perfil está listo.
 class ProfileWrapper extends StatefulWidget {
+  final TutorialKeys tutorialKeys;
   final Widget Function(
     BuildContext context,
     AuthState authState,
@@ -21,7 +15,11 @@ class ProfileWrapper extends StatefulWidget {
   )
   builder;
 
-  const ProfileWrapper({super.key, required this.builder});
+  const ProfileWrapper({
+    super.key,
+    required this.tutorialKeys,
+    required this.builder,
+  });
 
   @override
   State<ProfileWrapper> createState() => _ProfileWrapperState();
@@ -87,12 +85,12 @@ class _ProfileWrapperState extends State<ProfileWrapper> {
         if ((authState.userProfile?.complete ?? false) && !_tutorialShown) {
           _tutorialShown = true;
           WidgetsBinding.instance.addPostFrameCallback((_) async {
-            await triggerProfileTutorial(context, tutorialKeys);
+            await triggerProfileTutorial(context, widget.tutorialKeys);
           });
         }
 
         // Si llegamos aquí, el perfil existe y está listo -> delegamos al builder
-        return widget.builder(context, authState, tutorialKeys);
+        return widget.builder(context, authState, widget.tutorialKeys);
       },
     );
   }

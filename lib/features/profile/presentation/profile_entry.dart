@@ -16,15 +16,19 @@ import 'package:migozz_app/features/profile/presentation/profile/web/v3/profile_
     as web_v3;
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 
-/// Entry que decide si renderiza la UI web o mobile y qué versión según preferencia del usuario.
-/// Ambos contenidos deben ser *presentational* y recibir los datos del usuario.
 class ProfileEntry extends StatelessWidget {
-  const ProfileEntry({super.key, required TutorialKeys tutorialKeys});
+  final TutorialKeys tutorialKeys; // ← Recibir como parámetro requerido
+
+  const ProfileEntry({
+    super.key,
+    required this.tutorialKeys, // ← Hacerlo requerido
+  });
 
   @override
   Widget build(BuildContext context) {
     return ProfileWrapper(
-      builder: (context, authState, tutorialKeys) {
+      tutorialKeys: tutorialKeys, // ← Pasar al wrapper
+      builder: (context, authState, receivedKeys) {
         final user = authState.userProfile;
         if (user == null) {
           return const Scaffold(
@@ -38,26 +42,24 @@ class ProfileEntry extends StatelessWidget {
           );
         }
 
-        // Leer la versión de perfil preferida del usuario (1, 2 o 3)
         final profileVersion = user.profileVersion;
 
-        // decide la UI según plataforma y versión
         if (PlatformUtils.isWeb) {
           switch (profileVersion) {
             case 2:
               return web_v2.WebProfileContentV2(
                 user: user,
-                tutorialKeys: tutorialKeys,
+                tutorialKeys: receivedKeys, // ← Usar las keys recibidas
               );
             case 3:
               return web_v3.WebProfileContentV3(
                 user: user,
-                tutorialKeys: tutorialKeys,
+                tutorialKeys: receivedKeys,
               );
             default:
               return web_v1.WebProfileContent(
                 user: user,
-                tutorialKeys: tutorialKeys,
+                tutorialKeys: receivedKeys,
               );
           }
         } else {
@@ -65,17 +67,17 @@ class ProfileEntry extends StatelessWidget {
             case 2:
               return mobile_v2.MobileProfileContentV2(
                 user: user,
-                tutorialKeys: tutorialKeys,
+                tutorialKeys: receivedKeys,
               );
             case 3:
               return mobile_v3.MobileProfileContentV3(
                 user: user,
-                tutorialKeys: tutorialKeys,
+                tutorialKeys: receivedKeys,
               );
             default:
               return mobile_v1.MobileProfileContent(
                 user: user,
-                tutorialKeys: tutorialKeys,
+                tutorialKeys: receivedKeys,
               );
           }
         }
