@@ -31,25 +31,18 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 # Crear directorio de trabajo
 WORKDIR /app
 
-# Copiar package.json y package-lock.json
+# Copiar package.json
 COPY package*.json ./
 
 # Instalar dependencias
-RUN npm ci --only=production
+RUN npm install --only=production
 
 # Copiar código
 COPY . .
 
-# Crear usuario no-root para mayor seguridad
-RUN groupadd -r nodejs && useradd -r -g nodejs nodejs \
-    && chown -R nodejs:nodejs /app
-
-# Cambiar a usuario no-root
-USER nodejs
-
-# Exponer puerto (Cloud Run usa la variable PORT)
+# Exponer puerto
 EXPOSE 8080
 ENV PORT=8080
 
-# Iniciar servidor
+# Iniciar servidor (SIN usuario no-root)
 CMD ["node", "index.js"]
