@@ -10,7 +10,7 @@ class LoginCubit extends Cubit<LoginState> {
   LoginCubit() : super(const LoginState());
 
   /// Enviar OTP al email (solo UI/UX, no autenticación)
-  Future<void> sendOTPLoginCubit(String email) async {
+  Future<void> sendOTPLoginCubit(String email, {String? forcedOTP}) async {
     if (!state.isLoading) {
       emit(
         state.copyWith(
@@ -24,6 +24,23 @@ class LoginCubit extends Cubit<LoginState> {
     }
 
     try {
+      // Si nos pasan forcedOTP (modo test), lo usamos directamente
+      if (forcedOTP != null) {
+        // Simular pequeña espera para UX/consistencia
+        await Future.delayed(const Duration(milliseconds: 250));
+        debugPrint("✅ Forced OTP asignado a $email: $forcedOTP");
+
+        emit(
+          state.copyWith(
+            isLoading: false,
+            currentOTP: forcedOTP,
+            errorMessageLogin: null,
+          ),
+        );
+        return;
+      }
+
+      // Flujo real: llamar al servicio que envía OTP
       final result = await sendOTP(email: email);
 
       if (result["sent"] == true) {
