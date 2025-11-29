@@ -37,7 +37,7 @@ class SocialNetworks {
   static const Map<String, NetworkAuthCapability> _capabilities = {
     "tiktok": NetworkAuthCapability.manual,
     "instagram": NetworkAuthCapability.both,
-    "facebook": NetworkAuthCapability.oauth,
+    "facebook": NetworkAuthCapability.both,
     "youtube": NetworkAuthCapability.manual,
     "spotify": NetworkAuthCapability.oauth,
     "twitter": NetworkAuthCapability.oauth,

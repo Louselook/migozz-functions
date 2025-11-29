@@ -1,4 +1,5 @@
-// add_network_service_user.dart
+// lib/core/services/deeplink/deeplink_functions/social_network/add_network_service_user.dart
+
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -18,7 +19,7 @@ class AddNetworkServiceUser {
         : 'username_or_link';
 
     final uri = Uri.parse(
-      '${ApiConfig.apiBase}$endpoint',
+      '${ApiConfig.apiFuctions}$endpoint',
     ).replace(queryParameters: {queryParamName: usernameOrLink});
 
     debugPrint('🔍 [$network] Fetching profile: $usernameOrLink');
@@ -54,7 +55,7 @@ class AddNetworkServiceUser {
       case 'twitter':
         return '/twitter/profile';
       case 'facebook':
-        return '/facebook/profile';
+        return '/facebook/profile'; // ✅ AGREGADO
       case 'spotify':
         return '/spotify/profile';
       default:
@@ -62,7 +63,8 @@ class AddNetworkServiceUser {
     }
   }
 
-  // Métodos específicos
+  // ==================== MÉTODOS ESPECÍFICOS ====================
+
   Future<Map<String, dynamic>> getYouTubeProfile(String handleOrUrl) =>
       getProfileByUsernameOrLink(
         network: 'youtube',
@@ -84,6 +86,20 @@ class AddNetworkServiceUser {
   Future<Map<String, dynamic>> getLinkedInProfile(String usernameOrLink) =>
       getProfileByUsernameOrLink(
         network: 'linkedin',
+        usernameOrLink: usernameOrLink,
+      );
+
+  // ✅ NUEVO: Método para Facebook
+  Future<Map<String, dynamic>> getFacebookProfile(String usernameOrLink) =>
+      getProfileByUsernameOrLink(
+        network: 'facebook',
+        usernameOrLink: usernameOrLink,
+      );
+
+  // Opcional: Twitter
+  Future<Map<String, dynamic>> getTwitterProfile(String usernameOrLink) =>
+      getProfileByUsernameOrLink(
+        network: 'twitter',
         usernameOrLink: usernameOrLink,
       );
 }
