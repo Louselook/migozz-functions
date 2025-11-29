@@ -88,6 +88,30 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
+      //  TODO: test user
+      if (email.toLowerCase() == 'testuser@migozz.com') {
+        const testOtp = '672183'; // OTP hardcodeado
+        try {
+          // Ya mostramos el overlay arriba, llamamos al AuthCubit para login directo
+          final authCubit = context.read<AuthCubit>();
+          await authCubit.login(email: email, otp: testOtp);
+          // Si el cubit emite estado de autenticado, el listener global lo manejará.
+          return;
+        } catch (e) {
+          // Mostrar error si falla la autenticación
+          CustomSnackbar.show(
+            context: context,
+            message: 'Error logging in test user: $e',
+            type: SnackbarType.error,
+          );
+          return;
+        } finally {
+          // asegurarse de ocultar loader y resetear flag (se repetirá en el finally de arriba, pero está bien)
+          if (mounted) LoadingOverlay.hide(context);
+          setState(() => _isCheckingEmail = false);
+        }
+      }
+
       // Si existe -> continuar con el flujo de login: enviamos OTP por el LoginCubit
       // Resetear flags por si acaso
       context.read<LoginCubit>().sendOTPLoginCubit(email);
