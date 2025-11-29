@@ -1,5 +1,3 @@
-// lib/core/services/deeplink/deeplink_functions/social_network/add_network_service_user.dart
-
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -13,13 +11,20 @@ class AddNetworkServiceUser {
   }) async {
     final endpoint = _getProfileEndpoint(network);
 
-    // ✅ FIX: YouTube usa 'query', las demás usan 'username_or_link'
+    // ✅ Decidir qué API usar según la red social
+    final String? baseUrl = _getApiBaseForNetwork(network);
+
+    if (baseUrl == null) {
+      throw Exception('No hay API configurada para $network');
+    }
+
+    // ✅ YouTube usa 'query', las demás usan 'username_or_link'
     final queryParamName = network.toLowerCase() == 'youtube'
         ? 'query'
         : 'username_or_link';
 
     final uri = Uri.parse(
-      '${ApiConfig.apiFuctions}$endpoint',
+      '$baseUrl$endpoint',
     ).replace(queryParameters: {queryParamName: usernameOrLink});
 
     debugPrint('🔍 [$network] Fetching profile: $usernameOrLink');
@@ -41,6 +46,27 @@ class AddNetworkServiceUser {
     }
   }
 
+  /// ✅ NUEVO: Decidir qué API usar según la red social
+  String? _getApiBaseForNetwork(String network) {
+    switch (network.toLowerCase()) {
+      // Usar Cloud Run Functions (scraper con Puppeteer)
+      case 'tiktok':
+      case 'facebook':
+        return ApiConfig.apiFuctions;
+
+      // Usar API principal (tiene YouTube, Instagram OAuth, LinkedIn OAuth, etc.)
+      case 'youtube':
+      case 'instagram':
+      case 'linkedin':
+      case 'twitter':
+      case 'spotify':
+        return ApiConfig.apiBase;
+
+      default:
+        return null;
+    }
+  }
+
   /// Obtener el endpoint correcto según la red social
   String _getProfileEndpoint(String network) {
     switch (network.toLowerCase()) {
@@ -55,11 +81,11 @@ class AddNetworkServiceUser {
       case 'twitter':
         return '/twitter/profile';
       case 'facebook':
-        return '/facebook/profile'; // ✅ AGREGADO
+        return '/facebook/profile';
       case 'spotify':
         return '/spotify/profile';
       default:
-        throw Exception('Red social no soportada para scraping: $network');
+        throw Exception('Red social no soportada: $network');
     }
   }
 
@@ -89,14 +115,12 @@ class AddNetworkServiceUser {
         usernameOrLink: usernameOrLink,
       );
 
-  // ✅ NUEVO: Método para Facebook
   Future<Map<String, dynamic>> getFacebookProfile(String usernameOrLink) =>
       getProfileByUsernameOrLink(
         network: 'facebook',
         usernameOrLink: usernameOrLink,
       );
 
-  // Opcional: Twitter
   Future<Map<String, dynamic>> getTwitterProfile(String usernameOrLink) =>
       getProfileByUsernameOrLink(
         network: 'twitter',
