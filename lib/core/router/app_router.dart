@@ -205,6 +205,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         '/otp',
         '/terms-privacy',
         '/policy-deleted',
+        '/support',
       };
 
       // Helper para comparar rutas (exacta o anidada)
