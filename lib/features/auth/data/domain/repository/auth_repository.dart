@@ -15,6 +15,8 @@ abstract class AuthRepository {
 
   Future<AuthResult> loginWithGoogle();
 
+  Future<AuthResult> loginWithApple();
+
   Future<void> signOut();
 
   Future<bool> emailExists(String email);

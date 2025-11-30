@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/auth_result.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/location_dto.dart';
@@ -76,20 +77,37 @@ class AuthService {
   // LOGIN con Google
   Future<AuthResult> loginWithGoogle() async {
     try {
-      // ✅ Detecta automáticamente si es web o no
-      final googleSignIn = GoogleSignIn(
-        clientId: kIsWeb
-            ? null // Web usa el ID desde index.html
-            : dotenv.env['GOOGLE_CLIENT_ID'], // <-- tu clientId tipo Web
-      );
+      // ✅ Initialize GoogleSignIn with clientId if needed
+      final googleSignIn = GoogleSignIn.instance;
 
-      final googleUser = await googleSignIn.signIn();
+      // Initialize with clientId for non-web platforms
+      if (!kIsWeb && dotenv.env['GOOGLE_CLIENT_ID'] != null) {
+        await googleSignIn.initialize(
+          clientId: dotenv.env['GOOGLE_CLIENT_ID'],
+        );
+      }
+
+      // Authenticate the user (v7.x API)
+      final googleUser = await googleSignIn.authenticate();
       if (googleUser == null) throw Exception('cancelled_by_user');
 
-      final googleAuth = await googleUser.authentication;
+      // Authorize and get tokens (v7.x API)
+      // In v7, idToken and accessToken are obtained through authorization
+      final authorization = await googleUser.authorizationClient.authorizationForScopes([
+        'email',
+        'profile',
+      ]);
+
+      if (authorization == null) throw Exception('authorization_failed');
+
+      final idToken = authorization.accessToken;
+      final accessToken = authorization.accessToken;
+
+      if (accessToken == null) throw Exception('id_token_missing');
+
       final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
+        accessToken: accessToken,
+        idToken: idToken,
       );
 
       final userCredential = await _auth.signInWithCredential(credential);
@@ -127,6 +145,75 @@ class AuthService {
       );
     } on FirebaseAuthException catch (e) {
       throw Exception('Error en login con Google: ${e.code}');
+    } catch (e) {
+      throw Exception('Error inesperado: $e');
+    }
+  }
+
+  // LOGIN con Apple
+  Future<AuthResult> loginWithApple() async {
+    try {
+      // Request Apple Sign-In
+      final appleCredential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+      );
+
+      // Create OAuth credential for Firebase
+      final oAuthProvider = OAuthProvider('apple.com');
+      final credential = oAuthProvider.credential(
+        idToken: appleCredential.identityToken,
+        accessToken: appleCredential.authorizationCode,
+      );
+
+      final userCredential = await _auth.signInWithCredential(credential);
+      final user = userCredential.user;
+      if (user == null) throw Exception('firebase_sign_in_failed');
+
+      // Check if profile exists
+      final docRef = _firestore.collection('users').doc(user.uid);
+      final doc = await docRef.get();
+      bool profileExists = doc.exists;
+
+      // If user doesn't exist, create base document
+      if (!profileExists) {
+        // Apple may provide name only on first sign-in
+        String displayName = user.displayName ?? '';
+        if (displayName.isEmpty && appleCredential.givenName != null) {
+          displayName = '${appleCredential.givenName ?? ''} ${appleCredential.familyName ?? ''}'.trim();
+        }
+
+        final baseData = {
+          'displayName': displayName,
+          'email': user.email ?? appleCredential.email ?? '',
+          'avatarUrl': user.photoURL ?? '',
+          'phone': user.phoneNumber ?? '',
+          'username': '@${(displayName.isNotEmpty ? displayName : 'user').replaceAll(' ', '').toLowerCase()}',
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+          'complete': false,
+        };
+        await docRef.set(baseData);
+        profileExists = true;
+      }
+
+      final userDto = await _getUserFromFirestore(user.uid);
+
+      return AuthResult(
+        credential: userCredential,
+        user: userDto,
+        profileExists: profileExists,
+      );
+    } on SignInWithAppleAuthorizationException catch (e) {
+      // Handle user cancellation gracefully
+      if (e.code == AuthorizationErrorCode.canceled) {
+        throw Exception('cancelled_by_user');
+      }
+      throw Exception('Error en login con Apple: ${e.code} - ${e.message}');
+    } on FirebaseAuthException catch (e) {
+      throw Exception('Error en login con Apple: ${e.code}');
     } catch (e) {
       throw Exception('Error inesperado: $e');
     }
@@ -236,8 +323,9 @@ class AuthService {
   // SIGN OUT
   Future<void> signOut() async {
     try {
-      await GoogleSignIn().signOut();
+      await GoogleSignIn.instance.signOut();
     } catch (_) {}
+    // Note: Apple Sign-In doesn't require explicit sign out
     await _auth.signOut();
   }
 }

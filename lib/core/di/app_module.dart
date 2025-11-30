@@ -4,6 +4,7 @@ import 'package:migozz_app/features/auth/data/domain/repository/auth_repository.
 import 'package:migozz_app/features/auth/data/domain/use_cases/auth_use_cases.dart';
 import 'package:migozz_app/features/auth/data/domain/use_cases/get_current_user_use_case.dart';
 import 'package:migozz_app/features/auth/data/domain/use_cases/login_google_use_case.dart';
+import 'package:migozz_app/features/auth/data/domain/use_cases/login_apple_use_case.dart';
 import 'package:migozz_app/features/auth/data/domain/use_cases/login_use_case.dart';
 import 'package:migozz_app/features/auth/data/domain/use_cases/register_use_case.dart';
 import 'package:migozz_app/features/auth/data/domain/use_cases/signout_use_case.dart';
@@ -30,6 +31,7 @@ abstract class AppModule {
     login: LoginUseCase(authRepository),
     register: RegisterUseCase(authRepository),
     loginGoogle: LoginGoogleUseCase(authRepository),
+    loginApple: LoginAppleUseCase(authRepository),
     signout: SignOutUseCase(authRepository),
     getCurrentUser: GetCurrentUserUseCase(authRepository),
     authStateChanges: authRepository.authStateChanges(),

@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>895592952324-nh7fpbq5j9533r44s5908ds1qm8kq13d.apps.googleusercontent.com</string>
+	<string>895592952324-9com24km36qtr9pcpv6752qkgmf4otn3.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.895592952324-nh7fpbq5j9533r44s5908ds1qm8kq13d</string>
+	<string>com.googleusercontent.apps.895592952324-9com24km36qtr9pcpv6752qkgmf4otn3</string>
 	<key>ANDROID_CLIENT_ID</key>
 	<string>895592952324-acochpgr4ch4o97669jjpafeosgv7khg.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
@@ -15,7 +15,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.migozz.migozzApp</string>
+	<string>com.migozz.app</string>
 	<key>PROJECT_ID</key>
 	<string>migozz-e2a21</string>
 	<key>STORAGE_BUCKET</key>
@@ -31,7 +31,7 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:895592952324:ios:e1929bd2faa9988b727b51</string>
+	<string>1:895592952324:ios:98b70953208f9b63727b51</string>
 	<key>DATABASE_URL</key>
 	<string>https://migozz-e2a21-default-rtdb.firebaseio.com</string>
 </dict>

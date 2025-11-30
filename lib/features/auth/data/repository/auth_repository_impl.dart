@@ -32,6 +32,11 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<AuthResult> loginWithApple() {
+    return authService.loginWithApple();
+  }
+
+  @override
   Future<void> signOut() => authService.signOut();
 
   @override
