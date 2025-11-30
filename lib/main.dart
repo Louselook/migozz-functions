@@ -54,14 +54,17 @@ class MyApp extends StatelessWidget {
       providers: blocProviders,
       child: Builder(
         builder: (context) {
-          final goRouterNotifier = GoRouterNotifier(context.read<AuthCubit>());
+          // 👉 Crear el notifier aquí
+          final goRouterNotifier =
+              GoRouterNotifier(context.read<AuthCubit>());
+
+          // 👉 Crear el router UNA SOLA VEZ
+          final router = createRouter(goRouterNotifier);
 
           // 🔹 Inicializar deeplinks después del primer frame
           WidgetsBinding.instance.addPostFrameCallback((_) {
             DeeplinkService.initialize(context);
           });
-
-          // final router = createRouter(goRouterNotifier);
 
           return AppInitializer(
             builder: (context, initResult) {
@@ -70,25 +73,40 @@ class MyApp extends StatelessWidget {
                   initResult!.location,
                 );
               }
+
               final deviceLocale = context.locale;
-              final deviceLang = deviceLocale.languageCode; // 'es' o 'en'
+              final deviceLang = deviceLocale.languageCode;
               final langLabel = deviceLang == 'es' ? 'Español' : 'English';
 
-              // context.read<RegisterCubit>().setLanguage(langLabel);
-
               GeminiService.instance.setLanguage(langLabel);
+
+              if (initResult?.location != null) {
+                // Navegar post-frame para esperar a que EasyLocalization y el árbol estén listos.
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  try {
+                    final initialLocation = Uri.base.path; // ESTA ES LA RUTA QUE QUEREMOS
+
+                    // Evitamos navegar si es "/" o vacío
+                    if (initialLocation.isNotEmpty && initialLocation != "/") {
+                      debugPrint("➡️ Deep link real detectado: $initialLocation");
+                      router.go(initialLocation);
+                    }
+                  } catch (e, st) {
+                    debugPrint("⚠️ Error al navegar al deep link inicial: $e\n$st");
+                  }
+                });
+              }
 
               return MaterialApp.router(
                 debugShowCheckedModeBanner: false,
                 title: 'Migozz App',
-                routerConfig: createRouter(goRouterNotifier),
+                routerConfig: router, // 👈 ahora es estable
                 theme: ThemeData(
                   colorScheme: ColorScheme.fromSeed(
                     seedColor: Colors.deepPurple,
                   ),
                   useMaterial3: true,
                 ),
-                //  Esto es lo importante
                 localizationsDelegates: context.localizationDelegates,
                 supportedLocales: context.supportedLocales,
                 locale: context.locale,
@@ -100,3 +118,4 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+

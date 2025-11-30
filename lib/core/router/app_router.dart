@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -94,7 +95,28 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       GoRoute(
         path: '/terms-privacy',
         name: 'terms&Privacy',
-        builder: (context, state) => const TermsPrivacyScreen(),
+        builder: (context, state) {
+          final easy = EasyLocalization.of(context);
+          // Fail-safe: si por alguna razón EasyLocalization no está presente, mostramos la pantalla igual.
+          if (easy == null) return const TermsPrivacyScreen();
+
+          // loadTranslations() carga (o reutiliza) las traducciones y devuelve un Future
+          final loadFuture = easy.delegate.localizationController?.loadTranslations();
+
+          return FutureBuilder<void>(
+            future: loadFuture,
+            builder: (ctx, snap) {
+              if (snap.connectionState != ConnectionState.done) {
+                // Mientras carga, mostramos algo neutro (puede ser un skeleton del mismo layout)
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              }
+              // Ya cargó: ahora sí, construimos la pantalla real con las claves disponibles
+              return const TermsPrivacyScreen();
+            },
+          );
+        },
       ),
       GoRoute(
         path: '/complete-profile',
@@ -123,13 +145,27 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       ),
     ],
     redirect: (context, state) {
+      final localization = EasyLocalization.of(context);
+        // Si EasyLocalization aún no está listo, no redirijas todavía.
+      if (localization == null || !localization.supportedLocales.contains(localization.locale)) {
+        return null;
+      }
+      
       final status = goRouterNotifier.authStatus;
-      final goingTo = state.matchedLocation;
+      // Normalizamos la ruta entrante (quitamos query y slash final)
+      String normalize(String loc) {
+        final noQuery = loc.split('?').first;
+        if (noQuery != '/' && noQuery.endsWith('/')) {
+          return noQuery.substring(0, noQuery.length - 1);
+        }
+        return noQuery;
+      }
+
+      final goingTo = normalize(state.uri.toString()); // usa location y no matchedLocation
       debugPrint('REDIRECT -> status: $status, goingTo: $goingTo');
 
       final authCubit = context.read<AuthCubit>();
       final registerCubit = context.read<RegisterCubit>();
-
       final authState = authCubit.state;
       final registerState = registerCubit.state;
 
@@ -144,16 +180,20 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         '/policy-deleted',
       };
 
-      // Estado inicial de chequeo
-      if (status == AuthStatus.checking) {
-        return null;
+      // Helper para comparar rutas (exacta o anidada)
+      bool routeMatches(String loc, String route) {
+        if (loc == route) return true;
+        if (loc.startsWith('$route/')) return true; // p.ej. /profile/123 
+        return false;
       }
 
-      // ========================
-      // 🧩 1. Usuario NO autenticado
-      // ========================
+      final isPublic = publicRoutes.any((r) => routeMatches(goingTo, r));
+
+      // Estado inicial de chequeo
+      if (status == AuthStatus.checking) return null;
+
+      // 1) NO autenticado
       if (status == AuthStatus.notAuthenticated) {
-        // Si está en registro activo → ir al chat
         final isInRegisterFlow =
             registerState.regProgress != RegisterStatusProgress.emty &&
             registerState.regProgress != RegisterStatusProgress.doneChat;
@@ -163,29 +203,25 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
           return null;
         }
 
-        // Si intenta acceder a rutas privadas → enviarlo al login
-        if (!publicRoutes.contains(goingTo)) {
-          return '/login';
-        }
-        return null;
+        // Si la ruta es pública, permitir (IMPORTANTE para compartir /terms-privacy)
+        if (isPublic) return null;
+
+        // Si intenta acceder a ruta privada → login
+        return '/login';
       }
 
-      // ========================
-      // 🧩 2. Usuario autenticado
-      // ========================
+      // 2) Autenticado
       if (status == AuthStatus.authenticated) {
         final userProfile = authState.userProfile;
         final hasActiveRegistration =
             registerState.regProgress != RegisterStatusProgress.emty &&
             registerState.regProgress != RegisterStatusProgress.doneChat;
 
-        // 🟣 Caso: hay un flujo de registro activo
         if (hasActiveRegistration) {
           if (goingTo != '/ia-chat') return '/ia-chat';
           return null;
         }
 
-        // 🟡 Caso: perfil no completo (pero ya autenticado)
         if (userProfile == null || !userProfile.complete) {
           if (goingTo != '/complete-profile' && goingTo != '/ia-chat') {
             return '/complete-profile';
@@ -193,27 +229,26 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
           return null;
         }
 
-        // 🟢 Caso: perfil completo — permitir acceder a rutas privadas útiles
-        if (userProfile.complete) {
-          // Rutas permitidas cuando el perfil está completo (añadir aquí según necesites)
-          const allowedWhenComplete = {
-            '/profile',
-            '/profile-view',
-            '/edit-profile',
-            '/stats',
-            '/search',
-          };
+        // Rutas permitidas cuando perfil completo
+        const allowedWhenComplete = {
+          '/profile',
+          '/profile-view',
+          '/edit-profile',
+          '/stats',
+          '/search',
+        };
 
-          if (!allowedWhenComplete.contains(goingTo)) {
-            return '/profile';
-          }
+        final allowed =
+            allowedWhenComplete.any((r) => routeMatches(goingTo, r)) || isPublic;
+
+        if (!allowed) {
+          return '/profile';
         }
       }
 
-      // ========================
-      // ✅ 3. Por defecto, no redirigir
-      // ========================
+      // Por defecto no redirigir
       return null;
     },
+
   );
 }
