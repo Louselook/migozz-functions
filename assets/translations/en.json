@@ -469,5 +469,40 @@
                 "Rabbits"
             ]
         }
+    },
+  
+  "support": {
+    "header": "Support / Report a Problem",
+
+    "button": {
+      "send": "Send Report",
+      "back": "Back"
+    },
+
+    "form": {
+      "name": {
+        "label": "Your Name",
+        "placeholder": "Enter your name"
+      },
+      "email": {
+        "label": "Email Address",
+        "placeholder": "Enter your email"
+      },
+      "message": {
+        "label": "Describe the Issue",
+        "placeholder": "Explain what happened"
+      },
+      "attachment": {
+        "title": "Attach Screenshot (optional)",
+        "button": "Select File",
+        "selected": "File Selected"
+      }
+    },
+
+    "snackbar": {
+      "success": "Report sent successfully",
+      "validationError": "Please complete all required fields",
+      "invalidEmail": "Enter a valid email address"
     }
+  }
 }

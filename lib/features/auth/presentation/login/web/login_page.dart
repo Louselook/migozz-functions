@@ -1,10 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/components/atomics/logo.dart';
 import 'package:migozz_app/features/auth/presentation/login/shared/login_wrapper.dart';
 import 'package:migozz_app/features/auth/presentation/login/web/login_form.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
+
+  Widget _buildSupportHint(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 20),
+      child: GestureDetector(
+        onTap: () => context.push("/support"),
+        child: const Text(
+          "If you have any errors, please report it here",
+          style: TextStyle(
+            color: Colors.pinkAccent,
+            fontSize: 12,
+            decoration: TextDecoration.underline,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+  
 
   // Sección del logo + textos, reutilizada en mobile/desktop
   Widget _buildLogoSection(double logoSize) {
@@ -72,7 +92,13 @@ class LoginPage extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 32),
-          SizedBox(width: formWidth, child: const LoginForm()),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(width: formWidth, child: const LoginForm()),
+              _buildSupportHint(context), 
+            ],
+          ),
           const SizedBox(width: 32),
         ],
       ),

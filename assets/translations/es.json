@@ -469,5 +469,39 @@
         "Conejos"
       ]
     }
+  },
+  "support": {
+    "header": "Soporte / Reportar un problema",
+
+    "button": {
+      "send": "Enviar reporte",
+      "back": "Volver"
+    },
+
+    "form": {
+      "name": {
+        "label": "Nombre",
+        "placeholder": "Ingresa tu nombre"
+      },
+      "email": {
+        "label": "Correo electrónico",
+        "placeholder": "Ingresa tu correo"
+      },
+      "message": {
+        "label": "Describe el problema",
+        "placeholder": "Explica qué ocurrió"
+      },
+      "attachment": {
+        "title": "Adjuntar captura (opcional)",
+        "button": "Seleccionar archivo",
+        "selected": "Archivo seleccionado"
+      }
+    },
+
+    "snackbar": {
+      "success": "Reporte enviado correctamente",
+      "validationError": "Por favor completa los campos requeridos",
+      "invalidEmail": "Ingresa un correo válido"
+    }
   }
 }

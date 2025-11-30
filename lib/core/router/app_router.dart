@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/router/app_router_notifier.dart';
 import 'package:migozz_app/core/utils/pages/deleted_policy.dart';
+import 'package:migozz_app/core/utils/pages/support_screen.dart';
 import 'package:migozz_app/core/utils/pages/terms_and_policy_screen.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_state.dart';
@@ -114,6 +115,32 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
               }
               // Ya cargó: ahora sí, construimos la pantalla real con las claves disponibles
               return const TermsPrivacyScreen();
+            },
+          );
+        },
+      ),
+      GoRoute(
+        path: '/support',
+        name: 'support',
+        builder: (context, state) {
+          final easy = EasyLocalization.of(context);
+          // Fail-safe: si por alguna razón EasyLocalization no está presente, mostramos la pantalla igual.
+          if (easy == null) return const SupportScreen();
+
+          // loadTranslations() carga (o reutiliza) las traducciones y devuelve un Future
+          final loadFuture = easy.delegate.localizationController?.loadTranslations();
+
+          return FutureBuilder<void>(
+            future: loadFuture,
+            builder: (ctx, snap) {
+              if (snap.connectionState != ConnectionState.done) {
+                // Mientras carga, mostramos algo neutro (puede ser un skeleton del mismo layout)
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              }
+              // Ya cargó: ahora sí, construimos la pantalla real con las claves disponibles
+              return const SupportScreen();
             },
           );
         },
