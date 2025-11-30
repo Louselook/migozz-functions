@@ -10,6 +10,7 @@ import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/features/auth/components/bottom_text.dart';
 import 'package:migozz_app/features/auth/components/google_button.dart';
+import 'package:migozz_app/features/auth/components/apple_button.dart';
 import 'package:migozz_app/features/auth/data/datasources/auth_service.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/login_cubit/login_cubit.dart';
@@ -134,6 +135,34 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Future<void> _handleAppleSignIn() async {
+    FocusScope.of(context).unfocus();
+    LoadingOverlay.show(context);
+
+    try {
+      final authCubit = context.read<AuthCubit>();
+      await authCubit.signInWithApple();
+
+      if (!mounted) return;
+    } catch (e) {
+      debugPrint("error: $e");
+
+      // Evita mostrar errores genéricos o warnings de Firebase
+      final msg = e.toString();
+      if (!msg.contains("AppCheckProvider") &&
+          !msg.contains("ProviderInstaller") &&
+          !msg.contains("cancelled_by_user")) {
+        CustomSnackbar.show(
+          context: context,
+          message: 'Error logging in with Apple: $e',
+          type: SnackbarType.error,
+        );
+      }
+    } finally {
+      if (mounted) LoadingOverlay.hide(context);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Envuelve tu layout con LoginWrapper para heredar listeners compartidos
@@ -212,8 +241,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   const SizedBox(height: 5),
 
-                  // Google login button
-                  googleButton(onPressed: _handleGoogleSignIn),
+                  // Social login buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      googleButton(onPressed: _handleGoogleSignIn),
+                      const SizedBox(width: 10),
+                      appleButton(onPressed: _handleAppleSignIn),
+                    ],
+                  ),
                   const SizedBox(height: 50),
 
                   // Register

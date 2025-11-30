@@ -8,6 +8,7 @@ import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/core/components/atomics/loading_overlay.dart';
 import 'package:migozz_app/features/auth/components/bottom_text.dart';
 import 'package:migozz_app/features/auth/components/google_button.dart';
+import 'package:migozz_app/features/auth/components/apple_button.dart';
 import 'package:migozz_app/features/auth/data/datasources/auth_service.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/login_cubit/login_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
@@ -110,6 +111,27 @@ class _LoginFormState extends State<LoginForm> {
     }
   }
 
+  Future<void> _handleAppleSignIn() async {
+    FocusScope.of(context).unfocus();
+    LoadingOverlay.show(context);
+    try {
+      final authCubit = context.read<AuthCubit>();
+      await authCubit.signInWithApple();
+    } catch (e) {
+      debugPrint('error: $e');
+      if (!e.toString().contains('cancelled_by_user')) {
+        CustomSnackbar.show(
+          // ignore: use_build_context_synchronously
+          context: context,
+          message: 'Error al iniciar sesión con Apple: $e',
+          type: SnackbarType.error,
+        );
+      }
+    } finally {
+      if (mounted) LoadingOverlay.hide(context);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Form(
@@ -147,7 +169,14 @@ class _LoginFormState extends State<LoginForm> {
             const SecondaryText('Or login with', fontSize: 16),
             const SizedBox(height: 5),
 
-            googleButton(onPressed: _handleGoogleSignIn),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                googleButton(onPressed: _handleGoogleSignIn),
+                const SizedBox(width: 10),
+                appleButton(onPressed: _handleAppleSignIn),
+              ],
+            ),
             const SizedBox(height: 50),
 
             bottomText(context: context),

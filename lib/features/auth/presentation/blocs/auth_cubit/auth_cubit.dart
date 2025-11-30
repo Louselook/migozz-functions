@@ -100,6 +100,19 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  Future<AuthResult> signInWithApple() async {
+    try {
+      debugPrint('🍎 [AuthCubit] Iniciando login con Apple...');
+      final result = await _authUseCases.loginApple.run();
+      debugPrint('✅ [AuthCubit] Login exitoso: ${result.user}');
+      return result;
+    } catch (e) {
+      debugPrint('❌ [AuthCubit] Error en login con Apple: $e');
+      debugPrint('❌ [AuthCubit] Tipo de error: ${e.runtimeType}');
+      rethrow;
+    }
+  }
+
   Future<AuthResult> login({required String email, required String otp}) async {
     try {
       return await _authUseCases.login.run(email: email, otp: otp);
