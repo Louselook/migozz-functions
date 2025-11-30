@@ -28,6 +28,31 @@ import 'package:migozz_app/features/search/web/presentation/search_screen.dart'
     as web_search;
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 
+Widget localizedBuilder(
+  BuildContext context,
+  Widget Function() screenBuilder,
+) {
+  final easy = EasyLocalization.of(context);
+
+  // Si por alguna razón EasyLocalization aún no está disponible,
+  // cargamos la pantalla igual (fail-safe).
+  if (easy == null) return screenBuilder();
+
+  final load = easy.delegate.localizationController?.loadTranslations();
+
+  return FutureBuilder(
+    future: load,
+    builder: (ctx, snap) {
+      if (snap.connectionState != ConnectionState.done) {
+        return const Scaffold(
+          body: Center(child: CircularProgressIndicator()),
+        );
+      }
+      return screenBuilder();
+    },
+  );
+}
+
 GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
   return GoRouter(
     initialLocation: '/onboarding',
@@ -37,7 +62,14 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         path: '/onboarding',
         builder: (context, state) => const OnboardingEntry(),
       ),
-      GoRoute(path: '/login', builder: (context, state) => const LoginEntry()),
+      GoRoute(
+        path: '/login',
+        name: 'login',
+        builder: (context, state) => localizedBuilder(
+          context,
+          () => const LoginEntry(),
+        ),
+      ),
       // GoRoute(
       //   path: '/otp',
       //   builder: (context, state) {
@@ -47,7 +79,11 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       // ),
       GoRoute(
         path: '/register',
-        builder: (context, state) => const RegisterScreen(),
+        name: 'register',
+        builder: (context, state) => localizedBuilder(
+          context,
+          () => const RegisterScreen(),
+        ),
       ),
       GoRoute(
         path: '/profile',
@@ -61,7 +97,6 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
             // Si no hay usuario, redirigir al perfil propio
             return ProfileEntry(tutorialKeys: TutorialKeys(),);
           }
-
           // Decidir entre web y mobile según el ancho de pantalla
           final screenWidth = MediaQuery.of(context).size.width;
           if (screenWidth >= 900) {
@@ -96,54 +131,18 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       GoRoute(
         path: '/terms-privacy',
         name: 'terms&Privacy',
-        builder: (context, state) {
-          final easy = EasyLocalization.of(context);
-          // Fail-safe: si por alguna razón EasyLocalization no está presente, mostramos la pantalla igual.
-          if (easy == null) return const TermsPrivacyScreen();
-
-          // loadTranslations() carga (o reutiliza) las traducciones y devuelve un Future
-          final loadFuture = easy.delegate.localizationController?.loadTranslations();
-
-          return FutureBuilder<void>(
-            future: loadFuture,
-            builder: (ctx, snap) {
-              if (snap.connectionState != ConnectionState.done) {
-                // Mientras carga, mostramos algo neutro (puede ser un skeleton del mismo layout)
-                return const Scaffold(
-                  body: Center(child: CircularProgressIndicator()),
-                );
-              }
-              // Ya cargó: ahora sí, construimos la pantalla real con las claves disponibles
-              return const TermsPrivacyScreen();
-            },
-          );
-        },
-      ),
+        builder: (context, state) => localizedBuilder(
+            context,
+            () => const TermsPrivacyScreen(),
+          ),
+        ),
       GoRoute(
         path: '/support',
         name: 'support',
-        builder: (context, state) {
-          final easy = EasyLocalization.of(context);
-          // Fail-safe: si por alguna razón EasyLocalization no está presente, mostramos la pantalla igual.
-          if (easy == null) return const SupportScreen();
-
-          // loadTranslations() carga (o reutiliza) las traducciones y devuelve un Future
-          final loadFuture = easy.delegate.localizationController?.loadTranslations();
-
-          return FutureBuilder<void>(
-            future: loadFuture,
-            builder: (ctx, snap) {
-              if (snap.connectionState != ConnectionState.done) {
-                // Mientras carga, mostramos algo neutro (puede ser un skeleton del mismo layout)
-                return const Scaffold(
-                  body: Center(child: CircularProgressIndicator()),
-                );
-              }
-              // Ya cargó: ahora sí, construimos la pantalla real con las claves disponibles
-              return const SupportScreen();
-            },
-          );
-        },
+        builder: (context, state) => localizedBuilder(
+          context,
+          () => const SupportScreen(),
+        ),
       ),
       GoRoute(
         path: '/complete-profile',

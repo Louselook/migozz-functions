@@ -56,7 +56,7 @@ class _SupportScreenState extends State<SupportScreen> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () => context.pop(),
+                    onPressed: () => context.push("/login"),
                   ),
                   const SizedBox(width: 12),
                   Expanded(

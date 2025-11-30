@@ -67,6 +67,7 @@ class LoginPage extends StatelessWidget {
           _buildLogoSection(logoSize.clamp(120, 180)),
           const SizedBox(height: 40),
           const LoginForm(),
+          _buildSupportHint(context)
         ],
       ),
     );
