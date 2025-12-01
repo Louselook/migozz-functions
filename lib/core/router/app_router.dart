@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/router/app_router_notifier.dart';
 import 'package:migozz_app/core/utils/pages/deleted_policy.dart';
-import 'package:migozz_app/core/utils/pages/support_screen.dart';
+import 'package:migozz_app/core/utils/pages/support/support_screen.dart';
 import 'package:migozz_app/core/utils/pages/terms_and_policy_screen.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_state.dart';
@@ -28,10 +28,7 @@ import 'package:migozz_app/features/search/web/presentation/search_screen.dart'
     as web_search;
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 
-Widget localizedBuilder(
-  BuildContext context,
-  Widget Function() screenBuilder,
-) {
+Widget localizedBuilder(BuildContext context, Widget Function() screenBuilder) {
   final easy = EasyLocalization.of(context);
 
   // Si por alguna razón EasyLocalization aún no está disponible,
@@ -44,9 +41,7 @@ Widget localizedBuilder(
     future: load,
     builder: (ctx, snap) {
       if (snap.connectionState != ConnectionState.done) {
-        return const Scaffold(
-          body: Center(child: CircularProgressIndicator()),
-        );
+        return const Scaffold(body: Center(child: CircularProgressIndicator()));
       }
       return screenBuilder();
     },
@@ -65,10 +60,8 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       GoRoute(
         path: '/login',
         name: 'login',
-        builder: (context, state) => localizedBuilder(
-          context,
-          () => const LoginEntry(),
-        ),
+        builder: (context, state) =>
+            localizedBuilder(context, () => const LoginEntry()),
       ),
       // GoRoute(
       //   path: '/otp',
@@ -80,10 +73,8 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       GoRoute(
         path: '/register',
         name: 'register',
-        builder: (context, state) => localizedBuilder(
-          context,
-          () => const RegisterScreen(),
-        ),
+        builder: (context, state) =>
+            localizedBuilder(context, () => const RegisterScreen()),
       ),
       GoRoute(
         path: '/profile',
@@ -95,7 +86,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
           final user = state.extra as UserDTO?;
           if (user == null) {
             // Si no hay usuario, redirigir al perfil propio
-            return ProfileEntry(tutorialKeys: TutorialKeys(),);
+            return ProfileEntry(tutorialKeys: TutorialKeys());
           }
           // Decidir entre web y mobile según el ancho de pantalla
           final screenWidth = MediaQuery.of(context).size.width;
@@ -131,18 +122,14 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       GoRoute(
         path: '/terms-privacy',
         name: 'terms&Privacy',
-        builder: (context, state) => localizedBuilder(
-            context,
-            () => const TermsPrivacyScreen(),
-          ),
-        ),
+        builder: (context, state) =>
+            localizedBuilder(context, () => const TermsPrivacyScreen()),
+      ),
       GoRoute(
         path: '/support',
         name: 'support',
-        builder: (context, state) => localizedBuilder(
-          context,
-          () => const SupportScreen(),
-        ),
+        builder: (context, state) =>
+            localizedBuilder(context, () => const SupportScreen()),
       ),
       GoRoute(
         path: '/complete-profile',
@@ -172,11 +159,12 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
     ],
     redirect: (context, state) {
       final localization = EasyLocalization.of(context);
-        // Si EasyLocalization aún no está listo, no redirijas todavía.
-      if (localization == null || !localization.supportedLocales.contains(localization.locale)) {
+      // Si EasyLocalization aún no está listo, no redirijas todavía.
+      if (localization == null ||
+          !localization.supportedLocales.contains(localization.locale)) {
         return null;
       }
-      
+
       final status = goRouterNotifier.authStatus;
       // Normalizamos la ruta entrante (quitamos query y slash final)
       String normalize(String loc) {
@@ -187,7 +175,9 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         return noQuery;
       }
 
-      final goingTo = normalize(state.uri.toString()); // usa location y no matchedLocation
+      final goingTo = normalize(
+        state.uri.toString(),
+      ); // usa location y no matchedLocation
       debugPrint('REDIRECT -> status: $status, goingTo: $goingTo');
 
       final authCubit = context.read<AuthCubit>();
@@ -210,7 +200,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       // Helper para comparar rutas (exacta o anidada)
       bool routeMatches(String loc, String route) {
         if (loc == route) return true;
-        if (loc.startsWith('$route/')) return true; // p.ej. /profile/123 
+        if (loc.startsWith('$route/')) return true; // p.ej. /profile/123
         return false;
       }
 
@@ -266,7 +256,8 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         };
 
         final allowed =
-            allowedWhenComplete.any((r) => routeMatches(goingTo, r)) || isPublic;
+            allowedWhenComplete.any((r) => routeMatches(goingTo, r)) ||
+            isPublic;
 
         if (!allowed) {
           return '/profile';
@@ -276,6 +267,5 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       // Por defecto no redirigir
       return null;
     },
-
   );
 }
