@@ -89,7 +89,6 @@ class AuthService {
 
       // Authenticate the user (v7.x API)
       final googleUser = await googleSignIn.authenticate();
-      if (googleUser == null) throw Exception('cancelled_by_user');
 
       // Authorize and get tokens (v7.x API)
       // In v7, idToken and accessToken are obtained through authorization
@@ -102,8 +101,6 @@ class AuthService {
 
       final idToken = authorization.accessToken;
       final accessToken = authorization.accessToken;
-
-      if (accessToken == null) throw Exception('id_token_missing');
 
       final credential = GoogleAuthProvider.credential(
         accessToken: accessToken,
