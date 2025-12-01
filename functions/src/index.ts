@@ -7,6 +7,8 @@ import {initializeApp} from "firebase-admin/app";
 import {getFirestore, FieldValue} from "firebase-admin/firestore";
 import {getStorage} from "firebase-admin/storage";
 import QRCode from "qrcode";
+import { logger } from "firebase-functions";
+import nodemailer, { SendMailOptions } from "nodemailer";
 
 initializeApp();
 const db = getFirestore();
@@ -127,3 +129,54 @@ export const generateProfileQR = onCall(async (request) => {
 
   return {success: true, qrUrl};
 });
+
+// 6. sendSupportEmail → envía correo al crear ticket de soporte
+export const sendSupportEmail = onDocumentCreated(
+  "supportTickets/{ticketId}",
+  async (event) => {
+    const data = event.data?.data();
+    if (!data) return;
+
+    logger.info("📨 Nuevo ticket de soporte recibido:", data);
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: "issamu382@gmail.com",
+        pass: "nfnsyuwdkymgbwbs",
+      },
+    });
+
+    const mailOptions: SendMailOptions = {
+      from: "Migozz Support <MigozzSupport@migozz.com>",
+      to: "issamu382@gmail.com",
+      subject: `Nuevo Ticket de Soporte — ${data.email}`,
+      html: `
+        <h2>Nuevo Ticket de Soporte</h2>
+
+        <p><strong>Nombre:</strong> ${data.name}</p>
+        <p><strong>Email:</strong> ${data.email}</p>
+
+        <p><strong>Mensaje:</strong></p>
+        <p>${data.message}</p>
+
+        ${data.fileName ? `<p><strong>Adjunto:</strong> ${data.fileName}</p>` : ""}
+
+        <br><hr>
+        <p>Ticket generado automáticamente desde Migozz.</p>
+      `,
+      attachments: data.fileBase64
+        ? [
+            {
+              filename: data.fileName,
+              content: Buffer.from(data.fileBase64, "base64"),
+            },
+          ]
+        : [],
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    logger.info("📧 Correo de soporte enviado correctamente.");
+  }
+);

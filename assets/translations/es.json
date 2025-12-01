@@ -48,6 +48,7 @@
       "subtitle1": "Ingresa tu información a continuación",
       "inputText": "Ingresa tu correo",
       "buttonText": "Crear cuenta",
+      "social": "Aquí está la información extraída de sus redes sociales.",
       "bottonText": {
         "login": "¿Ya tienes una cuenta?",
         "LoginReturn": "Inicia sesión"

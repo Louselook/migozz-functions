@@ -146,7 +146,7 @@ final Map<String, Map<String, dynamic>> questionsEn = {
 
   "gender": {
     "text": "Great nickname! What is your gender?",
-    "options": ["Man", "Woman"],
+    "options": ["Male", "Female"],
     "step": "regProgress.gender",
     "keepTalk": false,
     "keyboardType": "text",
@@ -323,7 +323,7 @@ final Map<String, Map<String, dynamic>> errorMessagesEn = {
 
   "gender": {
     "text": "Please choose a valid option.",
-    "options": ["Man", "Woman", "Other"],
+    "options": ["Male", "Female"],
     "step": "regProgress.gender",
     "keepTalk": false,
   },

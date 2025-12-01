@@ -48,6 +48,7 @@
             "subtitle1" : "Enter your information below",
             "inputText" : "Enter email",
             "buttonText" : "Create Account",
+            "social": "Here is the information extracted from their social networks.",
             "bottonText" : {
                 "login" : "Already a member?",
                 "LoginReturn" : "Login"

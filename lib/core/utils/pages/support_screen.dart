@@ -1,9 +1,15 @@
 // ignore: deprecated_member_use, avoid_web_libraries_in_flutter, Solo para Web (upload files)
+// ignore_for_file: use_build_context_synchronously
+
+import 'dart:convert';
+// ignore: deprecated_member_use, avoid_web_libraries_in_flutter, Solo para Web (send to firebase)
 import 'dart:html' as html;
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:easy_localization/easy_localization.dart';
+// import 'package:easy_localization/easy_localization.dart';
 
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
@@ -17,6 +23,59 @@ class SupportScreen extends StatefulWidget {
 }
 
 class _SupportScreenState extends State<SupportScreen> {
+  
+  Future<void> _onSubmit() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Sending...")),
+      );
+
+      // 1. Preparar el archivo si existe
+      String? base64File;
+      String? fileName;
+
+      if (selectedFile != null) {
+        final reader = html.FileReader();
+        reader.readAsArrayBuffer(selectedFile!);
+        await reader.onLoad.first;
+
+        final bytes = reader.result as List<int>;
+        base64File = base64Encode(bytes);
+        fileName = selectedFile!.name;
+      }
+
+      // 2. Crear ticket en Firestore
+      final ticket = {
+        "name": _nameCtrl.text.trim(),
+        "email": _emailCtrl.text.trim(),
+        "message": _messageCtrl.text.trim(),
+        "createdAt": DateTime.now().toUtc().toIso8601String(),
+        "fileName": fileName,
+        "fileBase64": base64File,
+        "status": "pending",
+      };
+
+      await FirebaseFirestore.instance
+          .collection("supportTickets")
+          .add(ticket);
+
+      // 3. Mostrar éxito
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Ticket enviado correctamente.")),
+      );
+
+      context.go('/login');
+
+    } catch (e) {
+      debugPrint("ERROR al enviar ticket: $e");
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error sending ticket: $e")),
+      );
+    }
+  }
   final _formKey = GlobalKey<FormState>();
 
   // Controllers
@@ -27,15 +86,27 @@ class _SupportScreenState extends State<SupportScreen> {
   html.File? selectedFile;
 
   Future<void> pickFile() async {
-    final uploadInput = html.FileUploadInputElement()..accept = 'image/*';
-    uploadInput.click();
+    if (!kIsWeb) {
+      // Fallback si alguna vez compila en mobile
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Select File')),
+      );
+      return;
+    }
 
-    uploadInput.onChange.listen((event) {
-      final file = uploadInput.files?.first;
-      if (file != null) {
-        setState(() => selectedFile = file);
-      }
-    });
+    try {
+      final uploadInput = html.FileUploadInputElement()..accept = 'image/*';
+      uploadInput.click();
+
+      uploadInput.onChange.listen((event) {
+        final file = uploadInput.files?.first;
+        if (file != null) {
+          setState(() => selectedFile = file);
+        }
+      });
+    } catch (e, st) {
+      debugPrint('Error pickFile: $e\n$st');
+    }
   }
 
   @override
@@ -49,31 +120,31 @@ class _SupportScreenState extends State<SupportScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            /// HEADER
+            // Header (igual pattern que TermsPrivacy)
             Padding(
               padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
                   IconButton(
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () => context.push("/login"),
+                    onPressed: () => context.go('/login'), // volver 
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: PrimaryText("support.header".tr()),
+                    child: PrimaryText("Support / Report a Problem"),
                   ),
                 ],
               ),
             ),
 
-            /// CONTENIDO
+            // Content
             Expanded(
               child: isDesktop || isTablet
-                  ? _buildDesktopLayout()
-                  : _buildMobileLayout(),
+                  ? _buildTwoColumnLayout()
+                  : _buildSingleColumnLayout(),
             ),
 
-            /// BOTÓN ENVIAR
+            // Back to Login Button (mismo patrón que TermsPrivacy)
             Padding(
               padding: const EdgeInsets.all(20),
               child: ConstrainedBox(
@@ -87,7 +158,7 @@ class _SupportScreenState extends State<SupportScreen> {
                     children: [
                       const Icon(Icons.send, color: Colors.white, size: 20),
                       const SizedBox(width: 8),
-                      SecondaryText("support.button.send".tr()),
+                      SecondaryText("Send"),
                     ],
                   ),
                 ),
@@ -99,25 +170,63 @@ class _SupportScreenState extends State<SupportScreen> {
     );
   }
 
-  // DESKTOP/TABLET COLUMN
-  Widget _buildDesktopLayout() {
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 800),
-        child: _buildFormCard(),
+  // Two-column like TermsPrivacy: form + info panel (similar separation)
+  Widget _buildTwoColumnLayout() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: _buildFormCard()),
+          const SizedBox(width: 20),
+          // Right column: pequeño panel informativo (puede contener instrucciones)
+          // Expanded(
+          //   child: Container(
+          //     padding: const EdgeInsets.all(20),
+          //     decoration: BoxDecoration(
+          //       color: Colors.white.withValues(alpha: 0.03),
+          //       borderRadius: BorderRadius.circular(16),
+          //       border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+          //     ),
+          //     child: Column(
+          //       crossAxisAlignment: CrossAxisAlignment.start,
+          //       children: [
+          //         Text('support.header',
+          //             style: const TextStyle(
+          //                 color: Colors.white,
+          //                 fontSize: 18,
+          //                 fontWeight: FontWeight.bold)),
+          //         const SizedBox(height: 12),
+          //         Text(
+          //           'support.helpText',
+          //           style: TextStyle(
+          //               color: Colors.white.withValues(alpha: 0.85),
+          //               fontSize: 14,
+          //               height: 1.4),
+          //         ),
+          //       ],
+          //     ),
+          //   ),
+          // ),
+        ],
       ),
     );
   }
 
-  // MOBILE
-  Widget _buildMobileLayout() {
+  // Single column (mobile)
+  Widget _buildSingleColumnLayout() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: _buildFormCard(),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        children: [
+          _buildFormCard(),
+          const SizedBox(height: 20),
+        ],
+      ),
     );
   }
 
-  // MAIN CARD
+  // MAIN CARD (form)
   Widget _buildFormCard() {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -136,23 +245,23 @@ class _SupportScreenState extends State<SupportScreen> {
             const SizedBox(height: 20),
             _buildTextField(
               controller: _nameCtrl,
-              label: "support.form.name.label".tr(),
-              placeholder: "support.form.name.placeholder".tr(),
+              label: "Your Name",
+              placeholder: "Enter your name",
               icon: Icons.person,
             ),
             const SizedBox(height: 15),
 
             _buildTextField(
               controller: _emailCtrl,
-              label: "support.form.email.label".tr(),
-              placeholder: "support.form.email.placeholder".tr(),
+              label: "Email Address",
+              placeholder: "Enter your email",
               icon: Icons.email,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return "support.snackbar.validationError".tr();
+                  return "Please complete all required fields";
                 }
                 if (!value.contains('@')) {
-                  return "support.snackbar.invalidEmail".tr();
+                  return "Enter a valid email address";
                 }
                 return null;
               },
@@ -161,8 +270,8 @@ class _SupportScreenState extends State<SupportScreen> {
 
             _buildTextField(
               controller: _messageCtrl,
-              label: "support.form.message.label".tr(),
-              placeholder: "support.form.message.placeholder".tr(),
+              label: "Describe the Issue",
+              placeholder: "Explain what happened",
               icon: Icons.bug_report,
               maxLines: 6,
             ),
@@ -186,7 +295,7 @@ class _SupportScreenState extends State<SupportScreen> {
         children: [
           const Icon(Icons.support_agent, color: Colors.white, size: 24),
           const SizedBox(width: 12),
-          PrimaryText("support.header".tr(), color: Colors.white),
+          PrimaryText("Support / Report a Problem", color: Colors.white),
         ],
       ),
     );
@@ -206,7 +315,7 @@ class _SupportScreenState extends State<SupportScreen> {
       validator: validator ??
           (value) {
             if (value == null || value.isEmpty) {
-              return "support.snackbar.validationError".tr();
+              return "Please complete all required fields";
             }
             return null;
           },
@@ -233,7 +342,7 @@ class _SupportScreenState extends State<SupportScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        PrimaryText("support.form.attachment.title".tr()),
+        PrimaryText("Attach Screenshot (optional)"),
         const SizedBox(height: 8),
 
         OutlinedButton.icon(
@@ -241,8 +350,8 @@ class _SupportScreenState extends State<SupportScreen> {
           icon: const Icon(Icons.attachment, color: Colors.white),
           label: Text(
             selectedFile == null
-                ? "support.form.attachment.button".tr()
-                : "${"support.form.attachment.selected".tr()}: ${selectedFile!.name}",
+                ? "Select File"
+                : "${"File Selected"}: ${selectedFile!.name}",
             style: const TextStyle(color: Colors.white),
           ),
           style: OutlinedButton.styleFrom(
@@ -253,16 +362,16 @@ class _SupportScreenState extends State<SupportScreen> {
     );
   }
 
-  void _onSubmit() {
-    if (!_formKey.currentState!.validate()) return;
+  // void _onSubmit() {
+  //   if (!_formKey.currentState!.validate()) return;
 
-    debugPrint("Nombre: ${_nameCtrl.text}");
-    debugPrint("Correo: ${_emailCtrl.text}");
-    debugPrint("Mensaje: ${_messageCtrl.text}");
-    debugPrint("Archivo: ${selectedFile?.name}");
+  //   debugPrint("Nombre: ${_nameCtrl.text}");
+  //   debugPrint("Correo: ${_emailCtrl.text}");
+  //   debugPrint("Mensaje: ${_messageCtrl.text}");
+  //   debugPrint("Archivo: ${selectedFile?.name}");
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("support.snackbar.success".tr())),
-    );
-  }
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(content: Text("support.snackbar.success")),
+  //   );
+  // }
 }

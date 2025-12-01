@@ -76,6 +76,16 @@ class LocationService {
         debugPrint("⚠️ Error al obtener datos de la API: ${response.body}");
       }
 
+      if (response.statusCode != 200) {
+        debugPrint("⚠️ Error API (${response.statusCode}): ${response.body}");
+        return null;
+      }
+
+      if (!response.body.trim().startsWith('{')) {
+        debugPrint("❌ API devolvió HTML en vez de JSON");
+        return null;
+      }
+
       final data = jsonDecode(response.body);
 
       return LocationDTO(

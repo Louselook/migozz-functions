@@ -11,7 +11,7 @@ class LoginPage extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(top: 20),
       child: GestureDetector(
-        onTap: () => context.push("/support"),
+        onTap: () => context.go("/support"),
         child: const Text(
           "If you have any errors, please report it here",
           style: TextStyle(

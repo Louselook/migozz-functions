@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/components/compuestos/chat/audio/audio_playback_widget.dart';
 import 'package:migozz_app/features/chat/data/domain/models/chat_model.dart';
@@ -53,7 +54,7 @@ class ChatMessageBuilder {
 
     if (message["type"] == MessageType.socialCards) {
       return OtherMessage(
-        text: "Aquí está la información extraída de sus redes sociales.",
+        text: "register.presentation.social".tr(),
         time: message["time"] ?? "",
         platforms: List<Map<String, dynamic>>.from(message["platforms"]),
         chatController: chatController,
