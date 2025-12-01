@@ -21,7 +21,7 @@ class _SupportScreenState extends State<SupportScreen> {
   }
 
   Future<void> _openInBrowser() async {
-    final url = Uri.parse('https://migozz.com/support');
+    final url = Uri.parse('https://migozz-e2a21.web.app/support');
 
     try {
       if (await canLaunchUrl(url)) {
