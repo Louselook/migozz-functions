@@ -75,48 +75,56 @@ class AuthService {
   }
 
   // LOGIN con Google
+  // LOGIN con Google
   Future<AuthResult> loginWithGoogle() async {
     try {
-      // ✅ Initialize GoogleSignIn with clientId if needed
       final googleSignIn = GoogleSignIn.instance;
 
-      // Initialize with clientId for non-web platforms
-      if (!kIsWeb && dotenv.env['GOOGLE_CLIENT_ID'] != null) {
-        await googleSignIn.initialize(
-          clientId: dotenv.env['GOOGLE_CLIENT_ID'],
-        );
+      // Inicializa: solo pasa clientId en web
+      if (kIsWeb && dotenv.env['GOOGLE_CLIENT_ID'] != null) {
+        await googleSignIn.initialize(clientId: dotenv.env['GOOGLE_CLIENT_ID']);
+      } else {
+        await googleSignIn.initialize();
       }
 
-      // Authenticate the user (v7.x API)
+      // 1) UI de login
       final googleUser = await googleSignIn.authenticate();
 
-      // Authorize and get tokens (v7.x API)
-      // In v7, idToken and accessToken are obtained through authorization
-      final authorization = await googleUser.authorizationClient.authorizationForScopes([
-        'email',
-        'profile',
-      ]);
+      // 2) pedir autorización para scopes (devuelve accessToken si existe)
+      final authorization = await googleUser.authorizationClient
+          .authorizationForScopes([
+            'email',
+            'profile',
+            // 'openid' no garantiza idToken en todas las plataformas v7, pero no hace daño pedirlo.
+            'openid',
+          ]);
 
       if (authorization == null) throw Exception('authorization_failed');
 
-      final idToken = authorization.accessToken;
-      final accessToken = authorization.accessToken;
+      final String accessToken = authorization.accessToken;
 
+      debugPrint('🔐 accessToken length: ${accessToken.length}');
+
+      if (accessToken.isEmpty) {
+        throw Exception('no_access_token_obtained');
+      }
+
+      // 3) crear credential SOLO con accessToken (idToken no está disponible en v7)
       final credential = GoogleAuthProvider.credential(
         accessToken: accessToken,
-        idToken: idToken,
+        // idToken: null,
       );
 
+      // 4) sign in en Firebase
       final userCredential = await _auth.signInWithCredential(credential);
       final user = userCredential.user;
       if (user == null) throw Exception('firebase_sign_in_failed');
 
-      // 🔎 Verifica si el perfil ya existe
+      // 5) lógica Firestore (tuya, igual que antes)
       final docRef = _firestore.collection('users').doc(user.uid);
       final doc = await docRef.get();
       bool profileExists = doc.exists;
 
-      // 🆕 Si el usuario no existía, creamos el documento base
       if (!profileExists) {
         final baseData = {
           'displayName': user.displayName ?? '',
@@ -141,8 +149,10 @@ class AuthService {
         profileExists: profileExists,
       );
     } on FirebaseAuthException catch (e) {
+      debugPrint('FirebaseAuthException code=${e.code} message=${e.message}');
       throw Exception('Error en login con Google: ${e.code}');
     } catch (e) {
+      debugPrint('Error inesperado loginWithGoogle: $e');
       throw Exception('Error inesperado: $e');
     }
   }
@@ -179,7 +189,9 @@ class AuthService {
         // Apple may provide name only on first sign-in
         String displayName = user.displayName ?? '';
         if (displayName.isEmpty && appleCredential.givenName != null) {
-          displayName = '${appleCredential.givenName ?? ''} ${appleCredential.familyName ?? ''}'.trim();
+          displayName =
+              '${appleCredential.givenName ?? ''} ${appleCredential.familyName ?? ''}'
+                  .trim();
         }
 
         final baseData = {
@@ -187,7 +199,8 @@ class AuthService {
           'email': user.email ?? appleCredential.email ?? '',
           'avatarUrl': user.photoURL ?? '',
           'phone': user.phoneNumber ?? '',
-          'username': '@${(displayName.isNotEmpty ? displayName : 'user').replaceAll(' ', '').toLowerCase()}',
+          'username':
+              '@${(displayName.isNotEmpty ? displayName : 'user').replaceAll(' ', '').toLowerCase()}',
           'createdAt': FieldValue.serverTimestamp(),
           'updatedAt': FieldValue.serverTimestamp(),
           'complete': false,
