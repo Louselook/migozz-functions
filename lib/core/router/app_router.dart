@@ -50,9 +50,36 @@ Widget localizedBuilder(BuildContext context, Widget Function() screenBuilder) {
 
 GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
   return GoRouter(
-    initialLocation: '/onboarding',
-    refreshListenable: goRouterNotifier, // 🔑 clave
+    initialLocation: '/', // ✅ Cambiado a ruta raíz
+    refreshListenable: goRouterNotifier,
     routes: [
+      // ✅ NUEVA: Ruta raíz que redirige según el estado
+      GoRoute(
+        path: '/',
+        redirect: (context, state) {
+          final status = goRouterNotifier.authStatus;
+
+          // Si está chequeando, esperar
+          if (status == AuthStatus.checking) {
+            return null;
+          }
+
+          // Si está autenticado, ir al perfil
+          if (status == AuthStatus.authenticated) {
+            final authCubit = context.read<AuthCubit>();
+            final userProfile = authCubit.state.userProfile;
+
+            if (userProfile != null && userProfile.complete) {
+              return '/profile';
+            }
+            return '/complete-profile';
+          }
+
+          // Si no está autenticado, ir a onboarding
+          return '/onboarding';
+        },
+      ),
+
       GoRoute(
         path: '/onboarding',
         builder: (context, state) =>
@@ -64,13 +91,6 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         builder: (context, state) =>
             localizedBuilder(context, () => const LoginEntry()),
       ),
-      // GoRoute(
-      //   path: '/otp',
-      //   builder: (context, state) {
-      //     final data = state.extra as Map<String, dynamic>;
-      //     return OtpScreen(email: data['email'], userOTP: data['userOTP']);
-      //   },
-      // ),
       GoRoute(
         path: '/register',
         name: 'register',
@@ -86,28 +106,22 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         builder: (context, state) {
           final user = state.extra as UserDTO?;
           if (user == null) {
-            // Si no hay usuario, redirigir al perfil propio
             return ProfileEntry(tutorialKeys: TutorialKeys());
           }
-          // Decidir entre web y mobile según el ancho de pantalla
           final screenWidth = MediaQuery.of(context).size.width;
           if (screenWidth >= 900) {
             return web_profile.ProfileSearchScreen(user: user);
           }
-          // return mobile_profile.ProfileSearchScreen(user: user);
           return MainNavigation(initialIndex: 0, targetUser: user);
         },
       ),
       GoRoute(
         path: '/search',
         builder: (context, state) {
-          // Decide between web and mobile search screen using available MediaQuery size.
           final screenWidth = MediaQuery.of(context).size.width;
-          // Breakpoint: use web search when wide enough (>= 900)
           if (screenWidth >= 900) {
             return const web_search.SearchScreen();
           }
-          // return const mobile_search.SearchScreen();
           return const MainNavigation(initialIndex: 1);
         },
       ),
@@ -139,8 +153,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       GoRoute(
         path: '/ia-chat',
         builder: (context, state) {
-          // Intentar tomar email desde extra
-          final email = //"juanes.arenilla@gmail.com";
+          final email =
               state.extra as String? ??
               context.read<RegisterCubit>().state.email;
 
@@ -160,14 +173,13 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
     ],
     redirect: (context, state) {
       final localization = EasyLocalization.of(context);
-      // Si EasyLocalization aún no está listo, no redirijas todavía.
       if (localization == null ||
           !localization.supportedLocales.contains(localization.locale)) {
         return null;
       }
 
       final status = goRouterNotifier.authStatus;
-      // Normalizamos la ruta entrante (quitamos query y slash final)
+
       String normalize(String loc) {
         final noQuery = loc.split('?').first;
         if (noQuery != '/' && noQuery.endsWith('/')) {
@@ -176,9 +188,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         return noQuery;
       }
 
-      final goingTo = normalize(
-        state.uri.toString(),
-      ); // usa location y no matchedLocation
+      final goingTo = normalize(state.uri.toString());
       debugPrint('REDIRECT -> status: $status, goingTo: $goingTo');
 
       final authCubit = context.read<AuthCubit>();
@@ -186,7 +196,6 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       final authState = authCubit.state;
       final registerState = registerCubit.state;
 
-      // Rutas públicas accesibles
       const publicRoutes = {
         '/login',
         '/register',
@@ -198,16 +207,17 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         '/support',
       };
 
-      // Helper para comparar rutas (exacta o anidada)
       bool routeMatches(String loc, String route) {
         if (loc == route) return true;
-        if (loc.startsWith('$route/')) return true; // p.ej. /profile/123
+        if (loc.startsWith('$route/')) return true;
         return false;
       }
 
       final isPublic = publicRoutes.any((r) => routeMatches(goingTo, r));
 
-      // Estado inicial de chequeo
+      // ✅ Permitir la ruta raíz para que se maneje su propio redirect
+      if (goingTo == '/') return null;
+
       if (status == AuthStatus.checking) return null;
 
       // 1) NO autenticado
@@ -221,10 +231,8 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
           return null;
         }
 
-        // Si la ruta es pública, permitir (IMPORTANTE para compartir /terms-privacy)
         if (isPublic) return null;
 
-        // Si intenta acceder a ruta privada → login
         return '/login';
       }
 
@@ -247,7 +255,6 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
           return null;
         }
 
-        // Rutas permitidas cuando perfil completo
         const allowedWhenComplete = {
           '/profile',
           '/profile-view',
@@ -265,7 +272,6 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         }
       }
 
-      // Por defecto no redirigir
       return null;
     },
   );
