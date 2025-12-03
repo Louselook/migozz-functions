@@ -13,7 +13,6 @@ import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/profile/components/background_image.dart';
 import 'package:migozz_app/features/profile/components/social_rail.dart';
 
-
 class MobileProfileContent extends StatefulWidget {
   final UserDTO user;
   final TutorialKeys tutorialKeys;
@@ -65,43 +64,22 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
         userId: user.email,
         child: Stack(
           children: [
-            Positioned(
-              left: 10,
-              top: 45,
-              child: GestureDetector(
-                onTap: () {
-                  if (isOwnProfile) {
-                    showDialog(
-                      context: context,
-                      builder: (context) => ProfileVersionSelector(
-                        currentVersion: user.profileVersion,
-                      ),
-                    );
-                  } else {
-                    Navigator.of(context).pop();
-                  }
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      width: 1,
-                    ),
-                  ),
-                  child: Icon(
-                    isOwnProfile ? Icons.more_vert : Icons.arrow_back,
-                    color: const Color(0xFFFFFFFF),
-                    size: 28,
-                  ),
-                ),
-              ),
-            ),
-
+            // ✅ 3. TODOS LOS BOTONES SUPERIORES EN UN SOLO WIDGET
             ProfileTopActions(
               isOwnProfile: isOwnProfile,
+              onMenuTap: () {
+                // ✅ NUEVO callback
+                if (isOwnProfile) {
+                  showDialog(
+                    context: context,
+                    builder: (context) => ProfileVersionSelector(
+                      currentVersion: user.profileVersion,
+                    ),
+                  );
+                } else {
+                  Navigator.of(context).pop();
+                }
+              },
               onQrScanTap: () {
                 Navigator.push(
                   context,

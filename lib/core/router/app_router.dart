@@ -55,8 +55,8 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
     routes: [
       GoRoute(
         path: '/onboarding',
-        builder: (context, state) => 
-          localizedBuilder(context, () => const OnboardingEntry()),
+        builder: (context, state) =>
+            localizedBuilder(context, () => const OnboardingEntry()),
       ),
       GoRoute(
         path: '/login',

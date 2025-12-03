@@ -92,59 +92,30 @@ class _MobileProfileContentV2State extends State<MobileProfileContentV2> {
             ),
           ),
 
-          // ✅ Botón superior izquierdo (menú o regresar)
-          Positioned(
-            left: 10,
-            top: 45,
-            child: GestureDetector(
-              onTap: () {
-                if (isOwnProfile) {
-                  // Tu perfil: mostrar selector de versión
-                  showDialog(
-                    context: context,
-                    builder: (context) => ProfileVersionSelector(
-                      currentVersion: user.profileVersion,
-                    ),
-                  );
-                } else {
-                  // Perfil de otro: regresar
-                  Navigator.of(context).pop();
-                }
-              },
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    width: 1,
-                  ),
-                ),
-                child: Icon(
-                  // ✅ Ícono condicional
-                  isOwnProfile ? Icons.more_vert : Icons.arrow_back,
-                  color: const Color(0xFFFFFFFF),
-                  size: 28,
-                ),
-              ),
-            ),
-          ),
-
-          // Acciones superiores (chat, notificaciones, etc.)
+          // ✅ 3. TODOS LOS BOTONES SUPERIORES EN UN SOLO WIDGET
           ProfileTopActions(
             isOwnProfile: isOwnProfile,
+            onMenuTap: () {
+              // ✅ NUEVO callback
+              if (isOwnProfile) {
+                showDialog(
+                  context: context,
+                  builder: (context) => ProfileVersionSelector(
+                    currentVersion: user.profileVersion,
+                  ),
+                );
+              } else {
+                Navigator.of(context).pop();
+              }
+            },
             onQrScanTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const QrScannerScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const QrScannerScreen()),
               );
             },
             onChatTap: () {
               if (!isOwnProfile) {
-                // Chat con otro usuario
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -159,7 +130,6 @@ class _MobileProfileContentV2State extends State<MobileProfileContentV2> {
                   ),
                 );
               } else {
-                // Mis chats - Ir a la lista
                 Navigator.push(
                   context,
                   MaterialPageRoute(

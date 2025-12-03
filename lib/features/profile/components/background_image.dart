@@ -45,41 +45,6 @@ class BackgroundImage extends StatelessWidget {
       children: [
         SafeArea(
           bottom: false,
-
-          // Desactivamos scroll y generación de contenido
-          /*
-          child: NestedScrollView(
-            physics: const BouncingScrollPhysics(),
-            headerSliverBuilder: (context, innerBoxIsScrolled) {
-              return [
-                SliverPersistentHeader(
-                  pinned: true,
-                  delegate: _ProfileHeaderDelegate(
-                    maxHeight: size.height,
-                    minHeight: size.height * minHeaderFraction,
-                    bottomPaddingForCard: bottomPaddingForCard,
-                    avatarUrl: avatarUrl,
-                    name: name,
-                    displayName: displayName,
-                    comunityCount: comunityCount,
-                    nameComunity: nameComunity,
-                    voiceNoteUrl: voiceNoteUrl,
-                    tutorialKeys: tutorialKeys,
-                    isOwnProfile: isOwnProfile,
-                    userId: userId,
-                  ),
-                ),
-              ];
-            },
-            body: buildProfileCardsGrid(
-              context,
-              count: 30,
-              onTap: (i) => debugPrint("Card $i tocada"),
-              bottomExtraPadding: bottomGradientHeight,
-            ),
-          ),
-          */
-
           // Reemplazo temporal sin scroll
           child: _ProfileHeaderDelegate(
             maxHeight: size.height,

@@ -1,7 +1,8 @@
-import 'dart:ui';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:migozz_app/core/color.dart';
+import 'package:migozz_app/core/components/formart/text_formart.dart';
 import 'package:migozz_app/features/profile/presentation/profile/modules/share_profile.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 
@@ -14,6 +15,7 @@ class InfoUserProfile extends StatefulWidget {
   final TutorialKeys? tutorialKeys;
   final bool isOwnProfile;
   final String userId;
+  final VoidCallback? onMessageTap;
 
   const InfoUserProfile({
     super.key,
@@ -25,6 +27,7 @@ class InfoUserProfile extends StatefulWidget {
     this.isOwnProfile = true,
     this.userId = '',
     this.tutorialKeys,
+    this.onMessageTap,
   });
 
   @override
@@ -107,157 +110,142 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
 
   @override
   Widget build(BuildContext context) {
-    final borderRadius = BorderRadius.circular(18);
-
-    return ClipRRect(
-      borderRadius: borderRadius,
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: const Color.fromARGB(176, 0, 0, 0).withValues(alpha: 0.05),
-            borderRadius: borderRadius,
-            boxShadow: [
-              BoxShadow(
-                blurRadius: 18,
-                spreadRadius: 2,
-                offset: const Offset(0, 8),
-                color: Colors.black.withValues(alpha: 0.35),
+    return Column(
+      children: [
+        // Nombre + botón de play
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              formatDisplayName(widget.name, format: FormatName.short),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                height: 1.1,
               ),
-            ],
-          ),
-          alignment: Alignment.center,
-          constraints: const BoxConstraints(maxWidth: 400, maxHeight: 150),
-
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    widget.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      height: 1.1,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Text(
-                widget.displayName,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.85),
-                  fontSize: 13,
-                ),
-              ),
-              const SizedBox(height: 5),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    widget.comunityCount,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 1),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    widget.nameComunity,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-
-              // Botón para reproducir audio
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  GestureDetector(
-                    key: widget.tutorialKeys?.playButtonKey,
-                    onTap: _isLoading ? null : _togglePlay,
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Icon(
-                            _isPlaying
-                                ? Icons.pause_circle_outline_rounded
-                                : Icons.play_circle_outline_rounded,
-                            size: 18,
-                            color: Colors.white.withValues(alpha: 0.9),
-                          ),
-                  ),
-
-                  const SizedBox(width: 10),
-
-                  // Compartir perfil - diferencia entre propio y ajeno
-                  GestureDetector(
-                    key: widget.tutorialKeys?.shareButtonKey,
-                    onTap: () {
-                      if (widget.isOwnProfile) {
-                        // Perfil propio: navegar a la pantalla de QR sin parámetros
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute<void>(
-                            builder: (context) => const ProfileQrScreen(),
-                          ),
-                        );
-                      } else {
-                        // Perfil ajeno: pasar los datos del usuario para generar su QR
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute<void>(
-                            builder: (context) => ProfileQrScreen(
-                              overrideUsername: widget
-                                  .userId, // El username del usuario ajeno
-                              overrideDisplayName: widget
-                                  .name, // El displayName del usuario ajeno
-                            ),
-                          ),
-                        );
-                      }
-                    },
-                    child: Icon(
-                      Icons.share,
-                      size: 18,
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              key: widget.tutorialKeys?.playButtonKey,
+              onTap: _isLoading ? null : _togglePlay,
+              child: _isLoading
+                  ? const SizedBox(
+                      width: 28,
+                      height: 28,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Icon(
+                      _isPlaying
+                          ? Icons.pause_circle_outline_rounded
+                          : Icons.play_circle_outline_rounded,
+                      size: 28,
                       color: Colors.white.withValues(alpha: 0.9),
                     ),
-                  ),
-                ],
-              ),
-            ],
+            ),
+          ],
+        ),
+
+        // DisplayName (@username)
+        const SizedBox(height: 2),
+        Text(
+          widget.displayName,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.85),
+            fontSize: 14,
+            height: 1.2,
           ),
         ),
-      ),
+
+        // Contador de comunidad
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Icon(Icons.people_outline, size: 18, color: AppColors.primaryPink),
+            // const SizedBox(width: 4),
+            Text(
+              formatNumber(int.parse(widget.comunityCount)),
+              style: const TextStyle(
+                color: AppColors.primaryPink,
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                height: 1.2,
+              ),
+            ),
+          ],
+        ),
+
+        // Share + community name + message
+        const SizedBox(height: 4),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Compartir perfil
+            GestureDetector(
+              key: widget.tutorialKeys?.shareButtonKey,
+              onTap: () {
+                if (widget.isOwnProfile) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (context) => const ProfileQrScreen(),
+                    ),
+                  );
+                } else {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (context) => ProfileQrScreen(
+                        overrideUsername: widget.userId,
+                        overrideDisplayName: widget.name,
+                      ),
+                    ),
+                  );
+                }
+              },
+              child: Icon(
+                Icons.share_outlined,
+                size: 24,
+                color: Colors.white.withValues(alpha: 0.9),
+              ),
+            ),
+
+            const SizedBox(width: 8),
+            Text(
+              widget.nameComunity,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.9),
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                height: 1.2,
+              ),
+            ),
+            const SizedBox(width: 8),
+
+            // Ícono de mensaje
+            GestureDetector(
+              onTap: widget.onMessageTap,
+              child: Transform.rotate(
+                angle: 5.6,
+                child: Icon(
+                  Icons.send,
+                  size: 24,
+                  color: Colors.white.withValues(alpha: 0.9),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
