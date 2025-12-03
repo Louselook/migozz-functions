@@ -75,7 +75,7 @@ class _MobileProfileContentV3State extends State<MobileProfileContentV3> {
             child: Column(
               children: [
                 // Espacio para la imagen (60% de altura - 80px para superposición)
-                SizedBox(height: size.height * 0.39),
+                SizedBox(height: size.height * 0.4),
 
                 // Info del usuario
                 InfoUserProfile(
