@@ -50,21 +50,18 @@ Widget localizedBuilder(BuildContext context, Widget Function() screenBuilder) {
 
 GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
   return GoRouter(
-    initialLocation: '/', // ✅ Cambiado a ruta raíz
+    initialLocation: '/',
     refreshListenable: goRouterNotifier,
     routes: [
-      // ✅ NUEVA: Ruta raíz que redirige según el estado
       GoRoute(
         path: '/',
         redirect: (context, state) {
           final status = goRouterNotifier.authStatus;
 
-          // Si está chequeando, esperar
-          if (status == AuthStatus.checking) {
-            return null;
-          }
+          // If we are still checking, do not redirect.
+          if (status == AuthStatus.checking) return null;
 
-          // Si está autenticado, ir al perfil
+          // If you are logged in, go to profile
           if (status == AuthStatus.authenticated) {
             final authCubit = context.read<AuthCubit>();
             final userProfile = authCubit.state.userProfile;
@@ -75,7 +72,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
             return '/complete-profile';
           }
 
-          // Si no está autenticado, ir a onboarding
+          // If you are not authenticated, go to onboarding
           return '/onboarding';
         },
       ),

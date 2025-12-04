@@ -60,13 +60,11 @@ class _MobileProfileContentV3State extends State<MobileProfileContentV3> {
           TintesGradients(child: Container()),
 
           // ✅ 1. IMAGEN DE FONDO (solo ocupa 60% de la altura)
-          SafeArea(
-            child: Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
-            ),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
           ),
 
           // ✅ 2. CONTENIDO PRINCIPAL
