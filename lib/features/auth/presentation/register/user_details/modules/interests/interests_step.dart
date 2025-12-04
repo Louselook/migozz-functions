@@ -1,14 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/color.dart';
-import 'package:migozz_app/core/components/atomics/loading_overlay.dart';
+// import 'package:migozz_app/core/components/atomics/loading_overlay.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
+// import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/interest_section_model.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/user_details_button.dart';
-import 'package:migozz_app/features/auth/presentation/register/user_details/modules/interests/registration_handler.dart';
+// import 'package:migozz_app/features/auth/presentation/register/user_details/modules/interests/registration_handler.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 
@@ -174,8 +174,8 @@ class _InterestsStepState extends State<InterestsStep> {
         context: context,
         action: UserDetailsAction.finalRegister,
         onFinalAction: () async {
-          final registerCubit = context.read<RegisterCubit>();
-          final authCubit = context.read<AuthCubit>();
+          // final registerCubit = context.read<RegisterCubit>();
+          // final authCubit = context.read<AuthCubit>();
 
           // Construir intereses por sección
           final selectedBySection = <String, List<String>>{};
@@ -189,27 +189,27 @@ class _InterestsStepState extends State<InterestsStep> {
           }
 
           // Llamar al handler centralizado
-          try {
-            await RegistrationHandler.completeRegistration(
-              context: context,
-              registerCubit: registerCubit,
-              authCubit: authCubit,
-              selectedInterests: selectedBySection,
-            );
-          } catch (e) {
-            debugPrint('❌ [InterestsStep] Error en completeRegistration: $e');
-            if (context.mounted) {
-              // ignore: use_build_context_synchronously
-              LoadingOverlay.hide(context);
-              // ignore: use_build_context_synchronously
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Error completando registro: $e'),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            }
-          }
+          // try {
+          //   await RegistrationHandler.completeRegistration(
+          //     context: context,
+          //     registerCubit: registerCubit,
+          //     authCubit: authCubit,
+          //     // selectedInterests: selectedBySection,
+          //   );
+          // } catch (e) {
+          //   debugPrint('❌ [InterestsStep] Error en completeRegistration: $e');
+          //   if (context.mounted) {
+          //     // ignore: use_build_context_synchronously
+          //     LoadingOverlay.hide(context);
+          //     // ignore: use_build_context_synchronously
+          //     ScaffoldMessenger.of(context).showSnackBar(
+          //       SnackBar(
+          //         content: Text('Error completando registro: $e'),
+          //         backgroundColor: Colors.red,
+          //       ),
+          //     );
+          //   }
+          // }
         },
       );
     } else {

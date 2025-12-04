@@ -401,17 +401,17 @@ class RegisterCubit extends Cubit<RegisterState> {
           state.username != null &&
           state.gender != null &&
           hasLocationData &&
-          state.phone != null &&
-          state.category != null &&
-          state.interests != null;
+          state.phone != null; // &&
+          // state.category != null &&
+          // state.interests != null;
 
       final completeForGoogle =
           state.language != null &&
           state.gender != null &&
           hasLocationData &&
-          state.phone != null &&
-          state.category != null &&
-          state.interests != null;
+          state.phone != null ; // &&
+          // state.category != null &&
+          // state.interests != null;
 
       final complete = forGoogle ? completeForGoogle : completeFull;
 
