@@ -8,7 +8,7 @@ class PrimaryText extends StatelessWidget {
   final Color? color;
   final TextAlign? textAlign;
 
-  const PrimaryText(this.text, {this.color, this.textAlign, super.key});
+  const PrimaryText(this.text, {this.color, this.textAlign, super.key, maxLines, TextOverflow? overflow});
 
   @override
   Widget build(BuildContext context) {
