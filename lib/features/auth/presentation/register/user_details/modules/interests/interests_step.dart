@@ -26,7 +26,8 @@ class InterestsStep extends StatefulWidget {
   State<InterestsStep> createState() => _InterestsStepState();
 }
 
-class _InterestsStepState extends State<InterestsStep> {
+class _InterestsStepState extends State<InterestsStep>
+    with TickerProviderStateMixin {
   Set<String> selectedInterests = {};
   List<InterestSectionModel> dynamicSections = [];
   bool isLoading = true;
@@ -53,9 +54,8 @@ class _InterestsStepState extends State<InterestsStep> {
 
       // Convertir el mapa a un Set de intereses individuales
       setState(() {
-        selectedInterests = existingInterests.values
-            .expand((list) => list)
-            .toSet();
+        selectedInterests =
+            existingInterests.values.expand((list) => list).toSet();
       });
     });
   }
@@ -129,10 +129,10 @@ class _InterestsStepState extends State<InterestsStep> {
               : SingleChildScrollView(
                   child: Center(
                     child: Container(
-                      constraints: const BoxConstraints(maxWidth: 600),
+                      constraints: const BoxConstraints(maxWidth: 680),
                       padding: const EdgeInsets.symmetric(
                         vertical: 20,
-                        horizontal: 40,
+                        horizontal: 24,
                       ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -165,7 +165,7 @@ class _InterestsStepState extends State<InterestsStep> {
     );
   }
 
-  // Construir botón de acción según el modo
+  // Construir botón de acción según el modo (ahora con gradient Save para edición)
   Widget _buildActionButton() {
     if (widget.mode == MoreUserDetailsMode.register) {
       // En modo registro, usar el botón original con registration_handler
@@ -174,10 +174,6 @@ class _InterestsStepState extends State<InterestsStep> {
         context: context,
         action: UserDetailsAction.finalRegister,
         onFinalAction: () async {
-          // final registerCubit = context.read<RegisterCubit>();
-          // final authCubit = context.read<AuthCubit>();
-
-          // Construir intereses por sección
           final selectedBySection = <String, List<String>>{};
           for (final section in dynamicSections) {
             final picked = section.options
@@ -188,35 +184,13 @@ class _InterestsStepState extends State<InterestsStep> {
             }
           }
 
-          // Llamar al handler centralizado
-          // try {
-          //   await RegistrationHandler.completeRegistration(
-          //     context: context,
-          //     registerCubit: registerCubit,
-          //     authCubit: authCubit,
-          //     // selectedInterests: selectedBySection,
-          //   );
-          // } catch (e) {
-          //   debugPrint('❌ [InterestsStep] Error en completeRegistration: $e');
-          //   if (context.mounted) {
-          //     // ignore: use_build_context_synchronously
-          //     LoadingOverlay.hide(context);
-          //     // ignore: use_build_context_synchronously
-          //     ScaffoldMessenger.of(context).showSnackBar(
-          //       SnackBar(
-          //         content: Text('Error completando registro: $e'),
-          //         backgroundColor: Colors.red,
-          //       ),
-          //     );
-          //   }
-          // }
+          // Puedes activar aquí el handler si lo necesitas
         },
       );
     } else {
-      // En modo edición, simplemente guardar y volver
-      return ElevatedButton(
-        onPressed: () {
-          // Construir intereses por sección y actualizar el cubit
+      // En modo edición, mostrar "Save" con gradiente como en el mock
+      return GestureDetector(
+        onTap: () {
           final selectedBySection = <String, List<String>>{};
           for (final section in dynamicSections) {
             final picked = section.options
@@ -229,13 +203,36 @@ class _InterestsStepState extends State<InterestsStep> {
 
           _updateCubit(selectedBySection);
 
-          // Volver (el guardado se hará desde MoreUserDetails con el botón Save)
           Navigator.of(context).pop();
         },
-        style: ElevatedButton.styleFrom(
-          minimumSize: const Size(double.infinity, 50),
+        child: Container(
+          width: double.infinity,
+          height: 56,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFF59A3C), Color(0xFFB646F6)],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.35),
+                offset: const Offset(0, 6),
+                blurRadius: 18,
+              ),
+            ],
+          ),
+          alignment: Alignment.center,
+          child: const Text(
+            'Save',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ),
-        child: const Text('Done'),
       );
     }
   }
@@ -245,6 +242,7 @@ class _InterestsStepState extends State<InterestsStep> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         GestureDetector(
+          behavior: HitTestBehavior.opaque,
           onTap: () {
             setState(() {
               section.expanded = !section.expanded;
@@ -253,95 +251,169 @@ class _InterestsStepState extends State<InterestsStep> {
           child: Row(
             children: [
               Container(
+                padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
                   gradient: AppColors.primaryGradient,
-                  borderRadius: BorderRadius.circular(5),
+                  borderRadius: BorderRadius.circular(6),
                 ),
                 child: Icon(
-                  section.expanded ? Icons.arrow_drop_down_outlined : Icons.add,
+                  section.expanded ? Icons.arrow_drop_down : Icons.add,
                   color: AppColors.secondaryText,
                 ),
               ),
-              const SizedBox(width: 7),
+              const SizedBox(width: 10),
               SecondaryText(section.title, fontSize: 18),
+              const Spacer(),
+              // small count of selected in this section
+              if (section.options.any((o) => selectedInterests.contains(o)))
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white10,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: SecondaryText(
+                    '${section.options.where((o) => selectedInterests.contains(o)).length}',
+                    fontSize: 14,
+                  ),
+                ),
             ],
           ),
         ),
 
-        const SizedBox(height: 5),
+        const SizedBox(height: 8),
 
-        if (section.expanded)
-          Wrap(
-            spacing: 7,
-            runSpacing: 7,
-            children: section.options.map((opt) {
-              final selected = selectedInterests.contains(opt);
-              return _optionButton(
-                opt,
-                selected: selected,
-                onTap: () {
-                  setState(() {
-                    if (selected) {
-                      selectedInterests.remove(opt);
-                    } else {
-                      selectedInterests.add(opt);
-                    }
-                  });
+        // Animated size + fade for the content
+        AnimatedSize(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 250),
+            switchInCurve: Curves.easeIn,
+            switchOutCurve: Curves.easeOut,
+            child: section.expanded
+                ? Padding(
+                    key: ValueKey('expanded_$index'),
+                    padding: const EdgeInsets.only(top: 8, bottom: 16),
+                    child: LayoutBuilder(builder: (context, constraints) {
+                      // GridView con 4 columnas. Ajusta childAspectRatio si hace falta
+                      return GridView.count(
+                        crossAxisCount: 4,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        mainAxisSpacing: 8,
+                        crossAxisSpacing: 8,
+                        childAspectRatio: 3.0,
+                        children: section.options.map((opt) {
+                          final selected = selectedInterests.contains(opt);
+                          return _optionGridItem(
+                            label: opt,
+                            selected: selected,
+                            onTap: () {
+                              setState(() {
+                                if (selected) {
+                                  selectedInterests.remove(opt);
+                                } else {
+                                  selectedInterests.add(opt);
+                                }
+                              });
 
-                  // Actualizar el cubit en tiempo real
-                  final selectedBySection = <String, List<String>>{};
-                  for (final sec in dynamicSections) {
-                    final picked = sec.options
-                        .where((o) => selectedInterests.contains(o))
-                        .toList();
-                    if (picked.isNotEmpty) {
-                      selectedBySection[sec.title] = picked;
-                    }
-                  }
-                  _updateCubit(selectedBySection);
-                },
-              );
-            }).toList(),
+                              // Actualizar el cubit en tiempo real
+                              final selectedBySection = <String, List<String>>{};
+                              for (final sec in dynamicSections) {
+                                final picked = sec.options
+                                    .where((o) => selectedInterests.contains(o))
+                                    .toList();
+                                if (picked.isNotEmpty) {
+                                  selectedBySection[sec.title] = picked;
+                                }
+                              }
+                              _updateCubit(selectedBySection);
+                            },
+                          );
+                        }).toList(),
+                      );
+                    }),
+                  )
+                : const SizedBox.shrink(
+                    key: ValueKey('collapsed'),
+                  ),
           ),
+        ),
 
-        const SizedBox(height: 20),
+        const SizedBox(height: 12),
       ],
     );
   }
 
-  Widget _optionButton(
-    String label, {
+  Widget _optionGridItem({
+    required String label,
     bool selected = false,
     required VoidCallback onTap,
   }) {
-    return Container(
-      height: 30,
+    // Colores para el borde cuando está seleccionado
+    final borderColor = selected ? const Color(0xFFB646F6) : Colors.transparent;
+    final innerBg = AppColors.secondaryText;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeInOut,
       decoration: BoxDecoration(
-        color: AppColors.secondaryText,
         borderRadius: BorderRadius.circular(12),
-      ),
-      child: TextButton(
-        onPressed: onTap,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (selected)
-              Container(
-                width: 16,
-                height: 16,
-                margin: const EdgeInsets.only(right: 6),
-                decoration: BoxDecoration(
-                  color: Colors.green,
-                  borderRadius: BorderRadius.circular(8),
+        border: Border.all(width: 2, color: borderColor),
+        boxShadow: selected
+            ? [
+                BoxShadow(
+                  color: const Color(0xFFB646F6).withValues(alpha: 0.12),
+                  blurRadius: 10,
+                  offset: const Offset(0, 6),
                 ),
-                child: const Icon(Icons.check, color: Colors.white, size: 12),
-              ),
-            SecondaryText(
-              label,
-              color: AppColors.backgroundDark,
-              fontWeight: FontWeight.w500,
+              ]
+            : null,
+      ),
+      child: Material(
+        color: innerBg,
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // check marker
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 180),
+                  transitionBuilder: (child, anim) =>
+                      FadeTransition(opacity: anim, child: child),
+                  child: selected
+                      ? Container(
+                          key: const ValueKey('check'),
+                          width: 18,
+                          height: 18,
+                          margin: const EdgeInsets.only(right: 8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF4CAF50),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Icon(Icons.check,
+                              color: Colors.white, size: 12),
+                        )
+                      : SizedBox(key: const ValueKey('empty'), width: 0),
+                ),
+                Flexible(
+                  child: SecondaryText(
+                    label,
+                    color: AppColors.backgroundDark,
+                    fontWeight: FontWeight.w500,
+                    // maxLines: 1,
+                    // overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
