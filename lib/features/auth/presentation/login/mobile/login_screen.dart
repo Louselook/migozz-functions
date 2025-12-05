@@ -17,6 +17,8 @@ import 'package:migozz_app/features/auth/presentation/blocs/login_cubit/login_cu
 import 'package:migozz_app/features/auth/presentation/login/shared/login_wrapper.dart';
 import 'package:migozz_app/features/chat/presentation/register/components/chat_operation/functions/email_validation.dart';
 
+import '../../../../../core/utils/platform_utils.dart';
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -244,24 +246,30 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 30),
 
                   SecondaryText(
                     "login.presentation.subtitle2".tr(),
                     fontSize: 16,
                   ),
 
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 20),
 
                   // Social login buttons
-                  Row(
+                 PlatformUtils.isIOS
+                      ? Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      googleButton(onPressed: _handleGoogleSignIn),
+                      Expanded(child: googleButton(onPressed: _handleGoogleSignIn)),
                       const SizedBox(width: 10),
-                      appleButton(onPressed: _handleAppleSignIn),
+                      Expanded(child: appleButton(onPressed: _handleAppleSignIn)),
+                    ],
+                  ):                      Row(
+                    children: [
+                      Expanded(child: googleButton(onPressed: _handleGoogleSignIn)),
                     ],
                   ),
+
                   const SizedBox(height: 50),
 
                   // Register

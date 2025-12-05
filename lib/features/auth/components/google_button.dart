@@ -5,10 +5,11 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 Widget googleButton({required VoidCallback onPressed, String text = 'Google'}) {
   return Container(
-    width: 163,
-    height: 41,
+
+
     decoration: BoxDecoration(
-      color: AppColors.backgroundGoole,
+      color: AppColors.backgroundDark,
+      border: Border.all(color: AppColors.grey.withValues(alpha: 0.3), width: 1),
       borderRadius: BorderRadius.circular(19),
     ),
     child: ElevatedButton.icon(

@@ -32,17 +32,17 @@
 		<true/>
 	</dict>
 	<key>NSCameraUsageDescription</key>
-	<string>Necesitamos acceso a la cámara para que puedas tomar fotos y videos.</string>
+	<string>We need access to the camera so you can take photos and videos.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Necesitamos tu ubicación para mostrarte contenido relevante cerca de ti.</string>
+	<string>We need your location to show you relevant content near you.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Necesitamos tu ubicación para mostrarte contenido relevante cerca de ti.</string>
+	<string>We need your location to show you relevant content near you.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Necesitamos acceso al micrófono para grabar notas de voz.</string>
+	<string>We need access to the microphone to record voice notes.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Necesitamos permiso para guardar fotos y videos en tu galería.</string>
+	<string>We need permission to save photos and videos to your gallery.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Necesitamos acceso a tu galería para que puedas seleccionar fotos y videos.</string>
+	<string>We need access to your gallery so you can select photos and videos.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
