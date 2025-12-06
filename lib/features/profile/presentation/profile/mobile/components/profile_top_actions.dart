@@ -25,7 +25,7 @@ class ProfileTopActions extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             // ✅ BOTÓN IZQUIERDO (menú o regresar)
-            GestureDetector(
+          !isOwnProfile? GestureDetector(
               onTap: onMenuTap,
               child: Container(
                 padding: const EdgeInsets.all(8),
@@ -38,20 +38,24 @@ class ProfileTopActions extends StatelessWidget {
                   ),
                 ),
                 child: Icon(
-                  isOwnProfile ? Icons.more_vert : Icons.arrow_back,
+                 Icons.arrow_back,
                   color: const Color(0xFFFFFFFF),
                   size: 28,
                 ),
               ),
-            ),
+            ):GestureDetector(
+          onTap: onNotificationsTap ?? () {},
+      child: const Icon(
+        Icons.notifications_none_outlined,
+        color: Colors.white,
+        size: 28,
+      ),
+    ),
 
             // ✅ BOTONES DERECHOS (existentes)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.6),
-                borderRadius: BorderRadius.circular(16),
-              ),
+
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -61,27 +65,20 @@ class ProfileTopActions extends StatelessWidget {
                       child: const Icon(
                         Icons.qr_code_scanner,
                         color: Colors.white,
-                        size: 28,
+                        size: 25,
                       ),
                     ),
                     const SizedBox(width: 14),
                   ],
-                  GestureDetector(
-                    onTap: onChatTap,
-                    child: const Icon(
-                      Icons.chat_bubble_outline,
-                      color: Colors.white,
-                      size: 28,
-                    ),
-                  ),
+
                   if (isOwnProfile) ...[
-                    const SizedBox(width: 14),
+
                     GestureDetector(
-                      onTap: onNotificationsTap ?? () {},
+                      onTap: onMenuTap ?? () {},
                       child: const Icon(
-                        Icons.notifications_none_outlined,
+                  Icons.more_vert ,
                         color: Colors.white,
-                        size: 33,
+                        size: 25,
                       ),
                     ),
                   ],

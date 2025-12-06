@@ -118,13 +118,13 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
               },
             ),
 
-            if (socialLinks.isNotEmpty)
-              DraggableSocialRail(
-                initialPosition: initialSocialPosition,
-                links: socialLinks,
-                itemSize: 50,
-                iconSize: 45,
-              ),
+            // if (socialLinks.isNotEmpty)
+            //   DraggableSocialRail(
+            //     initialPosition: initialSocialPosition,
+            //     links: socialLinks,
+            //     itemSize: 50,
+            //     iconSize: 45,
+            //   ),
           ],
         ),
       ),

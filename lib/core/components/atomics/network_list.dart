@@ -1,4 +1,6 @@
 // Lista original
+import 'package:migozz_app/core/assets_constants.dart';
+
 final List<String> socials = [
   "Tiktok",
   "Instagram",
@@ -27,6 +29,21 @@ final Map<String, String> iconByLabel = {
   "Spotify": "assets/icons/social_networks/Spotify.svg",
   "Twitter": "assets/icons/social_networks/Twitter.svg",
   "Linkedin": "assets/icons/social_networks/LinkedIn.svg",
+  "Paypal": "assets/icons/social_networks/Paypal.svg",
+  "Xbox": "assets/icons/social_networks/Xbox.svg",
+  "Other": "assets/icons/social_networks/Other.svg",
+};
+final Map<String, String> iconBlackByLabel = {
+  "Tiktok": AssetsConstants.tiktokIcon,
+  "Instagram": AssetsConstants.instagramBlackIcon,
+  "Facebook": AssetsConstants.facebookIcon,
+  "Youtube": AssetsConstants.youtubeBlackIcon,
+  "Telegram": AssetsConstants.telegramIcon,
+  "Whatsapp": AssetsConstants.whatsappIcon,
+  "Pinterest": AssetsConstants.pinterestIcon,
+  "Spotify": AssetsConstants.spotifyIcon,
+  "Twitter": AssetsConstants.twitterIcon,
+  "Linkedin": AssetsConstants.linkedinIcon,
   "Paypal": "assets/icons/social_networks/Paypal.svg",
   "Xbox": "assets/icons/social_networks/Xbox.svg",
   "Other": "assets/icons/social_networks/Other.svg",

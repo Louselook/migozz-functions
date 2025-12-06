@@ -1,6 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:migozz_app/core/assets_constants.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/formart/text_formart.dart';
 import 'package:migozz_app/features/profile/presentation/profile/modules/share_profile.dart';
@@ -116,75 +118,65 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              formatDisplayName(widget.name, format: FormatName.short),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-                height: 1.1,
+            Flexible(
+              child: Text(
+                formatDisplayName(widget.name, format: FormatName.short),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 27,
+                  fontWeight: FontWeight.w700,
+                  height: 1.1,
+                ),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 12),
             GestureDetector(
               key: widget.tutorialKeys?.playButtonKey,
               onTap: _isLoading ? null : _togglePlay,
-              child: _isLoading
-                  ? const SizedBox(
-                      width: 28,
-                      height: 28,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
+              child: Container(
+                width: 20,
+                height: 20,
+
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: .5),
+                  gradient: LinearGradient(
+                    colors: AppColors.primaryGradient.colors,
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: _isLoading
+                    ? const SizedBox(
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Icon(
+                        _isPlaying ? Icons.pause : Icons.play_arrow_rounded,
+                        size: 16,
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
-                    )
-                  : Icon(
-                      _isPlaying
-                          ? Icons.pause_circle_outline_rounded
-                          : Icons.play_circle_outline_rounded,
-                      size: 28,
-                      color: Colors.white.withValues(alpha: 0.9),
-                    ),
+              ),
             ),
           ],
         ),
 
         // DisplayName (@username)
-        const SizedBox(height: 2),
+        const SizedBox(height: 3),
         Text(
           widget.displayName,
           textAlign: TextAlign.center,
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.85),
-            fontSize: 14,
-            height: 1.2,
-          ),
+          style: TextStyle(color: Colors.white, fontSize: 14, height: 1.2),
         ),
 
         // Contador de comunidad
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Icon(Icons.people_outline, size: 18, color: AppColors.primaryPink),
-            // const SizedBox(width: 4),
-            Text(
-              formatNumber(int.parse(widget.comunityCount)),
-              style: const TextStyle(
-                color: AppColors.primaryPink,
-                fontSize: 18,
-                fontWeight: FontWeight.w900,
-                height: 1.2,
-              ),
-            ),
-          ],
-        ),
+        const SizedBox(height: 11),
 
-        // Share + community name + message
-        const SizedBox(height: 4),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -212,38 +204,62 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
                   );
                 }
               },
-              child: Icon(
-                Icons.share_outlined,
-                size: 24,
-                color: Colors.white.withValues(alpha: 0.9),
+              child: SvgPicture.asset(
+                AssetsConstants.shareIcon,
+                width: 17,
+                height: 17,
+                color: Colors.white,
               ),
             ),
 
-            const SizedBox(width: 8),
-            Text(
-              widget.nameComunity,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.9),
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-                height: 1.2,
-              ),
+            const SizedBox(width:25),
+            Column(
+              children: [
+                Text(
+                  formatNumber(int.parse(widget.comunityCount)),
+                  style: const TextStyle(
+                    color: AppColors.primaryPink,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    height: .7,
+                  ),
+                ),
+                Text(
+                  widget.nameComunity,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.9),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 25),
 
             // Ícono de mensaje
             GestureDetector(
               onTap: widget.onMessageTap,
-              child: Transform.rotate(
-                angle: 5.6,
-                child: Icon(
-                  Icons.send,
-                  size: 24,
-                  color: Colors.white.withValues(alpha: 0.9),
-                ),
+              child: Image.asset(
+                AssetsConstants.inboxIcon,
+                width: 17,
+                height:17,
+                color: Colors.white,
               ),
             ),
           ],
+        ),
+        const SizedBox(height: 10),
+        Container(
+          width: MediaQuery.of(context).size.width * 0.7,
+          padding: const EdgeInsets.symmetric(horizontal: 16,vertical: 6),
+
+         decoration: BoxDecoration(borderRadius: BorderRadius.circular(4),
+            color: AppColors.greyBackground.withValues(alpha: 0.2),
+          ),child:   Text(
+              "🎶 Crafting stories through music. ✨ New album “Midnight Reflections” out now 🎧",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white60, fontSize: 10, height: 1.2),
+            ),
         ),
       ],
     );

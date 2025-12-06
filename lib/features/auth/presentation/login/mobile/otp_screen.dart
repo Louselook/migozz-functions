@@ -180,7 +180,7 @@ Widget _titleSection({required String email}) {
       const PrimaryText("Enter OTP Code", color: AppColors.backgroundDark),
       SecondaryText(
         "OTP code has been sent to $email",
-        color: AppColors.backgroundGoole,
+        color: AppColors.greyBackground,
         fontSize: 13,
       ),
     ],
@@ -293,7 +293,7 @@ class _ResendButton extends StatelessWidget {
       },
       child: const SecondaryText(
         "Resend",
-        color: AppColors.backgroundGoole,
+        color: AppColors.greyBackground,
         fontSize: 13,
       ),
     );

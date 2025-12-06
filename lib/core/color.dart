@@ -11,7 +11,7 @@ class AppColors {
   static const Color grey = Color(0xFF9CA3AF);
   static const Color radialEffect = Color(0xFFED4C5C);
   static const Color textInputBackGround = Color.fromARGB(255, 99, 99, 99);
-  static const Color backgroundGoole = Color(0xFF404040);
+  static const Color greyBackground = Color(0xFF404040);
 
   static LinearGradient get verticalOnboarding => LinearGradient(
     colors:[Color(0xFFE1E2E4), Color(0xFFCED1D8)],

@@ -9,7 +9,7 @@ String formatDisplayName(String? text, {FormatName format = FormatName.short}) {
   switch (format) {
     case FormatName.short:
       return parts.length > 1
-          ? "${parts[0]} ${parts[1][0]}"
+          ? "${parts[0]} ${parts[1][0].toUpperCase()}"
           : parts[0]; // Agarra el primer numero y el segundo se toma la primera letra en mayuscula
 
     case FormatName.firstOnly: // Agarra solo el primer nombre

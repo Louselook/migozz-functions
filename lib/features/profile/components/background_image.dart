@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:ui' as ui;
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/features/profile/components/info_user_profile.dart';
 // import 'package:migozz_app/features/profile/components/scroll_sheet.dart';
@@ -198,7 +199,7 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
                       constraints: BoxConstraints(
                         maxWidth: MediaQuery.of(context).size.width * 0.8,
                         minHeight: 80,
-                        maxHeight: 180,
+
                       ),
                       child: InfoUserProfile(
                         name: name,
@@ -267,13 +268,13 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
         0,
       ]),
       child: avatarUrl != null && avatarUrl!.isNotEmpty
-          ? Image.network(
-              avatarUrl!,
+          ? CachedNetworkImage(
+                imageUrl: avatarUrl!,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Image.asset(
-                "assets/images/profileBackground.webp",
-                fit: BoxFit.cover,
-              ),
+             errorWidget: (context, url, error) => Image.asset(
+                  "assets/images/profileBackground.webp",
+                  fit: BoxFit.cover,
+                ),
             )
           : Image.asset(
               "assets/images/profileBackground.webp",

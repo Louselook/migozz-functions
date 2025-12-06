@@ -73,7 +73,7 @@ class _MobileProfileContentV3State extends State<MobileProfileContentV3> {
             child: Column(
               children: [
                 // Espacio para la imagen (60% de altura - 80px para superposición)
-                SizedBox(height: size.height * 0.4),
+                SizedBox(height: size.height * 0.38),
 
                 // Info del usuario
                 InfoUserProfile(
@@ -117,7 +117,7 @@ class _MobileProfileContentV3State extends State<MobileProfileContentV3> {
 
                 // Iconos circulares de redes sociales
                 Padding(
-                  padding: const EdgeInsets.only(top: 5, bottom: 0),
+                  padding: const EdgeInsets.only(top: 8, bottom: 0),
                   child: SocialCirclesMobileV3(links: socialLinks),
                 ),
 

@@ -30,7 +30,7 @@ class SuggestionChips extends StatelessWidget {
                   horizontal: 15,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.backgroundGoole,
+                  color: AppColors.greyBackground,
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(10),
                     topRight: Radius.circular(10),

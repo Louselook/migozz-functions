@@ -172,7 +172,7 @@ class _OtpScreenState extends State<OtpScreen> {
                       const SizedBox(height: 8),
                       SecondaryText(
                         'OTP code has been sent to ${widget.email}',
-                        color: AppColors.backgroundGoole,
+                        color: AppColors.greyBackground,
                         fontSize: 13,
                       ),
                       const SizedBox(height: 40),
@@ -264,7 +264,7 @@ class _OtpScreenState extends State<OtpScreen> {
                                         .sendOTPLoginCubit(widget.email),
                                     child: const SecondaryText(
                                       'Resend',
-                                      color: AppColors.backgroundGoole,
+                                      color: AppColors.greyBackground,
                                       fontSize: 13,
                                     ),
                                   ),

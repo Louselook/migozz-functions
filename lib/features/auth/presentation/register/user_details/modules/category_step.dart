@@ -203,7 +203,7 @@ class _CategoryStepState extends State<CategoryStep> {
           border: Border.all(
             color: selected
                 ? const Color.fromARGB(255, 96, 27, 255)
-                : AppColors.backgroundGoole,
+                : AppColors.greyBackground,
             width: 3,
           ),
           borderRadius: BorderRadius.circular(12),

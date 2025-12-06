@@ -84,8 +84,8 @@ class _SocialBoxItemState extends State<_SocialBoxItem> {
       child: Center(
         child: SvgPicture.asset(
           widget.link.asset,
-          width: widget.boxSize * 0.55,
-          height: widget.boxSize * 0.55,
+          width: widget.boxSize * 0.35,
+          height: widget.boxSize * 0.35,
           fit: BoxFit.contain,
         ),
       ),

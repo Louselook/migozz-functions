@@ -42,7 +42,7 @@ class ProfileEntry extends StatelessWidget {
           );
         }
 
-        final profileVersion = user.profileVersion;
+        final profileVersion = 3;
 
         if (PlatformUtils.isWeb) {
           switch (profileVersion) {

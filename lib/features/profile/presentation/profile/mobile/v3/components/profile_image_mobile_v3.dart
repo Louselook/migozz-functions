@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:ui' as ui;
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 class ProfileImageMobileV3 extends StatelessWidget {
@@ -60,10 +61,10 @@ class ProfileImageMobileV3 extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        Image.network(
-          avatarUrl!,
+        CachedNetworkImage(
+         imageUrl: avatarUrl!,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => Image.asset(
+          errorWidget: (_, __, ___) => Image.asset(
             'assets/images/profileBackground.webp',
             fit: BoxFit.cover,
           ),

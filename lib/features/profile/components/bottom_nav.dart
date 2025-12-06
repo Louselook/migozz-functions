@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:migozz_app/core/assets_constants.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 
 class GradientBottomNav extends StatelessWidget {
@@ -92,11 +93,11 @@ class GradientBottomNav extends StatelessWidget {
             ),
           ),
           Positioned(
-            top: -20,
+            top: 8,
             left: 0,
-            right: 0,
+            right: 0,bottom: 8,
             child: Align(
-              alignment: Alignment.topCenter,
+              alignment: Alignment.center,
               child: _CenterActionButton(onTap: onCenterTap),
             ),
           ),
@@ -142,37 +143,30 @@ class _CenterActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(28),
-      elevation: 12,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(28),
-        child: Container(
-          width: 56,
-          height: 56,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(28),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFFB86BFF), Color(0xFFFF5F9A)],
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+
+        alignment: Alignment.center,
+        decoration: BoxDecoration(shape: BoxShape.circle,
+
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFB86BFF), Color(0xFFFF5F9A)],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.35),
+              blurRadius: 14,
+              offset: const Offset(0, 8),
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.35),
-                blurRadius: 14,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: const Icon(
-            Icons.arrow_upward_rounded,
-            color: Colors.white,
-            size: 36,
-          ),
+          ],
+        ),
+        child: Image.asset(
+          AssetsConstants.inboxIcon,
+          width: 23,
+          height: 23,color: Colors.white,
         ),
       ),
     );
