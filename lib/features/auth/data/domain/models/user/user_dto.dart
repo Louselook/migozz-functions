@@ -6,7 +6,7 @@ class UserDTO {
   final String lang;
   final String displayName;
   final String username;
-  final String gender;
+  final String gender; String? bio;
   final DateTime? birthDate;
 
   final List<Map<String, dynamic>>? socialEcosystem;
@@ -30,7 +30,7 @@ class UserDTO {
     required this.displayName,
     required this.username,
     required this.gender,
-    this.birthDate,
+    this.birthDate,this.bio,
     this.socialEcosystem,
     required this.location,
     this.avatarUrl,

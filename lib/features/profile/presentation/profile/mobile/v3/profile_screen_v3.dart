@@ -13,6 +13,7 @@ import 'package:migozz_app/features/profile/presentation/profile/mobile/componen
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/profile_image_mobile_v3.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/social_circles_mobile_v3.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/social_profile_photos_grid.dart';
+import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/profile_screen_v3_edit.dart';
 import 'package:migozz_app/features/profile/presentation/profile/modules/qr_scanner_screen.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 
@@ -58,16 +59,12 @@ class _MobileProfileContentV3State extends State<MobileProfileContentV3> {
         children: [
           // Gradientes de fondo
           TintesGradients(child: Container()),
-
-          // ✅ 1. IMAGEN DE FONDO (solo ocupa 60% de la altura)
           Positioned(
             top: 0,
             left: 0,
             right: 0,
             child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
           ),
-
-          // ✅ 2. CONTENIDO PRINCIPAL
           SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             child: Column(
@@ -126,18 +123,14 @@ class _MobileProfileContentV3State extends State<MobileProfileContentV3> {
               ],
             ),
           ),
-
-          // ✅ 3. TODOS LOS BOTONES SUPERIORES EN UN SOLO WIDGET
           ProfileTopActions(
             isOwnProfile: isOwnProfile,
             onMenuTap: () {
               // ✅ NUEVO callback
               if (isOwnProfile) {
-                showDialog(
-                  context: context,
-                  builder: (context) => ProfileVersionSelector(
-                    currentVersion: user.profileVersion,
-                  ),
+               Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => MobileProfileContentV3Edit(user: user, tutorialKeys:widget.tutorialKeys)),
                 );
               } else {
                 Navigator.of(context).pop();
