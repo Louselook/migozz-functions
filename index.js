@@ -15,8 +15,8 @@ app.get('/', (req, res) => {
   res.json({ 
     status: 'ok', 
     service: 'Migozz Scraper Service',
-    version: '2.2.0',
-    platforms: ['tiktok', 'instagram', 'linkedin', 'facebook']
+    version: '2.3.0',
+    platforms: ['tiktok', 'facebook']
   });
 });
 
@@ -33,10 +33,6 @@ function extractUsername(input, platform) {
     switch (platform) {
       case 'tiktok':
         return pathname.replace('/@', '').split('/')[0];
-      case 'instagram':
-        return pathname.replace('/', '').split('/')[0];
-      case 'linkedin':
-        return pathname.replace('/in/', '').replace('/', '').split('/')[0];
       case 'facebook':
         return pathname.replace('/', '').split('/')[0];
       default:
@@ -82,40 +78,6 @@ app.get('/tiktok/profile', async (req, res) => {
   }
 });
 
-app.get('/instagram/profile', async (req, res) => {
-  const { username_or_link } = req.query;
-  if (!username_or_link) {
-    return res.status(400).json({ error: 'Parámetro username_or_link requerido' });
-  }
-
-  try {
-    const username = extractUsername(username_or_link, 'instagram');
-    console.log(`📥 [Instagram] Scraping: ${username}`);
-    const result = await scrapeInstagram(username);
-    res.json(result);
-  } catch (error) {
-    console.error(`❌ [Instagram] Error:`, error.message);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.get('/linkedin/profile', async (req, res) => {
-  const { username_or_link } = req.query;
-  if (!username_or_link) {
-    return res.status(400).json({ error: 'Parámetro username_or_link requerido' });
-  }
-
-  try {
-    const username = extractUsername(username_or_link, 'linkedin');
-    console.log(`📥 [LinkedIn] Scraping: ${username}`);
-    const result = await scrapeLinkedIn(username);
-    res.json(result);
-  } catch (error) {
-    console.error(`❌ [LinkedIn] Error:`, error.message);
-    res.status(500).json({ error: error.message });
-  }
-});
-
 app.get('/facebook/profile', async (req, res) => {
   const { username_or_link } = req.query;
   if (!username_or_link) {
@@ -135,7 +97,7 @@ app.get('/facebook/profile', async (req, res) => {
 
 // ==================== SCRAPERS ====================
 
-// TikTok - MEJORADO
+// TikTok
 async function scrapeTikTok(username) {
   let browser;
   
@@ -151,7 +113,6 @@ async function scrapeTikTok(username) {
     const url = `https://www.tiktok.com/@${username}`;
     console.log(`🌐 [TikTok] Navegando a: ${url}`);
     
-    // Cambio importante: domcontentloaded en vez de networkidle0
     await page.goto(url, { 
       waitUntil: 'domcontentloaded', 
       timeout: 60000 
@@ -216,227 +177,7 @@ async function scrapeTikTok(username) {
   }
 }
 
-// Instagram - MEJORADO
-async function scrapeInstagram(username) {
-  let browser;
-  
-  try {
-    browser = await createBrowser();
-    const page = await browser.newPage();
-    
-    await page.setViewport({ width: 1920, height: 1080 });
-    await page.setUserAgent(
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    );
-
-    const url = `https://www.instagram.com/${username}/`;
-    console.log(`🌐 [Instagram] Navegando a: ${url}`);
-    
-    // Cambio importante: domcontentloaded
-    await page.goto(url, { 
-      waitUntil: 'domcontentloaded', 
-      timeout: 60000 
-    });
-    
-    console.log('⏳ [Instagram] Esperando contenido...');
-    await new Promise(resolve => setTimeout(resolve, 8000));
-
-    let profileData = null;
-
-    try {
-      profileData = await page.evaluate(() => {
-        const scripts = Array.from(document.querySelectorAll('script'));
-        
-        // Método 1: window._sharedData
-        for (const script of scripts) {
-          const text = script.textContent;
-          
-          if (text.includes('window._sharedData')) {
-            try {
-              const match = text.match(/window\._sharedData = ({.*?});/);
-              if (match) {
-                const data = JSON.parse(match[1]);
-                const user = data.entry_data?.ProfilePage?.[0]?.graphql?.user;
-                
-                if (user) {
-                  return {
-                    id: user.id,
-                    username: user.username,
-                    full_name: user.full_name,
-                    followers: user.edge_followed_by?.count || 0,
-                    following: user.edge_follow?.count || 0,
-                    mediaCount: user.edge_owner_to_timeline_media?.count || 0,
-                    bio: user.biography,
-                    profile_image_url: user.profile_pic_url_hd || user.profile_pic_url,
-                    verified: user.is_verified,
-                  };
-                }
-              }
-            } catch (e) {
-              console.error('Error parsing Instagram _sharedData:', e);
-            }
-          }
-        }
-        
-        // Método 2: Meta tags
-        const metaDescription = document.querySelector('meta[name="description"]');
-        const ogImage = document.querySelector('meta[property="og:image"]');
-        const ogTitle = document.querySelector('meta[property="og:title"]');
-        
-        let followers = 0;
-        let following = 0;
-        let posts = 0;
-        
-        if (metaDescription) {
-          const desc = metaDescription.content;
-          
-          const followersMatch = desc.match(/(\d+(?:,\d+)*(?:\.\d+)?[KMB]?)\s+Followers/i);
-          if (followersMatch) {
-            const value = followersMatch[1].replace(/,/g, '');
-            if (value.includes('K')) followers = Math.round(parseFloat(value) * 1000);
-            else if (value.includes('M')) followers = Math.round(parseFloat(value) * 1000000);
-            else if (value.includes('B')) followers = Math.round(parseFloat(value) * 1000000000);
-            else followers = parseInt(value);
-          }
-          
-          const followingMatch = desc.match(/(\d+(?:,\d+)*(?:\.\d+)?[KMB]?)\s+Following/i);
-          if (followingMatch) {
-            const value = followingMatch[1].replace(/,/g, '');
-            if (value.includes('K')) following = Math.round(parseFloat(value) * 1000);
-            else if (value.includes('M')) following = Math.round(parseFloat(value) * 1000000);
-            else following = parseInt(value);
-          }
-          
-          const postsMatch = desc.match(/(\d+(?:,\d+)*)\s+Posts/i);
-          if (postsMatch) {
-            posts = parseInt(postsMatch[1].replace(/,/g, ''));
-          }
-        }
-        
-        const username = window.location.pathname.replace(/\//g, '');
-        
-        return {
-          id: username,
-          username: username,
-          full_name: ogTitle ? ogTitle.content.split('(')[0].trim() : '',
-          followers: followers,
-          following: following,
-          mediaCount: posts,
-          bio: metaDescription ? metaDescription.content : '',
-          profile_image_url: ogImage ? ogImage.content : '',
-          verified: false,
-        };
-      });
-    } catch (evalError) {
-      console.error('❌ [Instagram] Error en evaluate:', evalError.message);
-    }
-
-    await browser.close();
-
-    if (!profileData) {
-      throw new Error('No se pudieron extraer los datos del perfil de Instagram');
-    }
-
-    profileData.url = `https://www.instagram.com/${profileData.username}/`;
-    console.log(`✅ [Instagram] Scraped: ${profileData.full_name} (@${profileData.username})`);
-    console.log(`   Followers: ${profileData.followers}, Following: ${profileData.following}`);
-    
-    return profileData;
-
-  } catch (error) {
-    if (browser) {
-      try { await browser.close(); } catch (e) {}
-    }
-    throw new Error(`Error scraping Instagram: ${error.message}`);
-  }
-}
-
-// LinkedIn - MEJORADO
-async function scrapeLinkedIn(username) {
-  let browser;
-  
-  try {
-    browser = await createBrowser();
-    const page = await browser.newPage();
-    
-    await page.setViewport({ width: 1920, height: 1080 });
-    await page.setUserAgent(
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    );
-
-    const url = `https://www.linkedin.com/in/${username}/`;
-    console.log(`🌐 [LinkedIn] Navegando a: ${url}`);
-    
-    await page.goto(url, { 
-      waitUntil: 'domcontentloaded', 
-      timeout: 60000 
-    });
-    
-    console.log('⏳ [LinkedIn] Esperando contenido...');
-    await new Promise(resolve => setTimeout(resolve, 5000));
-
-    let profileData = null;
-
-    try {
-      profileData = await page.evaluate(() => {
-        const ogTitle = document.querySelector('meta[property="og:title"]');
-        const ogImage = document.querySelector('meta[property="og:image"]');
-        const ogDescription = document.querySelector('meta[property="og:description"]');
-        
-        const name = document.querySelector('h1.text-heading-xlarge')?.textContent?.trim() || 
-                     document.querySelector('.top-card-layout__title')?.textContent?.trim() ||
-                     (ogTitle ? ogTitle.content : '');
-        
-        const headline = document.querySelector('.text-body-medium')?.textContent?.trim() ||
-                        document.querySelector('.top-card-layout__headline')?.textContent?.trim() ||
-                        (ogDescription ? ogDescription.content : '');
-        
-        const location = document.querySelector('.text-body-small.inline.t-black--light.break-words')?.textContent?.trim() ||
-                        document.querySelector('.top-card__subline-item')?.textContent?.trim() || '';
-        
-        const avatarImg = document.querySelector('.pv-top-card-profile-picture__image') ||
-                         document.querySelector('img.profile-photo-edit__preview');
-        const avatarUrl = avatarImg?.src || (ogImage ? ogImage.content : '');
-        
-        const username = window.location.pathname.replace('/in/', '').replace(/\//g, '');
-        
-        return {
-          id: username,
-          url: `https://www.linkedin.com/in/${username}/`,
-          username: username,
-          full_name: name,
-          headline: headline,
-          profile_image_url: avatarUrl,
-          connections: 0,
-          followers: 0,
-          location: location,
-          about: headline,
-          current_company: '',
-          current_position: headline,
-        };
-      });
-    } catch (evalError) {
-      console.error('❌ [LinkedIn] Error en evaluate:', evalError.message);
-    }
-
-    await browser.close();
-
-    if (!profileData) {
-      throw new Error('No se pudieron extraer los datos del perfil de LinkedIn');
-    }
-
-    console.log(`✅ [LinkedIn] Scraped: ${profileData.full_name}`);
-    return profileData;
-
-  } catch (error) {
-    if (browser) {
-      try { await browser.close(); } catch (e) {}
-    }
-    throw new Error(`Error scraping LinkedIn: ${error.message}`);
-  }
-}
-
-// Facebook - MEJORADO
+// Facebook
 async function scrapeFacebook(username) {
   let browser;
   
@@ -532,11 +273,9 @@ async function scrapeFacebook(username) {
 
 // Iniciar servidor
 app.listen(PORT, () => {
-  console.log(`🚀 Migozz Scraper Service v2.2 corriendo en puerto ${PORT}`);
+  console.log(`🚀 Migozz Scraper Service v2.3 corriendo en puerto ${PORT}`);
   console.log(`📡 Rutas disponibles:`);
   console.log(`   GET /tiktok/profile?username_or_link=xxx`);
-  console.log(`   GET /instagram/profile?username_or_link=xxx`);
-  console.log(`   GET /linkedin/profile?username_or_link=xxx`);
   console.log(`   GET /facebook/profile?username_or_link=xxx`);
   console.log(``);
   console.log(`✅ Campos compatibles con social_normalizer.dart`);
