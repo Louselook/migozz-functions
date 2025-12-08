@@ -21,12 +21,12 @@ async function scrapeTwitch(username) {
     console.log(`🌐 [Twitch] Navegando a: ${url}`);
     
     await page.goto(url, { 
-      waitUntil: 'domcontentloaded', 
+      waitUntil: 'networkidle2', 
       timeout: 60000 
     });
     
     console.log('⏳ [Twitch] Esperando contenido...');
-    await new Promise(resolve => setTimeout(resolve, 8000));
+    await new Promise(resolve => setTimeout(resolve, 12000));
 
     let profileData = null;
 
@@ -34,67 +34,120 @@ async function scrapeTwitch(username) {
       profileData = await page.evaluate(() => {
         // Método 1: Buscar en meta tags
         const ogImage = document.querySelector('meta[property="og:image"]');
-        const ogTitle = document.querySelector('meta[property="og:title"]');
         
-        // Método 2: Buscar en el DOM
         let username = window.location.pathname.replace('/', '').split('/')[0];
         let followers = 0;
         let profileImageUrl = ogImage ? ogImage.content : '';
         
-        // Intentar extraer followers del texto de la página
-        const bodyText = document.body.textContent;
+        // Función simplificada para convertir texto con K/M/B a número
+        function parseNumber(numStr, suffix) {
+          // Limpiar el número: remover comas y espacios
+          let num = parseFloat(numStr.replace(/[,\s]/g, '').replace(/\./g, ''));
+          
+          if (!suffix) return num;
+          
+          const suffixUpper = suffix.toUpperCase();
+          if (suffixUpper === 'K') return Math.round(num * 1000);
+          if (suffixUpper === 'M') return Math.round(num * 1000000);
+          if (suffixUpper === 'B') return Math.round(num * 1000000000);
+          
+          return num;
+        }
         
-        // Patrones para detectar seguidores
+        // Buscar en el texto completo de la página
+        const bodyText = document.body.innerText;
+        
+        // Patrones para buscar followers
         const patterns = [
-          /(\d+(?:,\d+)*(?:\.\d+)?[KMB]?)\s+followers/i,
-          /(\d+(?:,\d+)*(?:\.\d+)?[KMB]?)\s+seguidores/i,
+          // Formato: "16 M seguidores" o "570.945 seguidores"
+          /(\d+(?:[.,]\d+)?)\s*([KMB])?\s*seguidores/gi,
+          /(\d+(?:[.,]\d+)?)\s*([KMB])?\s*followers/gi,
         ];
         
         for (const pattern of patterns) {
-          const match = bodyText.match(pattern);
-          if (match) {
-            const value = match[1].replace(/,/g, '');
-            if (value.includes('K')) followers = Math.round(parseFloat(value) * 1000);
-            else if (value.includes('M')) followers = Math.round(parseFloat(value) * 1000000);
-            else if (value.includes('B')) followers = Math.round(parseFloat(value) * 1000000000);
-            else followers = parseInt(value);
-            break;
+          const matches = bodyText.matchAll(pattern);
+          for (const match of matches) {
+            const number = match[1];   // "16" o "570.945"
+            const suffix = match[2];    // "M" o undefined
+            
+            const count = parseNumber(number, suffix);
+            
+            // Solo tomar números que tengan sentido como followers (> 100)
+            if (count > 100 && count > followers) {
+              followers = count;
+            }
           }
         }
         
-        // Método 3: Buscar datos en scripts de la página
-        const scripts = Array.from(document.querySelectorAll('script'));
+        // Método 2: Buscar en selectores específicos de Twitch
+        const selectors = [
+          '[data-a-target="followers-count"]',
+          '.tw-stat__value',
+          'div[data-test-selector="FollowersCount"]',
+        ];
+        
+        for (const selector of selectors) {
+          const el = document.querySelector(selector);
+          if (el && el.textContent) {
+            const text = el.textContent.trim();
+            const match = text.match(/(\d+(?:[.,]\d+)?)\s*([KMB])?/i);
+            if (match) {
+              const count = parseNumber(match[1], match[2]);
+              if (count > followers) {
+                followers = count;
+              }
+            }
+          }
+        }
+        
+        // Método 3: Buscar en scripts JSON
+        const scripts = Array.from(document.querySelectorAll('script[type="application/ld+json"]'));
         for (const script of scripts) {
+          try {
+            const data = JSON.parse(script.textContent);
+            if (data.interactionStatistic) {
+              const followersStat = data.interactionStatistic.find(
+                stat => stat['@type'] === 'InteractionCounter' && 
+                        stat.interactionType === 'http://schema.org/FollowAction'
+              );
+              if (followersStat && followersStat.userInteractionCount) {
+                const count = parseInt(followersStat.userInteractionCount);
+                if (count > followers) {
+                  followers = count;
+                }
+              }
+            }
+          } catch (e) {
+            // Ignorar errores de parsing
+          }
+        }
+        
+        // Método 4: Buscar en otros scripts
+        const allScripts = Array.from(document.querySelectorAll('script'));
+        for (const script of allScripts) {
           try {
             const text = script.textContent;
             
-            // Buscar datos del usuario en estructuras JSON
             if (text.includes('"followerCount"') || text.includes('"followers"')) {
-              const followerMatch = text.match(/"followerCount["\s:]+(\d+)/i) || 
-                                   text.match(/"followers["\s:]+(\d+)/i);
-              if (followerMatch && followerMatch[1]) {
-                followers = parseInt(followerMatch[1]);
+              // Buscar patrón: "followerCount":16000000 o "followers":16000000
+              const match = text.match(/"(?:followerCount|followers)"[:\s]+(\d+)/i);
+              if (match && match[1]) {
+                const count = parseInt(match[1]);
+                if (count > followers) {
+                  followers = count;
+                }
               }
             }
             
             // Buscar imagen de perfil
-            if (text.includes('"profileImageURL"') || text.includes('"logo"')) {
-              const imageMatch = text.match(/"profileImageURL["\s:]+["']([^"']+)["']/i) ||
-                                text.match(/"logo["\s:]+["']([^"']+)["']/i);
-              if (imageMatch && imageMatch[1] && !profileImageUrl) {
-                profileImageUrl = imageMatch[1];
-              }
-            }
-            
-            // Buscar username oficial
-            if (text.includes('"login"') && text.includes(username)) {
-              const usernameMatch = text.match(/"login["\s:]+["']([^"']+)["']/i);
-              if (usernameMatch && usernameMatch[1]) {
-                username = usernameMatch[1];
+            if (!profileImageUrl && (text.includes('"profileImageURL"') || text.includes('"logo"'))) {
+              const imgMatch = text.match(/"(?:profileImageURL|logo)"[:\s]+"([^"]+)"/i);
+              if (imgMatch && imgMatch[1]) {
+                profileImageUrl = imgMatch[1];
               }
             }
           } catch (e) {
-            // Continuar con el siguiente script
+            // Ignorar errores
           }
         }
         
