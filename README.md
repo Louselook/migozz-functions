@@ -15,7 +15,8 @@ project/
 └── scrapers/
     ├── tiktok.js              # Scraper de TikTok
     ├── facebook.js            # Scraper de Facebook
-    └── twitch.js              # Scraper de Twitch
+    ├── twitch.js              # Scraper de Twitch
+    └── kick.js                # Scraper de Kick
 ```
 
 ## 🚀 Instalación
@@ -35,6 +36,7 @@ node index.js
 - `GET /tiktok/profile?username_or_link=xxx`
 - `GET /facebook/profile?username_or_link=xxx`
 - `GET /twitch/profile?username_or_link=xxx`
+- `GET /kick/profile?username_or_link=xxx`
 
 ## 📝 Cómo agregar una nueva red social
 

@@ -4,6 +4,7 @@ const { extractUsername } = require('./utils/helpers');
 const scrapeTikTok = require('./scrapers/tiktok');
 const scrapeFacebook = require('./scrapers/facebook');
 const scrapeTwitch = require('./scrapers/twitch');
+const scrapeKick  = require('./scrapers/kick');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -15,8 +16,8 @@ app.get('/', (req, res) => {
   res.json({ 
     status: 'ok', 
     service: 'Migozz Scraper Service',
-    version: '2.4.0',
-    platforms: ['tiktok', 'facebook', 'twitch']
+    version: '2.5.0',
+    platforms: ['tiktok', 'facebook', 'twitch', 'kick']
   });
 });
 
@@ -74,13 +75,31 @@ app.get('/twitch/profile', async (req, res) => {
   }
 });
 
+app.get('/kick/profile', async (req, res) => {
+  const { username_or_link } = req.query;
+  if (!username_or_link) {
+    return res.status(400).json({ error: 'Parámetro username_or_link requerido' });
+  }
+
+  try {
+    const username = extractUsername(username_or_link, 'kick');
+    console.log(`📥 [Kick] Scraping: ${username}`);
+    const result = await scrapeKick(username);
+    res.json(result);
+  } catch (error) {
+    console.error(`❌ [Kick] Error:`, error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Iniciar servidor
 app.listen(PORT, () => {
-  console.log(`🚀 Migozz Scraper Service v2.4 corriendo en puerto ${PORT}`);
+  console.log(`🚀 Migozz Scraper Service v2.5 corriendo en puerto ${PORT}`);
   console.log(`📡 Rutas disponibles:`);
   console.log(`   GET /tiktok/profile?username_or_link=xxx`);
   console.log(`   GET /facebook/profile?username_or_link=xxx`);
   console.log(`   GET /twitch/profile?username_or_link=xxx`);
+  console.log(`   GET /kick/profile?username_or_link=xxx`);
   console.log(``);
   console.log(`✅ Campos compatibles con social_normalizer.dart`);
 });
