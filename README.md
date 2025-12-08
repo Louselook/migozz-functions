@@ -14,7 +14,8 @@ project/
 │
 └── scrapers/
     ├── tiktok.js              # Scraper de TikTok
-    └── facebook.js            # Scraper de Facebook
+    ├── facebook.js            # Scraper de Facebook
+    └── twitch.js              # Scraper de Twitch
 ```
 
 ## 🚀 Instalación
@@ -33,14 +34,7 @@ node index.js
 
 - `GET /tiktok/profile?username_or_link=xxx`
 - `GET /facebook/profile?username_or_link=xxx`
-
-## ✨ Ventajas de esta Estructura
-
-1. **Modularidad**: Cada scraper está en su propio archivo
-2. **Mantenibilidad**: Más fácil de mantener y actualizar
-3. **Escalabilidad**: Agregar nuevas redes sociales es simple
-4. **Organización**: Código limpio y bien estructurado
-5. **Reutilización**: Las utilidades están centralizadas
+- `GET /twitch/profile?username_or_link=xxx`
 
 ## 📝 Cómo agregar una nueva red social
 

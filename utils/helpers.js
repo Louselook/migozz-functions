@@ -22,6 +22,8 @@ function extractUsername(input, platform) {
         return pathname.replace('/@', '').split('/')[0];
       case 'facebook':
         return pathname.replace('/', '').split('/')[0];
+      case 'twitch':
+        return pathname.replace('/', '').split('/')[0];
       default:
         return pathname.replace('/', '').split('/')[0];
     }
