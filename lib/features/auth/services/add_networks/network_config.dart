@@ -1,4 +1,4 @@
-// lib/features/auth/data/network_config.dart
+// lib/features/auth/services/add_networks/network_config.dart
 
 import 'package:migozz_app/core/components/atomics/network_list.dart';
 
@@ -14,6 +14,7 @@ class NetworkConfig {
   final String iconPath;
   final NetworkAuthCapability capability;
   final bool isEnabled;
+  final String? placeholder; // Placeholder para el campo de entrada
 
   const NetworkConfig({
     required this.name,
@@ -21,6 +22,7 @@ class NetworkConfig {
     required this.iconPath,
     required this.capability,
     this.isEnabled = true,
+    this.placeholder,
   });
 
   bool get supportsOAuth =>
@@ -33,21 +35,66 @@ class NetworkConfig {
 }
 
 class SocialNetworks {
-  // Configuración de capacidades por red (OAuth, Manual, o Ambos)
+  // Configuración de capacidades por red
   static const Map<String, NetworkAuthCapability> _capabilities = {
+    // Social Media
     "tiktok": NetworkAuthCapability.manual,
     "instagram": NetworkAuthCapability.both,
     "facebook": NetworkAuthCapability.both,
     "youtube": NetworkAuthCapability.manual,
-    "spotify": NetworkAuthCapability.oauth,
     "twitter": NetworkAuthCapability.oauth,
-    "telegram": NetworkAuthCapability.manual,
-    "whatsapp": NetworkAuthCapability.manual,
-    "pinterest": NetworkAuthCapability.manual,
     "linkedin": NetworkAuthCapability.manual,
+
+    // Streaming
+    "twitch": NetworkAuthCapability.manual,
+    "kick": NetworkAuthCapability.manual,
+
+    // Music
+    "spotify": NetworkAuthCapability.oauth,
+
+    // Websites & Stores (todos manual)
+    "website": NetworkAuthCapability.manual,
+    "shopify": NetworkAuthCapability.manual,
+    "woocommerce": NetworkAuthCapability.manual,
+    "etsy": NetworkAuthCapability.manual,
+
+    // Messaging (todos manual)
+    "whatsapp": NetworkAuthCapability.manual,
+    "telegram": NetworkAuthCapability.manual,
+
+    // Otros
+    "pinterest": NetworkAuthCapability.manual,
     "paypal": NetworkAuthCapability.manual,
     "xbox": NetworkAuthCapability.manual,
     "other": NetworkAuthCapability.manual,
+  };
+
+  // Placeholders personalizados por red
+  static const Map<String, String> _placeholders = {
+    // Social Media
+    "tiktok": "Username or URL",
+    "instagram": "Username or URL",
+    "facebook": "Username or URL",
+    "youtube": "Channel name or URL",
+    "twitter": "Username",
+    "linkedin": "Profile URL",
+
+    // Streaming
+    "twitch": "Username or URL",
+    "kick": "Username or URL",
+
+    // Music
+    "spotify": "Profile URL",
+
+    // Websites & Stores
+    "website": "Your website URL",
+    "shopify": "Your Shopify store URL",
+    "woocommerce": "Your WooCommerce store URL",
+    "etsy": "Your Etsy shop URL",
+
+    // Messaging
+    "whatsapp": "Phone number (with country code)",
+    "telegram": "Username or phone number",
   };
 
   // Genera configuraciones dinámicamente desde network_list.dart
@@ -60,13 +107,15 @@ class SocialNetworks {
           _capabilities[networkLower] ?? NetworkAuthCapability.manual;
       final iconPath =
           iconByLabel[network] ?? 'assets/icons/social_networks/Other.svg';
+      final placeholder = _placeholders[networkLower] ?? "Username or URL";
 
       configMap[networkLower] = NetworkConfig(
         name: networkLower,
         displayName: network,
         iconPath: iconPath,
         capability: capability,
-        isEnabled: true, // Si está en socials, está habilitada
+        isEnabled: true,
+        placeholder: placeholder,
       );
     }
 
@@ -81,6 +130,7 @@ class SocialNetworks {
           _capabilities[networkLower] ?? NetworkAuthCapability.manual;
       final iconPath =
           iconByLabel[network] ?? 'assets/icons/social_networks/Other.svg';
+      final placeholder = _placeholders[networkLower] ?? "Username or URL";
 
       return NetworkConfig(
         name: networkLower,
@@ -88,6 +138,7 @@ class SocialNetworks {
         iconPath: iconPath,
         capability: capability,
         isEnabled: true,
+        placeholder: placeholder,
       );
     }).toList();
   }

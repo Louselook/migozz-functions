@@ -160,3 +160,107 @@ Map<String, dynamic> normalizeLinkedIn(Map<String, dynamic> data) {
       'current_position': _toString(data['current_position']),
   };
 }
+
+// ==================== TWITCH ====================
+Map<String, dynamic> normalizeTwitch(Map<String, dynamic> data) {
+  return {
+    'username': _toString(data['username']),
+    'followers': _toInt(data['followers']),
+    'profile_image_url': _toString(data['profile_image_url']),
+    'url': _toString(
+      data['url'],
+      defaultValue: 'https://www.twitch.tv/${data['username'] ?? ''}',
+    ),
+  };
+}
+
+// ==================== KICK ====================
+Map<String, dynamic> normalizeKick(Map<String, dynamic> data) {
+  return {
+    'username': _toString(data['username']),
+    'followers': _toInt(data['followers']),
+    'profile_image_url': _toString(data['profile_image_url']),
+    'url': _toString(
+      data['url'],
+      defaultValue: 'https://kick.com/${data['username'] ?? ''}',
+    ),
+  };
+}
+
+// ==================== TROVO (OPCIONAL) ====================
+Map<String, dynamic> normalizeTrovo(Map<String, dynamic> data) {
+  return {
+    'username': _toString(data['username']),
+    'followers': _toInt(data['followers']),
+    'profile_image_url': _toString(data['profile_image_url']),
+    'url': _toString(
+      data['url'],
+      defaultValue: 'https://trovo.live/s/${data['username'] ?? ''}',
+    ),
+  };
+}
+
+// ==================== WEBSITES & STORES ====================
+
+Map<String, dynamic> normalizeWebsite(Map<String, dynamic> data) {
+  return {
+    'url': _toString(data['url']),
+    'type': _toString(data['type'], defaultValue: 'website'),
+    'name': _toString(data['name']),
+  };
+}
+
+Map<String, dynamic> normalizeShopify(Map<String, dynamic> data) {
+  return {
+    'url': _toString(data['url']),
+    'type': _toString(data['type'], defaultValue: 'shopify'),
+    'store_name': _toString(data['store_name']),
+  };
+}
+
+Map<String, dynamic> normalizeWooCommerce(Map<String, dynamic> data) {
+  return {
+    'url': _toString(data['url']),
+    'type': _toString(data['type'], defaultValue: 'woocommerce'),
+    'store_name': _toString(data['store_name']),
+  };
+}
+
+Map<String, dynamic> normalizeEtsy(Map<String, dynamic> data) {
+  return {
+    'url': _toString(data['url']),
+    'type': _toString(data['type'], defaultValue: 'etsy'),
+    'shop_name': _toString(data['shop_name']),
+    'username': _toString(data['username'] ?? data['shop_name']),
+  };
+}
+
+// ==================== MESSAGING ====================
+
+Map<String, dynamic> normalizeWhatsApp(Map<String, dynamic> data) {
+  return {
+    'phone': _toString(data['phone']),
+    'type': _toString(data['type'], defaultValue: 'whatsapp'),
+    'url': _toString(
+      data['url'],
+      defaultValue: 'https://wa.me/${data['phone'] ?? ''}',
+    ),
+  };
+}
+
+Map<String, dynamic> normalizeTelegram(Map<String, dynamic> data) {
+  final hasPhone = data.containsKey('phone') && data['phone'] != null;
+  final hasUsername = data.containsKey('username') && data['username'] != null;
+
+  return {
+    if (hasPhone) 'phone': _toString(data['phone']),
+    if (hasUsername) 'username': _toString(data['username']),
+    'type': _toString(data['type'], defaultValue: 'telegram'),
+    'url': _toString(
+      data['url'],
+      defaultValue: hasUsername
+          ? 'https://t.me/${data['username']}'
+          : 'https://t.me/${data['phone'] ?? ''}',
+    ),
+  };
+}

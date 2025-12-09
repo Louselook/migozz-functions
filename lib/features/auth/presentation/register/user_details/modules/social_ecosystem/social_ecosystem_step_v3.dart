@@ -39,9 +39,10 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
   // Categories for grouping platforms (based on available networks)
   final Map<String, List<String>> _categories = {
     'Social': ['instagram', 'tiktok', 'facebook', 'twitter', 'linkedin'],
-    'Streaming': ['youtube'],
+    'Streaming': ['twitch', 'kick', 'youtube'],
     'Music': ['spotify'],
-    'Chat': ['telegram'],
+    'Websites & Stores': ['website', 'shopify', 'woocommerce', 'etsy'],
+    'Messaging': ['whatsapp', 'telegram'],
   };
 
   @override
@@ -267,8 +268,10 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     final avatarUrl = user.avatarUrl;
     final socialLinks = _buildSocialLinks(user.socialEcosystem, user.username);
 
-    return GestureDetector(onTap: () => FocusScope.of(context).unfocus(),
-      child: SafeArea(top: false,
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: SafeArea(
+        top: false,
         child: Scaffold(
           backgroundColor: Colors.black,
           body: Stack(
@@ -281,15 +284,17 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                 right: 0,
                 child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
               ),
-        
+
               Positioned(
                 top: MediaQuery.of(context).padding.top + 8,
                 left: 0,
-        
+
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: GestureDetector(
-                    onTap: () {Navigator.pop(context);},
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       child: Icon(
@@ -322,7 +327,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                         height: 1.1,
                       ),
                     ),
-        
+
                     // DisplayName (@username)
                     const SizedBox(height: 3),
                     Text(
@@ -344,32 +349,35 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: TextField(
                         controller: _searchController,
-                        style: const TextStyle(color: Colors.white, fontSize: 12),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                        ),
                         decoration: InputDecoration(
                           isDense: true, // decrease height
                           filled: true,
                           fillColor: AppColors.greyBackground.withValues(
                             alpha: 0.4,
                           ),
-        
+
                           hintText: 'Search For Platforms',
                           hintStyle: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 12,
                           ),
-        
+
                           suffixIcon: Icon(
                             Icons.search,
                             color: Colors.grey[600],
                             size: 20,
                           ),
-        
+
                           // Rounded corners
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
                           ),
-        
+
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 12,
                             vertical: 5, // lower vertical padding
@@ -382,7 +390,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                         },
                       ),
                     ),
-        
+
                     // Content
                     Expanded(
                       child: _searchQuery.isNotEmpty
@@ -421,7 +429,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 15),
       padding: const EdgeInsets.all(10),
-     
+
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -434,7 +442,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
             ),
           ),
           const SizedBox(height: 12),
-          GridView.builder(shrinkWrap: true,
+          GridView.builder(
+            shrinkWrap: true,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
               childAspectRatio: 2.8,
@@ -626,6 +635,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
 
     String url;
     switch (platform) {
+      // ==================== SOCIAL MEDIA ====================
       case 'tiktok':
         url = customUrl ?? 'https://www.tiktok.com/@$username';
         break;
@@ -645,18 +655,43 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
       case 'youtube':
         url = customUrl ?? 'https://www.youtube.com/@$username';
         break;
-      case 'telegram':
-        url = customUrl ?? 'https://t.me/$username';
-        break;
-      case 'whatsapp':
-        url = customUrl ?? 'https://wa.me/$username';
-        break;
-      case 'spotify':
-        url = customUrl ?? 'https://open.spotify.com/user/$username';
-        break;
       case 'linkedin':
         url = customUrl ?? 'https://www.linkedin.com/in/$username';
         break;
+
+      // ==================== STREAMING ====================
+      case 'twitch':
+        url = customUrl ?? 'https://www.twitch.tv/$username';
+        break;
+      case 'kick':
+        url = customUrl ?? 'https://kick.com/$username';
+        break;
+      case 'trovo':
+        url = customUrl ?? 'https://trovo.live/s/$username';
+        break;
+
+      // ==================== MUSIC ====================
+      case 'spotify':
+        url = customUrl ?? 'https://open.spotify.com/user/$username';
+        break;
+
+      // ==================== WEBSITES & STORES ====================
+      case 'website':
+      case 'shopify':
+      case 'woocommerce':
+      case 'etsy':
+        // Para estos, el customUrl es obligatorio (viene del servicio directo)
+        url = customUrl ?? '';
+        break;
+
+      // ==================== MESSAGING ====================
+      case 'whatsapp':
+        url = customUrl ?? 'https://wa.me/$username';
+        break;
+      case 'telegram':
+        url = customUrl ?? 'https://t.me/$username';
+        break;
+
       default:
         url = customUrl ?? '';
     }

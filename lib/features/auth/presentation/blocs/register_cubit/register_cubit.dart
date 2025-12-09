@@ -7,6 +7,7 @@ import 'package:migozz_app/core/components/atomics/loading_overlay.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/location_dto.dart';
 import 'package:migozz_app/core/services/deeplink/deeplink_functions/social_network/social_normalizer.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/add_network.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/add_network_service_direct.dart';
 import 'package:migozz_app/features/auth/services/add_networks/add_network_service_click.dart';
 import 'package:migozz_app/features/auth/services/add_networks/add_network_service_user.dart';
 import 'package:migozz_app/features/auth/services/add_networks/network_config.dart';
@@ -18,6 +19,7 @@ class RegisterCubit extends Cubit<RegisterState> {
   final LocationService _locationService;
   final AddNetworkServiceClick _clickService = AddNetworkServiceClick();
   final AddNetworkServiceUser _userService = AddNetworkServiceUser();
+  final AddNetworkServiceDirect _directService = AddNetworkServiceDirect();
 
   // ✅ Callback para sincronización con EditCubit
   Function(List<Map<String, Map<String, dynamic>>>)? onSocialEcosystemUpdated;
@@ -260,19 +262,30 @@ class RegisterCubit extends Cubit<RegisterState> {
     bool inEditMode,
   ) async {
     try {
-      // Obtener datos del perfil
-      final rawData = await _userService.getProfileByUsernameOrLink(
-        network: network,
-        usernameOrLink: usernameOrLink,
-      );
+      Map<String, dynamic> rawData;
+
+      // ✅ Verificar si es una red "directa" (no requiere scraping)
+      final isDirectNetwork = _isDirectNetwork(network);
+
+      if (isDirectNetwork) {
+        // Usar servicio directo (sin scraping)
+        rawData = await _directService.createDirectProfile(
+          network: network,
+          input: usernameOrLink,
+        );
+      } else {
+        // Usar servicio de scraping normal
+        rawData = await _userService.getProfileByUsernameOrLink(
+          network: network,
+          usernameOrLink: usernameOrLink,
+        );
+      }
 
       // Normalizar según la red
       final profileData = _normalizeProfile(network, rawData);
 
       debugPrint('📊 [$network] Data normalized:');
-      debugPrint('   Username: ${profileData['username']}');
-      debugPrint('   Followers: ${profileData['followers']}');
-      debugPrint('   URL: ${profileData['url']}');
+      debugPrint('   Data: $profileData');
 
       // Actualizar el ecosistema social
       final current = List<Map<String, Map<String, dynamic>>>.from(
@@ -295,6 +308,18 @@ class RegisterCubit extends Cubit<RegisterState> {
     }
   }
 
+  bool _isDirectNetwork(String network) {
+    const directNetworks = [
+      'website',
+      'shopify',
+      'woocommerce',
+      'etsy',
+      'whatsapp',
+      'telegram',
+    ];
+    return directNetworks.contains(network.toLowerCase());
+  }
+
   /// Normalizar datos del perfil según la red social
   Map<String, dynamic> _normalizeProfile(
     String network,
@@ -315,6 +340,12 @@ class RegisterCubit extends Cubit<RegisterState> {
         return normalizeFacebook(rawData);
       case 'linkedin':
         return normalizeLinkedIn(rawData);
+      case 'twitch':
+        return normalizeTwitch(rawData);
+      case 'kick':
+        return normalizeKick(rawData);
+      // case 'trovo':
+      //   return normalizeTrovo(rawData);
       default:
         // Normalización genérica
         return {

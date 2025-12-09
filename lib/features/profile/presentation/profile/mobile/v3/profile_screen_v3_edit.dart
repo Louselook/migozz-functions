@@ -58,13 +58,13 @@ class _MobileProfileContentV3EditState
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          TintesGradients(child: Container()),
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
-          ),
+          // TintesGradients(child: Container()),
+          // Positioned(
+          //   top: 0,
+          //   left: 0,
+          //   right: 0,
+          //   child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
+          // ),
           SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             child: Column(
@@ -73,12 +73,16 @@ class _MobileProfileContentV3EditState
                 SizedBox(height: size.height * 0.4),
                 // Botón "Change Profile Picture"
                 Container(
-                  decoration: BoxDecoration(color: Colors.white10,borderRadius: BorderRadius.circular(5)),
+                  decoration: BoxDecoration(
+                    color: Colors.white10,
+                    borderRadius: BorderRadius.circular(5),
+                  ),
                   padding: const EdgeInsets.symmetric(
                     vertical: 5,
                     horizontal: 10,
                   ),
-                  child: Row(mainAxisSize: MainAxisSize.min,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
                         Icons.camera_alt_outlined,
@@ -146,7 +150,9 @@ class _MobileProfileContentV3EditState
                 children: [
                   // Botón de retroceso
                   GestureDetector(
-                    onTap: () {Navigator.pop(context);},
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       child: Icon(
@@ -205,7 +211,9 @@ class _MobileProfileContentV3EditState
 
     // Initialize EditCubit with current user data
     final currentSocials = authCubit.state.userProfile?.socialEcosystem ?? [];
-    debugPrint('📱 [ProfileV3Edit] Initializing with ${currentSocials.length} social networks');
+    debugPrint(
+      '📱 [ProfileV3Edit] Initializing with ${currentSocials.length} social networks',
+    );
 
     editCubit.initializeFromUser(
       socialEcosystem: currentSocials,
@@ -228,7 +236,8 @@ class _MobileProfileContentV3EditState
           ],
           child: SocialEcosystemStepV3(
             controller: PageController(),
-            mode: MoreUserDetailsMode.edit, user: widget.user,
+            mode: MoreUserDetailsMode.edit,
+            user: widget.user,
           ),
         ),
       ),

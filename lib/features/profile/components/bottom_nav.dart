@@ -94,10 +94,12 @@ class GradientBottomNav extends StatelessWidget {
           ),
           Positioned(
             top: 8,
-            left: 0,
-            right: 0,bottom: 8,
-            child: Align(
-              alignment: Alignment.center,
+            left:
+                MediaQuery.of(context).size.width / 2 -
+                28, // Center - half the size of the button
+            child: SizedBox(
+              width: 56, // Fixed button size
+              height: 56, // Fixed button size
               child: _CenterActionButton(onTap: onCenterTap),
             ),
           ),
@@ -146,9 +148,9 @@ class _CenterActionButton extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Container(
-
         alignment: Alignment.center,
-        decoration: BoxDecoration(shape: BoxShape.circle,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
 
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
@@ -166,7 +168,8 @@ class _CenterActionButton extends StatelessWidget {
         child: Image.asset(
           AssetsConstants.inboxIcon,
           width: 23,
-          height: 23,color: Colors.white,
+          height: 23,
+          color: Colors.white,
         ),
       ),
     );

@@ -46,12 +46,15 @@ class AddNetworkServiceUser {
     }
   }
 
-  /// ✅ NUEVO: Decidir qué API usar según la red social
+  /// ✅ ACTUALIZADO: Decidir qué API usar según la red social
   String? _getApiBaseForNetwork(String network) {
     switch (network.toLowerCase()) {
       // Usar Cloud Run Functions (scraper con Puppeteer)
       case 'tiktok':
       case 'facebook':
+      case 'twitch':
+      case 'kick':
+        // case 'trovo':
         return ApiConfig.apiFuctions;
 
       // Usar API principal (tiene YouTube, Instagram OAuth, LinkedIn OAuth, etc.)
@@ -84,6 +87,12 @@ class AddNetworkServiceUser {
         return '/facebook/profile';
       case 'spotify':
         return '/spotify/profile';
+      case 'twitch':
+        return '/twitch/profile';
+      case 'kick': // ✅ NUEVO
+        return '/kick/profile';
+      // case 'trovo':
+      //   return '/trovo/profile';
       default:
         throw Exception('Red social no soportada: $network');
     }
@@ -126,4 +135,23 @@ class AddNetworkServiceUser {
         network: 'twitter',
         usernameOrLink: usernameOrLink,
       );
+
+  Future<Map<String, dynamic>> getTwitchProfile(String usernameOrLink) =>
+      getProfileByUsernameOrLink(
+        network: 'twitch',
+        usernameOrLink: usernameOrLink,
+      );
+
+  Future<Map<String, dynamic>> getKickProfile(String usernameOrLink) =>
+      getProfileByUsernameOrLink(
+        network: 'kick',
+        usernameOrLink: usernameOrLink,
+      );
+
+  // // ✅ NUEVO: Trovo (opcional)
+  // Future<Map<String, dynamic>> getTrovoProfile(String usernameOrLink) =>
+  //     getProfileByUsernameOrLink(
+  //       network: 'trovo',
+  //       usernameOrLink: usernameOrLink,
+  //     );
 }
