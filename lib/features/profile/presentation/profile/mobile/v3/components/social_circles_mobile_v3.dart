@@ -34,14 +34,17 @@ class SocialCirclesMobileV3 extends StatelessWidget {
     }
 
     // Calcular número de filas
-    final rows = (socialNetworks.length / 3).ceil();
+    final itemsPerRow = 10;
+    final rows = (socialNetworks.length / itemsPerRow).ceil();
 
     return Column(
       children: [
-        // Grid de redes sociales 3x2
         ...List.generate(rows, (rowIndex) {
-          final startIndex = rowIndex * 3;
-          final endIndex = (startIndex + 3).clamp(0, socialNetworks.length);
+          final startIndex = rowIndex * itemsPerRow;
+          final endIndex = (startIndex + itemsPerRow).clamp(
+            0,
+            socialNetworks.length,
+          );
           final rowItems = socialNetworks.sublist(startIndex, endIndex);
 
           return Row(
@@ -58,7 +61,6 @@ class SocialCirclesMobileV3 extends StatelessWidget {
     );
   }
 }
-
 
 class SocialCirclesMobileV3Edit extends StatelessWidget {
   final List<SocialLink> links;
@@ -148,29 +150,20 @@ class _AddSocialButton extends StatelessWidget {
   final double boxSize;
   final VoidCallback? onPressed;
 
-  const _AddSocialButton({
-    required this.boxSize,
-    this.onPressed,
-  });
+  const _AddSocialButton({required this.boxSize, this.onPressed});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onPressed,
       child: Container(
-        width:20,
-        height:20,
+        width: 20,
+        height: 20,
         decoration: BoxDecoration(
-         shape: BoxShape.circle,gradient: AppColors.verticalPinkPurple
-
+          shape: BoxShape.circle,
+          gradient: AppColors.verticalPinkPurple,
         ),
-        child: Center(
-          child: Icon(
-            Icons.add,
-            color: Colors.white,
-            size: 15,
-          ),
-        ),
+        child: Center(child: Icon(Icons.add, color: Colors.white, size: 15)),
       ),
     );
   }
