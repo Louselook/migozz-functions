@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
@@ -32,8 +33,14 @@ class EditCubit extends Cubit<EditCubitState> {
 
   // Actualizar social ecosystem temporalmente
   void updateSocialEcosystem(List<Map<String, dynamic>> socials) {
+    debugPrint('📝 [EditCubit] updateSocialEcosystem called');
+    debugPrint('📝 [EditCubit] New socials count: ${socials.length}');
+    debugPrint('📝 [EditCubit] New socials: $socials');
+
     // Marca cambios (simple): cuando el usuario modifica la lista
     emit(state.copyWith(socialEcosystem: socials, hasChanges: true));
+
+    debugPrint('✅ [EditCubit] State updated, hasChanges: true');
   }
 
   // Actualizar categorías temporalmente
@@ -52,15 +59,19 @@ class EditCubit extends Cubit<EditCubitState> {
     required Map<String, dynamic> updatedFields,
   }) async {
     try {
+
       emit(state.copyWith(isSaving: true));
 
       await _userService.updateUserProfile(userId, updatedFields);
 
+
       //  Refresca el AuthCubit automáticamente
       await _authCubit.refreshUserProfile();
 
+
       // Al guardar, no quedan cambios pendientes
       emit(state.copyWith(isSaving: false, success: true, hasChanges: false));
+
     } catch (e) {
       emit(state.copyWith(isSaving: false, error: e.toString()));
     }

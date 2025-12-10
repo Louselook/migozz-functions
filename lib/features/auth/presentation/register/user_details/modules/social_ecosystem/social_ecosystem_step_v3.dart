@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:migozz_app/core/color.dart';
+import 'package:migozz_app/core/components/atomics/loading_overlay_with_cancel.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
@@ -77,11 +78,19 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
   void _setupSyncCallback() {
     final registerCubit = context.read<RegisterCubit>();
     final editCubit = context.read<EditCubit>();
+    final authCubit = context.read<AuthCubit>();
 
-    registerCubit.onSocialEcosystemUpdated = (newPlatforms) {
+    debugPrint('🔄 [V3] Setting up sync callback for edit mode');
+
+    registerCubit.onSocialEcosystemUpdated = (newPlatforms) async {
+      debugPrint('🔄 [V3] Sync callback triggered!');
+      debugPrint('🔄 [V3] New platforms: ${newPlatforms.length}');
+
       final currentList = List<Map<String, dynamic>>.from(
         editCubit.state.socialEcosystem ?? [],
       );
+
+      debugPrint('🔄 [V3] Current list before merge: ${currentList.length}');
 
       for (final newSocial in newPlatforms) {
         final platform = newSocial.keys.first;
@@ -90,13 +99,68 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
         );
 
         if (existingIndex != -1) {
+          debugPrint('🔄 [V3] Updating $platform');
           currentList[existingIndex] = newSocial;
         } else {
+          debugPrint('🔄 [V3] Adding $platform');
           currentList.add(newSocial);
         }
       }
 
+      debugPrint('🔄 [V3] Final list after merge: ${currentList.length}');
+      debugPrint('🔄 [V3] Updating EditCubit...');
+
       editCubit.updateSocialEcosystem(currentList);
+
+      debugPrint('✅ [V3] EditCubit updated successfully');
+
+      // Auto-save immediately after connecting social media
+      final userId = authCubit.state.firebaseUser?.uid;
+      if (userId != null) {
+        debugPrint('💾 [V3] Auto-saving changes...');
+
+        // Show loading overlay
+        if (context.mounted) {
+          LoadingOverlayWithCancel.show(
+            context,
+            message: 'Saving...',
+            onCancel: () {},
+          );
+        }
+
+        try {
+          await editCubit.saveAllPendingChanges(userId);
+          debugPrint('✅ [V3] Auto-save completed successfully!');
+
+          // Always hide the overlay
+          LoadingOverlayWithCancel.hide();
+
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Social media saved successfully!'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        } catch (e) {
+          debugPrint('❌ [V3] Auto-save failed: $e');
+
+          // Always hide the overlay
+          LoadingOverlayWithCancel.hide();
+
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error saving: $e'),
+                backgroundColor: Colors.red,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
+        }
+      }
     };
   }
 
@@ -137,18 +201,25 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
   }
 
   Future<void> _handleSocialTap(NetworkConfig config) async {
+    debugPrint('🔵 [_handleSocialTap] Tapped on: ${config.name}');
+
     if (widget.mode == MoreUserDetailsMode.register) {
       final cubit = context.read<RegisterCubit>();
       final current = List<Map<String, Map<String, dynamic>>>.from(
         cubit.state.socialEcosystem ?? [],
       );
 
+      debugPrint('🔵 [Register Mode] Current ecosystem: $current');
+
       final index = current.indexWhere((e) {
         final platformKey = e.keys.first.toLowerCase();
         return platformKey == config.name.toLowerCase();
       });
 
+      debugPrint('🔵 [Register Mode] Index found: $index');
+
       if (index == -1) {
+        debugPrint('🔵 [Register Mode] Network not connected, opening bottom sheet');
         await cubit.startSocialAuth(
           context,
           config.name,
@@ -156,10 +227,14 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
           inEditMode: false,
         );
       } else {
-        final remove = await _showRemoveDialog(config.displayName);
+        debugPrint('🔵 [Register Mode] Network already connected, showing edit dialog');
+        final socialData = current[index];
+        final remove = await _showEditSocialDialog(config, socialData);
         if (remove == true) {
+          debugPrint('🔵 [Register Mode] Removing network at index $index');
           current.removeAt(index);
           cubit.setSocialEcosystem(current);
+          debugPrint('🔵 [Register Mode] Network removed, new ecosystem: $current');
         }
       }
     } else {
@@ -170,12 +245,18 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
         editCubit.state.socialEcosystem ?? [],
       );
 
+      debugPrint('🔵 [Edit Mode] Current ecosystem: $current');
+
       final index = current.indexWhere((e) {
         final platformKey = e.keys.first.toLowerCase();
+        debugPrint('🔵 [Edit Mode] Checking platform: $platformKey vs ${config.name.toLowerCase()}');
         return platformKey == config.name.toLowerCase();
       });
 
+      debugPrint('🔵 [Edit Mode] Index found: $index');
+
       if (index == -1) {
+        debugPrint('🔵 [Edit Mode] Network not connected, opening bottom sheet');
         await registerCubit.startSocialAuth(
           context,
           config.name,
@@ -183,40 +264,428 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
           inEditMode: true,
         );
       } else {
-        final remove = await _showRemoveDialog(config.displayName);
+        debugPrint('🔵 [Edit Mode] Network already connected, showing edit dialog');
+        final socialData = current[index];
+        final remove = await _showEditSocialDialog(config, socialData);
         if (remove == true) {
+          debugPrint('🔵 [Edit Mode] Removing network at index $index');
           current.removeAt(index);
           editCubit.updateSocialEcosystem(current);
+          debugPrint('🔵 [Edit Mode] Network removed, new ecosystem: $current');
+
+          // Auto-save after removing
+          final authCubit = context.read<AuthCubit>();
+          final userId = authCubit.state.firebaseUser?.uid;
+
+          if (userId != null) {
+            debugPrint('💾 [Edit Mode] Auto-saving after removal...');
+
+            // Show loading overlay
+            if (mounted) {
+              LoadingOverlayWithCancel.show(
+                context,
+                message: 'Removing...',
+                onCancel: () {},
+              );
+            }
+
+            try {
+              await editCubit.saveAllPendingChanges(userId);
+              debugPrint('✅ [Edit Mode] Auto-save after removal completed!');
+
+              // Always hide the overlay
+              LoadingOverlayWithCancel.hide();
+
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('${config.displayName} removed successfully!'),
+                    backgroundColor: Colors.green,
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              }
+            } catch (e) {
+              debugPrint('❌ [Edit Mode] Auto-save after removal failed: $e');
+
+              // Always hide the overlay
+              LoadingOverlayWithCancel.hide();
+
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Error removing: $e'),
+                    backgroundColor: Colors.red,
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              }
+            }
+          }
         }
       }
     }
   }
 
-  Future<bool?> _showRemoveDialog(String platformName) {
+  Future<void> _handleSave() async {
+    if (widget.mode != MoreUserDetailsMode.edit) {
+      Navigator.of(context).pop();
+      return;
+    }
+
+    final authCubit = context.read<AuthCubit>();
+    final editCubit = context.read<EditCubit>();
+    final userId = authCubit.state.firebaseUser?.uid;
+
+    debugPrint('🔹🔹🔹 [_handleSave] Starting save process...');
+    debugPrint('🔹 userId: $userId');
+    debugPrint('🔹 hasChanges: ${editCubit.state.hasChanges}');
+    debugPrint('🔹 socialEcosystem: ${editCubit.state.socialEcosystem}');
+
+    if (userId == null) {
+      debugPrint('❌ [_handleSave] No userId, aborting');
+      Navigator.of(context).pop();
+      return;
+    }
+
+    // Show loading
+    if (mounted) {
+      LoadingOverlayWithCancel.show(
+        context,
+        message: 'Saving changes...',
+        onCancel: () {
+          debugPrint('❌ User cancelled save');
+        },
+      );
+    }
+
+    try {
+      debugPrint('🔹 [_handleSave] Calling saveAllPendingChanges...');
+
+      // Use saveAllPendingChanges instead of saveUserProfileField
+      await editCubit.saveAllPendingChanges(userId);
+
+      debugPrint('✅ [_handleSave] Save completed successfully!');
+      debugPrint('✅ EditCubit state after save: ${editCubit.state}');
+
+      if (!mounted) return;
+
+      LoadingOverlayWithCancel.hide();
+      Navigator.of(context).pop();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Social media saved successfully!'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } catch (e, stackTrace) {
+      debugPrint('❌ [_handleSave] Error saving social ecosystem: $e');
+      debugPrint('❌ StackTrace: $stackTrace');
+
+      if (!mounted) return;
+
+      LoadingOverlayWithCancel.hide();
+      Navigator.of(context).pop();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error saving: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  Future<bool?> _showEditSocialDialog(NetworkConfig config, Map<String, dynamic> socialData) {
+    final TextEditingController usernameController = TextEditingController();
+
+    // Extract username from the social data
+    final platformKey = config.name.toLowerCase();
+    final data = socialData[platformKey];
+    if (data is Map<String, dynamic>) {
+      usernameController.text = data['username']?.toString() ?? '';
+    }
+
     return showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1C1C1E),
-        title: const Text(
-          'Remove Platform',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: Text(
-          'Do you want to remove $platformName?',
-          style: const TextStyle(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+      barrierColor: Colors.black.withValues(alpha: 0.8),
+      builder: (dialogContext) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        child: SingleChildScrollView(
+          child: Container(
+            width: MediaQuery.of(context).size.width * 0.85,
+            decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF2D1B3D),
+                Color(0xFF1A0F2E),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(20),
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Remove', style: TextStyle(color: Colors.red)),
+          child: Stack(
+            children: [
+              // Close button
+              Positioned(
+                top: 16,
+                right: 16,
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.pop(dialogContext, false);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                ),
+              ),
+
+              // Main content
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(height: 20),
+
+                    // Platform icon
+                    Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      padding: const EdgeInsets.all(20),
+                      child: SvgPicture.asset(
+                        config.iconPath,
+                        width: 60,
+                        height: 60,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Title
+                    Text(
+                      'Add ${config.displayName}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Username input field
+                    TextField(
+                      controller: usernameController,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                      ),
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Colors.white.withValues(alpha: 0.1),
+                        hintText: 'Add ${config.displayName} username',
+                        hintStyle: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 14,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+                    // Save button with gradient
+                    GestureDetector(
+                      onTap: () async {
+                        final newUsername = usernameController.text.trim();
+                        if (newUsername.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Please enter a username'),
+                              backgroundColor: Colors.red,
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                          return;
+                        }
+
+                        // Close the dialog first
+                        Navigator.pop(dialogContext, null);
+
+                        // Update the username in the social data
+                        if (widget.mode == MoreUserDetailsMode.register) {
+                          final cubit = context.read<RegisterCubit>();
+                          final current = List<Map<String, Map<String, dynamic>>>.from(
+                            cubit.state.socialEcosystem ?? [],
+                          );
+
+                          final index = current.indexWhere((e) {
+                            final platformKey = e.keys.first.toLowerCase();
+                            return platformKey == config.name.toLowerCase();
+                          });
+
+                          if (index != -1) {
+                            final platformKey = current[index].keys.first;
+                            final platformData = Map<String, dynamic>.from(current[index][platformKey]!);
+                            platformData['username'] = newUsername;
+                            current[index] = {platformKey: platformData};
+                            cubit.setSocialEcosystem(current);
+
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('${config.displayName} username updated!'),
+                                  backgroundColor: Colors.green,
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
+                            }
+                          }
+                        } else {
+                          // Edit mode
+                          final editCubit = context.read<EditCubit>();
+                          final current = List<Map<String, dynamic>>.from(
+                            editCubit.state.socialEcosystem ?? [],
+                          );
+
+                          final index = current.indexWhere((e) {
+                            final platformKey = e.keys.first.toLowerCase();
+                            return platformKey == config.name.toLowerCase();
+                          });
+
+                          if (index != -1) {
+                            final platformKey = current[index].keys.first;
+                            final platformData = Map<String, dynamic>.from(current[index][platformKey]);
+                            platformData['username'] = newUsername;
+                            current[index] = {platformKey: platformData};
+                            editCubit.updateSocialEcosystem(current);
+
+                            // Auto-save after updating
+                            final authCubit = context.read<AuthCubit>();
+                            final userId = authCubit.state.firebaseUser?.uid;
+
+                            if (userId != null) {
+                              debugPrint('💾 [Edit Mode] Auto-saving after username update...');
+
+                              // Show loading overlay
+                              if (context.mounted) {
+                                LoadingOverlayWithCancel.show(
+                                  context,
+                                  message: 'Saving...',
+                                  onCancel: () {},
+                                );
+                              }
+
+                              try {
+                                await editCubit.saveAllPendingChanges(userId);
+                                debugPrint('✅ [Edit Mode] Auto-save after update completed!');
+
+                                // Always hide the overlay
+                                LoadingOverlayWithCancel.hide();
+
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('${config.displayName} username updated successfully!'),
+                                      backgroundColor: Colors.green,
+                                      duration: const Duration(seconds: 2),
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                debugPrint('❌ [Edit Mode] Auto-save after update failed: $e');
+
+                                // Always hide the overlay
+                                LoadingOverlayWithCancel.hide();
+
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Error saving: $e'),
+                                      backgroundColor: Colors.red,
+                                      duration: const Duration(seconds: 2),
+                                    ),
+                                  );
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          gradient: AppColors.primaryGradient,
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'Save',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Delete Link button
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pop(dialogContext, true);
+                      },
+                      child: const Text(
+                        'Delete Link',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
+        ),
       ),
-    );
+    ).whenComplete(() {
+      // Dispose controller after dialog is completely closed
+      Future.delayed(const Duration(milliseconds: 300), () {
+        usernameController.dispose();
+      });
+    });
   }
 
   List<SocialLink> _buildSocialLinks(
@@ -266,7 +735,20 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
         ? user.username
         : '@${user.username}';
     final avatarUrl = user.avatarUrl;
-    final socialLinks = _buildSocialLinks(user.socialEcosystem, user.username);
+
+    // Get social ecosystem from the appropriate cubit based on mode
+    final List<Map<String, dynamic>> socialEcosystem;
+    if (widget.mode == MoreUserDetailsMode.register) {
+      // RegisterCubit has List<Map<String, Map<String, dynamic>>>
+      final registerEcosystem = context.watch<RegisterCubit>().state.socialEcosystem ?? [];
+      // Convert to List<Map<String, dynamic>>
+      socialEcosystem = registerEcosystem.cast<Map<String, dynamic>>();
+    } else {
+      // EditCubit already has List<Map<String, dynamic>>
+      socialEcosystem = context.watch<EditCubit>().state.socialEcosystem ?? [];
+    }
+
+    final socialLinks = _buildSocialLinks(socialEcosystem, user.username);
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
@@ -292,7 +774,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: GestureDetector(
-                    onTap: () {
+                    onTap: () async {
+                      // Just navigate back - auto-save happens on add/remove
                       Navigator.pop(context);
                     },
                     child: Container(
@@ -306,7 +789,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                   ),
                 ),
               ),
-              // Co
+
               // Main content
               SafeArea(
                 child: Column(

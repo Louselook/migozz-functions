@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/components/atomics/loading_overlay.dart';
+import 'package:migozz_app/core/components/atomics/loading_overlay_with_cancel.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/location_dto.dart';
 import 'package:migozz_app/core/services/deeplink/deeplink_functions/social_network/social_normalizer.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/add_network.dart';
@@ -210,21 +211,42 @@ class RegisterCubit extends Cubit<RegisterState> {
             Navigator.of(context).pop();
             await _handleClickAuth(context, network, inEditMode);
           } else if (mode == NetworkAuthMode.manual && value != null) {
-            LoadingOverlay.show(context);
+            // Show custom loading overlay with cancel button
+            LoadingOverlayWithCancel.show(
+              context,
+              message: 'Connecting ${config.displayName}...',
+              onCancel: () {
+                debugPrint('❌ User cancelled connection');
+              },
+            );
 
             try {
               await _handleManualAuth(context, network, value, inEditMode);
-              Navigator.of(context).pop();
+
+              // Check if user cancelled
+              if (!LoadingOverlayWithCancel.isCancelled) {
+                LoadingOverlayWithCancel.hide();
+                Navigator.of(context).pop();
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('${config.displayName} connected successfully!'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
             } catch (e) {
               debugPrint('❌ Error en manual auth: $e');
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Error: ${e.toString()}'),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            } finally {
-              LoadingOverlay.hide(context);
+              LoadingOverlayWithCancel.hide();
+
+              if (!LoadingOverlayWithCancel.isCancelled) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Error: ${e.toString()}'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
             }
           }
         },

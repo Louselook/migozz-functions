@@ -46,6 +46,9 @@ class _MobileProfileContentV3EditState
     final authState = context.watch<AuthCubit>().state;
     final user = authState.userProfile ?? widget.user;
 
+    // Watch EditCubit to get real-time updates when social media is connected
+    final editState = context.watch<EditCubit>().state;
+
     final avatarUrl = user.avatarUrl;
     final bio = user.bio ?? '';
 
@@ -53,8 +56,17 @@ class _MobileProfileContentV3EditState
     final currentUserEmail = authState.userProfile?.email ?? '';
     final isOwnProfile = user.email == currentUserEmail;
 
-    // Recuperamos las redes sociales
-    final socialLinks = _buildSocialLinks(user.socialEcosystem, user.username);
+    // Recuperamos las redes sociales - usar EditCubit si tiene cambios, sino usar user
+    final socialEcosystem = editState.socialEcosystem ?? user.socialEcosystem;
+
+    debugPrint('🔍 [ProfileV3Edit] Building social links...');
+    debugPrint('🔍 editState.socialEcosystem: ${editState.socialEcosystem}');
+    debugPrint('🔍 user.socialEcosystem: ${user.socialEcosystem}');
+    debugPrint('🔍 Final socialEcosystem: $socialEcosystem');
+
+    final socialLinks = _buildSocialLinks(socialEcosystem, user.username);
+
+    debugPrint('🔍 [ProfileV3Edit] Built ${socialLinks.length} social links');
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -301,8 +313,24 @@ class _MobileProfileContentV3EditState
       ),
     );
 
-    // Refresh the UI after returning
+    // After returning, re-initialize EditCubit with fresh data from AuthCubit
     if (context.mounted) {
+      debugPrint('📱 [ProfileV3Edit] Returned from social ecosystem screen');
+
+      // Get the latest user data from AuthCubit
+      final updatedUser = authCubit.state.userProfile;
+      if (updatedUser != null) {
+        debugPrint('📱 [ProfileV3Edit] Re-initializing EditCubit with fresh data');
+        debugPrint('📱 [ProfileV3Edit] Fresh socialEcosystem: ${updatedUser.socialEcosystem}');
+
+        // Re-initialize EditCubit with the fresh data from Firestore
+        editCubit.initializeFromUser(
+          socialEcosystem: updatedUser.socialEcosystem,
+          category: updatedUser.category,
+          interests: updatedUser.interests,
+        );
+      }
+
       setState(() {});
     }
   }
@@ -311,14 +339,26 @@ class _MobileProfileContentV3EditState
     List<Map<String, dynamic>>? socialEcosystem,
     String username,
   ) {
-    if (socialEcosystem == null || socialEcosystem.isEmpty) return [];
+    debugPrint('🔗 [_buildSocialLinks] Input socialEcosystem: $socialEcosystem');
+    debugPrint('🔗 [_buildSocialLinks] Username: $username');
+
+    if (socialEcosystem == null || socialEcosystem.isEmpty) {
+      debugPrint('🔗 [_buildSocialLinks] socialEcosystem is null or empty, returning empty list');
+      return [];
+    }
+
     final links = <SocialLink>[];
     final cleanUsername = username.replaceFirst('@', '');
 
     for (final social in socialEcosystem) {
+      debugPrint('🔗 [_buildSocialLinks] Processing social: $social');
+
       for (final entry in social.entries) {
         final platform = entry.key.toLowerCase();
         final data = entry.value;
+
+        debugPrint('🔗 [_buildSocialLinks] Platform: $platform, Data: $data');
+
         int? followers;
         int? shares;
         String? customUrl;
@@ -330,6 +370,8 @@ class _MobileProfileContentV3EditState
         }
 
         final socialInfo = _getSocialInfo(platform, cleanUsername, customUrl);
+        debugPrint('🔗 [_buildSocialLinks] socialInfo for $platform: $socialInfo');
+
         if (socialInfo != null) {
           links.add(
             SocialLink(
@@ -339,10 +381,14 @@ class _MobileProfileContentV3EditState
               shares: shares,
             ),
           );
+          debugPrint('✅ [_buildSocialLinks] Added link for $platform');
+        } else {
+          debugPrint('❌ [_buildSocialLinks] No socialInfo found for $platform');
         }
       }
     }
 
+    debugPrint('🔗 [_buildSocialLinks] Returning ${links.length} links');
     return links;
   }
 

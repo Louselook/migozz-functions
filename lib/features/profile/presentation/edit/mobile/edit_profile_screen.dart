@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:migozz_app/core/color.dart';
+import 'package:migozz_app/core/components/atomics/loading_overlay_with_cancel.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
@@ -65,15 +66,33 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Future<void> _changeAvatar(String userId) async {
     final editCubit = context.read<EditCubit>();
-    setState(() => _uploading = true);
+
+    // Show loading overlay
+    if (mounted) {
+      LoadingOverlayWithCancel.show(
+        context,
+        message: 'Uploading profile picture...',
+        onCancel: () {
+          debugPrint('⚠️ User cancelled avatar upload');
+        },
+      );
+    }
+
     try {
       await editCubit.changeAvatar(userId);
+
+      // Hide loading overlay
+      LoadingOverlayWithCancel.hide();
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("edit.validations.updateProfilePic".tr())),
         );
       }
     } catch (e) {
+      // Hide loading overlay
+      LoadingOverlayWithCancel.hide();
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -83,8 +102,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ),
         );
       }
-    } finally {
-      if (mounted) setState(() => _uploading = false);
     }
   }
 

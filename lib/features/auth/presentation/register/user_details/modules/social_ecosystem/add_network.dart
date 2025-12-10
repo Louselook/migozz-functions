@@ -4,6 +4,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/features/auth/services/add_networks/network_config.dart';
+import 'package:migozz_app/core/components/atomics/loading_overlay_with_cancel.dart';
 
 enum NetworkAuthMode { click, manual }
 
@@ -79,7 +80,7 @@ class _AddNetworkBottomSheetState extends State<AddNetworkBottomSheet> {
             SvgPicture.asset(config.iconPath, width: 50, height: 50),
             const SizedBox(height: 20),
 
-            // Mostrar opciones según capacidades
+            // Show connection options
             if (_selectedMode == null) ...[
               // Si solo soporta OAuth, ejecutar directamente
               if (config.capability == NetworkAuthCapability.oauth)
