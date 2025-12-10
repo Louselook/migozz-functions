@@ -24,7 +24,8 @@ class RegisterChatController extends GenericChatController {
   void Function()? onShowVoiceNoteTutorial;
   void Function(Map<String, dynamic> botResponse)? onBotAction;
 
-  // Servicios específicos del registro
+  // Servicios específicos del registro+
+  Future<void> Function()? onRegistrationComplete;
   final AvatarTutorialService _avatarTutorialService = AvatarTutorialService();
   final VoiceNoteTutorialService _voiceNoteTutorialService =
       VoiceNoteTutorialService();
@@ -42,10 +43,14 @@ class RegisterChatController extends GenericChatController {
   RegisterChatController({required this.registerCubit, this.firebaseUid});
 
   /// Inicializar el chat de registro con IA
-  void initializeChat({void Function(Map<String, dynamic>)? onActionRequired}) {
+    void initializeChat({
+    void Function(Map<String, dynamic>)? onActionRequired,
+    Future<void> Function()? onRegistrationComplete,
+  }) {
     GeminiService.instance.ensureConfigured();
     onBotAction = onActionRequired;
-    reactivateChat(); // Usar método heredado
+    this.onRegistrationComplete = onRegistrationComplete;
+    reactivateChat();
     showNextBotMessage();
   }
 
@@ -311,58 +316,81 @@ class RegisterChatController extends GenericChatController {
 
       removeTypingIndicator(); // Usar método heredado
 
+      // Protege campos que podrían ser null
+      final botText = (botResponse["text"]?.toString() ?? '');
+      final botOptions = botResponse["options"] ?? [];
+      final botStep = botResponse["step"]?.toString() ?? '';
+      final botValid = botResponse["valid"];
+      final botAction = botResponse["action"];
+      final botIsError = botResponse["isError"] == true;
+      final botProfilePictures = botResponse["profilePictures"];
+
       final message = {
         "other": true,
         "type": MessageType.text,
-        "text": botResponse["text"],
-        "options": botResponse["options"] ?? [],
-        "step": botResponse["step"],
-        "valid": botResponse["valid"],
-        "action": botResponse["action"],
+        "text": botText,
+        "options": botOptions,
+        "step": botStep,
+        "valid": botValid,
+        "action": botAction,
         "name": "Migozz",
         "time": getTimeNow(),
       };
 
-      if (botResponse["isError"] == true) {
+      if (botIsError) {
         message["isError"] = true;
       }
-
-      if (botResponse["profilePictures"] != null) {
-        message["profilePictures"] = botResponse["profilePictures"];
+      if (botProfilePictures != null) {
+        message["profilePictures"] = botProfilePictures;
       }
 
-      final step = botResponse["step"]?.toString() ?? '';
       _showPhoneInput =
-          step.contains('phone') || botResponse["showPhoneCode"] == true;
+          botStep.contains('phone') || botResponse["showPhoneCode"] == true;
 
       addMessage(message);
 
-      // Mostrar tutorial de avatar si es necesario
-      if (GeminiService.instance.isOnAvatarStep && !kIsWeb) {
+      // COPY de callbacks / flags para evitar race conditions
+      final bool isOnAvatarStep = GeminiService.instance.isOnAvatarStep;
+      final bool isOnVoiceNoteStep = GeminiService.instance.isOnVoiceNoteStep;
+      final localOnShowAvatarTutorial = onShowAvatarTutorial;
+      final localOnShowVoiceNoteTutorial = onShowVoiceNoteTutorial;
+      final localOnBotAction = onBotAction;
+      final isWeb = kIsWeb;
+      final isSpanish = registerCubit.state.language == 'Español';
+
+      // Mostrar tutorial avatar
+      if (isOnAvatarStep && !isWeb) {
         debugPrint('📸 [RegisterChat] Detectado paso de avatar');
         Future.delayed(const Duration(milliseconds: 500), () {
-          if (onShowAvatarTutorial != null) {
-            onShowAvatarTutorial!();
+          if (!isActive) return;
+          if (localOnShowAvatarTutorial != null) {
+            try {
+              localOnShowAvatarTutorial();
+            } catch (e, st) {
+              debugPrint('Error en avatar tutorial callback: $e\n$st');
+            }
           }
         });
       }
 
-      // Mostrar tutorial de voice note si es necesario
-      if (GeminiService.instance.isOnVoiceNoteStep && !kIsWeb) {
+      // Mostrar tutorial voice note
+      if (isOnVoiceNoteStep && !isWeb) {
         debugPrint('🎤 [RegisterChat] Detectado paso de voice note');
         Future.delayed(const Duration(milliseconds: 500), () {
-          if (onShowVoiceNoteTutorial != null && isActive) {
-            onShowVoiceNoteTutorial!();
+          if (!isActive) return;
+          if (localOnShowVoiceNoteTutorial != null) {
+            try {
+              localOnShowVoiceNoteTutorial();
+            } catch (e, st) {
+              debugPrint('Error en voice tutorial callback: $e\n$st');
+            }
           }
         });
       }
 
       // Auto-skip voice step en WEB
-      final isVoiceStep =
-          GeminiService.instance.isOnVoiceNoteStep || step.contains('voice');
-      if (kIsWeb && isVoiceStep) {
-        final isSpanish = registerCubit.state.language == 'Español';
-
+      final isVoiceStep = isOnVoiceNoteStep || botStep.contains('voice');
+      if (isWeb && isVoiceStep) {
         addOtherMessage(
           text: isSpanish
               ? "Estás en la web — usa la app para grabar tu nota de presentación (1-10 segundos)."
@@ -380,7 +408,7 @@ class RegisterChatController extends GenericChatController {
 
       if (!isActive) return;
 
-      // Auto-avanzar si el bot lo indica
+      // Auto-avanzar si el bot lo indica (explainAndRepeat)
       if (botResponse["explainAndRepeat"] == true) {
         await Future.delayed(const Duration(milliseconds: 900));
         if (!isActive) return;
@@ -388,10 +416,9 @@ class RegisterChatController extends GenericChatController {
         return;
       }
 
+      // AutoAdvance (por ejemplo: "registro completado")
       if (botResponse["autoAdvance"] == true) {
-        debugPrint(
-          '🎉 Mensaje de éxito detectado, avanzando automáticamente...',
-        );
+        debugPrint('🎉 Mensaje de éxito detectado, avanzando automáticamente...');
         await Future.delayed(const Duration(milliseconds: 1500));
         if (!isActive) return;
         _lastUserMessage = 'continue';
@@ -399,15 +426,40 @@ class RegisterChatController extends GenericChatController {
         return;
       }
 
-      // Ejecutar acción del bot si existe callback
-      if (onBotAction != null) {
+      final stepStr = botResponse["step"]?.toString() ?? '';
+
+      // Si el bot indica que el flujo terminó, llamamos al callback de registro 
+      if (stepStr == 'finished' || botResponse["action"] == 'complete_registration') {
+        debugPrint('🎯 [RegisterChat] Bot indica FIN del flujo, disparando registro final...');
+        final localComplete = onRegistrationComplete;
+        if (localComplete != null) {
+          // ejecutarlo sin bloquear el hilo principal del showNextBotMessage
+          Future.microtask(() async {
+            try {
+              await localComplete();
+            } catch (e, st) {
+              debugPrint('❌ Error en onRegistrationComplete: $e\n$st');
+            }
+          });
+        } else {
+          debugPrint('⚠️ onRegistrationComplete no está definido; nadie completará el registro automáticamente.');
+        }
+      }
+
+      // Ejecutar acción del bot si existe callback (USANDO LA COPIA localOnBotAction)
+      if (localOnBotAction != null) {
         Future.delayed(const Duration(milliseconds: 850), () {
           if (!isActive) return;
-          onBotAction!(botResponse);
+          try {
+            localOnBotAction(botResponse);
+          } catch (e, st) {
+            debugPrint('Error al ejecutar onBotAction: $e\n$st');
+          }
         });
       }
-    } catch (e) {
+    } catch (e, st) {
       debugPrint('❌ Error en showNextBotMessage: $e');
+      debugPrintStack(label: 'stack', stackTrace: st);
       if (!isActive) return;
       removeTypingIndicator();
       final isSpanish = registerCubit.state.language == 'Español';
@@ -424,16 +476,19 @@ class RegisterChatController extends GenericChatController {
       });
     } finally {
       if (isActive) {
-        registerCubit.setAiResponse(false);
+        try {
+          registerCubit.setAiResponse(false);
+        } catch (_) {}
         notifyListeners();
       } else {
-        // Si ya no está activo, solo limpia estado si el cubit lo requiere
+        // Si ya no está activo, solo limpia estado si el cubit lo requiere (safe)
         try {
           registerCubit.setAiResponse(false);
         } catch (_) {}
       }
     }
   }
+
 
   /// Mostrar tutorial de avatar si es necesario
   void showAvatarTutorialIfNeeded(BuildContext context) {

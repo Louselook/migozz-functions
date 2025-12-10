@@ -7,6 +7,8 @@ import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 import 'package:migozz_app/features/auth/services/media_service.dart';
+import 'package:migozz_app/features/profile/components/utils/Loader.dart';
+import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
 import 'components/image_upload_area.dart';
 
 class AddAnotherNetworkScreen extends StatefulWidget {
@@ -26,11 +28,41 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
   bool _applyIconFromLink = false;
   bool _isSaving = false;
   String? _error;
+  DateTime? _loaderStart;
+
+  @override
+  void initState() {
+    super.initState();
+    _linkCtrl.addListener(_onLinkChanged);
+  }
 
   @override
   void dispose() {
+    _linkCtrl.removeListener(_onLinkChanged);
     _linkCtrl.dispose();
     super.dispose();
+  }
+
+  void _onLinkChanged() {
+    if (_applyIconFromLink) {
+      final text = _linkCtrl.text.trim();
+      if (text.isNotEmpty) {
+        final domain = _domainFromUrl(text);
+        final newIconUrl = _faviconFromDomain(domain);
+        if (_pickedImageUrl != newIconUrl) {
+          setState(() {
+            _pickedImageUrl = newIconUrl;
+            _pickedImage = null;
+          });
+        }
+      } else {
+        if (_pickedImageUrl != null) {
+          setState(() {
+            _pickedImageUrl = null;
+          });
+        }
+      }
+    }
   }
 
   Future<void> _openPickerSheet() async {
@@ -102,6 +134,28 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
     }
   }
 
+  Future<void> _showLoader({String message = 'Cargando...'}) async {
+    _loaderStart = DateTime.now();
+    showProfileLoader(context, message: message, barrierDismissible: false);
+  }
+
+  Future<void> _ensureMinLoaderThenPop([
+    Duration min = const Duration(seconds: 2),
+  ]) async {
+    final start = _loaderStart;
+    if (start != null) {
+      final elapsed = DateTime.now().difference(start);
+      final remaining = min - elapsed;
+      if (remaining > Duration.zero) {
+        await Future.delayed(remaining);
+      }
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+      _loaderStart = null;
+    }
+  }
+
   String? _validateLink(String input) {
     final trimmed = input.trim();
     if (trimmed.isEmpty) return 'El link es obligatorio';
@@ -126,13 +180,18 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
 
   Future<void> _save() async {
     FocusScope.of(context).unfocus();
+    setState(() {
+      _isSaving = true;
+      _error = null;
+    });
+    await _showLoader(message: 'Guardando...');
 
     final linkError = _validateLink(_linkCtrl.text);
     if (linkError != null) {
-      setState(() => _error = linkError);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(linkError), backgroundColor: Colors.red),
-      );
+      _error = linkError;
+      await _ensureMinLoaderThenPop();
+      setState(() => _isSaving = false);
+      await AlertGeneral.show(context, 4, message: linkError);
       return;
     }
 
@@ -140,21 +199,13 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
     final editCubit = context.read<EditCubit>();
     final userId = authCubit.state.firebaseUser?.uid;
     if (userId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Error: User not logged in'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      await _ensureMinLoaderThenPop();
+      setState(() => _isSaving = false);
+      await AlertGeneral.show(context, 4, message: 'Error: User not logged in');
       return;
     }
 
     try {
-      setState(() {
-        _isSaving = true;
-        _error = null;
-      });
-
       String? iconUrl;
       final link = _linkCtrl.text.trim();
       final domain = _domainFromUrl(link);
@@ -177,12 +228,15 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
 
       final data = <String, dynamic>{
         'type': 'custom',
+        'domain': domain,
         'url': link,
         if (iconUrl != null) 'iconUrl': iconUrl,
-        'createdAt': FieldValue.serverTimestamp(),
+        'applyIconFromLink': _applyIconFromLink,
+        'createdAt':
+            Timestamp.now(), // Corregido: serverTimestamp no soportado en arrays
       };
 
-      current.add({domain: data});
+      current.add(data);
 
       await editCubit.saveUserProfileField(
         userId: userId,
@@ -190,23 +244,21 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
       );
 
       if (!mounted) return;
+      await _ensureMinLoaderThenPop();
       setState(() => _isSaving = false);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✅ Red personalizada guardada'),
-          backgroundColor: Colors.green,
-        ),
+      await AlertGeneral.show(
+        context,
+        1,
+        message: 'Red personalizada guardada',
       );
-      Navigator.pop(context, 'done');
+      if (mounted) {
+        Navigator.pop(context, 'done');
+      }
     } catch (e) {
+      await _ensureMinLoaderThenPop();
       setState(() => _isSaving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('❌ Error guardando: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      await AlertGeneral.show(context, 4, message: 'Error guardando: $e');
     }
   }
 
@@ -235,7 +287,7 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
     );
 
     final updated = current
-        .where((entry) => !entry.containsKey(domain))
+        .where((entry) => entry['domain'] != domain)
         .toList();
 
     await editCubit.saveUserProfileField(
@@ -348,7 +400,7 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
                           value: _applyIconFromLink,
                           inactiveTrackColor: const Color(0xFF5E5564),
                           activeTrackColor: const Color(0xFF5E5564),
-                          activeColor: Colors.white,
+                          activeThumbColor: Colors.white,
                           onChanged: (v) {
                             setState(() {
                               _applyIconFromLink = v;

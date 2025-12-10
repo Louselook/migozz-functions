@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+// import 'package:migozz_app/core/components/atomics/loading_overlay.dart';
 import 'package:migozz_app/core/components/atomics/loading_overlay_with_cancel.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/location_dto.dart';
 import 'package:migozz_app/core/services/deeplink/deeplink_functions/social_network/social_normalizer.dart';
@@ -453,17 +454,17 @@ class RegisterCubit extends Cubit<RegisterState> {
           state.username != null &&
           state.gender != null &&
           hasLocationData &&
-          state.phone != null &&
-          state.category != null &&
-          state.interests != null;
+          state.phone != null; // &&
+          // state.category != null &&
+          // state.interests != null;
 
       final completeForGoogle =
           state.language != null &&
           state.gender != null &&
           hasLocationData &&
-          state.phone != null &&
-          state.category != null &&
-          state.interests != null;
+          state.phone != null ; // &&
+          // state.category != null &&
+          // state.interests != null;
 
       final complete = forGoogle ? completeForGoogle : completeFull;
 

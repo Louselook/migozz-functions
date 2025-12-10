@@ -87,7 +87,7 @@ class _LoadingOverlayWidgetState extends State<_LoadingOverlayWidget>
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.black.withOpacity(0.7),
+      color: Colors.black.withValues(alpha: 0.7),
       child: Center(
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 40),
@@ -194,7 +194,7 @@ class _CircularProgressPainter extends CustomPainter {
       final angle = i * segmentAngle + (progress * 2 * 3.14159);
       final opacity = (i / segmentCount);
 
-      segmentPaint.color = Colors.white.withOpacity(0.3 + (opacity * 0.7));
+      segmentPaint.color = Colors.white.withValues(alpha: 0.3 + (opacity * 0.7));
 
       final startAngle = angle;
       final sweepAngle = segmentAngle * 0.6;

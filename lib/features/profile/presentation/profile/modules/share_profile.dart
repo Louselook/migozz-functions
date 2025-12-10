@@ -195,7 +195,7 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
     if (gradient == null) {
       await prefs.remove('selected_gradient');
     } else {
-      final gradientStrings = gradient.map((c) => c.value.toString()).toList();
+      final gradientStrings = gradient.map((c) => c.r.toString()).toList();
       await prefs.setStringList('selected_gradient', gradientStrings);
     }
   }

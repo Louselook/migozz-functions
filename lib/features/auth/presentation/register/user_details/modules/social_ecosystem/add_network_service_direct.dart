@@ -183,7 +183,7 @@ class AddNetworkServiceDirect {
 
     // Remover caracteres no numéricos excepto el + inicial
     if (cleaned.startsWith('+')) {
-      cleaned = '+' + cleaned.substring(1).replaceAll(RegExp(r'[^\d]'), '');
+      cleaned = '+${cleaned.substring(1).replaceAll(RegExp(r'[^\d]'), '')}';
     } else {
       cleaned = cleaned.replaceAll(RegExp(r'[^\d]'), '');
     }

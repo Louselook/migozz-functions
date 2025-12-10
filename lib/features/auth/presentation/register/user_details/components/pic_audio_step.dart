@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
-// import 'package:migozz_app/features/auth/presentation/register/user_details/components/user_details_button.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/components/user_details_button.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/modules/interests/registration_handler.dart';
 
-// va en eel chat
 class PicAudioStep extends StatelessWidget {
-  const PicAudioStep({super.key});
+  final PageController controller;
 
-  // final PageController controller;
-  // const PicAudioStep({super.key, required this.controller});
+  const PicAudioStep({
+    super.key,
+    required this.controller,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +26,7 @@ class PicAudioStep extends StatelessWidget {
             const PrimaryText("Add Profile Pic"),
             const SizedBox(height: 20),
 
-            // 📸 Contenedor para foto
+            // Foto
             Container(
               width: double.infinity,
               height: 150,
@@ -37,6 +42,7 @@ class PicAudioStep extends StatelessWidget {
                 ),
               ),
             ),
+
             const SizedBox(height: 20),
             const SecondaryText(
               "Record Your Voicenote",
@@ -45,30 +51,25 @@ class PicAudioStep extends StatelessWidget {
             ),
             const SizedBox(height: 18),
 
-            // 🎤 Botón micrófono
-            Column(
-              children: [
-                Container(
-                  width: 200,
-                  height: 200,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.primaryPink,
-                  ),
-                  child: IconButton(
-                    onPressed: () {
-                      debugPrint("Mic pressed");
-                    },
-                    icon: const Icon(Icons.mic, color: Colors.white, size: 130),
-                  ),
-                ),
-                const SizedBox(height: 8),
-              ],
+            // Mic button
+            Container(
+              width: 200,
+              height: 200,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.primaryPink,
+              ),
+              child: IconButton(
+                onPressed: () {
+                  debugPrint("Mic pressed");
+                },
+                icon: const Icon(Icons.mic, color: Colors.white, size: 130),
+              ),
             ),
 
             const SizedBox(height: 30),
 
-            // ▶️ Botón Play
+            // Play audio
             Container(
               constraints: const BoxConstraints(
                 maxWidth: 250,
@@ -79,7 +80,7 @@ class PicAudioStep extends StatelessWidget {
                 borderRadius: BorderRadius.circular(40),
                 color: const Color.fromARGB(96, 50, 50, 50),
                 border: Border.all(
-                  color: const Color.fromARGB(255, 63, 63, 63),
+                  color: Color.fromARGB(255, 63, 63, 63),
                   width: 0.7,
                 ),
               ),
@@ -96,12 +97,6 @@ class PicAudioStep extends StatelessWidget {
                   Container(
                     width: MediaQuery.of(context).size.width * 0.25,
                     height: MediaQuery.of(context).size.width * 0.25,
-                    constraints: const BoxConstraints(
-                      minWidth: 100,
-                      maxWidth: 300,
-                      minHeight: 100,
-                      maxHeight: 300,
-                    ),
                     decoration: const BoxDecoration(
                       color: AppColors.primaryPink,
                       shape: BoxShape.circle,
@@ -123,12 +118,23 @@ class PicAudioStep extends StatelessWidget {
 
             const Spacer(),
 
-            // Botones
-            // userDetailsButton(
-            // controller: controller,
-            //   context: context,
-            //   action: UserDetailsAction.next,
-            // ),
+            // 🔥 ESTE ES EL BOTÓN FINAL DEL REGISTRO 🔥
+            userDetailsButton(
+              controller: controller,
+              context: context,
+              action: UserDetailsAction.finalRegister,
+              onFinalAction: () async {
+                final registerCubit = context.read<RegisterCubit>();
+                final authCubit = context.read<AuthCubit>();
+
+                await RegistrationHandler.completeRegistration(
+                  context: context,
+                  registerCubit: registerCubit,
+                  authCubit: authCubit,
+                  // selectedInterests: {}, // Ya no existen intereses
+                );
+              },
+            ),
           ],
         ),
       ),

@@ -1140,7 +1140,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                     // DisplayName (@username)
                     const SizedBox(height: 3),
                     Text(
-                      "${username}",
+                      username,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.white,
