@@ -10,10 +10,13 @@ class RegistrationHandler {
     required BuildContext context,
     required RegisterCubit registerCubit,
     required AuthCubit authCubit,
-    required Map<String, List<String>> selectedInterests,
   }) async {
-    //  Guardar intereses en el cubit
-    registerCubit.setInterests(selectedInterests);
+    debugPrint('▶️ [RegistrationHandler] Iniciando completeRegistration...');
+    debugPrint('   - auth isAuthenticated=${authCubit.state.isAuthenticated} '
+        'firebaseUser=${authCubit.state.firebaseUser?.uid}');
+    debugPrint('   - register snapshot: isComplete=${registerCubit.state.isComplete} '
+        'email=${registerCubit.state.email} fullName=${registerCubit.state.fullName} '
+        'voiceNoteUrl=${registerCubit.state.voiceNoteUrl} avatarUrl=${registerCubit.state.avatarUrl}');
 
     // Verificar si está autenticado con Google
     final firebaseUser = authCubit.state.firebaseUser;
@@ -26,12 +29,22 @@ class RegistrationHandler {
     // Verificar completitud pasando el UID si está disponible
     await registerCubit.checkCompletion(
       forGoogle: isAuthWithGoogle,
-      uid: isAuthWithGoogle ? firebaseUser.uid : null, //  Pasar UID
+      uid: isAuthWithGoogle ? firebaseUser.uid : null,
     );
 
-    // Si no está completo, mostrar error
+    // Si no está completo, mostrar error y listar campos faltantes
     if (!registerCubit.state.isComplete) {
-      debugPrint('⚠ [RegistrationHandler] Registro incompleto');
+      debugPrint('⚠️ [RegistrationHandler] Registro incompleto tras checkCompletion. Estado completo? ${registerCubit.state.isComplete}');
+      final missing = <String>[];
+      final s = registerCubit.state;
+      if (s.email == null || (s.email as String).trim().isEmpty) missing.add('email');
+      if (s.fullName == null || (s.fullName as String).trim().isEmpty) missing.add('fullName');
+      if (s.username == null || (s.username as String).trim().isEmpty) missing.add('username');
+      if (s.voiceNoteUrl == null || (s.voiceNoteUrl as String).trim().isEmpty) missing.add('voiceNoteUrl');
+      if (s.avatarUrl == null || (s.avatarUrl as String).trim().isEmpty) missing.add('avatarUrl');
+      if (s.location == null) missing.add('location');
+      debugPrint('   -> Campos faltantes: ${missing.join(", ")}');
+
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -49,6 +62,7 @@ class RegistrationHandler {
       LoadingOverlay.show(context);
 
       if (isAuthWithGoogle) {
+        // firebaseUser ya no es null porque isAuthWithGoogle es true
         await _completeGoogleRegistration(
           context: context,
           registerCubit: registerCubit,
@@ -62,7 +76,7 @@ class RegistrationHandler {
           authCubit: authCubit,
         );
       }
-    } catch (e) {
+    } catch (e, st) {
       if (context.mounted) {
         LoadingOverlay.hide(context);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -72,7 +86,8 @@ class RegistrationHandler {
           ),
         );
       }
-      debugPrint('❌ [RegistrationHandler] Error: $e');
+      debugPrint('❌ [RegistrationHandler] Error: $e\n$st');
+      rethrow;
     }
   }
 
@@ -85,7 +100,6 @@ class RegistrationHandler {
   }) async {
     debugPrint('🔵 [RegistrationHandler] Flujo Google iniciado');
 
-    // Construir datos para actualizar en Firestore
     final Map<String, dynamic> updateData = {};
 
     if (registerCubit.state.language != null) {
@@ -101,7 +115,6 @@ class RegistrationHandler {
       updateData['gender'] = registerCubit.state.gender;
     }
 
-    // Location
     final loc = registerCubit.state.location;
     if (loc != null) {
       updateData['location'] = {
@@ -113,13 +126,11 @@ class RegistrationHandler {
       };
     }
 
-    // Social ecosystem
     if (registerCubit.state.socialEcosystem != null &&
         registerCubit.state.socialEcosystem!.isNotEmpty) {
       updateData['socialEcosystem'] = registerCubit.state.socialEcosystem;
     }
 
-    // URLs de media (ya vienen con UID correcto desde checkCompletion)
     if (registerCubit.state.avatarUrl != null) {
       updateData['avatarUrl'] = registerCubit.state.avatarUrl;
     }
@@ -127,7 +138,6 @@ class RegistrationHandler {
       updateData['voiceNoteUrl'] = registerCubit.state.voiceNoteUrl;
     }
 
-    // Otros datos
     if (registerCubit.state.phone != null) {
       updateData['phone'] = registerCubit.state.phone;
     }
@@ -140,12 +150,10 @@ class RegistrationHandler {
       updateData['interests'] = registerCubit.state.interests;
     }
 
-    // Marcar como completo
     updateData['complete'] = true;
     updateData['updatedAt'] = FieldValue.serverTimestamp();
 
     try {
-      // Guardar en Firestore
       await FirebaseFirestore.instance
           .collection('users')
           .doc(uid)
@@ -153,7 +161,6 @@ class RegistrationHandler {
 
       debugPrint('✅ [RegistrationHandler] Firestore actualizado');
 
-      // Ocultar loading ANTES de cambiar estados
       if (context.mounted) {
         LoadingOverlay.hide(context);
       }
@@ -163,11 +170,11 @@ class RegistrationHandler {
       registerCubit.reset();
 
       debugPrint('🎉 [RegistrationHandler] Flujo Google completado');
-    } catch (e) {
+    } catch (e, st) {
       if (context.mounted) {
         LoadingOverlay.hide(context);
       }
-      debugPrint('❌ [RegistrationHandler] Error en flujo Google: $e');
+      debugPrint('❌ [RegistrationHandler] Error en flujo Google: $e\n$st');
       rethrow;
     }
   }
@@ -180,11 +187,33 @@ class RegistrationHandler {
   }) async {
     debugPrint('🟢 [RegistrationHandler] Flujo Email/OTP iniciado');
 
+    final email = registerCubit.state.email;
+    final otp = registerCubit.state.currentOTP;
+
+    if (email == null || email.trim().isEmpty) {
+      if (context.mounted) {
+        LoadingOverlay.hide(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Email faltante.')),
+        );
+      }
+      throw StateError('Email faltante en registerCubit.state.email');
+    }
+    if (otp == null || otp.trim().isEmpty) {
+      if (context.mounted) {
+        LoadingOverlay.hide(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('OTP faltante.')),
+        );
+      }
+      throw StateError('OTP faltante en registerCubit.state.currentOTP');
+    }
+
     try {
       // Completar registro en backend
       await authCubit.completeRegistration(
-        email: registerCubit.state.email!,
-        otp: registerCubit.state.currentOTP!,
+        email: email,
+        otp: otp,
         userData: registerCubit.state.buildUserDTO(),
       );
 
@@ -203,11 +232,11 @@ class RegistrationHandler {
       }
 
       debugPrint('🎉 [RegistrationHandler] Flujo Email/OTP completado');
-    } catch (e) {
+    } catch (e, st) {
       if (context.mounted) {
         LoadingOverlay.hide(context);
       }
-      debugPrint('❌ [RegistrationHandler] Error en flujo Email/OTP: $e');
+      debugPrint('❌ [RegistrationHandler] Error en flujo Email/OTP: $e\n$st');
       rethrow;
     }
   }

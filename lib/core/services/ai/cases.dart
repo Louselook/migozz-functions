@@ -98,44 +98,44 @@ final List gender = [
   },
 
   // Válida
-  {
-    "text": "Perfecto, ahora agreguemos tus redes sociales.",
-    "step": "regProgress.socialEcosystem",
-    "keepTalk": false,
-    "valid": true,
-    "userResponse": "Hombre",
-  },
+  // {
+  //   "text": "Perfecto, ahora agreguemos tus redes sociales.",
+  //   "step": "regProgress.socialEcosystem",
+  //   "keepTalk": false,
+  //   "valid": true,
+  //   "userResponse": "Hombre",
+  // },
 ];
 
-final List socialEcosystem = [
-  // Primera
-  {
-    "text": "¡Agreguemos tus redes sociales!",
-    "step": "regProgress.socialEcosystem",
-    "keepTalk": false,
-  },
+// final List socialEcosystem = [
+//   // Primera
+//   {
+//     "text": "¡Agreguemos tus redes sociales!",
+//     "step": "regProgress.socialEcosystem",
+//     "keepTalk": false,
+//   },
 
-  // Rechazo
-  {
-    "text": "No se pudo conectar la red social. Inténtalo nuevamente.",
-    "step": "regProgress.socialEcosystem",
-    "keepTalk": false,
-    "valid": false,
-  },
+//   // Rechazo
+//   {
+//     "text": "No se pudo conectar la red social. Inténtalo nuevamente.",
+//     "step": "regProgress.socialEcosystem",
+//     "keepTalk": false,
+//     "valid": false,
+//   },
 
-  // Válida
-  {
-    "text": "Perfecto, redes conectadas. Confirmemos tu ubicación.",
-    "step": "regProgress.location",
-    "keepTalk": false,
-    "valid": true,
-  },
-];
+//   // Válida
+//   {
+//     "text": "Perfecto, redes conectadas. Confirmemos tu ubicación.",
+//     "step": "regProgress.location",
+//     "keepTalk": false,
+//     "valid": true,
+//   },
+// ];
 
 final List location = [
   // Primera - Pregunta de autorización
   {
-    "text": "Detectamos que vives en {location}. ¿Deseas usar tu ubicación actual?",
+    "text": "Muy bien, Detectamos que vives en {location}. ¿Deseas usar tu ubicación actual?",
     "options": ["Sí", "No", "Ubicación incorrecta"],
     "step": "regProgress.location",
     "keepTalk": false,
@@ -289,55 +289,55 @@ final List voiceNoteUrl = [
   },
 ];
 
-final List category = [
-  // Primera
-  {
-    "text": "Elige tus categorías favoritas para personalizar tu experiencia.",
-    "step": "regProgress.category",
-    "keepTalk": false,
-  },
+// final List category = [
+//   // Primera
+//   {
+//     "text": "Elige tus categorías favoritas para personalizar tu experiencia.",
+//     "step": "regProgress.category",
+//     "keepTalk": false,
+//   },
 
-  // Rechazo
-  {
-    "text": "Debes seleccionar al menos una categoría para continuar.",
-    "step": "regProgress.category",
-    "keepTalk": false,
-    "valid": false,
-  },
+//   // Rechazo
+//   {
+//     "text": "Debes seleccionar al menos una categoría para continuar.",
+//     "step": "regProgress.category",
+//     "keepTalk": false,
+//     "valid": false,
+//   },
 
-  // Válida
-  {
-    "text": "Perfecto, ahora selecciona tus intereses específicos.",
-    "step": "regProgress.interests",
-    "keepTalk": false,
-    "valid": true,
-  },
-];
+//   // Válida
+//   {
+//     "text": "Perfecto, ahora selecciona tus intereses específicos.",
+//     "step": "regProgress.interests",
+//     "keepTalk": false,
+//     "valid": true,
+//   },
+// ];
 
-final List interests = [
-  // Primera
-  {
-    "text": "Selecciona tus intereses para afinar tu experiencia.",
-    "step": "regProgress.interests",
-    "keepTalk": false,
-  },
+// final List interests = [
+//   // Primera
+//   {
+//     "text": "Selecciona tus intereses para afinar tu experiencia.",
+//     "step": "regProgress.interests",
+//     "keepTalk": false,
+//   },
 
-  // Rechazo
-  {
-    "text": "Debes elegir al menos un interés para continuar.",
-    "step": "regProgress.interests",
-    "keepTalk": false,
-    "valid": false,
-  },
+//   // Rechazo
+//   {
+//     "text": "Debes elegir al menos un interés para continuar.",
+//     "step": "regProgress.interests",
+//     "keepTalk": false,
+//     "valid": false,
+//   },
 
-  // Válida
-  {
-    "text": "Todo listo. ¡Tu registro está completo! 🎉",
-    "step": "regProgress.done",
-    "keepTalk": false,
-    "valid": true,
-  },
-];
+//   // Válida
+//   {
+//     "text": "Todo listo. ¡Tu registro está completo! 🎉",
+//     "step": "regProgress.done",
+//     "keepTalk": false,
+//     "valid": true,
+//   },
+// ];
 
 final List done = [
   // Primera

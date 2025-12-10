@@ -6,7 +6,7 @@ class UserDTO {
   final String lang;
   final String displayName;
   final String username;
-  final String gender;
+  final String? gender;
   String? bio;
   final DateTime? birthDate;
 

@@ -302,7 +302,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 usernameCtrl.text = user.username;
                 emailCtrl.text = user.email;
                 phoneCtrl.text = user.phone ?? '';
-                genderCtrl.text = user.gender;
+                genderCtrl.text = user.gender ?? '';
 
                 if (user.birthDate != null) {
                   _dob = user.birthDate;

@@ -86,6 +86,11 @@ class _MainNavigationState extends State<MainNavigation> {
       debugPrint('⚠️ [MainNavigation] Ya estás en el index $index, ignorando');
       return;
     }
+    if (index == 1) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        searchKey.currentState?.checkAndMaybeOpenEditInterests();
+      });
+    }
 
     debugPrint('🔄 [MainNavigation] Navegando de $_currentIndex → $index');
     setState(() {
@@ -124,16 +129,19 @@ class _MainNavigationState extends State<MainNavigation> {
     debugPrint('🔄 [MainNavigation] Perfil actualizado');
     context.read<AuthCubit>().refreshUserProfile();
   }
+  final GlobalKey<SearchScreenState> searchKey = GlobalKey<SearchScreenState>();
 
   @override
   Widget build(BuildContext context) {
     final isViewingOtherProfile = widget.targetUser != null;
 
     final screens = [
-      isViewingOtherProfile
-          ? ProfileSearchScreen(user: widget.targetUser!, tutorialKeys: _tutorialKeys)
-          : ProfileEntry(tutorialKeys: _tutorialKeys), // <- PASAR
-      SearchScreen(tutorialKeys: _tutorialKeys),         // <- PASAR si aplica
+  isViewingOtherProfile
+      ? ProfileSearchScreen(user: widget.targetUser!, tutorialKeys: _tutorialKeys)
+      : ProfileEntry(tutorialKeys: _tutorialKeys),
+
+      SearchScreen(key: searchKey, tutorialKeys: _tutorialKeys),
+
       ProfileStatsScreen(tutorialKeys: _tutorialKeys),
       EditProfileScreen(tutorialKeys: _tutorialKeys),
     ];  

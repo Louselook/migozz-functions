@@ -51,9 +51,9 @@ Future<Map<String, dynamic>?> processBotResponse(
       }
       break;
 
-    case RegisterStatusProgress.socialEcosystem:
-      debugPrint('📱 Paso de redes sociales - se maneja en navigation handler');
-      break;
+    // case RegisterStatusProgress.socialEcosystem:
+    //   debugPrint('📱 Paso de redes sociales - se maneja en navigation handler');
+    //   break;
 
     case RegisterStatusProgress.location:
       debugPrint('📍 [processBotResponse] Procesando ubicación');
@@ -235,9 +235,9 @@ RegisterStatusProgress _parseStep(String raw) {
   }
   if (raw.contains('username')) return RegisterStatusProgress.username;
   if (raw.contains('gender')) return RegisterStatusProgress.gender;
-  if (raw.contains('social') || raw.contains('ecosystem')) {
-    return RegisterStatusProgress.socialEcosystem;
-  }
+  // if (raw.contains('social') || raw.contains('ecosystem')) {
+  //   return RegisterStatusProgress.socialEcosystem;
+  // }
   if (raw.contains('location')) return RegisterStatusProgress.location;
   if (raw.contains('sendotp')) return RegisterStatusProgress.sendOTP;
 

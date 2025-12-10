@@ -116,13 +116,13 @@ class RegisterState extends Equatable {
   // Construye UserDTO
   UserDTO buildUserDTO() {
     return UserDTO(
-      email: email!,
+      email: email ?? "",
       lang: language ?? "en-US",
-      displayName: fullName!,
-      username: username!,
-      gender: gender!,
-      location:
-          location ??
+      displayName: fullName ?? "",
+      username: username ?? "",
+      gender: gender ?? "unspecified",
+
+      location: location ??
           LocationDTO(
             country: "Colombia",
             state: "Antioquia",
@@ -130,15 +130,17 @@ class RegisterState extends Equatable {
             lat: 6.2442,
             lng: -75.5812,
           ),
-      socialEcosystem: socialEcosystem,
-      phone: phone!,
-      category: category!,
-      interests: interests!,
-      avatarUrl: avatarUrl, // opcional, ya en el state si se subió
-      voiceNoteUrl: voiceNoteUrl, // opcional
+
+      socialEcosystem: socialEcosystem ?? [],
+
+      phone: phone, // <-- ya NO revienta
+      category: category ?? [],
+      interests: interests ?? {},
+
+      avatarUrl: avatarUrl,
+      voiceNoteUrl: voiceNoteUrl,
     );
   }
-
   factory RegisterState.initial() {
     return const RegisterState(
       loadigAiResponse: false,

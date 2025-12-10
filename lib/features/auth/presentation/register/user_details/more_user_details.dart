@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
-import 'package:migozz_app/features/auth/presentation/register/user_details/modules/category_step.dart';
+// import 'package:migozz_app/features/auth/presentation/register/user_details/modules/category_step.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/interests/interests_step.dart';
 // import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/save_changes_social.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/social_ecosystem_step.dart';
@@ -89,7 +89,7 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
   Widget build(BuildContext context) {
     final steps = [
       SocialEcosystemStep(controller: pageController, mode: widget.mode),
-      CategoryStep(controller: pageController, mode: widget.mode),
+      // CategoryStep(controller: pageController, mode: widget.mode),
       InterestsStep(controller: pageController, mode: widget.mode),
     ];
 

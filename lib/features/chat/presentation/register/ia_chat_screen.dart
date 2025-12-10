@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/color.dart';
+import 'package:migozz_app/core/components/atomics/loading_overlay.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/core/services/ai/gemini_service.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/modules/interests/registration_handler.dart';
 import 'package:migozz_app/features/chat/data/domain/models/chat_model.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
@@ -26,6 +29,7 @@ class IaChatScreen extends StatefulWidget {
 class _IaChatScreenState extends State<IaChatScreen> {
   final TextEditingController _controller = TextEditingController();
   late final RegisterChatController _chatController;
+  bool _isCompletingRegistration = false; 
 
   final GlobalKey<ChatInputWidgetState> _chatInputKey = GlobalKey();
 
@@ -33,6 +37,8 @@ class _IaChatScreenState extends State<IaChatScreen> {
   void initState() {
     super.initState();
 
+    // final registerCubit = context.read<RegisterCubit>();
+    // final authCubit = context.read<AuthCubit>();
     final authState = context.read<AuthCubit>().state;
     final firebaseUid = authState.firebaseUser?.uid;
 
@@ -53,6 +59,75 @@ class _IaChatScreenState extends State<IaChatScreen> {
     if (_chatController.messages.isEmpty) {
       _chatController.initializeChat(onActionRequired: _handleNavigation);
     }
+      _chatController.onRegistrationComplete = () async {
+        if (_isCompletingRegistration) return;
+        _isCompletingRegistration = true;
+
+        final registerCubit = context.read<RegisterCubit>();
+        final authCubit = context.read<AuthCubit>();
+
+        try {
+          // Aseguramos que el cubit considera el registro completo (re-run checkCompletion)
+          await registerCubit.checkCompletion(
+            forGoogle: authCubit.state.isAuthenticated && authCubit.state.firebaseUser != null,
+            uid: authCubit.state.isAuthenticated && authCubit.state.firebaseUser != null
+                ? authCubit.state.firebaseUser!.uid
+                : null,
+          );
+
+          // Si sigue sin estar completo, avisar y no intentar completar
+          if (!registerCubit.state.isComplete) {
+            debugPrint('⚠️ onRegistrationComplete: registerCubit not complete, aborting.');
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Faltan datos para completar el registro'), backgroundColor: Colors.orange),
+            );
+            return;
+          }
+
+          // Validación extra para Email/OTP: chequear email y OTP presentes
+          final email = registerCubit.state.email;
+          final otp = registerCubit.state.currentOTP;
+          if (email == null || email.trim().isEmpty || otp == null || otp.trim().isEmpty) {
+            debugPrint('⚠️ onRegistrationComplete: email/otp faltante: email=$email otp=$otp');
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Falta email o código OTP. Revisa el chat.'), backgroundColor: Colors.orange),
+            );
+            return;
+          }
+
+          if (!mounted) return; 
+
+          // Mostrar overlay
+          try { LoadingOverlay.show(context); } catch (_) {}
+
+          // Llamar handler
+          await RegistrationHandler.completeRegistration(
+            context: context,
+            registerCubit: registerCubit,
+            authCubit: authCubit,
+          );
+          
+          if (!mounted) return; 
+
+          // Ocultar overlay
+          try { LoadingOverlay.hide(context); } catch (_) {}
+
+          if (!mounted) return;
+          // Usá GoRouter
+          context.go('/profile'); // o context.go('/home') según tu route
+        } catch (e, st) {
+          debugPrint('❌ Error en onRegistrationComplete wrapper: $e\n$st');
+          try { LoadingOverlay.hide(context); } catch (_) {}
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error finalizando registro: $e')),
+          );
+        } finally {
+          _isCompletingRegistration = false;
+        }
+      };
   }
 
   bool _initializedLanguage = false;

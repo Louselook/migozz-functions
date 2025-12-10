@@ -77,7 +77,7 @@ class GeminiService {
     'fullName', // 1
     'username', // 2
     'gender', // 3
-    'socialEcosystem', // 4
+    // 'socialEcosystem', // 4
     'location', // 5
     'sendOTP', // 6
     'emailVerification', // 7
@@ -86,18 +86,18 @@ class GeminiService {
     'avatarUrl', // 10
     'phone', // 11
     'voiceNoteUrl', // 12
-    'category', // 13
+    // 'category', // 13
   ];
 
   //  Flujo reducido para usuarios autenticados
   final List<String> _questionFlowAuth = [
     // 'language', // 0
     'gender', // 1
-    'socialEcosystem', // 2
+    // 'socialEcosystem', // 2
     'location', // 3
     'phone', // 4
     'voiceNoteUrl', // 5
-    'category', // 6
+    // 'category', // 6
   ];
 
   // Getter dinámico que devuelve el flujo correcto según auth
@@ -200,27 +200,25 @@ class GeminiService {
     }
 
     if (userInput.trim().isEmpty) {
-      return await _prepareQuestion(
-        AssistantFunctions.getCurrentQuestion(
-          questionFlow,
-          _currentQuestionIndex,
-          registerCubit,
-        ),
+      final q = AssistantFunctions.getCurrentQuestion(
+        questionFlow,
+        _currentQuestionIndex,
         registerCubit,
       );
-    }
 
+      // Si q es null, no prepares nada: termina flujo
+      if (q == null) {
+        return {
+          "text": registerCubit.state.language == 'Español'
+              ? "¡Listo! Ya terminamos tu registro 🎉"
+              : "All set! Your registration is complete 🎉",
+          "options": [],
+          "step": "finished",
+          "keepTalk": false,
+        };
+      }
 
-    // MENSAJE INICIAL 
-    if (userInput.trim().isEmpty) {
-      return await _prepareQuestion(
-        AssistantFunctions.getCurrentQuestion(
-          questionFlow,
-          _currentQuestionIndex,
-          registerCubit,
-        ),
-        registerCubit,
-      );
+      return await _prepareQuestion(q, registerCubit);
     }
 
     // Evaluar respuesta
@@ -244,6 +242,17 @@ class GeminiService {
 
         // Mostrar mensaje y avanzar
         _currentQuestionIndex++;
+        if (_currentQuestionIndex >= questionFlow.length) {
+          debugPrint('🎉 Registro completado, no hay más preguntas.');
+          return {
+            "text": registerCubit.state.language == 'Español'
+                ? "¡Listo! Ya terminamos tu registro 🎉"
+                : "All set! Your registration is complete 🎉",
+            "options": [],
+            "step": "finished",
+            "keepTalk": false,
+          };
+        }
         var nextQuestion = AssistantFunctions.getCurrentQuestion(
           questionFlow,
           _currentQuestionIndex,
@@ -251,7 +260,7 @@ class GeminiService {
         );
 
         // Saltar posibles mensajes "keepTalk"
-        while (nextQuestion['keepTalk'] == true) {
+        while (nextQuestion?['keepTalk'] == true) {
           debugPrint('⏩ Saltando mensaje keepTalk (web): ${questionFlow[_currentQuestionIndex]}');
           _currentQuestionIndex++;
           if (_currentQuestionIndex >= questionFlow.length) break;
@@ -299,19 +308,57 @@ class GeminiService {
       // Si no hubo errores, AHORA SÍ avanzar
       _currentQuestionIndex++;
 
+      // Si el índice quedó fuera de rango, terminamos el flujo
+      if (_currentQuestionIndex >= questionFlow.length) {
+        debugPrint('🎉 Registro completado, no hay más preguntas.');
+        return {
+          "text": registerCubit.state.language == 'Español'
+              ? "¡Listo! Ya terminamos tu registro 🎉"
+              : "All set! Your registration is complete 🎉",
+          "options": [],
+          "step": "finished",
+          "keepTalk": false,
+        };
+      }
+
       var nextQuestion = AssistantFunctions.getCurrentQuestion(
         questionFlow,
         _currentQuestionIndex,
         registerCubit,
       );
 
-      // Manejo de keepTalk
-      while (nextQuestion['keepTalk'] == true) {
+      // Manejo de keepTalk y posibles nulls devueltos por getCurrentQuestion
+      while (nextQuestion == null || nextQuestion['keepTalk'] == true) {
+        if (nextQuestion == null) {
+          debugPrint(
+            '⚠️ getCurrentQuestion devolvió null en índice $_currentQuestionIndex, finalizando flujo.',
+          );
+          return {
+            "text": registerCubit.state.language == 'Español'
+                ? "¡Listo! Ya terminamos tu registro 🎉"
+                : "All set! Your registration is complete 🎉",
+            "options": [],
+            "step": "finished",
+            "keepTalk": false,
+          };
+        }
+
         debugPrint(
           '⏩ Saltando mensaje keepTalk: ${questionFlow[_currentQuestionIndex]}',
         );
+
         _currentQuestionIndex++;
-        if (_currentQuestionIndex >= questionFlow.length) break;
+        if (_currentQuestionIndex >= questionFlow.length) {
+          debugPrint('🎉 Registro completado durante skip keepTalk.');
+          return {
+            "text": registerCubit.state.language == 'Español'
+                ? "¡Listo! Ya terminamos tu registro 🎉"
+                : "All set! Your registration is complete 🎉",
+            "options": [],
+            "step": "finished",
+            "keepTalk": false,
+          };
+        }
 
         nextQuestion = AssistantFunctions.getCurrentQuestion(
           questionFlow,
@@ -320,10 +367,10 @@ class GeminiService {
         );
       }
 
+      // Ahora nextQuestion es no-null y no tiene keepTalk == true
       return await _prepareQuestion(nextQuestion, registerCubit);
     }
 
-    
 
     // SI NO ES VÁLIDO → MENSAJE DE ERROR 
     if (decision['explainWhy'] == true) {

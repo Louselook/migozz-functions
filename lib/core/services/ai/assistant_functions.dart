@@ -1,4 +1,5 @@
 // assistant_functions.dart
+import 'package:flutter/foundation.dart';
 import 'package:migozz_app/core/services/bot/list_queestions.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 
@@ -10,23 +11,57 @@ class AssistantFunctions {
   }
 
   /// Obtiene la pregunta actual del flujo
-  static Map<String, dynamic> getCurrentQuestion(
+  /// Ahora devuelve Map<String,dynamic>? de forma defensiva (puede ser null)
+  static Map<String, dynamic>? getCurrentQuestion(
     List<String> questionFlow,
     int currentIndex,
     RegisterCubit cubit,
   ) {
-    if (currentIndex >= questionFlow.length) {
-      return getQuestion('done', _getIsSpanish(cubit))!;
+    if (currentIndex < 0 || currentIndex >= questionFlow.length) {
+      return null; // evitar null check crash
     }
+    try {
+      if (questionFlow.isEmpty) {
+        debugPrint('AssistantFunctions.getCurrentQuestion: questionFlow vacío o null');
+        return null;
+      }
 
-    final stepKey = questionFlow[currentIndex];
-    final isSpanish = _getIsSpanish(cubit);
-    var question = getQuestion(stepKey, isSpanish)!;
+      if (currentIndex >= questionFlow.length) {
+        // intentar obtener la clave 'done'
+        final doneQ = getQuestion('done', _getIsSpanish(cubit));
+        if (doneQ == null) {
+          debugPrint('AssistantFunctions: getQuestion("done") devolvió null');
+        }
+        return doneQ;
+      }
 
-    // Reemplazar valores dinámicos
-    question = _replaceDynamicValues(question, cubit);
+      final stepKey = questionFlow[currentIndex];
+      final isSpanish = _getIsSpanish(cubit);
+      var question = getQuestion(stepKey, isSpanish);
 
-    return question;
+      if (question == null) {
+        debugPrint('AssistantFunctions: getQuestion("$stepKey") devolvió null');
+        // fallback: intentar 'done'
+        final doneQ = getQuestion('done', isSpanish);
+        if (doneQ == null) {
+          debugPrint('AssistantFunctions: fallback getQuestion("done") también devolvió null');
+        }
+        question = doneQ;
+      }
+
+      if (question == null) {
+        // No hay pregunta válida, devolvemos null para que el caller lo maneje
+        return null;
+      }
+
+      // Reemplazar valores dinámicos (esto asume question no es null)
+      question = _replaceDynamicValues(question, cubit);
+
+      return question;
+    } catch (e, st) {
+      debugPrint('Error en AssistantFunctions.getCurrentQuestion: $e\n$st');
+      return null;
+    }
   }
 
   /// Evalúa la respuesta del usuario según el paso actual
@@ -49,9 +84,6 @@ class AssistantFunctions {
         normalized.contains('para que');
 
     switch (stepKey) {
-      // case 'language':
-      //   return _evaluateLanguage(normalized, userInput);
-
       case 'fullName':
         return _evaluateFullName(normalized, userInput);
 
@@ -60,13 +92,6 @@ class AssistantFunctions {
 
       case 'gender':
         return _evaluateGender(normalized, userInput);
-
-      case 'socialEcosystem':
-        return {
-          "step": "regProgress.socialEcosystem",
-          "valid": true,
-          "userResponse": userInput.trim(),
-        };
 
       case 'location':
         return _evaluateLocation(normalized, userInput, cubit);
@@ -139,71 +164,47 @@ class AssistantFunctions {
     Map<String, dynamic> question,
     RegisterCubit cubit,
   ) {
-    String text = question['text'] ?? '';
+    try {
+      String text = question['text'] ?? '';
 
-    if (text.contains('{fullName}')) {
-      text = text.replaceAll('{fullName}', cubit.state.fullName ?? 'Usuario');
-    }
-
-    if (text.contains('{location}')) {
-      final loc = cubit.state.location;
-      String locStr;
-      
-      // Manejo mejorado de ubicación
-      if (loc != null && !loc.isEmpty) {
-        // Si tiene ubicación válida, mostrarla
-        locStr = '${loc.city}, ${loc.country}';
-      } else if (loc != null && loc.isEmpty) {
-        // Si tiene ubicación vacía (usuario rechazó), usar genérico
-        final isSpanish = _getIsSpanish(cubit);
-        locStr = isSpanish ? 'tu ubicación' : 'your location';
-      } else {
-        // Si es null, también usar genérico
-        final isSpanish = _getIsSpanish(cubit);
-        locStr = isSpanish ? 'tu ubicación' : 'your location';
+      if (text.contains('{fullName}')) {
+        text = text.replaceAll('{fullName}', cubit.state.fullName ?? 'Usuario');
       }
-      
-      text = text.replaceAll('{location}', locStr);
+
+      if (text.contains('{location}')) {
+        final loc = cubit.state.location;
+        String locStr;
+
+        // Manejo mejorado de ubicación
+        if (loc != null && !loc.isEmpty) {
+          // Si tiene ubicación válida, mostrarla
+          locStr = '${loc.city}, ${loc.country}';
+        } else {
+          final isSpanish = _getIsSpanish(cubit);
+          locStr = isSpanish ? 'tu ubicación' : 'your location';
+        }
+
+        text = text.replaceAll('{location}', locStr);
+      }
+
+      if (text.contains('{email}')) {
+        text = text.replaceAll('{email}', cubit.state.email ?? 'tu correo');
+      }
+
+      if (text.contains('{socialEcosystem}')) {
+        final networks =
+            cubit.state.socialEcosystem?.map((e) => e.keys.first).join(', ') ??
+            'tus redes sociales';
+        text = text.replaceAll('{socialEcosystem}', networks);
+      }
+
+      question['text'] = text;
+    } catch (e, st) {
+      debugPrint('Error en _replaceDynamicValues: $e\n$st');
     }
 
-    if (text.contains('{email}')) {
-      text = text.replaceAll('{email}', cubit.state.email ?? 'tu correo');
-    }
-
-    if (text.contains('{socialEcosystem}')) {
-      final networks =
-          cubit.state.socialEcosystem?.map((e) => e.keys.first).join(', ') ??
-          'tus redes sociales';
-      text = text.replaceAll('{socialEcosystem}', networks);
-    }
-
-    question['text'] = text;
     return question;
   }
-
-  // static Map<String, dynamic> _evaluateLanguage(
-  //   String normalized,
-  //   String original,
-  // ) {
-  //   if (normalized.contains('es') || normalized.contains('español')) {
-  //     return {
-  //       "step": "regProgress.language",
-  //       "valid": true,
-  //       "userResponse": "Español",
-  //     };
-  //   } else if (normalized.contains('en') || normalized.contains('english')) {
-  //     return {
-  //       "step": "regProgress.language",
-  //       "valid": true,
-  //       "userResponse": "English",
-  //     };
-  //   }
-  //   return {
-  //     "step": "regProgress.language",
-  //     "valid": false,
-  //     "userResponse": original.trim(),
-  //   };
-  // }
 
   static Map<String, dynamic> _evaluateFullName(
     String normalized,
@@ -251,7 +252,7 @@ class AssistantFunctions {
     String normalized,
     String original,
   ) {
-    final validGenders = ['hombre', 'mujer', 'otro', 'man', 'woman', 'other'];
+    final validGenders = ['hombre', 'mujer', 'otro', 'male', 'female', 'other'];
 
     if (validGenders.any((g) => normalized.contains(g))) {
       return {
@@ -274,10 +275,10 @@ class AssistantFunctions {
     RegisterCubit cubit,
   ) {
     final isSpanish = _getIsSpanish(cubit);
-    
+
     // Opción 1: Usuario confirma ubicación (Sí)
-    if (normalized == 'sí' || 
-        normalized == 'si' || 
+    if (normalized == 'sí' ||
+        normalized == 'si' ||
         normalized == 'yes' ||
         normalized.contains('correcto')) {
       return {
@@ -287,7 +288,7 @@ class AssistantFunctions {
         "confirmLocation": true, //  Bandera para confirmar
       };
     }
-    
+
     // Opción 2: Usuario rechaza usar ubicación (No)
     if (normalized == 'no') {
       return {
@@ -297,9 +298,9 @@ class AssistantFunctions {
         "emptyLocation": true, //  Bandera para ubicación vacía
       };
     }
-    
+
     // Opción 3: Usuario reporta ubicación incorrecta
-    if (normalized.contains('incorrecta') || 
+    if (normalized.contains('incorrecta') ||
         normalized.contains('incorrect') ||
         normalized == 'ubicación incorrecta' ||
         normalized == 'incorrect location') {
@@ -315,7 +316,7 @@ class AssistantFunctions {
             : ["Yes", "No", "Incorrect location"],
       };
     }
-    
+
     // Respuesta no válida
     return {
       "step": "regProgress.location",
@@ -374,10 +375,7 @@ class AssistantFunctions {
 
       if (imageUrl != null) {
         final label =
-            data["title"] ??
-            data["username"] ??
-            data["full_name"] ??
-            key.toUpperCase();
+            data["title"] ?? data["username"] ?? data["full_name"] ?? key.toUpperCase();
 
         pictureCards.add({
           "imageUrl": imageUrl,
