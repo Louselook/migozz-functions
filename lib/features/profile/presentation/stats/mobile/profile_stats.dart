@@ -451,12 +451,20 @@ List<MapEntry<String, Map<String, dynamic>>> _parseEcosystem(
 ) {
   final out = <MapEntry<String, Map<String, dynamic>>>[];
   if (ecosystem == null) return out;
+  
   if (ecosystem is List) {
     for (final item in ecosystem) {
       if (item is Map<String, dynamic>) {
-        item.forEach((k, v) {
-          if (v is Map<String, dynamic>) out.add(MapEntry(k, v));
-        });
+        // Nueva estructura: objeto directo con campo 'domain'
+        if (item.containsKey('domain')) {
+          final domain = item['domain'] as String;
+          out.add(MapEntry(domain, item));
+        } else {
+          // Estructura antigua: objeto anidado {domain: {data}}
+          item.forEach((k, v) {
+            if (v is Map<String, dynamic>) out.add(MapEntry(k, v));
+          });
+        }
       }
     }
   } else if (ecosystem is Map<String, dynamic>) {
