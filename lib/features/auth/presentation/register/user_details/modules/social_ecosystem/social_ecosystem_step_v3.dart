@@ -37,6 +37,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
+  // Track previous state to detect changes
+  int _previousSocialCount = 0;
+
   // Categories for grouping platforms (based on available networks)
   final Map<String, List<String>> _categories = {
     'Social': ['instagram', 'tiktok', 'facebook', 'twitter', 'linkedin'],
@@ -54,6 +57,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     if (widget.mode == MoreUserDetailsMode.edit) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _setupSyncCallback();
+        _setupAutoSave(); // Config auto-save from deeplink
       });
     }
   }
@@ -71,6 +75,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
             );
           }
         }
+        // Initialize previous count
+        _previousSocialCount = editState.socialEcosystem?.length ?? 0;
       });
     }
   }
@@ -164,6 +170,73 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     };
   }
 
+  // ✅ NUEVO: Configurar listener para auto-save
+  void _setupAutoSave() {
+    final editCubit = context.read<EditCubit>();
+    final authCubit = context.read<AuthCubit>();
+
+    debugPrint('🔄 [V3] Setting up auto-save listener');
+
+    // Listen to EditCubit state changes
+    editCubit.stream.listen((editState) async {
+      // Check if social ecosystem changed
+      final currentCount = editState.socialEcosystem?.length ?? 0;
+
+      if (currentCount != _previousSocialCount && editState.hasChanges) {
+        debugPrint('💾 [V3] Detected change in social ecosystem');
+        debugPrint('   Previous count: $_previousSocialCount');
+        debugPrint('   Current count: $currentCount');
+
+        _previousSocialCount = currentCount;
+
+        // Auto-save
+        final userId = authCubit.state.firebaseUser?.uid;
+        if (userId != null && mounted) {
+          debugPrint('💾 [V3] Auto-saving changes...');
+
+          if (mounted) {
+            LoadingOverlayWithCancel.show(
+              context,
+              message: 'Saving...',
+              onCancel: () {},
+            );
+          }
+
+          try {
+            await editCubit.saveAllPendingChanges(userId);
+            debugPrint('✅ [V3] Auto-save completed successfully!');
+
+            LoadingOverlayWithCancel.hide();
+
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Social media saved successfully!'),
+                  backgroundColor: Colors.green,
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            }
+          } catch (e) {
+            debugPrint('❌ [V3] Auto-save failed: $e');
+
+            LoadingOverlayWithCancel.hide();
+
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Error saving: $e'),
+                  backgroundColor: Colors.red,
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            }
+          }
+        }
+      }
+    });
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -219,7 +292,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
       debugPrint('🔵 [Register Mode] Index found: $index');
 
       if (index == -1) {
-        debugPrint('🔵 [Register Mode] Network not connected, opening bottom sheet');
+        debugPrint(
+          '🔵 [Register Mode] Network not connected, opening bottom sheet',
+        );
         await cubit.startSocialAuth(
           context,
           config.name,
@@ -227,14 +302,18 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
           inEditMode: false,
         );
       } else {
-        debugPrint('🔵 [Register Mode] Network already connected, showing edit dialog');
+        debugPrint(
+          '🔵 [Register Mode] Network already connected, showing edit dialog',
+        );
         final socialData = current[index];
         final remove = await _showEditSocialDialog(config, socialData);
         if (remove == true) {
           debugPrint('🔵 [Register Mode] Removing network at index $index');
           current.removeAt(index);
           cubit.setSocialEcosystem(current);
-          debugPrint('🔵 [Register Mode] Network removed, new ecosystem: $current');
+          debugPrint(
+            '🔵 [Register Mode] Network removed, new ecosystem: $current',
+          );
         }
       }
     } else {
@@ -249,14 +328,18 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
 
       final index = current.indexWhere((e) {
         final platformKey = e.keys.first.toLowerCase();
-        debugPrint('🔵 [Edit Mode] Checking platform: $platformKey vs ${config.name.toLowerCase()}');
+        debugPrint(
+          '🔵 [Edit Mode] Checking platform: $platformKey vs ${config.name.toLowerCase()}',
+        );
         return platformKey == config.name.toLowerCase();
       });
 
       debugPrint('🔵 [Edit Mode] Index found: $index');
 
       if (index == -1) {
-        debugPrint('🔵 [Edit Mode] Network not connected, opening bottom sheet');
+        debugPrint(
+          '🔵 [Edit Mode] Network not connected, opening bottom sheet',
+        );
         await registerCubit.startSocialAuth(
           context,
           config.name,
@@ -264,7 +347,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
           inEditMode: true,
         );
       } else {
-        debugPrint('🔵 [Edit Mode] Network already connected, showing edit dialog');
+        debugPrint(
+          '🔵 [Edit Mode] Network already connected, showing edit dialog',
+        );
         final socialData = current[index];
         final remove = await _showEditSocialDialog(config, socialData);
         if (remove == true) {
@@ -299,7 +384,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('${config.displayName} removed successfully!'),
+                    content: Text(
+                      '${config.displayName} removed successfully!',
+                    ),
                     backgroundColor: Colors.green,
                     duration: const Duration(seconds: 2),
                   ),
@@ -327,79 +414,10 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     }
   }
 
-  Future<void> _handleSave() async {
-    if (widget.mode != MoreUserDetailsMode.edit) {
-      Navigator.of(context).pop();
-      return;
-    }
-
-    final authCubit = context.read<AuthCubit>();
-    final editCubit = context.read<EditCubit>();
-    final userId = authCubit.state.firebaseUser?.uid;
-
-    debugPrint('🔹🔹🔹 [_handleSave] Starting save process...');
-    debugPrint('🔹 userId: $userId');
-    debugPrint('🔹 hasChanges: ${editCubit.state.hasChanges}');
-    debugPrint('🔹 socialEcosystem: ${editCubit.state.socialEcosystem}');
-
-    if (userId == null) {
-      debugPrint('❌ [_handleSave] No userId, aborting');
-      Navigator.of(context).pop();
-      return;
-    }
-
-    // Show loading
-    if (mounted) {
-      LoadingOverlayWithCancel.show(
-        context,
-        message: 'Saving changes...',
-        onCancel: () {
-          debugPrint('❌ User cancelled save');
-        },
-      );
-    }
-
-    try {
-      debugPrint('🔹 [_handleSave] Calling saveAllPendingChanges...');
-
-      // Use saveAllPendingChanges instead of saveUserProfileField
-      await editCubit.saveAllPendingChanges(userId);
-
-      debugPrint('✅ [_handleSave] Save completed successfully!');
-      debugPrint('✅ EditCubit state after save: ${editCubit.state}');
-
-      if (!mounted) return;
-
-      LoadingOverlayWithCancel.hide();
-      Navigator.of(context).pop();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Social media saved successfully!'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-        ),
-      );
-    } catch (e, stackTrace) {
-      debugPrint('❌ [_handleSave] Error saving social ecosystem: $e');
-      debugPrint('❌ StackTrace: $stackTrace');
-
-      if (!mounted) return;
-
-      LoadingOverlayWithCancel.hide();
-      Navigator.of(context).pop();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error saving: $e'),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 3),
-        ),
-      );
-    }
-  }
-
-  Future<bool?> _showEditSocialDialog(NetworkConfig config, Map<String, dynamic> socialData) {
+  Future<bool?> _showEditSocialDialog(
+    NetworkConfig config,
+    Map<String, dynamic> socialData,
+  ) {
     final TextEditingController usernameController = TextEditingController();
 
     // Extract username from the social data
@@ -419,265 +437,277 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
           child: Container(
             width: MediaQuery.of(context).size.width * 0.85,
             decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF2D1B3D),
-                Color(0xFF1A0F2E),
-              ],
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF2D1B3D), Color(0xFF1A0F2E)],
+              ),
+              borderRadius: BorderRadius.circular(20),
             ),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Stack(
-            children: [
-              // Close button
-              Positioned(
-                top: 16,
-                right: 16,
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.pop(dialogContext, false);
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    child: const Icon(
-                      Icons.close,
-                      color: Colors.white,
-                      size: 24,
+            child: Stack(
+              children: [
+                // Close button
+                Positioned(
+                  top: 16,
+                  right: 16,
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.pop(dialogContext, false);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 24,
+                      ),
                     ),
                   ),
                 ),
-              ),
 
-              // Main content
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const SizedBox(height: 20),
+                // Main content
+                Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(height: 20),
 
-                    // Platform icon
-                    Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        color: Colors.black,
-                        borderRadius: BorderRadius.circular(20),
+                      // Platform icon
+                      Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: Colors.black,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        padding: const EdgeInsets.all(20),
+                        child: SvgPicture.asset(
+                          config.iconPath,
+                          width: 60,
+                          height: 60,
+                          fit: BoxFit.contain,
+                        ),
                       ),
-                      padding: const EdgeInsets.all(20),
-                      child: SvgPicture.asset(
-                        config.iconPath,
-                        width: 60,
-                        height: 60,
-                        fit: BoxFit.contain,
+
+                      const SizedBox(height: 24),
+
+                      // Title
+                      Text(
+                        'Add ${config.displayName}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
 
-                    const SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
-                    // Title
-                    Text(
-                      'Add ${config.displayName}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Username input field
-                    TextField(
-                      controller: usernameController,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                      ),
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: Colors.white.withValues(alpha: 0.1),
-                        hintText: 'Add ${config.displayName} username',
-                        hintStyle: TextStyle(
-                          color: Colors.grey[600],
+                      // Username input field
+                      TextField(
+                        controller: usernameController,
+                        style: const TextStyle(
+                          color: Colors.white,
                           fontSize: 14,
                         ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: Colors.white.withValues(alpha: 0.1),
+                          hintText: 'Add ${config.displayName} username',
+                          hintStyle: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
                         ),
                       ),
-                    ),
 
-                    const SizedBox(height: 24),
-                    // Save button with gradient
-                    GestureDetector(
-                      onTap: () async {
-                        final newUsername = usernameController.text.trim();
-                        if (newUsername.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Please enter a username'),
-                              backgroundColor: Colors.red,
-                              duration: Duration(seconds: 2),
-                            ),
-                          );
-                          return;
-                        }
-
-                        // Close the dialog first
-                        Navigator.pop(dialogContext, null);
-
-                        // Update the username in the social data
-                        if (widget.mode == MoreUserDetailsMode.register) {
-                          final cubit = context.read<RegisterCubit>();
-                          final current = List<Map<String, Map<String, dynamic>>>.from(
-                            cubit.state.socialEcosystem ?? [],
-                          );
-
-                          final index = current.indexWhere((e) {
-                            final platformKey = e.keys.first.toLowerCase();
-                            return platformKey == config.name.toLowerCase();
-                          });
-
-                          if (index != -1) {
-                            final platformKey = current[index].keys.first;
-                            final platformData = Map<String, dynamic>.from(current[index][platformKey]!);
-                            platformData['username'] = newUsername;
-                            current[index] = {platformKey: platformData};
-                            cubit.setSocialEcosystem(current);
-
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('${config.displayName} username updated!'),
-                                  backgroundColor: Colors.green,
-                                  duration: const Duration(seconds: 2),
-                                ),
-                              );
-                            }
+                      const SizedBox(height: 24),
+                      // Save button with gradient
+                      GestureDetector(
+                        onTap: () async {
+                          final newUsername = usernameController.text.trim();
+                          if (newUsername.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Please enter a username'),
+                                backgroundColor: Colors.red,
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                            return;
                           }
-                        } else {
-                          // Edit mode
-                          final editCubit = context.read<EditCubit>();
-                          final current = List<Map<String, dynamic>>.from(
-                            editCubit.state.socialEcosystem ?? [],
-                          );
 
-                          final index = current.indexWhere((e) {
-                            final platformKey = e.keys.first.toLowerCase();
-                            return platformKey == config.name.toLowerCase();
-                          });
+                          // Close the dialog first
+                          Navigator.pop(dialogContext, null);
 
-                          if (index != -1) {
-                            final platformKey = current[index].keys.first;
-                            final platformData = Map<String, dynamic>.from(current[index][platformKey]);
-                            platformData['username'] = newUsername;
-                            current[index] = {platformKey: platformData};
-                            editCubit.updateSocialEcosystem(current);
+                          // Update the username in the social data
+                          if (widget.mode == MoreUserDetailsMode.register) {
+                            final cubit = context.read<RegisterCubit>();
+                            final current =
+                                List<Map<String, Map<String, dynamic>>>.from(
+                                  cubit.state.socialEcosystem ?? [],
+                                );
 
-                            // Auto-save after updating
-                            final authCubit = context.read<AuthCubit>();
-                            final userId = authCubit.state.firebaseUser?.uid;
+                            final index = current.indexWhere((e) {
+                              final platformKey = e.keys.first.toLowerCase();
+                              return platformKey == config.name.toLowerCase();
+                            });
 
-                            if (userId != null) {
-                              debugPrint('💾 [Edit Mode] Auto-saving after username update...');
+                            if (index != -1) {
+                              final platformKey = current[index].keys.first;
+                              final platformData = Map<String, dynamic>.from(
+                                current[index][platformKey]!,
+                              );
+                              platformData['username'] = newUsername;
+                              current[index] = {platformKey: platformData};
+                              cubit.setSocialEcosystem(current);
 
-                              // Show loading overlay
                               if (context.mounted) {
-                                LoadingOverlayWithCancel.show(
-                                  context,
-                                  message: 'Saving...',
-                                  onCancel: () {},
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      '${config.displayName} username updated!',
+                                    ),
+                                    backgroundColor: Colors.green,
+                                    duration: const Duration(seconds: 2),
+                                  ),
                                 );
                               }
+                            }
+                          } else {
+                            // Edit mode
+                            final editCubit = context.read<EditCubit>();
+                            final current = List<Map<String, dynamic>>.from(
+                              editCubit.state.socialEcosystem ?? [],
+                            );
 
-                              try {
-                                await editCubit.saveAllPendingChanges(userId);
-                                debugPrint('✅ [Edit Mode] Auto-save after update completed!');
+                            final index = current.indexWhere((e) {
+                              final platformKey = e.keys.first.toLowerCase();
+                              return platformKey == config.name.toLowerCase();
+                            });
 
-                                // Always hide the overlay
-                                LoadingOverlayWithCancel.hide();
+                            if (index != -1) {
+                              final platformKey = current[index].keys.first;
+                              final platformData = Map<String, dynamic>.from(
+                                current[index][platformKey],
+                              );
+                              platformData['username'] = newUsername;
+                              current[index] = {platformKey: platformData};
+                              editCubit.updateSocialEcosystem(current);
 
+                              // Auto-save after updating
+                              final authCubit = context.read<AuthCubit>();
+                              final userId = authCubit.state.firebaseUser?.uid;
+
+                              if (userId != null) {
+                                debugPrint(
+                                  '💾 [Edit Mode] Auto-saving after username update...',
+                                );
+
+                                // Show loading overlay
                                 if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('${config.displayName} username updated successfully!'),
-                                      backgroundColor: Colors.green,
-                                      duration: const Duration(seconds: 2),
-                                    ),
+                                  LoadingOverlayWithCancel.show(
+                                    context,
+                                    message: 'Saving...',
+                                    onCancel: () {},
                                   );
                                 }
-                              } catch (e) {
-                                debugPrint('❌ [Edit Mode] Auto-save after update failed: $e');
 
-                                // Always hide the overlay
-                                LoadingOverlayWithCancel.hide();
-
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('Error saving: $e'),
-                                      backgroundColor: Colors.red,
-                                      duration: const Duration(seconds: 2),
-                                    ),
+                                try {
+                                  await editCubit.saveAllPendingChanges(userId);
+                                  debugPrint(
+                                    '✅ [Edit Mode] Auto-save after update completed!',
                                   );
+
+                                  // Always hide the overlay
+                                  LoadingOverlayWithCancel.hide();
+
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          '${config.displayName} username updated successfully!',
+                                        ),
+                                        backgroundColor: Colors.green,
+                                        duration: const Duration(seconds: 2),
+                                      ),
+                                    );
+                                  }
+                                } catch (e) {
+                                  debugPrint(
+                                    '❌ [Edit Mode] Auto-save after update failed: $e',
+                                  );
+
+                                  // Always hide the overlay
+                                  LoadingOverlayWithCancel.hide();
+
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Error saving: $e'),
+                                        backgroundColor: Colors.red,
+                                        duration: const Duration(seconds: 2),
+                                      ),
+                                    );
+                                  }
                                 }
                               }
                             }
                           }
-                        }
-                      },
-                      child: Container(
-                        width: double.infinity,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          gradient: AppColors.primaryGradient,
-                          borderRadius: BorderRadius.circular(25),
-                        ),
-                        child: const Center(
-                          child: Text(
-                            'Save',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            gradient: AppColors.primaryGradient,
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'Save',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
 
-                    const SizedBox(height: 16),
+                      const SizedBox(height: 16),
 
-                    // Delete Link button
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pop(dialogContext, true);
-                      },
-                      child: const Text(
-                        'Delete Link',
-                        style: TextStyle(
-                          color: Colors.red,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                      // Delete Link button
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pop(dialogContext, true);
+                        },
+                        child: const Text(
+                          'Delete Link',
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
-                    ),
 
-                    const SizedBox(height: 8),
-                  ],
+                      const SizedBox(height: 8),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
         ),
       ),
     ).whenComplete(() {
@@ -688,7 +718,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     });
   }
 
-  Future<Map<String, dynamic>?> _showCustomLinkDialog({Map<String, dynamic>? existingData}) async {
+  Future<Map<String, dynamic>?> _showCustomLinkDialog({
+    Map<String, dynamic>? existingData,
+  }) async {
     final TextEditingController linkController = TextEditingController();
     bool applyIconFromLink = true;
     String? pickedImageUrl;
@@ -696,7 +728,10 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     if (existingData != null) {
       linkController.text = existingData['url']?.toString() ?? '';
       pickedImageUrl = existingData['iconUrl']?.toString();
-      applyIconFromLink = pickedImageUrl != null && pickedImageUrl.startsWith('http') && pickedImageUrl.contains('favicon');
+      applyIconFromLink =
+          pickedImageUrl != null &&
+          pickedImageUrl.startsWith('http') &&
+          pickedImageUrl.contains('favicon');
     }
 
     return await showDialog<Map<String, dynamic>?>(
@@ -705,7 +740,10 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setState) => Dialog(
           backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 24,
+          ),
           child: SingleChildScrollView(
             child: Container(
               width: MediaQuery.of(context).size.width * 0.85,
@@ -713,10 +751,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                 gradient: const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF2D1B3D),
-                    Color(0xFF1A0F2E),
-                  ],
+                  colors: [Color(0xFF2D1B3D), Color(0xFF1A0F2E)],
                 ),
                 borderRadius: BorderRadius.circular(20),
               ),
@@ -774,10 +809,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                             gradient: const LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
-                              colors: [
-                                Color(0xFFD43AB6),
-                                Color(0xFF9321BD),
-                              ],
+                              colors: [Color(0xFFD43AB6), Color(0xFF9321BD)],
                             ),
                           ),
                           child: Center(
@@ -788,13 +820,14 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                                       width: 60,
                                       height: 60,
                                       fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) {
-                                        return const Icon(
-                                          Icons.language,
-                                          color: Colors.white,
-                                          size: 60,
-                                        );
-                                      },
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                            return const Icon(
+                                              Icons.language,
+                                              color: Colors.white,
+                                              size: 60,
+                                            );
+                                          },
                                     ),
                                   )
                                 : const Icon(
@@ -817,7 +850,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                           onChanged: (value) {
                             if (applyIconFromLink && value.trim().isNotEmpty) {
                               setState(() {
-                                pickedImageUrl = _faviconFromDomain(_domainFromUrl(value.trim()));
+                                pickedImageUrl = _faviconFromDomain(
+                                  _domainFromUrl(value.trim()),
+                                );
                               });
                             }
                           },
@@ -858,13 +893,18 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                               value: applyIconFromLink,
                               inactiveTrackColor: const Color(0xFF5E5564),
                               activeTrackColor: const Color(0xFF5E5564),
-                              thumbColor: const WidgetStatePropertyAll(Colors.white),
+                              thumbColor: const WidgetStatePropertyAll(
+                                Colors.white,
+                              ),
                               onChanged: (value) {
                                 setState(() {
                                   applyIconFromLink = value;
-                                  if (value && linkController.text.trim().isNotEmpty) {
+                                  if (value &&
+                                      linkController.text.trim().isNotEmpty) {
                                     pickedImageUrl = _faviconFromDomain(
-                                      _domainFromUrl(linkController.text.trim()),
+                                      _domainFromUrl(
+                                        linkController.text.trim(),
+                                      ),
                                     );
                                   } else if (!value) {
                                     pickedImageUrl = null;
@@ -896,8 +936,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                               'custom': {
                                 'type': 'custom',
                                 'url': link,
-                                if (pickedImageUrl != null) 'iconUrl': pickedImageUrl,
-                              }
+                                if (pickedImageUrl != null)
+                                  'iconUrl': pickedImageUrl,
+                              },
                             };
 
                             Navigator.pop(dialogContext, data);
@@ -1024,7 +1065,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     final List<Map<String, dynamic>> socialEcosystem;
     if (widget.mode == MoreUserDetailsMode.register) {
       // RegisterCubit has List<Map<String, Map<String, dynamic>>>
-      final registerEcosystem = context.watch<RegisterCubit>().state.socialEcosystem ?? [];
+      final registerEcosystem =
+          context.watch<RegisterCubit>().state.socialEcosystem ?? [];
       // Convert to List<Map<String, dynamic>>
       socialEcosystem = registerEcosystem.cast<Map<String, dynamic>>();
     } else {
@@ -1243,8 +1285,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
           if (networks.isEmpty) return const SizedBox.shrink();
 
           return Container(
-
-            padding: const EdgeInsets.symmetric(vertical:5),
+            padding: const EdgeInsets.symmetric(vertical: 5),
 
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1258,7 +1299,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                   ),
                 ),
                 const SizedBox(height: 6),
-                GridView.builder(padding: EdgeInsets.zero,
+                GridView.builder(
+                  padding: EdgeInsets.zero,
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(

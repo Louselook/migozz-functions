@@ -6,7 +6,6 @@ import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubi
 import 'package:migozz_app/features/chat/presentation/user/list/chats_list_screen.dart';
 import 'package:migozz_app/features/chat/presentation/user/user_chat_screen.dart';
 import 'package:migozz_app/features/profile/components/info_user_profile.dart';
-import 'package:migozz_app/features/profile/components/profile_version_selector.dart';
 import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
 import 'package:migozz_app/features/profile/components/social_rail.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/components/profile_top_actions.dart';
@@ -129,9 +128,14 @@ class _MobileProfileContentV3State extends State<MobileProfileContentV3> {
             onMenuTap: () {
               // ✅ NUEVO callback
               if (isOwnProfile) {
-               Navigator.push(
+                Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => MobileProfileContentV3Edit(user: user, tutorialKeys:widget.tutorialKeys)),
+                  MaterialPageRoute(
+                    builder: (_) => MobileProfileContentV3Edit(
+                      user: user,
+                      tutorialKeys: widget.tutorialKeys,
+                    ),
+                  ),
                 );
               } else {
                 Navigator.of(context).pop();

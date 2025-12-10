@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:migozz_app/core/color.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:migozz_app/features/profile/components/social_rail.dart';
-
-import '../../../../../../../core/color.dart';
 
 class SocialCirclesMobileV3 extends StatelessWidget {
   final List<SocialLink> links;
@@ -127,11 +126,7 @@ class _AddSocialButton extends StatelessWidget {
           gradient: AppColors.verticalPinkPurple,
         ),
         child: Center(
-          child: Icon(
-            Icons.add,
-            color: Colors.white,
-            size: iconSize * 0.6,
-          ),
+          child: Icon(Icons.add, color: Colors.white, size: iconSize * 0.6),
         ),
       ),
     );

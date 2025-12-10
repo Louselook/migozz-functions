@@ -1,9 +1,6 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:migozz_app/core/components/atomics/loading_overlay.dart';
 import 'package:migozz_app/core/components/atomics/loading_overlay_with_cancel.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/location_dto.dart';
 import 'package:migozz_app/core/services/deeplink/deeplink_functions/social_network/social_normalizer.dart';
@@ -230,7 +227,9 @@ class RegisterCubit extends Cubit<RegisterState> {
 
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('${config.displayName} connected successfully!'),
+                    content: Text(
+                      '${config.displayName} connected successfully!',
+                    ),
                     backgroundColor: Colors.green,
                   ),
                 );

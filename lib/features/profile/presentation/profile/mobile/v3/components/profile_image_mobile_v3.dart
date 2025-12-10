@@ -2,10 +2,6 @@ import 'dart:async';
 import 'dart:ui' as ui;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:migozz_app/core/assets_constants.dart';
-import 'package:migozz_app/features/auth/presentation/onboarding/shared/constant.dart';
-
 import 'add_contact_info_bottom_sheet.dart';
 
 class ProfileImageMobileV3 extends StatelessWidget {
@@ -63,16 +59,17 @@ class ProfileImageMobileV3 extends StatelessWidget {
   }
 
   Widget _buildFullImage() {
-    return Stack(alignment: Alignment.center,
+    return Stack(
+      alignment: Alignment.center,
       fit: StackFit.expand,
       children: [
-       avatarUrl != null && avatarUrl!.isNotEmpty
-          ? CachedNetworkImage(
-         imageUrl:avatarUrl!,
-          fit: BoxFit.cover,
-          errorWidget: (_, __, ___) => placeHolderWidget(size),
-
-        ):placeHolderWidget(size),
+        avatarUrl != null && avatarUrl!.isNotEmpty
+            ? CachedNetworkImage(
+                imageUrl: avatarUrl!,
+                fit: BoxFit.cover,
+                errorWidget: (_, __, ___) => placeHolderWidget(size),
+              )
+            : placeHolderWidget(size),
         Positioned(
           left: 0,
           right: 0,
@@ -95,8 +92,6 @@ class ProfileImageMobileV3 extends StatelessWidget {
       ],
     );
   }
-
-
 
   Widget _buildCircleAvatar() {
     return Stack(

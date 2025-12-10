@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/components/atomics/network_list.dart';
@@ -8,6 +9,9 @@ import 'package:migozz_app/features/auth/presentation/register/user_details/modu
 import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
 import 'package:migozz_app/features/profile/components/social_rail.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
+import 'package:migozz_app/features/profile/presentation/edit/components/profile_option_button.dart';
+import 'package:migozz_app/features/profile/presentation/edit/modules/edit_audio.dart';
+import 'package:migozz_app/features/profile/presentation/edit/modules/edit_my_interest.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/profile_strength_indicator.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/bio_section.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/email_contact_form_section.dart';
@@ -162,6 +166,40 @@ class _MobileProfileContentV3EditState
 
                 // Sección de Contact Info
                 ContactInfoSection(isOwnProfile: isOwnProfile, user: user),
+                const SizedBox(height: 10),
+
+                // Edit
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    children: [
+                      // recort
+                      ProfileOptionButton(
+                        icon: Icons.play_circle_outline,
+                        text: 'edit.presentation.record'.tr(),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const EditRecordScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      // interest
+                      ProfileOptionButton(
+                        icon: Icons.handshake_outlined,
+                        text: 'edit.presentation.interest'.tr(),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const EditInterestsScreen(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
                 const SizedBox(height: 100),
               ],
@@ -191,24 +229,24 @@ class _MobileProfileContentV3EditState
                     ),
                   ),
 
-                  // Botón "Done"
-                  GestureDetector(
-                    onTap: () {},
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      child: Text(
-                        'Done',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
+                  // // Botón "Done"
+                  // GestureDetector(
+                  //   onTap: () {},
+                  //   child: Container(
+                  //     padding: const EdgeInsets.symmetric(
+                  //       horizontal: 16,
+                  //       vertical: 8,
+                  //     ),
+                  //     child: Text(
+                  //       'Done',
+                  //       style: TextStyle(
+                  //         color: Colors.white,
+                  //         fontSize: 18,
+                  //         fontWeight: FontWeight.w600,
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ),
                 ],
               ),
             ),
@@ -320,8 +358,12 @@ class _MobileProfileContentV3EditState
       // Get the latest user data from AuthCubit
       final updatedUser = authCubit.state.userProfile;
       if (updatedUser != null) {
-        debugPrint('📱 [ProfileV3Edit] Re-initializing EditCubit with fresh data');
-        debugPrint('📱 [ProfileV3Edit] Fresh socialEcosystem: ${updatedUser.socialEcosystem}');
+        debugPrint(
+          '📱 [ProfileV3Edit] Re-initializing EditCubit with fresh data',
+        );
+        debugPrint(
+          '📱 [ProfileV3Edit] Fresh socialEcosystem: ${updatedUser.socialEcosystem}',
+        );
 
         // Re-initialize EditCubit with the fresh data from Firestore
         editCubit.initializeFromUser(
@@ -339,11 +381,15 @@ class _MobileProfileContentV3EditState
     List<Map<String, dynamic>>? socialEcosystem,
     String username,
   ) {
-    debugPrint('🔗 [_buildSocialLinks] Input socialEcosystem: $socialEcosystem');
+    debugPrint(
+      '🔗 [_buildSocialLinks] Input socialEcosystem: $socialEcosystem',
+    );
     debugPrint('🔗 [_buildSocialLinks] Username: $username');
 
     if (socialEcosystem == null || socialEcosystem.isEmpty) {
-      debugPrint('🔗 [_buildSocialLinks] socialEcosystem is null or empty, returning empty list');
+      debugPrint(
+        '🔗 [_buildSocialLinks] socialEcosystem is null or empty, returning empty list',
+      );
       return [];
     }
 
@@ -370,7 +416,9 @@ class _MobileProfileContentV3EditState
         }
 
         final socialInfo = _getSocialInfo(platform, cleanUsername, customUrl);
-        debugPrint('🔗 [_buildSocialLinks] socialInfo for $platform: $socialInfo');
+        debugPrint(
+          '🔗 [_buildSocialLinks] socialInfo for $platform: $socialInfo',
+        );
 
         if (socialInfo != null) {
           links.add(

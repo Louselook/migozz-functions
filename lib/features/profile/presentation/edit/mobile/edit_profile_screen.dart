@@ -2,22 +2,18 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-// import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
 import 'package:migozz_app/core/color.dart';
-import 'package:migozz_app/core/components/atomics/loading_overlay_with_cancel.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
 import 'package:migozz_app/features/auth/services/location_service.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
-import 'package:migozz_app/features/profile/presentation/edit/components/profile_avatar.dart';
 import 'package:migozz_app/features/profile/presentation/edit/components/profile_field.dart';
 import 'package:migozz_app/features/profile/presentation/edit/components/profile_option_button.dart';
-import 'package:migozz_app/features/profile/presentation/edit/modules/edit_audio.dart';
-import 'package:migozz_app/features/profile/presentation/edit/modules/edit_my_interest.dart';
-import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
+// import 'package:migozz_app/features/profile/presentation/edit/modules/edit_audio.dart';
+// import 'package:migozz_app/features/profile/presentation/edit/modules/edit_my_interest.dart';
+// import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 
 class EditProfileScreen extends StatefulWidget {
@@ -28,7 +24,6 @@ class EditProfileScreen extends StatefulWidget {
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
-  bool _uploading = false;
   final nameCtrl = TextEditingController();
   final usernameCtrl = TextEditingController();
   final emailCtrl = TextEditingController();
@@ -61,47 +56,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         birthCtrl.text =
             "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
       });
-    }
-  }
-
-  Future<void> _changeAvatar(String userId) async {
-    final editCubit = context.read<EditCubit>();
-
-    // Show loading overlay
-    if (mounted) {
-      LoadingOverlayWithCancel.show(
-        context,
-        message: 'Uploading profile picture...',
-        onCancel: () {
-          debugPrint('⚠️ User cancelled avatar upload');
-        },
-      );
-    }
-
-    try {
-      await editCubit.changeAvatar(userId);
-
-      // Hide loading overlay
-      LoadingOverlayWithCancel.hide();
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("edit.validations.updateProfilePic".tr())),
-        );
-      }
-    } catch (e) {
-      // Hide loading overlay
-      LoadingOverlayWithCancel.hide();
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              "${"edit.validations.errorUpdateProfilePic".tr()} $e",
-            ),
-          ),
-        );
-      }
     }
   }
 
@@ -289,13 +243,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ),
                 );
               }
-              String imageProfile = "";
 
               if (user.avatarUrl == null || user.avatarUrl!.isEmpty) {
-                imageProfile = "assets/images/Migozz.webp";
-              } else {
-                imageProfile = user.avatarUrl!;
-              }
+              } else {}
 
               if (nameCtrl.text.isEmpty) {
                 nameCtrl.text = user.displayName;
@@ -340,15 +290,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   children: [
                     SizedBox(height: height * 0.02),
 
-                    ProfileAvatar(
-                      avatarUrl: imageProfile,
-                      uploading: _uploading,
-                      onEdit: () {
-                        _changeAvatar(state.firebaseUser!.uid);
-                      },
-                    ),
-                    SizedBox(height: height * 0.025),
-
                     ProfileField(
                       hint: 'edit.presentation.fields.fullName'.tr(),
                       controller: nameCtrl,
@@ -391,77 +332,55 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
                     SizedBox(height: height * 0.025),
 
-                    ProfileOptionButton(
-                      icon: Icons.play_circle_outline,
-                      text: 'edit.presentation.record'.tr(),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const EditRecordScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    ProfileOptionButton(
-                      icon: Icons.handshake_outlined,
-                      text: 'edit.presentation.interest'.tr(),
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const EditInterestsScreen(),
-                        ),
-                      ),
-                    ),
-                    ProfileOptionButton(
-                      icon: Icons.share_outlined,
-                      text: 'edit.presentation.socials'.tr(),
-                      onTap: () {
-                        final userId = state.firebaseUser?.uid;
-                        if (userId == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'edit.validations.errorUserLogin'.tr(),
-                              ),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                          return;
-                        }
+                    // ProfileOptionButton(
+                    //   icon: Icons.share_outlined,
+                    //   text: 'edit.presentation.socials'.tr(),
+                    //   onTap: () {
+                    //     final userId = state.firebaseUser?.uid;
+                    //     if (userId == null) {
+                    //       ScaffoldMessenger.of(context).showSnackBar(
+                    //         SnackBar(
+                    //           content: Text(
+                    //             'edit.validations.errorUserLogin'.tr(),
+                    //           ),
+                    //           backgroundColor: Colors.red,
+                    //         ),
+                    //       );
+                    //       return;
+                    //     }
 
-                        final editCubit = context.read<EditCubit>();
+                    //     final editCubit = context.read<EditCubit>();
 
-                        // ✅ CLAVE: Inicializar con datos actuales del AuthCubit
-                        final currentSocials =
-                            state.userProfile?.socialEcosystem ?? [];
-                        debugPrint(
-                          '📱 [EditProfile] Inicializando con ${currentSocials.length} redes',
-                        );
+                    //     // ✅ CLAVE: Inicializar con datos actuales del AuthCubit
+                    //     final currentSocials =
+                    //         state.userProfile?.socialEcosystem ?? [];
+                    //     debugPrint(
+                    //       '📱 [EditProfile] Inicializando con ${currentSocials.length} redes',
+                    //     );
 
-                        editCubit.initializeFromUser(
-                          socialEcosystem: currentSocials,
-                          category: state.userProfile?.category,
-                          interests: state.userProfile?.interests,
-                        );
+                    //     editCubit.initializeFromUser(
+                    //       socialEcosystem: currentSocials,
+                    //       category: state.userProfile?.category,
+                    //       interests: state.userProfile?.interests,
+                    //     );
 
-                        editCubit.setEditItem(EditItem.socialEcosystem);
+                    //     editCubit.setEditItem(EditItem.socialEcosystem);
 
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => BlocProvider.value(
-                              value: editCubit,
-                              child: MoreUserDetails(
-                                pageIndicator: 0,
-                                mode: MoreUserDetailsMode.edit,
-                                userId: userId,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
+                    //     Navigator.push(
+                    //       context,
+                    //       MaterialPageRoute(
+                    //         builder: (_) => BlocProvider.value(
+                    //           value: editCubit,
+                    //           child: MoreUserDetails(
+                    //             pageIndicator: 0,
+                    //             mode: MoreUserDetailsMode.edit,
+                    //             userId: userId,
+                    //           ),
+                    //         ),
+                    //       ),
+                    //     );
+                    //   },
+                    // ),
                     ProfileOptionButton(
                       icon: Icons.logout,
                       text: 'edit.presentation.logOut'.tr(),

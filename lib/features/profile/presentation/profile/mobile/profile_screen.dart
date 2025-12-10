@@ -5,7 +5,6 @@ import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/chat/presentation/user/list/chats_list_screen.dart';
 import 'package:migozz_app/features/chat/presentation/user/user_chat_screen.dart';
-import 'package:migozz_app/features/profile/components/draggable_social_rail.dart';
 import 'package:migozz_app/features/profile/components/profile_version_selector.dart';
 import 'package:migozz_app/features/profile/presentation/profile/modules/qr_scanner_screen.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/components/profile_top_actions.dart';
@@ -38,9 +37,6 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
         ? authState.userProfile!
         : widget.user;
 
-    final size = MediaQuery.of(context).size;
-    final initialSocialPosition = Offset(size.width - 65, size.height * 0.2);
-
     final name = user.displayName;
     final username = user.username.startsWith('@')
         ? user.username
@@ -49,7 +45,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
     final voiceNoteUrl = user.voiceNoteUrl ?? '';
 
     final totalFollowers = _calculateTotalFollowers(user.socialEcosystem);
-    final socialLinks = _buildSocialLinks(user.socialEcosystem, user.username);
+    _buildSocialLinks(user.socialEcosystem, user.username);
 
     return Scaffold(
       body: BackgroundImage(
