@@ -40,7 +40,7 @@ class UserService {
   /// 🔹 PICKER GENÉRICO
   /// ---------------------------
   Future<File?> _pickImage({ImageSource source = ImageSource.gallery}) async {
-    final picked = await _picker.pickImage(source: source, imageQuality: 85);
+    final picked = await _picker.pickImage(source: source, imageQuality: 40);
     return picked != null ? File(picked.path) : null;
   }
 

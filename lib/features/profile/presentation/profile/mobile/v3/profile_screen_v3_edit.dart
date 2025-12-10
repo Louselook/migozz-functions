@@ -36,10 +36,15 @@ class MobileProfileContentV3Edit extends StatefulWidget {
 
 class _MobileProfileContentV3EditState
     extends State<MobileProfileContentV3Edit> {
+  bool _uploading = false;
+
   @override
   Widget build(BuildContext context) {
-    final user = widget.user;
     final size = MediaQuery.of(context).size;
+
+    // Watch AuthCubit to get real-time updates when avatar changes
+    final authState = context.watch<AuthCubit>().state;
+    final user = authState.userProfile ?? widget.user;
 
     final avatarUrl = user.avatarUrl;
     final bio =
@@ -47,7 +52,6 @@ class _MobileProfileContentV3EditState
         'Crafting stories through music.\nNew album "Midnight Reflections" out now 🎶✨';
 
     // Determinar si es el perfil del usuario autenticado
-    final authState = context.watch<AuthCubit>().state;
     final currentUserEmail = authState.userProfile?.email ?? '';
     final isOwnProfile = user.email == currentUserEmail;
 
@@ -58,13 +62,13 @@ class _MobileProfileContentV3EditState
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // TintesGradients(child: Container()),
-          // Positioned(
-          //   top: 0,
-          //   left: 0,
-          //   right: 0,
-          //   child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
-          // ),
+          TintesGradients(child: Container()),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
+          ),
           SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             child: Column(
@@ -72,33 +76,47 @@ class _MobileProfileContentV3EditState
                 // Imagen de perfil con overlay
                 SizedBox(height: size.height * 0.4),
                 // Botón "Change Profile Picture"
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white10,
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 5,
-                    horizontal: 10,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.camera_alt_outlined,
-                        color: Colors.white,
-                        size: 14,
-                      ),
-                      SizedBox(width: 10),
-                      Text(
-                        'Change Profile Picture',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
+                GestureDetector(
+                  onTap: _uploading ? null : () => _changeAvatar(),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white10,
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 5,
+                      horizontal: 10,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _uploading
+                            ? SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Icon(
+                                Icons.camera_alt_outlined,
+                                color: Colors.white,
+                                size: 14,
+                              ),
+                        SizedBox(width: 10),
+                        Text(
+                          _uploading
+                              ? 'Uploading...'
+                              : 'Change Profile Picture',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
 
@@ -189,6 +207,48 @@ class _MobileProfileContentV3EditState
         ],
       ),
     );
+  }
+
+  /// Change avatar
+  Future<void> _changeAvatar() async {
+    final authCubit = context.read<AuthCubit>();
+    final userId = authCubit.state.firebaseUser?.uid;
+
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error: User not logged in'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final editCubit = context.read<EditCubit>();
+    setState(() => _uploading = true);
+
+    try {
+      await editCubit.changeAvatar(userId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile picture updated successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error updating profile picture: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _uploading = false);
+    }
   }
 
   /// Navigate to social media selection screen V3

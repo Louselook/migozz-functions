@@ -68,7 +68,7 @@ class _AddPlatformBottomSheetState extends State<AddPlatformBottomSheet> {
         source: source,
         maxWidth: 1024,
         maxHeight: 1024,
-        imageQuality: 80,
+        imageQuality: 40,
       );
 
       if (image != null) {

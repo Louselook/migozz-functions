@@ -476,8 +476,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
           if (networks.isEmpty) return const SizedBox.shrink();
 
           return Container(
-            margin: const EdgeInsets.only(bottom: 5),
-            padding: const EdgeInsets.all(10),
+
+            padding: const EdgeInsets.symmetric(vertical:5),
 
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -490,8 +490,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(height: 12),
-                GridView.builder(
+                const SizedBox(height: 6),
+                GridView.builder(padding: EdgeInsets.zero,
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
