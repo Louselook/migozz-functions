@@ -210,7 +210,6 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
                 AssetsConstants.shareIcon,
                 width: 17,
                 height: 17,
-                color: Colors.white,
               ),
             ),
 

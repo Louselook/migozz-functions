@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:ui' as ui;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:migozz_app/core/assets_constants.dart';
-import 'package:migozz_app/features/auth/presentation/onboarding/shared/constant.dart';
+// import 'package:flutter_svg/flutter_svg.dart';
+// import 'package:migozz_app/core/assets_constants.dart';
+// import 'package:migozz_app/features/auth/presentation/onboarding/shared/constant.dart';
 
 import 'add_contact_info_bottom_sheet.dart';
 

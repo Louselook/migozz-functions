@@ -4,7 +4,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/features/auth/services/add_networks/network_config.dart';
-import 'package:migozz_app/core/components/atomics/loading_overlay_with_cancel.dart';
+// import 'package:migozz_app/core/components/atomics/loading_overlay_with_cancel.dart';
 
 enum NetworkAuthMode { click, manual }
 
