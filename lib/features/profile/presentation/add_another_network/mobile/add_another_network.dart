@@ -31,9 +31,38 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
   DateTime? _loaderStart;
 
   @override
+  void initState() {
+    super.initState();
+    _linkCtrl.addListener(_onLinkChanged);
+  }
+
+  @override
   void dispose() {
+    _linkCtrl.removeListener(_onLinkChanged);
     _linkCtrl.dispose();
     super.dispose();
+  }
+
+  void _onLinkChanged() {
+    if (_applyIconFromLink) {
+      final text = _linkCtrl.text.trim();
+      if (text.isNotEmpty) {
+        final domain = _domainFromUrl(text);
+        final newIconUrl = _faviconFromDomain(domain);
+        if (_pickedImageUrl != newIconUrl) {
+          setState(() {
+            _pickedImageUrl = newIconUrl;
+            _pickedImage = null;
+          });
+        }
+      } else {
+        if (_pickedImageUrl != null) {
+          setState(() {
+            _pickedImageUrl = null;
+          });
+        }
+      }
+    }
   }
 
   Future<void> _openPickerSheet() async {
