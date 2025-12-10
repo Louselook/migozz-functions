@@ -38,19 +38,19 @@ final List<Map<String, Object>> questionsTopics = [
     "options": {"en": [], "es": []},
     "keyboardType": "text",
   },
-  {
-    "id": "gender",
-    "description": "Pregunta el género del usuario.",
-    "text": {
-      "en": "Great nickname! What is your gender?",
-      "es": "¡Excelente apodo! ¿Cuál es tu género?",
-    },
-    "options": {
-      "en": ["Male", "Female", "Other"],
-      "es": ["Hombre", "Mujer", "Otro"],
-    },
-    "keyboardType": "text",
-  },
+  // {
+  //   "id": "gender",
+  //   "description": "Pregunta el género del usuario.",
+  //   "text": {
+  //     "en": "Great nickname! What is your gender?",
+  //     "es": "¡Excelente apodo! ¿Cuál es tu género?",
+  //   },
+  //   "options": {
+  //     "en": ["Male", "Female", "Other"],
+  //     "es": ["Hombre", "Mujer", "Otro"],
+  //   },
+  //   "keyboardType": "text",
+  // },
   {
     "id": "socialEcosystem",
     "description":

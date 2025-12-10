@@ -70,32 +70,32 @@ final List username = [
   },
 
   // Válida
-  {
-    "text": "¡Excelente apodo! ¿Cuál es tu género?",
-    "step": "regProgress.gender",
-    "keepTalk": false,
-    "valid": true,
-    "userResponse": "juanp",
-  },
+  // {
+  //   "text": "¡Excelente apodo! ¿Cuál es tu género?",
+  //   "step": "regProgress.gender",
+  //   "keepTalk": false,
+  //   "valid": true,
+  //   "userResponse": "juanp",
+  // },
 ];
 
-final List gender = [
-  // Primera
-  {
-    "text": "¿Cuál es tu género?",
-    "options": ["Hombre", "Mujer", "Otro"],
-    "step": "regProgress.gender",
-    "keepTalk": false,
-  },
+// final List gender = [
+//   // Primera
+//   {
+//     "text": "¿Cuál es tu género?",
+//     "options": ["Hombre", "Mujer", "Otro"],
+//     "step": "regProgress.gender",
+//     "keepTalk": false,
+//   },
 
-  // Rechazo
-  {
-    "text": "Por favor selecciona una opción válida.",
-    "options": ["Hombre", "Mujer", "Otro"],
-    "step": "regProgress.gender",
-    "keepTalk": false,
-    "valid": false,
-  },
+//   // Rechazo
+//   {
+//     "text": "Por favor selecciona una opción válida.",
+//     "options": ["Hombre", "Mujer", "Otro"],
+//     "step": "regProgress.gender",
+//     "keepTalk": false,
+//     "valid": false,
+//   },
 
   // Válida
   // {
@@ -105,7 +105,7 @@ final List gender = [
   //   "valid": true,
   //   "userResponse": "Hombre",
   // },
-];
+// ];
 
 // final List socialEcosystem = [
 //   // Primera

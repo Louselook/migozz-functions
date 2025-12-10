@@ -452,7 +452,7 @@ class RegisterCubit extends Cubit<RegisterState> {
           state.language != null &&
           state.fullName != null &&
           state.username != null &&
-          state.gender != null &&
+          // state.gender != null &&
           hasLocationData &&
           state.phone != null; // &&
           // state.category != null &&
@@ -460,7 +460,7 @@ class RegisterCubit extends Cubit<RegisterState> {
 
       final completeForGoogle =
           state.language != null &&
-          state.gender != null &&
+          // state.gender != null &&
           hasLocationData &&
           state.phone != null ; // &&
           // state.category != null &&

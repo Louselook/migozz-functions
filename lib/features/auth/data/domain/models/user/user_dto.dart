@@ -36,7 +36,7 @@ class UserDTO {
     required this.lang,
     required this.displayName,
     required this.username,
-    required this.gender,
+    this.gender,
     this.birthDate,
     this.bio,
     this.socialEcosystem,
