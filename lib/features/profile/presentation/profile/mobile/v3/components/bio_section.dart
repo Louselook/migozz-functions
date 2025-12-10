@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/color.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
+import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
+import 'edit_bio_bottom_sheet.dart';
 
 class BioSection extends StatelessWidget {
   final String bio;
@@ -11,46 +15,103 @@ class BioSection extends StatelessWidget {
     required this.isOwnProfile,
   });
 
+  Future<void> _editBio(BuildContext context) async {
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => EditBioBottomSheet(
+        currentBio: bio,
+        onSave: (newBio) async {
+          final authCubit = context.read<AuthCubit>();
+          final editCubit = context.read<EditCubit>();
+          final userId = authCubit.state.firebaseUser?.uid;
+
+          if (userId == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Error: User not logged in'),
+                backgroundColor: Colors.red,
+              ),
+            );
+            return;
+          }
+
+          try {
+            await editCubit.saveUserProfileField(
+              userId: userId,
+              updatedFields: {'bio': newBio},
+            );
+
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Bio updated successfully'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            }
+          } catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Error updating bio: $e'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          }
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 15),
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: AppColors.greyBackground.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Text(
-                    'Bio',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
+    return GestureDetector(
+      onTap: isOwnProfile ? () => _editBio(context) : null,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 15),
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: AppColors.greyBackground.withValues(alpha: 0.4),
+          borderRadius: BorderRadius.circular(5),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'Bio',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: EdgeInsets.all(3),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,gradient:AppColors.verticalPinkPurple,
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: AppColors.verticalPinkPurple,
+                      ),
+                      child: Icon(
+                        Icons.edit,
+                        color: Colors.white,
+                        size: 7,
+                      ),
                     ),
-                    child:Icon(Icons.edit,color: Colors.white,size: 7,),
-                  ),
-                ],
-              ),
-
+                  ],
+                ),
                 GestureDetector(
                   onTap: () {
-                    // TODO: Editar bio
-                    debugPrint('Editar bio');
+                    // TODO: Toggle visibility
+                    debugPrint('Toggle bio visibility');
                   },
                   child: Container(
                     padding: const EdgeInsets.all(4),
@@ -65,18 +126,19 @@ class BioSection extends StatelessWidget {
                     ),
                   ),
                 ),
-            ],
-          ),
-          const SizedBox(height: 7),
-          Text(
-            bio,
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 12,
-              height: 1.5,
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: 7),
+            Text(
+              bio.isEmpty ? 'Tap to add your bio...' : bio,
+              style: TextStyle(
+                color: bio.isEmpty ? Colors.white38 : Colors.white70,
+                fontSize: 12,
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

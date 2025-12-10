@@ -6,10 +6,12 @@ class UserDTO {
   final String lang;
   final String displayName;
   final String username;
-  final String gender; String? bio;
+  final String gender;
+  String? bio;
   final DateTime? birthDate;
 
   final List<Map<String, dynamic>>? socialEcosystem;
+  final List<Map<String, dynamic>>? featuredLinks;
   final LocationDTO location;
 
   final String? avatarUrl;
@@ -17,6 +19,11 @@ class UserDTO {
   final String? voiceNoteUrl;
   final List<String>? category;
   final int profileVersion; // 1, 2 o 3 - versión del diseño de perfil
+
+  // Contact info
+  final String? contactWebsite;
+  final String? contactPhone;
+  final String? contactEmail;
 
   final Map<String, List<String>> interests;
   final bool complete;
@@ -30,14 +37,19 @@ class UserDTO {
     required this.displayName,
     required this.username,
     required this.gender,
-    this.birthDate,this.bio,
+    this.birthDate,
+    this.bio,
     this.socialEcosystem,
+    this.featuredLinks,
     required this.location,
     this.avatarUrl,
     this.phone,
     this.voiceNoteUrl,
     this.category,
     this.profileVersion = 1, // Por defecto versión 1
+    this.contactWebsite,
+    this.contactPhone,
+    this.contactEmail,
     Map<String, List<String>>? interests,
     this.complete = true,
     DateTime? createdAt,
@@ -52,14 +64,19 @@ class UserDTO {
     String? displayName,
     String? username,
     String? gender,
+    String? bio,
     DateTime? birthDate,
     List<Map<String, dynamic>>? socialEcosystem,
+    List<Map<String, dynamic>>? featuredLinks,
     LocationDTO? location,
     String? avatarUrl,
     String? phone,
     String? voiceNoteUrl,
     List<String>? category,
     int? profileVersion,
+    String? contactWebsite,
+    String? contactPhone,
+    String? contactEmail,
     Map<String, List<String>>? interests,
     bool? complete,
     DateTime? createdAt,
@@ -71,14 +88,19 @@ class UserDTO {
       displayName: displayName ?? this.displayName,
       username: username ?? this.username,
       gender: gender ?? this.gender,
+      bio: bio ?? this.bio,
       birthDate: birthDate ?? this.birthDate,
       socialEcosystem: socialEcosystem ?? this.socialEcosystem,
+      featuredLinks: featuredLinks ?? this.featuredLinks,
       location: location ?? this.location,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       phone: phone ?? this.phone,
       voiceNoteUrl: voiceNoteUrl ?? this.voiceNoteUrl,
       category: category ?? this.category,
       profileVersion: profileVersion ?? this.profileVersion,
+      contactWebsite: contactWebsite ?? this.contactWebsite,
+      contactPhone: contactPhone ?? this.contactPhone,
+      contactEmail: contactEmail ?? this.contactEmail,
       interests: interests ?? this.interests,
       complete: complete ?? this.complete,
       createdAt: createdAt ?? this.createdAt,
@@ -93,14 +115,19 @@ class UserDTO {
       'displayName': displayName,
       'username': username,
       'gender': gender,
+      'bio': bio,
       'birthDate': birthDate != null ? Timestamp.fromDate(birthDate!) : null,
       'socialEcosystem': socialEcosystem,
+      'featuredLinks': featuredLinks,
       'location': location.toMap(),
       'avatarUrl': avatarUrl,
       'phone': phone,
       'voiceNoteUrl': voiceNoteUrl,
       'category': category,
       'profileVersion': profileVersion,
+      'contactWebsite': contactWebsite,
+      'contactPhone': contactPhone,
+      'contactEmail': contactEmail,
       'interests': interests,
       'complete': complete,
       'createdAt': Timestamp.fromDate(createdAt),
@@ -114,9 +141,13 @@ class UserDTO {
     final displayName = (map['displayName'] ?? '').toString();
     final username = (map['username'] ?? '').toString();
     final gender = (map['gender'] ?? '').toString();
+    final bio = map['bio']?.toString();
     final avatarUrl = map['avatarUrl']?.toString();
     final phone = map['phone']?.toString();
     final voiceNoteUrl = map['voiceNoteUrl']?.toString();
+    final contactWebsite = map['contactWebsite']?.toString();
+    final contactPhone = map['contactPhone']?.toString();
+    final contactEmail = map['contactEmail']?.toString();
 
     // ✅ birthDate defensivo
     DateTime? birthDate;
@@ -177,6 +208,20 @@ class UserDTO {
         }
       } else if (rawSocial is Map) {
         socialEcosystem = [Map<String, dynamic>.from(rawSocial)];
+      }
+    }
+
+    // featuredLinks
+    List<Map<String, dynamic>>? featuredLinks;
+    final rawLinks = map['featuredLinks'];
+    if (rawLinks != null) {
+      if (rawLinks is List) {
+        featuredLinks = [];
+        for (final item in rawLinks) {
+          if (item is Map) {
+            featuredLinks.add(Map<String, dynamic>.from(item));
+          }
+        }
       }
     }
 
@@ -269,14 +314,19 @@ class UserDTO {
       displayName: displayName,
       username: username,
       gender: gender,
+      bio: bio,
       birthDate: birthDate,
       socialEcosystem: socialEcosystem,
+      featuredLinks: featuredLinks,
       location: location,
       avatarUrl: avatarUrl,
       phone: phone,
       voiceNoteUrl: voiceNoteUrl,
       category: category,
       profileVersion: profileVersion,
+      contactWebsite: contactWebsite,
+      contactPhone: contactPhone,
+      contactEmail: contactEmail,
       interests: interests,
       complete: complete,
       createdAt: createdAt,

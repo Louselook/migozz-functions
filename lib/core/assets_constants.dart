@@ -6,6 +6,8 @@ class AssetsConstants {
 
   static const String shareIcon = '$icons/Share_Icon.svg';
   static const String inboxIcon = '$icons/send.png';
+  static const String migozIcon = '$icons/Migozz_Icon.svg';
+  static const String placeholderIcon = '$icons/placeholder.svg';
 
   //black and white icons
   static const String tiktokIcon = '$socialBlackWhiteIcons/tiktok.svg';

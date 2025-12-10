@@ -14,6 +14,7 @@ class InfoUserProfile extends StatefulWidget {
   final String comunityCount;
   final String nameComunity;
   final String voiceNoteUrl;
+  final String? bio;
   final TutorialKeys? tutorialKeys;
   final bool isOwnProfile;
   final String userId;
@@ -26,6 +27,7 @@ class InfoUserProfile extends StatefulWidget {
     required this.comunityCount,
     required this.nameComunity,
     required this.voiceNoteUrl,
+    this.bio,
     this.isOwnProfile = true,
     this.userId = '',
     this.tutorialKeys,
@@ -248,19 +250,26 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
             ),
           ],
         ),
-        const SizedBox(height: 10),
-        Container(
-          width: MediaQuery.of(context).size.width * 0.7,
-          padding: const EdgeInsets.symmetric(horizontal: 16,vertical: 6),
-
-         decoration: BoxDecoration(borderRadius: BorderRadius.circular(4),
-            color: AppColors.greyBackground.withValues(alpha: 0.2),
-          ),child:   Text(
-              "🎶 Crafting stories through music. ✨ New album “Midnight Reflections” out now 🎧",
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white60, fontSize: 10, height: 1.2),
+        if (widget.bio != null && widget.bio!.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          Container(
+            width: MediaQuery.of(context).size.width * 0.7,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(4),
+              color: AppColors.greyBackground.withValues(alpha: 0.2),
             ),
-        ),
+            child: Text(
+              widget.bio!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white60,
+                fontSize: 10,
+                height: 1.2,
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }

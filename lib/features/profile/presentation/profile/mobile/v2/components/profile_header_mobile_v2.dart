@@ -9,6 +9,7 @@ class ProfileHeaderMobileV2 extends StatelessWidget {
   final String communityName;
   final String? avatarUrl;
   final String voiceNoteUrl;
+  final String? bio;
   final TutorialKeys? tutorialKeys;
   final bool isOwnProfile;
   final String userId;
@@ -21,6 +22,7 @@ class ProfileHeaderMobileV2 extends StatelessWidget {
     required this.communityName,
     this.avatarUrl,
     this.voiceNoteUrl = '',
+    this.bio,
     this.tutorialKeys,
     this.isOwnProfile = true,
     this.userId = '',
@@ -46,6 +48,7 @@ class ProfileHeaderMobileV2 extends StatelessWidget {
           comunityCount: communityCount,
           nameComunity: communityName,
           voiceNoteUrl: voiceNoteUrl,
+          bio: bio,
           tutorialKeys: tutorialKeys,
           isOwnProfile: isOwnProfile,
           userId: userId,

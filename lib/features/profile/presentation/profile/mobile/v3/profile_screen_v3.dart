@@ -79,6 +79,7 @@ class _MobileProfileContentV3State extends State<MobileProfileContentV3> {
                   comunityCount: totalFollowers.toString(),
                   nameComunity: 'Community',
                   voiceNoteUrl: voiceNoteUrl,
+                  bio: user.bio,
                   tutorialKeys: widget.tutorialKeys,
                   isOwnProfile: isOwnProfile,
                   userId: user.email,

@@ -47,9 +47,7 @@ class _MobileProfileContentV3EditState
     final user = authState.userProfile ?? widget.user;
 
     final avatarUrl = user.avatarUrl;
-    final bio =
-        user.bio ??
-        'Crafting stories through music.\nNew album "Midnight Reflections" out now 🎶✨';
+    final bio = user.bio ?? '';
 
     // Determinar si es el perfil del usuario autenticado
     final currentUserEmail = authState.userProfile?.email ?? '';
@@ -146,14 +144,14 @@ class _MobileProfileContentV3EditState
                 const SizedBox(height: 10),
 
                 // Sección de Featured Links
-                FeaturedLinksSection(isOwnProfile: isOwnProfile),
+                FeaturedLinksSection(isOwnProfile: isOwnProfile, user: user),
 
                 const SizedBox(height: 10),
 
                 // Sección de Contact Info
                 ContactInfoSection(isOwnProfile: isOwnProfile, user: user),
 
-                const SizedBox(height: 40),
+                const SizedBox(height: 100),
               ],
             ),
           ),
