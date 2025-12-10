@@ -400,7 +400,7 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
                           value: _applyIconFromLink,
                           inactiveTrackColor: const Color(0xFF5E5564),
                           activeTrackColor: const Color(0xFF5E5564),
-                          activeThumbColor: Colors.white,
+                          activeColor: Colors.white,
                           onChanged: (v) {
                             setState(() {
                               _applyIconFromLink = v;
