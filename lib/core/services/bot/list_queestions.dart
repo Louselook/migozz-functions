@@ -28,13 +28,13 @@ final Map<String, Map<String, dynamic>> questionsEs = {
     "keyboardType": "text",
   },
 
-  "gender": {
-    "text": "¡Excelente apodo! ¿Cuál es tu género?",
-    "options": ["Hombre", "Mujer"],
-    "step": "regProgress.gender",
-    "keepTalk": false,
-    "keyboardType": "text",
-  },
+  // "gender": {
+  //   "text": "¡Excelente apodo! ¿Cuál es tu género?",
+  //   "options": ["Hombre", "Mujer"],
+  //   "step": "regProgress.gender",
+  //   "keepTalk": false,
+  //   "keyboardType": "text",
+  // },
 
   "socialEcosystem": {
     "text": "¡Agreguemos tus plataformas sociales!",
@@ -144,13 +144,13 @@ final Map<String, Map<String, dynamic>> questionsEn = {
     "keyboardType": "text",
   },
 
-  "gender": {
-    "text": "Great nickname! What is your gender?",
-    "options": ["Male", "Female"],
-    "step": "regProgress.gender",
-    "keepTalk": false,
-    "keyboardType": "text",
-  },
+  // "gender": {
+  //   "text": "Great nickname! What is your gender?",
+  //   "options": ["Male", "Female"],
+  //   "step": "regProgress.gender",
+  //   "keepTalk": false,
+  //   "keyboardType": "text",
+  // },
 
   "socialEcosystem": {
     "text": "Let's add your social platforms!",
@@ -255,12 +255,12 @@ final Map<String, Map<String, dynamic>> errorMessagesEs = {
     "keepTalk": false,
   },
 
-  "gender": {
-    "text": "Por favor elige una opción válida.",
-    "options": ["Hombre", "Mujer", "Otro"],
-    "step": "regProgress.gender",
-    "keepTalk": false,
-  },
+  // "gender": {
+  //   "text": "Por favor elige una opción válida.",
+  //   "options": ["Hombre", "Mujer", "Otro"],
+  //   "step": "regProgress.gender",
+  //   "keepTalk": false,
+  // },
 
   "location": {
     "text": "Por favor responde 'Sí' o 'No'.",
@@ -321,12 +321,12 @@ final Map<String, Map<String, dynamic>> errorMessagesEn = {
     "keepTalk": false,
   },
 
-  "gender": {
-    "text": "Please choose a valid option.",
-    "options": ["Male", "Female"],
-    "step": "regProgress.gender",
-    "keepTalk": false,
-  },
+  // "gender": {
+  //   "text": "Please choose a valid option.",
+  //   "options": ["Male", "Female"],
+  //   "step": "regProgress.gender",
+  //   "keepTalk": false,
+  // },
 
   "location": {
     "text": "Please answer 'Yes' or 'No'.",

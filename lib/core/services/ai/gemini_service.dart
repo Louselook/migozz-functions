@@ -76,7 +76,7 @@ class GeminiService {
     // 'language', // 0
     'fullName', // 1
     'username', // 2
-    'gender', // 3
+    // 'gender', // 3
     // 'socialEcosystem', // 4
     'location', // 5
     'sendOTP', // 6
@@ -92,7 +92,7 @@ class GeminiService {
   //  Flujo reducido para usuarios autenticados
   final List<String> _questionFlowAuth = [
     // 'language', // 0
-    'gender', // 1
+    // 'gender', // 1
     // 'socialEcosystem', // 2
     'location', // 3
     'phone', // 4
