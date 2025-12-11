@@ -5,13 +5,19 @@ import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/chat/presentation/user/list/chats_list_screen.dart';
 import 'package:migozz_app/features/chat/presentation/user/user_chat_screen.dart';
-// import 'package:migozz_app/features/profile/components/draggable_social_rail.dart';
-import 'package:migozz_app/features/profile/components/profile_version_selector.dart';
-import 'package:migozz_app/features/profile/presentation/profile/modules/qr_scanner_screen.dart';
-import 'package:migozz_app/features/profile/presentation/profile/mobile/components/profile_top_actions.dart';
-import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
-import 'package:migozz_app/features/profile/components/background_image.dart';
+import 'package:migozz_app/features/profile/components/info_user_profile.dart';
+import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
+// import 'package:migozz_app/features/profile/components/profile_version_selector.dart';
+// import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
 import 'package:migozz_app/features/profile/components/social_rail.dart';
+// import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
+import 'package:migozz_app/features/profile/presentation/profile/mobile/components/profile_top_actions.dart';
+import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/profile_image_mobile_v3.dart';
+import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/social_circles_mobile_v3.dart';
+import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/social_profile_photos_grid.dart';
+import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/profile_screen_v3_edit.dart';
+import 'package:migozz_app/features/profile/presentation/profile/modules/qr_scanner_screen.dart';
+import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 
 class MobileProfileContent extends StatefulWidget {
   final UserDTO user;
@@ -30,13 +36,8 @@ class MobileProfileContent extends StatefulWidget {
 class _MobileProfileContentState extends State<MobileProfileContent> {
   @override
   Widget build(BuildContext context) {
-    final authState = context.watch<AuthCubit>().state;
-    final currentUserEmail = authState.userProfile?.email ?? '';
-    final isOwnProfile = widget.user.email == currentUserEmail;
-
-    final user = isOwnProfile && authState.userProfile != null
-        ? authState.userProfile!
-        : widget.user;
+    final user = widget.user;
+    final size = MediaQuery.of(context).size;
 
     final name = user.displayName;
     final username = user.username.startsWith('@')
@@ -45,85 +46,142 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
     final avatarUrl = user.avatarUrl;
     final voiceNoteUrl = user.voiceNoteUrl ?? '';
 
+    // Determinar si es el perfil del usuario autenticado
+    final authState = context.watch<AuthCubit>().state;
+    final currentUserEmail = authState.userProfile?.email ?? '';
+    final isOwnProfile = user.email == currentUserEmail;
+
+    // Recuperamos los seguidores y redes desde el perfil
     final totalFollowers = _calculateTotalFollowers(user.socialEcosystem);
-    _buildSocialLinks(user.socialEcosystem, user.username);
+    final socialLinks = _buildSocialLinks(user.socialEcosystem, user.username);
 
     return Scaffold(
-      body: BackgroundImage(
-        avatarUrl: avatarUrl,
-        tutorialKeys: widget.tutorialKeys,
-        name: name.isNotEmpty ? name : 'NOMBRE VACÍO',
-        displayName: username,
-        comunityCount: totalFollowers.toString(),
-        nameComunity: 'Community',
-        voiceNoteUrl: voiceNoteUrl,
-        isOwnProfile: isOwnProfile,
-        userId: user.email,
-        child: Stack(
-          children: [
-            // ✅ 3. TODOS LOS BOTONES SUPERIORES EN UN SOLO WIDGET
-            ProfileTopActions(
-              isOwnProfile: isOwnProfile,
-              onMenuTap: () {
-                // ✅ NUEVO callback
-                if (isOwnProfile) {
-                  showDialog(
-                    context: context,
-                    builder: (context) => ProfileVersionSelector(
-                      currentVersion: user.profileVersion,
-                    ),
-                  );
-                } else {
-                  Navigator.of(context).pop();
-                }
-              },
-              onQrScanTap: () {
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          // Gradientes de fondo
+          TintesGradients(child: Container()),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
+          ),
+          SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              children: [
+                // Espacio para la imagen (60% de altura - 80px para superposición)
+                SizedBox(height: size.height * 0.38),
+
+                // Info del usuario
+                InfoUserProfile(
+                  name: name.isNotEmpty ? name : 'NOMBRE VACÍO',
+                  displayName: username,
+                  comunityCount: totalFollowers.toString(),
+                  nameComunity: 'Community',
+                  voiceNoteUrl: voiceNoteUrl,
+                  bio: user.bio,
+                  tutorialKeys: widget.tutorialKeys,
+                  isOwnProfile: isOwnProfile,
+                  userId: user.email,
+                  onMessageTap: () {
+                    debugPrint("pulsado el chat");
+                    if (!isOwnProfile) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => UserChatScreen(
+                            otherUserId: user.email,
+                            otherUserName: user.displayName.isNotEmpty
+                                ? user.displayName
+                                : user.username,
+                            otherUserAvatar: user.avatarUrl,
+                            currentUserId: currentUserEmail,
+                          ),
+                        ),
+                      );
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ChatsListScreen(
+                            username: user.username.replaceFirst('@', ''),
+                            currentUserId: currentUserEmail,
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                ),
+
+                // Iconos circulares de redes sociales
+                Padding(
+                  padding: const EdgeInsets.only(top: 8, bottom: 0),
+                  child: SocialCirclesMobileV3(links: socialLinks),
+                ),
+
+                // Grid de fotos de perfil de redes sociales
+                SocialProfilePhotosGrid(socialEcosystem: user.socialEcosystem),
+              ],
+            ),
+          ),
+          ProfileTopActions(
+            isOwnProfile: isOwnProfile,
+            onMenuTap: () {
+              // ✅ NUEVO callback
+              if (isOwnProfile) {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const QrScannerScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => MobileProfileContentV3Edit(
+                      user: user,
+                      tutorialKeys: widget.tutorialKeys,
+                    ),
+                  ),
                 );
-              },
-              onChatTap: () {
-                if (!isOwnProfile) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => UserChatScreen(
-                        otherUserId: user.email,
-                        otherUserName: user.displayName.isNotEmpty
-                            ? user.displayName
-                            : user.username,
-                        otherUserAvatar: user.avatarUrl,
-                        currentUserId: currentUserEmail,
-                      ),
+              } else {
+                Navigator.of(context).pop();
+              }
+            },
+            onQrScanTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const QrScannerScreen()),
+              );
+            },
+            onChatTap: () {
+              if (!isOwnProfile) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => UserChatScreen(
+                      otherUserId: user.email,
+                      otherUserName: user.displayName.isNotEmpty
+                          ? user.displayName
+                          : user.username,
+                      otherUserAvatar: user.avatarUrl,
+                      currentUserId: currentUserEmail,
                     ),
-                  );
-                } else {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ChatsListScreen(
-                        username: user.username.replaceFirst('@', ''),
-                        currentUserId: currentUserEmail,
-                      ),
+                  ),
+                );
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ChatsListScreen(
+                      username: user.username.replaceFirst('@', ''),
+                      currentUserId: currentUserEmail,
                     ),
-                  );
-                }
-              },
-              onNotificationsTap: () {
-                debugPrint('Abrir notificaciones');
-              },
-            ),
-
-            // if (socialLinks.isNotEmpty)
-            //   DraggableSocialRail(
-            //     initialPosition: initialSocialPosition,
-            //     links: socialLinks,
-            //     itemSize: 50,
-            //     iconSize: 45,
-            //   ),
-          ],
-        ),
+                  ),
+                );
+              }
+            },
+            onNotificationsTap: () {
+              debugPrint('Abrir notificaciones');
+            },
+          ),
+        ],
       ),
     );
   }
@@ -181,6 +239,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
         }
       }
     }
+
     return links;
   }
 
@@ -214,14 +273,26 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
       case 'twitter':
         url = customUrl ?? 'https://x.com/$username';
         break;
+      case 'facebook':
+        url = customUrl ?? 'https://www.facebook.com/$username';
+        break;
       case 'pinterest':
         url = customUrl ?? 'https://www.pinterest.com/$username';
         break;
       case 'youtube':
         url = customUrl ?? 'https://www.youtube.com/@$username';
         break;
+      case 'telegram':
+        url = customUrl ?? 'https://t.me/$username';
+        break;
+      case 'whatsapp':
+        url = customUrl ?? 'https://wa.me/$username';
+        break;
+      case 'spotify':
+        url = customUrl ?? 'https://open.spotify.com/user/$username';
+        break;
       case 'linkedin':
-        url = customUrl ?? '';
+        url = customUrl ?? 'https://www.linkedin.com/in/$username';
         break;
       default:
         url = customUrl ?? '';
