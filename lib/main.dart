@@ -9,7 +9,6 @@ import 'package:migozz_app/core/router/app_router.dart';
 import 'package:migozz_app/core/router/app_router_notifier.dart';
 import 'package:migozz_app/core/services/deeplink/deeplink_service.dart';
 import 'package:migozz_app/core/services/social_auth_service.dart';
-import 'package:migozz_app/email_otp_custom.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/injection.dart';
@@ -24,15 +23,6 @@ Future<void> main() async {
   await FirebaseConfig.initialize();
   await dotenv.load(fileName: ".env");
   SocialAuthService().init();
-
-  EmailOTP.config(
-    appName: 'Migozz',
-    otpType: OTPType.numeric,
-    expiry: 30000,
-    emailTheme: EmailTheme.v6,
-    appEmail: 'me@rohitchouhan.com',
-    otpLength: 6,
-  );
 
   setPathUrlStrategy();
   runApp(
@@ -55,8 +45,7 @@ class MyApp extends StatelessWidget {
       child: Builder(
         builder: (context) {
           // 👉 Crear el notifier aquí
-          final goRouterNotifier =
-              GoRouterNotifier(context.read<AuthCubit>());
+          final goRouterNotifier = GoRouterNotifier(context.read<AuthCubit>());
 
           // 👉 Crear el router UNA SOLA VEZ
           final router = createRouter(goRouterNotifier);
@@ -84,15 +73,20 @@ class MyApp extends StatelessWidget {
                 // Navegar post-frame para esperar a que EasyLocalization y el árbol estén listos.
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   try {
-                    final initialLocation = Uri.base.path; // ESTA ES LA RUTA QUE QUEREMOS
+                    final initialLocation =
+                        Uri.base.path; // ESTA ES LA RUTA QUE QUEREMOS
 
                     // Evitamos navegar si es "/" o vacío
                     if (initialLocation.isNotEmpty && initialLocation != "/") {
-                      debugPrint("➡️ Deep link real detectado: $initialLocation");
+                      debugPrint(
+                        "➡️ Deep link real detectado: $initialLocation",
+                      );
                       router.go(initialLocation);
                     }
                   } catch (e, st) {
-                    debugPrint("⚠️ Error al navegar al deep link inicial: $e\n$st");
+                    debugPrint(
+                      "⚠️ Error al navegar al deep link inicial: $e\n$st",
+                    );
                   }
                 });
               }
@@ -118,4 +112,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-

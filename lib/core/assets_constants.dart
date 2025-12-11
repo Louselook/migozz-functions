@@ -10,16 +10,21 @@ class AssetsConstants {
   static const String placeholderIcon = '$icons/placeholder.svg';
 
   //black and white icons
-  static const String tiktokIcon = '$socialBlackWhiteIcons/tiktok.svg';
   static const String instagramBlackIcon =
       '$socialBlackWhiteIcons/instagram_black.svg';
-  static const String facebookIcon = '$socialBlackWhiteIcons/facebook.svg';
   static const String youtubeBlackIcon =
       '$socialBlackWhiteIcons/youtube_black.svg';
-  static const String telegramIcon = '$socialBlackWhiteIcons/telegram.svg';
-  static const String whatsappIcon = '$socialBlackWhiteIcons/whatsapp.svg';
-  static const String pinterestIcon = '$socialBlackWhiteIcons/pinterest.svg';
-  static const String spotifyIcon = '$socialBlackWhiteIcons/spotify.svg';
-  static const String twitterIcon = '$socialBlackWhiteIcons/twitter.svg';
-  static const String linkedinIcon = '$socialBlackWhiteIcons/linkedin.svg';
+
+  static const String tiktokIcon = '$socialBlackWhiteIcons/TiktokIconNegro.svg';
+  static const String facebookIcon = '$socialBlackWhiteIcons/DiscordNegro.svg';
+  static const String telegramIcon = '$socialBlackWhiteIcons/TelegramNegro.svg';
+  static const String whatsappIcon = '$socialBlackWhiteIcons/WhatsappNegro.svg';
+  static const String pinterestIcon =
+      '$socialBlackWhiteIcons/PinterestNegro.svg';
+  static const String spotifyIcon = '$socialBlackWhiteIcons/SpotifyNegro.svg';
+  static const String twitterIcon = '$socialBlackWhiteIcons/TwitterNegro.svg';
+  static const String linkedinIcon =
+      '$socialBlackWhiteIcons/instagram_black.svg';
 }
+
+// DiscordBlanco.svg
