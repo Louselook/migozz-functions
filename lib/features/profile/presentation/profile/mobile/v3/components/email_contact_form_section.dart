@@ -1,23 +1,22 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../../../core/color.dart';
-
 class EmailContactFormSection extends StatelessWidget {
   final bool isOwnProfile;
 
-  const EmailContactFormSection({
-    super.key,
-    required this.isOwnProfile,
-  });
+  const EmailContactFormSection({super.key, required this.isOwnProfile});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 15),
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.greyBackground.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(5),
+        color: Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.12),
+          width: 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,15 +68,10 @@ class EmailContactFormSection extends StatelessWidget {
           const SizedBox(height: 7),
           Text(
             'Visitors can share their email with you through a contact form on your profile.',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 12,
-              height: 1.4,
-            ),
+            style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.4),
           ),
         ],
       ),
     );
   }
 }
-

@@ -16,11 +16,11 @@ class SocialProfilePhotosGrid extends StatelessWidget {
     if (photos.isEmpty) return const SizedBox.shrink();
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20,vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: StaggeredGrid.count(
         crossAxisCount: 4,
-        mainAxisSpacing: 1,
-        crossAxisSpacing: 1,
+        mainAxisSpacing: 6,
+        crossAxisSpacing: 6,
         children: List.generate(photos.length, (index) {
           // Define staggered pattern similar to the image
           // Pattern: large (2x2), medium (2x1), small (1x1), small (1x1), etc.
@@ -41,10 +41,7 @@ class SocialProfilePhotosGrid extends StatelessWidget {
           return StaggeredGridTile.count(
             crossAxisCellCount: pattern['cross']!,
             mainAxisCellCount: pattern['main']!,
-            child: _PhotoCard(
-              photo: photos[index],
-              aspectRatio: aspectRatio,
-            ),
+            child: _PhotoCard(photo: photos[index], aspectRatio: aspectRatio),
           );
         }),
       ),
@@ -106,58 +103,91 @@ class _PhotoCard extends StatelessWidget {
   final SocialPhoto photo;
   final double aspectRatio;
 
-  const _PhotoCard({
-    required this.photo,
-    this.aspectRatio = 1.0,
-  });
+  const _PhotoCard({required this.photo, this.aspectRatio = 1.0});
 
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
       aspectRatio: aspectRatio,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(0),
-          border: Border.all(
-            color: Colors.white54, // Color rosa/magenta del borde
-            width: 1,
-          ),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(0),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              // Imagen de perfil
-             CachedNetworkImage(imageUrl: photo.imageUrl,
-                fit: BoxFit.cover,
-                errorWidget: (context, error, stackTrace) {
-                  return Container(
-                    color: Colors.grey[900],
-                    child: const Icon(
-                      Icons.person,
-                      color: Colors.white54,
-                      size: 40,
-                    ),
-                  );
-                },
-               placeholder: (context, url) => const Center(
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final minSide = constraints.biggest.shortestSide;
+          final radius = minSide * 0.05;
+          const borderWidth = 2.0;
+          return Container(
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(radius),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.25),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.white.withValues(alpha: 0.28),
+                  offset: const Offset(2, 2),
+                  blurRadius: 10,
+                  spreadRadius: 0,
                 ),
+                BoxShadow(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  offset: const Offset(0, 0),
+                  blurRadius: 6,
+                  spreadRadius: 0.3,
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(radius),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  CachedNetworkImage(
+                    imageUrl: photo.imageUrl,
+                    fit: BoxFit.cover,
+                    errorWidget: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.grey[900],
+                        child: const Icon(
+                          Icons.person,
+                          color: Colors.white54,
+                          size: 40,
+                        ),
+                      );
+                    },
+                    placeholder: (context, url) => const Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 6,
+                    right: 6,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.35),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.18),
+                          width: 1,
+                        ),
+                      ),
+                      padding: const EdgeInsets.all(5),
+                      child: SvgPicture.asset(
+                        photo.iconAsset,
+                        fit: BoxFit.contain,
+                        width: 20,
+                        height: 20,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-
-              // Ícono de la red social en la esquina inferior derecha
-              Positioned(
-                bottom: 6,
-                right: 6,
-                child: SvgPicture.asset(photo.iconAsset, fit: BoxFit.contain,width: 20, height: 20,),
-              ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }

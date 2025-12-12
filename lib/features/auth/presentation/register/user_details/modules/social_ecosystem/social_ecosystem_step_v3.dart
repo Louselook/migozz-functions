@@ -1025,6 +1025,26 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     final cleanUsername = username.replaceFirst('@', '');
 
     for (final social in socialEcosystem) {
+      final type = social['type']?.toString().toLowerCase();
+      if (type == 'custom') {
+        final url = social['url']?.toString() ?? '';
+        final iconUrl = social['iconUrl']?.toString();
+        final domain = social['domain']?.toString() ?? '';
+        final assetUrl = (iconUrl != null && iconUrl.startsWith('http'))
+            ? iconUrl
+            : _faviconFromDomain(domain);
+        if (assetUrl.isNotEmpty && url.isNotEmpty) {
+          links.add(
+            SocialLink(
+              asset: assetUrl,
+              url: Uri.parse(url),
+              followers: null,
+              shares: null,
+            ),
+          );
+        }
+        continue;
+      }
       for (final entry in social.entries) {
         final platform = entry.key.toLowerCase();
         final data = entry.value;
@@ -1258,7 +1278,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
             shrinkWrap: true,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
-              childAspectRatio: 2.8,
+              childAspectRatio: 2.3,
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
             ),
@@ -1308,7 +1328,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 3,
-                    childAspectRatio: 2.8,
+                    childAspectRatio: 2.3,
                     crossAxisSpacing: 10,
                     mainAxisSpacing: 10,
                   ),
@@ -1371,8 +1391,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final h = constraints.maxHeight;
-            final iconSize = (h * 0.60).clamp(18.0, 28.0).toDouble();
-            final fontSize = (h * 0.38).clamp(11.0, 14.0).toDouble();
+            final iconSize = (h * 0.44).clamp(21.0, 30.0).toDouble();
+            final fontSize = (h * 0.34).clamp(14.0, 17.0).toDouble();
 
             return Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -1383,7 +1403,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                   height: iconSize,
                   fit: BoxFit.contain,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 Flexible(
                   child: Text(
                     network.displayName,

@@ -4,7 +4,6 @@ import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../../../../../../core/color.dart';
 import 'add_link_bottom_sheet.dart';
 
 class FeaturedLinksSection extends StatelessWidget {
@@ -56,10 +55,7 @@ class FeaturedLinksSection extends StatelessWidget {
           );
 
           // Add new link
-          currentLinks.add({
-            'url': url,
-            'label': label,
-          });
+          currentLinks.add({'url': url, 'label': label});
 
           try {
             await editCubit.saveUserProfileField(
@@ -134,10 +130,14 @@ class FeaturedLinksSection extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 15),
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.greyBackground.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(5),
+        color: Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.12),
+          width: 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -168,10 +168,7 @@ class FeaturedLinksSection extends StatelessWidget {
 
           // Add link button (only show if less than 2 links)
           if (isOwnProfile && (user.featuredLinks ?? []).length < 2)
-            _AddLinkButton(
-              text: '+Add link',
-              onTap: () => _addLink(context),
-            ),
+            _AddLinkButton(text: '+Add link', onTap: () => _addLink(context)),
         ],
       ),
     );
@@ -208,8 +205,12 @@ class _LinkItem extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white10,
-          borderRadius: BorderRadius.circular(8),
+          color: Colors.white.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.14),
+            width: 1,
+          ),
         ),
         child: Row(
           children: [
@@ -230,10 +231,7 @@ class _LinkItem extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     url,
-                    style: const TextStyle(
-                      color: Colors.white54,
-                      fontSize: 11,
-                    ),
+                    style: const TextStyle(color: Colors.white54, fontSize: 11),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -263,10 +261,7 @@ class _AddLinkButton extends StatelessWidget {
   final String text;
   final VoidCallback onTap;
 
-  const _AddLinkButton({
-    required this.text,
-    required this.onTap,
-  });
+  const _AddLinkButton({required this.text, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -282,14 +277,10 @@ class _AddLinkButton extends StatelessWidget {
         child: Center(
           child: Text(
             text,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-            ),
+            style: TextStyle(color: Colors.white, fontSize: 12),
           ),
         ),
       ),
     );
   }
 }
-
