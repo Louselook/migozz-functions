@@ -37,7 +37,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (email.isEmpty) {
       CustomSnackbar.show(
         context: context,
-        message: "Register.validations.emptyEmail".tr(),
+        message: "register.validations.emptyEmail".tr(),
         type: SnackbarType.error,
         duration: const Duration(seconds: 4),
       );
@@ -53,7 +53,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!isValidEmail) {
       CustomSnackbar.show(
         context: context,
-        message: "Register.validations.validationEmail".tr(),
+        message: "register.validations.validationEmail".tr(),
         type: SnackbarType.error,
         duration: const Duration(seconds: 4),
       );
@@ -78,7 +78,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (exists) {
         CustomSnackbar.show(
           context: context,
-          message: "Register.validations.registerEmail".tr(),
+          message: "register.validations.registerEmail".tr(),
           type: SnackbarType.error,
           duration: const Duration(seconds: 4),
         );
@@ -133,15 +133,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           const SizedBox(height: 20),
 
                           // Welcome text
-                          PrimaryText("Register.presentation.title".tr()),
+                          PrimaryText("register.presentation.title".tr()),
                           const SizedBox(height: 3),
-                          SecondaryText("Register.presentation.subtitle1".tr()),
+                          SecondaryText("register.presentation.subtitle1".tr()),
 
                           const SizedBox(height: 30),
 
                           // Email input
                           CustomTextField(
-                            hintText: "Register.presentation.inputText".tr(),
+                            hintText: "register.presentation.inputText".tr(),
                             prefixIcon: const Icon(
                               Icons.email_outlined,
                               color: AppColors.secondaryText,
@@ -168,7 +168,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     ),
                                   )
                                 : SecondaryText(
-                                    "Register.presentation.buttonText".tr(),
+                                    "register.presentation.buttonText".tr(),
                                     fontSize: 20, //  igual tamaño que en Login
                                   ),
                           ),
@@ -193,10 +193,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     style: const TextStyle(fontSize: 13, color: Colors.grey),
                     children: [
                       TextSpan(
-                        text: "Register.presentation.bottonText.login".tr(),
+                        text: "register.presentation.bottonText.login".tr(),
                       ),
                       gradientTextSpan(
-                        "Register.presentation.bottonText.LoginReturn".tr(),
+                        "register.presentation.bottonText.LoginReturn".tr(),
                         onTap: () {
                           context.go('/login');
                         },

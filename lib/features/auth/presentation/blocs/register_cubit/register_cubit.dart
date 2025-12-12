@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 // import 'package:migozz_app/core/components/atomics/loading_overlay.dart';
@@ -191,7 +192,7 @@ class RegisterCubit extends Cubit<RegisterState> {
     if (!config.isEnabled) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${config.displayName} no está disponible aún'),
+          content: Text('${config.displayName}${'register.validations.socialNotAvailable'.tr()}'),
           backgroundColor: Colors.orange,
         ),
       );
@@ -229,7 +230,7 @@ class RegisterCubit extends Cubit<RegisterState> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
-                      '${config.displayName} connected successfully!',
+                      '${config.displayName}${'register.validations.socialConnected'.tr()}',
                     ),
                     backgroundColor: Colors.green,
                   ),
@@ -269,7 +270,7 @@ class RegisterCubit extends Cubit<RegisterState> {
       debugPrint('❌ Error en OAuth: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error connecting to $network'),
+          content: Text('${'register.validations.socialErrorConnected'.tr()}$network'),
           backgroundColor: Colors.red,
         ),
       );

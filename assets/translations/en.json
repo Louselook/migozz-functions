@@ -37,11 +37,14 @@
             }
         }
     },
-    "Register":{
+    "register":{
         "validations":{
             "emptyEmail" : "Email cannot be empty",
             "validationEmail" :"Please enter a valid Email",
-            "registerEmail" : "This email is already registered"
+            "registerEmail" : "This email is already registered",
+            "socialNotAvailable" : "it is not available yet",
+            "socialErrorConnected" : "error connecting to",
+            "socialConnected" : "connected successfully"
         },
         "presentation":{
             "title" : "Register Now!",
@@ -239,6 +242,11 @@
             "settings" : "Modify your information and synchronize your socials"
         },
         "customization":{
+          "uploadingProfilePicture": {
+            "uploading...": "Uploading...",
+            "success": "Profile picture updated successfully",
+            "error": "Error updating profile picture:"
+            },
           "emailContactFormSection" : {
             "title" : "Email Contact Form",
             "subtitle" : "Visitors can share their email with you through a contact form on your profile."
@@ -257,6 +265,10 @@
             "reels": "Reels",
             "audio": "Audio",
             "hashtags": "Hashtags"
+        },
+        "validations": {
+            "emptySearch": "Please enter a search term",
+            "emptyInterest": "Add at least 1 interest to improve your recommendations"
         }
     },
     "stats":{
@@ -358,142 +370,7 @@
         "sport" : "Sport",
         "actor/Actress" : "Actor/Actress"
     },
-    "interest": {
-        "goingOut": {
-            "title": "Going Out",
-            "options": [
-                "Concerts",
-                "Museums & Galleries",
-                "Yoga",
-                "Comedy",
-                "Theater",
-                "Clubs",
-                "Bars",
-                "Karaoke",
-                "Film Festivals",
-                "Lounging"
-            ]
-        },
-        "sports": {
-            "title": "Sports",
-            "options": [
-                "Football",
-                "Soccer",
-                "Hockey",
-                "Sports News",
-                "Fishing",
-                "Basketball",
-                "Cricket",
-                "Pickleball",
-                "Gymnastics",
-                "Horse Riding",
-                "MMA",
-                "Tennis",
-                "Swimming",
-                "Snowboarding",
-                "Gym",
-                "Surfing",
-                "Skiing",
-                "Baseball",
-                "Golf",
-                "Boxing"
-            ]
-        },
-        "filmAndTv": {
-            "title": "Film & TV",
-            "options": [
-                "Drama",
-                "Thriller",
-                "Crime",
-                "Fantasy",
-                "Anime",
-                "Sci-fi",
-                "Mystery",
-                "Comedy",
-                "Romance",
-                "Action",
-                "Horror"
-            ]
-        },
-        "valuesAndTraits": {
-            "title": "Values & Traits",
-            "options": [
-                "Intelligence",
-                "Positivity",
-                "Confidence",
-                "Family Oriented",
-                "Ambition",
-                "Creativity",
-                "Empathy"
-            ]
-        },
-        "traveling": {
-            "title": "Traveling",
-            "options": [
-                "Beaches",
-                "Spa Weekends",
-                "Staycations",
-                "Backpacking",
-                "Winter Sports",
-                "Hiking Trips",
-                "Road Trips",
-                "Exploring New Cities",
-                "Fishing Trips",
-                "Camping"
-            ]
-        },
-        "business": {
-            "title": "Business",
-            "options": [
-                "Entrepreneurship",
-                "Sales",
-                "Real Estate",
-                "Crypto",
-                "Marketing",
-                "Stocks"
-            ]
-        },
-        "creativity": {
-            "title": "Creativity",
-            "options": [
-                "Writing",
-                "Photography",
-                "Dancing",
-                "Singing",
-                "Design",
-                "Content Creation",
-                "Art",
-                "Make-up"
-            ]
-        },
-        "stayingIn": {
-            "title": "Staying In",
-            "options": [
-                "Reading",
-                "Baking",
-                "Take Out",
-                "Cooking",
-                "Board Games",
-                "Gardening",
-                "Video Games"
-            ]
-        },
-        "pets": {
-            "title": "Pets",
-            "options": [
-                "Snakes",
-                "Birds",
-                "Fish",
-                "Turtles",
-                "Hamsters",
-                "Cats",
-                "Dogs",
-                "Lizards",
-                "Rabbits"
-            ]
-        }
-    },
-  
+
   "support": {
     "header": "Support / Report a Problem",
 

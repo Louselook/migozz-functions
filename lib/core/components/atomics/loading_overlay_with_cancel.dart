@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/color.dart';
 
@@ -155,8 +156,8 @@ class _LoadingOverlayWidgetState extends State<_LoadingOverlayWidget>
                       borderRadius: BorderRadius.circular(25),
                     ),
                   ),
-                  child: const Text(
-                    'Cancel',
+                  child: Text(
+                    'buttons.cancel'.tr(),
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
