@@ -29,7 +29,7 @@ class IaChatScreen extends StatefulWidget {
 class _IaChatScreenState extends State<IaChatScreen> {
   final TextEditingController _controller = TextEditingController();
   late final RegisterChatController _chatController;
-  bool _isCompletingRegistration = false; 
+  bool _isCompletingRegistration = false;
 
   final GlobalKey<ChatInputWidgetState> _chatInputKey = GlobalKey();
 
@@ -59,75 +59,91 @@ class _IaChatScreenState extends State<IaChatScreen> {
     if (_chatController.messages.isEmpty) {
       _chatController.initializeChat(onActionRequired: _handleNavigation);
     }
-      _chatController.onRegistrationComplete = () async {
-        if (_isCompletingRegistration) return;
-        _isCompletingRegistration = true;
+    _chatController.onRegistrationComplete = () async {
+      if (_isCompletingRegistration) return;
+      _isCompletingRegistration = true;
 
-        final registerCubit = context.read<RegisterCubit>();
-        final authCubit = context.read<AuthCubit>();
+      final registerCubit = context.read<RegisterCubit>();
+      final authCubit = context.read<AuthCubit>();
+      final isGoogleUser =
+          authCubit.state.isAuthenticated &&
+          authCubit.state.firebaseUser != null;
 
-        try {
-          // Aseguramos que el cubit considera el registro completo (re-run checkCompletion)
-          await registerCubit.checkCompletion(
-            forGoogle: authCubit.state.isAuthenticated && authCubit.state.firebaseUser != null,
-            uid: authCubit.state.isAuthenticated && authCubit.state.firebaseUser != null
-                ? authCubit.state.firebaseUser!.uid
-                : null,
+      try {
+        await registerCubit.checkCompletion(
+          forGoogle: isGoogleUser,
+          uid: isGoogleUser ? authCubit.state.firebaseUser!.uid : null,
+        );
+
+        if (!registerCubit.state.isComplete) {
+          debugPrint(
+            '⚠️ onRegistrationComplete: registerCubit not complete, aborting.',
           );
-
-          // Si sigue sin estar completo, avisar y no intentar completar
-          if (!registerCubit.state.isComplete) {
-            debugPrint('⚠️ onRegistrationComplete: registerCubit not complete, aborting.');
-            if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Faltan datos para completar el registro'), backgroundColor: Colors.orange),
-            );
-            return;
-          }
-
-          // Validación extra para Email/OTP: chequear email y OTP presentes
-          final email = registerCubit.state.email;
-          final otp = registerCubit.state.currentOTP;
-          if (email == null || email.trim().isEmpty || otp == null || otp.trim().isEmpty) {
-            debugPrint('⚠️ onRegistrationComplete: email/otp faltante: email=$email otp=$otp');
-            if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Falta email o código OTP. Revisa el chat.'), backgroundColor: Colors.orange),
-            );
-            return;
-          }
-
-          if (!mounted) return; 
-
-          // Mostrar overlay
-          try { LoadingOverlay.show(context); } catch (_) {}
-
-          // Llamar handler
-          await RegistrationHandler.completeRegistration(
-            context: context,
-            registerCubit: registerCubit,
-            authCubit: authCubit,
-          );
-          
-          if (!mounted) return; 
-
-          // Ocultar overlay
-          try { LoadingOverlay.hide(context); } catch (_) {}
-
-          if (!mounted) return;
-          // Usá GoRouter
-          context.go('/profile'); // o context.go('/home') según tu route
-        } catch (e, st) {
-          debugPrint('❌ Error en onRegistrationComplete wrapper: $e\n$st');
-          try { LoadingOverlay.hide(context); } catch (_) {}
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error finalizando registro: $e')),
+            const SnackBar(
+              content: Text('Faltan datos para completar el registro'),
+              backgroundColor: Colors.orange,
+            ),
           );
-        } finally {
-          _isCompletingRegistration = false;
+          return;
         }
-      };
+
+        // ✅ NUEVA VALIDACIÓN: Solo validar email/OTP para usuarios NO autenticados
+        if (!isGoogleUser) {
+          final email = registerCubit.state.email;
+          final otp = registerCubit.state.currentOTP;
+          if (email == null ||
+              email.trim().isEmpty ||
+              otp == null ||
+              otp.trim().isEmpty) {
+            debugPrint(
+              '⚠️ onRegistrationComplete: email/otp faltante: email=$email otp=$otp',
+            );
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Falta email o código OTP. Revisa el chat.'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+            return;
+          }
+        }
+
+        if (!mounted) return;
+
+        try {
+          LoadingOverlay.show(context);
+        } catch (_) {}
+
+        await RegistrationHandler.completeRegistration(
+          context: context,
+          registerCubit: registerCubit,
+          authCubit: authCubit,
+        );
+
+        if (!mounted) return;
+
+        try {
+          LoadingOverlay.hide(context);
+        } catch (_) {}
+
+        if (!mounted) return;
+        context.go('/profile');
+      } catch (e, st) {
+        debugPrint('❌ Error en onRegistrationComplete wrapper: $e\n$st');
+        try {
+          LoadingOverlay.hide(context);
+        } catch (_) {}
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error finalizando registro: $e')),
+        );
+      } finally {
+        _isCompletingRegistration = false;
+      }
+    };
   }
 
   bool _initializedLanguage = false;
