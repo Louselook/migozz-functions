@@ -211,7 +211,7 @@ final List avatarUrl = [
   // Primera
   {
     "text":
-        "Puedo sugerirte una foto de tus redes sociales conectadas o puedes subir una nueva. ¿Cuál prefieres? 📸",
+        "Personalicemos tu perfil. Puedes subir una nueva desde tu galeria o tomar una desde la camara. ¿Cuál prefieres? 📸",
     "step": "regProgress.avatarUrl",
     "keepTalk": false,
   },
@@ -228,7 +228,7 @@ final List avatarUrl = [
   // Válida
   {
     "text":
-        "Excelente, tu foto ha sido actualizada. Ahora necesito tu número de teléfono.",
+        "Excelente. Ahora necesito tu número de teléfono.",
     "step": "regProgress.phone",
     "keepTalk": false,
     "valid": true,

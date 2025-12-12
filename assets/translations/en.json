@@ -355,10 +355,17 @@
         "label" : "Share Profile"
     },
     "buttons" : {
+<<<<<<< HEAD
         "confirm" : "confirm",
         "cancel" : "cancel",
         "save" : "Save",
         "continue" : "continue"
+=======
+        "confirm" : "Confirm",
+        "cancel" : "Cancel",
+        "save" : "Save",
+        "continue" : "Continue"
+>>>>>>> 323daa0b7c400194efd9d7d18646a7307553c9c4
     },
     "category" : {
         "title" : "Choose Your Category",

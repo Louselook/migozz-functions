@@ -355,10 +355,17 @@
     "label": "Compartir perfil"
   },
   "buttons": {
+<<<<<<< HEAD
     "confirm": "confirmar",
     "cancel": "cancelar",
     "save": "Guardar",
     "continue": "continuar"
+=======
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "continue": "Continuar"
+>>>>>>> 323daa0b7c400194efd9d7d18646a7307553c9c4
   },
   "category": {
     "title": "Elige tu categoría",

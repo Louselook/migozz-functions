@@ -51,17 +51,17 @@ final List<Map<String, Object>> questionsTopics = [
   //   },
   //   "keyboardType": "text",
   // },
-  {
-    "id": "socialEcosystem",
-    "description":
-        "Permite al usuario agregar redes sociales. Solo preguntar si aún no tiene datos.",
-    "text": {
-      "en": "Let's add your social platforms!",
-      "es": "¡Agreguemos tus plataformas sociales!",
-    },
-    "options": {"en": [], "es": []},
-    "action": 0,
-  },
+  // {
+  //   "id": "socialEcosystem",
+  //   "description":
+  //       "Permite al usuario agregar redes sociales. Solo preguntar si aún no tiene datos.",
+  //   "text": {
+  //     "en": "Let's add your social platforms!",
+  //     "es": "¡Agreguemos tus plataformas sociales!",
+  //   },
+  //   "options": {"en": [], "es": []},
+  //   "action": 0,
+  // },
   {
     "id": "location",
     "description":
@@ -96,11 +96,11 @@ final List<Map<String, Object>> questionsTopics = [
         "Pregunta al usuario si desea subir o usar una foto sugerida de redes sociales.",
     "text": {
       "en":
-          "Now let's personalize your profile. I can suggest a photo from your connected social media or you can upload a new one. Which do you prefer? 📸",
+          "Let's personalize your profile. You can upload a photo from your gallery or take a new one with your camera. Which do you prefer? 📸",
       "es":
-          "Personalicemos tu perfil. Puedo sugerirte una foto de tus redes sociales conectadas o puedes subir una nueva. ¿Cuál prefieres? 📸",
+          "Personalicemos tu perfil. Puedes subir una desde tu galeria o tomar una nueva desde la camara. ¿Cuál prefieres? 📸",
     },
-    "options": {"en": [], "es": []},
+    "options": {"en": ["Skip Step"], "es": ["Saltar paso"]},
   },
   {
     "id": "phone",
@@ -124,27 +124,27 @@ final List<Map<String, Object>> questionsTopics = [
     },
     "options": {"en": [], "es": []},
   },
-  {
-    "id": "category",
-    "description": "Selecciona las categorías de interés del usuario.",
-    "text": {
-      "en": "Choose your categories to personalize your content.",
-      "es": "Elige tus categorías para personalizar tu contenido.",
-    },
-    "options": {"en": [], "es": []},
-    "action": 1,
-  },
-  {
-    "id": "interests",
-    "description":
-        "Selecciona intereses específicos para afinar la experiencia del usuario.",
-    "text": {
-      "en": "Pick your interests to refine your experience.",
-      "es": "Selecciona tus intereses para afinar tu experiencia.",
-    },
-    "options": {"en": [], "es": []},
-    "action": 2,
-  },
+  // {
+  //   "id": "category",
+  //   "description": "Selecciona las categorías de interés del usuario.",
+  //   "text": {
+  //     "en": "Choose your categories to personalize your content.",
+  //     "es": "Elige tus categorías para personalizar tu contenido.",
+  //   },
+  //   "options": {"en": [], "es": []},
+  //   "action": 1,
+  // },
+  // {
+  //   "id": "interests",
+  //   "description":
+  //       "Selecciona intereses específicos para afinar la experiencia del usuario.",
+  //   "text": {
+  //     "en": "Pick your interests to refine your experience.",
+  //     "es": "Selecciona tus intereses para afinar tu experiencia.",
+  //   },
+  //   "options": {"en": [], "es": []},
+  //   "action": 2,
+  // },
   {
     "id": "done",
     "description": "Finaliza el registro y da la bienvenida al usuario.",
