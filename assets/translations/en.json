@@ -355,10 +355,10 @@
         "label" : "Share Profile"
     },
     "buttons" : {
-        "confirm" : "confirm",
-        "cancel" : "cancel",
-        "save" : "save",
-        "continue" : "continue"
+        "confirm" : "Confirm",
+        "cancel" : "Cancel",
+        "save" : "Save",
+        "continue" : "Continue"
     },
     "category" : {
         "title" : "Choose Your Category",

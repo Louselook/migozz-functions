@@ -355,10 +355,10 @@
     "label": "Compartir perfil"
   },
   "buttons": {
-    "confirm": "confirmar",
-    "cancel": "cancelar",
-    "save": "guardar",
-    "continue": "continuar"
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "continue": "Continuar"
   },
   "category": {
     "title": "Elige tu categoría",

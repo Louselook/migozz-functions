@@ -249,7 +249,7 @@ RegisterStatusProgress _parseStep(String raw) {
     return RegisterStatusProgress.emailVerification;
   }
 
-  if (raw.contains('avatar')) return RegisterStatusProgress.avatarUrl;
+  // if (raw.contains('avatar')) return RegisterStatusProgress.avatarUrl;
   if (raw.contains('phone')) return RegisterStatusProgress.phone;
   if (raw.contains('voice')) return RegisterStatusProgress.voiceNoteUrl;
   if (raw.contains('done')) return RegisterStatusProgress.doneChat;
