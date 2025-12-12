@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
 
 Future<void> showProfileLoader(
   BuildContext context, {
@@ -83,7 +82,12 @@ class LoaderDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            const SegmentedSpinner(size: 120, segments: 14),
+            Image.asset(
+              'assets/images/Loader.gif',
+              width: 120,
+              height: 120,
+              fit: BoxFit.contain,
+            ),
             const SizedBox(height: 16),
             Text(
               message,
@@ -146,111 +150,5 @@ class _CancelButton extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-class SegmentedSpinner extends StatefulWidget {
-  final double size;
-  final int segments;
-  const SegmentedSpinner({super.key, this.size = 100, this.segments = 12});
-
-  @override
-  State<SegmentedSpinner> createState() => _SegmentedSpinnerState();
-}
-
-class _SegmentedSpinnerState extends State<SegmentedSpinner>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: widget.size,
-      height: widget.size,
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, _) {
-          return CustomPaint(
-            painter: _SpinnerPainter(
-              progress: _controller.value,
-              segments: widget.segments,
-              headColor: const Color(0xFFFFFFFF),
-              tailColor: const Color(0xFF5B1FB8),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _SpinnerPainter extends CustomPainter {
-  final double progress;
-  final int segments;
-  final Color headColor;
-  final Color tailColor;
-  _SpinnerPainter({
-    required this.progress,
-    required this.segments,
-    required this.headColor,
-    required this.tailColor,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width * 0.36;
-    final stroke = size.width * 0.15;
-    final step = 2 * math.pi / segments;
-    final rotation = progress * 2 * math.pi;
-    final basePaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = stroke
-      ..strokeCap = StrokeCap.round;
-
-    final headIndex = ((progress * segments)).floor();
-    final trailLen = (segments * 0.6).round();
-
-    for (int i = 0; i < segments; i++) {
-      final distance = (i - headIndex) % segments;
-      final d = distance < 0 ? distance + segments : distance;
-      double t = 1.0 - (d / trailLen).clamp(0.0, 1.0);
-      t = math.pow(t, 0.6).toDouble();
-
-      final start = -math.pi / 2 + i * step + rotation + step * 0.12 * (1 - t);
-      final sweep = step * (0.62 + 0.22 * t);
-      basePaint.color = Color.lerp(tailColor, headColor, t)!;
-
-      canvas.drawArc(
-        Rect.fromCircle(center: center, radius: radius),
-        start,
-        sweep,
-        false,
-        basePaint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _SpinnerPainter oldDelegate) {
-    return oldDelegate.progress != progress ||
-        oldDelegate.segments != segments ||
-        oldDelegate.headColor != headColor ||
-        oldDelegate.tailColor != tailColor;
   }
 }

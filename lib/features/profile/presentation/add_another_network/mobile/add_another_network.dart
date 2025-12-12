@@ -48,13 +48,7 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
       final text = _linkCtrl.text.trim();
       if (text.isNotEmpty) {
         final domain = _domainFromUrl(text);
-        final newIconUrl = _faviconFromDomain(domain);
-        if (_pickedImageUrl != newIconUrl) {
-          setState(() {
-            _pickedImageUrl = newIconUrl;
-            _pickedImage = null;
-          });
-        }
+        _setFaviconFromDomain(domain);
       } else {
         if (_pickedImageUrl != null) {
           setState(() {
@@ -170,12 +164,58 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
   }
 
   String _domainFromUrl(String url) {
-    final host = Uri.parse(url).host.toLowerCase();
+    final normalized = url.contains('://') ? url : 'https://$url';
+    final host = Uri.parse(normalized).host.toLowerCase();
     return host.startsWith('www.') ? host.substring(4) : host;
   }
 
   String _faviconFromDomain(String domain) {
     return 'https://www.google.com/s2/favicons?domain=$domain&sz=128';
+  }
+
+  String _duckFaviconFromDomain(String domain) {
+    return 'https://icons.duckduckgo.com/ip3/$domain.ico';
+  }
+
+  Future<String?> _resolveFavicon(String domain) async {
+    bool _isSupported(String? ct) {
+      if (ct == null) return false;
+      final v = ct.toLowerCase();
+      return v.contains('image/png') ||
+          v.contains('image/jpeg') ||
+          v.contains('image/webp') ||
+          v.contains('image/gif') ||
+          v.contains('image/svg+xml');
+    }
+
+    final candidates = <String>[
+      _faviconFromDomain(domain),
+      'https://s2.googleusercontent.com/s2/favicons?domain=$domain&sz=128',
+      'https://$domain/favicon.svg',
+      'https://$domain/favicon.png',
+      'https://$domain/apple-touch-icon.png',
+      'https://$domain/icon.png',
+    ];
+    for (final url in candidates) {
+      try {
+        final client = HttpClient();
+        final req = await client.getUrl(Uri.parse(url));
+        final res = await req.close();
+        final ct = res.headers.value('content-type');
+        if (res.statusCode >= 200 && res.statusCode < 400 && _isSupported(ct)) {
+          return url;
+        }
+      } catch (_) {}
+    }
+    return null;
+  }
+
+  Future<void> _setFaviconFromDomain(String domain) async {
+    final url = await _resolveFavicon(domain);
+    setState(() {
+      _pickedImageUrl = url;
+      _pickedImage = null;
+    });
   }
 
   Future<void> _save() async {
@@ -211,7 +251,7 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
       final domain = _domainFromUrl(link);
 
       if (_applyIconFromLink) {
-        iconUrl = _faviconFromDomain(domain);
+        iconUrl = await _resolveFavicon(domain);
         setState(() => _pickedImageUrl = iconUrl);
       } else if (_pickedImage != null) {
         final service = UserMediaService();
@@ -404,16 +444,17 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
                           onChanged: (v) {
                             setState(() {
                               _applyIconFromLink = v;
-                              if (v && _linkCtrl.text.trim().isNotEmpty) {
-                                final domain = _domainFromUrl(
-                                  _linkCtrl.text.trim(),
-                                );
-                                _pickedImageUrl = _faviconFromDomain(domain);
-                                _pickedImage = null;
-                              } else {
-                                _pickedImageUrl = null;
-                              }
                             });
+                            if (v && _linkCtrl.text.trim().isNotEmpty) {
+                              final domain = _domainFromUrl(
+                                _linkCtrl.text.trim(),
+                              );
+                              _setFaviconFromDomain(domain);
+                            } else {
+                              setState(() {
+                                _pickedImageUrl = null;
+                              });
+                            }
                           },
                         ),
                       ],

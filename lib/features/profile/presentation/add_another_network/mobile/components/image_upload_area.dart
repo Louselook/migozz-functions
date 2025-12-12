@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class ImageUploadArea extends StatelessWidget {
   final File? imageFile;
@@ -52,12 +53,22 @@ class ImageUploadArea extends StatelessWidget {
       );
     }
     if (imageUrl != null && imageUrl!.isNotEmpty) {
-      return Image.network(
-        imageUrl!,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) =>
-            const Icon(Icons.image, size: 64, color: Colors.white),
-      );
+      final url = imageUrl!;
+      if (url.toLowerCase().endsWith('.svg')) {
+        return SvgPicture.network(
+          url,
+          fit: BoxFit.cover,
+          placeholderBuilder: (_) =>
+              const Icon(Icons.image, size: 64, color: Colors.white),
+        );
+      } else {
+        return Image.network(
+          url,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) =>
+              const Icon(Icons.image, size: 64, color: Colors.white),
+        );
+      }
     }
     return Image.asset(
       defaultAssetPath,

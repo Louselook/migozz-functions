@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
+import 'dart:typed_data';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:migozz_app/features/profile/components/social_rail.dart';
+import 'package:http/http.dart' as http;
 
 class SocialCirclesMobileV3 extends StatelessWidget {
   final List<SocialLink> links;
@@ -51,6 +53,14 @@ class SocialCirclesMobileV3 extends StatelessWidget {
   }
 }
 
+Future<Uint8List?> _fetchBytes(String url) async {
+  try {
+    final uri = Uri.parse(url);
+    final res = await http.get(uri);
+    if (res.statusCode == 200) return res.bodyBytes;
+  } catch (_) {}
+  return null;
+}
 class SocialCirclesMobileV3Edit extends StatelessWidget {
   final List<SocialLink> links;
   final VoidCallback? onAddPressed;
@@ -155,14 +165,60 @@ class _SocialBoxItemState extends State<_SocialBoxItem> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: _launchUrl,
-      child: SvgPicture.asset(
-        widget.link.asset,
-        width: widget.boxSize,
-        height: widget.boxSize,
-        fit: BoxFit.contain,
-      ),
-    );
+    return GestureDetector(onTap: _launchUrl, child: _buildIcon());
+  }
+}
+
+Widget _buildNetworkSvg(String url, double size) {
+  return FutureBuilder<Uint8List?>(
+    future: _fetchBytes(url),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState != ConnectionState.done) {
+        return SizedBox(width: size, height: size);
+      }
+      final bytes = snapshot.data;
+      if (bytes == null) {
+        return SizedBox(width: size, height: size);
+      }
+      return SvgPicture.memory(bytes, width: size, height: size, fit: BoxFit.contain);
+    },
+  );
+}
+
+Widget _buildAssetSvg(String asset, double size) {
+  return SvgPicture.asset(
+    asset,
+    width: size,
+    height: size,
+    fit: BoxFit.contain,
+  );
+}
+
+Widget _buildRasterNetwork(String url, double size) {
+  return ClipRRect(
+    borderRadius: BorderRadius.circular(size / 2),
+    child: Image.network(
+      url,
+      width: size,
+      height: size,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stack) => SizedBox(width: size, height: size),
+    ),
+  );
+}
+
+extension on _SocialBoxItemState {
+  Widget _buildIcon() {
+    final asset = widget.link.asset;
+    final size = widget.boxSize;
+    final isNetwork =
+        asset.startsWith('http://') || asset.startsWith('https://');
+    final isSvg = asset.toLowerCase().endsWith('.svg');
+    if (isNetwork) {
+      return isSvg
+          ? _buildNetworkSvg(asset, size)
+          : _buildRasterNetwork(asset, size);
+    }
+    return _buildAssetSvg(asset, size);
   }
 }
