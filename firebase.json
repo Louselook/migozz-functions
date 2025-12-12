@@ -37,14 +37,30 @@
       ]
     }
   ],
-    "hosting": [
+  "hosting": [
     {
       "site": "migozz-e2a21",
       "public": "build/web",
       "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
       "rewrites": [
+        { "source": "/u/**", "destination": "/index.html" },
         { "source": "/terms-privacy", "destination": "/index.html" },
         { "source": "**", "destination": "/index.html" }
+      ],
+      "headers": [
+        {
+          "source": "/.well-known/assetlinks.json",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "*"
+            }
+          ]
+        }
       ]
     }
   ]

@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:migozz_app/core/services/deeplink/deeplink_functions/users/profile_deeplink_service.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_state.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
@@ -18,10 +19,13 @@ class DeeplinkService {
   static void initialize(BuildContext context) {
     if (_isInitialized) return;
 
-    debugPrint('🔗 [DeeplinkService] Inicializando canal de deeplinks');
+    debugPrint('🔗 [DeeplinkService] Inicializando canales de deeplinks');
 
+    // Inicializar deep links de redes sociales
     _socialChannel.setMethodCallHandler((call) async {
-      debugPrint('🔗 [DeeplinkService] Deeplink recibido: ${call.method}');
+      debugPrint(
+        '🔗 [DeeplinkService] Deeplink social recibido: ${call.method}',
+      );
 
       try {
         switch (call.method) {
@@ -49,6 +53,9 @@ class DeeplinkService {
         debugPrint('❌ [DeeplinkService] Error procesando deeplink: $e\n$st');
       }
     });
+
+    // Inicializar deep links de perfiles de usuario
+    ProfileDeeplinkService.initialize(context);
 
     _isInitialized = true;
   }

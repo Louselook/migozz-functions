@@ -55,7 +55,9 @@ class ProfileImageMobileV3 extends StatelessWidget {
           if (!snapshot.hasData) {
             return Container(color: Colors.grey.shade900);
           }
-          return snapshot.data! ? _buildFullImage() : _buildRectangleAvatar();
+          // rectangulo de pixeles
+          // return snapshot.data! ? _buildFullImage() : _buildRectangleAvatar();
+          return _buildFullImage();
         },
       ),
     );
@@ -106,8 +108,9 @@ class ProfileImageMobileV3 extends StatelessWidget {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(20), // Ajusta el redondeo aquí
             child: Container(
-              width: size.width * 0.5,   // Equivalente al diámetro del CircleAvatar
-              height: size.width * 0.5,  // Mantener proporción cuadrada
+              width:
+                  size.width * 0.5, // Equivalente al diámetro del CircleAvatar
+              height: size.width * 0.5, // Mantener proporción cuadrada
               decoration: BoxDecoration(
                 color: Colors.black.withValues(alpha: 0.4),
                 image: DecorationImage(
@@ -115,7 +118,7 @@ class ProfileImageMobileV3 extends StatelessWidget {
                   image: avatarUrl != null && avatarUrl!.isNotEmpty
                       ? NetworkImage(avatarUrl!)
                       : const AssetImage('assets/images/profileBackground.webp')
-                          as ImageProvider,
+                            as ImageProvider,
                 ),
               ),
             ),

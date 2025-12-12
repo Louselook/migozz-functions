@@ -2,8 +2,6 @@ import 'dart:io';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-// import 'package:migozz_app/core/components/atomics/loading_overlay.dart';
-import 'package:migozz_app/core/components/atomics/loading_overlay_with_cancel.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/location_dto.dart';
 import 'package:migozz_app/core/services/deeplink/deeplink_functions/social_network/social_normalizer.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/add_network.dart';
@@ -13,6 +11,7 @@ import 'package:migozz_app/features/auth/services/add_networks/add_network_servi
 import 'package:migozz_app/features/auth/services/add_networks/network_config.dart';
 import 'package:migozz_app/features/auth/services/location_service.dart';
 import 'package:migozz_app/features/auth/services/media_service.dart';
+import 'package:migozz_app/features/profile/components/utils/Loader.dart';
 import 'register_state.dart';
 
 class RegisterCubit extends Cubit<RegisterState> {
@@ -192,7 +191,9 @@ class RegisterCubit extends Cubit<RegisterState> {
     if (!config.isEnabled) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${config.displayName}${'register.validations.socialNotAvailable'.tr()}'),
+          content: Text(
+            '${config.displayName}${'register.validations.socialNotAvailable'.tr()}',
+          ),
           backgroundColor: Colors.orange,
         ),
       );
@@ -210,12 +211,16 @@ class RegisterCubit extends Cubit<RegisterState> {
             Navigator.of(context).pop();
             await _handleClickAuth(context, network, inEditMode);
           } else if (mode == NetworkAuthMode.manual && value != null) {
-            // Show custom loading overlay with cancel button
-            LoadingOverlayWithCancel.show(
+            // Variable local para rastrear cancelación
+            bool userCancelled = false;
+
+            // Show custom loading dialog with cancel button
+            showProfileLoader(
               context,
               message: 'Connecting ${config.displayName}...',
               onCancel: () {
                 debugPrint('❌ User cancelled connection');
+                userCancelled = true;
               },
             );
 
@@ -223,9 +228,9 @@ class RegisterCubit extends Cubit<RegisterState> {
               await _handleManualAuth(context, network, value, inEditMode);
 
               // Check if user cancelled
-              if (!LoadingOverlayWithCancel.isCancelled) {
-                LoadingOverlayWithCancel.hide();
-                Navigator.of(context).pop();
+              if (!userCancelled && context.mounted) {
+                Navigator.of(context).pop(); // Close loader
+                Navigator.of(context).pop(); // Close bottom sheet
 
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -238,15 +243,18 @@ class RegisterCubit extends Cubit<RegisterState> {
               }
             } catch (e) {
               debugPrint('❌ Error en manual auth: $e');
-              LoadingOverlayWithCancel.hide();
 
-              if (!LoadingOverlayWithCancel.isCancelled) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Error: ${e.toString()}'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
+              if (context.mounted) {
+                Navigator.of(context).pop(); // Close loader
+
+                if (!userCancelled) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error: ${e.toString()}'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               }
             }
           }
@@ -270,7 +278,9 @@ class RegisterCubit extends Cubit<RegisterState> {
       debugPrint('❌ Error en OAuth: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${'register.validations.socialErrorConnected'.tr()}$network'),
+          content: Text(
+            '${'register.validations.socialErrorConnected'.tr()}$network',
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -456,16 +466,16 @@ class RegisterCubit extends Cubit<RegisterState> {
           // state.gender != null &&
           hasLocationData &&
           state.phone != null; // &&
-          // state.category != null &&
-          // state.interests != null;
+      // state.category != null &&
+      // state.interests != null;
 
       final completeForGoogle =
           state.language != null &&
           // state.gender != null &&
           hasLocationData &&
-          state.phone != null ; // &&
-          // state.category != null &&
-          // state.interests != null;
+          state.phone != null; // &&
+      // state.category != null &&
+      // state.interests != null;
 
       final complete = forGoogle ? completeForGoogle : completeFull;
 

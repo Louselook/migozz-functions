@@ -187,25 +187,22 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
             GestureDetector(
               key: widget.tutorialKeys?.shareButtonKey,
               onTap: () {
-                if (widget.isOwnProfile) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute<void>(
-                      builder: (context) => const ProfileQrScreen(),
-                    ),
-                  );
-                } else {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute<void>(
-                      builder: (context) => ProfileQrScreen(
-                        overrideUsername: widget.userId,
-                        overrideDisplayName: widget.name,
-                      ),
-                    ),
-                  );
-                }
+                Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (context) => widget.isOwnProfile
+                        ? const ProfileQrScreen()
+                        : ProfileQrScreen(
+                            overrideUsername: widget.displayName.replaceFirst(
+                              '@',
+                              '',
+                            ),
+                            overrideDisplayName: widget.name,
+                          ),
+                  ),
+                );
               },
+
               child: SvgPicture.asset(
                 AssetsConstants.shareIcon,
                 width: 17,
@@ -213,7 +210,7 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
               ),
             ),
 
-            const SizedBox(width:25),
+            const SizedBox(width: 25),
             Column(
               children: [
                 Text(
@@ -243,7 +240,7 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
               child: Image.asset(
                 AssetsConstants.inboxIcon,
                 width: 17,
-                height:17,
+                height: 17,
                 color: Colors.white,
               ),
             ),

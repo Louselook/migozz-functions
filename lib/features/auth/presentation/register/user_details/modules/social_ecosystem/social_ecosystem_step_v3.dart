@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:migozz_app/core/color.dart';
-import 'package:migozz_app/core/components/atomics/loading_overlay_with_cancel.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
 import 'package:migozz_app/features/auth/services/add_networks/network_config.dart';
 import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
+import 'package:migozz_app/features/profile/components/utils/Loader.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 import 'package:migozz_app/features/profile/presentation/add_another_network/mobile/add_another_network.dart';
 
@@ -126,21 +126,17 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
       if (userId != null) {
         debugPrint('💾 [V3] Auto-saving changes...');
 
-        // Show loading overlay
+        // Show loading dialog
         if (context.mounted) {
-          LoadingOverlayWithCancel.show(
-            context,
-            message: 'Saving...',
-            onCancel: () {},
-          );
+          showProfileLoader(context, message: 'Saving...', onCancel: () {});
         }
 
         try {
           await editCubit.saveAllPendingChanges(userId);
           debugPrint('✅ [V3] Auto-save completed successfully!');
 
-          // Always hide the overlay
-          LoadingOverlayWithCancel.hide();
+          // Always hide the dialog
+          if (context.mounted) Navigator.of(context).pop();
 
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -154,8 +150,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
         } catch (e) {
           debugPrint('❌ [V3] Auto-save failed: $e');
 
-          // Always hide the overlay
-          LoadingOverlayWithCancel.hide();
+          // Always hide the dialog
+          if (context.mounted) Navigator.of(context).pop();
 
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -196,18 +192,14 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
           debugPrint('💾 [V3] Auto-saving changes...');
 
           if (mounted) {
-            LoadingOverlayWithCancel.show(
-              context,
-              message: 'Saving...',
-              onCancel: () {},
-            );
+            showProfileLoader(context, message: 'Saving...', onCancel: () {});
           }
 
           try {
             await editCubit.saveAllPendingChanges(userId);
             debugPrint('✅ [V3] Auto-save completed successfully!');
 
-            LoadingOverlayWithCancel.hide();
+            if (mounted) Navigator.of(context).pop();
 
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -221,7 +213,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
           } catch (e) {
             debugPrint('❌ [V3] Auto-save failed: $e');
 
-            LoadingOverlayWithCancel.hide();
+            if (mounted) Navigator.of(context).pop();
 
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -366,9 +358,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
           if (userId != null) {
             debugPrint('💾 [Edit Mode] Auto-saving after removal...');
 
-            // Show loading overlay
+            // Show loading dialog
             if (mounted) {
-              LoadingOverlayWithCancel.show(
+              showProfileLoader(
                 context,
                 message: 'Removing...',
                 onCancel: () {},
@@ -379,8 +371,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
               await editCubit.saveAllPendingChanges(userId);
               debugPrint('✅ [Edit Mode] Auto-save after removal completed!');
 
-              // Always hide the overlay
-              LoadingOverlayWithCancel.hide();
+              // Always hide the dialog
+              if (mounted) Navigator.of(context).pop();
 
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -396,8 +388,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
             } catch (e) {
               debugPrint('❌ [Edit Mode] Auto-save after removal failed: $e');
 
-              // Always hide the overlay
-              LoadingOverlayWithCancel.hide();
+              // Always hide the dialog
+              if (mounted) Navigator.of(context).pop();
 
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -614,9 +606,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                                   '💾 [Edit Mode] Auto-saving after username update...',
                                 );
 
-                                // Show loading overlay
+                                // Show loading dialog
                                 if (context.mounted) {
-                                  LoadingOverlayWithCancel.show(
+                                  showProfileLoader(
                                     context,
                                     message: 'Saving...',
                                     onCancel: () {},
@@ -629,8 +621,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                                     '✅ [Edit Mode] Auto-save after update completed!',
                                   );
 
-                                  // Always hide the overlay
-                                  LoadingOverlayWithCancel.hide();
+                                  // Always hide the dialog
+                                  if (context.mounted)
+                                    Navigator.of(context).pop();
 
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
@@ -648,8 +641,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                                     '❌ [Edit Mode] Auto-save after update failed: $e',
                                   );
 
-                                  // Always hide the overlay
-                                  LoadingOverlayWithCancel.hide();
+                                  // Always hide the dialog
+                                  if (context.mounted)
+                                    Navigator.of(context).pop();
 
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
@@ -719,341 +713,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     });
   }
 
-  Future<Map<String, dynamic>?> _showCustomLinkDialog({
-    Map<String, dynamic>? existingData,
-  }) async {
-    final TextEditingController linkController = TextEditingController();
-    bool applyIconFromLink = true;
-    String? pickedImageUrl;
-
-    if (existingData != null) {
-      linkController.text = existingData['url']?.toString() ?? '';
-      pickedImageUrl = existingData['iconUrl']?.toString();
-      applyIconFromLink =
-          pickedImageUrl != null &&
-          pickedImageUrl.startsWith('http') &&
-          pickedImageUrl.contains('favicon');
-    }
-
-    return await showDialog<Map<String, dynamic>?>(
-      context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.8),
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) => Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(
-            horizontal: 24,
-            vertical: 24,
-          ),
-          child: SingleChildScrollView(
-            child: Container(
-              width: MediaQuery.of(context).size.width * 0.85,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFF2D1B3D), Color(0xFF1A0F2E)],
-                ),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Stack(
-                children: [
-                  // Close button
-                  Positioned(
-                    top: 16,
-                    right: 16,
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.pop(dialogContext, null);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        child: const Icon(
-                          Icons.close,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Main content
-                  /**
-                   * Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const SizedBox(height: 20),
-
-                        // Title
-                        const Text(
-                          'Custom Link Icon',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        // Icon display
-                        Container(
-                          width: 120,
-                          height: 120,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.3),
-                              width: 3,
-                            ),
-                            gradient: const LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [Color(0xFFD43AB6), Color(0xFF9321BD)],
-                            ),
-                          ),
-                          child: Center(
-                            child: (pickedImageUrl?.isNotEmpty ?? false)
-                                ? ClipOval(
-                                    child: Image.network(
-                                      pickedImageUrl!,
-                                      width: 60,
-                                      height: 60,
-                                      fit: BoxFit.cover,
-                                      errorBuilder:
-                                          (context, error, stackTrace) {
-                                            return const Icon(
-                                              Icons.language,
-                                              color: Colors.white,
-                                              size: 60,
-                                            );
-                                          },
-                                    ),
-                                  )
-                                : const Icon(
-                                    Icons.language,
-                                    color: Colors.white,
-                                    size: 60,
-                                  ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        // Link input field
-                        TextField(
-                          controller: linkController,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                          ),
-                          onChanged: (value) {
-                            if (applyIconFromLink && value.trim().isNotEmpty) {
-                              setState(() {
-                                pickedImageUrl = _faviconFromDomain(
-                                  _domainFromUrl(value.trim()),
-                                );
-                              });
-                            }
-                          },
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor: const Color(0xFF7C7480),
-                            hintText: 'Add custom Link',
-                            hintStyle: const TextStyle(
-                              color: Color(0xFFE0E0E0),
-                              fontSize: 14,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 14,
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 18),
-
-                        // Apply Custom Icon from Link toggle
-                        Row(
-                          children: [
-                            const Expanded(
-                              child: Text(
-                                'Apply Custom Icon from Link',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
-                            Switch(
-                              value: applyIconFromLink,
-                              inactiveTrackColor: const Color(0xFF5E5564),
-                              activeTrackColor: const Color(0xFF5E5564),
-                              thumbColor: const WidgetStatePropertyAll(
-                                Colors.white,
-                              ),
-                              onChanged: (value) {
-                                setState(() {
-                                  applyIconFromLink = value;
-                                  if (value &&
-                                      linkController.text.trim().isNotEmpty) {
-                                    pickedImageUrl = _faviconFromDomain(
-                                      _domainFromUrl(
-                                        linkController.text.trim(),
-                                      ),
-                                    );
-                                  } else if (!value) {
-                                    pickedImageUrl = null;
-                                  }
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        // Save button with gradient
-                        GestureDetector(
-                          onTap: () {
-                            final link = linkController.text.trim();
-                            if (link.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Please enter a link'),
-                                  backgroundColor: Colors.red,
-                                  duration: Duration(seconds: 2),
-                                ),
-                              );
-                              return;
-                            }
-
-                            final data = <String, dynamic>{
-                              'custom': {
-                                'type': 'custom',
-                                'url': link,
-                                if (pickedImageUrl != null)
-                                  'iconUrl': pickedImageUrl,
-                              },
-                            };
-
-                            Navigator.pop(dialogContext, data);
-                          },
-                          child: Container(
-                            width: double.infinity,
-                            height: 50,
-                            decoration: BoxDecoration(
-                              gradient: AppColors.primaryGradient,
-                              borderRadius: BorderRadius.circular(25),
-                            ),
-                            child: const Center(
-                              child: Text(
-                                'Save',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        if (existingData != null) ...[
-                          const SizedBox(height: 16),
-
-                          // Delete Link button
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.pop(dialogContext, {'delete': true});
-                            },
-                            child: const Text(
-                              'Delete Link',
-                              style: TextStyle(
-                                color: Colors.red,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ],
-
-                        const SizedBox(height: 8),
-                      ],
-                    ),
-                  ),
-                   */
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    ).whenComplete(() {
-      Future.delayed(const Duration(milliseconds: 300), () {
-        linkController.dispose();
-      });
-    });
-  }
-
-  String _domainFromUrl(String url) {
-    try {
-      final uri = Uri.parse(url.startsWith('http') ? url : 'https://$url');
-      return uri.host.replaceFirst('www.', '');
-    } catch (e) {
-      return '';
-    }
-  }
-
-  String _faviconFromDomain(String domain) {
-    if (domain.isEmpty) return '';
-    return 'https://www.google.com/s2/favicons?domain=$domain&sz=128';
-  }
-
-  List<SocialLink> _buildSocialLinks(
-    List<Map<String, dynamic>>? socialEcosystem,
-    String username,
-  ) {
-    if (socialEcosystem == null || socialEcosystem.isEmpty) return [];
-    final links = <SocialLink>[];
-    final cleanUsername = username.replaceFirst('@', '');
-
-    for (final social in socialEcosystem) {
-      for (final entry in social.entries) {
-        final platform = entry.key.toLowerCase();
-        final data = entry.value;
-        int? followers;
-        int? shares;
-        String? customUrl;
-
-        if (data is Map<String, dynamic>) {
-          followers = _parseIntFromDynamic(data['followers']);
-          shares = _parseIntFromDynamic(data['shares']);
-          customUrl = data['url']?.toString();
-        }
-
-        final socialInfo = _getSocialInfo(platform, cleanUsername, customUrl);
-        if (socialInfo != null) {
-          links.add(
-            SocialLink(
-              asset: socialInfo['asset']!,
-              url: Uri.parse(socialInfo['url']!),
-              followers: followers,
-              shares: shares,
-            ),
-          );
-        }
-      }
-    }
-
-    return links;
-  }
+  // ... resto del código sin cambios hasta build()
 
   @override
   Widget build(BuildContext context) {
@@ -1099,7 +759,6 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
               Positioned(
                 top: MediaQuery.of(context).padding.top + 8,
                 left: 0,
-
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: GestureDetector(
@@ -1171,25 +830,21 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                           fillColor: AppColors.greyBackground.withValues(
                             alpha: 0.4,
                           ),
-
                           hintText: 'Search For Platforms',
                           hintStyle: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 12,
                           ),
-
                           suffixIcon: Icon(
                             Icons.search,
                             color: Colors.grey[600],
                             size: 20,
                           ),
-
                           // Rounded corners
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
                           ),
-
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 12,
                             vertical: 5, // lower vertical padding
@@ -1219,6 +874,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     );
   }
 
+  // ... resto de métodos sin cambios (_buildSearchResults, _buildCategorizedGrid, etc.)
+
   Widget _buildSearchResults() {
     final filteredNetworks = _getFilteredNetworks();
 
@@ -1241,7 +898,6 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 15),
       padding: const EdgeInsets.all(10),
-
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1280,7 +936,6 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
       padding: const EdgeInsets.symmetric(horizontal: 15),
       children: [
         const SizedBox(height: 10),
-
         ..._categories.entries.map((entry) {
           final categoryName = entry.key;
           final networks = _getNetworksForCategory(categoryName);
@@ -1289,7 +944,6 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
 
           return Container(
             padding: const EdgeInsets.symmetric(vertical: 5),
-
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1328,7 +982,6 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
         Container(
           margin: const EdgeInsets.only(bottom: 10),
           padding: const EdgeInsets.all(10),
-
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1410,76 +1063,6 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
   Widget _buildCustomLinkGridItem() {
     return GestureDetector(
       onTap: () async {
-        /**
-         * final result = await _showCustomLinkDialog();
-        if (result != null) {
-          // Handle adding custom link
-          if (widget.mode == MoreUserDetailsMode.register) {
-            final cubit = context.read<RegisterCubit>();
-            final current = List<Map<String, Map<String, dynamic>>>.from(
-              cubit.state.socialEcosystem ?? [],
-            );
-            current.add(result as Map<String, Map<String, dynamic>>);
-            cubit.setSocialEcosystem(current);
-
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Custom link added!'),
-                  backgroundColor: Colors.green,
-                  duration: Duration(seconds: 2),
-                ),
-              );
-            }
-          } else {
-            // Edit mode
-            final editCubit = context.read<EditCubit>();
-            final current = List<Map<String, dynamic>>.from(
-              editCubit.state.socialEcosystem ?? [],
-            );
-            current.add(result);
-            editCubit.updateSocialEcosystem(current);
-
-            // Auto-save
-            final authCubit = context.read<AuthCubit>();
-            final userId = authCubit.state.firebaseUser?.uid;
-
-            if (userId != null && mounted) {
-              LoadingOverlayWithCancel.show(
-                context,
-                message: 'Saving...',
-                onCancel: () {},
-              );
-
-              try {
-                await editCubit.saveAllPendingChanges(userId);
-                LoadingOverlayWithCancel.hide();
-
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Custom link added successfully!'),
-                      backgroundColor: Colors.green,
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                }
-              } catch (e) {
-                LoadingOverlayWithCancel.hide();
-
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Error saving: $e'),
-                      backgroundColor: Colors.red,
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                }
-              }
-            }
-          }
-         */
         final result = await Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const AddAnotherNetworkScreen()),
@@ -1520,6 +1103,45 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     if (value is int) return value;
     if (value is String) return int.tryParse(value);
     return null;
+  }
+
+  List<SocialLink> _buildSocialLinks(
+    List<Map<String, dynamic>>? socialEcosystem,
+    String username,
+  ) {
+    if (socialEcosystem == null || socialEcosystem.isEmpty) return [];
+    final links = <SocialLink>[];
+    final cleanUsername = username.replaceFirst('@', '');
+
+    for (final social in socialEcosystem) {
+      for (final entry in social.entries) {
+        final platform = entry.key.toLowerCase();
+        final data = entry.value;
+        int? followers;
+        int? shares;
+        String? customUrl;
+
+        if (data is Map<String, dynamic>) {
+          followers = _parseIntFromDynamic(data['followers']);
+          shares = _parseIntFromDynamic(data['shares']);
+          customUrl = data['url']?.toString();
+        }
+
+        final socialInfo = _getSocialInfo(platform, cleanUsername, customUrl);
+        if (socialInfo != null) {
+          links.add(
+            SocialLink(
+              asset: socialInfo['asset']!,
+              url: Uri.parse(socialInfo['url']!),
+              followers: followers,
+              shares: shares,
+            ),
+          );
+        }
+      }
+    }
+
+    return links;
   }
 
   Map<String, String>? _getSocialInfo(
@@ -1580,7 +1202,6 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
       case 'shopify':
       case 'woocommerce':
       case 'etsy':
-        // Para estos, el customUrl es obligatorio (viene del servicio directo)
         url = customUrl ?? '';
         break;
 

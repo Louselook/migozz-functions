@@ -357,7 +357,7 @@
     "buttons" : {
         "confirm" : "confirm",
         "cancel" : "cancel",
-        "save" : "save",
+        "save" : "Save",
         "continue" : "continue"
     },
     "category" : {

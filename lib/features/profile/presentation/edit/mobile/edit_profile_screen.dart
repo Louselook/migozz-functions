@@ -390,7 +390,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     SizedBox(height: height * 0.04),
 
                     GradientButton(
-                      onPressed: () {},
+                      onPressed: _confirmDeleteAccount,
                       width: double.infinity,
                       height: height * 0.065,
                       radius: width * 0.02,
@@ -413,6 +413,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ],
                       ),
                     ),
+
                     SizedBox(height: height * 0.012),
 
                     GradientButton(
@@ -437,5 +438,48 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         },
       ),
     );
+  }
+
+  Future<void> _confirmDeleteAccount() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text(
+          'Delete account',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: const Text(
+          'Are you sure you want to delete your account?\n\n'
+          'This action will start a deletion process that may take up to '
+          '30 business days to be fully completed. During this time, all your '
+          'data will be permanently removed and cannot be recovered.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete account'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      // 🚧 SOLO VISUAL - NO HACE NADA AÚN
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Account deletion request submitted. '
+            'Your data will be permanently deleted within 30 business days.',
+          ),
+        ),
+      );
+    }
   }
 }
