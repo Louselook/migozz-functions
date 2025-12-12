@@ -111,9 +111,9 @@ class RegistrationHandler {
     if (registerCubit.state.username != null) {
       updateData['username'] = registerCubit.state.username;
     }
-    if (registerCubit.state.gender != null) {
-      updateData['gender'] = registerCubit.state.gender;
-    }
+    // if (registerCubit.state.gender != null) {
+    //   updateData['gender'] = registerCubit.state.gender;
+    // }
 
     final loc = registerCubit.state.location;
     if (loc != null) {

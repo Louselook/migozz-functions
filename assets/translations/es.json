@@ -237,6 +237,12 @@
       "homeStep": "Accede a tu perfil aquí; también sirve para recargar tu información.",
       "statsStep": "Revisa tus estadísticas de redes sociales; si no has sincronizado ninguna, ¡hazlo!",
       "settings": "Modifica tu información y sincroniza tus redes"
+    },
+    "customization":{
+      "emailContactFormSection" : {
+        "title" : "Formulario de contacto por correo electrónico",
+        "subtitle" : "Los visitantes pueden compartir su correo electrónico contigo a través de un formulario de contacto en tu perfil"
+      }
     }
   },
   "search": {

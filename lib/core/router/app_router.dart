@@ -31,21 +31,17 @@ import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 Widget localizedBuilder(BuildContext context, Widget Function() screenBuilder) {
   final easy = EasyLocalization.of(context);
 
-  // Si por alguna razón EasyLocalization aún no está disponible,
-  // cargamos la pantalla igual (fail-safe).
   if (easy == null) return screenBuilder();
 
-  final load = easy.delegate.localizationController?.loadTranslations();
+  final controller = easy.delegate.localizationController;
 
-  return FutureBuilder(
-    future: load,
-    builder: (ctx, snap) {
-      if (snap.connectionState != ConnectionState.done) {
-        return const Scaffold(body: Center(child: CircularProgressIndicator()));
-      }
-      return screenBuilder();
-    },
-  );
+  if (controller == null) {
+    return const Scaffold(
+      body: Center(child: CircularProgressIndicator()),
+    );
+  }
+
+  return screenBuilder();
 }
 
 GoRouter createRouter(GoRouterNotifier goRouterNotifier) {

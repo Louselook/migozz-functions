@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../../../core/color.dart';
@@ -28,7 +29,7 @@ class EmailContactFormSection extends StatelessWidget {
               Row(
                 children: [
                   Text(
-                    'Email Contact Form',
+                    "profile.customization.emailContactFormSection.title".tr(),
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 13,
@@ -68,7 +69,7 @@ class EmailContactFormSection extends StatelessWidget {
           ),
           const SizedBox(height: 7),
           Text(
-            'Visitors can share their email with you through a contact form on your profile.',
+            "profile.customization.emailContactFormSection.subtitle".tr(),
             style: TextStyle(
               color: Colors.white70,
               fontSize: 12,
