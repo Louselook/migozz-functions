@@ -9,6 +9,7 @@ import 'package:migozz_app/features/auth/presentation/register/user_details/more
 import 'package:migozz_app/features/auth/services/add_networks/network_config.dart';
 import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
+import 'package:migozz_app/features/profile/presentation/add_another_network/mobile/add_another_network.dart';
 
 import '../../../../../../../core/components/atomics/network_list.dart';
 import '../../../../../../../core/components/formart/text_formart.dart';
@@ -777,7 +778,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                   ),
 
                   // Main content
-                  Padding(
+                  /**
+                   * Padding(
                     padding: const EdgeInsets.all(24),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -986,6 +988,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                       ],
                     ),
                   ),
+                   */
                 ],
               ),
             ),
@@ -1294,8 +1297,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                   categoryName,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
+                    fontSize: 19,
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -1364,34 +1367,41 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                 )
               : null,
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Platform Icon
-            SvgPicture.asset(
-              network.iconPath,
-              width: 17,
-              height: 17,
-              fit: BoxFit.contain,
-            ),
-            SizedBox(width: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final h = constraints.maxHeight;
+            final iconSize = (h * 0.60).clamp(18.0, 28.0).toDouble();
+            final fontSize = (h * 0.38).clamp(11.0, 14.0).toDouble();
 
-            // Platform Name
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Text(
-                network.displayName,
-                style: TextStyle(
-                  color: isSelected ? Colors.white : Colors.white70,
-                  fontSize: 8,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SvgPicture.asset(
+                  network.iconPath,
+                  width: iconSize,
+                  height: iconSize,
+                  fit: BoxFit.contain,
                 ),
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    network.displayName,
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : Colors.white70,
+                      fontSize: fontSize,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.w500,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -1400,7 +1410,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
   Widget _buildCustomLinkGridItem() {
     return GestureDetector(
       onTap: () async {
-        final result = await _showCustomLinkDialog();
+        /**
+         * final result = await _showCustomLinkDialog();
         if (result != null) {
           // Handle adding custom link
           if (widget.mode == MoreUserDetailsMode.register) {
@@ -1468,6 +1479,19 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
               }
             }
           }
+         */
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const AddAnotherNetworkScreen()),
+        );
+        if (result == 'done' && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Custom link updated'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
         }
       },
       child: Container(
