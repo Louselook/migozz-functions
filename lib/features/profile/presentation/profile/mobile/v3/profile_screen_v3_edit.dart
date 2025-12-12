@@ -121,8 +121,8 @@ class _MobileProfileContentV3EditState
                         SizedBox(width: 10),
                         Text(
                           _uploading
-                              ? 'Uploading...'
-                              : 'Change Profile Picture',
+                              ? 'profile.customization.uploadingProfilePicture.uploading'.tr()
+                              : 'profile.customization.uploadingProfilePicture.success'.tr(),
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 13,
@@ -279,8 +279,8 @@ class _MobileProfileContentV3EditState
       await editCubit.changeAvatar(userId);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile picture updated successfully'),
+          SnackBar(
+            content: Text('profile.customization.uploadingProfilePicture.success'.tr()),
             backgroundColor: Colors.green,
           ),
         );
@@ -289,7 +289,7 @@ class _MobileProfileContentV3EditState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error updating profile picture: $e'),
+            content: Text('${'profile.customization.uploadingProfilePicture.error'.tr()}$e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -306,8 +306,8 @@ class _MobileProfileContentV3EditState
 
     if (userId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Error: User not logged in'),
+        SnackBar(
+          content: Text('edit.validations.errorUserLogin'.tr()),
           backgroundColor: Colors.red,
         ),
       );

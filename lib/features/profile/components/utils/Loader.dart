@@ -10,7 +10,7 @@ Future<void> showProfileLoader(
     context: context,
     barrierDismissible: barrierDismissible,
     barrierLabel: 'Loader',
-    barrierColor: Colors.black.withOpacity(0.7),
+    barrierColor: Colors.black.withValues(alpha: 0.7),
     transitionDuration: const Duration(milliseconds: 200),
     pageBuilder: (ctx, a1, a2) => Center(
       child: LoaderDialog(message: message, onCancel: onCancel),
@@ -47,7 +47,7 @@ class LoaderDialog extends StatelessWidget {
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.35),
+              color: Colors.black.withValues(alpha: 0.35),
               blurRadius: 24,
               offset: const Offset(0, 12),
             ),
@@ -67,7 +67,7 @@ class LoaderDialog extends StatelessWidget {
                   height: 28,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.18),
+                    color: Colors.white.withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Text(
@@ -134,7 +134,7 @@ class _CancelButton extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFFF5A6E).withOpacity(0.4),
+              color: const Color(0xFFFF5A6E).withValues(alpha: 0.4),
               blurRadius: 18,
               offset: const Offset(0, 8),
             ),

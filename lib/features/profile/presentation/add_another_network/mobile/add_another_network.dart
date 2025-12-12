@@ -173,9 +173,9 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
     return 'https://www.google.com/s2/favicons?domain=$domain&sz=128';
   }
 
-  String _duckFaviconFromDomain(String domain) {
-    return 'https://icons.duckduckgo.com/ip3/$domain.ico';
-  }
+  // String _duckFaviconFromDomain(String domain) {
+  //   return 'https://icons.duckduckgo.com/ip3/$domain.ico';
+  // }
 
   Future<String?> _resolveFavicon(String domain) async {
     bool _isSupported(String? ct) {

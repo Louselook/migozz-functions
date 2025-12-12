@@ -44,16 +44,17 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
   Color _qrColor = const Color(0xFFD43AB6); // Default QR color
   BackgroundMode _currentMode = BackgroundMode.emoji; // Current mode
   List<Color>? _selectedGradient; // Track selected gradient
-  String? _selectedImagePath; // Track selected image (file path for mobile, base64 for web)
+  String?
+  _selectedImagePath; // Track selected image (file path for mobile, base64 for web)
   Uint8List? _selectedImageBytes; // Store image bytes for web
   final GlobalKey _screenshotKey = GlobalKey(); // Key for screenshot
 
   static const String _baseProfileUrl =
-      'https://migozz.app/u'; // Cambia a tu dominio real
+      'https://migozz-e2a21.web.app/u'; // Cambia a tu dominio real
 
   static const List<String> _emojiImages = [
     'assets/emojis/emoji_1.png',
-    'assets/emojis/emoji_2.png'
+    'assets/emojis/emoji_2.png',
   ];
 
   static const List<List<Color>> _gradientOptions = [
@@ -156,7 +157,9 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
       final ui.Image image = frameInfo.image;
 
       // Sample pixels from the center of the image
-      final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+      final ByteData? byteData = await image.toByteData(
+        format: ui.ImageByteFormat.rawRgba,
+      );
       if (byteData == null) return;
 
       // Get center pixel color
@@ -362,7 +365,9 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
                           _selectedEmoji = null;
                           _selectedGradient = null;
                           _selectedImagePath = null;
-                          _qrColor = const Color(0xFFD43AB6); // Reset to default color
+                          _qrColor = const Color(
+                            0xFFD43AB6,
+                          ); // Reset to default color
                         });
                         _saveSelectedEmoji(null);
                         _saveSelectedGradient(null);
@@ -504,7 +509,9 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: isSelected ? const Color(0xFFD43AB6) : Colors.grey.shade300,
+                            color: isSelected
+                                ? const Color(0xFFD43AB6)
+                                : Colors.grey.shade300,
                             width: 3,
                           ),
                           gradient: const RadialGradient(
@@ -637,10 +644,7 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
             const SizedBox(height: 8),
             Text(
               label,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
           ],
         ),
@@ -694,7 +698,9 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
       final ui.FrameInfo frameInfo = await codec.getNextFrame();
       final ui.Image image = frameInfo.image;
 
-      final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+      final ByteData? byteData = await image.toByteData(
+        format: ui.ImageByteFormat.rawRgba,
+      );
       if (byteData == null) return;
 
       final int width = image.width;
@@ -729,10 +735,13 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
   Future<void> _captureAndSaveScreenshot() async {
     try {
       // Capture the screenshot
-      RenderRepaintBoundary boundary = _screenshotKey.currentContext!
-          .findRenderObject() as RenderRepaintBoundary;
+      RenderRepaintBoundary boundary =
+          _screenshotKey.currentContext!.findRenderObject()
+              as RenderRepaintBoundary;
       ui.Image image = await boundary.toImage(pixelRatio: 3.0);
-      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      ByteData? byteData = await image.toByteData(
+        format: ui.ImageByteFormat.png,
+      );
       Uint8List pngBytes = byteData!.buffer.asUint8List();
 
       if (kIsWeb) {
@@ -740,7 +749,10 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
         final blob = html.Blob([pngBytes]);
         final url = html.Url.createObjectUrlFromBlob(blob);
         html.AnchorElement(href: url)
-          ..setAttribute('download', 'migozz_qr_${DateTime.now().millisecondsSinceEpoch}.png')
+          ..setAttribute(
+            'download',
+            'migozz_qr_${DateTime.now().millisecondsSinceEpoch}.png',
+          )
           ..click();
         html.Url.revokeObjectUrl(url);
 
@@ -775,7 +787,8 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
           }
 
           if (downloadsDir != null) {
-            final downloadPath = '${downloadsDir.path}/migozz_qr_$timestamp.png';
+            final downloadPath =
+                '${downloadsDir.path}/migozz_qr_$timestamp.png';
             final downloadFile = File(downloadPath);
             await downloadFile.writeAsBytes(pngBytes);
             debugPrint('Saved to: $downloadPath');
@@ -785,10 +798,9 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
         }
 
         // Share the image
-        await Share.shareXFiles(
-          [XFile(imagePath)],
-          text: 'Check out my Migozz profile!',
-        );
+        await Share.shareXFiles([
+          XFile(imagePath),
+        ], text: 'Check out my Migozz profile!');
 
         // Show success message
         if (mounted) {
@@ -841,40 +853,42 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
                       children: [
                         // Show background based on selection
                         if (_selectedImagePath != null)
-              Opacity(
-                opacity: 0.6,
-                child: kIsWeb
-                    ? (_selectedImageBytes != null
-                        ? Image.memory(
-                            _selectedImageBytes!,
-                            fit: BoxFit.cover,
+                          Opacity(
+                            opacity: 0.6,
+                            child: kIsWeb
+                                ? (_selectedImageBytes != null
+                                      ? Image.memory(
+                                          _selectedImageBytes!,
+                                          fit: BoxFit.cover,
+                                        )
+                                      : const SizedBox())
+                                : Image.file(
+                                    File(_selectedImagePath!),
+                                    fit: BoxFit.cover,
+                                  ),
                           )
-                        : const SizedBox())
-                    : Image.file(
-                        File(_selectedImagePath!),
-                        fit: BoxFit.cover,
-                      ),
-              )
-            else if (_selectedGradient != null)
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: _selectedGradient!,
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-              )
-            else if (_selectedEmoji != null)
-              Opacity(
-                opacity: 0.6,
-                child: Image.asset(
-                  _selectedEmoji!,
-                  fit: BoxFit.cover,
-                ),
-              )
-            else
-              TintesGradients(child: Container(height: bottomGradientHeight)),
+                        else if (_selectedGradient != null)
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: _selectedGradient!,
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                            ),
+                          )
+                        else if (_selectedEmoji != null)
+                          Opacity(
+                            opacity: 0.6,
+                            child: Image.asset(
+                              _selectedEmoji!,
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                        else
+                          TintesGradients(
+                            child: Container(height: bottomGradientHeight),
+                          ),
                       ],
                     ),
                   ),
@@ -883,84 +897,85 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
                 IgnorePointer(
                   ignoring: false,
                   child: FutureBuilder<_ProfileData>(
-            future: _futureProfile,
-            builder: (context, snap) {
-              if (snap.connectionState == ConnectionState.waiting) {
-                return const Center(
-                  child: CircularProgressIndicator(color: Colors.white),
-                );
-              }
-              if (!snap.hasData) {
-                return const Text(
-                  'No data',
-                  style: TextStyle(color: Colors.white),
-                );
-              }
-              final data = snap.data!;
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: EdgeInsets.fromLTRB(22, 10, 22, 0),
-                    width: 301,
-                    height: 372,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
+                    future: _futureProfile,
+                    builder: (context, snap) {
+                      if (snap.connectionState == ConnectionState.waiting) {
+                        return const Center(
+                          child: CircularProgressIndicator(color: Colors.white),
+                        );
+                      }
+                      if (!snap.hasData) {
+                        return const Text(
+                          'No data',
+                          style: TextStyle(color: Colors.white),
+                        );
+                      }
+                      final data = snap.data!;
+                      return Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              QrImageView(
-                                data: data.link,
-                                eyeStyle: QrEyeStyle(
-                                  eyeShape: QrEyeShape.square,
-                                  color: _qrColor,
-                                ),
-                                dataModuleStyle: QrDataModuleStyle(
-                                  dataModuleShape: QrDataModuleShape.square,
-                                  color: _qrColor,
-                                ),
-                                version: QrVersions.auto,
-                                size: 256,
+                          Container(
+                            padding: EdgeInsets.fromLTRB(22, 10, 22, 0),
+                            width: 301,
+                            height: 372,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      QrImageView(
+                                        data: data.link,
+                                        eyeStyle: QrEyeStyle(
+                                          eyeShape: QrEyeShape.square,
+                                          color: _qrColor,
+                                        ),
+                                        dataModuleStyle: QrDataModuleStyle(
+                                          dataModuleShape:
+                                              QrDataModuleShape.square,
+                                          color: _qrColor,
+                                        ),
+                                        version: QrVersions.auto,
+                                        size: 256,
+                                      ),
+                                      // Center logo
+                                      Image.asset(
+                                        'assets/images/Migozz.webp',
+                                        width: 50,
+                                        height: 50,
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    data.displayName,
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '@${data.username}',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              // Center logo
-                              Image.asset(
-                                'assets/images/Migozz.webp',
-                                width: 50,
-                                height: 50,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            data.displayName,
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '@${data.username}',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
-                            ),
-                          ),
+                          const SizedBox(height: 40),
                         ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 40),
-                ],
-              );
-            },
+                      );
+                    },
                   ),
                 ),
               ],
@@ -1013,14 +1028,21 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
                 GestureDetector(
                   onTap: _toggleMode,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
                       vertical: 5,
                     ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Text(_getButtonLabel(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                    child: Text(
+                      _getButtonLabel(),
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
                 IconButton(

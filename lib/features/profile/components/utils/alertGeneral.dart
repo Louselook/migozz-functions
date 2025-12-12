@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/color.dart';
-import 'package:migozz_app/core/components/atomics/text.dart';
+// import 'package:migozz_app/core/components/atomics/text.dart';
 
 class AlertGeneral {
   static Future<void> show(BuildContext context, int type, {String? message}) {
@@ -25,7 +25,7 @@ class _AlertCard extends StatelessWidget {
     final color = _colorFor(type);
 
     final screenWidth = MediaQuery.of(context).size.width;
-    final cardWidth = (screenWidth * 0.8).clamp(280.0, 340.0) as double;
+    final cardWidth = (screenWidth * 0.8).clamp(280.0, 340.0);
 
     return Align(
       alignment: const Alignment(0, 0.45),

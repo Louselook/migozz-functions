@@ -1,8 +1,8 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
+import 'package:migozz_app/features/chat/presentation/user/list/chats_list_screen.dart';
 import 'package:migozz_app/features/profile/components/bottom_nav.dart';
 import 'package:migozz_app/features/profile/presentation/edit/mobile/edit_profile_screen.dart';
 import 'package:migozz_app/features/profile/presentation/profile_entry.dart';
@@ -34,26 +34,26 @@ class _MainNavigationState extends State<MainNavigation> {
 
   late final TutorialKeys _tutorialKeys = widget.tutorialKeys ?? TutorialKeys();
 
-   @override
+  @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
     debugPrint('🚀 [MainNavigation] Inicializado con index: $_currentIndex');
   }
 
- @override
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    if (!_tutorialScheduled && widget.tutorialKeys != null && _currentIndex == 0) {
+    if (!_tutorialScheduled &&
+        widget.tutorialKeys != null &&
+        _currentIndex == 0) {
       _tutorialScheduled = true;
 
       // Espera a que el build ACTUAL termine
       WidgetsBinding.instance.addPostFrameCallback((_) {
-
         // Espera otro frame más para asegurar que BottomNav existe
         Future.delayed(const Duration(milliseconds: 200), () {
-
           if (!mounted) return;
 
           triggerProfileTutorial(context, widget.tutorialKeys!);
@@ -99,36 +99,39 @@ class _MainNavigationState extends State<MainNavigation> {
   }
 
   Future<void> _onCenterTap() async {
-    debugPrint('🎯 [MainNavigation] Botón central presionado');
+    debugPrint('🎯 [MainNavigation] Botón central presionado - ir a chats');
 
-    final shouldLogout = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Cerrar sesión'),
-        content: const Text('¿Estás seguro que deseas cerrar sesión?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Cerrar sesión'),
-          ),
-        ],
+    // Intentamos obtener el usuario actual desde el AuthCubit
+    final authState = context.read<AuthCubit>().state;
+    final currentUser = authState.userProfile;
+
+    if (currentUser == null) {
+      // Si no hay usuario (caso raro), mostramos un mensaje y salimos
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se ha encontrado usuario activo')),
+      );
+      return;
+    }
+
+    final currentUserEmail = currentUser.email;
+    final currentUsername = (currentUser.username).replaceFirst('@', '');
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ChatsListScreen(
+          username: currentUsername,
+          currentUserId: currentUserEmail,
+        ),
       ),
     );
-
-    if (shouldLogout == true) {
-      debugPrint('👋 [MainNavigation] Usuario cerrando sesión');
-      await FirebaseAuth.instance.signOut();
-    }
   }
 
   void _onProfileUpdated() {
     debugPrint('🔄 [MainNavigation] Perfil actualizado');
     context.read<AuthCubit>().refreshUserProfile();
   }
+
   final GlobalKey<SearchScreenState> searchKey = GlobalKey<SearchScreenState>();
 
   @override
@@ -136,15 +139,18 @@ class _MainNavigationState extends State<MainNavigation> {
     final isViewingOtherProfile = widget.targetUser != null;
 
     final screens = [
-  isViewingOtherProfile
-      ? ProfileSearchScreen(user: widget.targetUser!, tutorialKeys: _tutorialKeys)
-      : ProfileEntry(tutorialKeys: _tutorialKeys),
+      isViewingOtherProfile
+          ? ProfileSearchScreen(
+              user: widget.targetUser!,
+              tutorialKeys: _tutorialKeys,
+            )
+          : ProfileEntry(tutorialKeys: _tutorialKeys),
 
       SearchScreen(key: searchKey, tutorialKeys: _tutorialKeys),
 
       ProfileStatsScreen(tutorialKeys: _tutorialKeys),
       EditProfileScreen(tutorialKeys: _tutorialKeys),
-    ];  
+    ];
 
     return Scaffold(
       extendBody: true,

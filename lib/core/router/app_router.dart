@@ -10,7 +10,6 @@ import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_stat
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_state.dart';
 import 'package:migozz_app/features/auth/presentation/login/login_entry.dart';
 import 'package:migozz_app/features/auth/presentation/onboarding/onboarding_entry.dart';
-// import 'package:migozz_app/features/auth/presentation/login/otp_screen.dart';
 import 'package:migozz_app/features/auth/presentation/register/register_screen.dart';
 import 'package:migozz_app/features/profile/components/main_navigation.dart';
 import 'package:migozz_app/features/profile/presentation/edit/web/edit_profile_page.dart'
@@ -27,25 +26,20 @@ import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/features/search/web/presentation/search_screen.dart'
     as web_search;
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 Widget localizedBuilder(BuildContext context, Widget Function() screenBuilder) {
   final easy = EasyLocalization.of(context);
 
-  // Si por alguna razón EasyLocalization aún no está disponible,
-  // cargamos la pantalla igual (fail-safe).
   if (easy == null) return screenBuilder();
 
-  final load = easy.delegate.localizationController?.loadTranslations();
+  final controller = easy.delegate.localizationController;
 
-  return FutureBuilder(
-    future: load,
-    builder: (ctx, snap) {
-      if (snap.connectionState != ConnectionState.done) {
-        return const Scaffold(body: Center(child: CircularProgressIndicator()));
-      }
-      return screenBuilder();
-    },
-  );
+  if (controller == null) {
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
+  }
+
+  return screenBuilder();
 }
 
 GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
@@ -112,6 +106,69 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
           return MainNavigation(initialIndex: 0, targetUser: user);
         },
       ),
+
+      // 🆕 Nueva ruta para manejar /u/:username (App Links y Web)
+      GoRoute(
+        path: '/u/:username',
+        builder: (context, state) {
+          final username = state.pathParameters['username'];
+
+          if (username == null || username.isEmpty) {
+            // Si no hay username, redirigir a home
+            return const Scaffold(
+              body: Center(child: Text('Usuario no encontrado')),
+            );
+          }
+
+          // Cargar el perfil del usuario usando el username
+          return FutureBuilder<UserDTO?>(
+            future: _loadUserByUsername(username),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              if (!snapshot.hasData || snapshot.data == null) {
+                return Scaffold(
+                  body: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.person_off,
+                          size: 64,
+                          color: Colors.grey,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Usuario @$username no encontrado',
+                          style: const TextStyle(fontSize: 18),
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton(
+                          onPressed: () => context.go('/'),
+                          child: const Text('Ir al inicio'),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              final user = snapshot.data!;
+              final screenWidth = MediaQuery.of(context).size.width;
+
+              if (screenWidth >= 900) {
+                return web_profile.ProfileSearchScreen(user: user);
+              }
+              return MainNavigation(initialIndex: 0, targetUser: user);
+            },
+          );
+        },
+      ),
+
       GoRoute(
         path: '/search',
         builder: (context, state) {
@@ -212,6 +269,11 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
 
       final isPublic = publicRoutes.any((r) => routeMatches(goingTo, r));
 
+      // ✅ Permitir acceso público a perfiles /u/:username
+      if (goingTo.startsWith('/u/')) {
+        return null; // Permitir acceso sin autenticación
+      }
+
       // ✅ Permitir la ruta raíz para que se maneje su propio redirect
       if (goingTo == '/') return null;
 
@@ -272,4 +334,29 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       return null;
     },
   );
+}
+
+/// Función helper para cargar usuario por username
+Future<UserDTO?> _loadUserByUsername(String username) async {
+  try {
+    final cleanUsername = username.toLowerCase().replaceFirst('@', '');
+
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .where('username', isEqualTo: cleanUsername)
+        .limit(1)
+        .get();
+
+    if (querySnapshot.docs.isEmpty) {
+      return null;
+    }
+
+    final userData = querySnapshot.docs.first.data();
+
+    // Usar UserDTO.fromMap que ya maneja todos los campos defensivamente
+    return UserDTO.fromMap(userData);
+  } catch (e) {
+    debugPrint('Error loading user by username: $e');
+    return null;
+  }
 }

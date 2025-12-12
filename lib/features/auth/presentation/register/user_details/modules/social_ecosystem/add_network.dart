@@ -1,10 +1,8 @@
-// add_network.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/features/auth/services/add_networks/network_config.dart';
-// import 'package:migozz_app/core/components/atomics/loading_overlay_with_cancel.dart';
 
 enum NetworkAuthMode { click, manual }
 
@@ -210,13 +208,14 @@ class _AddNetworkBottomSheetState extends State<AddNetworkBottomSheet> {
   }
 
   Widget _buildManualForm() {
+    final networkTexts = _getNetworkTexts();
     return Column(
       children: [
         TextField(
           controller: _controller,
           style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
-            hintText: "Enter username or link",
+            hintText: networkTexts['hint'],
             hintStyle: const TextStyle(color: Colors.grey),
             filled: true,
             fillColor: Colors.grey[900],
@@ -234,7 +233,7 @@ class _AddNetworkBottomSheetState extends State<AddNetworkBottomSheet> {
 
         // Preview URL
         Text(
-          _getExampleUrl(),
+          networkTexts['example']!,
           style: const TextStyle(color: Colors.grey, fontSize: 12),
         ),
         const SizedBox(height: 20),
@@ -270,20 +269,57 @@ class _AddNetworkBottomSheetState extends State<AddNetworkBottomSheet> {
     );
   }
 
-  String _getExampleUrl() {
-    switch (widget.networkConfig.name.toLowerCase()) {
+  Map<String, String> _getNetworkTexts() {
+    final name = widget.networkConfig.name.toLowerCase();
+
+    switch (name) {
       case 'instagram':
-        return 'https://www.instagram.com/username';
+        return {
+          'hint': 'Enter Instagram username or link',
+          'example': 'https://www.instagram.com/username',
+        };
+
       case 'tiktok':
-        return 'https://www.tiktok.com/@username';
+        return {
+          'hint': 'Enter TikTok username or link',
+          'example': 'https://www.tiktok.com/@username',
+        };
+
       case 'youtube':
-        return 'https://www.youtube.com/@username';
+        return {
+          'hint': 'Enter YouTube channel or user link',
+          'example': 'https://www.youtube.com/@username',
+        };
+
       case 'twitter':
-        return 'https://twitter.com/username';
+        return {
+          'hint': 'Enter Twitter username or link',
+          'example': 'https://twitter.com/username',
+        };
+
       case 'facebook':
-        return 'https://www.facebook.com/username';
+        return {
+          'hint': 'Enter Facebook username or link',
+          'example': 'https://www.facebook.com/username',
+        };
+
+      case 'whatsapp':
+        return {
+          'hint': 'Enter phone number',
+          'example': 'https://wa.me/number',
+        };
+
+      case 'telegram':
+        return {
+          'hint': 'Enter Telegram username or link',
+          'example': 'https://t.me/username',
+        };
+
       default:
-        return 'https://www.${widget.networkConfig.name}.com/username';
+        return {
+          'hint': 'Enter username or link',
+          'example': 'https://www.$name.com/username',
+        };
     }
   }
 }

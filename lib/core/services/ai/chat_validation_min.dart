@@ -44,12 +44,12 @@ Future<Map<String, dynamic>?> processBotResponse(
       }
       break;
 
-    case RegisterStatusProgress.gender:
-      if (isValid == true && userResponse != null) {
-        registerCubit.setGender(userResponse);
-        debugPrint('✅ Género guardado: $userResponse');
-      }
-      break;
+    // case RegisterStatusProgress.gender:
+    //   if (isValid == true && userResponse != null) {
+    //     registerCubit.setGender(userResponse);
+    //     debugPrint('✅ Género guardado: $userResponse');
+    //   }
+    //   break;
 
     // case RegisterStatusProgress.socialEcosystem:
     //   debugPrint('📱 Paso de redes sociales - se maneja en navigation handler');
@@ -234,7 +234,7 @@ RegisterStatusProgress _parseStep(String raw) {
     return RegisterStatusProgress.fullName;
   }
   if (raw.contains('username')) return RegisterStatusProgress.username;
-  if (raw.contains('gender')) return RegisterStatusProgress.gender;
+  // if (raw.contains('gender')) return RegisterStatusProgress.gender;
   // if (raw.contains('social') || raw.contains('ecosystem')) {
   //   return RegisterStatusProgress.socialEcosystem;
   // }
@@ -249,7 +249,7 @@ RegisterStatusProgress _parseStep(String raw) {
     return RegisterStatusProgress.emailVerification;
   }
 
-  if (raw.contains('avatar')) return RegisterStatusProgress.avatarUrl;
+  // if (raw.contains('avatar')) return RegisterStatusProgress.avatarUrl;
   if (raw.contains('phone')) return RegisterStatusProgress.phone;
   if (raw.contains('voice')) return RegisterStatusProgress.voiceNoteUrl;
   if (raw.contains('done')) return RegisterStatusProgress.doneChat;

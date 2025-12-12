@@ -37,11 +37,14 @@
       }
     }
   },
-  "Register": {
+  "register": {
     "validations": {
       "emptyEmail": "El correo no puede estar vacío",
       "validationEmail": "Por favor ingrese un correo válido",
-      "registerEmail": "Este correo ya está registrado"
+      "registerEmail": "Este correo ya está registrado",
+      "socialNotAvailable": "no está disponible aún",
+      "socialError": "Error al conectar con ",
+      "socialConnected": "conectado exitosamente"
     },
     "presentation": {
       "title": "¡Regístrate ahora!",
@@ -237,6 +240,17 @@
       "homeStep": "Accede a tu perfil aquí; también sirve para recargar tu información.",
       "statsStep": "Revisa tus estadísticas de redes sociales; si no has sincronizado ninguna, ¡hazlo!",
       "settings": "Modifica tu información y sincroniza tus redes"
+    },
+    "customization":{
+      "uploadingProfilePicture": {
+        "uploading...": "Cargando..",
+        "success": "Foto de perfil actualizada exitosamente",
+        "error": "Error al actualizar la foto de perfil:"
+      },
+      "emailContactFormSection" : {
+        "title" : "Formulario de contacto por correo electrónico",
+        "subtitle" : "Los visitantes pueden compartir su correo electrónico contigo a través de un formulario de contacto en tu perfil"
+      }
     }
   },
   "search": {
@@ -246,11 +260,15 @@
         "suggestedNoResult": "No se encontraron usuarios"
       },
       "options": {
-          "forYou": "Para ti",
-          "accounts": "Cuentas",
-          "reels": "Reels",
-          "audio": "Audio",
-          "hashtags": "Hashtags"
+        "forYou": "Para ti",
+        "accounts": "Cuentas",
+        "reels": "Reels",
+        "audio": "Audio",
+        "hashtags": "Hashtags"
+      },
+      "validations": {
+        "emptySearch": "Por favor ingresa un término de búsqueda",
+        "emptyInterest": "Agrega al menos 1 interés para mejorar tus recomendaciones"
       }
   },
   "stats":{
@@ -337,10 +355,17 @@
     "label": "Compartir perfil"
   },
   "buttons": {
+<<<<<<< HEAD
     "confirm": "confirmar",
     "cancel": "cancelar",
-    "save": "guardar",
+    "save": "Guardar",
     "continue": "continuar"
+=======
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "continue": "Continuar"
+>>>>>>> 323daa0b7c400194efd9d7d18646a7307553c9c4
   },
   "category": {
     "title": "Elige tu categoría",
@@ -351,141 +376,6 @@
     "influencer": "Influencer",
     "sport": "Deportista",
     "actor/Actress": "Actor/Actriz"
-  },
-  "interest": {
-    "goingOut": {
-      "title": "Salir",
-      "options": [
-        "Conciertos",
-        "Museos y galerías",
-        "Yoga",
-        "Comedia",
-        "Teatro",
-        "Clubes",
-        "Bares",
-        "Karaoke",
-        "Festivales de cine",
-        "Descansar"
-      ]
-    },
-    "sports": {
-      "title": "Deportes",
-      "options": [
-        "Fútbol americano",
-        "Fútbol",
-        "Hockey",
-        "Noticias deportivas",
-        "Pesca",
-        "Baloncesto",
-        "Críquet",
-        "Pickleball",
-        "Gimnasia",
-        "Equitación",
-        "MMA",
-        "Tenis",
-        "Natación",
-        "Snowboard",
-        "Gimnasio",
-        "Surf",
-        "Esquí",
-        "Béisbol",
-        "Golf",
-        "Boxeo"
-      ]
-    },
-    "filmAndTv": {
-      "title": "Cine y TV",
-      "options": [
-        "Drama",
-        "Suspenso",
-        "Crimen",
-        "Fantasía",
-        "Anime",
-        "Ciencia ficción",
-        "Misterio",
-        "Comedia",
-        "Romance",
-        "Acción",
-        "Terror"
-      ]
-    },
-    "valuesAndTraits": {
-      "title": "Valores y rasgos",
-      "options": [
-        "Inteligencia",
-        "Positividad",
-        "Confianza",
-        "Orientado a la familia",
-        "Ambición",
-        "Creatividad",
-        "Empatía"
-      ]
-    },
-    "traveling": {
-      "title": "Viajes",
-      "options": [
-        "Playas",
-        "Fines de semana en spa",
-        "Escapadas locales",
-        "Mochilear",
-        "Deportes de invierno",
-        "Caminatas",
-        "Viajes por carretera",
-        "Explorar nuevas ciudades",
-        "Viajes de pesca",
-        "Camping"
-      ]
-    },
-    "business": {
-      "title": "Negocios",
-      "options": [
-        "Emprendimiento",
-        "Ventas",
-        "Bienes raíces",
-        "Cripto",
-        "Marketing",
-        "Acciones"
-      ]
-    },
-    "creativity": {
-      "title": "Creatividad",
-      "options": [
-        "Escritura",
-        "Fotografía",
-        "Baile",
-        "Canto",
-        "Diseño",
-        "Creación de contenido",
-        "Arte",
-        "Maquillaje"
-      ]
-    },
-    "stayingIn": {
-      "title": "Quedarse en casa",
-      "options": [
-        "Lectura",
-        "Hornear",
-        "Comida para llevar",
-        "Cocinar",
-        "Juegos de mesa",
-        "Jardinería",
-        "Videojuegos"
-      ]
-    },
-    "pets": {
-      "title": "Mascotas",
-      "options": [
-        "Serpientes",
-        "Pájaros",
-        "Peces",
-        "Tortugas",
-        "Hámsters",
-        "Gatos",
-        "Perros",
-        "Lagartos",
-        "Conejos"
-      ]
-    }
   },
   "support": {
     "header": "Soporte / Reportar un problema",

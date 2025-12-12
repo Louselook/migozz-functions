@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -77,8 +78,8 @@ class SearchScreenState extends State<SearchScreen> {
           // Si sigue vacío, avisamos y dejamos al usuario en search (puede salir a explorar igual)
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Agrega al menos 1 interés para mejorar tus recomendaciones'),
+              SnackBar(
+                content: Text('search.validations.emptyInterest'.tr()),
                 duration: Duration(seconds: 3),
               ),
             );

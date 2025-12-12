@@ -286,8 +286,8 @@ class _ResultSearchState extends State<ResultSearch> {
                     Container(
                       width: avatarRadius * 2,
                       height: avatarRadius * 2,
-                      decoration: const BoxDecoration(shape: BoxShape.circle),
-                      child: ClipOval(
+                      decoration: const BoxDecoration(shape: BoxShape.rectangle),
+                      child: ClipRSuperellipse(
                         child: avatar != null && avatar.isNotEmpty
                             ? CachedNetworkImage(
                                 imageUrl: avatar,

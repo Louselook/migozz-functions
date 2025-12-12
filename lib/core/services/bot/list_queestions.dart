@@ -36,13 +36,13 @@ final Map<String, Map<String, dynamic>> questionsEs = {
   //   "keyboardType": "text",
   // },
 
-  "socialEcosystem": {
-    "text": "¡Agreguemos tus plataformas sociales!",
-    "options": [],
-    "step": "regProgress.socialEcosystem",
-    "keepTalk": false,
-    "action": 0,
-  },
+  // "socialEcosystem": {
+  //   "text": "¡Agreguemos tus plataformas sociales!",
+  //   "options": [],
+  //   "step": "regProgress.socialEcosystem",
+  //   "keepTalk": false,
+  //   "action": 0,
+  // },
 
   "location": {
     "text":
@@ -86,8 +86,8 @@ final Map<String, Map<String, dynamic>> questionsEs = {
 
   "avatarUrl": {
     "text":
-        "Personalicemos tu perfil. Puedo sugerirte una foto de tus redes sociales conectadas o puedes subir una nueva. ¿Cuál prefieres? 📸",
-    "options": [],
+        "Personalicemos tu perfil. Puedes subir una nueva desde tu galeria o tomar una desde la camara. ¿Cuál prefieres? 📸",
+    "options": ["Saltar paso"],
     "step": "regProgress.avatarUrl",
     "keepTalk": false,
     "showProfilePictures": true,
@@ -152,13 +152,13 @@ final Map<String, Map<String, dynamic>> questionsEn = {
   //   "keyboardType": "text",
   // },
 
-  "socialEcosystem": {
-    "text": "Let's add your social platforms!",
-    "options": [],
-    "step": "regProgress.socialEcosystem",
-    "keepTalk": false,
-    "action": 0,
-  },
+  // "socialEcosystem": {
+  //   "text": "Let's add your social platforms!",
+  //   "options": [],
+  //   "step": "regProgress.socialEcosystem",
+  //   "keepTalk": false,
+  //   "action": 0,
+  // },
 
   "location": {
     "text":
@@ -200,8 +200,8 @@ final Map<String, Map<String, dynamic>> questionsEn = {
 
   "avatarUrl": {
     "text":
-        "Let's personalize your profile. I can suggest a photo from your connected social media or you can upload a new one. Which do you prefer? 📸",
-    "options": [],
+        "Let's personalize your profile. You can upload a photo from your gallery or take a new one with your camera. Which do you prefer? 📸",
+    "options": ["Skip step"],
     "step": "regProgress.avatarUrl",
     "keepTalk": false,
     "showProfilePictures": true,
@@ -223,12 +223,12 @@ final Map<String, Map<String, dynamic>> questionsEn = {
     "keepTalk": false,
   },
 
-  "category": {
-    "text": "Choose your categories to personalize your content.",
-    "step": "regProgress.category",
-    "keepTalk": false,
-    "action": 1,
-  },
+  // "category": {
+  //   "text": "Choose your categories to personalize your content.",
+  //   "step": "regProgress.category",
+  //   "keepTalk": false,
+  //   "action": 1,
+  // },
 };
 
 /// MENSAJES DE ERROR (respuestas inválidas)
@@ -290,13 +290,13 @@ final Map<String, Map<String, dynamic>> errorMessagesEs = {
     "keepTalk": false,
   },
 
-  "avatarUrl": {
-    "text":
-        "Por favor selecciona una foto de las opciones, súbela desde tu galería o tómala con la cámara. 📸",
-    "step": "regProgress.avatarUrl",
-    "keepTalk": false,
-    "showProfilePictures": true, // ✅ Volver a mostrar las fotos
-  },
+  // "avatarUrl": {
+  //   "text":
+  //       "Por favor selecciona una foto de las opciones, súbela desde tu galería o tómala con la cámara. 📸",
+  //   "step": "regProgress.avatarUrl",
+  //   "keepTalk": false,
+  //   "showProfilePictures": true, // ✅ Volver a mostrar las fotos
+  // },
 };
 
 final Map<String, Map<String, dynamic>> errorMessagesEn = {
