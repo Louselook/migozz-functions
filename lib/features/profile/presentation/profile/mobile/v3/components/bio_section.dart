@@ -9,11 +9,7 @@ class BioSection extends StatelessWidget {
   final String bio;
   final bool isOwnProfile;
 
-  const BioSection({
-    super.key,
-    required this.bio,
-    required this.isOwnProfile,
-  });
+  const BioSection({super.key, required this.bio, required this.isOwnProfile});
 
   Future<void> _editBio(BuildContext context) async {
     await showModalBottomSheet(
@@ -72,10 +68,21 @@ class BioSection extends StatelessWidget {
       onTap: isOwnProfile ? () => _editBio(context) : null,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 15),
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColors.greyBackground.withValues(alpha: 0.4),
-          borderRadius: BorderRadius.circular(5),
+          color: Colors.white.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.12),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.25),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -100,11 +107,7 @@ class BioSection extends StatelessWidget {
                         shape: BoxShape.circle,
                         gradient: AppColors.verticalPinkPurple,
                       ),
-                      child: Icon(
-                        Icons.edit,
-                        color: Colors.white,
-                        size: 7,
-                      ),
+                      child: Icon(Icons.edit, color: Colors.white, size: 7),
                     ),
                   ],
                 ),
@@ -143,4 +146,3 @@ class BioSection extends StatelessWidget {
     );
   }
 }
-

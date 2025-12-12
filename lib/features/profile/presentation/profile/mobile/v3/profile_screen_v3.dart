@@ -213,6 +213,26 @@ class _MobileProfileContentV3State extends State<MobileProfileContentV3> {
     final cleanUsername = username.replaceFirst('@', '');
 
     for (final social in socialEcosystem) {
+      final type = social['type']?.toString().toLowerCase();
+      if (type == 'custom') {
+        final url = social['url']?.toString() ?? '';
+        final iconUrl = social['iconUrl']?.toString();
+        final domain = social['domain']?.toString() ?? '';
+        final assetUrl = (iconUrl != null && iconUrl.startsWith('http'))
+            ? iconUrl
+            : _faviconFromDomain(domain);
+        if (assetUrl.isNotEmpty && url.isNotEmpty) {
+          links.add(
+            SocialLink(
+              asset: assetUrl,
+              url: Uri.parse(url),
+              followers: null,
+              shares: null,
+            ),
+          );
+        }
+        continue;
+      }
       for (final entry in social.entries) {
         final platform = entry.key.toLowerCase();
         final data = entry.value;
@@ -299,5 +319,10 @@ class _MobileProfileContentV3State extends State<MobileProfileContentV3> {
     }
 
     return {'asset': asset, 'url': url};
+  }
+
+  String _faviconFromDomain(String domain) {
+    if (domain.isEmpty) return '';
+    return 'https://www.google.com/s2/favicons?domain=$domain&sz=128';
   }
 }

@@ -6,6 +6,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:migozz_app/features/profile/components/social_rail.dart';
 import 'package:http/http.dart' as http;
 
+final Map<String, Uint8List?> _svgMemoryCache = {};
+
 class SocialCirclesMobileV3 extends StatelessWidget {
   final List<SocialLink> links;
 
@@ -14,7 +16,7 @@ class SocialCirclesMobileV3 extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final spacing = 6.0;
-    final iconSize = 24.0;
+    final iconSize = 28.0;
 
     // Separar redes sociales de URLs personalizadas
     final socialNetworks = <SocialLink>[];
@@ -54,13 +56,20 @@ class SocialCirclesMobileV3 extends StatelessWidget {
 }
 
 Future<Uint8List?> _fetchBytes(String url) async {
+  if (_svgMemoryCache.containsKey(url)) {
+    return _svgMemoryCache[url];
+  }
   try {
     final uri = Uri.parse(url);
     final res = await http.get(uri);
-    if (res.statusCode == 200) return res.bodyBytes;
+    if (res.statusCode == 200) {
+      _svgMemoryCache[url] = res.bodyBytes;
+      return res.bodyBytes;
+    }
   } catch (_) {}
   return null;
 }
+
 class SocialCirclesMobileV3Edit extends StatelessWidget {
   final List<SocialLink> links;
   final VoidCallback? onAddPressed;
@@ -74,7 +83,7 @@ class SocialCirclesMobileV3Edit extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final spacing = 6.0;
-    final iconSize = 24.0;
+    final iconSize = 28.0;
 
     // Separar redes sociales de URLs personalizadas
     final socialNetworks = <SocialLink>[];
@@ -174,36 +183,50 @@ Widget _buildNetworkSvg(String url, double size) {
     future: _fetchBytes(url),
     builder: (context, snapshot) {
       if (snapshot.connectionState != ConnectionState.done) {
-        return SizedBox(width: size, height: size);
+        return _placeholderIcon(size);
       }
       final bytes = snapshot.data;
       if (bytes == null) {
-        return SizedBox(width: size, height: size);
+        return _placeholderIcon(size);
       }
-      return SvgPicture.memory(bytes, width: size, height: size, fit: BoxFit.contain);
+      return _socialIconCircle(
+        SvgPicture.memory(
+          bytes,
+          width: size * 0.8,
+          height: size * 0.8,
+          fit: BoxFit.contain,
+        ),
+        size,
+      );
     },
   );
 }
 
 Widget _buildAssetSvg(String asset, double size) {
-  return SvgPicture.asset(
-    asset,
-    width: size,
-    height: size,
-    fit: BoxFit.contain,
+  return _socialIconCircle(
+    SvgPicture.asset(
+      asset,
+      width: size * 0.8,
+      height: size * 0.8,
+      fit: BoxFit.contain,
+    ),
+    size,
   );
 }
 
 Widget _buildRasterNetwork(String url, double size) {
-  return ClipRRect(
-    borderRadius: BorderRadius.circular(size / 2),
-    child: Image.network(
-      url,
-      width: size,
-      height: size,
-      fit: BoxFit.cover,
-      errorBuilder: (context, error, stack) => SizedBox(width: size, height: size),
+  return _socialIconCircle(
+    ClipOval(
+      child: Image.network(
+        url,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stack) =>
+            Icon(Icons.language, color: Colors.white, size: size * 0.7),
+      ),
     ),
+    size,
   );
 }
 
@@ -221,4 +244,32 @@ extension on _SocialBoxItemState {
     }
     return _buildAssetSvg(asset, size);
   }
+}
+
+Widget _socialIconCircle(Widget child, double size) {
+  return Container(
+    width: size,
+    height: size,
+    padding: EdgeInsets.all(size * 0.12),
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      color: Colors.white.withValues(alpha: 0.06),
+      border: Border.all(color: Colors.white.withValues(alpha: 0.14), width: 1),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.3),
+          blurRadius: 8,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: Center(child: child),
+  );
+}
+
+Widget _placeholderIcon(double size) {
+  return _socialIconCircle(
+    Icon(Icons.language, color: Colors.white, size: size * 0.7),
+    size,
+  );
 }

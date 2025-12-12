@@ -4,7 +4,6 @@ import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../../../../../../core/color.dart';
 import 'add_contact_info_bottom_sheet.dart';
 
 class ContactInfoSection extends StatelessWidget {
@@ -28,7 +27,10 @@ class ContactInfoSection extends StatelessWidget {
     }
   }
 
-  Future<void> _deleteContactInfo(BuildContext context, ContactType type) async {
+  Future<void> _deleteContactInfo(
+    BuildContext context,
+    ContactType type,
+  ) async {
     final authCubit = context.read<AuthCubit>();
     final editCubit = context.read<EditCubit>();
     final userId = authCubit.state.firebaseUser?.uid;
@@ -145,10 +147,14 @@ class ContactInfoSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 15),
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.greyBackground.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(5),
+        color: Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.12),
+          width: 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -249,11 +255,7 @@ class ContactInfoSection extends StatelessWidget {
                 : null,
             child: Row(
               children: [
-                Icon(
-                  icon,
-                  color: Colors.grey.shade400,
-                  size: 15,
-                ),
+                Icon(icon, color: Colors.grey.shade400, size: 15),
                 const SizedBox(width: 7),
                 Expanded(
                   child: Text(
@@ -284,4 +286,3 @@ class ContactInfoSection extends StatelessWidget {
     );
   }
 }
-
