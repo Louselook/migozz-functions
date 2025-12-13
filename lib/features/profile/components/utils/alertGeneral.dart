@@ -84,21 +84,6 @@ class _AlertCard extends StatelessWidget {
                   ),
                 ),
               ),
-              Positioned(
-                right: 12,
-                top: 12,
-                child: GestureDetector(
-                  onTap: () => Navigator.of(context).pop(),
-                  child: const Text(
-                    'x',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
             ],
           ),
         ),

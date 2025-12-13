@@ -6,7 +6,6 @@ import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubi
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
 import 'package:migozz_app/features/auth/services/add_networks/network_config.dart';
-import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
 import 'package:migozz_app/features/profile/components/utils/Loader.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 import 'package:migozz_app/features/profile/presentation/add_another_network/mobile/add_another_network.dart';
@@ -43,11 +42,22 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
 
   // Categories for grouping platforms (based on available networks)
   final Map<String, List<String>> _categories = {
-    'Social': ['instagram', 'tiktok', 'facebook', 'twitter', 'linkedin'],
-    'Streaming': ['twitch', 'kick', 'youtube'],
-    'Music': ['spotify'],
-    'Websites & Stores': ['website', 'shopify', 'woocommerce', 'etsy'],
-    'Messaging': ['whatsapp', 'telegram'],
+    'Social': [
+      'instagram',
+      'tiktok',
+      'youtube',
+      'facebook',
+      'x',
+      'snapchat',
+      'pinterest',
+      'threads',
+      'reddit',
+      'linkedin',
+    ],
+    'Streaming': ['twitch', 'trovo', 'kick'],
+    'Music': ['spotify', 'applemusic', 'deezer', 'soundcloud'],
+    'Stores': ['shopify', 'woocommerce', 'etsy'],
+    'Chat': ['whatsapp', 'telegram', 'discord'],
   };
 
   @override
@@ -713,298 +723,6 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     });
   }
 
-  // Future<Map<String, dynamic>?> _showCustomLinkDialog({
-  //   Map<String, dynamic>? existingData,
-  // }) async {
-  //   final TextEditingController linkController = TextEditingController();
-  //   bool applyIconFromLink = true;
-  //   String? pickedImageUrl;
-
-  //   if (existingData != null) {
-  //     linkController.text = existingData['url']?.toString() ?? '';
-  //     pickedImageUrl = existingData['iconUrl']?.toString();
-  //     applyIconFromLink =
-  //         pickedImageUrl != null &&
-  //         pickedImageUrl.startsWith('http') &&
-  //         pickedImageUrl.contains('favicon');
-  //   }
-
-  //   return await showDialog<Map<String, dynamic>?>(
-  //     context: context,
-  //     barrierColor: Colors.black.withValues(alpha: 0.8),
-  //     builder: (dialogContext) => StatefulBuilder(
-  //       builder: (context, setState) => Dialog(
-  //         backgroundColor: Colors.transparent,
-  //         insetPadding: const EdgeInsets.symmetric(
-  //           horizontal: 24,
-  //           vertical: 24,
-  //         ),
-  //         child: SingleChildScrollView(
-  //           child: Container(
-  //             width: MediaQuery.of(context).size.width * 0.85,
-  //             decoration: BoxDecoration(
-  //               gradient: const LinearGradient(
-  //                 begin: Alignment.topLeft,
-  //                 end: Alignment.bottomRight,
-  //                 colors: [Color(0xFF2D1B3D), Color(0xFF1A0F2E)],
-  //               ),
-  //               borderRadius: BorderRadius.circular(20),
-  //             ),
-  //             child: Stack(
-  //               children: [
-  //                 // Close button
-  //                 Positioned(
-  //                   top: 16,
-  //                   right: 16,
-  //                   child: GestureDetector(
-  //                     onTap: () {
-  //                       Navigator.pop(dialogContext, null);
-  //                     },
-  //                     child: Container(
-  //                       padding: const EdgeInsets.all(4),
-  //                       child: const Icon(
-  //                         Icons.close,
-  //                         color: Colors.white,
-  //                         size: 24,
-  //                       ),
-  //                     ),
-  //                   ),
-  //                 ),
-
-  //                 // Main content
-  //                 /**
-  //                  * Padding(
-  //                   padding: const EdgeInsets.all(24),
-  //                   child: Column(
-  //                     mainAxisSize: MainAxisSize.min,
-  //                     children: [
-  //                       const SizedBox(height: 20),
-
-  //                       // Title
-  //                       const Text(
-  //                         'Custom Link Icon',
-  //                         style: TextStyle(
-  //                           color: Colors.white,
-  //                           fontSize: 20,
-  //                           fontWeight: FontWeight.w600,
-  //                         ),
-  //                       ),
-
-  //                       const SizedBox(height: 24),
-
-  //                       // Icon display
-  //                       Container(
-  //                         width: 120,
-  //                         height: 120,
-  //                         decoration: BoxDecoration(
-  //                           shape: BoxShape.circle,
-  //                           border: Border.all(
-  //                             color: Colors.white.withValues(alpha: 0.3),
-  //                             width: 3,
-  //                           ),
-  //                           gradient: const LinearGradient(
-  //                             begin: Alignment.topLeft,
-  //                             end: Alignment.bottomRight,
-  //                             colors: [Color(0xFFD43AB6), Color(0xFF9321BD)],
-  //                           ),
-  //                         ),
-  //                         child: Center(
-  //                           child: (pickedImageUrl?.isNotEmpty ?? false)
-  //                               ? ClipOval(
-  //                                   child: Image.network(
-  //                                     pickedImageUrl!,
-  //                                     width: 60,
-  //                                     height: 60,
-  //                                     fit: BoxFit.cover,
-  //                                     errorBuilder:
-  //                                         (context, error, stackTrace) {
-  //                                           return const Icon(
-  //                                             Icons.language,
-  //                                             color: Colors.white,
-  //                                             size: 60,
-  //                                           );
-  //                                         },
-  //                                   ),
-  //                                 )
-  //                               : const Icon(
-  //                                   Icons.language,
-  //                                   color: Colors.white,
-  //                                   size: 60,
-  //                                 ),
-  //                         ),
-  //                       ),
-
-  //                       const SizedBox(height: 24),
-
-  //                       // Link input field
-  //                       TextField(
-  //                         controller: linkController,
-  //                         style: const TextStyle(
-  //                           color: Colors.white,
-  //                           fontSize: 14,
-  //                         ),
-  //                         onChanged: (value) {
-  //                           if (applyIconFromLink && value.trim().isNotEmpty) {
-  //                             setState(() {
-  //                               pickedImageUrl = _faviconFromDomain(
-  //                                 _domainFromUrl(value.trim()),
-  //                               );
-  //                             });
-  //                           }
-  //                         },
-  //                         decoration: InputDecoration(
-  //                           filled: true,
-  //                           fillColor: const Color(0xFF7C7480),
-  //                           hintText: 'Add custom Link',
-  //                           hintStyle: const TextStyle(
-  //                             color: Color(0xFFE0E0E0),
-  //                             fontSize: 14,
-  //                           ),
-  //                           border: OutlineInputBorder(
-  //                             borderRadius: BorderRadius.circular(12),
-  //                             borderSide: BorderSide.none,
-  //                           ),
-  //                           contentPadding: const EdgeInsets.symmetric(
-  //                             horizontal: 16,
-  //                             vertical: 14,
-  //                           ),
-  //                         ),
-  //                       ),
-
-  //                       const SizedBox(height: 18),
-
-  //                       // Apply Custom Icon from Link toggle
-  //                       Row(
-  //                         children: [
-  //                           const Expanded(
-  //                             child: Text(
-  //                               'Apply Custom Icon from Link',
-  //                               style: TextStyle(
-  //                                 color: Colors.white,
-  //                                 fontSize: 14,
-  //                               ),
-  //                             ),
-  //                           ),
-  //                           Switch(
-  //                             value: applyIconFromLink,
-  //                             inactiveTrackColor: const Color(0xFF5E5564),
-  //                             activeTrackColor: const Color(0xFF5E5564),
-  //                             thumbColor: const WidgetStatePropertyAll(
-  //                               Colors.white,
-  //                             ),
-  //                             onChanged: (value) {
-  //                               setState(() {
-  //                                 applyIconFromLink = value;
-  //                                 if (value &&
-  //                                     linkController.text.trim().isNotEmpty) {
-  //                                   pickedImageUrl = _faviconFromDomain(
-  //                                     _domainFromUrl(
-  //                                       linkController.text.trim(),
-  //                                     ),
-  //                                   );
-  //                                 } else if (!value) {
-  //                                   pickedImageUrl = null;
-  //                                 }
-  //                               });
-  //                             },
-  //                           ),
-  //                         ],
-  //                       ),
-
-  //                       const SizedBox(height: 24),
-
-  //                       // Save button with gradient
-  //                       GestureDetector(
-  //                         onTap: () {
-  //                           final link = linkController.text.trim();
-  //                           if (link.isEmpty) {
-  //                             ScaffoldMessenger.of(context).showSnackBar(
-  //                               const SnackBar(
-  //                                 content: Text('Please enter a link'),
-  //                                 backgroundColor: Colors.red,
-  //                                 duration: Duration(seconds: 2),
-  //                               ),
-  //                             );
-  //                             return;
-  //                           }
-
-  //                           final data = <String, dynamic>{
-  //                             'custom': {
-  //                               'type': 'custom',
-  //                               'url': link,
-  //                               if (pickedImageUrl != null)
-  //                                 'iconUrl': pickedImageUrl,
-  //                             },
-  //                           };
-
-  //                           Navigator.pop(dialogContext, data);
-  //                         },
-  //                         child: Container(
-  //                           width: double.infinity,
-  //                           height: 50,
-  //                           decoration: BoxDecoration(
-  //                             gradient: AppColors.primaryGradient,
-  //                             borderRadius: BorderRadius.circular(25),
-  //                           ),
-  //                           child: const Center(
-  //                             child: Text(
-  //                               'Save',
-  //                               style: TextStyle(
-  //                                 color: Colors.white,
-  //                                 fontSize: 16,
-  //                                 fontWeight: FontWeight.w600,
-  //                               ),
-  //                             ),
-  //                           ),
-  //                         ),
-  //                       ),
-
-  //                       if (existingData != null) ...[
-  //                         const SizedBox(height: 16),
-
-  //                         // Delete Link button
-  //                         GestureDetector(
-  //                           onTap: () {
-  //                             Navigator.pop(dialogContext, {'delete': true});
-  //                           },
-  //                           child: const Text(
-  //                             'Delete Link',
-  //                             style: TextStyle(
-  //                               color: Colors.red,
-  //                               fontSize: 14,
-  //                               fontWeight: FontWeight.w500,
-  //                             ),
-  //                           ),
-  //                         ),
-  //                       ],
-
-  //                       const SizedBox(height: 8),
-  //                     ],
-  //                   ),
-  //                 ),
-  //                  */
-  //               ],
-  //             ),
-  //           ),
-  //         ),
-  //       ),
-  //     ),
-  //   ).whenComplete(() {
-  //     Future.delayed(const Duration(milliseconds: 300), () {
-  //       linkController.dispose();
-  //     });
-  //   });
-  // }
-
-  // String _domainFromUrl(String url) {
-  //   try {
-  //     final uri = Uri.parse(url.startsWith('http') ? url : 'https://$url');
-  //     return uri.host.replaceFirst('www.', '');
-  //   } catch (e) {
-  //     return '';
-  //   }
-  // }
-
   String _faviconFromDomain(String domain) {
     if (domain.isEmpty) return '';
     return 'https://www.google.com/s2/favicons?domain=$domain&sz=128';
@@ -1101,8 +819,6 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
           backgroundColor: Colors.black,
           body: Stack(
             children: [
-              // Background gradients matching V3 profile
-              TintesGradients(child: Container()),
               Positioned(
                 top: 0,
                 left: 0,
@@ -1250,8 +966,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     }
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 15),
-      padding: const EdgeInsets.all(10),
+      margin: const EdgeInsets.symmetric(horizontal: 12),
+      padding: const EdgeInsets.all(8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1269,8 +985,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
               childAspectRatio: 2.3,
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
             ),
             itemCount: filteredNetworks.length,
             itemBuilder: (context, index) {
@@ -1287,7 +1003,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
 
   Widget _buildCategorizedGrid() {
     return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 15),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       children: [
         const SizedBox(height: 10),
         ..._categories.entries.map((entry) {
@@ -1297,7 +1013,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
           if (networks.isEmpty) return const SizedBox.shrink();
 
           return Container(
-            padding: const EdgeInsets.symmetric(vertical: 5),
+            padding: const EdgeInsets.symmetric(vertical: 4),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1305,11 +1021,11 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                   categoryName,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 19,
-                    fontWeight: FontWeight.w900,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 GridView.builder(
                   padding: EdgeInsets.zero,
                   shrinkWrap: true,
@@ -1317,8 +1033,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 3,
                     childAspectRatio: 2.3,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
                   ),
                   itemCount: networks.length,
                   itemBuilder: (context, index) {
@@ -1327,15 +1043,16 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                     return _buildPlatformGridItem(network, isSelected);
                   },
                 ),
+                const SizedBox(height: 10),
               ],
             ),
           );
         }),
 
-        // Add Custom Link Section
+        // Add Custom Link Section (alineado con el grid)
         Container(
           margin: const EdgeInsets.only(bottom: 10),
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.symmetric(vertical: 4),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1347,8 +1064,20 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                   fontWeight: FontWeight.w800,
                 ),
               ),
-              const SizedBox(height: 12),
-              _buildCustomLinkGridItem(),
+              const SizedBox(height: 4),
+              GridView.builder(
+                padding: EdgeInsets.zero,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  childAspectRatio: 2.3,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                ),
+                itemCount: 1,
+                itemBuilder: (context, index) => _buildCustomLinkGridItem(),
+              ),
             ],
           ),
         ),
@@ -1364,25 +1093,39 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
       child: Container(
         decoration: BoxDecoration(
           color: isSelected
-              ? Colors.white10
-              : Colors.white.withValues(alpha: 0.05),
+              ? Colors.white.withValues(alpha: 0.1)
+              : Colors.white.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(8),
-          border: isSelected
-              ? Border.all(
-                  color: AppColors.primaryPink.withValues(alpha: 0.5),
-                  width: 1.5,
-                )
-              : null,
+          border: Border.all(
+            color: isSelected
+                ? Colors.white.withValues(alpha: 0.2)
+                : Colors.white.withValues(alpha: 0.08),
+            width: isSelected ? 1.5 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.25),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
+            ),
+          ],
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         child: LayoutBuilder(
           builder: (context, constraints) {
             final h = constraints.maxHeight;
-            final iconSize = (h * 0.44).clamp(21.0, 30.0).toDouble();
-            final fontSize = (h * 0.34).clamp(14.0, 17.0).toDouble();
+            final iconSize = (h * 0.44).clamp(20.0, 28.0).toDouble();
+            final baseFontSize = (h * 0.33).clamp(12.0, 15.0).toDouble();
+            final availableTextWidth =
+                constraints.maxWidth - iconSize - 8 - 6 - 6;
+            final fitFontSize =
+                (availableTextWidth / (network.displayName.length * 0.6))
+                    .clamp(10.0, baseFontSize)
+                    .toDouble();
+            final fontSize = fitFontSize;
 
             return Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 SvgPicture.asset(
                   network.iconPath,
@@ -1391,7 +1134,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                   fit: BoxFit.contain,
                 ),
                 const SizedBox(width: 6),
-                Flexible(
+                Expanded(
                   child: Text(
                     network.displayName,
                     style: TextStyle(
@@ -1401,9 +1144,10 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                           ? FontWeight.w600
                           : FontWeight.w500,
                     ),
-                    textAlign: TextAlign.center,
+                    textAlign: TextAlign.start,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
+                    softWrap: false,
                   ),
                 ),
               ],
@@ -1433,20 +1177,60 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
       },
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         decoration: BoxDecoration(
-          color: Colors.white24,
-          borderRadius: BorderRadius.circular(30),
-        ),
-        child: const Center(
-          child: Text(
-            '+Add Custom Link',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
+          color: Colors.white.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.08),
+            width: 1,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.25),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final h = constraints.maxHeight;
+            final iconSize = (h * 0.44).clamp(20.0, 28.0).toDouble();
+            final baseFontSize = (h * 0.33).clamp(12.0, 15.0).toDouble();
+            final availableTextWidth =
+                constraints.maxWidth - iconSize - 8 - 6 - 6;
+            final fitFontSize = (availableTextWidth / ('New'.length * 0.6))
+                .clamp(10.0, baseFontSize)
+                .toDouble();
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                SvgPicture.asset(
+                  iconByLabel['Enlace'] ??
+                      'assets/icons/social_networks/OtherIconDefault.svg',
+                  width: iconSize,
+                  height: iconSize,
+                  fit: BoxFit.contain,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'New',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: fitFontSize,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    textAlign: TextAlign.start,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: false,
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -1489,6 +1273,15 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
       case 'pinterest':
         url = customUrl ?? 'https://www.pinterest.com/$username';
         break;
+      case 'snapchat':
+        url = customUrl ?? 'https://www.snapchat.com/add/$username';
+        break;
+      case 'threads':
+        url = customUrl ?? 'https://www.threads.net/@$username';
+        break;
+      case 'reddit':
+        url = customUrl ?? 'https://www.reddit.com/user/$username';
+        break;
       case 'youtube':
         url = customUrl ?? 'https://www.youtube.com/@$username';
         break;
@@ -1511,6 +1304,15 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
       case 'spotify':
         url = customUrl ?? 'https://open.spotify.com/user/$username';
         break;
+      case 'applemusic':
+        url = customUrl ?? 'https://music.apple.com/profile/$username';
+        break;
+      case 'deezer':
+        url = customUrl ?? 'https://www.deezer.com/profile/$username';
+        break;
+      case 'soundcloud':
+        url = customUrl ?? 'https://soundcloud.com/$username';
+        break;
 
       // ==================== WEBSITES & STORES ====================
       case 'website':
@@ -1526,6 +1328,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
         break;
       case 'telegram':
         url = customUrl ?? 'https://t.me/$username';
+        break;
+      case 'discord':
+        url = customUrl ?? '';
         break;
 
       default:

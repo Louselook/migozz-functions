@@ -41,7 +41,6 @@ class MobileProfileContentV3Edit extends StatefulWidget {
 
 class _MobileProfileContentV3EditState
     extends State<MobileProfileContentV3Edit> {
-      
   bool _uploading = false;
 
   @override
@@ -71,7 +70,6 @@ class _MobileProfileContentV3EditState
     debugPrint('🔍 Final socialEcosystem: $socialEcosystem');
 
     final socialLinks = _buildSocialLinks(socialEcosystem, user.username);
-    
 
     debugPrint('🔍 [ProfileV3Edit] Built ${socialLinks.length} social links');
 
@@ -80,32 +78,159 @@ class _MobileProfileContentV3EditState
       body: Stack(
         children: [
           // Fondo / gradiente
-          Positioned.fill(
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black,
-                  ],
-                ),
-              ),
-            ),
-          ),
 
-          // 🧍 Imagen de perfil FIJA
+          // Imagen de perfil FIJA
           Positioned(
             top: 0,
             left: 0,
             right: 0,
-            child: ProfileImageMobileV3(
-              avatarUrl: avatarUrl,
-              size: size,
+            child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
+          ),
+
+          // 🔥 SCROLL REAL
+          SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              children: [
+                // Espacio para que se vea la foto arriba
+                SizedBox(height: size.height * 0.38),
+
+                // Contenedor, evitamos el solapamiento con la imagen de perfil
+                Container(
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(32),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 16),
+
+                      // Change profile picture
+                      GestureDetector(
+                        onTap: _uploading ? null : () => _changeAvatar(),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white10,
+                            borderRadius: BorderRadius.circular(32),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 5,
+                            horizontal: 10,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _uploading
+                                  ? const SizedBox(
+                                      width: 14,
+                                      height: 14,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.camera_alt_outlined,
+                                      size: 14,
+                                      color: Colors.white,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                              const SizedBox(width: 10),
+                              Text(
+                                _uploading
+                                    ? '...'
+                                    : 'profile.customization.uploadingProfilePicture.title'
+                                          .tr(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      SocialCirclesMobileV3Edit(
+                        links: socialLinks,
+                        onAddPressed: () => _navigateToAddSocial(context),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      ProfileStrengthIndicator(percentage: 80),
+                      const SizedBox(height: 17),
+
+                      BioSection(bio: bio, isOwnProfile: isOwnProfile),
+
+                      const SizedBox(height: 10),
+
+                      EmailContactFormSection(isOwnProfile: isOwnProfile),
+
+                      const SizedBox(height: 10),
+
+                      FeaturedLinksSection(
+                        isOwnProfile: isOwnProfile,
+                        user: user,
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      ContactInfoSection(
+                        isOwnProfile: isOwnProfile,
+                        user: user,
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Column(
+                          children: [
+                            ProfileOptionButton(
+                              icon: Icons.play_circle_outline,
+                              text: 'edit.presentation.record'.tr(),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const EditRecordScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+                            ProfileOptionButton(
+                              icon: Icons.handshake_outlined,
+                              text: 'edit.presentation.interest'.tr(),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const EditInterestsScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 100),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
 
-          // Back fijo
+          // Botón back FIJO
           Positioned(
             top: MediaQuery.of(context).padding.top + 8,
             left: 16,
@@ -116,156 +241,6 @@ class _MobileProfileContentV3EditState
                 color: Colors.white,
                 size: 24,
               ),
-            ),
-          ),
-
-          // CONTENIDO PRINCIPAL
-          SafeArea(
-            child: Column(
-              children: [
-                // espacio para la imagen
-                SizedBox(height: size.height * 0.44),
-
-                // CONTENEDOR FIJO (sheet)
-                Expanded(
-                  child: Container(
-                    width: double.infinity,
-                    decoration: const BoxDecoration(
-                      color: Colors.black,
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(32),
-                      ),
-                    ),
-
-                    // SCROLL INTERNO
-                    child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.only(top: 16),
-                      child: Column(
-                        children: [
-                          // Change profile picture
-                          GestureDetector(
-                            onTap: _uploading ? null : _changeAvatar,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white10,
-                                borderRadius: BorderRadius.circular(32),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 5,
-                                horizontal: 10,
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  _uploading
-                                      ? const SizedBox(
-                                          width: 14,
-                                          height: 14,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Colors.white,
-                                          ),
-                                        )
-                                      : const Icon(
-                                          Icons.camera_alt_outlined,
-                                          size: 14,
-                                          color: Colors.white,
-                                        ),
-                                  const SizedBox(width: 10),
-                                  Text(
-                                    _uploading
-                                        ? '...'
-                                        : 'profile.customization.uploadingProfilePicture.title'
-                                            .tr(),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 8),
-
-                          SocialCirclesMobileV3Edit(
-                            links: socialLinks,
-                            onAddPressed: () =>
-                                _navigateToAddSocial(context),
-                          ),
-
-                          const SizedBox(height: 24),
-                          ProfileStrengthIndicator(percentage: 80),
-                          const SizedBox(height: 17),
-
-                          BioSection(
-                            bio: bio,
-                            isOwnProfile: isOwnProfile,
-                          ),
-
-                          const SizedBox(height: 10),
-                          EmailContactFormSection(
-                            isOwnProfile: isOwnProfile,
-                          ),
-
-                          const SizedBox(height: 10),
-                          FeaturedLinksSection(
-                            isOwnProfile: isOwnProfile,
-                            user: user,
-                          ),
-
-                          const SizedBox(height: 10),
-                          ContactInfoSection(
-                            isOwnProfile: isOwnProfile,
-                            user: user,
-                          ),
-
-                          const SizedBox(height: 10),
-
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: Column(
-                              children: [
-                                ProfileOptionButton(
-                                  icon: Icons.play_circle_outline,
-                                  text: 'edit.presentation.record'.tr(),
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            const EditRecordScreen(),
-                                      ),
-                                    );
-                                  },
-                                ),
-                                ProfileOptionButton(
-                                  icon: Icons.handshake_outlined,
-                                  text: 'edit.presentation.interest'.tr(),
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            const EditInterestsScreen(),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          const SizedBox(height: 100),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
             ),
           ),
         ],
@@ -315,7 +290,11 @@ class _MobileProfileContentV3EditState
     final userId = authCubit.state.firebaseUser?.uid;
 
     if (userId == null) {
-      AlertGeneral.show(context, 4, message: 'edit.validations.errorUserLogin'.tr());
+      AlertGeneral.show(
+        context,
+        4,
+        message: 'edit.validations.errorUserLogin'.tr(),
+      );
       return;
     }
 
@@ -403,6 +382,31 @@ class _MobileProfileContentV3EditState
 
     for (final social in socialEcosystem) {
       debugPrint('🔗 [_buildSocialLinks] Processing social: $social');
+
+      // Soporte para enlaces personalizados con ícono dinámico
+      final type = social['type']?.toString().toLowerCase();
+      if (type == 'custom') {
+        final url = social['url']?.toString() ?? '';
+        final iconUrl = social['iconUrl']?.toString();
+        final domain = social['domain']?.toString() ?? '';
+        final assetUrl = (iconUrl != null && iconUrl.startsWith('http'))
+            ? iconUrl
+            : _faviconFromDomain(domain);
+        if (assetUrl.isNotEmpty && url.isNotEmpty) {
+          links.add(
+            SocialLink(
+              asset: assetUrl,
+              url: Uri.parse(url),
+              followers: null,
+              shares: null,
+            ),
+          );
+          debugPrint(
+            '✅ [_buildSocialLinks] Added custom link with icon $assetUrl',
+          );
+        }
+        continue;
+      }
 
       for (final entry in social.entries) {
         final platform = entry.key.toLowerCase();
@@ -502,6 +506,9 @@ class _MobileProfileContentV3EditState
 
     return {'asset': asset, 'url': url};
   }
+
+  String _faviconFromDomain(String domain) {
+    if (domain.isEmpty) return '';
+    return 'https://www.google.com/s2/favicons?domain=$domain&sz=128';
+  }
 }
-
-
