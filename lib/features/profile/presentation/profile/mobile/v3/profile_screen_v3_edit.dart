@@ -136,7 +136,6 @@ class _MobileProfileContentV3EditState
                                       Icons.camera_alt_outlined,
                                       size: 14,
                                       color: Colors.white,
-                                      fontSize: 13,
                                       fontWeight: FontWeight.w500,
                                     ),
                               const SizedBox(width: 10),
