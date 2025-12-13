@@ -248,6 +248,26 @@
           "emailContactFormSection" : {
             "title" : "Email Contact Form",
             "subtitle" : "Visitors can share their email with you through a contact form on your profile."
+          },
+          "bio" : {
+            "add" : "Tap to add your bio."
+          },
+          "links": {
+            "title" : "Featured Links",
+            "add" : "+ Add link.",
+            "successAdd" : "Link added successfully",
+            "errorAdd" : "Error adding link:",
+            "maximumLinks" : "Maximum 2 links allowed."
+          },
+          "contact": {
+            "title" : "Contact information",
+            "website" : "Website",
+            "number" : "Number",
+            "email" : "Email",
+            "infoAdded" : "Contact info added successfully",
+            "infoAddError" : "Error adding contact info:",
+            "infodeleted" : "Contact info deleted successfully",
+            "infoDeleteError" : "Error deleting contact info:"
           }
         }
     },

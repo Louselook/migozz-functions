@@ -88,7 +88,6 @@ class _MobileProfileContentV3EditState
                   end: Alignment.bottomCenter,
                   colors: [
                     Color(0xFF7B2CBF),// morado
-                    Colors.black,     // intermedio para mantener estructura de tercios
                     Colors.black,     // negro
                   ],
                 ),
