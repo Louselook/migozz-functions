@@ -57,6 +57,7 @@ class LoaderDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            /* 
             Align(
               alignment: Alignment.topRight,
               child: InkWell(
@@ -81,6 +82,7 @@ class LoaderDialog extends StatelessWidget {
                 ),
               ),
             ),
+            */
             const SizedBox(height: 8),
             Image.asset(
               'assets/images/Loader.gif',
@@ -99,12 +101,14 @@ class LoaderDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 18),
+            /*
             _CancelButton(
               onTap: () {
                 onCancel?.call();
                 Navigator.of(context).pop();
               },
             ),
+            */
           ],
         ),
       ),
