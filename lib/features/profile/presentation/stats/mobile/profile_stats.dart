@@ -5,6 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/social_ecosystem_step_v3.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
 // import 'package:migozz_app/features/profile/components/bottom_nav.dart';
 import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
@@ -186,8 +188,9 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
   Future<void> _navigateToEditSocials() async {
     final authCubit = context.read<AuthCubit>();
     final userId = authCubit.state.firebaseUser?.uid;
+    final userProfile = authCubit.state.userProfile;
 
-    if (userId == null) {
+    if (userId == null || userProfile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Error: User not logged in'),
@@ -200,18 +203,23 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
     final editCubit = context.read<EditCubit>();
     editCubit.setEditItem(EditItem.socialEcosystem);
 
-    debugPrint('🔹 Navegando a MoreUserDetails en modo EDIT');
+    debugPrint('🔹 Navegando a SocialEcosystemStepV3 en modo EDIT');
 
     // Navegar y esperar el resultado
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => BlocProvider.value(
-          value: editCubit,
-          child: MoreUserDetails(
-            pageIndicator: 0,
+        builder: (_) => MultiBlocProvider(
+          providers: [
+            BlocProvider.value(value: editCubit),
+            BlocProvider.value(value: authCubit),
+            BlocProvider.value(value: context.read<RegisterCubit>()),
+          ],
+          child: SocialEcosystemStepV3(
+            controller:
+                PageController(), // PageController temporal para navegación directa
+            user: userProfile,
             mode: MoreUserDetailsMode.edit,
-            userId: userId,
           ),
         ),
       ),
@@ -451,7 +459,7 @@ List<MapEntry<String, Map<String, dynamic>>> _parseEcosystem(
 ) {
   final out = <MapEntry<String, Map<String, dynamic>>>[];
   if (ecosystem == null) return out;
-  
+
   if (ecosystem is List) {
     for (final item in ecosystem) {
       if (item is Map<String, dynamic>) {
