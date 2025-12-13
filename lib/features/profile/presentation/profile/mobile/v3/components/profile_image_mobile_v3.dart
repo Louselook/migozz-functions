@@ -98,48 +98,48 @@ class ProfileImageMobileV3 extends StatelessWidget {
     );
   }
 
-  Widget _buildRectangleAvatar() {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Image.asset('assets/images/profileBackground.webp', fit: BoxFit.cover),
-        Container(color: Colors.black.withValues(alpha: 0.3)),
-        Center(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20), // Ajusta el redondeo aquí
-            child: Container(
-              width:
-                  size.width * 0.5, // Equivalente al diámetro del CircleAvatar
-              height: size.width * 0.5, // Mantener proporción cuadrada
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.4),
-                image: DecorationImage(
-                  fit: BoxFit.cover,
-                  image: avatarUrl != null && avatarUrl!.isNotEmpty
-                      ? NetworkImage(avatarUrl!)
-                      : const AssetImage('assets/images/profileBackground.webp')
-                            as ImageProvider,
-                ),
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          height: size.height * 0.1,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Colors.transparent, Colors.black],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+  // Widget _buildRectangleAvatar() {
+  //   return Stack(
+  //     fit: StackFit.expand,
+  //     children: [
+  //       Image.asset('assets/images/profileBackground.webp', fit: BoxFit.cover),
+  //       Container(color: Colors.black.withValues(alpha: 0.3)),
+  //       Center(
+  //         child: ClipRRect(
+  //           borderRadius: BorderRadius.circular(20), // Ajusta el redondeo aquí
+  //           child: Container(
+  //             width:
+  //                 size.width * 0.5, // Equivalente al diámetro del CircleAvatar
+  //             height: size.width * 0.5, // Mantener proporción cuadrada
+  //             decoration: BoxDecoration(
+  //               color: Colors.black.withValues(alpha: 0.4),
+  //               image: DecorationImage(
+  //                 fit: BoxFit.cover,
+  //                 image: avatarUrl != null && avatarUrl!.isNotEmpty
+  //                     ? NetworkImage(avatarUrl!)
+  //                     : const AssetImage('assets/images/profileBackground.webp')
+  //                           as ImageProvider,
+  //               ),
+  //             ),
+  //           ),
+  //         ),
+  //       ),
+  //       Positioned(
+  //         left: 0,
+  //         right: 0,
+  //         bottom: 0,
+  //         height: size.height * 0.1,
+  //         child: DecoratedBox(
+  //           decoration: BoxDecoration(
+  //             gradient: LinearGradient(
+  //               begin: Alignment.topCenter,
+  //               end: Alignment.bottomCenter,
+  //               colors: [Colors.transparent, Colors.black],
+  //             ),
+  //           ),
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
 }

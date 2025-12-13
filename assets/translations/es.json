@@ -243,7 +243,8 @@
     },
     "customization":{
       "uploadingProfilePicture": {
-        "uploading...": "Cargando..",
+        "title": "Subir",
+        "uploading": "Cargando",
         "success": "Foto de perfil actualizada exitosamente",
         "error": "Error al actualizar la foto de perfil:"
       },

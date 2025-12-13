@@ -237,6 +237,18 @@
             "homeStep" : "Access to your profile here, it also serves to reload your user information.",
             "statsStep" : "Check your social media statistics; if you haven't synced any, do so!",
             "settings" : "Modify your information and synchronize your socials"
+        },
+        "customization":{
+          "uploadingProfilePicture": {
+            "title": "Upload",
+            "uploading": "Uploading",
+            "success": "Profile picture updated successfully",
+            "error": "Error updating profile picture:"
+            },
+          "emailContactFormSection" : {
+            "title" : "Email Contact Form",
+            "subtitle" : "Visitors can share their email with you through a contact form on your profile."
+          }
         }
     },
     "search" : {

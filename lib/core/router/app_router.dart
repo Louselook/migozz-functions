@@ -34,12 +34,47 @@ Widget localizedBuilder(BuildContext context, Widget Function() screenBuilder) {
   if (easy == null) return screenBuilder();
 
   final controller = easy.delegate.localizationController;
+  
 
   if (controller == null) {
     return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 
   return screenBuilder();
+}
+
+class AppGate extends StatefulWidget {
+  const AppGate({super.key});
+
+  @override
+  State<AppGate> createState() => _AppGateState();
+}
+
+class _AppGateState extends State<AppGate> {
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // 🔒 Esperar UN frame garantiza que Easy ya cargó
+      final authStatus = context.read<AuthCubit>().state.status;
+
+      if (authStatus == AuthStatus.authenticated) {
+        context.go('/profile');
+      } else {
+        context.go('/onboarding');
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+  }
 }
 
 GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
@@ -49,26 +84,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
     routes: [
       GoRoute(
         path: '/',
-        redirect: (context, state) {
-          final status = goRouterNotifier.authStatus;
-
-          // If we are still checking, do not redirect.
-          if (status == AuthStatus.checking) return null;
-
-          // If you are logged in, go to profile
-          if (status == AuthStatus.authenticated) {
-            final authCubit = context.read<AuthCubit>();
-            final userProfile = authCubit.state.userProfile;
-
-            if (userProfile != null && userProfile.complete) {
-              return '/profile';
-            }
-            return '/complete-profile';
-          }
-
-          // If you are not authenticated, go to onboarding
-          return '/onboarding';
-        },
+        builder: (context, state) => const AppGate(),
       ),
 
       GoRoute(

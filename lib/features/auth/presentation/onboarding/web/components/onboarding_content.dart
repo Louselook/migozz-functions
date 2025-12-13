@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/features/auth/presentation/onboarding/shared/onboarding_model.dart';
 import 'onboarding_progress_indicators.dart';
@@ -45,7 +46,7 @@ class OnboardingContent extends StatelessWidget {
               ? const EdgeInsets.symmetric(horizontal: 0)
               : EdgeInsets.zero,
           child: Text(
-            data.title,
+            data.titleKey.tr(),
             style: TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
@@ -62,7 +63,7 @@ class OnboardingContent extends StatelessWidget {
               ? const EdgeInsets.symmetric(horizontal: 0)
               : EdgeInsets.zero,
           child: Text(
-            data.description,
+            data.descriptionKey.tr(),
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.7),
               fontSize: screenWidth < 600 ? 16 : (screenWidth < 900 ? 20 : 24),

@@ -1,11 +1,11 @@
 class OnboardingData {
-  final String title;
-  final String description;
+  final String titleKey;
+  final String descriptionKey;
   final String imagePath;
 
   const OnboardingData({
-    required this.title,
-    required this.description,
+    required this.titleKey,
+    required this.descriptionKey,
     required this.imagePath,
   });
 }

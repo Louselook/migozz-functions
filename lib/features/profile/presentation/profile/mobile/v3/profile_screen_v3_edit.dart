@@ -40,6 +40,7 @@ class MobileProfileContentV3Edit extends StatefulWidget {
 
 class _MobileProfileContentV3EditState
     extends State<MobileProfileContentV3Edit> {
+      
   bool _uploading = false;
 
   @override
@@ -69,192 +70,193 @@ class _MobileProfileContentV3EditState
     debugPrint('🔍 Final socialEcosystem: $socialEcosystem');
 
     final socialLinks = _buildSocialLinks(socialEcosystem, user.username);
+    
 
     debugPrint('🔍 [ProfileV3Edit] Built ${socialLinks.length} social links');
 
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          TintesGradients(child: Container()),
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
+  return Scaffold(
+    backgroundColor: Colors.black,
+    body: Stack(
+      children: [
+        // Fondo / gradiente
+
+        // Imagen de perfil FIJA
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: ProfileImageMobileV3(
+            avatarUrl: avatarUrl,
+            size: size,
           ),
-          SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Column(
-              children: [
-                // Imagen de perfil con overlay
-                SizedBox(height: size.height * 0.4),
-                // Botón "Change Profile Picture"
-                GestureDetector(
-                  onTap: _uploading ? null : () => _changeAvatar(),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white10,
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 5,
-                      horizontal: 10,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _uploading
-                            ? SizedBox(
-                                width: 14,
-                                height: 14,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : Icon(
-                                Icons.camera_alt_outlined,
+        ),
+
+        // 🔥 SCROLL REAL
+        SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Column(
+            children: [
+              // Espacio para que se vea la foto arriba
+              SizedBox(height: size.height * 0.38),
+
+              // Contenedor, evitamos el solapamiento con la imagen de perfil
+              Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  color: Colors.black,
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(32),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 16),
+
+                    // Change profile picture
+                    GestureDetector(
+                      onTap: _uploading ? null : () => _changeAvatar(),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white10,
+                          borderRadius: BorderRadius.circular(32),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 5,
+                          horizontal: 10,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _uploading
+                                ? const SizedBox(
+                                    width: 14,
+                                    height: 14,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Icon(
+                                    Icons.camera_alt_outlined,
+                                    size: 14,
+                                    color: Colors.white,
+                                  ),
+                            const SizedBox(width: 10),
+                            Text(
+                              _uploading
+                                  ? '...'
+                                  : 'profile.customization.uploadingProfilePicture.title'
+                                      .tr(),
+                              style: const TextStyle(
                                 color: Colors.white,
-                                size: 14,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
                               ),
-                        SizedBox(width: 10),
-                        Text(
-                          _uploading
-                              ? 'profile.customization.uploadingProfilePicture.uploading'.tr()
-                              : 'profile.customization.uploadingProfilePicture.success'.tr(),
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                Padding(
-                  padding: const EdgeInsets.only(top: 8, bottom: 0),
-                  child: SocialCirclesMobileV3Edit(
-                    links: socialLinks,
-                    onAddPressed: () => _navigateToAddSocial(context),
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // Indicador de fortaleza del perfil
-                ProfileStrengthIndicator(percentage: 80),
-
-                const SizedBox(height: 17),
-
-                // Sección de Bio
-                BioSection(bio: bio, isOwnProfile: isOwnProfile),
-
-                const SizedBox(height: 10),
-
-                // Sección de Email Contact Form
-                EmailContactFormSection(isOwnProfile: isOwnProfile),
-
-                const SizedBox(height: 10),
-
-                // Sección de Featured Links
-                FeaturedLinksSection(isOwnProfile: isOwnProfile, user: user),
-
-                const SizedBox(height: 10),
-
-                // Sección de Contact Info
-                ContactInfoSection(isOwnProfile: isOwnProfile, user: user),
-                const SizedBox(height: 10),
-
-                // Edit
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    children: [
-                      // recort
-                      ProfileOptionButton(
-                        icon: Icons.play_circle_outline,
-                        text: 'edit.presentation.record'.tr(),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const EditRecordScreen(),
                             ),
-                          );
-                        },
-                      ),
-                      // interest
-                      ProfileOptionButton(
-                        icon: Icons.handshake_outlined,
-                        text: 'edit.presentation.interest'.tr(),
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const EditInterestsScreen(),
-                          ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
+                    ),
 
-                const SizedBox(height: 100),
-              ],
-            ),
-          ),
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 8,
-            left: 0,
-            right: 0,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Botón de retroceso
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      child: Icon(
-                        Icons.arrow_back_ios,
-                        color: Colors.white,
-                        size: 24,
+                    const SizedBox(height: 8),
+
+                    SocialCirclesMobileV3Edit(
+                      links: socialLinks,
+                      onAddPressed: () =>
+                          _navigateToAddSocial(context),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    ProfileStrengthIndicator(percentage: 80),
+                    const SizedBox(height: 17),
+
+                    BioSection(
+                      bio: bio,
+                      isOwnProfile: isOwnProfile,
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    EmailContactFormSection(
+                      isOwnProfile: isOwnProfile,
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    FeaturedLinksSection(
+                      isOwnProfile: isOwnProfile,
+                      user: user,
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    ContactInfoSection(
+                      isOwnProfile: isOwnProfile,
+                      user: user,
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Column(
+                        children: [
+                          ProfileOptionButton(
+                            icon: Icons.play_circle_outline,
+                            text: 'edit.presentation.record'.tr(),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      const EditRecordScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                          ProfileOptionButton(
+                            icon: Icons.handshake_outlined,
+                            text: 'edit.presentation.interest'.tr(),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      const EditInterestsScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
                       ),
                     ),
-                  ),
 
-                  // // Botón "Done"
-                  // GestureDetector(
-                  //   onTap: () {},
-                  //   child: Container(
-                  //     padding: const EdgeInsets.symmetric(
-                  //       horizontal: 16,
-                  //       vertical: 8,
-                  //     ),
-                  //     child: Text(
-                  //       'Done',
-                  //       style: TextStyle(
-                  //         color: Colors.white,
-                  //         fontSize: 18,
-                  //         fontWeight: FontWeight.w600,
-                  //       ),
-                  //     ),
-                  //   ),
-                  // ),
-                ],
+                    const SizedBox(height: 100),
+                  ],
+                ),
               ),
+            ],
+          ),
+        ),
+
+        // Botón back FIJO
+        Positioned(
+          top: MediaQuery.of(context).padding.top + 8,
+          left: 16,
+          child: GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: const Icon(
+              Icons.arrow_back_ios,
+              color: Colors.white,
+              size: 24,
             ),
           ),
-          // Co
-        ],
-      ),
-    );
+        ),
+      ],
+    ),
+  );
+
   }
 
   /// Change avatar
@@ -397,26 +399,6 @@ class _MobileProfileContentV3EditState
     final cleanUsername = username.replaceFirst('@', '');
 
     for (final social in socialEcosystem) {
-      final type = social['type']?.toString().toLowerCase();
-      if (type == 'custom') {
-        final url = social['url']?.toString() ?? '';
-        final iconUrl = social['iconUrl']?.toString();
-        final domain = social['domain']?.toString() ?? '';
-        final assetUrl = (iconUrl != null && iconUrl.startsWith('http'))
-            ? iconUrl
-            : _faviconFromDomain(domain);
-        if (assetUrl.isNotEmpty && url.isNotEmpty) {
-          links.add(
-            SocialLink(
-              asset: assetUrl,
-              url: Uri.parse(url),
-              followers: null,
-              shares: null,
-            ),
-          );
-        }
-        continue;
-      }
       debugPrint('🔗 [_buildSocialLinks] Processing social: $social');
 
       for (final entry in social.entries) {
@@ -458,11 +440,6 @@ class _MobileProfileContentV3EditState
 
     debugPrint('🔗 [_buildSocialLinks] Returning ${links.length} links');
     return links;
-  }
-
-  String _faviconFromDomain(String domain) {
-    if (domain.isEmpty) return '';
-    return 'https://www.google.com/s2/favicons?domain=$domain&sz=128';
   }
 
   int? _parseIntFromDynamic(dynamic value) {
@@ -523,3 +500,5 @@ class _MobileProfileContentV3EditState
     return {'asset': asset, 'url': url};
   }
 }
+
+

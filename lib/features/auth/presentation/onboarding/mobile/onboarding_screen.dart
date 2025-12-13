@@ -90,10 +90,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 5),
-                PrimaryText(data.title),
+                PrimaryText(data.titleKey.tr()),
                 const SizedBox(height: 8),
                 SecondaryText(
-                  data.description,
+                  data.descriptionKey.tr(),
                   textAlign: TextAlign.start,
                   color: AppColors.secondaryText.withValues(alpha: 0.53),
                 ),

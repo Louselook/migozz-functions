@@ -113,7 +113,7 @@ class _PhotoCard extends StatelessWidget {
         builder: (context, constraints) {
           final minSide = constraints.biggest.shortestSide;
           final radius = minSide * 0.05;
-          const borderWidth = 2.0;
+          // const borderWidth = 2.0;
           return Container(
             decoration: BoxDecoration(
               color: Colors.transparent,

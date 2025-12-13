@@ -713,297 +713,297 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     });
   }
 
-  Future<Map<String, dynamic>?> _showCustomLinkDialog({
-    Map<String, dynamic>? existingData,
-  }) async {
-    final TextEditingController linkController = TextEditingController();
-    bool applyIconFromLink = true;
-    String? pickedImageUrl;
+  // Future<Map<String, dynamic>?> _showCustomLinkDialog({
+  //   Map<String, dynamic>? existingData,
+  // }) async {
+  //   final TextEditingController linkController = TextEditingController();
+  //   bool applyIconFromLink = true;
+  //   String? pickedImageUrl;
 
-    if (existingData != null) {
-      linkController.text = existingData['url']?.toString() ?? '';
-      pickedImageUrl = existingData['iconUrl']?.toString();
-      applyIconFromLink =
-          pickedImageUrl != null &&
-          pickedImageUrl.startsWith('http') &&
-          pickedImageUrl.contains('favicon');
-    }
+  //   if (existingData != null) {
+  //     linkController.text = existingData['url']?.toString() ?? '';
+  //     pickedImageUrl = existingData['iconUrl']?.toString();
+  //     applyIconFromLink =
+  //         pickedImageUrl != null &&
+  //         pickedImageUrl.startsWith('http') &&
+  //         pickedImageUrl.contains('favicon');
+  //   }
 
-    return await showDialog<Map<String, dynamic>?>(
-      context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.8),
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) => Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(
-            horizontal: 24,
-            vertical: 24,
-          ),
-          child: SingleChildScrollView(
-            child: Container(
-              width: MediaQuery.of(context).size.width * 0.85,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFF2D1B3D), Color(0xFF1A0F2E)],
-                ),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Stack(
-                children: [
-                  // Close button
-                  Positioned(
-                    top: 16,
-                    right: 16,
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.pop(dialogContext, null);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        child: const Icon(
-                          Icons.close,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                      ),
-                    ),
-                  ),
+  //   return await showDialog<Map<String, dynamic>?>(
+  //     context: context,
+  //     barrierColor: Colors.black.withValues(alpha: 0.8),
+  //     builder: (dialogContext) => StatefulBuilder(
+  //       builder: (context, setState) => Dialog(
+  //         backgroundColor: Colors.transparent,
+  //         insetPadding: const EdgeInsets.symmetric(
+  //           horizontal: 24,
+  //           vertical: 24,
+  //         ),
+  //         child: SingleChildScrollView(
+  //           child: Container(
+  //             width: MediaQuery.of(context).size.width * 0.85,
+  //             decoration: BoxDecoration(
+  //               gradient: const LinearGradient(
+  //                 begin: Alignment.topLeft,
+  //                 end: Alignment.bottomRight,
+  //                 colors: [Color(0xFF2D1B3D), Color(0xFF1A0F2E)],
+  //               ),
+  //               borderRadius: BorderRadius.circular(20),
+  //             ),
+  //             child: Stack(
+  //               children: [
+  //                 // Close button
+  //                 Positioned(
+  //                   top: 16,
+  //                   right: 16,
+  //                   child: GestureDetector(
+  //                     onTap: () {
+  //                       Navigator.pop(dialogContext, null);
+  //                     },
+  //                     child: Container(
+  //                       padding: const EdgeInsets.all(4),
+  //                       child: const Icon(
+  //                         Icons.close,
+  //                         color: Colors.white,
+  //                         size: 24,
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 ),
 
-                  // Main content
-                  /**
-                   * Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const SizedBox(height: 20),
+  //                 // Main content
+  //                 /**
+  //                  * Padding(
+  //                   padding: const EdgeInsets.all(24),
+  //                   child: Column(
+  //                     mainAxisSize: MainAxisSize.min,
+  //                     children: [
+  //                       const SizedBox(height: 20),
 
-                        // Title
-                        const Text(
-                          'Custom Link Icon',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+  //                       // Title
+  //                       const Text(
+  //                         'Custom Link Icon',
+  //                         style: TextStyle(
+  //                           color: Colors.white,
+  //                           fontSize: 20,
+  //                           fontWeight: FontWeight.w600,
+  //                         ),
+  //                       ),
 
-                        const SizedBox(height: 24),
+  //                       const SizedBox(height: 24),
 
-                        // Icon display
-                        Container(
-                          width: 120,
-                          height: 120,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.3),
-                              width: 3,
-                            ),
-                            gradient: const LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [Color(0xFFD43AB6), Color(0xFF9321BD)],
-                            ),
-                          ),
-                          child: Center(
-                            child: (pickedImageUrl?.isNotEmpty ?? false)
-                                ? ClipOval(
-                                    child: Image.network(
-                                      pickedImageUrl!,
-                                      width: 60,
-                                      height: 60,
-                                      fit: BoxFit.cover,
-                                      errorBuilder:
-                                          (context, error, stackTrace) {
-                                            return const Icon(
-                                              Icons.language,
-                                              color: Colors.white,
-                                              size: 60,
-                                            );
-                                          },
-                                    ),
-                                  )
-                                : const Icon(
-                                    Icons.language,
-                                    color: Colors.white,
-                                    size: 60,
-                                  ),
-                          ),
-                        ),
+  //                       // Icon display
+  //                       Container(
+  //                         width: 120,
+  //                         height: 120,
+  //                         decoration: BoxDecoration(
+  //                           shape: BoxShape.circle,
+  //                           border: Border.all(
+  //                             color: Colors.white.withValues(alpha: 0.3),
+  //                             width: 3,
+  //                           ),
+  //                           gradient: const LinearGradient(
+  //                             begin: Alignment.topLeft,
+  //                             end: Alignment.bottomRight,
+  //                             colors: [Color(0xFFD43AB6), Color(0xFF9321BD)],
+  //                           ),
+  //                         ),
+  //                         child: Center(
+  //                           child: (pickedImageUrl?.isNotEmpty ?? false)
+  //                               ? ClipOval(
+  //                                   child: Image.network(
+  //                                     pickedImageUrl!,
+  //                                     width: 60,
+  //                                     height: 60,
+  //                                     fit: BoxFit.cover,
+  //                                     errorBuilder:
+  //                                         (context, error, stackTrace) {
+  //                                           return const Icon(
+  //                                             Icons.language,
+  //                                             color: Colors.white,
+  //                                             size: 60,
+  //                                           );
+  //                                         },
+  //                                   ),
+  //                                 )
+  //                               : const Icon(
+  //                                   Icons.language,
+  //                                   color: Colors.white,
+  //                                   size: 60,
+  //                                 ),
+  //                         ),
+  //                       ),
 
-                        const SizedBox(height: 24),
+  //                       const SizedBox(height: 24),
 
-                        // Link input field
-                        TextField(
-                          controller: linkController,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                          ),
-                          onChanged: (value) {
-                            if (applyIconFromLink && value.trim().isNotEmpty) {
-                              setState(() {
-                                pickedImageUrl = _faviconFromDomain(
-                                  _domainFromUrl(value.trim()),
-                                );
-                              });
-                            }
-                          },
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor: const Color(0xFF7C7480),
-                            hintText: 'Add custom Link',
-                            hintStyle: const TextStyle(
-                              color: Color(0xFFE0E0E0),
-                              fontSize: 14,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 14,
-                            ),
-                          ),
-                        ),
+  //                       // Link input field
+  //                       TextField(
+  //                         controller: linkController,
+  //                         style: const TextStyle(
+  //                           color: Colors.white,
+  //                           fontSize: 14,
+  //                         ),
+  //                         onChanged: (value) {
+  //                           if (applyIconFromLink && value.trim().isNotEmpty) {
+  //                             setState(() {
+  //                               pickedImageUrl = _faviconFromDomain(
+  //                                 _domainFromUrl(value.trim()),
+  //                               );
+  //                             });
+  //                           }
+  //                         },
+  //                         decoration: InputDecoration(
+  //                           filled: true,
+  //                           fillColor: const Color(0xFF7C7480),
+  //                           hintText: 'Add custom Link',
+  //                           hintStyle: const TextStyle(
+  //                             color: Color(0xFFE0E0E0),
+  //                             fontSize: 14,
+  //                           ),
+  //                           border: OutlineInputBorder(
+  //                             borderRadius: BorderRadius.circular(12),
+  //                             borderSide: BorderSide.none,
+  //                           ),
+  //                           contentPadding: const EdgeInsets.symmetric(
+  //                             horizontal: 16,
+  //                             vertical: 14,
+  //                           ),
+  //                         ),
+  //                       ),
 
-                        const SizedBox(height: 18),
+  //                       const SizedBox(height: 18),
 
-                        // Apply Custom Icon from Link toggle
-                        Row(
-                          children: [
-                            const Expanded(
-                              child: Text(
-                                'Apply Custom Icon from Link',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
-                            Switch(
-                              value: applyIconFromLink,
-                              inactiveTrackColor: const Color(0xFF5E5564),
-                              activeTrackColor: const Color(0xFF5E5564),
-                              thumbColor: const WidgetStatePropertyAll(
-                                Colors.white,
-                              ),
-                              onChanged: (value) {
-                                setState(() {
-                                  applyIconFromLink = value;
-                                  if (value &&
-                                      linkController.text.trim().isNotEmpty) {
-                                    pickedImageUrl = _faviconFromDomain(
-                                      _domainFromUrl(
-                                        linkController.text.trim(),
-                                      ),
-                                    );
-                                  } else if (!value) {
-                                    pickedImageUrl = null;
-                                  }
-                                });
-                              },
-                            ),
-                          ],
-                        ),
+  //                       // Apply Custom Icon from Link toggle
+  //                       Row(
+  //                         children: [
+  //                           const Expanded(
+  //                             child: Text(
+  //                               'Apply Custom Icon from Link',
+  //                               style: TextStyle(
+  //                                 color: Colors.white,
+  //                                 fontSize: 14,
+  //                               ),
+  //                             ),
+  //                           ),
+  //                           Switch(
+  //                             value: applyIconFromLink,
+  //                             inactiveTrackColor: const Color(0xFF5E5564),
+  //                             activeTrackColor: const Color(0xFF5E5564),
+  //                             thumbColor: const WidgetStatePropertyAll(
+  //                               Colors.white,
+  //                             ),
+  //                             onChanged: (value) {
+  //                               setState(() {
+  //                                 applyIconFromLink = value;
+  //                                 if (value &&
+  //                                     linkController.text.trim().isNotEmpty) {
+  //                                   pickedImageUrl = _faviconFromDomain(
+  //                                     _domainFromUrl(
+  //                                       linkController.text.trim(),
+  //                                     ),
+  //                                   );
+  //                                 } else if (!value) {
+  //                                   pickedImageUrl = null;
+  //                                 }
+  //                               });
+  //                             },
+  //                           ),
+  //                         ],
+  //                       ),
 
-                        const SizedBox(height: 24),
+  //                       const SizedBox(height: 24),
 
-                        // Save button with gradient
-                        GestureDetector(
-                          onTap: () {
-                            final link = linkController.text.trim();
-                            if (link.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Please enter a link'),
-                                  backgroundColor: Colors.red,
-                                  duration: Duration(seconds: 2),
-                                ),
-                              );
-                              return;
-                            }
+  //                       // Save button with gradient
+  //                       GestureDetector(
+  //                         onTap: () {
+  //                           final link = linkController.text.trim();
+  //                           if (link.isEmpty) {
+  //                             ScaffoldMessenger.of(context).showSnackBar(
+  //                               const SnackBar(
+  //                                 content: Text('Please enter a link'),
+  //                                 backgroundColor: Colors.red,
+  //                                 duration: Duration(seconds: 2),
+  //                               ),
+  //                             );
+  //                             return;
+  //                           }
 
-                            final data = <String, dynamic>{
-                              'custom': {
-                                'type': 'custom',
-                                'url': link,
-                                if (pickedImageUrl != null)
-                                  'iconUrl': pickedImageUrl,
-                              },
-                            };
+  //                           final data = <String, dynamic>{
+  //                             'custom': {
+  //                               'type': 'custom',
+  //                               'url': link,
+  //                               if (pickedImageUrl != null)
+  //                                 'iconUrl': pickedImageUrl,
+  //                             },
+  //                           };
 
-                            Navigator.pop(dialogContext, data);
-                          },
-                          child: Container(
-                            width: double.infinity,
-                            height: 50,
-                            decoration: BoxDecoration(
-                              gradient: AppColors.primaryGradient,
-                              borderRadius: BorderRadius.circular(25),
-                            ),
-                            child: const Center(
-                              child: Text(
-                                'Save',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
+  //                           Navigator.pop(dialogContext, data);
+  //                         },
+  //                         child: Container(
+  //                           width: double.infinity,
+  //                           height: 50,
+  //                           decoration: BoxDecoration(
+  //                             gradient: AppColors.primaryGradient,
+  //                             borderRadius: BorderRadius.circular(25),
+  //                           ),
+  //                           child: const Center(
+  //                             child: Text(
+  //                               'Save',
+  //                               style: TextStyle(
+  //                                 color: Colors.white,
+  //                                 fontSize: 16,
+  //                                 fontWeight: FontWeight.w600,
+  //                               ),
+  //                             ),
+  //                           ),
+  //                         ),
+  //                       ),
 
-                        if (existingData != null) ...[
-                          const SizedBox(height: 16),
+  //                       if (existingData != null) ...[
+  //                         const SizedBox(height: 16),
 
-                          // Delete Link button
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.pop(dialogContext, {'delete': true});
-                            },
-                            child: const Text(
-                              'Delete Link',
-                              style: TextStyle(
-                                color: Colors.red,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ],
+  //                         // Delete Link button
+  //                         GestureDetector(
+  //                           onTap: () {
+  //                             Navigator.pop(dialogContext, {'delete': true});
+  //                           },
+  //                           child: const Text(
+  //                             'Delete Link',
+  //                             style: TextStyle(
+  //                               color: Colors.red,
+  //                               fontSize: 14,
+  //                               fontWeight: FontWeight.w500,
+  //                             ),
+  //                           ),
+  //                         ),
+  //                       ],
 
-                        const SizedBox(height: 8),
-                      ],
-                    ),
-                  ),
-                   */
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    ).whenComplete(() {
-      Future.delayed(const Duration(milliseconds: 300), () {
-        linkController.dispose();
-      });
-    });
-  }
+  //                       const SizedBox(height: 8),
+  //                     ],
+  //                   ),
+  //                 ),
+  //                  */
+  //               ],
+  //             ),
+  //           ),
+  //         ),
+  //       ),
+  //     ),
+  //   ).whenComplete(() {
+  //     Future.delayed(const Duration(milliseconds: 300), () {
+  //       linkController.dispose();
+  //     });
+  //   });
+  // }
 
-  String _domainFromUrl(String url) {
-    try {
-      final uri = Uri.parse(url.startsWith('http') ? url : 'https://$url');
-      return uri.host.replaceFirst('www.', '');
-    } catch (e) {
-      return '';
-    }
-  }
+  // String _domainFromUrl(String url) {
+  //   try {
+  //     final uri = Uri.parse(url.startsWith('http') ? url : 'https://$url');
+  //     return uri.host.replaceFirst('www.', '');
+  //   } catch (e) {
+  //     return '';
+  //   }
+  // }
 
   String _faviconFromDomain(String domain) {
     if (domain.isEmpty) return '';

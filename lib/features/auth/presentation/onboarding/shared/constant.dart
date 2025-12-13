@@ -1,27 +1,26 @@
 import 'dart:async';
 import 'package:flutter/widgets.dart';
-import 'package:easy_localization/easy_localization.dart';
+// import 'package:easy_localization/easy_localization.dart';
 import 'onboarding_model.dart';
 
 class AppConstants {
   static const String appName = 'Migozz';
 
-  /// Getter para obtener las páginas según el idioma actual
-  static List<OnboardingData> get onboardingPages => [
+  static const List<OnboardingData> onboardingPages = [
     OnboardingData(
       imagePath: "assets/images/onboarding_1.webp",
-      title: "onboarding.titles.onboardingTitle1".tr(),
-      description: "onboarding.descriptions.onboardingDescription1".tr(),
+      titleKey: "onboarding.titles.onboardingTitle1",
+      descriptionKey: "onboarding.descriptions.onboardingDescription1",
     ),
     OnboardingData(
-      imagePath: 'assets/images/onboarding_2.webp',
-      title: "onboarding.titles.onboardingTitle2".tr(),
-      description: "onboarding.descriptions.onboardingDescription2".tr(),
+      imagePath: "assets/images/onboarding_2.webp",
+      titleKey: "onboarding.titles.onboardingTitle2",
+      descriptionKey: "onboarding.descriptions.onboardingDescription2",
     ),
     OnboardingData(
-      imagePath: 'assets/images/onboarding_3.webp',
-      title: "onboarding.titles.onboardingTitle3".tr(),
-      description: "onboarding.descriptions.onboardingDescription3".tr(),
+      imagePath: "assets/images/onboarding_3.webp",
+      titleKey: "onboarding.titles.onboardingTitle3",
+      descriptionKey: "onboarding.descriptions.onboardingDescription3",
     ),
   ];
 
