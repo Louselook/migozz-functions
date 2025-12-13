@@ -54,149 +54,229 @@ class _MobileProfileContentV3State extends State<MobileProfileContentV3> {
     // Recuperamos los seguidores y redes desde el perfil
     final totalFollowers = _calculateTotalFollowers(user.socialEcosystem);
     final socialLinks = _buildSocialLinks(user.socialEcosystem, user.username);
+    final bool hasSocials = socialLinks.isNotEmpty;
 
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
         children: [
+          // 1) FOTO FULLSCREEN (siempre)
+          Positioned.fill(
+            child: ProfileImageMobileV3(
+              size: size,
+              avatarUrl: avatarUrl,
+            ),
+          ),
+
+          // 2) GRADIENT encima para legibilidad
           Positioned.fill(
             child: Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Color(0xFF7B2CBF), // morado arriba
-                    Colors.black,     // negro abajo
+                    Colors.black.withOpacity(0.15),
+                    Colors.black.withOpacity(0.85),
                   ],
                 ),
               ),
             ),
           ),
-          // Gradientes de fondo
+
+          // 3A) SIN REDES -> profilhero: card flotante abajo (no scroll)
+          if (!hasSocials)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: SafeArea(
+                bottom: true,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                  child: _InfoCardGlass(
+                    child: InfoUserProfile(
+                      name: name.isNotEmpty ? name : 'NOMBRE VACÍO',
+                      displayName: username,
+                      comunityCount: totalFollowers.toString(),
+                      nameComunity: 'Community',
+                      voiceNoteUrl: voiceNoteUrl,
+                      bio: user.bio,
+                      tutorialKeys: widget.tutorialKeys,
+                      isOwnProfile: isOwnProfile,
+                      userId: user.email,
+                      onMessageTap: () {
+                        if (!isOwnProfile) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => UserChatScreen(
+                                otherUserId: user.email,
+                                otherUserName: user.displayName.isNotEmpty
+                                    ? user.displayName
+                                    : user.username,
+                                otherUserAvatar: user.avatarUrl,
+                                currentUserId: currentUserEmail,
+                              ),
+                            ),
+                          );
+                        } else {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ChatsListScreen(
+                                username:
+                                    user.username.replaceFirst('@', ''),
+                                currentUserId: currentUserEmail,
+                              ),
+                            ),
+                          );
+                        }
+                      }
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+          // 3B) CON REDES -> miti-miti: empujamos contenido con un spacer igual a mitad de pantalla
+          if (hasSocials)
+            SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                children: [
+                  // ESTE SizedBox decide cuánto del fondo se muestra antes del card
+                  SizedBox(height: size.height * 0.5),
+
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: _InfoCardGlass(
+                      child: InfoUserProfile(
+                        name: name.isNotEmpty ? name : 'NOMBRE VACÍO',
+                        displayName: username,
+                        comunityCount: totalFollowers.toString(),
+                        nameComunity: 'Community',
+                        voiceNoteUrl: voiceNoteUrl,
+                        bio: user.bio,
+                        tutorialKeys: widget.tutorialKeys,
+                        isOwnProfile: isOwnProfile,
+                        userId: user.email,
+                        onMessageTap: () {
+                          if (!isOwnProfile) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => UserChatScreen(
+                                  otherUserId: user.email,
+                                  otherUserName: user.displayName.isNotEmpty
+                                      ? user.displayName
+                                      : user.username,
+                                  otherUserAvatar: user.avatarUrl,
+                                  currentUserId: currentUserEmail,
+                                ),
+                              ),
+                            );
+                          } else {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ChatsListScreen(
+                                  username:
+                                      user.username.replaceFirst('@', ''),
+                                  currentUserId: currentUserEmail,
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: SocialCirclesMobileV3(links: socialLinks),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  SocialProfilePhotosGrid(socialEcosystem: user.socialEcosystem),
+
+                  const SizedBox(height: 40), // espacio final
+                ],
+              ),
+            ),
+
+          // 4) Botones siempre arriba (SafeArea)
           Positioned(
             top: 0,
             left: 0,
             right: 0,
-            child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
-          ),
-          SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Column(
-              children: [
-                // Espacio para la imagen (60% de altura - 80px para superposición)
-                SizedBox(height: size.height * 0.38),
-
-                // Info del usuario
-                InfoUserProfile(
-                  name: name.isNotEmpty ? name : 'NOMBRE VACÍO',
-                  displayName: username,
-                  comunityCount: totalFollowers.toString(),
-                  nameComunity: 'Community',
-                  voiceNoteUrl: voiceNoteUrl,
-                  bio: user.bio,
-                  tutorialKeys: widget.tutorialKeys,
-                  isOwnProfile: isOwnProfile,
-                  userId: user.email,
-                  onMessageTap: () {
-                    debugPrint("pulsado el chat");
-                    if (!isOwnProfile) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => UserChatScreen(
-                            otherUserId: user.email,
-                            otherUserName: user.displayName.isNotEmpty
-                                ? user.displayName
-                                : user.username,
-                            otherUserAvatar: user.avatarUrl,
-                            currentUserId: currentUserEmail,
-                          ),
+            child: SafeArea(
+              child: ProfileTopActions(
+                isOwnProfile: isOwnProfile,
+                onMenuTap: () {
+                  if (isOwnProfile) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => MobileProfileContentV3Edit(
+                          user: user,
+                          tutorialKeys: widget.tutorialKeys,
                         ),
-                      );
-                    } else {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ChatsListScreen(
-                            username: user.username.replaceFirst('@', ''),
-                            currentUserId: currentUserEmail,
-                          ),
+                      ),
+                    );
+                  } else {
+                    Navigator.of(context).pop();
+                  }
+                },
+                onQrScanTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const QrScannerScreen(),
+                    ),
+                  );
+                },
+                onChatTap: () {
+                  if (!isOwnProfile) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => UserChatScreen(
+                          otherUserId: user.email,
+                          otherUserName: user.displayName.isNotEmpty
+                              ? user.displayName
+                              : user.username,
+                          otherUserAvatar: user.avatarUrl,
+                          currentUserId: currentUserEmail,
                         ),
-                      );
-                    }
-                  },
-                ),
-
-                // Iconos circulares de redes sociales
-                Padding(
-                  padding: const EdgeInsets.only(top: 8, bottom: 0),
-                  child: SocialCirclesMobileV3(links: socialLinks),
-                ),
-
-                // Grid de fotos de perfil de redes sociales
-                SocialProfilePhotosGrid(socialEcosystem: user.socialEcosystem),
-              ],
+                      ),
+                    );
+                  } else {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ChatsListScreen(
+                          username: user.username.replaceFirst('@', ''),
+                          currentUserId: currentUserEmail,
+                        ),
+                      ),
+                    );
+                  }
+                },
+                onNotificationsTap: () {
+                  debugPrint('Abrir notificaciones');
+                },
+              ),
             ),
-          ),
-          ProfileTopActions(
-            isOwnProfile: isOwnProfile,
-            onMenuTap: () {
-              // ✅ NUEVO callback
-              if (isOwnProfile) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => MobileProfileContentV3Edit(
-                      user: user,
-                      tutorialKeys: widget.tutorialKeys,
-                    ),
-                  ),
-                );
-              } else {
-                Navigator.of(context).pop();
-              }
-            },
-            onQrScanTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const QrScannerScreen()),
-              );
-            },
-            onChatTap: () {
-              if (!isOwnProfile) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => UserChatScreen(
-                      otherUserId: user.email,
-                      otherUserName: user.displayName.isNotEmpty
-                          ? user.displayName
-                          : user.username,
-                      otherUserAvatar: user.avatarUrl,
-                      currentUserId: currentUserEmail,
-                    ),
-                  ),
-                );
-              } else {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ChatsListScreen(
-                      username: user.username.replaceFirst('@', ''),
-                      currentUserId: currentUserEmail,
-                    ),
-                  ),
-                );
-              }
-            },
-            onNotificationsTap: () {
-              debugPrint('Abrir notificaciones');
-            },
           ),
         ],
       ),
     );
+
   }
 
   int _calculateTotalFollowers(List<Map<String, dynamic>>? socialEcosystem) {
@@ -337,5 +417,28 @@ class _MobileProfileContentV3State extends State<MobileProfileContentV3> {
   String _faviconFromDomain(String domain) {
     if (domain.isEmpty) return '';
     return 'https://www.google.com/s2/favicons?domain=$domain&sz=128';
+  }
+}
+
+class _InfoCardGlass extends StatelessWidget {
+  final Widget child;
+
+  const _InfoCardGlass({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.08),
+        ),
+        // blur opcional si quieres
+      ),
+      child: child,
+    );
   }
 }
