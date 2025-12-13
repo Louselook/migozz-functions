@@ -1459,45 +1459,6 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     return null;
   }
 
-  List<SocialLink> _buildSocialLinks(
-    List<Map<String, dynamic>>? socialEcosystem,
-    String username,
-  ) {
-    if (socialEcosystem == null || socialEcosystem.isEmpty) return [];
-    final links = <SocialLink>[];
-    final cleanUsername = username.replaceFirst('@', '');
-
-    for (final social in socialEcosystem) {
-      for (final entry in social.entries) {
-        final platform = entry.key.toLowerCase();
-        final data = entry.value;
-        int? followers;
-        int? shares;
-        String? customUrl;
-
-        if (data is Map<String, dynamic>) {
-          followers = _parseIntFromDynamic(data['followers']);
-          shares = _parseIntFromDynamic(data['shares']);
-          customUrl = data['url']?.toString();
-        }
-
-        final socialInfo = _getSocialInfo(platform, cleanUsername, customUrl);
-        if (socialInfo != null) {
-          links.add(
-            SocialLink(
-              asset: socialInfo['asset']!,
-              url: Uri.parse(socialInfo['url']!),
-              followers: followers,
-              shares: shares,
-            ),
-          );
-        }
-      }
-    }
-
-    return links;
-  }
-
   Map<String, String>? _getSocialInfo(
     String platform,
     String username,
