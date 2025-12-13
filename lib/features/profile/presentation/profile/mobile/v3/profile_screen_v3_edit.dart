@@ -75,11 +75,11 @@ class _MobileProfileContentV3EditState
 
     debugPrint('🔍 [ProfileV3Edit] Built ${socialLinks.length} social links');
 
-  return Scaffold(
-    backgroundColor: Colors.black,
-    body: Stack(
-      children: [
-        // Fondo / gradiente
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          // Fondo / gradiente
           Positioned.fill(
             child: Container(
               decoration: const BoxDecoration(
@@ -87,190 +87,190 @@ class _MobileProfileContentV3EditState
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Color(0xFF7B2CBF),// morado
-                    Colors.black,     // negro
+                    Colors.black,
                   ],
                 ),
               ),
             ),
           ),
-        // Imagen de perfil FIJA
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          child: ProfileImageMobileV3(
-            avatarUrl: avatarUrl,
-            size: size,
+
+          // 🧍 Imagen de perfil FIJA
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: ProfileImageMobileV3(
+              avatarUrl: avatarUrl,
+              size: size,
+            ),
           ),
-        ),
 
-        // 🔥 SCROLL REAL
-        SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Column(
-            children: [
-              // Espacio para que se vea la foto arriba
-              SizedBox(height: size.height * 0.38),
+          // Back fijo
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 8,
+            left: 16,
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: const Icon(
+                Icons.arrow_back_ios,
+                color: Colors.white,
+                size: 24,
+              ),
+            ),
+          ),
 
-              // Contenedor, evitamos el solapamiento con la imagen de perfil
-              Container(
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(32),
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 16),
+          // CONTENIDO PRINCIPAL
+          SafeArea(
+            child: Column(
+              children: [
+                // espacio para la imagen
+                SizedBox(height: size.height * 0.44),
 
-                    // Change profile picture
-                    GestureDetector(
-                      onTap: _uploading ? null : () => _changeAvatar(),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white10,
-                          borderRadius: BorderRadius.circular(32),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 5,
-                          horizontal: 10,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _uploading
-                                ? const SizedBox(
-                                    width: 14,
-                                    height: 14,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : const Icon(
-                                    Icons.camera_alt_outlined,
-                                    size: 14,
-                                    color: Colors.white,
-                                  ),
-                            const SizedBox(width: 10),
-                            Text(
-                              _uploading
-                                  ? '...'
-                                  : 'profile.customization.uploadingProfilePicture.title'
-                                      .tr(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
+                // CONTENEDOR FIJO (sheet)
+                Expanded(
+                  child: Container(
+                    width: double.infinity,
+                    decoration: const BoxDecoration(
+                      color: Colors.black,
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(32),
                       ),
                     ),
 
-                    const SizedBox(height: 8),
-
-                    SocialCirclesMobileV3Edit(
-                      links: socialLinks,
-                      onAddPressed: () =>
-                          _navigateToAddSocial(context),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    ProfileStrengthIndicator(percentage: 80),
-                    const SizedBox(height: 17),
-
-                    BioSection(
-                      bio: bio,
-                      isOwnProfile: isOwnProfile,
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    EmailContactFormSection(
-                      isOwnProfile: isOwnProfile,
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    FeaturedLinksSection(
-                      isOwnProfile: isOwnProfile,
-                      user: user,
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    ContactInfoSection(
-                      isOwnProfile: isOwnProfile,
-                      user: user,
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                    // SCROLL INTERNO
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.only(top: 16),
                       child: Column(
                         children: [
-                          ProfileOptionButton(
-                            icon: Icons.play_circle_outline,
-                            text: 'edit.presentation.record'.tr(),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      const EditRecordScreen(),
-                                ),
-                              );
-                            },
+                          // Change profile picture
+                          GestureDetector(
+                            onTap: _uploading ? null : _changeAvatar,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white10,
+                                borderRadius: BorderRadius.circular(32),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 5,
+                                horizontal: 10,
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  _uploading
+                                      ? const SizedBox(
+                                          width: 14,
+                                          height: 14,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : const Icon(
+                                          Icons.camera_alt_outlined,
+                                          size: 14,
+                                          color: Colors.white,
+                                        ),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    _uploading
+                                        ? '...'
+                                        : 'profile.customization.uploadingProfilePicture.title'
+                                            .tr(),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                          ProfileOptionButton(
-                            icon: Icons.handshake_outlined,
-                            text: 'edit.presentation.interest'.tr(),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      const EditInterestsScreen(),
-                                ),
-                              );
-                            },
+
+                          const SizedBox(height: 8),
+
+                          SocialCirclesMobileV3Edit(
+                            links: socialLinks,
+                            onAddPressed: () =>
+                                _navigateToAddSocial(context),
                           ),
+
+                          const SizedBox(height: 24),
+                          ProfileStrengthIndicator(percentage: 80),
+                          const SizedBox(height: 17),
+
+                          BioSection(
+                            bio: bio,
+                            isOwnProfile: isOwnProfile,
+                          ),
+
+                          const SizedBox(height: 10),
+                          EmailContactFormSection(
+                            isOwnProfile: isOwnProfile,
+                          ),
+
+                          const SizedBox(height: 10),
+                          FeaturedLinksSection(
+                            isOwnProfile: isOwnProfile,
+                            user: user,
+                          ),
+
+                          const SizedBox(height: 10),
+                          ContactInfoSection(
+                            isOwnProfile: isOwnProfile,
+                            user: user,
+                          ),
+
+                          const SizedBox(height: 10),
+
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Column(
+                              children: [
+                                ProfileOptionButton(
+                                  icon: Icons.play_circle_outline,
+                                  text: 'edit.presentation.record'.tr(),
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            const EditRecordScreen(),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                ProfileOptionButton(
+                                  icon: Icons.handshake_outlined,
+                                  text: 'edit.presentation.interest'.tr(),
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            const EditInterestsScreen(),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 100),
                         ],
                       ),
                     ),
-
-                    const SizedBox(height: 100),
-                  ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ),
-
-        // Botón back FIJO
-        Positioned(
-          top: MediaQuery.of(context).padding.top + 8,
-          left: 16,
-          child: GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: const Icon(
-              Icons.arrow_back_ios,
-              color: Colors.white,
-              size: 24,
+              ],
             ),
           ),
-        ),
-      ],
-    ),
-  );
-
+        ],
+      ),
+    );
   }
 
   /// Change avatar

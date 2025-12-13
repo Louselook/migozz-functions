@@ -252,6 +252,18 @@
           "bio" : {
             "add" : "Tap to add your bio."
           },
+          "plataform" : {
+            "title" : "Add New Platform",
+            "image": "Select Image Source",
+            "imageError": "Error selecting image:",
+            "addName": "Add platform name",
+            "addUsername": "Add your username",
+            "addLogo": "Add Platform Logo",
+            "addTapLogo": "Tap to add Logo",
+            "addLink": "Add your Profile Link",
+            "camera": "Camera",
+            "gallery": "Gallery"
+          },
           "links": {
             "title" : "Featured Links",
             "add" : "+ Add link.",
