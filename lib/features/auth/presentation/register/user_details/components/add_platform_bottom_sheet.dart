@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
@@ -26,8 +27,8 @@ class _AddPlatformBottomSheetState extends State<AddPlatformBottomSheet> {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: const Color(0xFF2A2A2A),
-          title: const Text(
-            'Select Image Source',
+          title: Text(
+            'profile.customization.plataform.image'.tr(),
             style: TextStyle(color: Colors.white),
           ),
           content: Column(
@@ -35,8 +36,8 @@ class _AddPlatformBottomSheetState extends State<AddPlatformBottomSheet> {
             children: [
               ListTile(
                 leading: const Icon(Icons.camera_alt, color: Colors.white),
-                title: const Text(
-                  'Camera',
+                title: Text(
+                  'profile.customization.plataform.camera'.tr(),
                   style: TextStyle(color: Colors.white),
                 ),
                 onTap: () {
@@ -46,8 +47,8 @@ class _AddPlatformBottomSheetState extends State<AddPlatformBottomSheet> {
               ),
               ListTile(
                 leading: const Icon(Icons.photo_library, color: Colors.white),
-                title: const Text(
-                  'Gallery',
+                title: Text(
+                  'profile.customization.plataform.gallery'.tr(),
                   style: TextStyle(color: Colors.white),
                 ),
                 onTap: () {
@@ -80,7 +81,7 @@ class _AddPlatformBottomSheetState extends State<AddPlatformBottomSheet> {
       // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error selecting image: $e'),
+          content: Text('${'profile.customization.plataform.gallery'.tr()}$e'),
           backgroundColor: Colors.red,
         ),
       );
@@ -128,8 +129,8 @@ class _AddPlatformBottomSheetState extends State<AddPlatformBottomSheet> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  "Add New Platform",
+                Text(
+                  'profile.customization.plataform.title'.tr(),
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -146,8 +147,8 @@ class _AddPlatformBottomSheetState extends State<AddPlatformBottomSheet> {
             const SizedBox(height: 20),
 
             // Add Platform Name
-            const Text(
-              "Add Platform Name",
+            Text(
+              'profile.customization.plataform.addName'.tr(),
               style: TextStyle(color: Colors.white, fontSize: 16),
             ),
             const SizedBox(height: 8),
@@ -159,8 +160,8 @@ class _AddPlatformBottomSheetState extends State<AddPlatformBottomSheet> {
               child: TextField(
                 controller: _platformNameController,
                 style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  hintText: "Enter username",
+                decoration: InputDecoration(
+                  hintText: 'profile.customization.plataform.gallery'.tr(),
                   hintStyle: TextStyle(color: Colors.grey),
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.all(16),
@@ -171,8 +172,8 @@ class _AddPlatformBottomSheetState extends State<AddPlatformBottomSheet> {
             const SizedBox(height: 20),
 
             // Add Platform Logo
-            const Text(
-              "Add Platform Logo",
+            Text(
+              'profile.customization.plataform.addUsername'.tr(),
               style: TextStyle(color: Colors.white, fontSize: 16),
             ),
             const SizedBox(height: 8),
@@ -196,7 +197,7 @@ class _AddPlatformBottomSheetState extends State<AddPlatformBottomSheet> {
                           height: 100,
                         ),
                       )
-                    : const Column(
+                    : Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
@@ -206,7 +207,7 @@ class _AddPlatformBottomSheetState extends State<AddPlatformBottomSheet> {
                           ),
                           SizedBox(height: 8),
                           Text(
-                            "Tap to add logo",
+                            'profile.customization.plataform.addTapLogo'.tr(),
                             style: TextStyle(color: Colors.grey, fontSize: 12),
                           ),
                         ],
@@ -217,8 +218,8 @@ class _AddPlatformBottomSheetState extends State<AddPlatformBottomSheet> {
             const SizedBox(height: 20),
 
             // Add Profile Link
-            const Text(
-              "Add your Profile Link",
+            Text(
+              'profile.customization.plataform.addLink'.tr(),
               style: TextStyle(color: Colors.white, fontSize: 16),
             ),
             const SizedBox(height: 8),
@@ -278,8 +279,8 @@ class _AddPlatformBottomSheetState extends State<AddPlatformBottomSheet> {
                 width: double.infinity,
                 radius: 25,
                 gradient: AppColors.primaryGradient,
-                child: const Text(
-                  "Save",
+                child: Text(
+                  'buttons.save'.tr(),
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,

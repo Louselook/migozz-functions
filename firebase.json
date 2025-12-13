@@ -43,13 +43,14 @@
       "public": "build/web",
       "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
       "rewrites": [
+        { "source": "/.well-known/**", "destination": "/.well-known/assetlinks.json" },
         { "source": "/u/**", "destination": "/index.html" },
         { "source": "/terms-privacy", "destination": "/index.html" },
         { "source": "**", "destination": "/index.html" }
       ],
       "headers": [
         {
-          "source": "/.well-known/assetlinks.json",
+          "source": "/.well-known/**",
           "headers": [
             {
               "key": "Content-Type",

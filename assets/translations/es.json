@@ -248,10 +248,29 @@
         "success": "Foto de perfil actualizada exitosamente",
         "error": "Error al actualizar la foto de perfil:"
       },
-      "emailContactFormSection" : {
-        "title" : "Formulario de contacto por correo electrónico",
-        "subtitle" : "Los visitantes pueden compartir su correo electrónico contigo a través de un formulario de contacto en tu perfil"
-      }
+        "emailContactFormSection": {
+          "title": "Formulario de contacto por correo electrónico",
+          "subtitle": "Los visitantes pueden compartir su correo electrónico contigo a través de un formulario de contacto en tu perfil."
+        },
+        "bio": {
+          "add": "Pulsa para añadir tu biografía."
+        },
+        "links": {
+          "title": "Enlaces destacados",
+          "add": "+ Añadir enlace.",
+          "successAdd": "Enlace añadido correctamente",
+          "errorAdd": "Error al añadir el enlace:",
+          "maximumLinks": "Se permiten un máximo de 2 enlaces." },
+        "contact": {
+          "title": "Información de contacto",
+          "website": "Sitio web",
+          "number": "Número",
+          "email": "Correo electrónico",
+          "infoAdded": "Información de contacto añadida correctamente",
+          "infoAddError": "Error al añadir la información de contacto:",
+          "infodeleted": "Información de contacto eliminada correctamente",
+          "infoDeleteError": "Error al eliminar la información de contacto:"
+        }
     }
   },
   "search": {

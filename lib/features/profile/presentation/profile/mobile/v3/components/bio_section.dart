@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/color.dart';
@@ -119,7 +120,7 @@ class BioSection extends StatelessWidget {
             ),
             const SizedBox(height: 7),
             Text(
-              bio.isEmpty ? 'Tap to add your bio...' : bio,
+              bio.isEmpty ? 'profile.customization.bio.add'.tr() : bio,
               style: TextStyle(
                 color: bio.isEmpty ? Colors.white38 : Colors.white70,
                 fontSize: 12,

@@ -82,43 +82,43 @@ class LoaderDialog extends StatelessWidget {
   }
 }
 
-class _CancelButton extends StatelessWidget {
-  final VoidCallback onTap;
-  const _CancelButton({required this.onTap});
+// class _CancelButton extends StatelessWidget {
+//   final VoidCallback onTap;
+//   const _CancelButton({required this.onTap});
 
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(24),
-      child: Container(
-        height: 42,
-        width: 180,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          gradient: const LinearGradient(
-            colors: [Color(0xFFFF5A6E), Color(0xFFEA1457)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFFFF5A6E).withValues(alpha: 0.4),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: const Text(
-          'Cancel',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return InkWell(
+//       onTap: onTap,
+//       borderRadius: BorderRadius.circular(24),
+//       child: Container(
+//         height: 42,
+//         width: 180,
+//         alignment: Alignment.center,
+//         decoration: BoxDecoration(
+//           borderRadius: BorderRadius.circular(24),
+//           gradient: const LinearGradient(
+//             colors: [Color(0xFFFF5A6E), Color(0xFFEA1457)],
+//             begin: Alignment.topLeft,
+//             end: Alignment.bottomRight,
+//           ),
+//           boxShadow: [
+//             BoxShadow(
+//               color: const Color(0xFFFF5A6E).withValues(alpha: 0.4),
+//               blurRadius: 18,
+//               offset: const Offset(0, 8),
+//             ),
+//           ],
+//         ),
+//         child: const Text(
+//           'Cancel',
+//           style: TextStyle(
+//             color: Colors.white,
+//             fontSize: 14,
+//             fontWeight: FontWeight.w700,
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }

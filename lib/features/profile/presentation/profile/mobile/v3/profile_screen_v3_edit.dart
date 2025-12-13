@@ -20,7 +20,7 @@ import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/compo
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
 
-import '../../../../components/tintes_gradients.dart';
+// import '../../../../components/tintes_gradients.dart';
 import 'components/profile_image_mobile_v3.dart';
 import 'components/social_circles_mobile_v3.dart';
 
@@ -136,6 +136,8 @@ class _MobileProfileContentV3EditState
                                       Icons.camera_alt_outlined,
                                       size: 14,
                                       color: Colors.white,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
                                     ),
                               const SizedBox(width: 10),
                               Text(

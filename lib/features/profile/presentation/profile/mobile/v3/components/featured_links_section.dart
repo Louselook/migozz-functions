@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
@@ -21,7 +22,13 @@ class FeaturedLinksSection extends StatelessWidget {
     // Check if already has 2 links
     final currentLinks = user.featuredLinks ?? [];
     if (currentLinks.length >= 2) {
-      AlertGeneral.show(context, 3, message: 'Maximum 2 links allowed');
+      AlertGeneral.show(context, 3, message: 'profile.customization.links.maximumLinks'.tr());
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('profile.customization.links.maximumLinks'.tr()),
+          backgroundColor: Colors.orange,
+        ),
+      );
       return;
     }
 
@@ -36,7 +43,13 @@ class FeaturedLinksSection extends StatelessWidget {
           final userId = authCubit.state.firebaseUser?.uid;
 
           if (userId == null) {
-            AlertGeneral.show(context, 4, message: 'Error: User not logged in');
+            AlertGeneral.show(context, 4, message: 'edit.validations.errorUserLogin'.tr());
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('edit.validations.errorUserLogin'.tr()),
+                backgroundColor: Colors.red,
+              ),
+            );
             return;
           }
 
@@ -55,11 +68,17 @@ class FeaturedLinksSection extends StatelessWidget {
             );
 
             if (context.mounted) {
-              AlertGeneral.show(context, 1, message: 'Link added successfully');
+              AlertGeneral.show(context, 1, message: 'profile.customization.links.successAdd'.tr());
             }
           } catch (e) {
             if (context.mounted) {
-              AlertGeneral.show(context, 4, message: 'Error adding link: $e');
+              AlertGeneral.show(context, 4, message: '${'profile.customization.links.errorAdd'.tr()}$e');
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('profile.customization.links.successAdd'.tr()),
+                  backgroundColor: Colors.green,
+                ),
+              );
             }
           }
         },
@@ -86,13 +105,19 @@ class FeaturedLinksSection extends StatelessWidget {
       );
 
       if (context.mounted) {
-        AlertGeneral.show(context, 1, message: 'Link removed successfully');
+        AlertGeneral.show(context, 1, message: 'profile.customization.links.successAdd'.tr());
       }
     } catch (e) {
       if (context.mounted) {
-        AlertGeneral.show(context, 4, message: 'Error removing link: $e');
+        AlertGeneral.show(context, 4, message: '${'profile.customization.links.errorAdd'.tr()}$e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('profile.customization.links.successAdd'.tr()),
+            backgroundColor: Colors.green,
+          ),
+        );
       }
-    }
+    } 
   }
 
   @override
@@ -114,7 +139,7 @@ class FeaturedLinksSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Featured Links',
+            'profile.customization.links.title'.tr(),
             style: TextStyle(
               color: Colors.white,
               fontSize: 12,
@@ -139,7 +164,7 @@ class FeaturedLinksSection extends StatelessWidget {
 
           // Add link button (only show if less than 2 links)
           if (isOwnProfile && (user.featuredLinks ?? []).length < 2)
-            _AddLinkButton(text: '+Add link', onTap: () => _addLink(context)),
+            _AddLinkButton(text: 'profile.customization.links.add'.tr(), onTap: () => _addLink(context)),
         ],
       ),
     );
