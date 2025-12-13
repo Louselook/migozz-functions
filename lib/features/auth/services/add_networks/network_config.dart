@@ -45,14 +45,23 @@ class SocialNetworks {
     "facebook": NetworkAuthCapability.manual,
     "youtube": NetworkAuthCapability.manual,
     "twitter": NetworkAuthCapability.oauth,
+    "x": NetworkAuthCapability.oauth,
     "linkedin": NetworkAuthCapability.manual,
+    "snapchat": NetworkAuthCapability.manual,
+    "pinterest": NetworkAuthCapability.manual,
+    "threads": NetworkAuthCapability.manual,
+    "reddit": NetworkAuthCapability.manual,
 
     // Streaming
     "twitch": NetworkAuthCapability.manual,
     "kick": NetworkAuthCapability.manual,
+    "trovo": NetworkAuthCapability.manual,
 
     // Music
     "spotify": NetworkAuthCapability.oauth,
+    "applemusic": NetworkAuthCapability.manual,
+    "deezer": NetworkAuthCapability.manual,
+    "soundcloud": NetworkAuthCapability.manual,
 
     // Websites & Stores (todos manual)
     "website": NetworkAuthCapability.manual,
@@ -63,9 +72,10 @@ class SocialNetworks {
     // Messaging (todos manual)
     "whatsapp": NetworkAuthCapability.manual,
     "telegram": NetworkAuthCapability.manual,
+    "discord": NetworkAuthCapability.manual,
 
     // Otros
-    "pinterest": NetworkAuthCapability.manual,
+    // "pinterest": NetworkAuthCapability.manual,
     "paypal": NetworkAuthCapability.manual,
     "xbox": NetworkAuthCapability.manual,
     "other": NetworkAuthCapability.manual,
@@ -80,13 +90,21 @@ class SocialNetworks {
     "youtube": "Channel name or URL",
     "twitter": "Username",
     "linkedin": "Profile URL",
+    "snapchat": "Username",
+    "pinterest": "Username",
+    "threads": "Username",
+    "reddit": "Username",
 
     // Streaming
     "twitch": "Username or URL",
     "kick": "Username or URL",
+    "trovo": "Username or URL",
 
     // Music
     "spotify": "Profile URL",
+    "applemusic": "Profile URL",
+    "deezer": "Profile URL",
+    "soundcloud": "Profile URL",
 
     // Websites & Stores
     "website": "Your website URL",
@@ -97,6 +115,7 @@ class SocialNetworks {
     // Messaging
     "whatsapp": "Phone number (with country code)",
     "telegram": "Username or phone number",
+    "discord": "Username or URL",
   };
 
   // Genera configuraciones dinámicamente desde network_list.dart
