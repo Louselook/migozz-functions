@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -15,13 +16,42 @@ class DeeplinkService {
   static const _socialChannel = MethodChannel('socialAuth');
   static bool _isInitialized = false;
 
-  //  Inicializar el canal UNA SOLA VEZ en toda la app
+  /// Inicializar deeplinks según la plataforma
   static void initialize(BuildContext context) {
     if (_isInitialized) return;
 
-    debugPrint('🔗 [DeeplinkService] Inicializando canales de deeplinks');
+    debugPrint(
+      '🔗 [DeeplinkService] Inicializando deeplinks para ${kIsWeb ? "WEB" : "MOBILE"}',
+    );
 
-    // Inicializar deep links de redes sociales
+    if (kIsWeb) {
+      // 🌐 EN WEB: Solo manejar deeplinks de perfiles manualmente si es necesario
+      // GoRouter ya maneja automáticamente las rutas como /u/:username
+      _initializeWebDeeplinks(context);
+    } else {
+      // 📱 EN MOBILE: Usar MethodChannel para interceptar intents nativos
+      _initializeMobileDeeplinks(context);
+    }
+
+    _isInitialized = true;
+  }
+
+  /// Inicialización específica para WEB
+  static void _initializeWebDeeplinks(BuildContext context) {
+    debugPrint(
+      '🌐 [DeeplinkService] Web deeplinks listos - GoRouter maneja las rutas automáticamente',
+    );
+
+    // En web, GoRouter ya captura las rutas del navegador
+    // No necesitas hacer nada más aquí, solo asegúrate de que
+    // las rutas estén bien definidas en app_router.dart
+  }
+
+  /// Inicialización específica para MOBILE (Android/iOS)
+  static void _initializeMobileDeeplinks(BuildContext context) {
+    debugPrint('📱 [DeeplinkService] Configurando MethodChannels para mobile');
+
+    // Canal para redes sociales (migozz://...)
     _socialChannel.setMethodCallHandler((call) async {
       debugPrint(
         '🔗 [DeeplinkService] Deeplink social recibido: ${call.method}',
@@ -54,13 +84,11 @@ class DeeplinkService {
       }
     });
 
-    // Inicializar deep links de perfiles de usuario
+    // Inicializar deep links de perfiles para mobile
     ProfileDeeplinkService.initialize(context);
-
-    _isInitialized = true;
   }
 
-  //  Handlers que actualizan AMBOS cubits según el contexto
+  // Mantén tus handlers existentes
   static Future<void> _handleSpotify(String data, BuildContext context) async {
     handleSpotify(data, context);
     await _syncToEditCubit(context, 'spotify');
@@ -89,7 +117,6 @@ class DeeplinkService {
     await _syncToEditCubit(context, 'instagram');
   }
 
-  /// Sincronizar el último item de RegisterCubit a EditCubit
   static Future<void> _syncToEditCubit(
     BuildContext context,
     String platform,
@@ -104,7 +131,6 @@ class DeeplinkService {
         return;
       }
 
-      // Buscar el último item de esta plataforma
       final lastItem = socialEcosystem.lastWhere(
         (item) => item.keys.first.toLowerCase() == platform.toLowerCase(),
         orElse: () => {},
@@ -115,12 +141,10 @@ class DeeplinkService {
         return;
       }
 
-      // Actualizar EditCubit
       final currentEdit = List<Map<String, dynamic>>.from(
         editCubit.state.socialEcosystem ?? [],
       );
 
-      // Evitar duplicados
       currentEdit.removeWhere(
         (e) => e.keys.first.toLowerCase() == platform.toLowerCase(),
       );
@@ -129,14 +153,8 @@ class DeeplinkService {
       editCubit.updateSocialEcosystem(currentEdit);
 
       debugPrint('✅ [DeeplinkService] $platform sincronizado a EditCubit');
-      debugPrint(
-        '🔹 EditCubit socialEcosystem: ${editCubit.state.socialEcosystem}',
-      );
 
-      //  NUEVA LÓGICA: Verificar si hay un registro REAL activo
       final regProgress = registerCubit.state.regProgress;
-
-      // Un registro está activo si tiene email Y está en progreso (no vacío ni completo)
       final hasEmail =
           registerCubit.state.email != null &&
           registerCubit.state.email!.isNotEmpty;
@@ -146,22 +164,10 @@ class DeeplinkService {
 
       final isActiveRegistration = hasEmail && isInProgress;
 
-      debugPrint('🔍 [DeeplinkService] Verificando registro activo:');
-      debugPrint('   • hasEmail: $hasEmail');
-      debugPrint('   • email: ${registerCubit.state.email}');
-      debugPrint('   • regProgress: $regProgress');
-      debugPrint('   • isActiveRegistration: $isActiveRegistration');
-
       if (!isActiveRegistration) {
-        // Solo limpiamos si NO hay un registro real activo
         registerCubit.reset();
         debugPrint(
           '🧹 [DeeplinkService] RegisterCubit limpiado (modo edición)',
-        );
-      } else {
-        // Hay un registro real en curso - NO limpiar
-        debugPrint(
-          '⏸️ [DeeplinkService] RegisterCubit NO limpiado (registro activo)',
         );
       }
     } catch (e, st) {

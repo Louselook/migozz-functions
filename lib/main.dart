@@ -1,4 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -13,7 +14,6 @@ import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubi
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/injection.dart';
 import 'package:url_strategy/url_strategy.dart';
-
 import 'core/services/ai/gemini_service.dart';
 
 Future<void> main() async {
@@ -44,16 +44,15 @@ class MyApp extends StatelessWidget {
       providers: blocProviders,
       child: Builder(
         builder: (context) {
-          // 👉 Crear el notifier aquí
           final goRouterNotifier = GoRouterNotifier(context.read<AuthCubit>());
-
-          // 👉 Crear el router UNA SOLA VEZ
           final router = createRouter(goRouterNotifier);
 
-          // 🔹 Inicializar deeplinks después del primer frame
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            DeeplinkService.initialize(context);
-          });
+          // Inicializar deeplinks solo en mobile
+          if (!kIsWeb) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              DeeplinkService.initialize(context);
+            });
+          }
 
           return AppInitializer(
             builder: (context, initResult) {

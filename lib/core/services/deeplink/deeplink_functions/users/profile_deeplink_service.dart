@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -9,17 +10,32 @@ class ProfileDeeplinkService {
   static const _channel = MethodChannel('profileDeeplink');
   static bool _isInitialized = false;
 
-  /// Inicializar el canal de deep links de perfiles
+  /// Inicializar según la plataforma
   static void initialize(BuildContext context) {
     if (_isInitialized) return;
 
     debugPrint(
-      '🔗 [ProfileDeeplinkService] Inicializando canal de deep links de perfiles',
+      '🔗 [ProfileDeeplinkService] Inicializando para ${kIsWeb ? "WEB" : "MOBILE"}',
     );
 
+    if (!kIsWeb) {
+      // Solo en mobile (Android/iOS) configurar el MethodChannel
+      _initializeMobileChannel(context);
+    } else {
+      // En web, GoRouter maneja automáticamente /u/:username
+      debugPrint(
+        '🌐 [ProfileDeeplinkService] En web - GoRouter maneja las rutas automáticamente',
+      );
+    }
+
+    _isInitialized = true;
+  }
+
+  /// Configurar MethodChannel para mobile
+  static void _initializeMobileChannel(BuildContext context) {
     _channel.setMethodCallHandler((call) async {
       debugPrint(
-        '🔗 [ProfileDeeplinkService] Deep link recibido: ${call.method}',
+        '🔗 [ProfileDeeplinkService] Deep link recibido (mobile): ${call.method}',
       );
 
       try {
@@ -33,11 +49,9 @@ class ProfileDeeplinkService {
         );
       }
     });
-
-    _isInitialized = true;
   }
 
-  /// Manejar deep link de perfil
+  /// Manejar deep link de perfil (funciona en todas las plataformas)
   static Future<void> _handleProfileDeeplink(
     String username,
     BuildContext context,
@@ -45,10 +59,8 @@ class ProfileDeeplinkService {
     try {
       debugPrint('🔍 [ProfileDeeplinkService] Buscando perfil: $username');
 
-      // Limpiar username (remover @ si existe)
       final cleanUsername = username.toLowerCase().replaceFirst('@', '');
 
-      // Buscar usuario en Firestore
       final querySnapshot = await FirebaseFirestore.instance
           .collection('users')
           .where('username', isEqualTo: cleanUsername)
@@ -60,24 +72,19 @@ class ProfileDeeplinkService {
           '⚠️ [ProfileDeeplinkService] Usuario no encontrado: $cleanUsername',
         );
 
-        // Mostrar mensaje de error
         if (context.mounted) {
           AlertGeneral.show(context, 4, message: 'Usuario no encontrado');
         }
         return;
       }
 
-      // Obtener datos del usuario
       final userData = querySnapshot.docs.first.data();
-
-      // Crear UserDTO usando fromMap (que maneja todos los campos defensivamente)
       final user = UserDTO.fromMap(userData);
 
       debugPrint(
         '✅ [ProfileDeeplinkService] Usuario encontrado: ${user.username}',
       );
 
-      // Navegar a la pantalla de perfil
       if (context.mounted) {
         context.push('/profile-view', extra: user);
       }
@@ -92,7 +99,7 @@ class ProfileDeeplinkService {
     }
   }
 
-  /// Método para abrir un perfil manualmente (útil para web)
+  /// Método público para abrir perfil (útil para web y mobile)
   static Future<void> openProfileByUsername(
     String username,
     BuildContext context,
