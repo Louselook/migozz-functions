@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
+import 'package:migozz_app/features/profile/components/utils/Loader.dart';
 
 class SupportScreen extends StatefulWidget {
   const SupportScreen({super.key});
@@ -32,18 +34,14 @@ class _SupportScreenState extends State<SupportScreen> {
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Could not open support page')),
-          );
+          AlertGeneral.show(context, 4, message: 'Could not open support page');
           context.go('/login');
         }
       }
     } catch (e) {
       debugPrint('Error opening browser: $e');
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        AlertGeneral.show(context, 4, message: 'Error: $e');
         context.go('/login');
       }
     }
@@ -54,17 +52,7 @@ class _SupportScreenState extends State<SupportScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const CircularProgressIndicator(color: Colors.white),
-            const SizedBox(height: 20),
-            Text(
-              'Opening support page in browser...',
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
-            ),
-          ],
-        ),
+        child: LoaderDialog(message: 'Opening support page in browser...'),
       ),
     );
   }

@@ -14,6 +14,8 @@ import 'package:universal_io/io.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:universal_html/html.dart' as html;
 import 'dart:convert';
+import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
+import 'package:migozz_app/features/profile/components/utils/Loader.dart';
 
 /// Pantalla que muestra un QR y permite compartir el enlace del perfil
 /// de un usuario. Si no se pasa [userId], se usa el usuario logueado.
@@ -758,13 +760,7 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
 
         // Show success message
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('QR Code downloaded!'),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 2),
-            ),
-          );
+          AlertGeneral.show(context, 1, message: 'QR Code downloaded!');
         }
       } else {
         // Mobile: Save to app directory first
@@ -804,25 +800,13 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
 
         // Show success message
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('QR Code saved and shared!'),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 2),
-            ),
-          );
+          AlertGeneral.show(context, 1, message: 'QR Code saved and shared!');
         }
       }
     } catch (e) {
       debugPrint('Error capturing screenshot: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to save QR Code'),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 2),
-          ),
-        );
+        AlertGeneral.show(context, 4, message: 'Failed to save QR Code');
       }
     }
   }
@@ -901,7 +885,7 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
                     builder: (context, snap) {
                       if (snap.connectionState == ConnectionState.waiting) {
                         return const Center(
-                          child: CircularProgressIndicator(color: Colors.white),
+                          child: LoaderDialog(message: 'Loading...'),
                         );
                       }
                       if (!snap.hasData) {

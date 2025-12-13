@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
+import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
 
 import '../../../../../../../core/assets_constants.dart';
 
@@ -113,12 +114,7 @@ class _AddContactInfoBottomSheetState extends State<AddContactInfoBottomSheet> {
     final error = _validate(value);
 
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error),
-          backgroundColor: Colors.red,
-        ),
-      );
+      AlertGeneral.show(context, 4, message: error);
       return;
     }
 

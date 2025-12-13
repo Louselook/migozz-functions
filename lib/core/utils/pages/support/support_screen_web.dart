@@ -13,6 +13,7 @@ import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
+import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
 
 class SupportScreen extends StatefulWidget {
   const SupportScreen({super.key});
@@ -26,9 +27,7 @@ class _SupportScreenState extends State<SupportScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     try {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Sending...")));
+      AlertGeneral.show(context, 2, message: "Sending...");
 
       String? base64File;
       String? fileName;
@@ -55,16 +54,12 @@ class _SupportScreenState extends State<SupportScreen> {
 
       await FirebaseFirestore.instance.collection("supportTickets").add(ticket);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Ticket enviado correctamente.")),
-      );
+      AlertGeneral.show(context, 1, message: "Ticket enviado correctamente.");
 
       context.go('/login');
     } catch (e) {
       debugPrint("ERROR al enviar ticket: $e");
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Error sending ticket: $e")));
+      AlertGeneral.show(context, 4, message: "Error sending ticket: $e");
     }
   }
 
@@ -77,9 +72,7 @@ class _SupportScreenState extends State<SupportScreen> {
 
   Future<void> pickFile() async {
     if (!kIsWeb) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Select File')));
+      AlertGeneral.show(context, 2, message: 'Select File');
       return;
     }
 

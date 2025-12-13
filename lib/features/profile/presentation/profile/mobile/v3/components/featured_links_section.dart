@@ -5,6 +5,7 @@ import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubi
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'add_link_bottom_sheet.dart';
+import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
 
 class FeaturedLinksSection extends StatelessWidget {
   final bool isOwnProfile;
@@ -20,12 +21,7 @@ class FeaturedLinksSection extends StatelessWidget {
     // Check if already has 2 links
     final currentLinks = user.featuredLinks ?? [];
     if (currentLinks.length >= 2) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Maximum 2 links allowed'),
-          backgroundColor: Colors.orange,
-        ),
-      );
+      AlertGeneral.show(context, 3, message: 'Maximum 2 links allowed');
       return;
     }
 
@@ -40,12 +36,7 @@ class FeaturedLinksSection extends StatelessWidget {
           final userId = authCubit.state.firebaseUser?.uid;
 
           if (userId == null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Error: User not logged in'),
-                backgroundColor: Colors.red,
-              ),
-            );
+            AlertGeneral.show(context, 4, message: 'Error: User not logged in');
             return;
           }
 
@@ -64,21 +55,11 @@ class FeaturedLinksSection extends StatelessWidget {
             );
 
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Link added successfully'),
-                  backgroundColor: Colors.green,
-                ),
-              );
+              AlertGeneral.show(context, 1, message: 'Link added successfully');
             }
           } catch (e) {
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Error adding link: $e'),
-                  backgroundColor: Colors.red,
-                ),
-              );
+              AlertGeneral.show(context, 4, message: 'Error adding link: $e');
             }
           }
         },
@@ -105,21 +86,11 @@ class FeaturedLinksSection extends StatelessWidget {
       );
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Link removed successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        AlertGeneral.show(context, 1, message: 'Link removed successfully');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error removing link: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        AlertGeneral.show(context, 4, message: 'Error removing link: $e');
       }
     }
   }

@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
+import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
 
 /// Selector de versión de perfil (1, 2 o 3)
 /// Permite al usuario elegir qué diseño de perfil prefiere
@@ -98,24 +99,11 @@ class _ProfileVersionSelectorState extends State<ProfileVersionSelector> {
       if (context.mounted) {
         Navigator.of(context).pop();
 
-        // Mostrar confirmación
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Diseño actualizado a Versión $version'),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        AlertGeneral.show(context, 1, message: 'Diseño actualizado a Versión $version');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al cambiar diseño: $e'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
-          ),
-        );
+        AlertGeneral.show(context, 4, message: 'Error al cambiar diseño: $e');
       }
     }
   }

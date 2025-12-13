@@ -7,6 +7,7 @@ import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/formart/text_formart.dart';
 import 'package:migozz_app/features/profile/presentation/profile/modules/share_profile.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
+import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
 
 class InfoUserProfile extends StatefulWidget {
   final String name;
@@ -81,9 +82,7 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
   Future<void> _togglePlay() async {
     final voiceNoteUrl = widget.voiceNoteUrl;
     if (voiceNoteUrl.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("profile.validations.emptyAudio".tr())),
-      );
+      AlertGeneral.show(context, 3, message: "profile.validations.emptyAudio".tr());
       return;
     }
 
@@ -104,9 +103,7 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
       setState(() => _isPlaying = !_isPlaying);
     } catch (e) {
       // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("profile.validations.errorAudio".tr())),
-      );
+      AlertGeneral.show(context, 4, message: "profile.validations.errorAudio".tr());
     } finally {
       setState(() => _isLoading = false);
     }

@@ -11,6 +11,7 @@ import 'package:migozz_app/features/profile/presentation/stats/mobile/profile_st
 import 'package:migozz_app/features/search/mobile/presentation/search_screen.dart';
 import 'package:migozz_app/features/tutorial/profile_tutorial_helper.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
+import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
 
 class MainNavigation extends StatefulWidget {
   final TutorialKeys? tutorialKeys;
@@ -106,10 +107,7 @@ class _MainNavigationState extends State<MainNavigation> {
     final currentUser = authState.userProfile;
 
     if (currentUser == null) {
-      // Si no hay usuario (caso raro), mostramos un mensaje y salimos
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se ha encontrado usuario activo')),
-      );
+      AlertGeneral.show(context, 4, message: 'No se ha encontrado usuario activo');
       return;
     }
 

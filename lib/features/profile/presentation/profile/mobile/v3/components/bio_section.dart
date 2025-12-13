@@ -4,6 +4,7 @@ import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 import 'edit_bio_bottom_sheet.dart';
+import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
 
 class BioSection extends StatelessWidget {
   final String bio;
@@ -24,12 +25,7 @@ class BioSection extends StatelessWidget {
           final userId = authCubit.state.firebaseUser?.uid;
 
           if (userId == null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Error: User not logged in'),
-                backgroundColor: Colors.red,
-              ),
-            );
+            AlertGeneral.show(context, 4, message: 'Error: User not logged in');
             return;
           }
 
@@ -40,21 +36,11 @@ class BioSection extends StatelessWidget {
             );
 
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Bio updated successfully'),
-                  backgroundColor: Colors.green,
-                ),
-              );
+              AlertGeneral.show(context, 1, message: 'Bio updated successfully');
             }
           } catch (e) {
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Error updating bio: $e'),
-                  backgroundColor: Colors.red,
-                ),
-              );
+              AlertGeneral.show(context, 4, message: 'Error updating bio: $e');
             }
           }
         },
