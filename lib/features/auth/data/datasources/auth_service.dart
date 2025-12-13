@@ -75,7 +75,6 @@ class AuthService {
   }
 
   // LOGIN con Google
-  // LOGIN con Google
   Future<AuthResult> loginWithGoogle() async {
     try {
       final googleSignIn = GoogleSignIn.instance;
@@ -129,10 +128,11 @@ class AuthService {
         final baseData = {
           'displayName': user.displayName ?? '',
           'email': user.email ?? '',
-          'avatarUrl': user.photoURL ?? '',
+          // 'avatarUrl': user.photoURL ?? '',
           'phone': user.phoneNumber ?? '',
-          'username':
-              '@${(user.displayName ?? 'user').replaceAll(' ', '').toLowerCase()}',
+          'username': (user.displayName ?? 'user')
+              .replaceAll(' ', '')
+              .toLowerCase(),
           'createdAt': FieldValue.serverTimestamp(),
           'updatedAt': FieldValue.serverTimestamp(),
           'complete': false,
@@ -199,8 +199,9 @@ class AuthService {
           'email': user.email ?? appleCredential.email ?? '',
           'avatarUrl': user.photoURL ?? '',
           'phone': user.phoneNumber ?? '',
-          'username':
-              '@${(displayName.isNotEmpty ? displayName : 'user').replaceAll(' ', '').toLowerCase()}',
+          'username': (displayName.isNotEmpty ? displayName : 'user')
+              .replaceAll(' ', '')
+              .toLowerCase(),
           'createdAt': FieldValue.serverTimestamp(),
           'updatedAt': FieldValue.serverTimestamp(),
           'complete': false,

@@ -35,7 +35,7 @@ class UserDTO {
     required this.email,
     required this.lang,
     required this.displayName,
-    required this.username,
+    required String username, // 👈 recibe el valor crudo
     this.gender,
     this.birthDate,
     this.bio,
@@ -46,7 +46,7 @@ class UserDTO {
     this.phone,
     this.voiceNoteUrl,
     this.category,
-    this.profileVersion = 1, // Por defecto versión 1
+    this.profileVersion = 1,
     this.contactWebsite,
     this.contactPhone,
     this.contactEmail,
@@ -54,7 +54,8 @@ class UserDTO {
     this.complete = true,
     DateTime? createdAt,
     DateTime? updatedAt,
-  }) : interests = interests ?? <String, List<String>>{},
+  }) : username = username.trim().toLowerCase(),
+       interests = interests ?? <String, List<String>>{},
        createdAt = createdAt ?? DateTime.now(),
        updatedAt = updatedAt ?? DateTime.now();
 
