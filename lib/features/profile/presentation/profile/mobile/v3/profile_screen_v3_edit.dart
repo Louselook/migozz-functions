@@ -18,6 +18,7 @@ import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/compo
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/featured_links_section.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/contact_info_section.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
+import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
 
 // import '../../../../components/tintes_gradients.dart';
 import 'components/profile_image_mobile_v3.dart';
@@ -279,12 +280,7 @@ class _MobileProfileContentV3EditState
     final userId = authCubit.state.firebaseUser?.uid;
 
     if (userId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Error: User not logged in'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      AlertGeneral.show(context, 4, message: 'Error: User not logged in');
       return;
     }
 
@@ -294,20 +290,19 @@ class _MobileProfileContentV3EditState
     try {
       await editCubit.changeAvatar(userId);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('profile.customization.uploadingProfilePicture.success'.tr()),
-            backgroundColor: Colors.green,
-          ),
+        AlertGeneral.show(
+          context,
+          1,
+          message: 'profile.customization.uploadingProfilePicture.success'.tr(),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${'profile.customization.uploadingProfilePicture.error'.tr()}$e'),
-            backgroundColor: Colors.red,
-          ),
+        AlertGeneral.show(
+          context,
+          4,
+          message:
+              '${'profile.customization.uploadingProfilePicture.error'.tr()}$e',
         );
       }
     } finally {
@@ -321,12 +316,7 @@ class _MobileProfileContentV3EditState
     final userId = authCubit.state.firebaseUser?.uid;
 
     if (userId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('edit.validations.errorUserLogin'.tr()),
-          backgroundColor: Colors.red,
-        ),
-      );
+      AlertGeneral.show(context, 4, message: 'edit.validations.errorUserLogin'.tr());
       return;
     }
 

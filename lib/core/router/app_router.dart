@@ -27,6 +27,7 @@ import 'package:migozz_app/features/search/web/presentation/search_screen.dart'
     as web_search;
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:migozz_app/features/profile/components/utils/Loader.dart';
 
 Widget localizedBuilder(BuildContext context, Widget Function() screenBuilder) {
   final easy = EasyLocalization.of(context);
@@ -37,7 +38,7 @@ Widget localizedBuilder(BuildContext context, Widget Function() screenBuilder) {
   
 
   if (controller == null) {
-    return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    return const Scaffold(body: Center(child: LoaderDialog(message: 'Loading...')));
   }
 
   return screenBuilder();
@@ -71,7 +72,7 @@ class _AppGateState extends State<AppGate> {
   Widget build(BuildContext context) {
     return const Scaffold(
       body: Center(
-        child: CircularProgressIndicator(),
+        child: LoaderDialog(message: 'Loading...'),
       ),
     );
   }
@@ -142,7 +143,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Scaffold(
-                  body: Center(child: CircularProgressIndicator()),
+                  body: Center(child: LoaderDialog(message: 'Loading...')),
                 );
               }
 

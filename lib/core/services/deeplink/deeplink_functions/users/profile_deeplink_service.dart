@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 
 class ProfileDeeplinkService {
@@ -61,13 +62,7 @@ class ProfileDeeplinkService {
 
         // Mostrar mensaje de error
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Usuario no encontrado'),
-              backgroundColor: Colors.red,
-              duration: Duration(seconds: 3),
-            ),
-          );
+          AlertGeneral.show(context, 4, message: 'Usuario no encontrado');
         }
         return;
       }
@@ -92,13 +87,7 @@ class ProfileDeeplinkService {
       );
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Error al cargar el perfil'),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 3),
-          ),
-        );
+        AlertGeneral.show(context, 4, message: 'Error al cargar el perfil');
       }
     }
   }

@@ -7,6 +7,8 @@ import 'package:migozz_app/features/profile/presentation/profile/mobile/profile_
     as mobile_profile;
 import 'package:migozz_app/features/profile/presentation/profile/web/profile_search_screen.dart'
     as web_profile;
+import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
+import 'package:migozz_app/features/profile/components/utils/Loader.dart';
 
 /// QR Scanner screen to scan user profile QR codes
 class QrScannerScreen extends StatefulWidget {
@@ -107,15 +109,8 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
         return;
       }
 
-      // Show loading
       if (mounted) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => const Center(
-            child: CircularProgressIndicator(color: Colors.white),
-          ),
-        );
+        showProfileLoader(context, message: 'Loading profile...');
       }
 
       // Fetch user data
@@ -169,13 +164,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
   void _showError(String message) {
     if (!mounted) return;
     
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    AlertGeneral.show(context, 4, message: message);
   }
 
   @override

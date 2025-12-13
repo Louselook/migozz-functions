@@ -12,6 +12,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
 import 'package:migozz_app/features/profile/presentation/profile/web/components/edit_profile_options.dart';
+import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
+import 'package:migozz_app/features/profile/components/utils/Loader.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -70,15 +72,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
       await editCubit.saveUserProfileField(userId: userId, updatedFields: data);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile updated successfully')),
-        );
+        AlertGeneral.show(context, 1, message: 'Profile updated successfully');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error saving profile: $e')));
+        AlertGeneral.show(context, 4, message: 'Error saving profile: $e');
       }
     }
   }
@@ -88,9 +86,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final newLocation = await svc.initAndFetchAddress();
     if (newLocation == null) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not fetch current location')),
-      );
+      AlertGeneral.show(context, 4, message: 'Could not fetch current location');
       return;
     }
 
@@ -116,12 +112,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
 
     if (confirm == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Location updated to ${newLocation.city}, ${newLocation.country}',
-          ),
-        ),
+      AlertGeneral.show(
+        context,
+        1,
+        message: 'Location updated to ${newLocation.city}, ${newLocation.country}',
       );
     }
   }
@@ -162,7 +156,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       body: BlocBuilder<AuthCubit, AuthState>(
         builder: (context, authState) {
           if (authState.isLoadingProfile) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: LoaderDialog(message: 'Loading profile...'));
           }
 
           final user = authState.userProfile;
@@ -377,9 +371,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         const SizedBox(height: 30),
         EditProfileOptions(
           onEditRecord: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Use the app to change your audio")),
-            );
+            AlertGeneral.show(context, 2, message: "Use the app to change your audio");
           },
           onEditInterest: () => Navigator.push(
             context,
@@ -387,12 +379,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ),
           onEditSocials: () {
             if (userId == null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Error: User not logged in'),
-                  backgroundColor: Colors.red,
-                ),
-              );
+              AlertGeneral.show(context, 4, message: 'Error: User not logged in');
               return;
             }
 

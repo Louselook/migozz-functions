@@ -15,6 +15,8 @@ import 'package:migozz_app/features/profile/presentation/edit/components/profile
 // import 'package:migozz_app/features/profile/presentation/edit/modules/edit_my_interest.dart';
 // import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
+import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
+import 'package:migozz_app/features/profile/components/utils/Loader.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key, required TutorialKeys tutorialKeys});
@@ -73,16 +75,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       await editCubit.saveUserProfileField(userId: userId, updatedFields: data);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("edit.validations.updateProfile".tr())),
-        );
+        AlertGeneral.show(context, 1, message: "edit.validations.updateProfile".tr());
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${"edit.validations.errorUpdateProfile".tr()} $e'),
-          ),
+        AlertGeneral.show(
+          context,
+          4,
+          message: '${"edit.validations.errorUpdateProfile".tr()} $e',
         );
       }
     }
@@ -92,24 +92,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final svc = LocationService();
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("edit.validations.detectLocation".tr()),
-          duration: const Duration(seconds: 1),
-        ),
-      );
+      AlertGeneral.show(context, 2, message: "edit.validations.detectLocation".tr());
     }
 
     final newLocation = await svc.initAndFetchAddress();
 
     if (newLocation == null) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("edit.validations.errorDetecLocation".tr()),
-          backgroundColor: Colors.red,
-        ),
-      );
+      AlertGeneral.show(context, 4, message: "edit.validations.errorDetecLocation".tr());
       return;
     }
 
@@ -145,12 +135,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         final userId = context.read<AuthCubit>().state.firebaseUser?.uid;
 
         if (userId == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('edit.validations.errorUserLogin'.tr()),
-              backgroundColor: Colors.red,
-            ),
-          );
+          AlertGeneral.show(context, 4, message: 'edit.validations.errorUserLogin'.tr());
           return;
         }
 
@@ -169,31 +154,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
         debugPrint('✅ [EditProfile] Ubicación guardada exitosamente');
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
+        AlertGeneral.show(
+          context,
+          1,
+          message:
               '✅ ${"edit.validations.updateLocation".tr().replaceAll("\${newLocation.city}", newLocation.city).replaceAll("\${newLocation.country}", newLocation.country)}',
-            ),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 2),
-          ),
         );
       } catch (e) {
         if (!mounted) return;
 
         debugPrint('❌ [EditProfile] Error guardando ubicación: $e');
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              "edit.validations.errorUpdateLocation".tr().replaceAll(
-                "\$e",
-                e.toString(),
-              ),
-            ),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
-          ),
+        AlertGeneral.show(
+          context,
+          4,
+          message: "edit.validations.errorUpdateLocation"
+              .tr()
+              .replaceAll("\$e", e.toString()),
         );
       }
     } else {
@@ -232,7 +209,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           return BlocBuilder<AuthCubit, AuthState>(
             builder: (context, state) {
               if (state.isLoadingProfile) {
-                return const Center(child: CircularProgressIndicator());
+                return const Center(child: LoaderDialog(message: 'Loading profile...'));
               }
               final user = state.userProfile;
               if (user == null) {
@@ -472,13 +449,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (confirm == true) {
       // 🚧 SOLO VISUAL - NO HACE NADA AÚN
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Account deletion request submitted. '
-            'Your data will be permanently deleted within 30 business days.',
-          ),
-        ),
+      AlertGeneral.show(
+        context,
+        2,
+        message:
+            'Account deletion request submitted. Your data will be permanently deleted within 30 business days.',
       );
     }
   }

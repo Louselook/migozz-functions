@@ -5,6 +5,7 @@ import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubi
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'add_contact_info_bottom_sheet.dart';
+import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
 
 class ContactInfoSection extends StatelessWidget {
   final bool isOwnProfile;
@@ -44,20 +45,18 @@ class ContactInfoSection extends StatelessWidget {
       );
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Contact info deleted successfully'),
-            backgroundColor: Colors.green,
-          ),
+        AlertGeneral.show(
+          context,
+          1,
+          message: 'Contact info deleted successfully',
         );
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error deleting contact info: $e'),
-            backgroundColor: Colors.red,
-          ),
+        AlertGeneral.show(
+          context,
+          4,
+          message: 'Error deleting contact info: $e',
         );
       }
     }
@@ -84,12 +83,7 @@ class ContactInfoSection extends StatelessWidget {
           final userId = authCubit.state.firebaseUser?.uid;
 
           if (userId == null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Error: User not logged in'),
-                backgroundColor: Colors.red,
-              ),
-            );
+            AlertGeneral.show(context, 4, message: 'Error: User not logged in');
             return;
           }
 
@@ -100,20 +94,18 @@ class ContactInfoSection extends StatelessWidget {
             );
 
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Contact info saved successfully'),
-                  backgroundColor: Colors.green,
-                ),
+              AlertGeneral.show(
+                context,
+                1,
+                message: 'Contact info saved successfully',
               );
             }
           } catch (e) {
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Error saving contact info: $e'),
-                  backgroundColor: Colors.red,
-                ),
+              AlertGeneral.show(
+                context,
+                4,
+                message: 'Error saving contact info: $e',
               );
             }
           }

@@ -5,6 +5,7 @@ import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubi
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
 import 'package:migozz_app/features/tutorial/profile_tutorial_helper.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
+import 'package:migozz_app/features/profile/components/utils/Loader.dart';
 
 class ProfileWrapper extends StatefulWidget {
   final TutorialKeys tutorialKeys;
@@ -38,7 +39,7 @@ class _ProfileWrapperState extends State<ProfileWrapper> {
         if (authState.status == AuthStatus.checking) {
           return const Scaffold(
             backgroundColor: Colors.black,
-            body: Center(child: CircularProgressIndicator(color: Colors.white)),
+            body: Center(child: LoaderDialog(message: 'Loading...')),
           );
         }
 
@@ -59,7 +60,7 @@ class _ProfileWrapperState extends State<ProfileWrapper> {
         if (authState.isLoadingProfile) {
           return const Scaffold(
             backgroundColor: Colors.black,
-            body: Center(child: CircularProgressIndicator(color: Colors.white)),
+            body: Center(child: LoaderDialog(message: 'Loading profile...')),
           );
         }
 
