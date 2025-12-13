@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:migozz_app/core/utils/platform_utils.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/profile_screen.dart'
     as mobile_v1;
-import 'package:migozz_app/features/profile/presentation/profile/mobile/v2/profile_screen_v2.dart'
-    as mobile_v2;
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/profile_screen_v3.dart'
     as mobile_v3;
 import 'package:migozz_app/features/profile/presentation/profile/shared/profile_wrapper.dart';
@@ -64,11 +62,6 @@ class ProfileEntry extends StatelessWidget {
           }
         } else {
           switch (profileVersion) {
-            case 2:
-              return mobile_v2.MobileProfileContentV2(
-                user: user,
-                tutorialKeys: receivedKeys,
-              );
             case 3:
               return mobile_v3.MobileProfileContentV3(
                 user: user,

@@ -19,7 +19,7 @@ import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/compo
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/contact_info_section.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 
-import '../../../../components/tintes_gradients.dart';
+// import '../../../../components/tintes_gradients.dart';
 import 'components/profile_image_mobile_v3.dart';
 import 'components/social_circles_mobile_v3.dart';
 
@@ -79,7 +79,21 @@ class _MobileProfileContentV3EditState
     body: Stack(
       children: [
         // Fondo / gradiente
-
+          Positioned.fill(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xFF7B2CBF),// morado
+                    Colors.black,     // intermedio para mantener estructura de tercios
+                    Colors.black,     // negro
+                  ],
+                ),
+              ),
+            ),
+          ),
         // Imagen de perfil FIJA
         Positioned(
           top: 0,
