@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
@@ -48,7 +49,7 @@ class ContactInfoSection extends StatelessWidget {
         AlertGeneral.show(
           context,
           1,
-          message: 'Contact info deleted successfully',
+          message: 'profile.customization.contact.infoDeleted'.tr(),
         );
       }
     } catch (e) {
@@ -56,7 +57,7 @@ class ContactInfoSection extends StatelessWidget {
         AlertGeneral.show(
           context,
           4,
-          message: 'Error deleting contact info: $e',
+          message: 'profile.customization.contact.infoDeletedError'.tr(),
         );
       }
     }
@@ -83,7 +84,7 @@ class ContactInfoSection extends StatelessWidget {
           final userId = authCubit.state.firebaseUser?.uid;
 
           if (userId == null) {
-            AlertGeneral.show(context, 4, message: 'Error: User not logged in');
+            AlertGeneral.show(context, 4, message: 'edit.validations.errorUserLogin'.tr());
             return;
           }
 
@@ -97,7 +98,7 @@ class ContactInfoSection extends StatelessWidget {
               AlertGeneral.show(
                 context,
                 1,
-                message: 'Contact info saved successfully',
+                message: 'profile.customization.contact.infoAdded'.tr(),
               );
             }
           } catch (e) {
@@ -105,7 +106,7 @@ class ContactInfoSection extends StatelessWidget {
               AlertGeneral.show(
                 context,
                 4,
-                message: 'Error saving contact info: $e',
+                message: 'profile.customization.contact.infoAddedError'.tr(),
               );
             }
           }
@@ -157,7 +158,7 @@ class ContactInfoSection extends StatelessWidget {
               Row(
                 children: [
                   Text(
-                    'Contact Info',
+                    'profile.customization.contact.title'.tr(),
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 13,
@@ -199,7 +200,7 @@ class ContactInfoSection extends StatelessWidget {
           _buildContactItem(
             context: context,
             icon: Icons.language,
-            label: 'Website',
+            label: 'profile.customization.contact.website'.tr(),
             value: user.contactWebsite,
             type: ContactType.website,
             isOwnProfile: isOwnProfile,
@@ -208,7 +209,7 @@ class ContactInfoSection extends StatelessWidget {
           _buildContactItem(
             context: context,
             icon: Icons.phone,
-            label: 'Number',
+            label: 'profile.customization.contact.number'.tr(),
             value: user.contactPhone,
             type: ContactType.phone,
             isOwnProfile: isOwnProfile,
@@ -217,7 +218,7 @@ class ContactInfoSection extends StatelessWidget {
           _buildContactItem(
             context: context,
             icon: Icons.email_outlined,
-            label: 'Email',
+            label: 'profile.customization.contact.email'.tr(),
             value: user.contactEmail,
             type: ContactType.email,
             isOwnProfile: isOwnProfile,
