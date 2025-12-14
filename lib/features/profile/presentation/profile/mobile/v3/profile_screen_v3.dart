@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+// import 'package:migozz_app/core/assets_constants.dart';
 import 'package:migozz_app/core/components/atomics/network_list.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
@@ -60,29 +61,43 @@ class _MobileProfileContentV3State extends State<MobileProfileContentV3> {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // 1) FOTO FULLSCREEN (siempre)
-          Positioned.fill(
-            child: ProfileImageMobileV3(
-              size: size,
-              avatarUrl: avatarUrl,
-            ),
-          ),
-
-          // 2) GRADIENT encima para legibilidad
-          Positioned.fill(
+           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withOpacity(0.15),
-                    Colors.black.withOpacity(0.85),
+                    Colors.purpleAccent.withValues(alpha: 0.35),
+                    Colors.black.withValues(alpha: 0.40),
+                    Colors.black,
+                  ],
+                  stops: const [
+                    0.3,
+                    0.7,
+                    1.0,
                   ],
                 ),
               ),
             ),
           ),
+          // FOTO FULLSCREEN (si no hay redes)
+          if (!hasSocials)
+            Positioned.fill(
+              child: ProfileImageMobileV3(
+                size: size,
+                avatarUrl: avatarUrl,
+              ),
+            ),
+        
+          // FOTO "top" si hay redes
+          if (hasSocials)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
+            ),
 
           // 3A) SIN REDES -> profilhero: card flotante abajo (no scroll)
           if (!hasSocials)
@@ -142,72 +157,121 @@ class _MobileProfileContentV3State extends State<MobileProfileContentV3> {
           // 3B) CON REDES -> miti-miti: empujamos contenido con un spacer igual a mitad de pantalla
           if (hasSocials)
             SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                children: [
-                  // ESTE SizedBox decide cuánto del fondo se muestra antes del card
-                  SizedBox(height: size.height * 0.5),
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              children: [
+                // Espacio para la imagen (60% de altura - 80px para superposición)
+                SizedBox(height: size.height * 0.38),
 
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: _InfoCardGlass(
-                      child: InfoUserProfile(
-                        name: name.isNotEmpty ? name : 'NOMBRE VACÍO',
-                        displayName: username,
-                        comunityCount: totalFollowers.toString(),
-                        nameComunity: 'Community',
-                        voiceNoteUrl: voiceNoteUrl,
-                        bio: user.bio,
-                        tutorialKeys: widget.tutorialKeys,
-                        isOwnProfile: isOwnProfile,
-                        userId: user.email,
-                        onMessageTap: () {
-                          if (!isOwnProfile) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => UserChatScreen(
-                                  otherUserId: user.email,
-                                  otherUserName: user.displayName.isNotEmpty
-                                      ? user.displayName
-                                      : user.username,
-                                  otherUserAvatar: user.avatarUrl,
-                                  currentUserId: currentUserEmail,
-                                ),
-                              ),
-                            );
-                          } else {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ChatsListScreen(
-                                  username:
-                                      user.username.replaceFirst('@', ''),
-                                  currentUserId: currentUserEmail,
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                      ),
+                // Info del usuario
+                InfoUserProfile(
+                  name: name.isNotEmpty ? name : 'NOMBRE VACÍO',
+                  displayName: username,
+                  comunityCount: totalFollowers.toString(),
+                  nameComunity: 'Community',
+                  voiceNoteUrl: voiceNoteUrl,
+                  bio: user.bio,
+                  tutorialKeys: widget.tutorialKeys,
+                  isOwnProfile: isOwnProfile,
+                  userId: user.email,
+                  onMessageTap: () {
+                    debugPrint("pulsado el chat");
+                    if (!isOwnProfile) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => UserChatScreen(
+                            otherUserId: user.email,
+                            otherUserName: user.displayName.isNotEmpty
+                                ? user.displayName
+                                : user.username,
+                            otherUserAvatar: user.avatarUrl,
+                            currentUserId: currentUserEmail,
+                          ),
+                        ),
+                      );
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ChatsListScreen(
+                            username: user.username.replaceFirst('@', ''),
+                            currentUserId: currentUserEmail,
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                ),
+
+                // Iconos circulares de redes sociales
+                Padding(
+                  padding: const EdgeInsets.only(top: 8, bottom: 0),
+                  child: SocialCirclesMobileV3(links: socialLinks),
+                ),
+
+                // Grid de fotos de perfil de redes sociales
+                SocialProfilePhotosGrid(socialEcosystem: user.socialEcosystem),
+              ],
+            ),
+          ),
+          ProfileTopActions(
+            isOwnProfile: isOwnProfile,
+            onMenuTap: () {
+              // ✅ NUEVO callback
+              if (isOwnProfile) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => MobileProfileContentV3Edit(
+                      user: user,
+                      tutorialKeys: widget.tutorialKeys,
+
                     ),
                   ),
+                );
+              } else {
+                Navigator.of(context).pop();
+              }
+            },
+            onQrScanTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const QrScannerScreen()),
+              );
+            },
+            onChatTap: () {
+              if (!isOwnProfile) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => UserChatScreen(
+                      otherUserId: user.email,
+                      otherUserName: user.displayName.isNotEmpty
+                          ? user.displayName
+                          : user.username,
+                      otherUserAvatar: user.avatarUrl,
+                      currentUserId: currentUserEmail,
 
-                  const SizedBox(height: 12),
-
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: SocialCirclesMobileV3(links: socialLinks),
+                    ),
                   ),
-
-                  const SizedBox(height: 12),
-
-                  SocialProfilePhotosGrid(socialEcosystem: user.socialEcosystem),
-
-                  const SizedBox(height: 40), // espacio final
-                ],
-              ),
-            ),
+                );
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ChatsListScreen(
+                      username: user.username.replaceFirst('@', ''),
+                      currentUserId: currentUserEmail,
+                    ),
+                  ),
+                );
+              }
+            },
+            onNotificationsTap: () {
+              debugPrint('Abrir notificaciones');
+            },
+          ),
 
           // 4) Botones siempre arriba (SafeArea)
           Positioned(
@@ -276,7 +340,6 @@ class _MobileProfileContentV3State extends State<MobileProfileContentV3> {
         ],
       ),
     );
-
   }
 
   int _calculateTotalFollowers(List<Map<String, dynamic>>? socialEcosystem) {

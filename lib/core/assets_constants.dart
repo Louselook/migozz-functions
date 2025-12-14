@@ -26,4 +26,24 @@ class AssetsConstants {
   static const String linkedinIcon = '$socialBlackWhiteIcons/LinkedInNe.svg';
 }
 
+class SocialIconResolver {
+  static const Map<String, String> byKey = {
+    'instagram': AssetsConstants.instagramBlackIcon,
+    'youtube': AssetsConstants.youtubeBlackIcon,
+    'tiktok': AssetsConstants.tiktokIcon,
+    'facebook': AssetsConstants.facebookIcon,
+    'telegram': AssetsConstants.telegramIcon,
+    'whatsapp': AssetsConstants.whatsappIcon,
+    'pinterest': AssetsConstants.pinterestIcon,
+    'spotify': AssetsConstants.spotifyIcon,
+    'twitter': AssetsConstants.twitterIcon,
+    'linkedin': AssetsConstants.linkedinIcon,
+    'global': AssetsConstants.migozIcon,
+  };
+
+  static String? resolve(String value) {
+    return byKey[value.toLowerCase().trim()];
+  }
+}
+
 // DiscordBlanco.svg

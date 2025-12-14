@@ -253,7 +253,10 @@
           "subtitle": "Los visitantes pueden compartir su correo electrónico contigo a través de un formulario de contacto en tu perfil."
         },
         "bio": {
-          "add": "Pulsa para añadir tu biografía."
+          "title": "Editar biografía",
+          "add": "Toca para añadir tu biografía",
+          "hint": "Cuéntale a la gente sobre ti...",
+          "save": "Guardar biografía"
         },
         "links": {
           "title": "Enlaces destacados",
@@ -292,14 +295,15 @@
       }
   },
   "stats":{
-    "title":"My Stats",
+    "title":"Mis Estadísticas",
     "rangeText": "No seleccionado",
     "noStats":{
       "notSocials": "Aún no tienes redes sociales conectadas, ¡conéctalas!",
       "addButton": "Agregar redes"
     },
-    "date": "Selec date",
+    "date": "Fecha",
     "dataCardLabel": {
+      "title" : "Resumen",
       "likes" : "Me gustas:",
       "shares" : "Compartidos:",
       "followers" : "Seguidores:"

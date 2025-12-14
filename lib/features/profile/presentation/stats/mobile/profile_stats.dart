@@ -4,6 +4,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:migozz_app/core/assets_constants.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/social_ecosystem_step_v3.dart';
@@ -323,8 +325,7 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
                                 ),
                                 const SizedBox(height: 20),
                                 _DataCard(
-                                  image:
-                                      'assets/icons/social_networks/mini_icon_migozz.svg',
+                                  iconKey: 'global',
                                   title: "Overview",
                                   rows: [
                                     _RowData(
@@ -380,9 +381,7 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
                                           bottom: 12,
                                         ),
                                         child: _DataCard(
-                                          // TODO: Resolver este problema, miniicon tiktok pero no existe, ni este ni mas rutas en assets
-                                          image:
-                                              "assets/icons/social_networks/mini_icon_${name.toLowerCase()}.svg",
+                                          iconKey: name, 
                                           title: name,
                                           rows: filteredEntries.map((e) {
                                             final displayKey = _applyFieldRules(
@@ -526,46 +525,56 @@ class _Metric extends StatelessWidget {
 
 class _DataCard extends StatelessWidget {
   final String title;
-  final String? image;
+  final String? iconKey; // clave lógica (instagram, twitter, etc)
   final List<_RowData> rows;
-  const _DataCard({required this.title, required this.rows, this.image});
+
+  const _DataCard({
+    required this.title,
+    required this.rows,
+    this.iconKey,
+  });
 
   @override
-  Widget build(BuildContext context) => Card(
-    color: Colors.grey[900],
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    margin: EdgeInsets.zero,
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              if (image != null && image!.isNotEmpty)
-                Image.asset(
-                  image!,
-                  width: 20,
-                  height: 20,
-                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+  Widget build(BuildContext context) {
+    final String? iconPath =
+        iconKey != null ? SocialIconResolver.resolve(iconKey!) : null;
+
+    return Card(
+      color: Colors.grey[900],
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                if (iconPath != null)
+                  SvgPicture.asset(
+                    iconPath,
+                    width: 22,
+                    height: 22,
+                  ),
+                if (iconPath != null) const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              if (image != null && image!.isNotEmpty) const SizedBox(width: 8),
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          ...rows,
-        ],
+              ],
+            ),
+            const SizedBox(height: 12),
+            ...rows,
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
+
 
 class _RowData extends StatelessWidget {
   final String label, value;

@@ -250,7 +250,10 @@
             "subtitle" : "Visitors can share their email with you through a contact form on your profile."
           },
           "bio" : {
-            "add" : "Tap to add your bio."
+            "title" : "Edit Bio",
+            "add" : "Tap to add your bio.",
+            "hint": "Tell people about yourself...",
+            "save" : "Save Bio"
           },
           "plataform" : {
             "title" : "Add New Platform",
@@ -306,9 +309,10 @@
         },
         "date": "Selec date",
         "dataCardLabel": {
-            "likes" : "Likes:",
-            "shares" : "Shares:",
-            "followers" : "Followers:"
+          "title" : "Overwied",
+          "likes" : "Likes:",
+          "shares" : "Shares:",
+          "followers" : "Followers:"
         }
     },
     "addSocials": {

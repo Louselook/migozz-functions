@@ -818,7 +818,28 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
         child: Scaffold(
           backgroundColor: Colors.black,
           body: Stack(
+            
             children: [
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.purpleAccent.withValues(alpha: 0.35),
+                        Colors.black.withValues(alpha: 0.40),
+                        Colors.black,
+                      ],
+                      stops: const [
+                        0.3,
+                        0.7,
+                        1.0,
+                      ],
+                    ),
+                  ),
+                ),
+              ),
               Positioned(
                 top: 0,
                 left: 0,

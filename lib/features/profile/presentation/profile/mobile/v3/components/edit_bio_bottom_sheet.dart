@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
@@ -61,8 +62,8 @@ class _EditBioBottomSheetState extends State<EditBioBottomSheet> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Edit Bio',
+                  Text(
+                    'profile.customization.bio.title'.tr(),
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 20,
@@ -84,7 +85,7 @@ class _EditBioBottomSheetState extends State<EditBioBottomSheet> {
                 maxLength: _maxLength,
                 style: const TextStyle(color: Colors.white, fontSize: 14),
                 decoration: InputDecoration(
-                  hintText: 'Tell people about yourself...',
+                  hintText: 'profile.customization.bio.hint'.tr(),
                   hintStyle: const TextStyle(color: Colors.white38),
                   filled: true,
                   fillColor: Colors.white10,
@@ -105,8 +106,8 @@ class _EditBioBottomSheetState extends State<EditBioBottomSheet> {
                   gradient: AppColors.primaryGradient,
                   radius: 10,
                   height: 48,
-                  child: const Text(
-                    'Save Bio',
+                  child: Text(
+                    'profile.customization.bio.save'.tr(),
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.white,
