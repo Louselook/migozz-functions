@@ -11,17 +11,15 @@ class AddNetworkServiceUser {
   }) async {
     final endpoint = _getProfileEndpoint(network);
 
-    // ✅ Decidir qué API usar según la red social
+    // Decidir qué API usar según la red social (por defecto usamos apiFuctions que apunta a tu backend de scrapers)
     final String? baseUrl = _getApiBaseForNetwork(network);
 
     if (baseUrl == null) {
       throw Exception('No hay API configurada para $network');
     }
 
-    // ✅ YouTube usa 'query', las demás usan 'username_or_link'
-    final queryParamName = network.toLowerCase() == 'youtube'
-        ? 'query'
-        : 'username_or_link';
+    // Tu backend usa siempre 'username_or_link' como query param
+    final queryParamName = 'username_or_link';
 
     final uri = Uri.parse(
       '$baseUrl$endpoint',
@@ -35,7 +33,7 @@ class AddNetworkServiceUser {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         debugPrint('✅ [$network] Profile fetched successfully');
-        return data;
+        return Map<String, dynamic>.from(data);
       } else {
         debugPrint('❌ [$network] Error: ${response.body}');
         throw Exception('Error fetching $network profile: ${response.body}');
@@ -46,25 +44,30 @@ class AddNetworkServiceUser {
     }
   }
 
-  /// ✅ ACTUALIZADO: Decidir qué API usar según la red social
+  /// ACTUALIZADO: Decidir qué API usar según la red social
+  /// Por ahora todas las plataformas de scraping apuntan a ApiConfig.apiFuctions.
+  /// Si necesitas que alguna use ApiConfig.apiBase, cámbialo aquí.
   String? _getApiBaseForNetwork(String network) {
     switch (network.toLowerCase()) {
-      // Usar Cloud Run Functions (scraper con Puppeteer)
       case 'tiktok':
       case 'facebook':
       case 'twitch':
       case 'kick':
-        // case 'trovo':
-        return ApiConfig.apiFuctions;
-
-      // Usar API principal (tiene YouTube, Instagram OAuth, LinkedIn OAuth, etc.)
+      case 'trovo':
       case 'youtube':
       case 'instagram':
       case 'linkedin':
       case 'twitter':
       case 'spotify':
-        return ApiConfig.apiBase;
-
+      case 'reddit':
+      case 'threads':
+      case 'pinterest':
+      case 'soundcloud':
+      case 'applemusic':
+      case 'deezer':
+      case 'discord':
+      case 'snapchat':
+        return ApiConfig.apiFuctions;
       default:
         return null;
     }
@@ -74,7 +77,7 @@ class AddNetworkServiceUser {
   String _getProfileEndpoint(String network) {
     switch (network.toLowerCase()) {
       case 'youtube':
-        return '/youtube/channel';
+        return '/youtube/profile';
       case 'instagram':
         return '/instagram/profile';
       case 'tiktok':
@@ -89,21 +92,37 @@ class AddNetworkServiceUser {
         return '/spotify/profile';
       case 'twitch':
         return '/twitch/profile';
-      case 'kick': // ✅ NUEVO
+      case 'kick':
         return '/kick/profile';
-      // case 'trovo':
-      //   return '/trovo/profile';
+      case 'trovo':
+        return '/trovo/profile';
+      case 'reddit':
+        return '/reddit/profile';
+      case 'threads':
+        return '/threads/profile';
+      case 'pinterest':
+        return '/pinterest/profile';
+      case 'soundcloud':
+        return '/soundcloud/profile';
+      case 'applemusic':
+        return '/applemusic/profile';
+      case 'deezer':
+        return '/deezer/profile';
+      case 'discord':
+        return '/discord/profile';
+      case 'snapchat':
+        return '/snapchat/profile';
       default:
+        // Si agregas nuevas plataformas en el backend puedes manejar aquí.
         throw Exception('Red social no soportada: $network');
     }
   }
 
   // ==================== MÉTODOS ESPECÍFICOS ====================
-
-  Future<Map<String, dynamic>> getYouTubeProfile(String handleOrUrl) =>
+  Future<Map<String, dynamic>> getYouTubeProfile(String usernameOrLink) =>
       getProfileByUsernameOrLink(
         network: 'youtube',
-        usernameOrLink: handleOrUrl,
+        usernameOrLink: usernameOrLink,
       );
 
   Future<Map<String, dynamic>> getInstagramProfile(String usernameOrLink) =>
@@ -148,10 +167,63 @@ class AddNetworkServiceUser {
         usernameOrLink: usernameOrLink,
       );
 
-  // // ✅ NUEVO: Trovo (opcional)
-  // Future<Map<String, dynamic>> getTrovoProfile(String usernameOrLink) =>
-  //     getProfileByUsernameOrLink(
-  //       network: 'trovo',
-  //       usernameOrLink: usernameOrLink,
-  //     );
+  Future<Map<String, dynamic>> getTrovoProfile(String usernameOrLink) =>
+      getProfileByUsernameOrLink(
+        network: 'trovo',
+        usernameOrLink: usernameOrLink,
+      );
+
+  Future<Map<String, dynamic>> getSpotifyProfile(String usernameOrLink) =>
+      getProfileByUsernameOrLink(
+        network: 'spotify',
+        usernameOrLink: usernameOrLink,
+      );
+
+  Future<Map<String, dynamic>> getRedditProfile(String usernameOrLink) =>
+      getProfileByUsernameOrLink(
+        network: 'reddit',
+        usernameOrLink: usernameOrLink,
+      );
+
+  Future<Map<String, dynamic>> getThreadsProfile(String usernameOrLink) =>
+      getProfileByUsernameOrLink(
+        network: 'threads',
+        usernameOrLink: usernameOrLink,
+      );
+
+  Future<Map<String, dynamic>> getPinterestProfile(String usernameOrLink) =>
+      getProfileByUsernameOrLink(
+        network: 'pinterest',
+        usernameOrLink: usernameOrLink,
+      );
+
+  Future<Map<String, dynamic>> getSoundCloudProfile(String usernameOrLink) =>
+      getProfileByUsernameOrLink(
+        network: 'soundcloud',
+        usernameOrLink: usernameOrLink,
+      );
+
+  Future<Map<String, dynamic>> getAppleMusicProfile(String usernameOrLink) =>
+      getProfileByUsernameOrLink(
+        network: 'applemusic',
+        usernameOrLink: usernameOrLink,
+      );
+
+  Future<Map<String, dynamic>> getDeezerProfile(String usernameOrLink) =>
+      getProfileByUsernameOrLink(
+        network: 'deezer',
+        usernameOrLink: usernameOrLink,
+      );
+
+  Future<Map<String, dynamic>> getDiscordProfile(String usernameOrLink) =>
+      getProfileByUsernameOrLink(
+        network: 'discord',
+        usernameOrLink: usernameOrLink,
+      );
+
+  Future<Map<String, dynamic>> getSnapchatProfile(String usernameOrLink) =>
+      getProfileByUsernameOrLink(
+        network: 'snapchat',
+        usernameOrLink: usernameOrLink,
+      );
 }
