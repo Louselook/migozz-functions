@@ -65,7 +65,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
             top: 0,
             left: 0,
             right: 0,
-            child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
+            child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size,),
           ),
           SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
