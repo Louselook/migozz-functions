@@ -1,7 +1,7 @@
 const { createBrowser } = require('../utils/helpers');
 
 /**
- * Scraper para perfiles de Twitch
+ * Scraper para perfiles de Twitch - Optimizado para Cloud Run
  * @param {string} username - Username de Twitch
  * @returns {Promise<Object>} Datos del perfil
  */
@@ -12,21 +12,36 @@ async function scrapeTwitch(username) {
     browser = await createBrowser();
     const page = await browser.newPage();
     
+    // Configurar viewport y user agent
     await page.setViewport({ width: 1920, height: 1080 });
     await page.setUserAgent(
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     );
 
+    // ⚡ OPTIMIZACIÓN: Bloquear recursos innecesarios
+    await page.setRequestInterception(true);
+    page.on('request', (req) => {
+      const resourceType = req.resourceType();
+      // Bloquear imágenes, estilos, fuentes y videos para acelerar
+      if (['image', 'stylesheet', 'font', 'media'].includes(resourceType)) {
+        req.abort();
+      } else {
+        req.continue();
+      }
+    });
+
     const url = `https://www.twitch.tv/${username}`;
     console.log(`🌐 [Twitch] Navegando a: ${url}`);
     
+    // ⚡ OPTIMIZACIÓN: Aumentar timeout a 90 segundos para Cloud Run
     await page.goto(url, { 
-      waitUntil: 'networkidle2', 
-      timeout: 60000 
+      waitUntil: 'domcontentloaded', // Cambio de 'networkidle2' a 'domcontentloaded' para ser más rápido
+      timeout: 90000 
     });
     
+    // ⚡ OPTIMIZACIÓN: Reducir espera de 12s a 5s
     console.log('⏳ [Twitch] Esperando contenido...');
-    await new Promise(resolve => setTimeout(resolve, 12000));
+    await new Promise(resolve => setTimeout(resolve, 5000));
 
     let profileData = null;
 
@@ -39,9 +54,8 @@ async function scrapeTwitch(username) {
         let followers = 0;
         let profileImageUrl = ogImage ? ogImage.content : '';
         
-        // Función simplificada para convertir texto con K/M/B a número
+        // Función para convertir texto con K/M/B a número
         function parseNumber(numStr, suffix) {
-          // Limpiar el número: remover comas y espacios
           let num = parseFloat(numStr.replace(/[,\s]/g, '').replace(/\./g, ''));
           
           if (!suffix) return num;
@@ -59,7 +73,6 @@ async function scrapeTwitch(username) {
         
         // Patrones para buscar followers
         const patterns = [
-          // Formato: "16 M seguidores" o "570.945 seguidores"
           /(\d+(?:[.,]\d+)?)\s*([KMB])?\s*seguidores/gi,
           /(\d+(?:[.,]\d+)?)\s*([KMB])?\s*followers/gi,
         ];
@@ -67,19 +80,18 @@ async function scrapeTwitch(username) {
         for (const pattern of patterns) {
           const matches = bodyText.matchAll(pattern);
           for (const match of matches) {
-            const number = match[1];   // "16" o "570.945"
-            const suffix = match[2];    // "M" o undefined
+            const number = match[1];
+            const suffix = match[2];
             
             const count = parseNumber(number, suffix);
             
-            // Solo tomar números que tengan sentido como followers (> 100)
             if (count > 100 && count > followers) {
               followers = count;
             }
           }
         }
         
-        // Método 2: Buscar en selectores específicos de Twitch
+        // Método 2: Buscar en selectores específicos
         const selectors = [
           '[data-a-target="followers-count"]',
           '.tw-stat__value',
@@ -118,7 +130,7 @@ async function scrapeTwitch(username) {
               }
             }
           } catch (e) {
-            // Ignorar errores de parsing
+            // Ignorar errores
           }
         }
         
@@ -129,7 +141,6 @@ async function scrapeTwitch(username) {
             const text = script.textContent;
             
             if (text.includes('"followerCount"') || text.includes('"followers"')) {
-              // Buscar patrón: "followerCount":16000000 o "followers":16000000
               const match = text.match(/"(?:followerCount|followers)"[:\s]+(\d+)/i);
               if (match && match[1]) {
                 const count = parseInt(match[1]);
@@ -139,7 +150,6 @@ async function scrapeTwitch(username) {
               }
             }
             
-            // Buscar imagen de perfil
             if (!profileImageUrl && (text.includes('"profileImageURL"') || text.includes('"logo"'))) {
               const imgMatch = text.match(/"(?:profileImageURL|logo)"[:\s]+"([^"]+)"/i);
               if (imgMatch && imgMatch[1]) {

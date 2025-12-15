@@ -80,30 +80,25 @@ function extractUsername(input, platform) {
         case 'soundcloud':
           return pathname.replace('/', '').split('/')[0];
         case 'applemusic':
-          // URLs como music.apple.com/us/artist/artista/123456
           if (pathname.includes('/artist/')) {
             const parts = pathname.split('/artist/');
             if (parts[1]) {
               const artistPart = parts[1].split('/');
-              // Puede ser /artist/nombre/id o /artist/id
               return artistPart[artistPart.length - 1] || artistPart[0];
             }
           }
           return pathname.replace('/', '').split('/')[0];
         case 'deezer':
-          // URLs como deezer.com/artist/123456
           if (pathname.includes('/artist/')) {
             return pathname.split('/artist/')[1]?.split('/')[0] || input;
           }
           return pathname.replace('/', '').split('/')[0];
         case 'discord':
-          // URLs como discord.gg/codigo o discord.com/invite/codigo
           if (pathname.includes('/invite/')) {
             return pathname.split('/invite/')[1]?.split('/')[0] || input;
           }
           return pathname.replace('/', '').split('/')[0];
         case 'snapchat':
-          // URLs como snapchat.com/add/username
           if (pathname.includes('/add/')) {
             return pathname.split('/add/')[1]?.split('/')[0] || input;
           }
@@ -120,23 +115,46 @@ function extractUsername(input, platform) {
 }
 
 /**
- * Crea una instancia de navegador Puppeteer con configuración stealth
+ * Crea una instancia de navegador Puppeteer con configuración optimizada para Cloud Run
  * @returns {Promise<Browser>} Instancia del navegador
  */
 async function createBrowser() {
-  return await puppeteerExtra.launch({
+  const isProduction = process.env.NODE_ENV === 'production';
+  
+  const config = {
     headless: 'new',
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
       '--disable-dev-shm-usage',
       '--disable-gpu',
-      '--window-size=1920,1080',
+      '--disable-software-rasterizer',
+      '--disable-extensions',
       '--disable-web-security',
       '--disable-features=IsolateOrigins,site-per-process',
-      '--disable-blink-features=AutomationControlled'
+      '--disable-blink-features=AutomationControlled',
+      '--no-first-run',
+      '--no-zygote',
+      '--disable-background-timer-throttling',
+      '--disable-backgrounding-occluded-windows',
+      '--disable-renderer-backgrounding',
+      '--window-size=1920,1080',
     ]
-  });
+  };
+
+  // En producción, usar el ejecutable configurado
+  if (isProduction && process.env.PUPPETEER_EXECUTABLE_PATH) {
+    config.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+  }
+
+  try {
+    const browser = await puppeteerExtra.launch(config);
+    console.log('✅ Browser launched successfully');
+    return browser;
+  } catch (error) {
+    console.error('❌ Error launching browser:', error.message);
+    throw error;
+  }
 }
 
 module.exports = {
