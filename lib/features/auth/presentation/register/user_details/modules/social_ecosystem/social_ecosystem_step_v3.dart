@@ -840,14 +840,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                   ),
                 ),
               ),
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0.43 * size.height,
-                child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
-              ),
 
+              
               Positioned(
                 top: MediaQuery.of(context).padding.top + 8,
                 left: 0,
@@ -870,6 +864,13 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                 ),
               ),
 
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0.43 * size.height,
+                child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
+              ),
               // Main content
               SafeArea(
                 child: Column(
