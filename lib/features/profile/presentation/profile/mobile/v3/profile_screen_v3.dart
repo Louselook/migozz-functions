@@ -89,18 +89,6 @@ class _MobileProfileContentV3State extends State<MobileProfileContentV3> {
                 avatarUrl: avatarUrl,
               ),
             ),
-        
-          // FOTO "top" si hay redes
-          if (hasSocials)
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
-            ),
-
-          // 3A) SIN REDES -> profilhero: card flotante abajo (no scroll)
-          if (!hasSocials)
             Positioned(
               left: 0,
               right: 0,
@@ -153,16 +141,29 @@ class _MobileProfileContentV3State extends State<MobileProfileContentV3> {
                 ),
               ),
             ),
+        
+          // FOTO "top" si hay redes
+          if (hasSocials)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
+            ),
+
+          // 3A) SIN REDES -> profilhero: card flotante abajo (no scroll)
+          if (!hasSocials)
+            
 
           // 3B) CON REDES -> miti-miti: empujamos contenido con un spacer igual a mitad de pantalla
           if (hasSocials)
+          
             SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             child: Column(
               children: [
                 // Espacio para la imagen (60% de altura - 80px para superposición)
                 SizedBox(height: size.height * 0.38),
-
                 // Info del usuario
                 InfoUserProfile(
                   name: name.isNotEmpty ? name : 'NOMBRE VACÍO',
@@ -203,74 +204,15 @@ class _MobileProfileContentV3State extends State<MobileProfileContentV3> {
                     }
                   },
                 ),
-
                 // Iconos circulares de redes sociales
                 Padding(
                   padding: const EdgeInsets.only(top: 8, bottom: 0),
                   child: SocialCirclesMobileV3(links: socialLinks),
                 ),
-
                 // Grid de fotos de perfil de redes sociales
                 SocialProfilePhotosGrid(socialEcosystem: user.socialEcosystem),
               ],
             ),
-          ),
-          ProfileTopActions(
-            isOwnProfile: isOwnProfile,
-            onMenuTap: () {
-              // ✅ NUEVO callback
-              if (isOwnProfile) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => MobileProfileContentV3Edit(
-                      user: user,
-                      tutorialKeys: widget.tutorialKeys,
-
-                    ),
-                  ),
-                );
-              } else {
-                Navigator.of(context).pop();
-              }
-            },
-            onQrScanTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const QrScannerScreen()),
-              );
-            },
-            onChatTap: () {
-              if (!isOwnProfile) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => UserChatScreen(
-                      otherUserId: user.email,
-                      otherUserName: user.displayName.isNotEmpty
-                          ? user.displayName
-                          : user.username,
-                      otherUserAvatar: user.avatarUrl,
-                      currentUserId: currentUserEmail,
-
-                    ),
-                  ),
-                );
-              } else {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ChatsListScreen(
-                      username: user.username.replaceFirst('@', ''),
-                      currentUserId: currentUserEmail,
-                    ),
-                  ),
-                );
-              }
-            },
-            onNotificationsTap: () {
-              debugPrint('Abrir notificaciones');
-            },
           ),
 
           // 4) Botones siempre arriba (SafeArea)

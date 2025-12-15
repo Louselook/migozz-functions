@@ -9,7 +9,7 @@ import 'package:migozz_app/features/profile/presentation/profile_entry.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/profile_search_screen.dart';
 import 'package:migozz_app/features/profile/presentation/stats/mobile/profile_stats.dart';
 import 'package:migozz_app/features/search/mobile/presentation/search_screen.dart';
-import 'package:migozz_app/features/tutorial/profile_tutorial_helper.dart';
+// import 'package:migozz_app/features/tutorial/profile_tutorial_helper.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
 
@@ -57,7 +57,7 @@ class _MainNavigationState extends State<MainNavigation> {
         Future.delayed(const Duration(milliseconds: 200), () {
           if (!mounted) return;
 
-          triggerProfileTutorial(context, widget.tutorialKeys!);
+          // triggerProfileTutorial(context, widget.tutorialKeys!);
         });
       });
     }
@@ -75,9 +75,9 @@ class _MainNavigationState extends State<MainNavigation> {
         await Future.delayed(const Duration(milliseconds: 200));
 
         // 3. Ahora sí lanzar tutorial
-        if (mounted) {
-          triggerProfileTutorial(context, widget.tutorialKeys!);
-        }
+        // if (mounted) {
+        //   triggerProfileTutorial(context, widget.tutorialKeys!);
+        // }
       });
     }
   }

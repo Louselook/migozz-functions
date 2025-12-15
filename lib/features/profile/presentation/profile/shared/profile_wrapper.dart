@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
-import 'package:migozz_app/features/tutorial/profile_tutorial_helper.dart';
+// import 'package:migozz_app/features/tutorial/profile_tutorial_helper.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/profile/components/utils/Loader.dart';
 
@@ -29,7 +29,7 @@ class ProfileWrapper extends StatefulWidget {
 class _ProfileWrapperState extends State<ProfileWrapper> {
   final tutorialKeys = TutorialKeys();
   bool _hasNavigated = false;
-  bool _tutorialShown = false;
+  // bool _tutorialShown = false;
 
   @override
   Widget build(BuildContext context) {
@@ -83,12 +83,12 @@ class _ProfileWrapperState extends State<ProfileWrapper> {
         }
 
         // Si perfil completo -> trigger tutorial si aplica (solo una vez)
-        if ((authState.userProfile?.complete ?? false) && !_tutorialShown) {
-          _tutorialShown = true;
-          WidgetsBinding.instance.addPostFrameCallback((_) async {
-            await triggerProfileTutorial(context, widget.tutorialKeys);
-          });
-        }
+        // if ((authState.userProfile?.complete ?? false) && !_tutorialShown) {
+        //   _tutorialShown = true;
+        //   WidgetsBinding.instance.addPostFrameCallback((_) async {
+        //     await triggerProfileTutorial(context, widget.tutorialKeys);
+        //   });
+        // }
 
         // Si llegamos aquí, el perfil existe y está listo -> delegamos al builder
         return widget.builder(context, authState, widget.tutorialKeys);

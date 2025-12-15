@@ -46,14 +46,14 @@ final Map<String, String> iconByLabel = {
   // Social Media
   "Instagram": "assets/icons/social_networks/Instagram.svg",
   "Youtube": "assets/icons/social_networks/Youtube.svg",
-  "Tiktok": "assets/icons/social_networks/TikTok.svg",
+  "Tiktok": "assets/icons/social_networks/Tiktok.svg",
   "Facebook": "assets/icons/social_networks/Facebook.svg",
   "Twitter": "assets/icons/social_networks/Twitter.svg",
   "X": "assets/icons/social_networks/Twitter.svg",
   "Linkedin": "assets/icons/social_networks/LinkedIn.svg",
   "Threads": "assets/icons/social_networks/Threads.svg",
   "Reddit": "assets/icons/social_networks/Reddit.svg",
-  "Pinterest": "assets/icons/social_networks/Pinterest.svg",
+  "Pinterest": "assets/icons/social_networks/pinterest.svg",
   "Snapchat": "assets/icons/social_networks/Snapchat.svg",
 
   // Streaming
@@ -68,8 +68,7 @@ final Map<String, String> iconByLabel = {
   "SoundCloud": "assets/icons/social_networks/Soundcloud.svg",
 
   // Messaging
-  "WhatsApp": "assets/icons/social_networks/WhatsApp.svg",
-  "Whatsapp": "assets/icons/social_networks/WhatsApp.svg",
+  "WhatsApp": "assets/icons/social_networks/Whatsapp.svg",
   "Telegram": "assets/icons/social_networks/Telegram.svg",
   "Discord": "assets/icons/social_networks/Discord.svg",
 

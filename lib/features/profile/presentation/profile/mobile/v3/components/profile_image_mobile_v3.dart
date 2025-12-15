@@ -9,12 +9,14 @@ import 'package:migozz_app/core/assets_constants.dart';
 class ProfileImageMobileV3 extends StatelessWidget {
   final String? avatarUrl;
   final Size size;
+  final double? height;
   final int minHeight;
 
   const ProfileImageMobileV3({
     super.key,
     this.avatarUrl,
     required this.size,
+    this.height,
     this.minHeight = 600,
   });
 
@@ -62,7 +64,7 @@ class ProfileImageMobileV3 extends StatelessWidget {
     return SvgPicture.asset(
       AssetsConstants.placeholderIcon,
       width: size.width,
-      height: size.height * 0.5,
+      height: size.height,
       fit: BoxFit.cover,
       // opcional: placeholderBuilder
       placeholderBuilder: (context) => Container(color: Colors.grey.shade900),
@@ -73,7 +75,7 @@ class ProfileImageMobileV3 extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: size.width,
-      height: size.height * 0.5,
+      height: height ?? size.height,
       child: FutureBuilder<bool>(
         future: _isHighQuality(context),
         builder: (context, snapshot) {
@@ -93,16 +95,19 @@ class ProfileImageMobileV3 extends StatelessWidget {
       fit: StackFit.expand,
       children: [
         // fondo base (siempre fullscreen)
-        Container(color: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.purpleAccent.withValues(alpha: 0.5),
-              Colors.black,
-            ],
+        Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.purpleAccent.withValues(alpha: 0.5),
+                Colors.black,
+              ],
+            ),
           ),
-        ).color),
+        ),
+
 
         // Imagen real SOLO si existe
         if (hasAvatar)
@@ -121,7 +126,7 @@ class ProfileImageMobileV3 extends StatelessWidget {
           left: 0,
           right: 0,
           bottom: 0,
-          height: size.height * 0.1,
+          height: size.height * 0.6,
           child: DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
