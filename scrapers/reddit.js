@@ -1,8 +1,7 @@
 const { createBrowser } = require('../utils/helpers');
 
 /**
- * Scraper para perfiles de Reddit (usuarios y subreddits) - VERSIÓN MEJORADA
- * Garantiza extracción de profile_image_url
+ * Scraper para perfiles de Reddit (usuarios y subreddits)
  * @param {string} input - Username (u/xxx) o subreddit (r/xxx)
  * @returns {Promise<Object>} Datos del perfil
  */
@@ -30,12 +29,9 @@ async function scrapeReddit(input) {
   // Intentar primero con la API pública de Reddit
   try {
     const apiData = await fetchRedditAPI(type, name);
-    if (apiData && apiData.profile_image_url) {
+    if (apiData) {
       console.log(`✅ [Reddit] Datos obtenidos via API`);
-      console.log(`   Profile Image: ${apiData.profile_image_url}`);
       return apiData;
-    } else if (apiData) {
-      console.log(`⚠️ [Reddit] API sin imagen, intentando Puppeteer...`);
     }
   } catch (apiError) {
     console.log(`⚠️ [Reddit] API no disponible: ${apiError.message}`);
@@ -52,8 +48,6 @@ async function fetchRedditAPI(type, name) {
   const apiUrl = type === 'subreddit' 
     ? `https://www.reddit.com/r/${name}/about.json`
     : `https://www.reddit.com/user/${name}/about.json`;
-  
-  console.log(`🌐 [Reddit API] Fetching: ${apiUrl}`);
   
   const response = await fetch(apiUrl, {
     headers: {
@@ -73,20 +67,7 @@ async function fetchRedditAPI(type, name) {
     throw new Error('Invalid API response');
   }
   
-  console.log(`🔍 [Reddit API] Response keys:`, Object.keys(data));
-  
   if (type === 'subreddit') {
-    // Para subreddits
-    let profileImage = '';
-    
-    if (data.icon_img && !data.icon_img.includes('styles/')) {
-      profileImage = data.icon_img.split('?')[0];
-    } else if (data.community_icon && !data.community_icon.includes('styles/')) {
-      profileImage = data.community_icon.split('?')[0];
-    }
-    
-    console.log(`🔍 [Reddit API] Subreddit image: ${profileImage}`);
-    
     return {
       id: data.id,
       username: data.display_name,
@@ -94,7 +75,7 @@ async function fetchRedditAPI(type, name) {
       bio: data.public_description || data.description || '',
       followers: data.subscribers || 0,
       active_users: data.accounts_active || 0,
-      profile_image_url: profileImage,
+      profile_image_url: data.icon_img?.split('?')[0] || data.community_icon?.split('?')[0] || '',
       banner_url: data.banner_background_image?.split('?')[0] || '',
       created_at: new Date(data.created_utc * 1000).toISOString(),
       is_nsfw: data.over18 || false,
@@ -103,34 +84,6 @@ async function fetchRedditAPI(type, name) {
       type: 'subreddit'
     };
   } else {
-    // Para usuarios
-    let profileImage = '';
-    
-    // 🔍 MÉTODO 1: icon_img (imagen principal)
-    if (data.icon_img && 
-        !data.icon_img.includes('default_avatars') &&
-        !data.icon_img.includes('styles/')) {
-      profileImage = data.icon_img.split('?')[0];
-      console.log(`✅ [Reddit API] Using icon_img: ${profileImage}`);
-    }
-    
-    // 🔍 MÉTODO 2: snoovatar_img (avatar personalizado)
-    if (!profileImage && data.snoovatar_img) {
-      profileImage = data.snoovatar_img;
-      console.log(`✅ [Reddit API] Using snoovatar_img: ${profileImage}`);
-    }
-    
-    // 🔍 MÉTODO 3: subreddit.icon_img (perfil de usuario como subreddit)
-    if (!profileImage && data.subreddit && data.subreddit.icon_img) {
-      const subIcon = data.subreddit.icon_img;
-      if (!subIcon.includes('default_avatars') && !subIcon.includes('styles/')) {
-        profileImage = subIcon.split('?')[0];
-        console.log(`✅ [Reddit API] Using subreddit.icon_img: ${profileImage}`);
-      }
-    }
-    
-    console.log(`🔍 [Reddit API] Final profile_image_url: ${profileImage || 'NOT FOUND'}`);
-    
     return {
       id: data.id,
       username: data.name,
@@ -140,7 +93,7 @@ async function fetchRedditAPI(type, name) {
       karma: (data.link_karma || 0) + (data.comment_karma || 0),
       link_karma: data.link_karma || 0,
       comment_karma: data.comment_karma || 0,
-      profile_image_url: profileImage,
+      profile_image_url: data.icon_img?.split('?')[0] || data.snoovatar_img || '',
       created_at: new Date(data.created_utc * 1000).toISOString(),
       verified: data.verified || false,
       is_gold: data.is_gold || false,
@@ -170,7 +123,7 @@ async function scrapeRedditWithPuppeteer(type, name) {
       ? `https://www.reddit.com/r/${name}/`
       : `https://www.reddit.com/user/${name}/`;
     
-    console.log(`🌐 [Reddit Puppeteer] Navegando a: ${url}`);
+    console.log(`🌐 [Reddit] Navegando a: ${url}`);
     
     await page.goto(url, { 
       waitUntil: 'domcontentloaded', 
@@ -192,39 +145,8 @@ async function scrapeRedditWithPuppeteer(type, name) {
       const ogDescription = document.querySelector('meta[property="og:description"]');
       
       if (ogTitle) title = ogTitle.content;
-      
-      // 🔍 MEJORADO: Buscar imagen de perfil en múltiples lugares
-      if (ogImage && !ogImage.content.includes('default')) {
-        profileImageUrl = ogImage.content;
-        console.log('[Puppeteer] Found og:image:', profileImageUrl);
-      }
-      
+      if (ogImage) profileImageUrl = ogImage.content;
       if (ogDescription) description = ogDescription.content;
-      
-      // 🔍 Buscar en elementos del DOM
-      if (!profileImageUrl) {
-        const avatarSelectors = [
-          'img[alt*="avatar" i]',
-          'img[class*="Avatar"]',
-          'img[src*="avatars"]',
-          'img[src*="styles.redd"]',
-          '.ProfileCard img',
-          '[data-testid="profile-avatar"] img',
-        ];
-        
-        for (const sel of avatarSelectors) {
-          try {
-            const img = document.querySelector(sel);
-            if (img && img.src && 
-                !img.src.includes('default') && 
-                !img.src.includes('pixel.reddit')) {
-              profileImageUrl = img.src;
-              console.log('[Puppeteer] Found via selector:', sel, profileImageUrl);
-              break;
-            }
-          } catch (e) {}
-        }
-      }
       
       // Buscar subscribers/karma
       const bodyText = document.body.innerText;
@@ -241,6 +163,7 @@ async function scrapeRedditWithPuppeteer(type, name) {
       }
       
       if (type === 'subreddit') {
+        // Buscar members/subscribers
         const patterns = [
           /(\d+(?:[.,]\d+)?)\s*([KMB])?\s*(?:members|subscribers|miembros)/gi,
         ];
@@ -253,6 +176,7 @@ async function scrapeRedditWithPuppeteer(type, name) {
           }
         }
       } else {
+        // Buscar karma
         const karmaPatterns = [
           /(\d+(?:[.,]\d+)?)\s*([KMB])?\s*karma/gi,
         ];
@@ -266,12 +190,11 @@ async function scrapeRedditWithPuppeteer(type, name) {
         }
       }
       
-      // 🔍 Buscar en scripts
+      // Buscar en scripts
       const scripts = Array.from(document.querySelectorAll('script'));
       for (const script of scripts) {
         const text = script.textContent;
         
-        // Buscar estadísticas
         if (text.includes('"subscribers"') || text.includes('"karma"')) {
           try {
             const subsMatch = text.match(/"subscribers"[:\s]*(\d+)/);
@@ -284,27 +207,6 @@ async function scrapeRedditWithPuppeteer(type, name) {
             if (karmaMatch && type === 'user') {
               const count = parseInt(karmaMatch[1]);
               if (count > subscribers) subscribers = count;
-            }
-          } catch (e) {}
-        }
-        
-        // 🔍 Buscar imagen en JSON
-        if (!profileImageUrl) {
-          try {
-            // Buscar icon_img en JSON
-            const iconMatch = text.match(/"icon_img"[:\s]*"([^"]+)"/);
-            if (iconMatch && !iconMatch[1].includes('default')) {
-              profileImageUrl = iconMatch[1].split('?')[0];
-              console.log('[Puppeteer] Found icon_img in script:', profileImageUrl);
-            }
-            
-            // Buscar snoovatar_img
-            if (!profileImageUrl) {
-              const snooMatch = text.match(/"snoovatar_img"[:\s]*"([^"]+)"/);
-              if (snooMatch) {
-                profileImageUrl = snooMatch[1];
-                console.log('[Puppeteer] Found snoovatar_img in script:', profileImageUrl);
-              }
             }
           } catch (e) {}
         }
@@ -324,15 +226,12 @@ async function scrapeRedditWithPuppeteer(type, name) {
       throw new Error('No se pudieron extraer los datos de Reddit');
     }
 
-    console.log(`✅ [Reddit Puppeteer] Extracted profile_image_url: ${profileData.profileImageUrl || 'NOT FOUND'}`);
-
     return {
       id: name,
       username: name,
       full_name: profileData.name || name,
       bio: profileData.description || '',
       followers: profileData.subscribers,
-      karma: profileData.subscribers, // En Puppeteer usamos karma como followers
       profile_image_url: profileData.profileImageUrl || '',
       url: type === 'subreddit' 
         ? `https://www.reddit.com/r/${name}` 
