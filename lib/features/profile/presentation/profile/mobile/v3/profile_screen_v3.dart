@@ -72,11 +72,11 @@ class _MobileProfileContentV3State extends State<MobileProfileContentV3> {
                     Colors.black.withValues(alpha: 0.40),
                     Colors.black,
                   ],
-                  stops: const [
-                    0.3,
-                    0.7,
-                    1.0,
-                  ],
+                  // stops: const [
+                  //   0.3,
+                  //   1.0,
+                  //   1.0,
+                  // ],
                 ),
               ),
             ),
@@ -89,6 +89,19 @@ class _MobileProfileContentV3State extends State<MobileProfileContentV3> {
                 avatarUrl: avatarUrl,
               ),
             ),
+        
+          // FOTO "top" si hay redes
+          if (hasSocials)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: size.height * 0.09,
+              child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
+            ),
+
+          // 3A) SIN REDES -> profilhero: card flotante abajo (no scroll)
+          if (!hasSocials)
             Positioned(
               left: 0,
               right: 0,
@@ -141,18 +154,6 @@ class _MobileProfileContentV3State extends State<MobileProfileContentV3> {
                 ),
               ),
             ),
-        
-          // FOTO "top" si hay redes
-          if (hasSocials)
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
-            ),
-
-          // 3A) SIN REDES -> profilhero: card flotante abajo (no scroll)
-          if (!hasSocials)
             
 
           // 3B) CON REDES -> miti-miti: empujamos contenido con un spacer igual a mitad de pantalla

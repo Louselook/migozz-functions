@@ -831,11 +831,11 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                         Colors.black.withValues(alpha: 0.40),
                         Colors.black,
                       ],
-                      stops: const [
-                        0.3,
-                        0.7,
-                        1.0,
-                      ],
+                      // stops: const [
+                      //   0.3,
+                      //   0.7,
+                      //   1.0,
+                      // ],
                     ),
                   ),
                 ),
@@ -844,6 +844,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                 top: 0,
                 left: 0,
                 right: 0,
+                bottom: 0.43 * size.height,
                 child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
               ),
 

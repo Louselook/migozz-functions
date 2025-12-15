@@ -100,7 +100,7 @@ class _MobileProfileContentV3EditState
             top: 0,
             left: 0,
             right: 0,
-            bottom: size.height * 0.50,
+            bottom: size.height * 0.40,
             child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
           ),
 
@@ -125,7 +125,7 @@ class _MobileProfileContentV3EditState
             child: Column(
               children: [
                 // espacio para la imagen
-                SizedBox(height: size.height * 0.42),
+                SizedBox(height: size.height * 0.50),
 
                 // CONTENEDOR FIJO (sheet)
                 Expanded(
