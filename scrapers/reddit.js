@@ -69,37 +69,37 @@ async function fetchRedditAPI(type, name) {
   
   if (type === 'subreddit') {
     return {
-      id: data.id,
-      username: data.display_name,
-      full_name: data.title,
-      bio: data.public_description || data.description || '',
-      followers: data.subscribers || 0,
-      active_users: data.accounts_active || 0,
-      profile_image_url: data.icon_img?.split('?')[0] || data.community_icon?.split('?')[0] || '',
-      banner_url: data.banner_background_image?.split('?')[0] || '',
-      created_at: new Date(data.created_utc * 1000).toISOString(),
-      is_nsfw: data.over18 || false,
-      url: `https://www.reddit.com/r/${name}`,
-      platform: 'reddit',
-      type: 'subreddit'
+      // id: data.id,
+      // username: data.display_name,
+      // full_name: data.title,
+      // bio: data.public_description || data.description || '',
+      // followers: data.subscribers || 0,
+      // active_users: data.accounts_active || 0,
+      // profile_image_url: data.icon_img?.split('?')[0] || data.community_icon?.split('?')[0] || '',
+      // banner_url: data.banner_background_image?.split('?')[0] || '',
+      // created_at: new Date(data.created_utc * 1000).toISOString(),
+      // is_nsfw: data.over18 || false,
+      // url: `https://www.reddit.com/r/${name}`,
+      // platform: 'reddit',
+      // type: 'subreddit'
     };
   } else {
     return {
-      id: data.id,
-      username: data.name,
-      full_name: data.subreddit?.title || data.name,
-      bio: data.subreddit?.public_description || '',
-      followers: data.subreddit?.subscribers || 0,
-      karma: (data.link_karma || 0) + (data.comment_karma || 0),
-      link_karma: data.link_karma || 0,
-      comment_karma: data.comment_karma || 0,
-      profile_image_url: data.icon_img?.split('?')[0] || data.snoovatar_img || '',
-      created_at: new Date(data.created_utc * 1000).toISOString(),
-      verified: data.verified || false,
-      is_gold: data.is_gold || false,
-      url: `https://www.reddit.com/user/${name}`,
-      platform: 'reddit',
-      type: 'user'
+      // id: data.id,
+      // username: data.name,
+      // full_name: data.subreddit?.title || data.name,
+      // bio: data.subreddit?.public_description || '',
+      // followers: data.subreddit?.subscribers || 0,
+      // karma: (data.link_karma || 0) + (data.comment_karma || 0),
+      // link_karma: data.link_karma || 0,
+      // comment_karma: data.comment_karma || 0,
+      // profile_image_url: data.icon_img?.split('?')[0] || data.snoovatar_img || '',
+      // created_at: new Date(data.created_utc * 1000).toISOString(),
+      // verified: data.verified || false,
+      // is_gold: data.is_gold || false,
+      // url: `https://www.reddit.com/user/${name}`,
+      // platform: 'reddit',
+      // type: 'user'
     };
   }
 }
