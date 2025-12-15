@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:migozz_app/core/utils/platform_utils.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/profile_screen.dart'
     as mobile_v1;
-import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/profile_screen_v3.dart'
+import 'package:migozz_app/features/profile/presentation/profile/mobile/profile_screen.dart'
     as mobile_v3;
+
 import 'package:migozz_app/features/profile/presentation/profile/shared/profile_wrapper.dart';
 import 'package:migozz_app/features/profile/presentation/profile/web/profile_page.dart'
     as web_v1;
@@ -40,7 +41,7 @@ class ProfileEntry extends StatelessWidget {
           );
         }
 
-        final profileVersion =3;
+        final profileVersion = 3;
 
         if (PlatformUtils.isWeb) {
           switch (profileVersion) {
@@ -63,12 +64,12 @@ class ProfileEntry extends StatelessWidget {
         } else {
           switch (profileVersion) {
             case 3:
-              return mobile_v3.MobileProfileContentV3(
+              return mobile_v3.ProfileScreem(
                 user: user,
                 tutorialKeys: receivedKeys,
               );
             default:
-              return mobile_v1.MobileProfileContent(
+              return mobile_v1.ProfileScreem(
                 user: user,
                 tutorialKeys: receivedKeys,
               );

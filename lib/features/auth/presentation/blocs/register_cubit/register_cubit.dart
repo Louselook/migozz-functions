@@ -353,7 +353,6 @@ class RegisterCubit extends Cubit<RegisterState> {
     return directNetworks.contains(network.toLowerCase());
   }
 
-  /// Normalizar datos del perfil según la red social
   Map<String, dynamic> _normalizeProfile(
     String network,
     Map<String, dynamic> rawData,
@@ -377,14 +376,30 @@ class RegisterCubit extends Cubit<RegisterState> {
         return normalizeTwitch(rawData);
       case 'kick':
         return normalizeKick(rawData);
-      // case 'trovo':
-      //   return normalizeTrovo(rawData);
+      case 'trovo':
+        return normalizeTrovo(rawData);
+
+      // 🆕 NUEVOS NORMALIZADORES
+      case 'pinterest':
+        return normalizePinterest(rawData);
+      case 'reddit':
+        return normalizeReddit(rawData);
+      case 'threads':
+        return normalizeThreads(rawData);
+      case 'soundcloud':
+        return normalizeSoundCloud(rawData);
+      case 'discord':
+        return normalizeDiscord(rawData);
+      case 'snapchat':
+        return normalizeSnapchat(rawData);
+
       default:
         // Normalización genérica
         return {
           'username': rawData['username'] ?? rawData['name'] ?? '',
           'followers': rawData['followers'] ?? rawData['follower_count'] ?? 0,
           'url': rawData['url'] ?? rawData['profile_url'] ?? '',
+          'profile_image_url': rawData['profile_image_url'] ?? '',
         };
     }
   }

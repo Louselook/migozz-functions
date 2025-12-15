@@ -1,18 +1,18 @@
-// Lista original
 import 'package:migozz_app/core/assets_constants.dart';
 
 final List<String> socials = [
   // Social Media
-  "Tiktok",
   "Instagram",
-  "Facebook",
   "Youtube",
+  "Tiktok",
+  "Facebook",
   "X",
+  "Twitter",
   "Linkedin",
-  "Snapchat",
-  "Pinterest",
   "Threads",
   "Reddit",
+  "Pinterest",
+  "Snapchat",
 
   // Streaming
   "Twitch",
@@ -25,37 +25,36 @@ final List<String> socials = [
   "Deezer",
   "SoundCloud",
 
+  // Messaging
+  "WhatsApp",
+  "Whatsapp",
+  "Telegram",
+  "Discord",
+
   // Websites & Stores
   "Website",
   "Shopify",
   "WooCommerce",
   "Etsy",
 
-  // Messaging
-  "WhatsApp",
-  "Telegram",
-  "Discord",
-
-  // Deshabilitados por ahora
-  // "Paypal",
-  // "Xbox",
-  // "Other",
+  // Otros
+  "Enlace",
+  "Global",
 ];
 
-// Label -> path exacto
 final Map<String, String> iconByLabel = {
   // Social Media
-  "Tiktok": "assets/icons/social_networks/TikTok.svg",
   "Instagram": "assets/icons/social_networks/Instagram.svg",
-  "Facebook": "assets/icons/social_networks/Facebook.svg",
   "Youtube": "assets/icons/social_networks/Youtube.svg",
+  "Tiktok": "assets/icons/social_networks/TikTok.svg",
+  "Facebook": "assets/icons/social_networks/Facebook.svg",
   "Twitter": "assets/icons/social_networks/Twitter.svg",
   "X": "assets/icons/social_networks/Twitter.svg",
   "Linkedin": "assets/icons/social_networks/LinkedIn.svg",
-  "Snapchat": "assets/icons/social_networks/Snapchat.svg",
-  "Pinterest": "assets/icons/social_networks/Pinterest.svg",
   "Threads": "assets/icons/social_networks/Threads.svg",
   "Reddit": "assets/icons/social_networks/Reddit.svg",
+  "Pinterest": "assets/icons/social_networks/Pinterest.svg",
+  "Snapchat": "assets/icons/social_networks/Snapchat.svg",
 
   // Streaming
   "Twitch": "assets/icons/social_networks/Twitch.svg",
@@ -65,57 +64,64 @@ final Map<String, String> iconByLabel = {
   // Music
   "Spotify": "assets/icons/social_networks/Spotify.svg",
   "AppleMusic": "assets/icons/social_networks/AppleMusic.svg",
-  "Applemusic": "assets/icons/social_networks/AppleMusic.svg",
   "Deezer": "assets/icons/social_networks/Deezer.svg",
   "SoundCloud": "assets/icons/social_networks/Soundcloud.svg",
-  "Soundcloud": "assets/icons/social_networks/Soundcloud.svg",
+
+  // Messaging
+  "WhatsApp": "assets/icons/social_networks/WhatsApp.svg",
+  "Whatsapp": "assets/icons/social_networks/WhatsApp.svg",
+  "Telegram": "assets/icons/social_networks/Telegram.svg",
+  "Discord": "assets/icons/social_networks/Discord.svg",
 
   // Websites & Stores
   "Website": "assets/icons/social_networks/Website.svg",
   "Shopify": "assets/icons/social_networks/Shopify.svg",
   "WooCommerce": "assets/icons/social_networks/WooCommerce.svg",
-  "Woocommerce": "assets/icons/social_networks/WooCommerce.svg",
   "Etsy": "assets/icons/social_networks/Etsy.svg",
 
-  // Messaging
-  "WhatsApp": "assets/icons/social_networks/WhatsApp.svg",
-  "Telegram": "assets/icons/social_networks/Telegram.svg",
-  "Discord": "assets/icons/social_networks/Discord.svg",
-  "Whatsapp": "assets/icons/social_networks/WhatsApp.svg",
-
-  // Otros (deshabilitados)
-  "Paypal": "assets/icons/social_networks/Paypal.svg",
-  "Xbox": "assets/icons/social_networks/Xbox.svg",
-  "Other": "assets/icons/social_networks/Other.svg",
+  // Otros
+  "Enlace": "assets/icons/social_networks/Enlace.svg",
+  "Global": "assets/icons/Migozz_Icon.svg",
 };
 
 final Map<String, String> iconBlackByLabel = {
+  // Social Media
   "Instagram": AssetsConstants.instagramBlackIcon,
   "Youtube": AssetsConstants.youtubeBlackIcon,
-
   "Tiktok": AssetsConstants.tiktokIcon,
   "Facebook": AssetsConstants.facebookIcon,
-  "Telegram": AssetsConstants.telegramIcon,
-  "Whatsapp": AssetsConstants.whatsappIcon,
-  "Pinterest": AssetsConstants.pinterestIcon,
-  "Spotify": AssetsConstants.spotifyIcon,
   "Twitter": AssetsConstants.twitterIcon,
   "X": AssetsConstants.twitterIcon,
   "Linkedin": AssetsConstants.linkedinIcon,
-  "Paypal": "assets/icons/social_networks/Paypal.svg",
-  "Xbox": "assets/icons/social_networks/Xbox.svg",
-  "Other": "assets/icons/social_networks/Other.svg",
+  "Threads": AssetsConstants.threadsIcon,
+  "Reddit": AssetsConstants.redditIcon,
+  "Pinterest": AssetsConstants.pinterestIcon,
+  "Snapchat": AssetsConstants.snapchatIcon,
 
-  // Extras comunes
-  "Discord": "assets/icons/social_networks/Discord.svg",
-  "Trovo": "assets/icons/social_networks/Trovo.svg",
-  "AppleMusic": "assets/icons/social_networks/AppleMusic.svg",
-  "Deezer": "assets/icons/social_networks/Deezer.svg",
-  "SoundCloud": "assets/icons/social_networks/Soundcloud.svg",
-  "Snapchat": "assets/icons/social_networks/Snapchat.svg",
-  "Threads": "assets/icons/social_networks/Threads.svg",
-  "Reddit": "assets/icons/social_networks/Reddit.svg",
+  // Streaming
+  "Twitch": AssetsConstants.twitchIcon,
+  "Kick": AssetsConstants.kickIcon,
+  "Trovo": AssetsConstants.trovoIcon,
 
-  // custom
-  "Enlace": "assets/icons/social_networks/Enlace.svg",
+  // Music
+  "Spotify": AssetsConstants.spotifyIcon,
+  "AppleMusic": AssetsConstants.appleMusicIcon,
+  "Deezer": AssetsConstants.deezerIcon,
+  "SoundCloud": AssetsConstants.soundCloudIcon,
+
+  // Messaging
+  "WhatsApp": AssetsConstants.whatsappIcon,
+  "Whatsapp": AssetsConstants.whatsappIcon,
+  "Telegram": AssetsConstants.telegramIcon,
+  "Discord": "$AssetsConstants.socialBlackWhiteIcons/DiscordBlanco.svg",
+
+  // Websites & Stores
+  "Shopify": AssetsConstants.shopifyIcon,
+  "WooCommerce": AssetsConstants.wooIcon,
+  "Etsy": AssetsConstants.etsyIcon,
+  "Website": AssetsConstants.wrnsitePerIcon,
+
+  // Otros
+  "Enlace": AssetsConstants.wrnsitePerIcon,
+  "Global": AssetsConstants.migozIcon,
 };

@@ -6,12 +6,16 @@ import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 class ProfileSearchScreen extends StatelessWidget {
   final UserDTO user;
 
-  const ProfileSearchScreen({super.key, required this.user, required TutorialKeys tutorialKeys});
+  const ProfileSearchScreen({
+    super.key,
+    required this.user,
+    required TutorialKeys tutorialKeys,
+  });
 
   @override
   Widget build(BuildContext context) {
     // Reutilizamos la misma UI del profile normal
-    return MobileProfileContent(
+    return ProfileScreem(
       user: user,
       tutorialKeys: TutorialKeys(), // o uno dummy si no se necesita
     );

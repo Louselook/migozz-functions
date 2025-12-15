@@ -2,13 +2,19 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
-import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 
 class ProfileDeeplinkService {
   static const _channel = MethodChannel('profileDeeplink');
   static bool _isInitialized = false;
+
+  // Guardar la referencia al router
+  static GoRouter? _router;
+
+  /// Método para registrar el router (llamar desde main.dart)
+  static void setRouter(GoRouter router) {
+    _router = router;
+    debugPrint('✅ [ProfileDeeplinkService] Router registrado');
+  }
 
   /// Inicializar según la plataforma
   static void initialize(BuildContext context) {
@@ -19,10 +25,8 @@ class ProfileDeeplinkService {
     );
 
     if (!kIsWeb) {
-      // Solo en mobile (Android/iOS) configurar el MethodChannel
-      _initializeMobileChannel(context);
+      _initializeMobileChannel();
     } else {
-      // En web, GoRouter maneja automáticamente /u/:username
       debugPrint(
         '🌐 [ProfileDeeplinkService] En web - GoRouter maneja las rutas automáticamente',
       );
@@ -32,7 +36,7 @@ class ProfileDeeplinkService {
   }
 
   /// Configurar MethodChannel para mobile
-  static void _initializeMobileChannel(BuildContext context) {
+  static void _initializeMobileChannel() {
     _channel.setMethodCallHandler((call) async {
       debugPrint(
         '🔗 [ProfileDeeplinkService] Deep link recibido (mobile): ${call.method}',
@@ -41,7 +45,13 @@ class ProfileDeeplinkService {
       try {
         if (call.method == 'openProfile') {
           final username = call.arguments as String;
-          await _handleProfileDeeplink(username, context);
+
+          debugPrint(
+            '🔍 [ProfileDeeplinkService] Navegando a perfil: $username',
+          );
+
+          // Navegar directamente usando el router
+          await _navigateToProfile(username);
         }
       } catch (e, st) {
         debugPrint(
@@ -51,59 +61,47 @@ class ProfileDeeplinkService {
     });
   }
 
-  /// Manejar deep link de perfil (funciona en todas las plataformas)
-  static Future<void> _handleProfileDeeplink(
-    String username,
-    BuildContext context,
-  ) async {
-    try {
-      debugPrint('🔍 [ProfileDeeplinkService] Buscando perfil: $username');
+  /// Navegar al perfil usando la ruta directa
+  static Future<void> _navigateToProfile(String username) async {
+    // Esperar un momento para asegurar que todo está inicializado
+    await Future.delayed(const Duration(milliseconds: 300));
 
-      final cleanUsername = username.toLowerCase().replaceFirst('@', '');
+    if (_router == null) {
+      debugPrint(
+        '⚠️ [ProfileDeeplinkService] Router no disponible, reintentando...',
+      );
 
-      final querySnapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .where('username', isEqualTo: cleanUsername)
-          .limit(1)
-          .get();
+      // Reintentar después de medio segundo
+      await Future.delayed(const Duration(milliseconds: 500));
 
-      if (querySnapshot.docs.isEmpty) {
-        debugPrint(
-          '⚠️ [ProfileDeeplinkService] Usuario no encontrado: $cleanUsername',
-        );
-
-        if (context.mounted) {
-          AlertGeneral.show(context, 4, message: 'Usuario no encontrado');
-        }
+      if (_router == null) {
+        debugPrint('❌ [ProfileDeeplinkService] Router aún no disponible');
         return;
       }
+    }
 
-      final userData = querySnapshot.docs.first.data();
-      final user = UserDTO.fromMap(userData);
+    try {
+      final cleanUsername = username.toLowerCase().replaceFirst('@', '');
+      final route = '/u/$cleanUsername';
 
-      debugPrint(
-        '✅ [ProfileDeeplinkService] Usuario encontrado: ${user.username}',
-      );
+      debugPrint('✅ [ProfileDeeplinkService] Navegando a: $route');
 
-      if (context.mounted) {
-        context.push('/profile-view', extra: user);
-      }
+      // Usar go() del router directamente
+      _router!.go(route);
     } catch (e, st) {
-      debugPrint(
-        '❌ [ProfileDeeplinkService] Error manejando deep link: $e\n$st',
-      );
-
-      if (context.mounted) {
-        AlertGeneral.show(context, 4, message: 'Error al cargar el perfil');
-      }
+      debugPrint('❌ [ProfileDeeplinkService] Error en navegación: $e\n$st');
     }
   }
 
-  /// Método público para abrir perfil (útil para web y mobile)
-  static Future<void> openProfileByUsername(
-    String username,
-    BuildContext context,
-  ) async {
-    await _handleProfileDeeplink(username, context);
+  /// Método público para abrir perfil
+  static void openProfileByUsername(String username, BuildContext context) {
+    final cleanUsername = username.toLowerCase().replaceFirst('@', '');
+    context.go('/u/$cleanUsername');
+  }
+
+  /// Limpiar recursos
+  static void dispose() {
+    _isInitialized = false;
+    _router = null;
   }
 }

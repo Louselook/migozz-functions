@@ -187,7 +187,7 @@ Map<String, dynamic> normalizeKick(Map<String, dynamic> data) {
   };
 }
 
-// ==================== TROVO (OPCIONAL) ====================
+// ==================== TROVO ====================
 Map<String, dynamic> normalizeTrovo(Map<String, dynamic> data) {
   return {
     'username': _toString(data['username']),
@@ -197,6 +197,95 @@ Map<String, dynamic> normalizeTrovo(Map<String, dynamic> data) {
       data['url'],
       defaultValue: 'https://trovo.live/s/${data['username'] ?? ''}',
     ),
+  };
+}
+
+// ==================== PINTEREST ====================
+Map<String, dynamic> normalizePinterest(Map<String, dynamic> data) {
+  return {
+    'username': _toString(data['username']),
+    'followers': _toInt(data['followers']),
+    'following': _toInt(data['following']),
+    'profile_image_url': _toString(data['profile_image_url']),
+    'url': _toString(
+      data['url'],
+      defaultValue: 'https://www.pinterest.com/${data['username'] ?? ''}',
+    ),
+    'bio': _toString(data['bio']),
+  };
+}
+
+// ==================== REDDIT ====================
+Map<String, dynamic> normalizeReddit(Map<String, dynamic> data) {
+  return {
+    'username': _toString(data['username']),
+    'followers': _toInt(data['followers'] ?? data['subscribers']),
+    'profile_image_url': _toString(
+      data['profile_image_url'] ?? data['icon_img'],
+    ),
+    'url': _toString(
+      data['url'],
+      defaultValue: 'https://www.reddit.com/user/${data['username'] ?? ''}',
+    ),
+    'karma': _toInt(data['karma'] ?? data['total_karma']),
+  };
+}
+
+// ==================== THREADS ====================
+Map<String, dynamic> normalizeThreads(Map<String, dynamic> data) {
+  return {
+    'username': _toString(data['username']),
+    'followers': _toInt(data['followers']),
+    'following': _toInt(data['following']),
+    'profile_image_url': _toString(data['profile_image_url']),
+    'url': _toString(
+      data['url'],
+      defaultValue: 'https://www.threads.net/@${data['username'] ?? ''}',
+    ),
+    'bio': _toString(data['bio']),
+  };
+}
+
+// ==================== SOUNDCLOUD ====================
+Map<String, dynamic> normalizeSoundCloud(Map<String, dynamic> data) {
+  return {
+    'username': _toString(data['username']),
+    'followers': _toInt(data['followers']),
+    'following': _toInt(data['following']),
+    'profile_image_url': _toString(
+      data['profile_image_url'] ?? data['avatar_url'],
+    ),
+    'url': _toString(
+      data['url'],
+      defaultValue: 'https://soundcloud.com/${data['username'] ?? ''}',
+    ),
+    'track_count': _toInt(data['track_count']),
+  };
+}
+
+// ==================== DISCORD ====================
+Map<String, dynamic> normalizeDiscord(Map<String, dynamic> data) {
+  return {
+    'username': _toString(data['username']),
+    'discriminator': _toString(data['discriminator']),
+    'profile_image_url': _toString(data['profile_image_url'] ?? data['avatar']),
+    'url': _toString(data['url']),
+    'id': _toString(data['id']),
+  };
+}
+
+// ==================== SNAPCHAT ====================
+Map<String, dynamic> normalizeSnapchat(Map<String, dynamic> data) {
+  return {
+    'username': _toString(data['username']),
+    'profile_image_url': _toString(
+      data['profile_image_url'] ?? data['bitmoji_avatar'],
+    ),
+    'url': _toString(
+      data['url'],
+      defaultValue: 'https://www.snapchat.com/add/${data['username'] ?? ''}',
+    ),
+    'display_name': _toString(data['display_name']),
   };
 }
 

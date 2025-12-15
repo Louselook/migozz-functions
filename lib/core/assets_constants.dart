@@ -24,6 +24,21 @@ class AssetsConstants {
   static const String spotifyIcon = '$socialBlackWhiteIcons/SpotifyNegro.svg';
   static const String twitterIcon = '$socialBlackWhiteIcons/TwitterNegro.svg';
   static const String linkedinIcon = '$socialBlackWhiteIcons/LinkedInNe.svg';
+  static const String appleMusicIcon = '$socialBlackWhiteIcons/AppleMNegro.svg';
+  static const String deezerIcon = '$socialBlackWhiteIcons/DeezerNegro.svg';
+  static const String etsyIcon = '$socialBlackWhiteIcons/EtsyNegro.svg';
+  static const String kickIcon = '$socialBlackWhiteIcons/KickNegro.svg';
+  static const String redditIcon = '$socialBlackWhiteIcons/RedditNegro.svg';
+  static const String snapchatIcon = '$socialBlackWhiteIcons/SnapchatNegro.svg';
+  static const String soundCloudIcon =
+      '$socialBlackWhiteIcons/SoundCloudNegro.svg';
+  static const String shopifyIcon = '$socialBlackWhiteIcons/ShopifyNegro.svg';
+  static const String threadsIcon = '$socialBlackWhiteIcons/ThreadsNegro.svg';
+  static const String trovoIcon = '$socialBlackWhiteIcons/TrovoNegro.svg';
+  static const String twitchIcon = '$socialBlackWhiteIcons/TwitchNegro.svg';
+  static const String wooIcon = '$socialBlackWhiteIcons/WooNegro.svg';
+  static const String wrnsitePerIcon =
+      '$socialBlackWhiteIcons/WrnsitePerNegro.svg';
 }
 
 class SocialIconResolver {
@@ -38,6 +53,19 @@ class SocialIconResolver {
     'spotify': AssetsConstants.spotifyIcon,
     'twitter': AssetsConstants.twitterIcon,
     'linkedin': AssetsConstants.linkedinIcon,
+    'applemusic': AssetsConstants.appleMusicIcon,
+    'deezer': AssetsConstants.deezerIcon,
+    'etsy': AssetsConstants.etsyIcon,
+    'kick': AssetsConstants.kickIcon,
+    'reddit': AssetsConstants.redditIcon,
+    'snapchat': AssetsConstants.snapchatIcon,
+    'soundcloud': AssetsConstants.soundCloudIcon,
+    'shopify': AssetsConstants.shopifyIcon,
+    'threads': AssetsConstants.threadsIcon,
+    'trovo': AssetsConstants.trovoIcon,
+    'twitch': AssetsConstants.twitchIcon,
+    'woocommerce': AssetsConstants.wooIcon,
+    'enlace': AssetsConstants.wrnsitePerIcon,
     'global': AssetsConstants.migozIcon,
   };
 

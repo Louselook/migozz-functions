@@ -8,6 +8,7 @@ import 'package:migozz_app/bloc_providers.dart';
 import 'package:migozz_app/core/config/firebase_config.dart';
 import 'package:migozz_app/core/router/app_router.dart';
 import 'package:migozz_app/core/router/app_router_notifier.dart';
+import 'package:migozz_app/core/services/deeplink/deeplink_functions/users/profile_deeplink_service.dart';
 import 'package:migozz_app/core/services/deeplink/deeplink_service.dart';
 import 'package:migozz_app/core/services/social_auth_service.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
@@ -46,6 +47,9 @@ class MyApp extends StatelessWidget {
         builder: (context) {
           final goRouterNotifier = GoRouterNotifier(context.read<AuthCubit>());
           final router = createRouter(goRouterNotifier);
+
+          // 🔥 AGREGAR ESTA LÍNEA:
+          ProfileDeeplinkService.setRouter(router);
 
           // Inicializar deeplinks solo en mobile
           if (!kIsWeb) {
