@@ -76,6 +76,7 @@ class _MobileProfileContentV3EditState
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
+        clipBehavior: Clip.none, 
         children: [
 
           // Fondo / gradiente
@@ -99,6 +100,7 @@ class _MobileProfileContentV3EditState
             top: 0,
             left: 0,
             right: 0,
+            bottom: size.height * 0.50,
             child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
           ),
 
@@ -123,18 +125,20 @@ class _MobileProfileContentV3EditState
             child: Column(
               children: [
                 // espacio para la imagen
-                SizedBox(height: size.height * 0.44),
+                SizedBox(height: size.height * 0.42),
 
                 // CONTENEDOR FIJO (sheet)
                 Expanded(
-                  child: Container(
-                    width: double.infinity,
-                    decoration: const BoxDecoration(
-                      color: Colors.black,
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(32),
+                  child: Transform.translate(
+                    offset: const Offset(0, -32), // sube el sheet
+                    child: Container(
+                      width: double.infinity,
+                      decoration: const BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(32),
+                        ),
                       ),
-                    ),
 
                     // SCROLL INTERNO
                     child: SingleChildScrollView(
@@ -183,46 +187,11 @@ class _MobileProfileContentV3EditState
                                       fontWeight: FontWeight.w500,
                                     ),
 
-
-
-
-
                                   ),
                                 ],
-
-
-
-
-
-
-
-
-
                               ),
                             ),
                           ),
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                           const SizedBox(height: 8),
 
                           SocialCirclesMobileV3Edit(
@@ -301,18 +270,19 @@ class _MobileProfileContentV3EditState
                 ),
 
                 // Botón back FIJO
-                Positioned(
-                  top: MediaQuery.of(context).padding.top + 8,
-                  left: 16,
-                  child: GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: const Icon(
-                      Icons.arrow_back_ios,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                ),
+                // Positioned(
+                //   top: MediaQuery.of(context).padding.top + 8,
+                //   left: 16,
+                //   child: GestureDetector(
+                //     onTap: () => Navigator.pop(context),
+                //     child: const Icon(
+                //       Icons.arrow_back_ios,
+                //       color: Colors.white,
+                //       size: 24,
+                //     ),
+                //   ),
+                // ),
+                )
               ],
             )
           )
