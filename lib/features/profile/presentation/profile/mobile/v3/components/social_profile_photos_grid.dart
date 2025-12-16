@@ -19,8 +19,8 @@ class SocialProfilePhotosGrid extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: StaggeredGrid.count(
         crossAxisCount: 4,
-        mainAxisSpacing: 4,
-        crossAxisSpacing: 4,
+        mainAxisSpacing: 0,
+        crossAxisSpacing: 0,
         children: List.generate(photos.length, (index) {
           // Define staggered pattern similar to the image
           // Pattern: large (2x2), medium (2x1), small (1x1), small (1x1), etc.
@@ -122,23 +122,10 @@ class _PhotoCard extends StatelessWidget {
                 color: Colors.white.withValues(alpha: 0.25),
                 width: 1,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.white.withValues(alpha: 0.28),
-                  offset: const Offset(2, 2),
-                  blurRadius: 10,
-                  spreadRadius: 0,
-                ),
-                BoxShadow(
-                  color: Colors.white.withValues(alpha: 0.12),
-                  offset: const Offset(0, 0),
-                  blurRadius: 6,
-                  spreadRadius: 0.3,
-                ),
-              ],
+
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(radius),
+              borderRadius: BorderRadius.circular(0),
               child: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -166,14 +153,14 @@ class _PhotoCard extends StatelessWidget {
                     bottom: 6,
                     right: 6,
                     child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.35),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.18),
-                          width: 1,
-                        ),
-                      ),
+                      // decoration: BoxDecoration(
+                      //   color: Colors.black.withValues(alpha: 0.35),
+                      //   borderRadius: BorderRadius.circular(8),
+                      //   border: Border.all(
+                      //     color: Colors.white.withValues(alpha: 0.18),
+                      //     width: 1,
+                      //   ),
+                      // ),
                       padding: const EdgeInsets.all(3),
                       child: SvgPicture.asset(
                         photo.iconAsset,

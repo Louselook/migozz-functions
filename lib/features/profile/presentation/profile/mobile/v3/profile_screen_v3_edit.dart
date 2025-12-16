@@ -156,7 +156,7 @@ class _MobileProfileContentV3EditState
                               ),
                               padding: const EdgeInsets.symmetric(
                                 vertical: 5,
-                                horizontal: 10,
+                                horizontal: 15,
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,

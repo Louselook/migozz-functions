@@ -138,8 +138,8 @@ class _AddSocialButton extends StatelessWidget {
     return GestureDetector(
       onTap: onPressed,
       child: Container(
-        width: iconSize,
-        height: iconSize,
+        width: 20,
+        height: 20,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: AppColors.verticalPinkPurple,
@@ -192,8 +192,8 @@ Widget _buildNetworkSvg(String url, double size) {
       return _socialIconCircle(
         SvgPicture.memory(
           bytes,
-          width: size * 0.8,
-          height: size * 0.8,
+          width: size * 0.7,
+          height: size * 0.7,
           fit: BoxFit.contain,
         ),
         size,
@@ -206,8 +206,8 @@ Widget _buildAssetSvg(String asset, double size) {
   return _socialIconCircle(
     SvgPicture.asset(
       asset,
-      width: size * 0.8,
-      height: size * 0.8,
+      width: size * 0.7,
+      height: size * 0.7,
       fit: BoxFit.contain,
     ),
     size,
@@ -251,18 +251,7 @@ Widget _socialIconCircle(Widget child, double size) {
     width: size,
     height: size,
     padding: EdgeInsets.all(size * 0.12),
-    decoration: BoxDecoration(
-      shape: BoxShape.circle,
-      color: Colors.white.withValues(alpha: 0.06),
-      border: Border.all(color: Colors.white.withValues(alpha: 0.14), width: 1),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.3),
-          blurRadius: 8,
-          offset: const Offset(0, 2),
-        ),
-      ],
-    ),
+
     child: Center(child: child),
   );
 }
