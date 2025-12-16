@@ -210,12 +210,12 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
 
               child: SvgPicture.asset(
                 AssetsConstants.shareIcon,
-                width: 25,
-                height: 25,
+                width: 20,
+                height: 20,
               ),
             ),
 
-            const SizedBox(width: 5),
+            const SizedBox(width: 15),
             Column(
               children: [
                 Text(
@@ -237,15 +237,15 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
                 ),
               ],
             ),
-            const SizedBox(width: 5),
+            const SizedBox(width: 15),
 
             // Ícono de mensaje
             GestureDetector(
               onTap: widget.onMessageTap,
               child: Image.asset(
                 AssetsConstants.inboxIcon,
-                width: 25,
-                height: 25,
+                width: 20,
+                height: 20,
                 color: Colors.white,
               ),
             ),

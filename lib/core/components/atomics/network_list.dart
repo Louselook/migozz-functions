@@ -67,7 +67,7 @@ final Map<String, String> iconByLabel = {
   "SoundCloud": "assets/icons/social_networks/Soundcloud.svg",
 
   // Messaging
-  "WhatsApp": "assets/icons/social_networks/Whatsapp.svg",
+  "WhatsApp": "assets/icons/social_networks/WhatsApp.svg",
   "Telegram": "assets/icons/social_networks/Telegram.svg",
   "Discord": "assets/icons/social_networks/Discord.svg",
 

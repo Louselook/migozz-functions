@@ -18,17 +18,14 @@ class SocialCirclesMobileV3 extends StatelessWidget {
     final spacing = 1.0;
     final iconSize = 28.0;
 
-    // Separar redes sociales de URLs personalizadas
-    final socialNetworks = <SocialLink>[];
-
-    for (final link in links) {
+    // Separar redes sociales de URLs personalizadas y filtrar nulos/vacíos
+    final socialNetworks = links.where((link) {
+      if (link.asset.isEmpty) return false;
       final assetLower = link.asset.toLowerCase();
-      if (!assetLower.contains('other') &&
+      return !assetLower.contains('other') &&
           !assetLower.contains('paypal') &&
-          !assetLower.contains('xbox')) {
-        socialNetworks.add(link);
-      }
-    }
+          !assetLower.contains('xbox');
+    }).toList();
 
     if (socialNetworks.isEmpty) {
       return const SizedBox.shrink();
@@ -85,17 +82,14 @@ class SocialCirclesMobileV3Edit extends StatelessWidget {
     final spacing = 1.0;
     final iconSize = 28.0;
 
-    // Separar redes sociales de URLs personalizadas
-    final socialNetworks = <SocialLink>[];
-
-    for (final link in links) {
+    // Separar redes sociales de URLs personalizadas y filtrar nulos/vacíos
+    final socialNetworks = links.where((link) {
+      if (link.asset.isEmpty) return false;
       final assetLower = link.asset.toLowerCase();
-      if (!assetLower.contains('other') &&
+      return !assetLower.contains('other') &&
           !assetLower.contains('paypal') &&
-          !assetLower.contains('xbox')) {
-        socialNetworks.add(link);
-      }
-    }
+          !assetLower.contains('xbox');
+    }).toList();
 
     return SizedBox(
       height: iconSize + 8,
