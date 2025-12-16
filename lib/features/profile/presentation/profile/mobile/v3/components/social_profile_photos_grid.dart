@@ -19,8 +19,8 @@ class SocialProfilePhotosGrid extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: StaggeredGrid.count(
         crossAxisCount: 4,
-        mainAxisSpacing: 6,
-        crossAxisSpacing: 6,
+        mainAxisSpacing: 4,
+        crossAxisSpacing: 4,
         children: List.generate(photos.length, (index) {
           // Define staggered pattern similar to the image
           // Pattern: large (2x2), medium (2x1), small (1x1), small (1x1), etc.
@@ -168,18 +168,18 @@ class _PhotoCard extends StatelessWidget {
                     child: Container(
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.35),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color: Colors.white.withValues(alpha: 0.18),
                           width: 1,
                         ),
                       ),
-                      padding: const EdgeInsets.all(5),
+                      padding: const EdgeInsets.all(3),
                       child: SvgPicture.asset(
                         photo.iconAsset,
                         fit: BoxFit.contain,
-                        width: 20,
-                        height: 20,
+                        width: 16,
+                        height: 16,
                       ),
                     ),
                   ),

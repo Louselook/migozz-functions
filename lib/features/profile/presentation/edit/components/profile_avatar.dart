@@ -31,9 +31,7 @@ class ProfileAvatar extends StatelessWidget {
                       return Container(color: Colors.grey[900]);
                     },
                   )
-                : Container(
-                    color: Colors.grey[900],
-                  ),
+                : Container(color: Colors.grey[900]),
           ),
         ),
         Positioned(
@@ -43,13 +41,13 @@ class ProfileAvatar extends StatelessWidget {
             onTap: uploading ? null : onEdit,
             child: CircleAvatar(
               backgroundColor: Colors.pinkAccent,
-              radius: 20,
+              radius: 16,
               child: uploading
                   ? const CircularProgressIndicator(
                       color: Colors.white,
                       strokeWidth: 2,
                     )
-                  : const Icon(Icons.edit, color: Colors.white, size: 20),
+                  : const Icon(Icons.edit, color: Colors.white, size: 16),
             ),
           ),
         ),
