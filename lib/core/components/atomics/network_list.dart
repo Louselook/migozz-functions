@@ -27,7 +27,6 @@ final List<String> socials = [
 
   // Messaging
   "WhatsApp",
-  "Whatsapp",
   "Telegram",
   "Discord",
 
@@ -110,7 +109,6 @@ final Map<String, String> iconBlackByLabel = {
 
   // Messaging
   "WhatsApp": AssetsConstants.whatsappIcon,
-  "Whatsapp": AssetsConstants.whatsappIcon,
   "Telegram": AssetsConstants.telegramIcon,
   "Discord": "$AssetsConstants.socialBlackWhiteIcons/DiscordBlanco.svg",
 

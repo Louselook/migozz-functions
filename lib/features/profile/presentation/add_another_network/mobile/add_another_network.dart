@@ -178,7 +178,7 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
   // }
 
   Future<String?> _resolveFavicon(String domain) async {
-    bool _isSupported(String? ct) {
+    bool isSupported(String? ct) {
       if (ct == null) return false;
       final v = ct.toLowerCase();
       return v.contains('image/png') ||
@@ -202,7 +202,7 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
         final req = await client.getUrl(Uri.parse(url));
         final res = await req.close();
         final ct = res.headers.value('content-type');
-        if (res.statusCode >= 200 && res.statusCode < 400 && _isSupported(ct)) {
+        if (res.statusCode >= 200 && res.statusCode < 400 && isSupported(ct)) {
           return url;
         }
       } catch (_) {}
@@ -440,7 +440,7 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
                           value: _applyIconFromLink,
                           inactiveTrackColor: const Color(0xFF5E5564),
                           activeTrackColor: const Color(0xFF5E5564),
-                          activeColor: Colors.white,
+                          activeThumbColor: Colors.white,
                           onChanged: (v) {
                             setState(() {
                               _applyIconFromLink = v;

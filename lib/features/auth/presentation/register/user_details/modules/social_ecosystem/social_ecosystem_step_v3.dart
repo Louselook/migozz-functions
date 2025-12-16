@@ -632,8 +632,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                                   );
 
                                   // Always hide the dialog
-                                  if (context.mounted)
+                                  if (context.mounted) {
                                     Navigator.of(context).pop();
+                                  }
 
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
@@ -652,8 +653,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                                   );
 
                                   // Always hide the dialog
-                                  if (context.mounted)
+                                  if (context.mounted) {
                                     Navigator.of(context).pop();
+                                  }
 
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
