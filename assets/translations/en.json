@@ -37,7 +37,7 @@
             }
         }
     },
-    "Register":{
+    "register":{
         "validations":{
             "emptyEmail" : "Email cannot be empty",
             "validationEmail" :"Please enter a valid Email",
@@ -52,7 +52,7 @@
             "bottonText" : {
                 "login" : "Already a member?",
                 "LoginReturn" : "Login"
-            }   
+            }
         }
     },
   "termsPrivacy": {

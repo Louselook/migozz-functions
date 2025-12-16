@@ -60,43 +60,55 @@ class _CachedOnboardingImageState extends State<CachedOnboardingImage> {
       );
     }
 
-    return Image(
-      image: _imageProvider!,
-      fit: widget.fit,
-      alignment: widget.alignment,
-      gaplessPlayback: true,
-      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-        if (wasSynchronouslyLoaded) {
-          return child;
-        }
-        // Muestra un fade-in suave cuando la imagen carga
-        return AnimatedOpacity(
-          opacity: frame == null ? 0 : 1,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 400),
+      switchInCurve: Curves.easeInOut,
+      switchOutCurve: Curves.easeInOut,
+      transitionBuilder: (Widget child, Animation<double> animation) {
+        return FadeTransition(
+          opacity: animation,
           child: child,
         );
       },
-      errorBuilder: (context, error, stackTrace) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            setState(() {
-              _hasError = true;
-            });
+      child: Image(
+        key: ValueKey<String>(widget.imagePath),
+        image: _imageProvider!,
+        fit: widget.fit,
+        alignment: widget.alignment,
+        gaplessPlayback: true,
+        frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+          if (wasSynchronouslyLoaded) {
+            return child;
           }
-        });
-        debugPrint('Error loading image ${widget.imagePath}: $error');
-        return Container(
-          color: Colors.grey.withValues(alpha: 0.3),
-          child: const Center(
-            child: Icon(
-              Icons.image_not_supported,
-              size: 50,
-              color: Colors.white54,
+          // Muestra un fade-in suave cuando la imagen carga
+          return AnimatedOpacity(
+            opacity: frame == null ? 0 : 1,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+            child: child,
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              setState(() {
+                _hasError = true;
+              });
+            }
+          });
+          debugPrint('Error loading image ${widget.imagePath}: $error');
+          return Container(
+            color: Colors.grey.withValues(alpha: 0.3),
+            child: const Center(
+              child: Icon(
+                Icons.image_not_supported,
+                size: 50,
+                color: Colors.white54,
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }

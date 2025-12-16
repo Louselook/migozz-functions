@@ -164,12 +164,48 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   children: [
                     // Imagen principal siempre abajo y centrada
                     Positioned.fill(
-                      child: Align(
-                        alignment: Alignment.bottomCenter,
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 400),
+                        switchInCurve: Curves.easeInOut,
+                        switchOutCurve: Curves.easeInOut,
+                        transitionBuilder: (Widget child, Animation<double> animation) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: child,
+                          );
+                        },
                         child: Image.asset(
-                          scale: screenHeight < 800 ? 1.5 : 1,
                           data.imagePath,
-                          fit: BoxFit.contain,
+                          key: ValueKey<String>(data.imagePath),
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: double.infinity,
+                          alignment: Alignment.center,
+                          gaplessPlayback: true,
+                          frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+                            if (wasSynchronouslyLoaded) {
+                              return child;
+                            }
+                            return AnimatedOpacity(
+                              opacity: frame == null ? 0 : 1,
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeOut,
+                              child: child,
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            debugPrint('Error loading image ${data.imagePath}: $error');
+                            return Container(
+                              color: Colors.grey.withOpacity(0.3),
+                              child: const Center(
+                                child: Icon(
+                                  Icons.image_not_supported,
+                                  size: 50,
+                                  color: Colors.white54,
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ),
