@@ -241,8 +241,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             _handleEmailLoginCheck();
                           },
                     child: SecondaryText(
-                      "login.presentation.buttonText".tr(),
-                      fontSize: 20,
+                      "login.presentation.buttonText".tr(),fontSize: 17,
                     ),
                   ),
 

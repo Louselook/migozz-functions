@@ -13,7 +13,7 @@ class GradientButton extends StatelessWidget {
     required this.child,
     this.onPressed,
     this.width = 90,
-    this.height = 40,
+    this.height = 45,
     this.radius = 8,
     this.gradient,
   });
@@ -21,7 +21,7 @@ class GradientButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 300,
+width: width,
       height: height,
       decoration: BoxDecoration(
         gradient: gradient ?? AppColors.primaryGradient,

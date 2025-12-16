@@ -169,7 +169,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   )
                                 : SecondaryText(
                                     "register.presentation.buttonText".tr(),
-                                    fontSize: 20, //  igual tamaño que en Login
+                                    fontSize: 17, //  igual tamaño que en Login
                                   ),
                           ),
                         ],

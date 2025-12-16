@@ -27,7 +27,7 @@ Widget googleButton({required VoidCallback onPressed, String text = 'Google'}) {
         placeholderBuilder: (context) =>
             const Icon(Icons.g_mobiledata, color: AppColors.textLight),
       ),
-      label: SecondaryText(text, color: AppColors.grey),
+      label: SecondaryText(text, color: AppColors.grey,fontSize: 17,),
     ),
   );
 }
