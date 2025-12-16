@@ -15,7 +15,7 @@ class SocialCirclesMobileV3 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final spacing = 6.0;
+    final spacing = 1.0;
     final iconSize = 28.0;
 
     // Separar redes sociales de URLs personalizadas
@@ -82,7 +82,7 @@ class SocialCirclesMobileV3Edit extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final spacing = 6.0;
+    final spacing = 1.0;
     final iconSize = 28.0;
 
     // Separar redes sociales de URLs personalizadas

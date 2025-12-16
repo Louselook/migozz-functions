@@ -82,7 +82,11 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
   Future<void> _togglePlay() async {
     final voiceNoteUrl = widget.voiceNoteUrl;
     if (voiceNoteUrl.isEmpty) {
-      AlertGeneral.show(context, 3, message: "profile.validations.emptyAudio".tr());
+      AlertGeneral.show(
+        context,
+        3,
+        message: "profile.validations.emptyAudio".tr(),
+      );
       return;
     }
 
@@ -103,7 +107,11 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
       setState(() => _isPlaying = !_isPlaying);
     } catch (e) {
       // ignore: use_build_context_synchronously
-      AlertGeneral.show(context, 4, message: "profile.validations.errorAudio".tr());
+      AlertGeneral.show(
+        context,
+        4,
+        message: "profile.validations.errorAudio".tr(),
+      );
     } finally {
       setState(() => _isLoading = false);
     }
@@ -202,12 +210,12 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
 
               child: SvgPicture.asset(
                 AssetsConstants.shareIcon,
-                width: 17,
-                height: 17,
+                width: 25,
+                height: 25,
               ),
             ),
 
-            const SizedBox(width: 25),
+            const SizedBox(width: 5),
             Column(
               children: [
                 Text(
@@ -229,15 +237,15 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
                 ),
               ],
             ),
-            const SizedBox(width: 25),
+            const SizedBox(width: 5),
 
             // Ícono de mensaje
             GestureDetector(
               onTap: widget.onMessageTap,
               child: Image.asset(
                 AssetsConstants.inboxIcon,
-                width: 17,
-                height: 17,
+                width: 25,
+                height: 25,
                 color: Colors.white,
               ),
             ),
