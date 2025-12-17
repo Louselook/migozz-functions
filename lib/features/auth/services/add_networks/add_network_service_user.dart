@@ -19,11 +19,13 @@ class AddNetworkServiceUser {
       throw Exception('No hay API configurada para $network');
     }
 
+    // Asegurarse del correcto formateo de la URL (concatenar base + endpoint)
     final uri = Uri.parse(
       '$baseUrl$endpoint',
     ).replace(queryParameters: {queryParamName: usernameOrLink});
 
     debugPrint('🔍 [$network] Fetching profile');
+    debugPrint('🔍 Base URL usada: $baseUrl'); // <-- ayuda a depurar
     debugPrint('🔍 URL: $uri');
 
     try {
@@ -44,11 +46,16 @@ class AddNetworkServiceUser {
   }
 
   // ---------------------------------------------------------------------------
-  // API BASE POR RED
+  // API BASE POR RED (ahora instagram y linkedin usan apiBase; el resto apiFuctions)
   // ---------------------------------------------------------------------------
   String? _getApiBaseForNetwork(String network) {
     switch (network) {
-      // 🧠 Scrapers
+      // Para estas redes queremos usar el backend principal (apiBase)
+      case 'instagram':
+      case 'linkedin':
+        return ApiConfig.apiBase;
+
+      // Resto: scrapers / funciones serverless
       case 'tiktok':
       case 'facebook':
       case 'twitch':
@@ -62,11 +69,9 @@ class AddNetworkServiceUser {
       case 'deezer':
       case 'discord':
       case 'snapchat':
-      case 'youtube': // 👈 AHORA AQUÍ
-      case 'instagram':
+      case 'youtube':
       case 'twitter':
       case 'spotify':
-      case 'linkedin':
         return ApiConfig.apiFuctions;
 
       default:
@@ -79,8 +84,6 @@ class AddNetworkServiceUser {
   // ---------------------------------------------------------------------------
   String _getProfileEndpoint(String network) {
     switch (network) {
-      // case 'youtube':
-      //   return '/youtube/channel';
       case 'youtube':
         return '/youtube/profile';
       case 'instagram':
@@ -91,7 +94,6 @@ class AddNetworkServiceUser {
         return '/twitter/profile';
       case 'spotify':
         return '/spotify/profile';
-
       case 'tiktok':
         return '/tiktok/profile';
       case 'facebook':
@@ -118,7 +120,6 @@ class AddNetworkServiceUser {
         return '/discord/profile';
       case 'snapchat':
         return '/snapchat/profile';
-
       default:
         throw Exception('Red social no soportada: $network');
     }
@@ -128,13 +129,9 @@ class AddNetworkServiceUser {
   // QUERY PARAM POR RED
   // ---------------------------------------------------------------------------
   String _getQueryParamName(String network) {
+    // youtube usa 'query' en tu backend; el resto usa 'username_or_link'
+    if (network == 'youtube') return 'query';
     return 'username_or_link';
-    // switch (network) {
-    //   case 'youtube':
-    //     return 'query'; // 🔴 especial
-    //   default:
-    //     return 'username_or_link';
-    // }
   }
 
   // ==================== MÉTODOS ESPECÍFICOS ====================
