@@ -1,30 +1,6 @@
 const { createBrowser } = require('../utils/helpers');
 
 /**
- * Fetch con reintentos para manejar errores 403
- */
-async function fetchWithRetry(url, options, maxRetries = 3) {
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      const response = await fetch(url, options);
-      if (response.ok) return response;
-      
-      if (response.status === 403 && i < maxRetries - 1) {
-        console.log(`⏳ [Reddit] Reintento ${i + 1}/${maxRetries} después de 403`);
-        await new Promise(resolve => setTimeout(resolve, (i + 1) * 2000));
-        continue;
-      }
-      
-      throw new Error(`API responded with status ${response.status}`);
-    } catch (error) {
-      if (i === maxRetries - 1) throw error;
-      console.log(`⏳ [Reddit] Reintento ${i + 1}/${maxRetries} después de error`);
-      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
-    }
-  }
-}
-
-/**
  * Scraper para perfiles de Reddit (usuarios y subreddits)
  * @param {string} input - Username (u/xxx) o subreddit (r/xxx)
  * @returns {Promise<Object>} Datos del perfil
@@ -61,7 +37,7 @@ async function scrapeReddit(input) {
     console.log(`⚠️ [Reddit] API no disponible: ${apiError.message}`);
   }
   
-  // Fallback a Puppeteer con old.reddit.com
+  // Fallback a Puppeteer
   return await scrapeRedditWithPuppeteer(type, name);
 }
 
@@ -73,18 +49,10 @@ async function fetchRedditAPI(type, name) {
     ? `https://www.reddit.com/r/${name}/about.json`
     : `https://www.reddit.com/user/${name}/about.json`;
   
-  const response = await fetchWithRetry(apiUrl, {
+  const response = await fetch(apiUrl, {
     headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-      'Accept': 'application/json',
-      'Accept-Language': 'en-US,en;q=0.9',
-      'Accept-Encoding': 'gzip, deflate, br',
-      'DNT': '1',
-      'Connection': 'keep-alive',
-      'Referer': 'https://www.reddit.com/',
-      'Sec-Fetch-Dest': 'empty',
-      'Sec-Fetch-Mode': 'cors',
-      'Sec-Fetch-Site': 'same-origin'
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+      'Accept': 'application/json'
     }
   });
   
@@ -137,7 +105,7 @@ async function fetchRedditAPI(type, name) {
 }
 
 /**
- * Scraping con Puppeteer usando old.reddit.com
+ * Scraping con Puppeteer como fallback
  */
 async function scrapeRedditWithPuppeteer(type, name) {
   let browser;
@@ -148,133 +116,122 @@ async function scrapeRedditWithPuppeteer(type, name) {
     
     await page.setViewport({ width: 1920, height: 1080 });
     await page.setUserAgent(
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     );
 
-    // Usar old.reddit.com - SIN /about para usuarios
     const url = type === 'subreddit'
-      ? `https://old.reddit.com/r/${name}/`
-      : `https://old.reddit.com/user/${name}/`;
+      ? `https://www.reddit.com/r/${name}/`
+      : `https://www.reddit.com/user/${name}/`;
     
     console.log(`🌐 [Reddit] Navegando a: ${url}`);
     
     await page.goto(url, { 
-      waitUntil: 'networkidle0', 
+      waitUntil: 'domcontentloaded', 
       timeout: 60000 
     });
     
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    console.log(`🔍 [Reddit] Extrayendo datos de ${type}...`);
+    await new Promise(resolve => setTimeout(resolve, 5000));
 
     const profileData = await page.evaluate((type) => {
-      let username = '';
-      let karma = 0;
-      let linkKarma = 0;
-      let commentKarma = 0;
+      let name = '';
+      let title = '';
+      let description = '';
       let subscribers = 0;
-      let createdAt = null;
       let profileImageUrl = '';
-      let bio = '';
       
-      if (type === 'user') {
-        // Buscar en la sidebar derecha
-        const sidebar = document.querySelector('.side');
+      // Meta tags
+      const ogTitle = document.querySelector('meta[property="og:title"]');
+      const ogImage = document.querySelector('meta[property="og:image"]');
+      const ogDescription = document.querySelector('meta[property="og:description"]');
+      
+      if (ogTitle) title = ogTitle.content;
+      if (ogImage) profileImageUrl = ogImage.content;
+      if (ogDescription) description = ogDescription.content;
+      
+      // Buscar subscribers/karma
+      const bodyText = document.body.innerText;
+      
+      function parseNumber(text) {
+        const match = text.match(/(\d+(?:[.,]\d+)?)\s*([KMB])?/i);
+        if (!match) return 0;
+        let num = parseFloat(match[1].replace(/,/g, ''));
+        const suffix = match[2]?.toUpperCase();
+        if (suffix === 'K') num *= 1000;
+        else if (suffix === 'M') num *= 1000000;
+        else if (suffix === 'B') num *= 1000000000;
+        return Math.round(num);
+      }
+      
+      if (type === 'subreddit') {
+        // Buscar members/subscribers
+        const patterns = [
+          /(\d+(?:[.,]\d+)?)\s*([KMB])?\s*(?:members|subscribers|miembros)/gi,
+        ];
         
-        if (sidebar) {
-          // Extraer karma de la sidebar
-          const karmaSpans = sidebar.querySelectorAll('span.karma');
-          karmaSpans.forEach(span => {
-            const text = span.textContent;
-            const number = parseInt(text.replace(/,/g, '')) || 0;
-            
-            // Identificar si es link o comment karma por el contexto
-            const label = span.parentElement?.textContent || '';
-            if (label.toLowerCase().includes('link')) {
-              linkKarma = number;
-            } else if (label.toLowerCase().includes('comment')) {
-              commentKarma = number;
-            }
-          });
-          
-          karma = linkKarma + commentKarma;
-          
-          // Fecha de creación
-          const timeElement = sidebar.querySelector('time');
-          if (timeElement) {
-            createdAt = timeElement.getAttribute('datetime');
+        for (const pattern of patterns) {
+          const matches = bodyText.matchAll(pattern);
+          for (const match of matches) {
+            const count = parseNumber(match[0]);
+            if (count > subscribers) subscribers = count;
           }
         }
-        
-        // Nombre de usuario del título
-        const titleElement = document.querySelector('.titlebox h1.redditname a');
-        if (titleElement) {
-          username = titleElement.textContent.trim();
-        }
-        
-        // Buscar imagen de perfil
-        const profileImg = document.querySelector('img[alt*="avatar"]');
-        if (profileImg) {
-          profileImageUrl = profileImg.src;
-        }
-        
       } else {
-        // Subreddit
-        const sidebar = document.querySelector('.side');
+        // Buscar karma
+        const karmaPatterns = [
+          /(\d+(?:[.,]\d+)?)\s*([KMB])?\s*karma/gi,
+        ];
         
-        if (sidebar) {
-          // Nombre del subreddit
-          const titleElement = sidebar.querySelector('.titlebox h1.redditname a');
-          if (titleElement) {
-            username = titleElement.textContent.trim().replace(/^r\//, '');
-          }
-          
-          // Subscribers
-          const subscribersElement = sidebar.querySelector('.subscribers .number');
-          if (subscribersElement) {
-            const text = subscribersElement.textContent.replace(/,/g, '');
-            subscribers = parseInt(text) || 0;
-          }
-          
-          // Descripción
-          const descElement = sidebar.querySelector('.usertext-body .md');
-          if (descElement) {
-            bio = descElement.textContent.trim();
+        for (const pattern of karmaPatterns) {
+          const matches = bodyText.matchAll(pattern);
+          for (const match of matches) {
+            const count = parseNumber(match[0]);
+            if (count > subscribers) subscribers = count;
           }
         }
+      }
+      
+      // Buscar en scripts
+      const scripts = Array.from(document.querySelectorAll('script'));
+      for (const script of scripts) {
+        const text = script.textContent;
         
-        // Icono del subreddit
-        const iconImg = document.querySelector('.icon img');
-        if (iconImg && iconImg.src && !iconImg.src.includes('default')) {
-          profileImageUrl = iconImg.src;
+        if (text.includes('"subscribers"') || text.includes('"karma"')) {
+          try {
+            const subsMatch = text.match(/"subscribers"[:\s]*(\d+)/);
+            if (subsMatch) {
+              const count = parseInt(subsMatch[1]);
+              if (count > subscribers) subscribers = count;
+            }
+            
+            const karmaMatch = text.match(/"(?:total_karma|link_karma)"[:\s]*(\d+)/);
+            if (karmaMatch && type === 'user') {
+              const count = parseInt(karmaMatch[1]);
+              if (count > subscribers) subscribers = count;
+            }
+          } catch (e) {}
         }
       }
       
       return {
-        username,
-        karma,
-        linkKarma,
-        commentKarma,
+        name: title,
+        description,
         subscribers,
-        createdAt,
-        profileImageUrl,
-        bio
+        profileImageUrl
       };
     }, type);
 
     await browser.close();
-    
-    console.log(`✅ [Reddit] Datos extraídos: karma=${profileData.karma}, subscribers=${profileData.subscribers}`);
 
-    if (!profileData || (!profileData.username && !profileData.karma && !profileData.subscribers)) {
+    if (!profileData) {
       throw new Error('No se pudieron extraer los datos de Reddit');
     }
 
-    const baseResult = {
+    return {
       id: name,
-      username: profileData.username || name,
-      full_name: profileData.username || name,
-      bio: profileData.bio || '',
+      username: name,
+      full_name: profileData.name || name,
+      bio: profileData.description || '',
+      followers: profileData.subscribers,
       profile_image_url: profileData.profileImageUrl || '',
       url: type === 'subreddit' 
         ? `https://www.reddit.com/r/${name}` 
@@ -282,23 +239,6 @@ async function scrapeRedditWithPuppeteer(type, name) {
       platform: 'reddit',
       type: type
     };
-
-    if (type === 'user') {
-      return {
-        ...baseResult,
-        followers: 0,
-        karma: profileData.karma || 0,
-        link_karma: profileData.linkKarma || 0,
-        comment_karma: profileData.commentKarma || 0,
-        verified: false,
-        ...(profileData.createdAt && { created_at: profileData.createdAt })
-      };
-    } else {
-      return {
-        ...baseResult,
-        followers: profileData.subscribers || 0
-      };
-    }
 
   } catch (error) {
     if (browser) {
