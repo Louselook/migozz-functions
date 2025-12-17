@@ -1,14 +1,13 @@
 steps:
-  # Build the container image
+  # Construir la imagen Docker
   - name: "gcr.io/cloud-builders/docker"
-    args: ["build", "-t", "gcr.io/$PROJECT_ID/migozz-scraper:$SHORT_SHA", "."]
-    timeout: 1200s
+    args: ["build", "-t", "gcr.io/$PROJECT_ID/migozz-functions", "."]
 
-  # Push the container image to Container Registry
+  # Subir la imagen a Container Registry
   - name: "gcr.io/cloud-builders/docker"
-    args: ["push", "gcr.io/$PROJECT_ID/migozz-scraper:$SHORT_SHA"]
+    args: ["push", "gcr.io/$PROJECT_ID/migozz-functions"]
 
-  # Deploy container image to Cloud Run
+  # Desplegar a Cloud Run
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     entrypoint: gcloud
     args:
@@ -16,26 +15,21 @@ steps:
       - "deploy"
       - "migozz-functions"
       - "--image"
-      - "gcr.io/$PROJECT_ID/migozz-scraper:$SHORT_SHA"
+      - "gcr.io/$PROJECT_ID/migozz-functions"
       - "--region"
-      - "northamerica-northeast2"
+      - "us-central1"
       - "--platform"
       - "managed"
-      - "--memory"
-      - "2Gi" # Aumentar memoria para Chrome
-      - "--cpu"
-      - "2" # Aumentar CPU para mejor rendimiento
-      - "--timeout"
-      - "300s" # Timeout de 5 minutos
-      - "--concurrency"
-      - "80"
-      - "--max-instances"
-      - "10"
       - "--allow-unauthenticated"
+      - "--memory"
+      - "2Gi"
+      - "--cpu"
+      - "2"
+      - "--timeout"
+      - "300"
 
-timeout: 1800s
+# ESTA ES LA LÍNEA IMPORTANTE QUE FALTA
 options:
-  machineType: "N1_HIGHCPU_8"
+  logging: CLOUD_LOGGING_ONLY
 
-images:
-  - "gcr.io/$PROJECT_ID/migozz-scraper:$SHORT_SHA"
+timeout: "1200s"
