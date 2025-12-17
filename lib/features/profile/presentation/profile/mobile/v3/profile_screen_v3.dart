@@ -61,7 +61,7 @@ class _MobileProfileContentV3State extends State<MobileProfileContentV3> {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-           Positioned.fill(
+          Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -84,12 +84,9 @@ class _MobileProfileContentV3State extends State<MobileProfileContentV3> {
           // FOTO FULLSCREEN (si no hay redes)
           if (!hasSocials)
             Positioned.fill(
-              child: ProfileImageMobileV3(
-                size: size,
-                avatarUrl: avatarUrl,
-              ),
+              child: ProfileImageMobileV3(size: size, avatarUrl: avatarUrl),
             ),
-        
+
           // FOTO "top" si hay redes
           if (hasSocials)
             Positioned(
@@ -109,7 +106,10 @@ class _MobileProfileContentV3State extends State<MobileProfileContentV3> {
               child: SafeArea(
                 bottom: true,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 20,
+                  ),
                   child: _InfoCardGlass(
                     child: InfoUserProfile(
                       name: name.isNotEmpty ? name : 'NOMBRE VACÍO',
@@ -141,80 +141,79 @@ class _MobileProfileContentV3State extends State<MobileProfileContentV3> {
                             context,
                             MaterialPageRoute(
                               builder: (_) => ChatsListScreen(
-                                username:
-                                    user.username.replaceFirst('@', ''),
+                                username: user.username.replaceFirst('@', ''),
                                 currentUserId: currentUserEmail,
                               ),
                             ),
                           );
                         }
-                      }
+                      },
                     ),
                   ),
                 ),
               ),
             ),
-            
 
           // 3B) CON REDES -> miti-miti: empujamos contenido con un spacer igual a mitad de pantalla
           if (hasSocials)
-          
             SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Column(
-              children: [
-                // Espacio para la imagen (60% de altura - 80px para superposición)
-                SizedBox(height: size.height * 0.38),
-                // Info del usuario
-                InfoUserProfile(
-                  name: name.isNotEmpty ? name : 'NOMBRE VACÍO',
-                  displayName: username,
-                  comunityCount: totalFollowers.toString(),
-                  nameComunity: 'Community',
-                  voiceNoteUrl: voiceNoteUrl,
-                  bio: user.bio,
-                  tutorialKeys: widget.tutorialKeys,
-                  isOwnProfile: isOwnProfile,
-                  userId: user.email,
-                  onMessageTap: () {
-                    debugPrint("pulsado el chat");
-                    if (!isOwnProfile) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => UserChatScreen(
-                            otherUserId: user.email,
-                            otherUserName: user.displayName.isNotEmpty
-                                ? user.displayName
-                                : user.username,
-                            otherUserAvatar: user.avatarUrl,
-                            currentUserId: currentUserEmail,
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                children: [
+                  // Espacio para la imagen (60% de altura - 80px para superposición)
+                  SizedBox(height: size.height * 0.38),
+                  // Info del usuario
+                  InfoUserProfile(
+                    name: name.isNotEmpty ? name : 'NOMBRE VACÍO',
+                    displayName: username,
+                    comunityCount: totalFollowers.toString(),
+                    nameComunity: 'Community',
+                    voiceNoteUrl: voiceNoteUrl,
+                    bio: user.bio,
+                    tutorialKeys: widget.tutorialKeys,
+                    isOwnProfile: isOwnProfile,
+                    userId: user.email,
+                    onMessageTap: () {
+                      debugPrint("pulsado el chat");
+                      if (!isOwnProfile) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => UserChatScreen(
+                              otherUserId: user.email,
+                              otherUserName: user.displayName.isNotEmpty
+                                  ? user.displayName
+                                  : user.username,
+                              otherUserAvatar: user.avatarUrl,
+                              currentUserId: currentUserEmail,
+                            ),
                           ),
-                        ),
-                      );
-                    } else {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ChatsListScreen(
-                            username: user.username.replaceFirst('@', ''),
-                            currentUserId: currentUserEmail,
+                        );
+                      } else {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ChatsListScreen(
+                              username: user.username.replaceFirst('@', ''),
+                              currentUserId: currentUserEmail,
+                            ),
                           ),
-                        ),
-                      );
-                    }
-                  },
-                ),
-                // Iconos circulares de redes sociales
-                Padding(
-                  padding: const EdgeInsets.only(top: 8, bottom: 0),
-                  child: SocialCirclesMobileV3(links: socialLinks),
-                ),
-                // Grid de fotos de perfil de redes sociales
-                SocialProfilePhotosGrid(socialEcosystem: user.socialEcosystem),
-              ],
+                        );
+                      }
+                    },
+                  ),
+                  // Iconos circulares de redes sociales
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8, bottom: 0),
+                    child: SocialCirclesMobileV3(links: socialLinks),
+                  ),
+                  // Grid de fotos de perfil de redes sociales
+                  SocialProfilePhotosGrid(
+                    socialEcosystem: user.socialEcosystem,
+                  ),
+                ],
+              ),
             ),
-          ),
 
           // 4) Botones siempre arriba (SafeArea)
           Positioned(
@@ -242,9 +241,7 @@ class _MobileProfileContentV3State extends State<MobileProfileContentV3> {
                 onQrScanTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) => const QrScannerScreen(),
-                    ),
+                    MaterialPageRoute(builder: (_) => const QrScannerScreen()),
                   );
                 },
                 onChatTap: () {
@@ -439,9 +436,7 @@ class _InfoCardGlass extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.45),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.08),
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
         // blur opcional si quieres
       ),
       child: child,

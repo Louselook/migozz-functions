@@ -48,7 +48,7 @@ class AddNetworkServiceUser {
   // ---------------------------------------------------------------------------
   String? _getApiBaseForNetwork(String network) {
     switch (network) {
-      // 🧠 Scrapers (Cloud Functions / Puppeteer)
+      // 🧠 Scrapers
       case 'tiktok':
       case 'facebook':
       case 'twitch':
@@ -62,15 +62,12 @@ class AddNetworkServiceUser {
       case 'deezer':
       case 'discord':
       case 'snapchat':
-        return ApiConfig.apiFuctions;
-
-      // 🔐 API principal (OAuth / APIs oficiales)
-      case 'youtube':
+      case 'youtube': // 👈 AHORA AQUÍ
       case 'instagram':
-      case 'linkedin':
       case 'twitter':
       case 'spotify':
-        return ApiConfig.apiBase;
+      case 'linkedin':
+        return ApiConfig.apiFuctions;
 
       default:
         return null;
@@ -82,8 +79,10 @@ class AddNetworkServiceUser {
   // ---------------------------------------------------------------------------
   String _getProfileEndpoint(String network) {
     switch (network) {
+      // case 'youtube':
+      //   return '/youtube/channel';
       case 'youtube':
-        return '/youtube/channel';
+        return '/youtube/profile';
       case 'instagram':
         return '/instagram/profile';
       case 'linkedin':
@@ -129,12 +128,13 @@ class AddNetworkServiceUser {
   // QUERY PARAM POR RED
   // ---------------------------------------------------------------------------
   String _getQueryParamName(String network) {
-    switch (network) {
-      case 'youtube':
-        return 'query'; // 🔴 especial
-      default:
-        return 'username_or_link';
-    }
+    return 'username_or_link';
+    // switch (network) {
+    //   case 'youtube':
+    //     return 'query'; // 🔴 especial
+    //   default:
+    //     return 'username_or_link';
+    // }
   }
 
   // ==================== MÉTODOS ESPECÍFICOS ====================
