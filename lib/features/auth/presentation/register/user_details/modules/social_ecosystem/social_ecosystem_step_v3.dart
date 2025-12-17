@@ -277,7 +277,11 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
   }
 
   Future<void> _handleSocialTap(NetworkConfig config) async {
-    debugPrint('🔵 [_handleSocialTap] Tapped on: ${config.name}');
+    final platformName = config.name.toLowerCase() == 'x'
+        ? 'twitter'
+        : config.name.toLowerCase();
+
+    debugPrint('🔵 [_handleSocialTap] Tapped on: $platformName');
 
     if (widget.mode == MoreUserDetailsMode.register) {
       final cubit = context.read<RegisterCubit>();
@@ -289,7 +293,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
 
       final index = current.indexWhere((e) {
         final platformKey = e.keys.first.toLowerCase();
-        return platformKey == config.name.toLowerCase();
+        return platformKey == platformName;
       });
 
       debugPrint('🔵 [Register Mode] Index found: $index');
@@ -298,9 +302,10 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
         debugPrint(
           '🔵 [Register Mode] Network not connected, opening bottom sheet',
         );
+        // <-- aquí pasamos platformName en vez de config.name
         await cubit.startSocialAuth(
           context,
-          config.name,
+          platformName,
           config.iconPath,
           inEditMode: false,
         );
@@ -332,9 +337,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
       final index = current.indexWhere((e) {
         final platformKey = e.keys.first.toLowerCase();
         debugPrint(
-          '🔵 [Edit Mode] Checking platform: $platformKey vs ${config.name.toLowerCase()}',
+          '🔵 [Edit Mode] Checking platform: $platformKey vs $platformName',
         );
-        return platformKey == config.name.toLowerCase();
+        return platformKey == platformName;
       });
 
       debugPrint('🔵 [Edit Mode] Index found: $index');
@@ -343,9 +348,10 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
         debugPrint(
           '🔵 [Edit Mode] Network not connected, opening bottom sheet',
         );
+        // <-- aquí también pasamos platformName
         await registerCubit.startSocialAuth(
           context,
-          config.name,
+          platformName,
           config.iconPath,
           inEditMode: true,
         );
@@ -820,7 +826,6 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
         child: Scaffold(
           backgroundColor: Colors.black,
           body: Stack(
-            
             children: [
               Positioned.fill(
                 child: Container(
@@ -843,7 +848,6 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                 ),
               ),
 
-              
               Positioned(
                 top: MediaQuery.of(context).padding.top + 8,
                 left: 0,
