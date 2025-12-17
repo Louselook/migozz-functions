@@ -9,7 +9,6 @@ async function fetchWithRetry(url, options, maxRetries = 3) {
       const response = await fetch(url, options);
       if (response.ok) return response;
       
-      // Si es 403, esperar más tiempo antes de reintentar
       if (response.status === 403 && i < maxRetries - 1) {
         console.log(`⏳ [Reddit] Reintento ${i + 1}/${maxRetries} después de 403`);
         await new Promise(resolve => setTimeout(resolve, (i + 1) * 2000));
@@ -62,7 +61,7 @@ async function scrapeReddit(input) {
     console.log(`⚠️ [Reddit] API no disponible: ${apiError.message}`);
   }
   
-  // Fallback a Puppeteer
+  // Fallback a Puppeteer con old.reddit.com
   return await scrapeRedditWithPuppeteer(type, name);
 }
 
@@ -138,7 +137,7 @@ async function fetchRedditAPI(type, name) {
 }
 
 /**
- * Scraping con Puppeteer como fallback
+ * Scraping con Puppeteer usando old.reddit.com
  */
 async function scrapeRedditWithPuppeteer(type, name) {
   let browser;
@@ -152,9 +151,10 @@ async function scrapeRedditWithPuppeteer(type, name) {
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
     );
 
+    // Usar old.reddit.com que es más fácil de scrapear
     const url = type === 'subreddit'
-      ? `https://www.reddit.com/r/${name}/`
-      : `https://www.reddit.com/user/${name}/`;
+      ? `https://old.reddit.com/r/${name}/about`
+      : `https://old.reddit.com/user/${name}/about`;
     
     console.log(`🌐 [Reddit] Navegando a: ${url}`);
     
@@ -163,151 +163,88 @@ async function scrapeRedditWithPuppeteer(type, name) {
       timeout: 60000 
     });
     
-    // Esperar a que el contenido de Reddit se cargue
-    try {
-      await page.waitForSelector('shreddit-app', { timeout: 10000 });
-    } catch (e) {
-      console.log(`⚠️ [Reddit] shreddit-app no encontrado, continuando...`);
-    }
-    
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
     const profileData = await page.evaluate((type) => {
-      let name = '';
-      let title = '';
-      let description = '';
-      let subscribers = 0;
+      let username = '';
       let karma = 0;
-      let profileImageUrl = '';
       let linkKarma = 0;
       let commentKarma = 0;
+      let subscribers = 0;
       let createdAt = null;
-      let verified = false;
+      let profileImageUrl = '';
+      let bio = '';
       
-      // Meta tags
-      const ogTitle = document.querySelector('meta[property="og:title"]');
-      const ogImage = document.querySelector('meta[property="og:image"]');
-      const ogDescription = document.querySelector('meta[property="og:description"]');
-      
-      if (ogTitle) title = ogTitle.content;
-      if (ogImage) profileImageUrl = ogImage.content;
-      if (ogDescription) description = ogDescription.content;
-      
-      // Buscar en scripts con datos estructurados
-      const scripts = Array.from(document.querySelectorAll('script[type="application/ld+json"]'));
-      for (const script of scripts) {
-        try {
-          const data = JSON.parse(script.textContent);
-          if (data['@type'] === 'ProfilePage') {
-            if (data.image) profileImageUrl = data.image;
-            if (data.name) name = data.name;
-          }
-        } catch (e) {}
-      }
-      
-      // Buscar subscribers/karma en el body
-      const bodyText = document.body.innerText;
-      
-      function parseNumber(text) {
-        const match = text.match(/(\d+(?:[.,]\d+)?)\s*([KMB])?/i);
-        if (!match) return 0;
-        let num = parseFloat(match[1].replace(/,/g, ''));
-        const suffix = match[2]?.toUpperCase();
-        if (suffix === 'K') num *= 1000;
-        else if (suffix === 'M') num *= 1000000;
-        else if (suffix === 'B') num *= 1000000000;
-        return Math.round(num);
-      }
-      
-      if (type === 'subreddit') {
-        // Buscar members/subscribers
-        const patterns = [
-          /(\d+(?:[.,]\d+)?)\s*([KMB])?\s*(?:members|subscribers|miembros)/gi,
-        ];
-        
-        for (const pattern of patterns) {
-          const matches = bodyText.matchAll(pattern);
-          for (const match of matches) {
-            const count = parseNumber(match[0]);
-            if (count > subscribers) subscribers = count;
-          }
+      if (type === 'user') {
+        // Extraer datos del usuario
+        const titleElement = document.querySelector('.titlebox h1');
+        if (titleElement) {
+          username = titleElement.textContent.trim();
         }
+        
+        // Extraer karma
+        const karmaElements = document.querySelectorAll('.karma');
+        karmaElements.forEach(el => {
+          const text = el.textContent.toLowerCase();
+          if (text.includes('link karma')) {
+            const match = text.match(/(\d+(?:,\d+)*)/);
+            if (match) linkKarma = parseInt(match[1].replace(/,/g, ''));
+          } else if (text.includes('comment karma')) {
+            const match = text.match(/(\d+(?:,\d+)*)/);
+            if (match) commentKarma = parseInt(match[1].replace(/,/g, ''));
+          }
+        });
+        
+        karma = linkKarma + commentKarma;
+        
+        // Extraer fecha de creación
+        const ageElement = document.querySelector('.age time');
+        if (ageElement) {
+          createdAt = ageElement.getAttribute('datetime');
+        }
+        
+        // Extraer imagen de perfil
+        const imgElement = document.querySelector('.profile-img');
+        if (imgElement) {
+          profileImageUrl = imgElement.src;
+        }
+        
       } else {
-        // Buscar karma
-        const karmaPatterns = [
-          /(\d+(?:[.,]\d+)?[KMB]?)\s*(?:post\s+)?karma/gi,
-          /karma[:\s]*(\d+(?:[.,]\d+)?[KMB]?)/gi
-        ];
-        
-        for (const pattern of karmaPatterns) {
-          const matches = bodyText.matchAll(pattern);
-          for (const match of matches) {
-            const count = parseNumber(match[0]);
-            if (count > karma) karma = count;
-          }
+        // Extraer datos del subreddit
+        const titleElement = document.querySelector('.titlebox h1');
+        if (titleElement) {
+          username = titleElement.textContent.replace('/r/', '').trim();
         }
-      }
-      
-      // Buscar en scripts de estado
-      const stateScripts = Array.from(document.querySelectorAll('script'))
-        .filter(s => s.textContent && s.textContent.length > 0);
-      
-      for (const script of stateScripts) {
-        const text = script.textContent;
         
-        if (text.includes('"subscribers"') || text.includes('"karma"') || text.includes('"totalKarma"')) {
-          try {
-            // Buscar subscribers
-            const subsMatch = text.match(/"subscribers"[:\s]*(\d+)/);
-            if (subsMatch) {
-              const count = parseInt(subsMatch[1]);
-              if (count > subscribers) subscribers = count;
-            }
-            
-            // Buscar karma total
-            const totalKarmaMatch = text.match(/"(?:total_karma|totalKarma)"[:\s]*(\d+)/);
-            if (totalKarmaMatch && type === 'user') {
-              const count = parseInt(totalKarmaMatch[1]);
-              if (count > karma) karma = count;
-            }
-            
-            // Buscar link_karma
-            const linkKarmaMatch = text.match(/"link_karma"[:\s]*(\d+)/);
-            if (linkKarmaMatch) {
-              linkKarma = parseInt(linkKarmaMatch[1]);
-            }
-            
-            // Buscar comment_karma
-            const commentKarmaMatch = text.match(/"comment_karma"[:\s]*(\d+)/);
-            if (commentKarmaMatch) {
-              commentKarma = parseInt(commentKarmaMatch[1]);
-            }
-            
-            // Buscar verified
-            const verifiedMatch = text.match(/"verified"[:\s]*(true|false)/);
-            if (verifiedMatch) {
-              verified = verifiedMatch[1] === 'true';
-            }
-            
-            // Buscar created_utc
-            const createdMatch = text.match(/"created_utc"[:\s]*(\d+)/);
-            if (createdMatch) {
-              createdAt = new Date(parseInt(createdMatch[1]) * 1000).toISOString();
-            }
-          } catch (e) {}
+        // Extraer subscribers
+        const subscribersElement = document.querySelector('.subscribers .number');
+        if (subscribersElement) {
+          const text = subscribersElement.textContent.replace(/,/g, '');
+          subscribers = parseInt(text) || 0;
+        }
+        
+        // Extraer descripción
+        const descElement = document.querySelector('.md');
+        if (descElement) {
+          bio = descElement.textContent.trim();
+        }
+        
+        // Extraer imagen
+        const imgElement = document.querySelector('.icon-img');
+        if (imgElement) {
+          profileImageUrl = imgElement.src;
         }
       }
       
       return {
-        name: title,
-        description,
-        subscribers,
+        username,
         karma,
         linkKarma,
         commentKarma,
+        subscribers,
+        createdAt,
         profileImageUrl,
-        verified,
-        createdAt
+        bio
       };
     }, type);
 
@@ -319,9 +256,9 @@ async function scrapeRedditWithPuppeteer(type, name) {
 
     const baseResult = {
       id: name,
-      username: name,
-      full_name: profileData.name || name,
-      bio: profileData.description || '',
+      username: profileData.username || name,
+      full_name: profileData.username || name,
+      bio: profileData.bio || '',
       profile_image_url: profileData.profileImageUrl || '',
       url: type === 'subreddit' 
         ? `https://www.reddit.com/r/${name}` 
@@ -337,7 +274,7 @@ async function scrapeRedditWithPuppeteer(type, name) {
         karma: profileData.karma || 0,
         link_karma: profileData.linkKarma || 0,
         comment_karma: profileData.commentKarma || 0,
-        verified: profileData.verified || false,
+        verified: false,
         ...(profileData.createdAt && { created_at: profileData.createdAt })
       };
     } else {
