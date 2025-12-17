@@ -157,7 +157,17 @@ async function createBrowser() {
   }
 }
 
+/**
+ * ✅ NUEVA: Función helper para esperar (reemplazo de waitForTimeout)
+ * @param {number} ms - Milisegundos a esperar
+ * @returns {Promise<void>}
+ */
+async function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 module.exports = {
   extractUsername,
-  createBrowser
+  createBrowser,
+  wait  // ✅ Exportar la nueva función
 };

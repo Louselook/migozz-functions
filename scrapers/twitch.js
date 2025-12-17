@@ -118,8 +118,8 @@ async function scrapeTwitch(username) {
       console.warn('⏳ waitForFunction no encontró "followers" en 30s, continuando. ' + (e.message || ''));
     }
 
-    // espera extra para permitir a GraphQL/JS completar solicitudes (10s)
-    await page.waitForTimeout(8000);
+    // ✅ CORREGIDO: espera extra para permitir a GraphQL/JS completar solicitudes (8s)
+    await new Promise(resolve => setTimeout(resolve, 8000));
 
     // Evaluar selectores / meta tags en el DOM
     let domData = await page.evaluate(() => {
