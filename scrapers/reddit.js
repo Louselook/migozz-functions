@@ -151,19 +151,21 @@ async function scrapeRedditWithPuppeteer(type, name) {
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
     );
 
-    // Usar old.reddit.com que es más fácil de scrapear
+    // Usar old.reddit.com - SIN /about para usuarios
     const url = type === 'subreddit'
-      ? `https://old.reddit.com/r/${name}/about`
-      : `https://old.reddit.com/user/${name}/about`;
+      ? `https://old.reddit.com/r/${name}/`
+      : `https://old.reddit.com/user/${name}/`;
     
     console.log(`🌐 [Reddit] Navegando a: ${url}`);
     
     await page.goto(url, { 
-      waitUntil: 'networkidle2', 
+      waitUntil: 'networkidle0', 
       timeout: 60000 
     });
     
     await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    console.log(`🔍 [Reddit] Extrayendo datos de ${type}...`);
 
     const profileData = await page.evaluate((type) => {
       let username = '';
@@ -176,63 +178,75 @@ async function scrapeRedditWithPuppeteer(type, name) {
       let bio = '';
       
       if (type === 'user') {
-        // Extraer datos del usuario
-        const titleElement = document.querySelector('.titlebox h1');
+        // Buscar en la sidebar derecha
+        const sidebar = document.querySelector('.side');
+        
+        if (sidebar) {
+          // Extraer karma de la sidebar
+          const karmaSpans = sidebar.querySelectorAll('span.karma');
+          karmaSpans.forEach(span => {
+            const text = span.textContent;
+            const number = parseInt(text.replace(/,/g, '')) || 0;
+            
+            // Identificar si es link o comment karma por el contexto
+            const label = span.parentElement?.textContent || '';
+            if (label.toLowerCase().includes('link')) {
+              linkKarma = number;
+            } else if (label.toLowerCase().includes('comment')) {
+              commentKarma = number;
+            }
+          });
+          
+          karma = linkKarma + commentKarma;
+          
+          // Fecha de creación
+          const timeElement = sidebar.querySelector('time');
+          if (timeElement) {
+            createdAt = timeElement.getAttribute('datetime');
+          }
+        }
+        
+        // Nombre de usuario del título
+        const titleElement = document.querySelector('.titlebox h1.redditname a');
         if (titleElement) {
           username = titleElement.textContent.trim();
         }
         
-        // Extraer karma
-        const karmaElements = document.querySelectorAll('.karma');
-        karmaElements.forEach(el => {
-          const text = el.textContent.toLowerCase();
-          if (text.includes('link karma')) {
-            const match = text.match(/(\d+(?:,\d+)*)/);
-            if (match) linkKarma = parseInt(match[1].replace(/,/g, ''));
-          } else if (text.includes('comment karma')) {
-            const match = text.match(/(\d+(?:,\d+)*)/);
-            if (match) commentKarma = parseInt(match[1].replace(/,/g, ''));
-          }
-        });
-        
-        karma = linkKarma + commentKarma;
-        
-        // Extraer fecha de creación
-        const ageElement = document.querySelector('.age time');
-        if (ageElement) {
-          createdAt = ageElement.getAttribute('datetime');
-        }
-        
-        // Extraer imagen de perfil
-        const imgElement = document.querySelector('.profile-img');
-        if (imgElement) {
-          profileImageUrl = imgElement.src;
+        // Buscar imagen de perfil
+        const profileImg = document.querySelector('img[alt*="avatar"]');
+        if (profileImg) {
+          profileImageUrl = profileImg.src;
         }
         
       } else {
-        // Extraer datos del subreddit
-        const titleElement = document.querySelector('.titlebox h1');
-        if (titleElement) {
-          username = titleElement.textContent.replace('/r/', '').trim();
+        // Subreddit
+        const sidebar = document.querySelector('.side');
+        
+        if (sidebar) {
+          // Nombre del subreddit
+          const titleElement = sidebar.querySelector('.titlebox h1.redditname a');
+          if (titleElement) {
+            username = titleElement.textContent.trim().replace(/^r\//, '');
+          }
+          
+          // Subscribers
+          const subscribersElement = sidebar.querySelector('.subscribers .number');
+          if (subscribersElement) {
+            const text = subscribersElement.textContent.replace(/,/g, '');
+            subscribers = parseInt(text) || 0;
+          }
+          
+          // Descripción
+          const descElement = sidebar.querySelector('.usertext-body .md');
+          if (descElement) {
+            bio = descElement.textContent.trim();
+          }
         }
         
-        // Extraer subscribers
-        const subscribersElement = document.querySelector('.subscribers .number');
-        if (subscribersElement) {
-          const text = subscribersElement.textContent.replace(/,/g, '');
-          subscribers = parseInt(text) || 0;
-        }
-        
-        // Extraer descripción
-        const descElement = document.querySelector('.md');
-        if (descElement) {
-          bio = descElement.textContent.trim();
-        }
-        
-        // Extraer imagen
-        const imgElement = document.querySelector('.icon-img');
-        if (imgElement) {
-          profileImageUrl = imgElement.src;
+        // Icono del subreddit
+        const iconImg = document.querySelector('.icon img');
+        if (iconImg && iconImg.src && !iconImg.src.includes('default')) {
+          profileImageUrl = iconImg.src;
         }
       }
       
@@ -249,8 +263,10 @@ async function scrapeRedditWithPuppeteer(type, name) {
     }, type);
 
     await browser.close();
+    
+    console.log(`✅ [Reddit] Datos extraídos: karma=${profileData.karma}, subscribers=${profileData.subscribers}`);
 
-    if (!profileData) {
+    if (!profileData || (!profileData.username && !profileData.karma && !profileData.subscribers)) {
       throw new Error('No se pudieron extraer los datos de Reddit');
     }
 
