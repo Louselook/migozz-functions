@@ -148,7 +148,7 @@ async function scrapeRedditWithPuppeteer(type, name) {
     await page.goto(newUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
 
     // dejar que cargue JS y recursos mínimos
-    await page.waitForTimeout(3000);
+    await new Promise(resolve => setTimeout(resolve, 3000));
 
     // Evaluar datos en la versión nueva
     const evaluateNew = await page.evaluate((type) => {
@@ -197,7 +197,7 @@ async function scrapeRedditWithPuppeteer(type, name) {
     if (!profileData.avatar || profileData.avatar.length < 5) {
       console.log('🔁 [Reddit] No se encontró avatar confiable en la versión nueva; probando old.reddit.com');
       await page.goto(oldUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
-      await page.waitForTimeout(2000);
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
       const evaluateOld = await page.evaluate((type) => {
         function parseNumber(text) {
