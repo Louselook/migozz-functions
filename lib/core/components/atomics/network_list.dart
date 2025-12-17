@@ -26,7 +26,7 @@ final List<String> socials = [
   "SoundCloud",
 
   // Messaging
-  "WhatsApp",
+  "Whatsapp",
   "Telegram",
   "Discord",
 

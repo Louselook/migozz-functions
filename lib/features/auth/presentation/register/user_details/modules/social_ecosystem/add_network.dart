@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:intl_phone_field/country_picker_dialog.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/features/auth/services/add_networks/network_config.dart';
@@ -24,6 +26,10 @@ class _AddNetworkBottomSheetState extends State<AddNetworkBottomSheet> {
   NetworkAuthMode? _selectedMode;
   final TextEditingController _controller = TextEditingController();
 
+  // Para el phone input
+  String _completePhoneNumber = '';
+  bool _isPhoneValid = false;
+
   @override
   void dispose() {
     _controller.dispose();
@@ -40,10 +46,32 @@ class _AddNetworkBottomSheetState extends State<AddNetworkBottomSheet> {
   }
 
   void _handleSaveManual() {
+    final networkName = widget.networkConfig.name.toLowerCase();
+
+    // Para WhatsApp y Telegram con phone input
+    if (_isPhoneInputNetwork(networkName)) {
+      if (_isPhoneValid && _completePhoneNumber.isNotEmpty) {
+        widget.onOptionSelected(NetworkAuthMode.manual, _completePhoneNumber);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please enter a valid phone number'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return;
+    }
+
+    // Para otros campos de texto normales
     final value = _controller.text.trim();
     if (value.isNotEmpty) {
       widget.onOptionSelected(NetworkAuthMode.manual, value);
     }
+  }
+
+  bool _isPhoneInputNetwork(String networkName) {
+    return networkName == 'whatsapp' || networkName == 'telegram';
   }
 
   @override
@@ -208,33 +236,89 @@ class _AddNetworkBottomSheetState extends State<AddNetworkBottomSheet> {
   }
 
   Widget _buildManualForm() {
+    final networkName = widget.networkConfig.name.toLowerCase();
+    final isPhoneInput = _isPhoneInputNetwork(networkName);
     final networkTexts = _getNetworkTexts();
+
     return Column(
       children: [
-        TextField(
-          controller: _controller,
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            hintText: networkTexts['hint'],
-            hintStyle: const TextStyle(color: Colors.grey),
-            filled: true,
-            fillColor: Colors.grey[900],
-            border: OutlineInputBorder(
+        // Phone input para WhatsApp y Telegram
+        if (isPhoneInput)
+          Container(
+            height: 56,
+            decoration: BoxDecoration(
+              color: Colors.grey[900],
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
             ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 12,
+            child: IntlPhoneField(
+              decoration: InputDecoration(
+                hintText: networkTexts['hint'],
+                hintStyle: TextStyle(color: Colors.grey[400], fontSize: 15),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
+                counterText: '',
+              ),
+              showDropdownIcon: true,
+              dropdownIcon: Icon(
+                Icons.arrow_drop_down,
+                color: Colors.grey[400],
+              ),
+              style: const TextStyle(color: Colors.white, fontSize: 15),
+              dropdownTextStyle: const TextStyle(
+                color: Colors.white,
+                fontSize: 15,
+              ),
+              onChanged: (phone) {
+                setState(() {
+                  _completePhoneNumber = phone.completeNumber;
+                  _isPhoneValid = phone.number.length >= 4;
+                });
+              },
+              keyboardType: TextInputType.phone,
+              disableLengthCheck: true,
+              pickerDialogStyle: PickerDialogStyle(
+                width: 350,
+                countryCodeStyle: const TextStyle(color: Colors.black),
+                countryNameStyle: const TextStyle(color: Colors.black87),
+                searchFieldInputDecoration: const InputDecoration(
+                  hintText: 'Search country',
+                  hintStyle: TextStyle(color: Colors.black87),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ),
+          )
+        else
+          // TextField normal para otras redes
+          TextField(
+            controller: _controller,
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              hintText: networkTexts['hint'],
+              hintStyle: const TextStyle(color: Colors.grey),
+              filled: true,
+              fillColor: Colors.grey[900],
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
             ),
           ),
-        ),
+
         const SizedBox(height: 10),
 
-        // Preview URL
+        // Preview URL o ejemplo
         Text(
           networkTexts['example']!,
           style: const TextStyle(color: Colors.grey, fontSize: 12),
+          textAlign: TextAlign.center,
         ),
         const SizedBox(height: 20),
 
@@ -305,14 +389,14 @@ class _AddNetworkBottomSheetState extends State<AddNetworkBottomSheet> {
 
       case 'whatsapp':
         return {
-          'hint': 'Enter phone number',
-          'example': 'https://wa.me/number',
+          'hint': '1234567890',
+          'example': 'Enter your phone number with country code',
         };
 
       case 'telegram':
         return {
-          'hint': 'Enter Telegram username or link',
-          'example': 'https://t.me/username',
+          'hint': '1234567890',
+          'example': 'Enter your phone number with country code',
         };
 
       default:
