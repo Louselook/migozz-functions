@@ -1,445 +1,445 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-// import 'package:migozz_app/core/assets_constants.dart';
-import 'package:migozz_app/core/components/atomics/network_list.dart';
-import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
-import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
-import 'package:migozz_app/features/chat/presentation/user/list/chats_list_screen.dart';
-import 'package:migozz_app/features/chat/presentation/user/user_chat_screen.dart';
-import 'package:migozz_app/features/profile/components/info_user_profile.dart';
-// import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
-// import 'package:migozz_app/features/profile/components/profile_version_selector.dart';
-// import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
-import 'package:migozz_app/features/profile/components/social_rail.dart';
-// import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
-import 'package:migozz_app/features/profile/presentation/profile/mobile/components/profile_top_actions.dart';
-import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/profile_image_mobile_v3.dart';
-import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/social_circles_mobile_v3.dart';
-import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/social_profile_photos_grid.dart';
-import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/profile_screen_v3_edit.dart';
-import 'package:migozz_app/features/profile/presentation/profile/modules/qr_scanner_screen.dart';
-import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
+// import 'package:flutter/material.dart';
+// import 'package:flutter_bloc/flutter_bloc.dart';
+// // import 'package:migozz_app/core/assets_constants.dart';
+// import 'package:migozz_app/core/components/atomics/network_list.dart';
+// import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
+// import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
+// import 'package:migozz_app/features/chat/presentation/user/list/chats_list_screen.dart';
+// import 'package:migozz_app/features/chat/presentation/user/user_chat_screen.dart';
+// import 'package:migozz_app/features/profile/components/info_user_profile.dart';
+// // import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
+// // import 'package:migozz_app/features/profile/components/profile_version_selector.dart';
+// // import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
+// import 'package:migozz_app/features/profile/components/social_rail.dart';
+// // import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
+// import 'package:migozz_app/features/profile/presentation/profile/mobile/components/profile_top_actions.dart';
+// import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/profile_image_mobile_v3.dart';
+// import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/social_circles_mobile_v3.dart';
+// import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/social_profile_photos_grid.dart';
+// import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/profile_screen_v3_edit.dart';
+// import 'package:migozz_app/features/profile/presentation/profile/modules/qr_scanner_screen.dart';
+// import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 
-class MobileProfileContentV3 extends StatefulWidget {
-  final UserDTO user;
-  final TutorialKeys tutorialKeys;
+// class MobileProfileContentV3 extends StatefulWidget {
+//   final UserDTO user;
+//   final TutorialKeys tutorialKeys;
 
-  const MobileProfileContentV3({
-    super.key,
-    required this.user,
-    required this.tutorialKeys,
-  });
+//   const MobileProfileContentV3({
+//     super.key,
+//     required this.user,
+//     required this.tutorialKeys,
+//   });
 
-  @override
-  State<MobileProfileContentV3> createState() => _MobileProfileContentV3State();
-}
+//   @override
+//   State<MobileProfileContentV3> createState() => _MobileProfileContentV3State();
+// }
 
-class _MobileProfileContentV3State extends State<MobileProfileContentV3> {
-  @override
-  Widget build(BuildContext context) {
-    final user = widget.user;
-    final size = MediaQuery.of(context).size;
+// class _MobileProfileContentV3State extends State<MobileProfileContentV3> {
+//   @override
+//   Widget build(BuildContext context) {
+//     final user = widget.user;
+//     final size = MediaQuery.of(context).size;
 
-    final name = user.displayName;
-    final username = user.username.startsWith('@')
-        ? user.username
-        : '@${user.username}';
-    final avatarUrl = user.avatarUrl;
-    final voiceNoteUrl = user.voiceNoteUrl ?? '';
+//     final name = user.displayName;
+//     final username = user.username.startsWith('@')
+//         ? user.username
+//         : '@${user.username}';
+//     final avatarUrl = user.avatarUrl;
+//     final voiceNoteUrl = user.voiceNoteUrl ?? '';
 
-    // Determinar si es el perfil del usuario autenticado
-    final authState = context.watch<AuthCubit>().state;
-    final currentUserEmail = authState.userProfile?.email ?? '';
-    final isOwnProfile = user.email == currentUserEmail;
+//     // Determinar si es el perfil del usuario autenticado
+//     final authState = context.watch<AuthCubit>().state;
+//     final currentUserEmail = authState.userProfile?.email ?? '';
+//     final isOwnProfile = user.email == currentUserEmail;
 
-    // Recuperamos los seguidores y redes desde el perfil
-    final totalFollowers = _calculateTotalFollowers(user.socialEcosystem);
-    final socialLinks = _buildSocialLinks(user.socialEcosystem, user.username);
-    final bool hasSocials = socialLinks.isNotEmpty;
+//     // Recuperamos los seguidores y redes desde el perfil
+//     final totalFollowers = _calculateTotalFollowers(user.socialEcosystem);
+//     final socialLinks = _buildSocialLinks(user.socialEcosystem, user.username);
+//     final bool hasSocials = socialLinks.isNotEmpty;
 
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.purpleAccent.withValues(alpha: 0.35),
-                    Colors.black.withValues(alpha: 0.40),
-                    Colors.black,
-                  ],
-                  // stops: const [
-                  //   0.3,
-                  //   1.0,
-                  //   1.0,
-                  // ],
-                ),
-              ),
-            ),
-          ),
-          // FOTO FULLSCREEN (si no hay redes)
-          if (!hasSocials)
-            Positioned.fill(
-              child: ProfileImageMobileV3(size: size, avatarUrl: avatarUrl),
-            ),
+//     return Scaffold(
+//       backgroundColor: Colors.black,
+//       body: Stack(
+//         children: [
+//           Positioned.fill(
+//             child: Container(
+//               decoration: BoxDecoration(
+//                 gradient: LinearGradient(
+//                   begin: Alignment.topCenter,
+//                   end: Alignment.bottomCenter,
+//                   colors: [
+//                     Colors.purpleAccent.withValues(alpha: 0.35),
+//                     Colors.black.withValues(alpha: 0.40),
+//                     Colors.black,
+//                   ],
+//                   // stops: const [
+//                   //   0.3,
+//                   //   1.0,
+//                   //   1.0,
+//                   // ],
+//                 ),
+//               ),
+//             ),
+//           ),
+//           // FOTO FULLSCREEN (si no hay redes)
+//           if (!hasSocials)
+//             Positioned.fill(
+//               child: ProfileImageMobileV3(size: size, avatarUrl: avatarUrl),
+//             ),
 
-          // FOTO "top" si hay redes
-          if (hasSocials)
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: size.height * 0.09,
-              child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
-            ),
+//           // FOTO "top" si hay redes
+//           if (hasSocials)
+//             Positioned(
+//               top: 0,
+//               left: 0,
+//               right: 0,
+//               bottom: size.height * 0.09,
+//               child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
+//             ),
 
-          // 3A) SIN REDES -> profilhero: card flotante abajo (no scroll)
-          if (!hasSocials)
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: SafeArea(
-                bottom: true,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 20,
-                  ),
-                  child: _InfoCardGlass(
-                    child: InfoUserProfile(
-                      name: name.isNotEmpty ? name : 'NOMBRE VACÍO',
-                      displayName: username,
-                      comunityCount: totalFollowers.toString(),
-                      nameComunity: 'Community',
-                      voiceNoteUrl: voiceNoteUrl,
-                      bio: user.bio,
-                      tutorialKeys: widget.tutorialKeys,
-                      isOwnProfile: isOwnProfile,
-                      userId: user.email,
-                      onMessageTap: () {
-                        if (!isOwnProfile) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => UserChatScreen(
-                                otherUserId: user.email,
-                                otherUserName: user.displayName.isNotEmpty
-                                    ? user.displayName
-                                    : user.username,
-                                otherUserAvatar: user.avatarUrl,
-                                currentUserId: currentUserEmail,
-                              ),
-                            ),
-                          );
-                        } else {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => ChatsListScreen(
-                                username: user.username.replaceFirst('@', ''),
-                                currentUserId: currentUserEmail,
-                              ),
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                  ),
-                ),
-              ),
-            ),
+//           // 3A) SIN REDES -> profilhero: card flotante abajo (no scroll)
+//           if (!hasSocials)
+//             Positioned(
+//               left: 0,
+//               right: 0,
+//               bottom: 0,
+//               child: SafeArea(
+//                 bottom: true,
+//                 child: Padding(
+//                   padding: const EdgeInsets.symmetric(
+//                     horizontal: 20,
+//                     vertical: 20,
+//                   ),
+//                   child: _InfoCardGlass(
+//                     child: InfoUserProfile(
+//                       name: name.isNotEmpty ? name : 'NOMBRE VACÍO',
+//                       displayName: username,
+//                       comunityCount: totalFollowers.toString(),
+//                       nameComunity: 'Community',
+//                       voiceNoteUrl: voiceNoteUrl,
+//                       bio: user.bio,
+//                       tutorialKeys: widget.tutorialKeys,
+//                       isOwnProfile: isOwnProfile,
+//                       userId: user.email,
+//                       onMessageTap: () {
+//                         if (!isOwnProfile) {
+//                           Navigator.push(
+//                             context,
+//                             MaterialPageRoute(
+//                               builder: (_) => UserChatScreen(
+//                                 otherUserId: user.email,
+//                                 otherUserName: user.displayName.isNotEmpty
+//                                     ? user.displayName
+//                                     : user.username,
+//                                 otherUserAvatar: user.avatarUrl,
+//                                 currentUserId: currentUserEmail,
+//                               ),
+//                             ),
+//                           );
+//                         } else {
+//                           Navigator.push(
+//                             context,
+//                             MaterialPageRoute(
+//                               builder: (_) => ChatsListScreen(
+//                                 username: user.username.replaceFirst('@', ''),
+//                                 currentUserId: currentUserEmail,
+//                               ),
+//                             ),
+//                           );
+//                         }
+//                       },
+//                     ),
+//                   ),
+//                 ),
+//               ),
+//             ),
 
-          // 3B) CON REDES -> miti-miti: empujamos contenido con un spacer igual a mitad de pantalla
-          if (hasSocials)
-            SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                children: [
-                  // Espacio para la imagen (60% de altura - 80px para superposición)
-                  SizedBox(height: size.height * 0.38),
-                  // Info del usuario
-                  InfoUserProfile(
-                    name: name.isNotEmpty ? name : 'NOMBRE VACÍO',
-                    displayName: username,
-                    comunityCount: totalFollowers.toString(),
-                    nameComunity: 'Community',
-                    voiceNoteUrl: voiceNoteUrl,
-                    bio: user.bio,
-                    tutorialKeys: widget.tutorialKeys,
-                    isOwnProfile: isOwnProfile,
-                    userId: user.email,
-                    onMessageTap: () {
-                      debugPrint("pulsado el chat");
-                      if (!isOwnProfile) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => UserChatScreen(
-                              otherUserId: user.email,
-                              otherUserName: user.displayName.isNotEmpty
-                                  ? user.displayName
-                                  : user.username,
-                              otherUserAvatar: user.avatarUrl,
-                              currentUserId: currentUserEmail,
-                            ),
-                          ),
-                        );
-                      } else {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ChatsListScreen(
-                              username: user.username.replaceFirst('@', ''),
-                              currentUserId: currentUserEmail,
-                            ),
-                          ),
-                        );
-                      }
-                    },
-                  ),
-                  // Iconos circulares de redes sociales
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8, bottom: 0),
-                    child: SocialCirclesMobileV3(links: socialLinks),
-                  ),
-                  // Grid de fotos de perfil de redes sociales
-                  SocialProfilePhotosGrid(
-                    socialEcosystem: user.socialEcosystem,
-                  ),
-                ],
-              ),
-            ),
+//           // 3B) CON REDES -> miti-miti: empujamos contenido con un spacer igual a mitad de pantalla
+//           if (hasSocials)
+//             SingleChildScrollView(
+//               physics: const BouncingScrollPhysics(),
+//               child: Column(
+//                 children: [
+//                   // Espacio para la imagen (60% de altura - 80px para superposición)
+//                   SizedBox(height: size.height * 0.38),
+//                   // Info del usuario
+//                   InfoUserProfile(
+//                     name: name.isNotEmpty ? name : 'NOMBRE VACÍO',
+//                     displayName: username,
+//                     comunityCount: totalFollowers.toString(),
+//                     nameComunity: 'Community',
+//                     voiceNoteUrl: voiceNoteUrl,
+//                     bio: user.bio,
+//                     tutorialKeys: widget.tutorialKeys,
+//                     isOwnProfile: isOwnProfile,
+//                     userId: user.email,
+//                     onMessageTap: () {
+//                       debugPrint("pulsado el chat");
+//                       if (!isOwnProfile) {
+//                         Navigator.push(
+//                           context,
+//                           MaterialPageRoute(
+//                             builder: (_) => UserChatScreen(
+//                               otherUserId: user.email,
+//                               otherUserName: user.displayName.isNotEmpty
+//                                   ? user.displayName
+//                                   : user.username,
+//                               otherUserAvatar: user.avatarUrl,
+//                               currentUserId: currentUserEmail,
+//                             ),
+//                           ),
+//                         );
+//                       } else {
+//                         Navigator.push(
+//                           context,
+//                           MaterialPageRoute(
+//                             builder: (_) => ChatsListScreen(
+//                               username: user.username.replaceFirst('@', ''),
+//                               currentUserId: currentUserEmail,
+//                             ),
+//                           ),
+//                         );
+//                       }
+//                     },
+//                   ),
+//                   // Iconos circulares de redes sociales
+//                   Padding(
+//                     padding: const EdgeInsets.only(top: 8, bottom: 0),
+//                     child: SocialCirclesMobileV3(links: socialLinks),
+//                   ),
+//                   // Grid de fotos de perfil de redes sociales
+//                   SocialProfilePhotosGrid(
+//                     socialEcosystem: user.socialEcosystem,
+//                   ),
+//                 ],
+//               ),
+//             ),
 
-          // 4) Botones siempre arriba (SafeArea)
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: SafeArea(
-              child: ProfileTopActions(
-                isOwnProfile: isOwnProfile,
-                onMenuTap: () {
-                  if (isOwnProfile) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => MobileProfileContentV3Edit(
-                          user: user,
-                          tutorialKeys: widget.tutorialKeys,
-                        ),
-                      ),
-                    );
-                  } else {
-                    Navigator.of(context).pop();
-                  }
-                },
-                onQrScanTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const QrScannerScreen()),
-                  );
-                },
-                onChatTap: () {
-                  if (!isOwnProfile) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => UserChatScreen(
-                          otherUserId: user.email,
-                          otherUserName: user.displayName.isNotEmpty
-                              ? user.displayName
-                              : user.username,
-                          otherUserAvatar: user.avatarUrl,
-                          currentUserId: currentUserEmail,
-                        ),
-                      ),
-                    );
-                  } else {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ChatsListScreen(
-                          username: user.username.replaceFirst('@', ''),
-                          currentUserId: currentUserEmail,
-                        ),
-                      ),
-                    );
-                  }
-                },
-                onNotificationsTap: () {
-                  debugPrint('Abrir notificaciones');
-                },
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+//           // 4) Botones siempre arriba (SafeArea)
+//           Positioned(
+//             top: 0,
+//             left: 0,
+//             right: 0,
+//             child: SafeArea(
+//               child: ProfileTopActions(
+//                 isOwnProfile: isOwnProfile,
+//                 onMenuTap: () {
+//                   if (isOwnProfile) {
+//                     Navigator.push(
+//                       context,
+//                       MaterialPageRoute(
+//                         builder: (_) => MobileProfileContentV3Edit(
+//                           user: user,
+//                           tutorialKeys: widget.tutorialKeys,
+//                         ),
+//                       ),
+//                     );
+//                   } else {
+//                     Navigator.of(context).pop();
+//                   }
+//                 },
+//                 onQrScanTap: () {
+//                   Navigator.push(
+//                     context,
+//                     MaterialPageRoute(builder: (_) => const QrScannerScreen()),
+//                   );
+//                 },
+//                 onChatTap: () {
+//                   if (!isOwnProfile) {
+//                     Navigator.push(
+//                       context,
+//                       MaterialPageRoute(
+//                         builder: (_) => UserChatScreen(
+//                           otherUserId: user.email,
+//                           otherUserName: user.displayName.isNotEmpty
+//                               ? user.displayName
+//                               : user.username,
+//                           otherUserAvatar: user.avatarUrl,
+//                           currentUserId: currentUserEmail,
+//                         ),
+//                       ),
+//                     );
+//                   } else {
+//                     Navigator.push(
+//                       context,
+//                       MaterialPageRoute(
+//                         builder: (_) => ChatsListScreen(
+//                           username: user.username.replaceFirst('@', ''),
+//                           currentUserId: currentUserEmail,
+//                         ),
+//                       ),
+//                     );
+//                   }
+//                 },
+//                 onNotificationsTap: () {
+//                   debugPrint('Abrir notificaciones');
+//                 },
+//               ),
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
 
-  int _calculateTotalFollowers(List<Map<String, dynamic>>? socialEcosystem) {
-    if (socialEcosystem == null || socialEcosystem.isEmpty) return 0;
-    int total = 0;
-    for (final social in socialEcosystem) {
-      for (final platformData in social.values) {
-        if (platformData is Map<String, dynamic>) {
-          final followers = platformData['followers'];
-          if (followers is int) {
-            total += followers;
-          } else if (followers is String) {
-            total += int.tryParse(followers) ?? 0;
-          }
-        }
-      }
-    }
-    return total;
-  }
+//   int _calculateTotalFollowers(List<Map<String, dynamic>>? socialEcosystem) {
+//     if (socialEcosystem == null || socialEcosystem.isEmpty) return 0;
+//     int total = 0;
+//     for (final social in socialEcosystem) {
+//       for (final platformData in social.values) {
+//         if (platformData is Map<String, dynamic>) {
+//           final followers = platformData['followers'];
+//           if (followers is int) {
+//             total += followers;
+//           } else if (followers is String) {
+//             total += int.tryParse(followers) ?? 0;
+//           }
+//         }
+//       }
+//     }
+//     return total;
+//   }
 
-  List<SocialLink> _buildSocialLinks(
-    List<Map<String, dynamic>>? socialEcosystem,
-    String username,
-  ) {
-    if (socialEcosystem == null || socialEcosystem.isEmpty) return [];
-    final links = <SocialLink>[];
-    final cleanUsername = username.replaceFirst('@', '');
+//   List<SocialLink> _buildSocialLinks(
+//     List<Map<String, dynamic>>? socialEcosystem,
+//     String username,
+//   ) {
+//     if (socialEcosystem == null || socialEcosystem.isEmpty) return [];
+//     final links = <SocialLink>[];
+//     final cleanUsername = username.replaceFirst('@', '');
 
-    for (final social in socialEcosystem) {
-      final type = social['type']?.toString().toLowerCase();
-      if (type == 'custom') {
-        final url = social['url']?.toString() ?? '';
-        final iconUrl = social['iconUrl']?.toString();
-        final domain = social['domain']?.toString() ?? '';
-        final assetUrl = (iconUrl != null && iconUrl.startsWith('http'))
-            ? iconUrl
-            : _faviconFromDomain(domain);
-        if (assetUrl.isNotEmpty && url.isNotEmpty) {
-          links.add(
-            SocialLink(
-              asset: assetUrl,
-              url: Uri.parse(url),
-              followers: null,
-              shares: null,
-            ),
-          );
-        }
-        continue;
-      }
-      for (final entry in social.entries) {
-        final platform = entry.key.toLowerCase();
-        final data = entry.value;
-        int? followers;
-        int? shares;
-        String? customUrl;
+//     for (final social in socialEcosystem) {
+//       final type = social['type']?.toString().toLowerCase();
+//       if (type == 'custom') {
+//         final url = social['url']?.toString() ?? '';
+//         final iconUrl = social['iconUrl']?.toString();
+//         final domain = social['domain']?.toString() ?? '';
+//         final assetUrl = (iconUrl != null && iconUrl.startsWith('http'))
+//             ? iconUrl
+//             : _faviconFromDomain(domain);
+//         if (assetUrl.isNotEmpty && url.isNotEmpty) {
+//           links.add(
+//             SocialLink(
+//               asset: assetUrl,
+//               url: Uri.parse(url),
+//               followers: null,
+//               shares: null,
+//             ),
+//           );
+//         }
+//         continue;
+//       }
+//       for (final entry in social.entries) {
+//         final platform = entry.key.toLowerCase();
+//         final data = entry.value;
+//         int? followers;
+//         int? shares;
+//         String? customUrl;
 
-        if (data is Map<String, dynamic>) {
-          followers = _parseIntFromDynamic(data['followers']);
-          shares = _parseIntFromDynamic(data['shares']);
-          customUrl = data['url']?.toString();
-        }
+//         if (data is Map<String, dynamic>) {
+//           followers = _parseIntFromDynamic(data['followers']);
+//           shares = _parseIntFromDynamic(data['shares']);
+//           customUrl = data['url']?.toString();
+//         }
 
-        final socialInfo = _getSocialInfo(platform, cleanUsername, customUrl);
-        if (socialInfo != null) {
-          links.add(
-            SocialLink(
-              asset: socialInfo['asset']!,
-              url: Uri.parse(socialInfo['url']!),
-              followers: followers,
-              shares: shares,
-            ),
-          );
-        }
-      }
-    }
+//         final socialInfo = _getSocialInfo(platform, cleanUsername, customUrl);
+//         if (socialInfo != null) {
+//           links.add(
+//             SocialLink(
+//               asset: socialInfo['asset']!,
+//               url: Uri.parse(socialInfo['url']!),
+//               followers: followers,
+//               shares: shares,
+//             ),
+//           );
+//         }
+//       }
+//     }
 
-    return links;
-  }
+//     return links;
+//   }
 
-  int? _parseIntFromDynamic(dynamic value) {
-    if (value == null) return null;
-    if (value is int) return value;
-    if (value is String) return int.tryParse(value);
-    return null;
-  }
+//   int? _parseIntFromDynamic(dynamic value) {
+//     if (value == null) return null;
+//     if (value is int) return value;
+//     if (value is String) return int.tryParse(value);
+//     return null;
+//   }
 
-  Map<String, String>? _getSocialInfo(
-    String platform,
-    String username,
-    String? customUrl,
-  ) {
-    final normalizedLabel =
-        platform[0].toUpperCase() + platform.substring(1).toLowerCase();
+//   Map<String, String>? _getSocialInfo(
+//     String platform,
+//     String username,
+//     String? customUrl,
+//   ) {
+//     final normalizedLabel =
+//         platform[0].toUpperCase() + platform.substring(1).toLowerCase();
 
-    final asset = iconByLabel[normalizedLabel];
-    if (asset == null) return null;
+//     final asset = iconByLabel[normalizedLabel];
+//     if (asset == null) return null;
 
-    String url;
-    switch (platform) {
-      case 'tiktok':
-        url = customUrl ?? 'https://www.tiktok.com/@$username';
-        break;
-      case 'instagram':
-        url = customUrl ?? 'https://www.instagram.com/$username';
-        break;
-      case 'x':
-      case 'twitter':
-        url = customUrl ?? 'https://x.com/$username';
-        break;
-      case 'facebook':
-        url = customUrl ?? 'https://www.facebook.com/$username';
-        break;
-      case 'pinterest':
-        url = customUrl ?? 'https://www.pinterest.com/$username';
-        break;
-      case 'youtube':
-        url = customUrl ?? 'https://www.youtube.com/@$username';
-        break;
-      case 'telegram':
-        url = customUrl ?? 'https://t.me/$username';
-        break;
-      case 'whatsapp':
-        url = customUrl ?? 'https://wa.me/$username';
-        break;
-      case 'spotify':
-        url = customUrl ?? 'https://open.spotify.com/user/$username';
-        break;
-      case 'linkedin':
-        url = customUrl ?? 'https://www.linkedin.com/in/$username';
-        break;
-      default:
-        url = customUrl ?? '';
-    }
+//     String url;
+//     switch (platform) {
+//       case 'tiktok':
+//         url = customUrl ?? 'https://www.tiktok.com/@$username';
+//         break;
+//       case 'instagram':
+//         url = customUrl ?? 'https://www.instagram.com/$username';
+//         break;
+//       case 'x':
+//       case 'twitter':
+//         url = customUrl ?? 'https://x.com/$username';
+//         break;
+//       case 'facebook':
+//         url = customUrl ?? 'https://www.facebook.com/$username';
+//         break;
+//       case 'pinterest':
+//         url = customUrl ?? 'https://www.pinterest.com/$username';
+//         break;
+//       case 'youtube':
+//         url = customUrl ?? 'https://www.youtube.com/@$username';
+//         break;
+//       case 'telegram':
+//         url = customUrl ?? 'https://t.me/$username';
+//         break;
+//       case 'whatsapp':
+//         url = customUrl ?? 'https://wa.me/$username';
+//         break;
+//       case 'spotify':
+//         url = customUrl ?? 'https://open.spotify.com/user/$username';
+//         break;
+//       case 'linkedin':
+//         url = customUrl ?? 'https://www.linkedin.com/in/$username';
+//         break;
+//       default:
+//         url = customUrl ?? '';
+//     }
 
-    return {'asset': asset, 'url': url};
-  }
+//     return {'asset': asset, 'url': url};
+//   }
 
-  String _faviconFromDomain(String domain) {
-    if (domain.isEmpty) return '';
-    return 'https://www.google.com/s2/favicons?domain=$domain&sz=128';
-  }
-}
+//   String _faviconFromDomain(String domain) {
+//     if (domain.isEmpty) return '';
+//     return 'https://www.google.com/s2/favicons?domain=$domain&sz=128';
+//   }
+// }
 
-class _InfoCardGlass extends StatelessWidget {
-  final Widget child;
+// class _InfoCardGlass extends StatelessWidget {
+//   final Widget child;
 
-  const _InfoCardGlass({required this.child});
+//   const _InfoCardGlass({required this.child});
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-        // blur opcional si quieres
-      ),
-      child: child,
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container(
+//       margin: const EdgeInsets.symmetric(horizontal: 20),
+//       padding: const EdgeInsets.all(20),
+//       decoration: BoxDecoration(
+//         color: Colors.black.withValues(alpha: 0.45),
+//         borderRadius: BorderRadius.circular(24),
+//         border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+//         // blur opcional si quieres
+//       ),
+//       child: child,
+//     );
+//   }
+// }
