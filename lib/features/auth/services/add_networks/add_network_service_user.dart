@@ -130,7 +130,7 @@ class AddNetworkServiceUser {
   // ---------------------------------------------------------------------------
   String _getQueryParamName(String network) {
     // youtube usa 'query' en tu backend; el resto usa 'username_or_link'
-    if (network == 'youtube') return 'query';
+    if (network == 'youtube') return 'username_or_link';
     return 'username_or_link';
   }
 
