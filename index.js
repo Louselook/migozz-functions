@@ -203,21 +203,21 @@ app.get('/spotify/profile', async (req, res) => {
   }
 });
 
-// app.get('/reddit/profile', async (req, res) => {
-//   const { username_or_link } = req.query;
-//   if (!username_or_link) {
-//     return res.status(400).json({ error: 'Parámetro username_or_link requerido' });
-//   }
+app.get('/reddit/profile', async (req, res) => {
+  const { username_or_link } = req.query;
+  if (!username_or_link) {
+    return res.status(400).json({ error: 'Parámetro username_or_link requerido' });
+  }
 
-//   try {
-//     console.log(`📥 [Reddit] Scraping: ${username_or_link}`);
-//     const result = await scrapeReddit(username_or_link);
-//     res.json(result);
-//   } catch (error) {
-//     console.error(`❌ [Reddit] Error:`, error.message);
-//     res.status(500).json({ error: error.message });
-//   }
-// });
+  try {
+    console.log(`📥 [Reddit] Scraping: ${username_or_link}`);
+    const result = await scrapeReddit(username_or_link);
+    res.json(result);
+  } catch (error) {
+    console.error(`❌ [Reddit] Error:`, error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 app.get('/threads/profile', async (req, res) => {
   const { username_or_link } = req.query;
