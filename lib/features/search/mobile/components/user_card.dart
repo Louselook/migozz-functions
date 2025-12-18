@@ -11,7 +11,7 @@ class UserCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final avatar = user.avatarUrl?.isNotEmpty == true
         ? user.avatarUrl!
-        : "https://i.imgur.com/BoN9kdC.png"; // sin foto es CJ
+        : "assets/icons/placeholder.svg";
 
     return GestureDetector(
       onTap: () {
