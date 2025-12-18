@@ -72,6 +72,7 @@ class _ChatsListScreenState extends State<ChatsListScreen>
         isVerified: userData['isVerified'] ?? false,
         isOnline: false,
         unreadCount: chatRoom.getUnreadCount(widget.currentUserId),
+        isBlocked: chatRoom.isBlocked(widget.currentUserId, otherUserId),
       );
     } catch (e) {
       debugPrint('❌ Error al convertir ChatRoom: $e');
@@ -160,7 +161,16 @@ class _ChatsListScreenState extends State<ChatsListScreen>
           );
         }
 
+        // 🆕 Crear una key única basada en los unreadCount para forzar rebuild
+        final unreadKey = chatRooms
+            .map(
+              (r) =>
+                  '${r.chatRoomId}:${r.getUnreadCount(widget.currentUserId)}',
+            )
+            .join('_');
+
         return FutureBuilder<List<ChatPreview?>>(
+          key: ValueKey(unreadKey),
           future: Future.wait(
             chatRooms.map((room) => _chatRoomToPreview(room)),
           ),
@@ -291,7 +301,10 @@ class _ChatsListScreenState extends State<ChatsListScreen>
                   currentUserId: widget.currentUserId,
                 ),
               ),
-            );
+            ).then((_) {
+              // 🆕 Forzar rebuild al regresar para actualizar unreadCount
+              if (mounted) setState(() {});
+            });
           },
         );
       },

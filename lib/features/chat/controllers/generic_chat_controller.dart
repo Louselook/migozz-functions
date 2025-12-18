@@ -106,13 +106,14 @@ class GenericChatController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Scroll automático al final
+  /// Scroll automático al final (para ListView con reverse: true, ir al inicio)
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_isActive) return;
       if (scrollController.hasClients) {
+        // Con reverse: true, los mensajes nuevos están en position 0
         scrollController.animateTo(
-          scrollController.position.maxScrollExtent,
+          0, // Ir al inicio (que visualmente es abajo con reverse: true)
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,
         );

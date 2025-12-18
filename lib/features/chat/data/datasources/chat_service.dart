@@ -1,21 +1,20 @@
-// chat_service.dart
+// chat_service.dart - VERSIÓN MEJORADA
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-// ignore: depend_on_referenced_packages
 import 'package:path/path.dart' as p;
 import 'package:migozz_app/features/chat/data/datasources/firestore_message.dart';
 import 'package:migozz_app/features/chat/data/domain/models/chat_rooms.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 
-/// Servicio completo de chat con Firebase (estructura Storage: chat/{chatId}/{audios|images}/file)
+/// Servicio completo de chat con Firebase - MEJORADO
 class ChatService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
-  // CHAT ROOMS
+  // ==================== CHAT ROOMS ====================
 
   Future<String> getOrCreateChatRoom({
     required String currentUserId,
@@ -40,6 +39,10 @@ class ChatService {
           'hasResponded': {currentUserId: false, otherUserId: false},
           'createdAt': Timestamp.fromDate(now),
           'lastMessageData': null,
+          'deletedFor': [], // 🆕 Lista de usuarios que eliminaron el chat
+          'deletedAt':
+              {}, // 🆕 {userId: timestamp} - Cuándo eliminó cada usuario
+          'blockedBy': {}, // 🆕 {userId: [listaDeUsuariosBloqueados]}
         });
         debugPrint('✅ [ChatService] Nueva sala creada: $chatRoomId');
       }
@@ -51,15 +54,40 @@ class ChatService {
     }
   }
 
+  /// Stream de chats del usuario (excluyendo los eliminados)
   Stream<List<ChatRoom>> getUserChatsStream(String userId) {
     return _firestore
         .collection('chat_rooms')
         .where('participants', arrayContains: userId)
         .orderBy('lastMessageTime', descending: true)
         .snapshots()
-        .map(
-          (snap) => snap.docs.map((d) => ChatRoom.fromFirestore(d)).toList(),
-        );
+        .map((snap) {
+          debugPrint(
+            '📋 [ChatService] getUserChatsStream - Total docs: ${snap.docs.length}',
+          );
+
+          final allChats = snap.docs
+              .map((d) => ChatRoom.fromFirestore(d))
+              .toList();
+
+          // Debug: mostrar deletedFor de cada chat
+          for (final chat in allChats) {
+            debugPrint(
+              '📋 [ChatService] Chat ${chat.chatRoomId} - deletedFor: ${chat.deletedFor}',
+            );
+          }
+
+          // Filtrar chats eliminados por este usuario
+          final filtered = allChats
+              .where((chat) => !chat.isDeletedFor(userId))
+              .toList();
+
+          debugPrint(
+            '📋 [ChatService] Chats después de filtrar eliminados: ${filtered.length}',
+          );
+
+          return filtered;
+        });
   }
 
   Stream<List<ChatRoom>> getNewChatsStream(String userId) => getUserChatsStream(
@@ -71,7 +99,7 @@ class ChatService {
         userId,
       ).map((chats) => chats.where((c) => c.userHasResponded(userId)).toList());
 
-  // MENSAJES
+  // ==================== MENSAJES ====================
 
   Future<void> sendTextMessage({
     required String chatRoomId,
@@ -80,6 +108,12 @@ class ChatService {
     required String text,
   }) async {
     try {
+      // 🆕 Verificar si está bloqueado
+      if (await _isBlocked(chatRoomId, senderId, receiverId)) {
+        debugPrint('⚠️ [ChatService] Mensaje no enviado: usuario bloqueado');
+        return; // El mensaje no se envía pero el usuario no lo sabe
+      }
+
       final messagesRef = _firestore
           .collection('chat_rooms')
           .doc(chatRoomId)
@@ -121,7 +155,12 @@ class ChatService {
     required int durationSeconds,
   }) async {
     try {
-      // Subir audio en: chat/{chatRoomId}/audios/<file>
+      // 🆕 Verificar bloqueo
+      if (await _isBlocked(chatRoomId, senderId, receiverId)) {
+        debugPrint('⚠️ [ChatService] Audio no enviado: usuario bloqueado');
+        return;
+      }
+
       final url = await _uploadFileToChatFolder(
         file: audioFile,
         chatRoomId: chatRoomId,
@@ -170,6 +209,12 @@ class ChatService {
     required List<File> imageFiles,
   }) async {
     try {
+      // 🆕 Verificar bloqueo
+      if (await _isBlocked(chatRoomId, senderId, receiverId)) {
+        debugPrint('⚠️ [ChatService] Imagen no enviada: usuario bloqueado');
+        return;
+      }
+
       final urls = <String>[];
       for (final img in imageFiles) {
         final url = await _uploadFileToChatFolder(
@@ -218,15 +263,13 @@ class ChatService {
     }
   }
 
+  /// 🆕 Stream de mensajes con filtro de bloqueados
   Stream<List<FirestoreMessage>> getMessagesStream(String chatRoomId) {
     return _firestore
         .collection('chat_rooms')
         .doc(chatRoomId)
         .collection('messages')
-        .orderBy(
-          'sentAt',
-          descending: true,
-        ) // newest first (compatible con .reversed en UI)
+        .orderBy('sentAt', descending: true)
         .snapshots()
         .map(
           (snap) =>
@@ -234,9 +277,65 @@ class ChatService {
         );
   }
 
+  /// 🆕 Stream de mensajes filtrados por deletedAt del usuario (estilo WhatsApp)
+  /// Solo muestra mensajes enviados DESPUÉS de la última eliminación
+  Stream<List<FirestoreMessage>> getMessagesStreamForUser({
+    required String chatRoomId,
+    required String userId,
+  }) {
+    // Primero obtenemos el deletedAt del chat room
+    return _firestore.collection('chat_rooms').doc(chatRoomId).snapshots().asyncExpand((
+      chatDoc,
+    ) {
+      final data = chatDoc.data() ?? {};
+      final deletedAtMap = data['deletedAt'] as Map<String, dynamic>? ?? {};
+
+      // Obtener timestamp de eliminación del usuario
+      DateTime? userDeletedAt;
+      if (deletedAtMap.containsKey(userId)) {
+        final raw = deletedAtMap[userId];
+        if (raw is Timestamp) {
+          userDeletedAt = raw.toDate();
+        }
+      }
+
+      debugPrint(
+        '🔍 [ChatService] getMessagesStreamForUser - userId: $userId, deletedAt: $userDeletedAt',
+      );
+
+      // Escuchar mensajes en tiempo real y filtrar
+      return _firestore
+          .collection('chat_rooms')
+          .doc(chatRoomId)
+          .collection('messages')
+          .orderBy('sentAt', descending: true)
+          .snapshots()
+          .map((messagesSnap) {
+            final allMessages = messagesSnap.docs
+                .map((d) => FirestoreMessage.fromFirestore(d))
+                .toList();
+
+            // Filtrar mensajes anteriores a deletedAt
+            if (userDeletedAt != null) {
+              final filtered = allMessages.where((msg) {
+                return msg.sentAt.isAfter(userDeletedAt!);
+              }).toList();
+              debugPrint(
+                '🔍 [ChatService] Mensajes filtrados: ${filtered.length} de ${allMessages.length}',
+              );
+              return filtered;
+            }
+
+            return allMessages;
+          });
+    });
+  }
+
+  /// 🆕 MEJORADO: Marcar mensaje como leído Y actualizar contador
   Future<void> markMessageAsRead({
     required String chatRoomId,
     required String messageId,
+    required String userId, // 🆕 Necesario para actualizar contador
   }) async {
     try {
       await _firestore
@@ -245,52 +344,306 @@ class ChatService {
           .collection('messages')
           .doc(messageId)
           .update({'isRead': true, 'readAt': Timestamp.now()});
+
+      // 🆕 Decrementar contador de no leídos
+      await _decrementUnreadCount(chatRoomId, userId);
+
       debugPrint('✅ [ChatService] Mensaje marcado como leído: $messageId');
     } catch (e) {
       debugPrint('❌ [ChatService] Error al marcar mensaje leído: $e');
     }
   }
 
+  /// 🆕 MEJORADO: Marcar todos los mensajes como leídos Y resetear contador
   Future<void> markAllMessagesAsRead({
     required String chatRoomId,
     required String userId,
   }) async {
     try {
-      final ref = _firestore
-          .collection('chat_rooms')
-          .doc(chatRoomId)
-          .collection('messages');
-      final unread = await ref
+      debugPrint(
+        '🔍 [ChatService] Buscando mensajes no leídos para: $userId en sala: $chatRoomId',
+      );
+
+      final chatRoomRef = _firestore.collection('chat_rooms').doc(chatRoomId);
+      final messagesRef = chatRoomRef.collection('messages');
+
+      // Obtener TODOS los mensajes recibidos por este usuario
+      final allReceived = await messagesRef
           .where('receiverId', isEqualTo: userId)
-          .where('isRead', isEqualTo: false)
           .get();
 
-      final batch = _firestore.batch();
-      for (final doc in unread.docs) {
-        batch.update(doc.reference, {
-          'isRead': true,
-          'readAt': Timestamp.now(),
-        });
+      debugPrint(
+        '📩 [ChatService] Total mensajes recibidos: ${allReceived.docs.length}',
+      );
+
+      // Filtrar los no leídos manualmente (más robusto)
+      final unreadDocs = allReceived.docs.where((doc) {
+        final data = doc.data();
+        return data['isRead'] != true;
+      }).toList();
+
+      debugPrint('📬 [ChatService] Mensajes no leídos: ${unreadDocs.length}');
+
+      if (unreadDocs.isNotEmpty) {
+        // Marcar todos como leídos en batch
+        final batch = _firestore.batch();
+        final now = Timestamp.now();
+
+        for (final doc in unreadDocs) {
+          batch.update(doc.reference, {'isRead': true, 'readAt': now});
+        }
+        await batch.commit();
+        debugPrint(
+          '✅ [ChatService] ${unreadDocs.length} mensajes marcados como leídos',
+        );
       }
-      await batch.commit();
 
-      await _firestore.collection('chat_rooms').doc(chatRoomId).update({
-        'unreadCount.$userId': 0,
-      });
+      // 🆕 FIX: Actualizar el mapa completo para evitar problemas con emails que tienen puntos
+      final chatRoomDoc = await chatRoomRef.get();
+      final data = chatRoomDoc.data() ?? {};
 
-      debugPrint('✅ [ChatService] Todos los mensajes marcados como leídos');
+      // Debug: ver qué hay actualmente en unreadCount
+      debugPrint('🔍 [ChatService] unreadCount actual: ${data['unreadCount']}');
+
+      // Reconstruir el mapa limpio (solo con los participantes correctos)
+      final participants = List<String>.from(data['participants'] ?? []);
+      final newUnreadCount = <String, int>{};
+      for (final p in participants) {
+        newUnreadCount[p] = (p == userId)
+            ? 0
+            : _getUnreadValue(data['unreadCount'], p);
+      }
+
+      await chatRoomRef.update({'unreadCount': newUnreadCount});
+      debugPrint('✅ [ChatService] Contador actualizado: $newUnreadCount');
     } catch (e) {
       debugPrint('❌ [ChatService] Error al marcar todos como leídos: $e');
     }
   }
 
-  // HELPERS PRIVADOS
+  /// Helper para obtener el valor de unread de forma segura
+  int _getUnreadValue(dynamic unreadMap, String key) {
+    if (unreadMap == null || unreadMap is! Map) return 0;
+    final value = unreadMap[key];
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value) ?? 0;
+    return 0;
+  }
 
-  /// Sube archivo a: chat/{chatRoomId}/{subfolder}/{timestamp_filename.ext}
+  // ==================== FUNCIONES NUEVAS ====================
+
+  /// 🆕 Bloquear usuario
+  Future<void> blockUser({
+    required String chatRoomId,
+    required String userId,
+    required String blockedUserId,
+  }) async {
+    try {
+      final chatRoomRef = _firestore.collection('chat_rooms').doc(chatRoomId);
+      final doc = await chatRoomRef.get();
+
+      if (!doc.exists) return;
+
+      final data = doc.data() ?? {};
+      final blockedBy = Map<String, dynamic>.from(data['blockedBy'] ?? {});
+
+      // Añadir el usuario bloqueado a la lista del usuario actual
+      if (blockedBy[userId] == null) {
+        blockedBy[userId] = [blockedUserId];
+      } else {
+        final List<dynamic> blocked = List.from(blockedBy[userId]);
+        if (!blocked.contains(blockedUserId)) {
+          blocked.add(blockedUserId);
+          blockedBy[userId] = blocked;
+        }
+      }
+
+      await chatRoomRef.update({'blockedBy': blockedBy});
+      debugPrint('✅ [ChatService] Usuario bloqueado: $blockedUserId');
+    } catch (e) {
+      debugPrint('❌ [ChatService] Error al bloquear usuario: $e');
+      rethrow;
+    }
+  }
+
+  /// 🆕 Desbloquear usuario
+  Future<void> unblockUser({
+    required String chatRoomId,
+    required String userId,
+    required String blockedUserId,
+  }) async {
+    try {
+      final chatRoomRef = _firestore.collection('chat_rooms').doc(chatRoomId);
+      final doc = await chatRoomRef.get();
+
+      if (!doc.exists) return;
+
+      final data = doc.data() ?? {};
+      final blockedBy = Map<String, dynamic>.from(data['blockedBy'] ?? {});
+
+      if (blockedBy[userId] != null) {
+        final List<dynamic> blocked = List.from(blockedBy[userId]);
+        blocked.remove(blockedUserId);
+        blockedBy[userId] = blocked;
+
+        await chatRoomRef.update({'blockedBy': blockedBy});
+        debugPrint('✅ [ChatService] Usuario desbloqueado: $blockedUserId');
+      }
+    } catch (e) {
+      debugPrint('❌ [ChatService] Error al desbloquear usuario: $e');
+    }
+  }
+
+  /// 🆕 Verificar si un usuario está bloqueado
+  Future<bool> isUserBlocked({
+    required String chatRoomId,
+    required String userId,
+    required String otherUserId,
+  }) async {
+    try {
+      final doc = await _firestore
+          .collection('chat_rooms')
+          .doc(chatRoomId)
+          .get();
+
+      if (!doc.exists) return false;
+
+      final data = doc.data() ?? {};
+      final blockedBy = Map<String, dynamic>.from(data['blockedBy'] ?? {});
+
+      // Verificar si userId bloqueó a otherUserId
+      if (blockedBy[userId] != null) {
+        final List<dynamic> blocked = List.from(blockedBy[userId]);
+        return blocked.contains(otherUserId);
+      }
+
+      return false;
+    } catch (e) {
+      debugPrint('❌ [ChatService] Error al verificar bloqueo: $e');
+      return false;
+    }
+  }
+
+  /// 🆕 Eliminar chat para un usuario específico (estilo WhatsApp)
+  /// Guarda el timestamp de eliminación para filtrar mensajes antiguos
+  Future<void> deleteChatForUser({
+    required String chatRoomId,
+    required String userId,
+  }) async {
+    try {
+      // Primero obtener el deletedAt actual
+      final doc = await _firestore
+          .collection('chat_rooms')
+          .doc(chatRoomId)
+          .get();
+      final data = doc.data() ?? {};
+      final deletedAt = Map<String, dynamic>.from(data['deletedAt'] ?? {});
+
+      // Agregar/actualizar timestamp para este usuario
+      deletedAt[userId] = Timestamp.now();
+
+      await _firestore.collection('chat_rooms').doc(chatRoomId).update({
+        'deletedFor': FieldValue.arrayUnion([userId]),
+        'deletedAt': deletedAt, // 🆕 Guardar mapa completo
+      });
+      debugPrint(
+        '✅ [ChatService] Chat eliminado para el usuario: $userId (con timestamp: ${deletedAt[userId]})',
+      );
+    } catch (e) {
+      debugPrint('❌ [ChatService] Error al eliminar chat: $e');
+      rethrow;
+    }
+  }
+
+  /// 🆕 Verificar si ambos usuarios eliminaron el chat (para eliminación definitiva)
+  Future<bool> isChatDeletedByBoth({
+    required String chatRoomId,
+    required List<String> participants,
+  }) async {
+    try {
+      final doc = await _firestore
+          .collection('chat_rooms')
+          .doc(chatRoomId)
+          .get();
+
+      if (!doc.exists) return false;
+
+      final data = doc.data() ?? {};
+      final deletedFor = List<String>.from(data['deletedFor'] ?? []);
+
+      // Verificar si ambos participantes están en deletedFor
+      return participants.every((p) => deletedFor.contains(p));
+    } catch (e) {
+      debugPrint('❌ [ChatService] Error al verificar eliminación: $e');
+      return false;
+    }
+  }
+
+  // ==================== HELPERS PRIVADOS ====================
+
+  /// Verificar si el remitente está bloqueado por el receptor
+  Future<bool> _isBlocked(
+    String chatRoomId,
+    String senderId,
+    String receiverId,
+  ) async {
+    try {
+      final doc = await _firestore
+          .collection('chat_rooms')
+          .doc(chatRoomId)
+          .get();
+
+      if (!doc.exists) return false;
+
+      final data = doc.data() ?? {};
+      final blockedBy = Map<String, dynamic>.from(data['blockedBy'] ?? {});
+
+      // Verificar si el receptor bloqueó al remitente
+      if (blockedBy[receiverId] != null) {
+        final List<dynamic> blocked = List.from(blockedBy[receiverId]);
+        return blocked.contains(senderId);
+      }
+
+      return false;
+    } catch (e) {
+      debugPrint('❌ [ChatService] Error al verificar bloqueo: $e');
+      return false;
+    }
+  }
+
+  /// 🆕 Decrementar contador de no leídos
+  Future<void> _decrementUnreadCount(String chatRoomId, String userId) async {
+    try {
+      final ref = _firestore.collection('chat_rooms').doc(chatRoomId);
+      final doc = await ref.get();
+
+      if (!doc.exists) return;
+
+      final data = doc.data() ?? {};
+      final unreadCount = Map<String, dynamic>.from(data['unreadCount'] ?? {});
+
+      int currentCount = 0;
+      final rawCount = unreadCount[userId];
+      if (rawCount is int) {
+        currentCount = rawCount;
+      } else if (rawCount is String) {
+        currentCount = int.tryParse(rawCount) ?? 0;
+      }
+
+      if (currentCount > 0) {
+        // 🆕 FIX: Actualizar el mapa completo para evitar problemas con emails que tienen puntos
+        unreadCount[userId] = currentCount - 1;
+        await ref.update({'unreadCount': unreadCount});
+      }
+    } catch (e) {
+      debugPrint('❌ [ChatService] Error al decrementar contador: $e');
+    }
+  }
+
   Future<String> _uploadFileToChatFolder({
     required File file,
     required String chatRoomId,
-    required String subfolder, // 'images' o 'audios'
+    required String subfolder,
   }) async {
     try {
       final filename =
@@ -298,7 +651,6 @@ class ChatService {
       final storagePath = 'chat/$chatRoomId/$subfolder/$filename';
       final ref = _storage.ref().child(storagePath);
 
-      // Subida
       final uploadTask = ref.putFile(file);
       final snapshot = await uploadTask;
       final downloadUrl = await snapshot.ref.getDownloadURL();
@@ -344,6 +696,7 @@ class ChatService {
         }
       });
 
+      // 🆕 Solo incrementar si el receptor no tiene el chat abierto
       unread[receiverId] = (unread[receiverId] ?? 0) + 1;
 
       // Normalizar hasResponded
@@ -362,6 +715,35 @@ class ChatService {
 
       responded[senderId] = true;
 
+      // 🆕 Restaurar chat para AMBOS usuarios si estaban en deletedFor
+      // - Si el SENDER había eliminado el chat y ahora escribe, debe volver a verlo
+      // - Si el RECEIVER había eliminado el chat y le escriben, debe volver a verlo
+      final deletedFor = List<String>.from(data['deletedFor'] ?? []);
+      debugPrint(
+        '🔍 [ChatService] _updateChatRoom - senderId: $senderId, receiverId: $receiverId',
+      );
+      debugPrint(
+        '🔍 [ChatService] _updateChatRoom - deletedFor ANTES: $deletedFor',
+      );
+
+      // Restaurar para el sender (si eliminó el chat pero ahora escribe)
+      if (deletedFor.contains(senderId)) {
+        deletedFor.remove(senderId);
+        debugPrint('🔄 [ChatService] Chat restaurado para SENDER: $senderId');
+      }
+
+      // Restaurar para el receiver (si eliminó el chat pero le escriben)
+      if (deletedFor.contains(receiverId)) {
+        deletedFor.remove(receiverId);
+        debugPrint(
+          '🔄 [ChatService] Chat restaurado para RECEIVER: $receiverId',
+        );
+      }
+
+      debugPrint(
+        '🔍 [ChatService] _updateChatRoom - deletedFor DESPUÉS: $deletedFor',
+      );
+
       await ref.update({
         'lastMessage': lastMessage,
         'lastMessageType': lastMessageType,
@@ -369,6 +751,7 @@ class ChatService {
         'lastMessageData': lastMessageData,
         'unreadCount': unread,
         'hasResponded': responded,
+        'deletedFor': deletedFor, // 🆕 Actualizar lista de eliminados
       });
 
       debugPrint('✅ [ChatService] Chat room actualizado');
@@ -377,7 +760,7 @@ class ChatService {
     }
   }
 
-  // UTILIDADES
+  // ==================== UTILIDADES ====================
 
   Future<void> deleteMessage({
     required String chatRoomId,
@@ -410,30 +793,11 @@ class ChatService {
     }
   }
 
-  Future<void> deleteChat({
-    required String chatRoomId,
-    required String userId,
-  }) async {
-    try {
-      await _firestore.collection('chat_rooms').doc(chatRoomId).update({
-        'deletedFor': FieldValue.arrayUnion([userId]),
-      });
-      debugPrint('✅ [ChatService] Chat eliminado para el usuario');
-    } catch (e) {
-      debugPrint('❌ [ChatService] Error al eliminar chat: $e');
-    }
-  }
-
   Stream<int> getTotalUnreadCountStream(String userId) {
-    // ignore: avoid_types_as_parameter_names
     return getUserChatsStream(userId).map(
-      // ignore: avoid_types_as_parameter_names
       (chats) => chats.fold<int>(0, (sum, c) => sum + c.getUnreadCount(userId)),
     );
   }
-
-  // (Opcional) helper: descargar URL remota a archivo temporal
-  // útil si tu reproductor necesita ruta local
 
   Future<File> downloadUrlToTempFile(String url, {String? filename}) async {
     final resp = await http.get(Uri.parse(url));
