@@ -7,12 +7,6 @@ import 'package:migozz_app/features/chat/presentation/components/chat_input/chat
 
 /// Pantalla genérica de chat mejorada
 /// Base reutilizable para diferentes tipos de chat (usuario-usuario, IA, etc.)
-/// Incluye soporte para:
-/// - Renderizado inverso de mensajes (nuevos abajo)
-/// - Manejo de sugerencias/opciones
-/// - Input personalizado o por defecto
-/// - Mensajes de audio e imágenes
-/// - Recuperación de errores
 class GenericChatScreen extends StatefulWidget {
   final GenericChatController chatController;
   final String? title;
@@ -27,6 +21,8 @@ class GenericChatScreen extends StatefulWidget {
   final VoidCallback? onMessageAdded;
   final bool showLoading;
   final bool passChatControllerToMessages;
+  final String? otherUserName;
+  final String? otherUserAvatar;
 
   const GenericChatScreen({
     super.key,
@@ -43,6 +39,8 @@ class GenericChatScreen extends StatefulWidget {
     this.onMessageAdded,
     this.showLoading = false,
     this.passChatControllerToMessages = false,
+    this.otherUserName,
+    this.otherUserAvatar,
   });
 
   @override
@@ -52,18 +50,158 @@ class GenericChatScreen extends StatefulWidget {
 class GenericChatScreenState extends State<GenericChatScreen> {
   final TextEditingController _textController = TextEditingController();
   late GlobalKey<ChatInputWidgetState> _chatInputKey;
-  bool _isInitialized = true;
+  final bool _isInitialized = true;
+  bool _isAtBottom = true;
+  int _unreadMessagesCount = 0;
+  int _previousMessagesCount = 0;
+  bool _isProgrammaticScroll = false;
 
   @override
   void initState() {
     super.initState();
     _chatInputKey = GlobalKey<ChatInputWidgetState>();
+    _previousMessagesCount = widget.chatController.messages.length;
+
+    // 🆕 Deshabilitar auto-scroll del controller para control manual
+    widget.chatController.setAutoScroll(false);
+
+    widget.chatController.scrollController.addListener(_onScrollChanged);
+    widget.chatController.addListener(_onMessagesChanged);
   }
 
   @override
   void dispose() {
+    widget.chatController.scrollController.removeListener(_onScrollChanged);
+    widget.chatController.removeListener(_onMessagesChanged);
     _textController.dispose();
     super.dispose();
+  }
+
+  void _onScrollChanged() {
+    final scrollController = widget.chatController.scrollController;
+    if (!scrollController.hasClients) return;
+
+    if (_isProgrammaticScroll) return;
+
+    final isAtBottom = scrollController.position.pixels <= 100;
+
+    if (_isAtBottom != isAtBottom) {
+      setState(() {
+        _isAtBottom = isAtBottom;
+      });
+
+      if (isAtBottom) {
+        setState(() {
+          _unreadMessagesCount = 0;
+        });
+      }
+    }
+  }
+
+  void _onMessagesChanged() {
+    final currentMessagesCount = widget.chatController.messages.length;
+
+    if (currentMessagesCount > _previousMessagesCount) {
+      final newMessages = currentMessagesCount - _previousMessagesCount;
+
+      // 🔑 Verificar si el último mensaje es del otro usuario
+      final lastMessage = widget.chatController.messages.last;
+      final isReceivedMessage = lastMessage["other"] == true;
+
+      // 🆕 Guardar posición ANTES de actualizar estado
+      final scrollController = widget.chatController.scrollController;
+      double? savedScrollPosition;
+      double? savedMaxScrollExtent;
+
+      if (scrollController.hasClients && !_isAtBottom && isReceivedMessage) {
+        savedScrollPosition = scrollController.position.pixels;
+        savedMaxScrollExtent = scrollController.position.maxScrollExtent;
+        debugPrint(
+          '💾 [GenericChat] Guardando posición: pixels=$savedScrollPosition, max=$savedMaxScrollExtent',
+        );
+      }
+
+      debugPrint(
+        '📨 [GenericChat] Nuevo mensaje detectado | isAtBottom: $_isAtBottom | isReceived: $isReceivedMessage | newMessages: $newMessages',
+      );
+
+      setState(() {
+        _previousMessagesCount = currentMessagesCount;
+
+        // 🔥 LÓGICA ACTUALIZADA:
+        if (!isReceivedMessage) {
+          // 👤 MENSAJE PROPIO → SIEMPRE hacer scroll automático
+          debugPrint('✅ [GenericChat] Mensaje propio - Scroll automático');
+          _isAtBottom = true;
+          _scrollToBottom();
+        } else {
+          // 💬 MENSAJE RECIBIDO
+          if (_isAtBottom) {
+            debugPrint(
+              '✅ [GenericChat] Mensaje recibido - Scroll automático (estaba en bottom)',
+            );
+            _scrollToBottom();
+          } else {
+            debugPrint(
+              '🔴 [GenericChat] Mensaje recibido - Manteniendo posición de lectura',
+            );
+            _unreadMessagesCount += newMessages;
+
+            // 🆕 Restaurar posición después del rebuild
+            if (savedScrollPosition != null && savedMaxScrollExtent != null) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (!scrollController.hasClients) return;
+
+                // Calcular el desplazamiento causado por los nuevos mensajes
+                final newMaxScrollExtent =
+                    scrollController.position.maxScrollExtent;
+                final scrollDelta = newMaxScrollExtent - savedMaxScrollExtent!;
+
+                // Ajustar la posición para compensar el nuevo contenido
+                // Con reverse:true, los nuevos mensajes se agregan "arriba" (position 0)
+                // así que necesitamos ajustar la posición
+                final targetPosition = savedScrollPosition! + scrollDelta;
+
+                scrollController.jumpTo(targetPosition);
+
+                debugPrint(
+                  '📍 [GenericChat] Posición restaurada: $savedScrollPosition → $targetPosition (delta: $scrollDelta)',
+                );
+              });
+            }
+          }
+        }
+      });
+    }
+  }
+
+  void _scrollToBottom() {
+    _isProgrammaticScroll = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final scrollController = widget.chatController.scrollController;
+      if (!scrollController.hasClients) {
+        _isProgrammaticScroll = false;
+        return;
+      }
+
+      scrollController
+          .animateTo(
+            0,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          )
+          .then((_) => _isProgrammaticScroll = false)
+          .catchError((error) => _isProgrammaticScroll = false);
+    });
+  }
+
+  void _onScrollToBottomPressed() {
+    setState(() {
+      _unreadMessagesCount = 0;
+      _isAtBottom = true;
+    });
+    _scrollToBottom();
   }
 
   void _handleSendMessage() {
@@ -175,6 +313,8 @@ class GenericChatScreenState extends State<GenericChatScreen> {
                             chatController: widget.passChatControllerToMessages
                                 ? widget.chatController
                                 : null,
+                            otherUserName: widget.otherUserName,
+                            otherUserAvatar: widget.otherUserAvatar,
                           ),
                           // Mostrar sugerencias si existe el builder
                           if (isLastBotMsgWithOptions &&
@@ -201,6 +341,78 @@ class GenericChatScreenState extends State<GenericChatScreen> {
           ],
         ),
       ),
+      // Botón flotante para scroll al bottom con contador
+      floatingActionButton: !_isAtBottom
+          ? Padding(
+              padding: const EdgeInsets.only(bottom: 75, right: 4),
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2C2C2E),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.1),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: _onScrollToBottomPressed,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      clipBehavior: Clip.none,
+                      children: [
+                        const Icon(
+                          Icons.keyboard_arrow_down_rounded,
+                          color: Colors.white70,
+                          size: 22,
+                        ),
+                        // Badge circular más pequeño
+                        if (_unreadMessagesCount > 0)
+                          Positioned(
+                            top: -2,
+                            right: -2,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFE91E63),
+                                shape: BoxShape.circle,
+                              ),
+                              constraints: const BoxConstraints(
+                                minWidth: 16,
+                                minHeight: 16,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  _unreadMessagesCount > 9
+                                      ? '9+'
+                                      : _unreadMessagesCount.toString(),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            )
+          : null,
     );
   }
 

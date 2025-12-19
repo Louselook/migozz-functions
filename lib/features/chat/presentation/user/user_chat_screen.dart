@@ -63,6 +63,9 @@ class _UserChatScreenState extends State<UserChatScreen>
       onMarkAsRead: _markMessageAsRead,
     );
 
+    // 🆕 CRÍTICO: Deshabilitar auto-scroll para UserChat
+    _chatController.setAutoScroll(false);
+
     _initializeChat();
   }
 
@@ -516,6 +519,8 @@ class _UserChatScreenState extends State<UserChatScreen>
       showSuggestions: false,
       showLoading: false,
       customAppBar: _buildAppBar(),
+      otherUserName: widget.otherUserName,
+      otherUserAvatar: widget.otherUserAvatar,
       customInput: ChatInputWidget(
         controller: _textController,
         onSend: () {
