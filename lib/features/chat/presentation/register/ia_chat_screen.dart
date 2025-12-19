@@ -10,12 +10,13 @@ import 'package:migozz_app/features/auth/presentation/register/user_details/modu
 import 'package:migozz_app/features/chat/data/domain/models/chat_model.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
-import 'package:migozz_app/core/components/compuestos/chat/chat_message_builder.dart';
+
 import 'package:migozz_app/features/chat/presentation/components/chat_input/chat_input_widget.dart';
 import 'package:migozz_app/features/chat/controllers/register_chat_controller.dart';
 import 'package:migozz_app/features/chat/presentation/register/components/chat_operation/send_chat.dart';
 import 'package:migozz_app/features/chat/presentation/register/components/suggestion_chips.dart';
 import 'package:migozz_app/features/chat/presentation/register/components/chat_operation/functions/chat_navigation_handler.dart';
+import 'package:migozz_app/features/chat/presentation/components/generic_chat_screen.dart';
 import 'package:migozz_app/features/tutorial/avatar_register_tutorial.dart';
 import 'package:migozz_app/features/tutorial/voice_register_tutorial.dart';
 
@@ -30,15 +31,13 @@ class _IaChatScreenState extends State<IaChatScreen> {
   final TextEditingController _controller = TextEditingController();
   late final RegisterChatController _chatController;
   bool _isCompletingRegistration = false;
-
-  final GlobalKey<ChatInputWidgetState> _chatInputKey = GlobalKey();
+  late GlobalKey<GenericChatScreenState> _genericChatKey;
 
   @override
   void initState() {
     super.initState();
+    _genericChatKey = GlobalKey<GenericChatScreenState>();
 
-    // final registerCubit = context.read<RegisterCubit>();
-    // final authCubit = context.read<AuthCubit>();
     final authState = context.read<AuthCubit>().state;
     final firebaseUid = authState.firebaseUser?.uid;
 
@@ -49,8 +48,9 @@ class _IaChatScreenState extends State<IaChatScreen> {
       firebaseUid: firebaseUid,
     );
 
+    // Callbacks para gestionar el audio y tutoriales
     _chatController.onResetAudioUI = () {
-      _chatInputKey.currentState?.resetAudioManager();
+      _genericChatKey.currentState?.resetAudioManager();
     };
 
     _chatController.onShowAvatarTutorial = () => _showAvatarTutorial();
@@ -59,6 +59,7 @@ class _IaChatScreenState extends State<IaChatScreen> {
     if (_chatController.messages.isEmpty) {
       _chatController.initializeChat(onActionRequired: _handleNavigation);
     }
+
     _chatController.onRegistrationComplete = () async {
       if (_isCompletingRegistration) return;
       _isCompletingRegistration = true;
@@ -180,15 +181,13 @@ class _IaChatScreenState extends State<IaChatScreen> {
 
   // Método para mostrar el tutorial de avatar
   void _showAvatarTutorial() {
-    final chatInputState = _chatInputKey.currentState;
-    if (chatInputState == null) {
-      debugPrint('⚠️ [IaChatScreen] ChatInputWidget state no disponible');
+    final attachButtonKey = _genericChatKey.currentState?.getAttachButtonKey();
+    if (attachButtonKey == null) {
+      debugPrint('⚠️ [IaChatScreen] Attach button key no disponible');
       return;
     }
 
-    final attachButtonKey = chatInputState.attachButtonKey;
     final language = context.read<RegisterCubit>().state.language ?? 'English';
-
     debugPrint('📸 [IaChatScreen] Mostrando tutorial de avatar');
 
     final tutorialService = AvatarTutorialService();
@@ -205,15 +204,13 @@ class _IaChatScreenState extends State<IaChatScreen> {
   }
 
   void _showVoiceNoteTutorial() {
-    final chatInputState = _chatInputKey.currentState;
-    if (chatInputState == null) {
-      debugPrint('⚠️ [IaChatScreen] ChatInputWidget state no disponible');
+    final micButtonKey = _genericChatKey.currentState?.getMicButtonKey();
+    if (micButtonKey == null) {
+      debugPrint('⚠️ [IaChatScreen] Mic button key no disponible');
       return;
     }
 
-    final micButtonKey = chatInputState.micButtonKey;
     final language = context.read<RegisterCubit>().state.language ?? 'English';
-
     debugPrint('🎤 [IaChatScreen] Mostrando tutorial de voice note');
 
     final tutorialService = VoiceNoteTutorialService();
@@ -229,134 +226,105 @@ class _IaChatScreenState extends State<IaChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return GenericChatScreen(
+      key: _genericChatKey,
+      chatController: _chatController,
       backgroundColor: AppColors.backgroundDark,
-      body: SafeArea(
-        child: Column(
-          children: [
-            const SizedBox(height: 10),
-            const PrimaryText("AI ASSISTANT"),
-            const SizedBox(height: 20),
-
-            // Messages list
-            Expanded(
-              child: ListenableBuilder(
-                listenable: _chatController,
-                builder: (context, child) {
-                  return ListView.builder(
-                    controller: _chatController.scrollController,
-                    padding: const EdgeInsets.all(10),
-                    itemCount: _chatController.messages.length,
-                    itemBuilder: (context, index) {
-                      final message = _chatController.messages[index];
-                      final isLastBotMsgWithOptions =
-                          message["other"] == true &&
-                          (message["options"] != null &&
-                              (message["options"] as List).isNotEmpty) &&
-                          !_chatController.messages
-                              .sublist(index + 1)
-                              .any(
-                                (m) =>
-                                    m["other"] == true &&
-                                    (m["options"] != null &&
-                                        (m["options"] as List).isNotEmpty),
-                              );
-
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ChatMessageBuilder.buildMessage(
-                            message,
-                            chatController: _chatController,
-                          ),
-                          if (isLastBotMsgWithOptions)
-                            SuggestionChips(
-                              suggestions: List<String>.from(
-                                message["options"],
-                              ),
-                              onSelected: (suggestion) {
-                                _chatController.onSuggestionSelected(
-                                  suggestion,
-                                );
-                              },
-                            ),
-                        ],
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-
-            // Input bar
-            ListenableBuilder(
-              listenable: _chatController,
-              builder: (context, child) {
-                return ChatInputWidget(
-                  key: _chatInputKey, //  Ya estaba, perfecto
-                  controller: _controller,
-                  showPhoneInput: _chatController.showPhoneInput,
-                  onSend: () {
-                    sendChat(
-                      other: false,
-                      type: MessageType.text,
-                      text: _controller.text,
-                      controller: _chatController,
-                      context: context,
-                    );
-                    _controller.clear();
-                  },
-
-                  // Safety: if web -> send fallback text; else send audio as before
-                  onSendAudio: (path) {
-                    if (kIsWeb) {
-                      sendChat(
-                        other: false,
-                        type: MessageType.text,
-                        text:
-                            "If you'd like to add images or audio, please use the app!",
-                        controller: _chatController,
-                        context: context,
-                      );
-                    } else {
-                      sendChat(
-                        other: false,
-                        type: MessageType.audio,
-                        audio: path,
-                        controller: _chatController,
-                        context: context,
-                      );
-                    }
-                  },
-
-                  // Safety: if web -> fallback text; else send image as before
-                  onSendImage: (path) {
-                    if (kIsWeb) {
-                      sendChat(
-                        other: false,
-                        type: MessageType.text,
-                        text:
-                            "If you'd like to add images or audio, please use the app!",
-                        controller: _chatController,
-                        context: context,
-                      );
-                    } else {
-                      sendChat(
-                        other: false,
-                        type: MessageType.pictureCard,
-                        pictures: [
-                          {"imageUrl": path, "label": "Mi Imagen"},
-                        ],
-                        controller: _chatController,
-                        context: context,
-                      );
-                    }
-                  },
+      reverseMessages: true,
+      showSuggestions: true,
+      showLoading: false,
+      passChatControllerToMessages: true,
+      customAppBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const PrimaryText("AI ASSISTANT"),
+        centerTitle: true,
+      ),
+      customInput: ListenableBuilder(
+        listenable: _chatController,
+        builder: (context, child) {
+          return ChatInputWidget(
+            controller: _controller,
+            showPhoneInput: _chatController.showPhoneInput,
+            onSend: () {
+              sendChat(
+                other: false,
+                type: MessageType.text,
+                text: _controller.text,
+                controller: _chatController,
+                context: context,
+              );
+              _controller.clear();
+            },
+            onSendAudio: (path) {
+              if (kIsWeb) {
+                sendChat(
+                  other: false,
+                  type: MessageType.text,
+                  text:
+                      "If you'd like to add images or audio, please use the app!",
+                  controller: _chatController,
+                  context: context,
                 );
-              },
-            ),
-          ],
-        ),
+              } else {
+                sendChat(
+                  other: false,
+                  type: MessageType.audio,
+                  audio: path,
+                  controller: _chatController,
+                  context: context,
+                );
+              }
+            },
+            onSendImage: (path) {
+              if (kIsWeb) {
+                sendChat(
+                  other: false,
+                  type: MessageType.text,
+                  text:
+                      "If you'd like to add images or audio, please use the app!",
+                  controller: _chatController,
+                  context: context,
+                );
+              } else {
+                sendChat(
+                  other: false,
+                  type: MessageType.pictureCard,
+                  pictures: [
+                    {"imageUrl": path, "label": "Mi Imagen"},
+                  ],
+                  controller: _chatController,
+                  context: context,
+                );
+              }
+            },
+          );
+        },
+      ),
+      suggestionBuilder: ListenableBuilder(
+        listenable: _chatController,
+        builder: (context, child) {
+          final messages = _chatController.messages;
+          if (messages.isEmpty) {
+            return const SizedBox.shrink();
+          }
+
+          // Buscar el último mensaje del bot con opciones
+          for (int i = messages.length - 1; i >= 0; i--) {
+            final message = messages[i];
+            if (message["other"] == true &&
+                message["options"] != null &&
+                (message["options"] as List).isNotEmpty) {
+              return SuggestionChips(
+                suggestions: List<String>.from(message["options"]),
+                onSelected: (suggestion) {
+                  _chatController.onSuggestionSelected(suggestion);
+                },
+              );
+            }
+          }
+          return const SizedBox.shrink();
+        },
       ),
     );
   }

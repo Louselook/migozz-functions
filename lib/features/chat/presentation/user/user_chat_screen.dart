@@ -8,15 +8,16 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/color.dart';
-import 'package:migozz_app/core/components/compuestos/chat/chat_message_builder.dart';
+
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/features/chat/controllers/user_chat_controller.dart';
 import 'package:migozz_app/features/chat/data/datasources/chat_service.dart';
 import 'package:migozz_app/features/chat/data/datasources/message_adapter.dart';
 import 'package:migozz_app/features/chat/data/domain/models/chat_model.dart';
 import 'package:migozz_app/features/chat/presentation/components/chat_input/chat_input_widget.dart';
+import 'package:migozz_app/features/chat/presentation/components/generic_chat_screen.dart';
 
-/// Pantalla de chat entre dos usuarios - SOLO CON MEJORA DE MARCADO LEÍDO
+/// Pantalla de chat entre dos usuarios
 class UserChatScreen extends StatefulWidget {
   final String otherUserId;
   final String otherUserName;
@@ -43,13 +44,15 @@ class _UserChatScreenState extends State<UserChatScreen>
   final ChatService _chatService = ChatService();
   final TextEditingController _textController = TextEditingController();
   bool _isInitialized = false;
-  bool _isBlocked = false; // 🆕 Estado de bloqueo
-  StreamSubscription? _messagesSubscription; // 🆕 Para cancelar el stream
+  bool _isBlocked = false;
+  StreamSubscription? _messagesSubscription;
+  late GlobalKey<GenericChatScreenState> _genericChatKey;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this); // 🆕 AÑADIDO
+    WidgetsBinding.instance.addObserver(this);
+    _genericChatKey = GlobalKey<GenericChatScreenState>();
 
     _chatController = UserChatController(
       currentUserId: widget.currentUserId,
@@ -505,49 +508,24 @@ class _UserChatScreenState extends State<UserChatScreen>
       );
     }
 
-    return Scaffold(
+    return GenericChatScreen(
+      key: _genericChatKey,
+      chatController: _chatController,
       backgroundColor: AppColors.backgroundDark,
-      appBar: _buildAppBar(),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListenableBuilder(
-              listenable: _chatController,
-              builder: (context, child) {
-                final messages = _chatController.messages;
-                return ListView.builder(
-                  controller: _chatController.scrollController,
-                  padding: const EdgeInsets.all(10),
-                  reverse: true, // 🆕 Los mensajes nuevos aparecen abajo
-                  itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    // 🆕 Invertir el índice porque reverse: true
-                    final reversedIndex = messages.length - 1 - index;
-                    final message = messages[reversedIndex];
-                    return ChatMessageBuilder.buildMessage(
-                      message,
-                      chatController: null,
-                      otherUserName: widget.otherUserName,
-                      otherUserAvatar: widget.otherUserAvatar,
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-
-          ChatInputWidget(
-            controller: _textController,
-            onSend: () {
-              if (_textController.text.trim().isNotEmpty) {
-                _chatController.sendTextMessage(_textController.text);
-                _textController.clear();
-              }
-            },
-            onSendAudio: _sendAudioMessage,
-            onSendImage: _sendImageMessage,
-          ),
-        ],
+      reverseMessages: true,
+      showSuggestions: false,
+      showLoading: false,
+      customAppBar: _buildAppBar(),
+      customInput: ChatInputWidget(
+        controller: _textController,
+        onSend: () {
+          if (_textController.text.trim().isNotEmpty) {
+            _chatController.sendTextMessage(_textController.text);
+            _textController.clear();
+          }
+        },
+        onSendAudio: _sendAudioMessage,
+        onSendImage: _sendImageMessage,
       ),
     );
   }
