@@ -21,7 +21,11 @@
             "emptyEmail" : "Email cannot be empty",
             "invalidEmail" : "Please enter a valid email",
             "notExistEmail" : "This email is not registered. Please create an account first.",
-            "validationEmail" : "Error verifying email: "
+            "validationEmail" : "Error verifying email: ",
+            "cancelledGoogle" : "Login with Google was cancelled",
+            "cancelledApple" : "Login with Apple was cancelled",
+            "errorGoogle" : "Error logging in with Google. Please try again.",
+            "errorApple" : "Error logging in with Apple. Please try again."
         },
         "presentation":{
             "title" : "Welcome to Migozz",
@@ -571,6 +575,72 @@
       "success": "Report sent successfully",
       "validationError": "Please complete all required fields",
       "invalidEmail": "Enter a valid email address"
+    }
+  },
+
+  "chat": {
+    "input": {
+      "webRestriction": "If you'd like to add images or audio, please use the app!",
+      "holdToRecord": "Hold to record",
+      "typeMessage": "Type something...",
+      "phoneHint": "Phone number",
+      "searchCountry": "Search country"
+    },
+    "attachments": {
+      "gallery": "Gallery",
+      "camera": "Camera"
+    },
+    "assistant": {
+      "title": "AI ASSISTANT"
+    },
+    "validations": {
+      "missingData": "Missing data to complete registration",
+      "missingEmailOTP": "Missing email or OTP code. Check the chat.",
+      "errorCompleting": "Error completing registration: "
+    },
+    "userChat": {
+      "appBar": {
+        "tapToViewProfile": "Tap to view profile"
+      },
+      "menu": {
+        "viewProfile": "View profile",
+        "deleteChat": "Delete chat",
+        "block": "Block",
+        "unblock": "Unblock"
+      },
+      "dialogs": {
+        "deleteTitle": "Delete chat?",
+        "deleteMessage": "The chat will be deleted only for you. The other user will still be able to see it.",
+        "blockTitle": "Block {{name}}?",
+        "unblockTitle": "Unblock {{name}}?",
+        "blockMessage": "You will not receive messages from this user while they are blocked. The user will not know you blocked them.",
+        "unblockMessage": "You will receive messages from this user again.",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "block": "Block",
+        "unblock": "Unblock"
+      },
+      "messages": {
+        "sending": "Sending...",
+        "you": "You",
+        "image": "Image",
+        "chatDeleted": "Chat deleted",
+        "userBlocked": "{{name}} has been blocked",
+        "userUnblocked": "{{name}} has been unblocked"
+      },
+      "errors": {
+        "sendMessage": "Error sending message: ",
+        "profileNotFound": "User profile could not be found",
+        "loadProfile": "Error loading profile: ",
+        "deleteChat": "Error deleting: ",
+        "blockUser": "Error blocking: ",
+        "sendAudio": "Error sending audio: ",
+        "sendImage": "Error sending image: "
+      },
+      "webRestrictions": {
+        "audio": "Please use the app to send audio!",
+        "image": "Please use the app to send images!"
+      }
     }
   }
 }

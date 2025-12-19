@@ -1,9 +1,8 @@
-// user_chat_screen.dart - VERSIÓN CON SOLO LA MEJORA DE MARCADO COMO LEÍDO
-// Este archivo solo incluye los cambios necesarios para arreglar el problema de los mensajes no leídos
-
+// user_chat_screen.dart - VERSIÓN CON TRADUCCIONES
 import 'dart:async';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -38,7 +37,6 @@ class UserChatScreen extends StatefulWidget {
 
 class _UserChatScreenState extends State<UserChatScreen>
     with WidgetsBindingObserver {
-  // 🆕 AÑADIDO para detectar lifecycle
   late UserChatController _chatController;
   late String _chatRoomId;
   final ChatService _chatService = ChatService();
@@ -63,7 +61,6 @@ class _UserChatScreenState extends State<UserChatScreen>
       onMarkAsRead: _markMessageAsRead,
     );
 
-    // 🆕 CRÍTICO: Deshabilitar auto-scroll para UserChat
     _chatController.setAutoScroll(false);
 
     _initializeChat();
@@ -71,20 +68,18 @@ class _UserChatScreenState extends State<UserChatScreen>
 
   @override
   void dispose() {
-    _messagesSubscription?.cancel(); // 🆕 Cancelar stream PRIMERO
+    _messagesSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _chatController.dispose();
     _textController.dispose();
     super.dispose();
   }
 
-  // 🆕 NUEVO: Detectar cuando la app vuelve del background
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
 
     if (state == AppLifecycleState.resumed) {
-      // Marcar mensajes como leídos cuando la app vuelve a primer plano
       _markAllAsReadSilently();
     }
   }
@@ -102,10 +97,8 @@ class _UserChatScreenState extends State<UserChatScreen>
 
       _loadMessages();
 
-      // 🆕 CRÍTICO: Marcar todos los mensajes como leídos al entrar al chat
       await _markAllAsReadSilently();
 
-      // 🆕 Verificar si el usuario está bloqueado
       _isBlocked = await _chatService.isUserBlocked(
         chatRoomId: _chatRoomId,
         userId: widget.currentUserId,
@@ -120,7 +113,6 @@ class _UserChatScreenState extends State<UserChatScreen>
     }
   }
 
-  /// 🆕 NUEVO: Marcar todos como leídos sin mostrar mensajes
   Future<void> _markAllAsReadSilently() async {
     try {
       await _chatService.markAllMessagesAsRead(
@@ -141,7 +133,6 @@ class _UserChatScreenState extends State<UserChatScreen>
         )
         .listen(
           (firestoreMessages) {
-            // 🆕 Verificar que el widget esté montado antes de usar el controller
             if (!mounted) return;
 
             _chatController.clearMessages();
@@ -155,7 +146,6 @@ class _UserChatScreenState extends State<UserChatScreen>
               _chatController.addMessages(uiMessages);
             }
 
-            // 🆕 NUEVO: Marcar nuevos mensajes como leídos automáticamente
             _markNewMessagesAsRead(firestoreMessages);
           },
           onError: (error) {
@@ -164,11 +154,9 @@ class _UserChatScreenState extends State<UserChatScreen>
         );
   }
 
-  /// 🆕 NUEVO: Marcar nuevos mensajes recibidos como leídos
   Future<void> _markNewMessagesAsRead(List<dynamic> messages) async {
     try {
       for (final msg in messages) {
-        // Solo marcar como leídos los mensajes que recibí y que no están leídos
         if (msg.receiverId == widget.currentUserId && !msg.isRead) {
           await _chatService.markMessageAsRead(
             chatRoomId: _chatRoomId,
@@ -200,7 +188,7 @@ class _UserChatScreenState extends State<UserChatScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al enviar mensaje: $e'),
+            content: Text("${"chat.userChat.errors.sendMessage".tr()}$e"),
             backgroundColor: Colors.red,
           ),
         );
@@ -223,10 +211,8 @@ class _UserChatScreenState extends State<UserChatScreen>
 
   // ==================== ACCIONES DEL MENÚ ====================
 
-  /// 🆕 Navegar al perfil del usuario
   Future<void> _goToProfile() async {
     try {
-      // Buscar el usuario por email
       final userDoc = await FirebaseFirestore.instance
           .collection('users')
           .where('email', isEqualTo: widget.otherUserId)
@@ -236,8 +222,8 @@ class _UserChatScreenState extends State<UserChatScreen>
       if (userDoc.docs.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('No se pudo encontrar el perfil del usuario'),
+            SnackBar(
+              content: Text("chat.userChat.errors.profileNotFound".tr()),
               backgroundColor: Colors.orange,
             ),
           );
@@ -256,7 +242,7 @@ class _UserChatScreenState extends State<UserChatScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al cargar perfil: $e'),
+            content: Text("${"chat.userChat.errors.loadProfile".tr()}$e"),
             backgroundColor: Colors.red,
           ),
         );
@@ -264,29 +250,34 @@ class _UserChatScreenState extends State<UserChatScreen>
     }
   }
 
-  /// 🆕 Eliminar chat (solo para el usuario actual)
   Future<void> _deleteChat() async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF2C2C2E),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          '¿Eliminar chat?',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          "chat.userChat.dialogs.deleteTitle".tr(),
+          style: const TextStyle(color: Colors.white),
         ),
-        content: const Text(
-          'El chat se eliminará solo para ti. El otro usuario podrá seguir viéndolo.',
-          style: TextStyle(color: Colors.white70),
+        content: Text(
+          "chat.userChat.dialogs.deleteMessage".tr(),
+          style: const TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar', style: TextStyle(color: Colors.grey)),
+            child: Text(
+              "chat.userChat.dialogs.cancel".tr(),
+              style: const TextStyle(color: Colors.grey),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+            child: Text(
+              "chat.userChat.dialogs.delete".tr(),
+              style: const TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
@@ -301,19 +292,19 @@ class _UserChatScreenState extends State<UserChatScreen>
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Chat eliminado'),
+            SnackBar(
+              content: Text("chat.userChat.messages.chatDeleted".tr()),
               backgroundColor: Colors.green,
             ),
           );
-          Navigator.of(context).pop(); // Volver a la lista de chats
+          Navigator.of(context).pop();
         }
       } catch (e) {
         debugPrint('❌ [UserChat] Error al eliminar chat: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Error al eliminar: $e'),
+              content: Text("${"chat.userChat.errors.deleteChat".tr()}$e"),
               backgroundColor: Colors.red,
             ),
           );
@@ -322,33 +313,42 @@ class _UserChatScreenState extends State<UserChatScreen>
     }
   }
 
-  /// 🆕 Bloquear/Desbloquear usuario
   Future<void> _toggleBlockUser() async {
-    final action = _isBlocked ? 'desbloquear' : 'bloquear';
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF2C2C2E),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
-          '¿${_isBlocked ? 'Desbloquear' : 'Bloquear'} a ${widget.otherUserName}?',
+          _isBlocked
+              ? "chat.userChat.dialogs.unblockTitle".tr(
+                  namedArgs: {'name': widget.otherUserName},
+                )
+              : "chat.userChat.dialogs.blockTitle".tr(
+                  namedArgs: {'name': widget.otherUserName},
+                ),
           style: const TextStyle(color: Colors.white),
         ),
         content: Text(
           _isBlocked
-              ? 'Volverás a recibir mensajes de este usuario.'
-              : 'No recibirás mensajes de este usuario mientras esté bloqueado. El usuario no sabrá que lo bloqueaste.',
+              ? "chat.userChat.dialogs.unblockMessage".tr()
+              : "chat.userChat.dialogs.blockMessage".tr(),
           style: const TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar', style: TextStyle(color: Colors.grey)),
+            child: Text(
+              "chat.userChat.dialogs.cancel".tr(),
+              style: const TextStyle(color: Colors.grey),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             child: Text(
-              _isBlocked ? 'Desbloquear' : 'Bloquear',
+              _isBlocked
+                  ? "chat.userChat.dialogs.unblock".tr()
+                  : "chat.userChat.dialogs.block".tr(),
               style: TextStyle(color: _isBlocked ? Colors.green : Colors.red),
             ),
           ),
@@ -381,19 +381,23 @@ class _UserChatScreenState extends State<UserChatScreen>
             SnackBar(
               content: Text(
                 _isBlocked
-                    ? '${widget.otherUserName} ha sido bloqueado'
-                    : '${widget.otherUserName} ha sido desbloqueado',
+                    ? "chat.userChat.messages.userBlocked".tr(
+                        namedArgs: {'name': widget.otherUserName},
+                      )
+                    : "chat.userChat.messages.userUnblocked".tr(
+                        namedArgs: {'name': widget.otherUserName},
+                      ),
               ),
               backgroundColor: Colors.green,
             ),
           );
         }
       } catch (e) {
-        debugPrint('❌ [UserChat] Error al $action usuario: $e');
+        debugPrint('❌ [UserChat] Error al bloquear/desbloquear: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Error al $action: $e'),
+              content: Text("${"chat.userChat.errors.blockUser".tr()}$e"),
               backgroundColor: Colors.red,
             ),
           );
@@ -402,16 +406,11 @@ class _UserChatScreenState extends State<UserChatScreen>
     }
   }
 
-  // TODO: Implementar funcionalidad de reportar usuario
-  // Future<void> _reportUser() async {
-  //   // Implementar lógica de reporte
-  // }
-
   Future<void> _sendAudioMessage(String audioPath) async {
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please use the app to send audio!"),
+        SnackBar(
+          content: Text("chat.userChat.webRestrictions.audio".tr()),
           backgroundColor: Colors.blue,
         ),
       );
@@ -425,7 +424,7 @@ class _UserChatScreenState extends State<UserChatScreen>
         'other': false,
         'type': MessageType.audio,
         'audio': audioPath,
-        'time': 'Enviando...',
+        'time': "chat.userChat.messages.sending".tr(),
         'chatController': _chatController,
       });
 
@@ -444,7 +443,7 @@ class _UserChatScreenState extends State<UserChatScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al enviar audio: $e'),
+            content: Text("${"chat.userChat.errors.sendAudio".tr()}$e"),
             backgroundColor: Colors.red,
           ),
         );
@@ -455,8 +454,8 @@ class _UserChatScreenState extends State<UserChatScreen>
   Future<void> _sendImageMessage(String imagePath) async {
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please use the app to send images!"),
+        SnackBar(
+          content: Text("chat.userChat.webRestrictions.image".tr()),
           backgroundColor: Colors.blue,
         ),
       );
@@ -470,10 +469,10 @@ class _UserChatScreenState extends State<UserChatScreen>
         'other': false,
         'type': MessageType.pictureCard,
         'pictures': [
-          {'imageUrl': imagePath, 'label': 'Imagen'},
+          {'imageUrl': imagePath, 'label': "chat.userChat.messages.image".tr()},
         ],
-        'time': 'Enviando...',
-        'senderName': 'Tú',
+        'time': "chat.userChat.messages.sending".tr(),
+        'senderName': "chat.userChat.messages.you".tr(),
         'senderAvatar': null,
       });
 
@@ -491,7 +490,7 @@ class _UserChatScreenState extends State<UserChatScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al enviar imagen: $e'),
+            content: Text("${"chat.userChat.errors.sendImage".tr()}$e"),
             backgroundColor: Colors.red,
           ),
         );
@@ -544,7 +543,7 @@ class _UserChatScreenState extends State<UserChatScreen>
         onPressed: () => Navigator.of(context).pop(),
       ),
       title: GestureDetector(
-        onTap: _goToProfile, // 🆕 Tap en el título para ir al perfil
+        onTap: _goToProfile,
         child: Row(
           children: [
             CircleAvatar(
@@ -563,7 +562,6 @@ class _UserChatScreenState extends State<UserChatScreen>
                   : null,
             ),
             const SizedBox(width: 12),
-
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -582,16 +580,15 @@ class _UserChatScreenState extends State<UserChatScreen>
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      // 🆕 Indicador de bloqueado
                       if (_isBlocked) ...[
                         const SizedBox(width: 6),
                         const Icon(Icons.block, color: Colors.red, size: 14),
                       ],
                     ],
                   ),
-                  const Text(
-                    "Toca para ver perfil",
-                    style: TextStyle(color: Colors.white54, fontSize: 12),
+                  Text(
+                    "chat.userChat.appBar.tapToViewProfile".tr(),
+                    style: const TextStyle(color: Colors.white54, fontSize: 12),
                   ),
                 ],
               ),
@@ -614,30 +611,32 @@ class _UserChatScreenState extends State<UserChatScreen>
               case 'block':
                 _toggleBlockUser();
                 break;
-              // TODO: Implementar reportar
-              // case 'report':
-              //   _reportUser();
-              //   break;
             }
           },
           itemBuilder: (context) => [
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'profile',
               child: Row(
                 children: [
-                  Icon(Icons.person, size: 20, color: Colors.white),
-                  SizedBox(width: 12),
-                  Text('Ver perfil', style: TextStyle(color: Colors.white)),
+                  const Icon(Icons.person, size: 20, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Text(
+                    "chat.userChat.menu.viewProfile".tr(),
+                    style: const TextStyle(color: Colors.white),
+                  ),
                 ],
               ),
             ),
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'delete',
               child: Row(
                 children: [
-                  Icon(Icons.delete, size: 20, color: Colors.red),
-                  SizedBox(width: 12),
-                  Text('Eliminar chat', style: TextStyle(color: Colors.red)),
+                  const Icon(Icons.delete, size: 20, color: Colors.red),
+                  const SizedBox(width: 12),
+                  Text(
+                    "chat.userChat.menu.deleteChat".tr(),
+                    style: const TextStyle(color: Colors.red),
+                  ),
                 ],
               ),
             ),
@@ -652,7 +651,9 @@ class _UserChatScreenState extends State<UserChatScreen>
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    _isBlocked ? 'Desbloquear' : 'Bloquear',
+                    _isBlocked
+                        ? "chat.userChat.menu.unblock".tr()
+                        : "chat.userChat.menu.block".tr(),
                     style: TextStyle(
                       color: _isBlocked ? Colors.green : Colors.orange,
                     ),
@@ -660,17 +661,6 @@ class _UserChatScreenState extends State<UserChatScreen>
                 ],
               ),
             ),
-            // TODO: Habilitar cuando se implemente la funcionalidad de reportar
-            // const PopupMenuItem(
-            //   value: 'report',
-            //   child: Row(
-            //     children: [
-            //       Icon(Icons.flag, size: 20, color: Colors.white),
-            //       SizedBox(width: 12),
-            //       Text('Reportar', style: TextStyle(color: Colors.white)),
-            //     ],
-            //   ),
-            // ),
           ],
         ),
       ],
