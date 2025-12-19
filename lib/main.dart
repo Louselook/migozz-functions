@@ -48,7 +48,6 @@ class MyApp extends StatelessWidget {
           final goRouterNotifier = GoRouterNotifier(context.read<AuthCubit>());
           final router = createRouter(goRouterNotifier);
 
-          // 🔥 AGREGAR ESTA LÍNEA:
           ProfileDeeplinkService.setRouter(router);
 
           // Inicializar deeplinks solo en mobile

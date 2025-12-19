@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
@@ -144,8 +145,8 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
             SnackBar(
               content: Text(
                 durationInSeconds < 1.0
-                    ? 'El audio es muy corto (${durationInSeconds.toStringAsFixed(1)}s). Debe durar entre 1 y 10 segundos'
-                    : 'El audio es muy largo (${durationInSeconds.toStringAsFixed(1)}s). Debe durar entre 1 y 10 segundos',
+                    ? "register.validations.audioMinLimit".tr()
+                    : "register.validations.audioMaxLimit".tr(),
               ),
               backgroundColor: Colors.orange,
             ),

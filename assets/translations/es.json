@@ -42,9 +42,8 @@
       "emptyEmail": "El correo no puede estar vacío",
       "validationEmail": "Por favor ingrese un correo válido",
       "registerEmail": "Este correo ya está registrado",
-      "socialNotAvailable": "no está disponible aún",
-      "socialError": "Error al conectar con ",
-      "socialConnected": "conectado exitosamente"
+      "audioMinLimit": "El audio es muy corto (${durationInSeconds.toStringAsFixed(1)}s). Debe durar entre 1 y 10 segundos.",
+      "audioMaxLimit": "El audio es muy largo (${durationInSeconds.toStringAsFixed(1)}s). Debe durar entre 1 y 10 segundos."
     },
     "presentation": {
       "title": "¡Regístrate ahora!",
@@ -359,7 +358,7 @@
       "audioSaved": "Audio subido y guardado ✅",
       "errorUploadAudio": "Error al subir — inténtalo de nuevo",
       "record": "Graba tu nota de voz",
-      "maxLimit": "Nota de voz: máximo 5–15 segundos.",
+      "maxLimit": "Nota de voz: máximo 1–10 segundos.",
       "liste": "Escucha tu audio"
     },
     "editLocation": {

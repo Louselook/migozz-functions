@@ -41,7 +41,10 @@
         "validations":{
             "emptyEmail" : "Email cannot be empty",
             "validationEmail" :"Please enter a valid Email",
-            "registerEmail" : "This email is already registered"
+            "registerEmail" : "This email is already registered",
+            "audioLimit" : "This email is already registered",
+            "audioMinLimit": "The audio is very short (${durationInSeconds.toStringAsFixed(1)}s). It must last between 1 and 10 seconds.",
+            "audioMaxLimit": "The audio is very long (${durationInSeconds.toStringAsFixed(1)}s). It must last between 1 and 10 seconds."
         },
         "presentation":{
             "title" : "Register Now!",
@@ -365,7 +368,7 @@
             "audioSaved" : "Audio uploaded and saved ✅",
             "errorUploadAudio" : "Upload failed — try again",
             "record" : "Record Your Voicenote",
-            "maxLimit" : "Voice note: 5–15 seconds max.",
+            "maxLimit" : "Voice note: 1–10 seconds max.",
             "liste" : "Listen to your audio"
         },
         "editLocation" : {
