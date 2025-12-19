@@ -8,7 +8,14 @@ class PrimaryText extends StatelessWidget {
   final Color? color;
   final TextAlign? textAlign;
 
-  const PrimaryText(this.text, {this.color, this.textAlign, super.key, maxLines, TextOverflow? overflow});
+  const PrimaryText(
+    this.text, {
+    this.color,
+    this.textAlign,
+    super.key,
+    maxLines,
+    TextOverflow? overflow,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -131,6 +138,22 @@ TextSpan gradientTextSpan(String text, {VoidCallback? onTap}) {
       foreground: Paint()
         ..shader = const LinearGradient(
           colors: [Color(0xFFF28A57), Color(0xFF6C1D5E)],
+          stops: [0.2, 1],
+        ).createShader(const Rect.fromLTWH(90, 0, 200, 70)),
+    ),
+    recognizer: onTap != null ? (TapGestureRecognizer()..onTap = onTap) : null,
+  );
+}
+
+TextSpan gradientTextSpanRegister(String text, {VoidCallback? onTap}) {
+  return TextSpan(
+    text: text,
+    style: TextStyle(
+      fontSize: 16,
+      fontWeight: FontWeight.w800,
+      foreground: Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0xFF9022BA), Color(0xFFDC44AA)],
           stops: [0.2, 1],
         ).createShader(const Rect.fromLTWH(90, 0, 200, 70)),
     ),

@@ -16,30 +16,30 @@
             "getStarted" : "Get Started"
         }
     },
-    "login":{
-        "validations":{
-            "emptyEmail" : "Email cannot be empty",
-            "invalidEmail" : "Please enter a valid email",
-            "notExistEmail" : "This email is not registered. Please create an account first.",
-            "validationEmail" : "Error verifying email: ",
-            "cancelledGoogle" : "Login with Google was cancelled",
-            "cancelledApple" : "Login with Apple was cancelled",
-            "errorGoogle" : "Error logging in with Google. Please try again.",
-            "errorApple" : "Error logging in with Apple. Please try again."
-        },
-        "presentation":{
-            "title" : "Welcome to Migozz",
-            "subtitle1" : "Connect your Community",
-            "inputText" : "Enter email",
-            "buttonText" : "Login",
-            "subtitle2" : "Or login with",
-            "bottonText" : {
-                "Register" : "Don´t have an account? ",
-                "RegisterSpan" : "Register Now\n",
-                "Terms&Conditions" : "By registering you agree to our\n",
-                "Terms&ConditionsSpan" : "Terms and conditions"
-            }
+    "login": {
+      "validations": {
+        "emptyEmail": "Email cannot be empty",
+        "invalidEmail": "Please enter a valid email",
+        "notExistEmail": "This email is not registered. Please create an account first.",
+        "validationEmail": "Error verifying email: ",
+        "cancelledGoogle": "Login with Google was cancelled",
+        "cancelledApple": "Login with Apple was cancelled",
+        "errorGoogle": "Error logging in with Google. Please try again.",
+        "errorApple": "Error logging in with Apple. Please try again."
+      },
+      "presentation": {
+        "title": "Welcome to Migozz!",
+        "subtitle1": "Connect your Community",
+        "inputText": "Enter Email",
+        "buttonText": "Login",
+        "subtitle2": "Or login with",
+        "bottomText": {
+          "newUser": "NEW USER?\n",
+          "register": "REGISTER HERE!",
+          "agreement": "By registering you agree to our ",
+          "terms": "Terms and conditions"
         }
+      }
     },
     "register":{
         "validations":{

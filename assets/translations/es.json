@@ -21,23 +21,23 @@
       "emptyEmail": "El correo no puede estar vacío",
       "invalidEmail": "Por favor ingrese un correo válido",
       "notExistEmail": "Este correo no está registrado. Por favor crea una cuenta primero.",
-      "validationEmail": "Error al verificar el correo: $e",
+      "validationEmail": "Error al verificar el correo: ",
       "cancelledGoogle": "Se canceló el inicio de sesión con Google",
       "cancelledApple": "Se canceló el inicio de sesión con Apple",
       "errorGoogle": "Error al iniciar sesión con Google. Inténtalo de nuevo.",
       "errorApple": "Error al iniciar sesión con Apple. Inténtalo de nuevo."
     },
     "presentation": {
-      "title": "Bienvenido a Migozz",
+      "title": "¡Bienvenido a Migozz!",
       "subtitle1": "Conecta tu comunidad",
       "inputText": "Ingresa tu correo",
       "buttonText": "Iniciar sesión",
       "subtitle2": "O inicia sesión con",
-      "bottonText": {
-        "Register": "¿No tienes una cuenta?",
-        "RegisterSpan": "Regístrate ahora\n",
-        "Terms&Conditions": "Al registrarte aceptas nuestros\n",
-        "Terms&ConditionsSpan": "Términos y condiciones"
+      "bottomText": {
+        "newUser": "¿NUEVO USUARIO?\n ",
+        "register": "¡REGÍSTRATE AQUÍ!",
+        "agreement": "Al registrarte aceptas nuestros ",
+        "terms": "Términos y condiciones"
       }
     }
   },

@@ -229,7 +229,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     keyboardType: TextInputType.emailAddress,
                   ),
 
-                  const SizedBox(height: 35),
+                  const SizedBox(height: 15),
 
                   // Login button
                   GradientButton(
@@ -253,35 +253,22 @@ class _LoginScreenState extends State<LoginScreen> {
                     fontSize: 16,
                   ),
 
-                  const SizedBox(height: 20),
-
+                  const SizedBox(height: 5),
                   // Social login buttons
                   PlatformUtils.isIOS
                       ? Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Expanded(
-                              child: googleButton(
-                                onPressed: _handleGoogleSignIn,
-                              ),
-                            ),
+                            googleButton(onPressed: _handleGoogleSignIn),
                             const SizedBox(width: 10),
-                            Expanded(
-                              child: appleButton(onPressed: _handleAppleSignIn),
-                            ),
+                            appleButton(onPressed: _handleAppleSignIn),
                           ],
                         )
-                      : Row(
-                          children: [
-                            Expanded(
-                              child: googleButton(
-                                onPressed: _handleGoogleSignIn,
-                              ),
-                            ),
-                          ],
+                      : Center(
+                          child: googleButton(onPressed: _handleGoogleSignIn),
                         ),
 
-                  const SizedBox(height: 50),
+                  const SizedBox(height: 30),
 
                   // Register
                   bottomText(context: context),
