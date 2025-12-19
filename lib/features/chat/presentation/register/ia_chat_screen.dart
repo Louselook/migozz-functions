@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -82,8 +83,8 @@ class _IaChatScreenState extends State<IaChatScreen> {
           );
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Faltan datos para completar el registro'),
+            SnackBar(
+              content: Text("chat.validations.missingData".tr()),
               backgroundColor: Colors.orange,
             ),
           );
@@ -103,8 +104,8 @@ class _IaChatScreenState extends State<IaChatScreen> {
             );
             if (!mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Falta email o código OTP. Revisa el chat.'),
+              SnackBar(
+                content: Text("chat.validations.missingEmailOTP".tr()),
                 backgroundColor: Colors.orange,
               ),
             );
@@ -139,7 +140,9 @@ class _IaChatScreenState extends State<IaChatScreen> {
         } catch (_) {}
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error finalizando registro: $e')),
+          SnackBar(
+            content: Text("${"chat.validations.errorCompleting".tr()}$e"),
+          ),
         );
       } finally {
         _isCompletingRegistration = false;
@@ -237,7 +240,7 @@ class _IaChatScreenState extends State<IaChatScreen> {
       customAppBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const PrimaryText("AI ASSISTANT"),
+        title: PrimaryText("chat.assistant.title".tr()),
         centerTitle: true,
       ),
       customInput: ListenableBuilder(
@@ -261,8 +264,7 @@ class _IaChatScreenState extends State<IaChatScreen> {
                 sendChat(
                   other: false,
                   type: MessageType.text,
-                  text:
-                      "If you'd like to add images or audio, please use the app!",
+                  text: "chat.input.webRestriction".tr(),
                   controller: _chatController,
                   context: context,
                 );
@@ -281,8 +283,7 @@ class _IaChatScreenState extends State<IaChatScreen> {
                 sendChat(
                   other: false,
                   type: MessageType.text,
-                  text:
-                      "If you'd like to add images or audio, please use the app!",
+                  text: "chat.input.webRestriction".tr(),
                   controller: _chatController,
                   context: context,
                 );

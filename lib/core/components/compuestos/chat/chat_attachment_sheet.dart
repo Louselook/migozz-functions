@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:migozz_app/core/color.dart';
@@ -101,14 +102,14 @@ class ChatAttachmentGrid extends StatelessWidget {
             _buildAttachmentOption(
               context,
               icon: Icons.image_outlined,
-              label: "Galería",
+              label: "chat.attachments.gallery".tr(),
               color: Colors.blue,
               onTap: () async => await openGallery(),
             ),
             _buildAttachmentOption(
               context,
               icon: Icons.camera_alt_outlined,
-              label: "Cámara",
+              label: "chat.attachments.camera".tr(),
               color: Colors.pink,
               onTap: () async => await openCamera(),
             ),

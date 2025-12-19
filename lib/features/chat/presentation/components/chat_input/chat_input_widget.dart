@@ -95,10 +95,8 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
     // Solo permitir abrir attachments en MOBILE
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "If you'd like to add images or audio, please use the app!",
-          ),
+        SnackBar(
+          content: Text("chat.input.webRestriction".tr()),
           backgroundColor: Colors.blue,
         ),
       );
@@ -111,10 +109,8 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
     // Si estamos en web, avisar y no enviar audio
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "If you'd like to add images or audio, please use the app!",
-          ),
+        SnackBar(
+          content: Text("chat.input.webRestriction".tr()),
           backgroundColor: Colors.blue,
         ),
       );
@@ -215,7 +211,7 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
       _handleSendAudio();
     } else {
       // Si no hay texto ni audio, abrir tooltip instruccional
-      _showTooltip(context, "Mantén pulsado para grabar");
+      _showTooltip(context, "chat.input.holdToRecord".tr());
     }
   }
 
@@ -223,10 +219,8 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
     // En web, no permitimos grabar (mostramos mensaje)
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "If you'd like to add images or audio, please use the app!",
-          ),
+        SnackBar(
+          content: Text("chat.input.webRestriction".tr()),
           backgroundColor: Colors.blue,
         ),
       );
@@ -340,7 +334,7 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
           ),
           child: IntlPhoneField(
             decoration: InputDecoration(
-              hintText: '1234',
+              hintText: "chat.input.phoneHint".tr(),
               hintStyle: const TextStyle(color: Colors.white54, fontSize: 15),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(vertical: 12),
@@ -374,10 +368,10 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
               width: 350,
               countryCodeStyle: const TextStyle(color: Colors.black),
               countryNameStyle: const TextStyle(color: Colors.black87),
-              searchFieldInputDecoration: const InputDecoration(
-                hintText: 'Search country',
-                hintStyle: TextStyle(color: Colors.black87),
-                border: OutlineInputBorder(),
+              searchFieldInputDecoration: InputDecoration(
+                hintText: "chat.input.searchCountry".tr(),
+                hintStyle: const TextStyle(color: Colors.black87),
+                border: const OutlineInputBorder(),
               ),
             ),
           ),
@@ -405,7 +399,7 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
       child: CustomTextField(
         key: const ValueKey('text_input'),
         controller: widget.controller,
-        hintText: "Escribe algo...",
+        hintText: "chat.input.typeMessage".tr(),
         radius: 8,
         keyboardType: widget.keyboardType,
         textInputAction: TextInputAction.send,
@@ -555,7 +549,7 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
         if (_isLongPressValid) {
           _stopRecordingRelease();
         } else {
-          _showTooltip(context, "Mantén pulsado para grabar");
+          _showTooltip(context, "chat.input.holdToRecord".tr());
         }
       },
       onPointerCancel: (_) {

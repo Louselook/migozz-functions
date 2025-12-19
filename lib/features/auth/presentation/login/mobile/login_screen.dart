@@ -140,7 +140,7 @@ class _LoginScreenState extends State<LoginScreen> {
           !msg.contains("ProviderInstaller")) {
         CustomSnackbar.show(
           context: context,
-          message: 'Error logging in with Google: $e',
+          message: "login.validations.cancelledGoogle".tr(),
           type: SnackbarType.error,
         );
       }
@@ -168,7 +168,7 @@ class _LoginScreenState extends State<LoginScreen> {
           !msg.contains("cancelled_by_user")) {
         CustomSnackbar.show(
           context: context,
-          message: 'Error logging in with Apple: $e',
+          message: "login.validations.cancelledApple".tr(),
           type: SnackbarType.error,
         );
       }
@@ -241,7 +241,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             _handleEmailLoginCheck();
                           },
                     child: SecondaryText(
-                      "login.presentation.buttonText".tr(),fontSize: 17,
+                      "login.presentation.buttonText".tr(),
+                      fontSize: 17,
                     ),
                   ),
 
