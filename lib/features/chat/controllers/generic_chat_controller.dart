@@ -13,12 +13,25 @@ class GenericChatController extends ChangeNotifier {
   bool _isActive = true;
   bool get isActive => _isActive;
 
+  // 🆕 Flag para controlar auto-scroll
+  bool _enableAutoScroll = true;
+  bool get enableAutoScroll => _enableAutoScroll;
+
+  /// 🆕 Permitir deshabilitar el auto-scroll desde el screen
+  void setAutoScroll(bool enabled) {
+    _enableAutoScroll = enabled;
+  }
+
   /// Agregar un mensaje al chat
   void addMessage(Map<String, dynamic> message) {
     if (!_isActive) return;
     _messages.add(message);
     notifyListeners();
-    _scrollToBottom();
+
+    // 🔒 Solo hacer auto-scroll si está habilitado
+    if (_enableAutoScroll) {
+      _scrollToBottom();
+    }
   }
 
   /// Agregar múltiples mensajes
@@ -26,7 +39,11 @@ class GenericChatController extends ChangeNotifier {
     if (!_isActive) return;
     _messages.addAll(messages);
     notifyListeners();
-    _scrollToBottom();
+
+    // 🔒 Solo hacer auto-scroll si está habilitado
+    if (_enableAutoScroll) {
+      _scrollToBottom();
+    }
   }
 
   /// Enviar mensaje de texto del usuario
