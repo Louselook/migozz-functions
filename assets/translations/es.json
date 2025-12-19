@@ -1,14 +1,14 @@
 {
   "onboarding": {
     "titles": {
-      "onboardingTitle1": "Bienvenido",
-      "onboardingTitle2": "La mejor app social para hacer nuevos amigos",
-      "onboardingTitle3": "Crea, encuentra y únete a tu círculo ahora"
+      "onboardingTitle1": "⭐ Bienvenido a tu nuevo ecosistema social",
+      "onboardingTitle2": "Más conexiones. Mayor impacto",
+      "onboardingTitle3": "Crea tu enlace inteligente y activa tu comunidad en segundos"
     },
     "descriptions": {
-      "onboardingDescription1": "Es un hecho establecido que un lector se distraerá con el contenido legible.",
-      "onboardingDescription2": "Integra contenido de diferentes plataformas sociales en una experiencia coherente.",
-      "onboardingDescription3": "La plataforma permite a los creadores compartir su contenido en varios formatos, como texto, fotos y videos, ¡e incluso volver a publicar contenido de otras plataformas!"
+      "onboardingDescription1": "Tu contenido. Tus reglas. Tu universo. Centraliza todo lo que eres. Comparte al instante. Crece sin esfuerzo.",
+      "onboardingDescription2": "Migozz fusiona tus redes y te presenta nuevas comunidades con un solo toque.",
+      "onboardingDescription3": "Comparte publicaciones, enlaces, fotos, historias, música, servicios y más. Tu perfil de Migozz se convierte en tu centro de control para hacerte viral y unirte a círculos de creadores, fans o empresas."
     },
     "buttons": {
       "skip": "Saltar",
