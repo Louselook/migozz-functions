@@ -201,7 +201,9 @@ class _MobileProfileContentV3EditState
                           ),
 
                           const SizedBox(height: 24),
-                          ProfileStrengthIndicator(percentage: 80),
+                          ProfileStrengthIndicator(
+                            percentage: _calculateProfileStrength(user),
+                          ),
                           const SizedBox(height: 17),
 
                           BioSection(
@@ -553,5 +555,42 @@ class _MobileProfileContentV3EditState
   String _faviconFromDomain(String domain) {
     if (domain.isEmpty) return '';
     return 'https://www.google.com/s2/favicons?domain=$domain&sz=128';
+  }
+
+  /// Calculate profile strength based on completion criteria
+  /// - 20% for at least 1 social media
+  /// - 20% for bio text
+  /// - 20% for profile picture
+  /// - 30% for interests
+  /// - 10% for category
+  int _calculateProfileStrength(UserDTO user) {
+    int strength = 0;
+
+    // 20% for at least 1 social media
+    if (user.socialEcosystem != null && user.socialEcosystem!.isNotEmpty) {
+      strength += 20;
+    }
+
+    // 20% for bio text
+    if (user.bio != null && user.bio!.trim().isNotEmpty) {
+      strength += 20;
+    }
+
+    // 20% for profile picture
+    if (user.avatarUrl != null && user.avatarUrl!.isNotEmpty) {
+      strength += 20;
+    }
+
+    // 30% for interests
+    if (user.interests.isNotEmpty) {
+      strength += 30;
+    }
+
+    // 10% for category
+    if (user.category != null && user.category!.isNotEmpty) {
+      strength += 10;
+    }
+
+    return strength;
   }
 }
