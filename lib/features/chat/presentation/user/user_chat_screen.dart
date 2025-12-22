@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/color.dart';
+import 'package:migozz_app/core/services/notifications/active_chat_manager.dart';
 
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/features/chat/controllers/user_chat_controller.dart';
@@ -68,6 +69,9 @@ class _UserChatScreenState extends State<UserChatScreen>
 
   @override
   void dispose() {
+    // Leave the active chat to allow notifications again
+    ActiveChatManager.instance.leaveChat();
+
     _messagesSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _chatController.dispose();
@@ -93,6 +97,12 @@ class _UserChatScreenState extends State<UserChatScreen>
       _chatRoomId = await _chatService.getOrCreateChatRoom(
         currentUserId: widget.currentUserId,
         otherUserId: widget.otherUserId,
+      );
+
+      // Register this chat as active to suppress notifications
+      ActiveChatManager.instance.enterChat(
+        otherUserId: widget.otherUserId,
+        chatRoomId: _chatRoomId,
       );
 
       _loadMessages();

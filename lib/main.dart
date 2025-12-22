@@ -10,6 +10,7 @@ import 'package:migozz_app/core/router/app_router.dart';
 import 'package:migozz_app/core/router/app_router_notifier.dart';
 import 'package:migozz_app/core/services/deeplink/deeplink_functions/users/profile_deeplink_service.dart';
 import 'package:migozz_app/core/services/deeplink/deeplink_service.dart';
+import 'package:migozz_app/core/services/notifications/notification_initializer.dart';
 import 'package:migozz_app/core/services/social_auth_service.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
@@ -93,19 +94,21 @@ class MyApp extends StatelessWidget {
                 });
               }
 
-              return MaterialApp.router(
-                debugShowCheckedModeBanner: false,
-                title: 'Migozz App',
-                routerConfig: router, // 👈 ahora es estable
-                theme: ThemeData(
-                  colorScheme: ColorScheme.fromSeed(
-                    seedColor: Colors.deepPurple,
+              return NotificationInitializer(
+                child: MaterialApp.router(
+                  debugShowCheckedModeBanner: false,
+                  title: 'Migozz App',
+                  routerConfig: router, // 👈 ahora es estable
+                  theme: ThemeData(
+                    colorScheme: ColorScheme.fromSeed(
+                      seedColor: Colors.deepPurple,
+                    ),
+                    useMaterial3: true,
                   ),
-                  useMaterial3: true,
+                  localizationsDelegates: context.localizationDelegates,
+                  supportedLocales: context.supportedLocales,
+                  locale: context.locale,
                 ),
-                localizationsDelegates: context.localizationDelegates,
-                supportedLocales: context.supportedLocales,
-                locale: context.locale,
               );
             },
           );

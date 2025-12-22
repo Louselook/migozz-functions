@@ -295,7 +295,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                     }
                   },
                   onNotificationsTap: () {
-                    debugPrint('Abrir notificaciones');
+                    context.push('/notifications');
                   },
                 ),
               ),

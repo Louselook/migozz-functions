@@ -642,5 +642,18 @@
         "image": "Please use the app to send images!"
       }
     }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": {
+      "title": "No notifications yet",
+      "subtitle": "When you receive messages, they will appear here"
+    },
+    "clearAll": {
+      "title": "Clear all notifications",
+      "message": "Are you sure you want to delete all notifications?",
+      "cancel": "Cancel",
+      "confirm": "Delete all"
+    }
   }
 }

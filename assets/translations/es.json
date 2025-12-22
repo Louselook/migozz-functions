@@ -496,5 +496,18 @@
         "image": "¡Por favor usa la app para enviar imágenes!"
       }
     }
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "empty": {
+      "title": "Sin notificaciones",
+      "subtitle": "Cuando recibas mensajes, aparecerán aquí"
+    },
+    "clearAll": {
+      "title": "Borrar todas las notificaciones",
+      "message": "¿Estás seguro de que quieres eliminar todas las notificaciones?",
+      "cancel": "Cancelar",
+      "confirm": "Eliminar todo"
+    }
   }
 }
