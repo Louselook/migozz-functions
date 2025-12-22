@@ -307,7 +307,7 @@ class _MobileProfileContentV3EditState
     setState(() => _uploading = true);
 
     try {
-      await editCubit.changeAvatar(userId);
+      await editCubit.changeAvatar(userId, context);
       if (mounted) {
         AlertGeneral.show(
           context,

@@ -1,77 +1,31 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:migozz_app/core/color.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:migozz_app/core/utils/camera_permission_handler.dart';
 
 class ChatAttachmentGrid extends StatelessWidget {
   final void Function(String path) onSendImage;
   const ChatAttachmentGrid({super.key, required this.onSendImage});
 
-  Future<void> openGallery() async {
-    // Para Android 13+ (API 33+) usa READ_MEDIA_IMAGES
-    // Para versiones anteriores usa READ_EXTERNAL_STORAGE
-    PermissionStatus status;
+  Future<void> openGallery(BuildContext context) async {
+    final imagePath = await CameraPermissionHandler.openGallery(
+      imageQuality: 80,
+      context: context,
+    );
 
-    if (await Permission.photos.isGranted) {
-      status = PermissionStatus.granted;
-    } else {
-      // Intenta con photos primero (Android 13+)
-      status = await Permission.photos.request();
-
-      // Si no funciona, intenta con storage (Android < 13)
-      if (status.isDenied || status.isPermanentlyDenied) {
-        status = await Permission.storage.request();
-      }
-    }
-
-    if (status.isGranted) {
-      try {
-        final XFile? image = await ImagePicker().pickImage(
-          source: ImageSource.gallery,
-          imageQuality: 80,
-        );
-        if (image != null) {
-          onSendImage(image.path);
-          debugPrint('✅ Imagen seleccionada: ${image.path}');
-        } else {
-          debugPrint('⚠️ No se seleccionó ninguna imagen');
-        }
-      } catch (e) {
-        debugPrint('❌ Error al abrir galería: $e');
-      }
-    } else if (status.isPermanentlyDenied) {
-      debugPrint('⛔ Permiso denegado permanentemente');
-      // Opcional: mostrar diálogo para abrir configuración
-      await openAppSettings();
-    } else {
-      debugPrint('⚠️ Permiso de galería denegado');
+    if (imagePath != null) {
+      onSendImage(imagePath);
     }
   }
 
-  Future<void> openCamera() async {
-    final status = await Permission.camera.request();
+  Future<void> openCamera(BuildContext context) async {
+    final photoPath = await CameraPermissionHandler.openCamera(
+      imageQuality: 80,
+      context: context,
+    );
 
-    if (status.isGranted) {
-      try {
-        final XFile? photo = await ImagePicker().pickImage(
-          source: ImageSource.camera,
-          imageQuality: 80,
-        );
-        if (photo != null) {
-          onSendImage(photo.path);
-          debugPrint('✅ Foto capturada: ${photo.path}');
-        } else {
-          debugPrint('⚠️ No se capturó ninguna foto');
-        }
-      } catch (e) {
-        debugPrint('❌ Error al abrir cámara: $e');
-      }
-    } else if (status.isPermanentlyDenied) {
-      debugPrint('⛔ Permiso de cámara denegado permanentemente');
-      await openAppSettings();
-    } else {
-      debugPrint('⚠️ Permiso de cámara denegado');
+    if (photoPath != null) {
+      onSendImage(photoPath);
     }
   }
 
@@ -104,14 +58,14 @@ class ChatAttachmentGrid extends StatelessWidget {
               icon: Icons.image_outlined,
               label: "chat.attachments.gallery".tr(),
               color: Colors.blue,
-              onTap: () async => await openGallery(),
+              onTap: () async => await openGallery(context),
             ),
             _buildAttachmentOption(
               context,
               icon: Icons.camera_alt_outlined,
               label: "chat.attachments.camera".tr(),
               color: Colors.pink,
-              onTap: () async => await openCamera(),
+              onTap: () async => await openCamera(context),
             ),
           ],
         ),

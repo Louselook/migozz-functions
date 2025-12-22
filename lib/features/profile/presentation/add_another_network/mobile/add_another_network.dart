@@ -2,8 +2,8 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
+import 'package:migozz_app/core/utils/camera_permission_handler.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 import 'package:migozz_app/features/auth/services/media_service.dart';
@@ -21,7 +21,6 @@ class AddAnotherNetworkScreen extends StatefulWidget {
 
 class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
   final TextEditingController _linkCtrl = TextEditingController();
-  final ImagePicker _picker = ImagePicker();
 
   File? _pickedImage;
   String? _pickedImageUrl;
@@ -75,7 +74,7 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
               ),
               onTap: () async {
                 Navigator.pop(ctx);
-                await _pickImage(ImageSource.gallery);
+                await _pickImageFromGallery();
               },
             ),
             ListTile(
@@ -86,7 +85,7 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
               ),
               onTap: () async {
                 Navigator.pop(ctx);
-                await _pickImage(ImageSource.camera);
+                await _pickImageFromCamera();
               },
             ),
           ],
@@ -95,37 +94,61 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
     );
   }
 
-  Future<void> _pickImage(ImageSource source) async {
+  Future<void> _pickImageFromGallery() async {
     try {
-      final xfile = await _picker.pickImage(source: source, imageQuality: 85);
-      if (xfile == null) return;
-      final file = File(xfile.path);
+      final imagePath = await CameraPermissionHandler.openGallery(
+        imageQuality: 85,
+        context: context,
+      );
 
-      final sizeBytes = await file.length();
-      final lower = file.path.toLowerCase();
-      final allowed =
-          lower.endsWith('.jpg') ||
-          lower.endsWith('.jpeg') ||
-          lower.endsWith('.png') ||
-          lower.endsWith('.webp');
+      if (imagePath == null) return;
 
-      if (!allowed) {
-        setState(() => _error = 'Tipo de imagen no permitido');
-        return;
-      }
-      if (sizeBytes > 5 * 1024 * 1024) {
-        setState(() => _error = 'La imagen supera 5MB');
-        return;
-      }
-
-      setState(() {
-        _pickedImage = file;
-        _pickedImageUrl = null;
-        _error = null;
-      });
+      await _validateAndSetImage(imagePath);
     } catch (e) {
       setState(() => _error = 'Error seleccionando imagen: $e');
     }
+  }
+
+  Future<void> _pickImageFromCamera() async {
+    try {
+      final imagePath = await CameraPermissionHandler.openCamera(
+        imageQuality: 85,
+        context: context,
+      );
+
+      if (imagePath == null) return;
+
+      await _validateAndSetImage(imagePath);
+    } catch (e) {
+      setState(() => _error = 'Error capturando imagen: $e');
+    }
+  }
+
+  Future<void> _validateAndSetImage(String imagePath) async {
+    final file = File(imagePath);
+
+    final sizeBytes = await file.length();
+    final lower = file.path.toLowerCase();
+    final allowed =
+        lower.endsWith('.jpg') ||
+        lower.endsWith('.jpeg') ||
+        lower.endsWith('.png') ||
+        lower.endsWith('.webp');
+
+    if (!allowed) {
+      setState(() => _error = 'Tipo de imagen no permitido');
+      return;
+    }
+    if (sizeBytes > 5 * 1024 * 1024) {
+      setState(() => _error = 'La imagen supera 5MB');
+      return;
+    }
+
+    setState(() {
+      _pickedImage = file;
+      _pickedImageUrl = null;
+      _error = null;
+    });
   }
 
   Future<void> _showLoader({String message = 'Cargando...'}) async {

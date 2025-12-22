@@ -107,10 +107,10 @@ class EditCubit extends Cubit<EditCubitState> {
   }
 
   /// actualizar avatar
-  Future<void> changeAvatar(String userId) async {
+  Future<void> changeAvatar(String userId, BuildContext context) async {
     try {
       emit(state.copyWith(isSaving: true));
-      final newUrl = await _userService.changeAvatar(userId);
+      final newUrl = await _userService.changeAvatar(userId, context);
 
       if (newUrl != null) {
         await _authCubit.refreshUserProfile();

@@ -2,7 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:migozz_app/core/utils/camera_permission_handler.dart';
 import 'dart:io';
 import 'add_username_bottom_sheet.dart';
 
@@ -18,7 +18,6 @@ class AddPlatformBottomSheet extends StatefulWidget {
 class _AddPlatformBottomSheetState extends State<AddPlatformBottomSheet> {
   final TextEditingController _platformNameController = TextEditingController();
   final TextEditingController _profileLinkController = TextEditingController();
-  final ImagePicker _picker = ImagePicker();
   File? _selectedImage;
 
   Future<void> _showImageSourceDialog() async {
@@ -42,7 +41,7 @@ class _AddPlatformBottomSheetState extends State<AddPlatformBottomSheet> {
                 ),
                 onTap: () {
                   Navigator.pop(context);
-                  _pickImage(ImageSource.camera);
+                  _pickImageFromCamera();
                 },
               ),
               ListTile(
@@ -53,7 +52,7 @@ class _AddPlatformBottomSheetState extends State<AddPlatformBottomSheet> {
                 ),
                 onTap: () {
                   Navigator.pop(context);
-                  _pickImage(ImageSource.gallery);
+                  _pickImageFromGallery();
                 },
               ),
             ],
@@ -63,28 +62,51 @@ class _AddPlatformBottomSheetState extends State<AddPlatformBottomSheet> {
     );
   }
 
-  Future<void> _pickImage(ImageSource source) async {
+  Future<void> _pickImageFromCamera() async {
     try {
-      final XFile? image = await _picker.pickImage(
-        source: source,
-        maxWidth: 1024,
-        maxHeight: 1024,
+      final imagePath = await CameraPermissionHandler.openCamera(
         imageQuality: 40,
+        context: context,
       );
 
-      if (image != null) {
+      if (imagePath != null) {
         setState(() {
-          _selectedImage = File(image.path);
+          _selectedImage = File(imagePath);
         });
       }
     } catch (e) {
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${'profile.customization.plataform.gallery'.tr()}$e'),
-          backgroundColor: Colors.red,
-        ),
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${'profile.customization.plataform.camera'.tr()} $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickImageFromGallery() async {
+    try {
+      final imagePath = await CameraPermissionHandler.openGallery(
+        imageQuality: 40,
+        context: context,
       );
+
+      if (imagePath != null) {
+        setState(() {
+          _selectedImage = File(imagePath);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${'profile.customization.plataform.gallery'.tr()} $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

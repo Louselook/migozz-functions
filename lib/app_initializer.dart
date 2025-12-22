@@ -82,12 +82,60 @@ class _AppInitializerState extends State<AppInitializer>
 
       if (!kIsWeb) {
         //  Solo en móvil o desktop
+
+        // Request microphone permission
         final micStatus = await Permission.microphone.request();
         microphoneGranted = micStatus.isGranted;
 
-        final locStatus = await Permission.locationWhenInUse.request();
+        // Check location permission status first
+        final locStatus = await Permission.locationWhenInUse.status;
+        debugPrint('📍 [LocationPermission] Current status: $locStatus');
 
+        PermissionStatus finalLocStatus;
+
+        // If already granted, use location directly
         if (locStatus.isGranted || locStatus.isLimited) {
+          finalLocStatus = locStatus;
+        }
+        // If permanently denied or restricted, show settings dialog
+        else if (locStatus.isPermanentlyDenied || locStatus.isRestricted) {
+          debugPrint('⛔ [LocationPermission] Permission permanently denied or restricted');
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            _showLocationDeniedDialog(true);
+          });
+          finalLocStatus = locStatus;
+        }
+        // If denied (including notDetermined), request permission (shows native dialog)
+        else if (locStatus.isDenied) {
+          debugPrint('🔔 [LocationPermission] Requesting permission (status: denied/notDetermined)');
+          finalLocStatus = await Permission.locationWhenInUse.request();
+          debugPrint('📍 [LocationPermission] Request result: $finalLocStatus');
+
+          // If user denied the permission, show dialog
+          if (finalLocStatus.isDenied) {
+            debugPrint('⚠️ [LocationPermission] Permission denied by user');
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+              _showLocationDeniedDialog(false);
+            });
+          } else if (finalLocStatus.isPermanentlyDenied) {
+            debugPrint('⛔ [LocationPermission] Permission permanently denied after request');
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+              _showLocationDeniedDialog(true);
+            });
+          }
+        }
+        // Fallback: request permission
+        else {
+          debugPrint('🔔 [LocationPermission] Fallback - requesting permission');
+          finalLocStatus = await Permission.locationWhenInUse.request();
+          debugPrint('📍 [LocationPermission] Request result: $finalLocStatus');
+        }
+
+        // If permission granted or limited, get location
+        if (finalLocStatus.isGranted || finalLocStatus.isLimited) {
           locationGranted = true;
           try {
             final svc = LocationService();
@@ -95,13 +143,6 @@ class _AppInitializerState extends State<AppInitializer>
           } catch (e) {
             debugPrint('❌ Error al obtener ubicación: $e');
           }
-        } else {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!mounted) return;
-            _showLocationDeniedDialog(
-              locStatus == PermissionStatus.permanentlyDenied,
-            );
-          });
         }
       } else {
         // En web — permisos simulados o usando otra API
@@ -160,10 +201,19 @@ class _AppInitializerState extends State<AppInitializer>
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(permanentlyDenied ? "Abrir ajustes" : "Cerrar"),
-              ),
+              if (permanentlyDenied)
+                ElevatedButton(
+                  onPressed: () async {
+                    Navigator.pop(context);
+                    await openAppSettings();
+                  },
+                  child: const Text("Abrir ajustes"),
+                )
+              else
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Cerrar"),
+                ),
               const SizedBox(height: 8),
             ],
           ),
