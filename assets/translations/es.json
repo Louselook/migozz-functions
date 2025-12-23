@@ -384,6 +384,10 @@
     }
   },
   "addSocials": {
+    "addOtherNetworks": "Agregar otras redes",
+    "validation": {
+      "atLeastOne": "Se requiere al menos una red social"
+    },
     "register": {
       "title": "Tu Ecosistema Social",
       "subtitle": "Agrega tus plataformas"

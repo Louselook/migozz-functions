@@ -1,360 +1,114 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:migozz_app/core/components/atomics/text.dart';
-import 'package:migozz_app/core/utils/responsive_utils.dart';
-import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
-import 'package:migozz_app/features/auth/presentation/register/user_details/components/social_icon_card.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/user_details_button.dart';
-import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/save_changes_social.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
 import 'package:migozz_app/features/auth/services/add_networks/network_config.dart';
-import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
+import 'package:migozz_app/core/components/atomics/network_list.dart';
+import 'package:migozz_app/features/profile/presentation/add_another_network/mobile/add_another_network.dart';
 
-class SocialEcosystemStep extends StatefulWidget {
+/// Initial screen for social ecosystem in register mode
+/// Shows only the network categories grid without profile info
+
+class SocialEcosystemInitialStep extends StatelessWidget {
   final PageController controller;
-  final MoreUserDetailsMode mode;
+  final VoidCallback onAddNetwork;
 
-  const SocialEcosystemStep({
+  const SocialEcosystemInitialStep({
     super.key,
     required this.controller,
-    this.mode = MoreUserDetailsMode.register,
+    required this.onAddNetwork,
   });
 
-  @override
-  State<SocialEcosystemStep> createState() => _SocialEcosystemStepState();
-}
+  // Categories for grouping platforms
+  final Map<String, List<String>> _categories = const {
+    'Social': [
+      'instagram',
+      'tiktok',
+      'youtube',
+      'facebook',
+      'x',
+      'snapchat',
+      'pinterest',
+      'threads',
+      'reddit',
+      'linkedin',
+    ],
+    'Streaming': ['twitch', 'trovo', 'kick'],
+    'Music': ['spotify', 'applemusic', 'deezer', 'soundcloud'],
+    'Stores': ['shopify', 'woocommerce', 'etsy'],
+    'Chat': ['whatsapp', 'telegram', 'discord'],
+  };
 
-class _SocialEcosystemStepState extends State<SocialEcosystemStep> {
-  @override
-  void initState() {
-    super.initState();
-    _initializeSocialEcosystem();
-
-    // ✅ Configurar sincronización en modo edición
-    if (widget.mode == MoreUserDetailsMode.edit) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _setupSyncCallback();
-      });
-    }
+  List<NetworkConfig> _getNetworksForCategory(String category) {
+    final categoryNetworks = _categories[category] ?? [];
+    return SocialNetworks.enabledNetworks.where((network) {
+      return categoryNetworks.contains(network.name.toLowerCase());
+    }).toList();
   }
 
-  void _initializeSocialEcosystem() {
-    if (widget.mode == MoreUserDetailsMode.edit) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final editState = context.read<EditCubit>().state;
-        debugPrint(
-          '🔹 EditCubit socialEcosystem: ${editState.socialEcosystem}',
-        );
-
-        if (editState.socialEcosystem == null ||
-            editState.socialEcosystem!.isEmpty) {
-          // Si el EditCubit está vacío, cargar desde el AuthCubit
-          final authState = context.read<AuthCubit>().state;
-          if (authState.userProfile?.socialEcosystem != null) {
-            debugPrint(
-              '🔹 Cargando desde AuthCubit: ${authState.userProfile!.socialEcosystem}',
-            );
-            context.read<EditCubit>().updateSocialEcosystem(
-              authState.userProfile!.socialEcosystem!,
-            );
-          }
-        }
-      });
-    }
+  String _categoryLabel(String category) {
+    final key = category.toLowerCase();
+    return 'addSocials.categories.$key'.tr();
   }
 
-  // ✅ ARREGLADO: Hacer merge manualmente antes de actualizar
-  void _setupSyncCallback() {
-    final registerCubit = context.read<RegisterCubit>();
-    final editCubit = context.read<EditCubit>();
+  bool _isNetworkSelected(BuildContext context, NetworkConfig config) {
+    final selectedList =
+        context.watch<RegisterCubit>().state.socialEcosystem ?? [];
 
-    registerCubit.onSocialEcosystemUpdated = (newPlatforms) {
-      debugPrint(
-        '🔄 [SocialEcosystem] Sincronizando RegisterCubit → EditCubit',
-      );
-      debugPrint('   Nuevas plataformas: ${newPlatforms.length}');
-
-      // ✅ Obtener lista actual del EditCubit
-      final currentList = List<Map<String, dynamic>>.from(
-        editCubit.state.socialEcosystem ?? [],
-      );
-
-      // ✅ Hacer MERGE manualmente: agregar o actualizar
-      for (final newSocial in newPlatforms) {
-        final platform = newSocial.keys.first;
-
-        final existingIndex = currentList.indexWhere(
-          (item) => item.keys.first.toLowerCase() == platform.toLowerCase(),
-        );
-
-        if (existingIndex != -1) {
-          debugPrint('   ✏️ Actualizando $platform');
-          currentList[existingIndex] = newSocial;
-        } else {
-          debugPrint('   ➕ Agregando $platform');
-          currentList.add(newSocial);
-        }
-      }
-
-      debugPrint('   ✅ Total final: ${currentList.length} redes');
-
-      // Ahora sí, actualizar con la lista completa (mergeada)
-      editCubit.updateSocialEcosystem(currentList);
-    };
+    return selectedList.any((e) {
+      if (e.isEmpty) return false;
+      final platformKey = e.keys.first.toLowerCase();
+      return platformKey == config.name.toLowerCase();
+    });
   }
 
-  @override
-  void dispose() {
-    // ✅ Limpiar callback al salir
-    // if (widget.mode == MoreUserDetailsMode.edit) {
-    //   context.read<RegisterCubit>().onSocialEcosystemUpdated = null;
-    // }
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isEditMode = widget.mode == MoreUserDetailsMode.edit;
-    final editState = isEditMode ? context.watch<EditCubit>().state : null;
-    final scaleFactor = context.scaleFactor;
-    final deviceType = context.deviceType;
-
-    final horizontalPadding = ResponsiveUtils.scaleValue(
-      24.0,
-      scaleFactor,
-      minValue: 16.0,
-      maxValue: 30.0,
-    );
-    final verticalPadding = ResponsiveUtils.scaleValue(
-      16.0,
-      scaleFactor,
-      minValue: 12.0,
-      maxValue: 20.0,
-    );
-    final topSpacing = ResponsiveUtils.scaleValue(
-      16.0,
-      scaleFactor,
-      minValue: 12.0,
-      maxValue: 24.0,
-    );
-    final contentSpacing = ResponsiveUtils.scaleValue(
-      30.0,
-      scaleFactor,
-      minValue: 15.0,
-      maxValue: 20.0,
+  Future<void> _handleSocialTap(
+    BuildContext context,
+    NetworkConfig config,
+  ) async {
+    final cubit = context.read<RegisterCubit>();
+    final current = List<Map<String, Map<String, dynamic>>>.from(
+      cubit.state.socialEcosystem ?? [],
     );
 
-    final crossAxisCount = ResponsiveUtils.getGridColumns(deviceType);
-    final mainAxisSpacing = ResponsiveUtils.scaleValue(
-      16.0,
-      scaleFactor,
-      minValue: 10.0,
-      maxValue: 15.0,
-    );
-    final crossAxisSpacing = ResponsiveUtils.scaleValue(
-      16.0,
-      scaleFactor,
-      minValue: 10.0,
-      maxValue: 16.0,
-    );
+    final platformName = config.name.toLowerCase() == 'x'
+        ? 'twitter'
+        : config.name.toLowerCase();
 
-    final availableWidth =
-        MediaQuery.of(context).size.width - (horizontalPadding * 2);
-    final cardWidth =
-        (availableWidth - (crossAxisSpacing * (crossAxisCount - 1))) /
-        crossAxisCount;
-    final cardSize = Size(cardWidth, cardWidth * 1.1);
+    final index = current.indexWhere((e) {
+      final platformKey = e.keys.first.toLowerCase();
+      return platformKey == platformName;
+    });
 
-    return Container(
-      padding: EdgeInsets.symmetric(
-        vertical: verticalPadding,
-        horizontal: horizontalPadding,
-      ),
-      child: SafeArea(
-        child: Column(
-          children: [
-            SizedBox(height: topSpacing),
-            PrimaryText(
-              widget.mode == MoreUserDetailsMode.register
-                  ? "addSocials.register.title".tr()
-                  : "addSocials.edit.title".tr(),
-            ),
-            SecondaryText(
-              widget.mode == MoreUserDetailsMode.register
-                  ? "addSocials.register.subtitle".tr()
-                  : "addSocials.edit.subtitle".tr(),
-            ),
-            SizedBox(height: contentSpacing),
-
-            Expanded(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: deviceType == DeviceType.desktop
-                        ? 800.0
-                        : deviceType == DeviceType.tablet
-                        ? 600.0
-                        : double.infinity,
-                  ),
-                  child: GridView.builder(
-                    padding: const EdgeInsets.symmetric(vertical: 6.0),
-                    itemCount: SocialNetworks.enabledNetworks.length,
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: crossAxisCount,
-                      mainAxisSpacing: mainAxisSpacing,
-                      crossAxisSpacing: crossAxisSpacing,
-                      childAspectRatio: cardSize.width / cardSize.height,
-                    ),
-                    itemBuilder: (context, index) {
-                      final config = SocialNetworks.enabledNetworks[index];
-                      final iconSize = cardSize.width * 0.4;
-                      final clampedIconSize = iconSize.clamp(24.0, 48.0);
-
-                      // Obtener la lista según el modo
-                      final selectedList =
-                          widget.mode == MoreUserDetailsMode.register
-                          ? context
-                                    .watch<RegisterCubit>()
-                                    .state
-                                    .socialEcosystem ??
-                                []
-                          : context.watch<EditCubit>().state.socialEcosystem ??
-                                [];
-
-                      // Comparar en minúsculas
-                      final selected = selectedList.any((e) {
-                        final platformKey = e.keys.first.toLowerCase();
-                        final labelLower = config.name.toLowerCase();
-                        return platformKey == labelLower;
-                      });
-
-                      return SocialIconCard(
-                        label: config.displayName,
-                        assetPath: config.iconPath,
-                        iconSize: clampedIconSize,
-                        sizeIcon: cardSize,
-                        isSelected: selected,
-                        onTap: () => _handleSocialTap(config),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ),
-
-            SizedBox(
-              height: ResponsiveUtils.scaleValue(
-                16.0,
-                scaleFactor,
-                minValue: 12.0,
-                maxValue: 24.0,
-              ),
-            ),
-
-            userDetailsButton(
-              cubit: context.read<RegisterCubit>(),
-              controller: widget.controller,
-              context: context,
-              // en modo registro: Back, en modo edición: finalRegister (para que ejecute onFinalAction)
-              action: isEditMode
-                  ? UserDetailsAction.finalRegister
-                  : UserDetailsAction.back,
-              mode: widget.mode,
-              hasChanges: isEditMode ? editState?.hasChanges : null,
-              onFinalAction: isEditMode
-                  ? () async {
-                      final userId = context
-                          .read<AuthCubit>()
-                          .state
-                          .firebaseUser
-                          ?.uid;
-                      if (userId != null) {
-                        await saveSocialChanges(context, userId);
-                      }
-                    }
-                  : null,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _handleSocialTap(NetworkConfig config) async {
-    if (widget.mode == MoreUserDetailsMode.register) {
-      // ========== MODO REGISTRO ==========
-      final cubit = context.read<RegisterCubit>();
-      final current = List<Map<String, Map<String, dynamic>>>.from(
-        cubit.state.socialEcosystem ?? [],
-      );
-
-      final index = current.indexWhere((e) {
-        final platformKey = e.keys.first.toLowerCase();
-        return platformKey == config.name.toLowerCase();
-      });
-
-      if (index == -1) {
-        // Agregar nueva red - Modo registro
+    if (index == -1) {
+      // Navigate to full view to add network
+      onAddNetwork();
+      // Small delay to ensure navigation completes
+      await Future.delayed(const Duration(milliseconds: 100));
+      // Then trigger the social auth
+      if (context.mounted) {
         await cubit.startSocialAuth(
           context,
-          config.name,
+          platformName,
           config.iconPath,
           inEditMode: false,
         );
-      } else {
-        // Eliminar red existente
-        final remove = await _showRemoveDialog(config.displayName);
-        if (remove == true) {
-          current.removeAt(index);
-          cubit.setSocialEcosystem(current);
-        }
       }
-
-      debugPrint(
-        "🌐 Ecosistema social (registro): ${cubit.state.socialEcosystem}",
-      );
     } else {
-      // ========== MODO EDICIÓN ==========
-      final editCubit = context.read<EditCubit>();
-      final registerCubit = context.read<RegisterCubit>();
-
-      final current = List<Map<String, dynamic>>.from(
-        editCubit.state.socialEcosystem ?? [],
-      );
-
-      final index = current.indexWhere((e) {
-        final platformKey = e.keys.first.toLowerCase();
-        return platformKey == config.name.toLowerCase();
-      });
-
-      if (index == -1) {
-        // Agregar nueva red - Modo edición
-        await registerCubit.startSocialAuth(
-          context,
-          config.name,
-          config.iconPath,
-          inEditMode: true,
-        );
-
-        debugPrint('🌐 Esperando sincronización de deeplink...');
-      } else {
-        // Eliminar red existente
-        final remove = await _showRemoveDialog(config.displayName);
-        if (remove == true) {
-          current.removeAt(index);
-          editCubit.updateSocialEcosystem(current);
-        }
+      // Remove network
+      final remove = await _showRemoveDialog(context, config.displayName);
+      if (remove == true) {
+        current.removeAt(index);
+        cubit.setSocialEcosystem(current);
       }
-
-      debugPrint(
-        "🌐 Ecosistema social (edición): ${editCubit.state.socialEcosystem}",
-      );
     }
   }
 
-  Future<bool?> _showRemoveDialog(String label) {
+  Future<bool?> _showRemoveDialog(BuildContext context, String label) {
     return showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
@@ -370,6 +124,393 @@ class _SocialEcosystemStepState extends State<SocialEcosystemStep> {
             child: Text("addSocials.popUp.yes".tr()),
           ),
         ],
+      ),
+    );
+  }
+
+  void _handleBackTap(BuildContext context) {
+    try {
+      if (controller.hasClients) {
+        final currentPage = (controller.page ?? controller.initialPage).round();
+        if (currentPage > 0) {
+          controller.previousPage(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+          return;
+        } else {
+          if (Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+            return;
+          }
+        }
+      } else {
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+          return;
+        }
+      }
+    } catch (e, st) {
+      debugPrint('[_handleBackTap] error: $e\n$st');
+      if (Navigator.of(context).canPop()) Navigator.of(context).pop();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: SafeArea(
+        top: false,
+        child: Scaffold(
+          backgroundColor: Colors.black,
+          body: Stack(
+            children: [
+              // Gradient background
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.purpleAccent.withValues(alpha: 0.35),
+                        Colors.black.withValues(alpha: 0.40),
+                        Colors.black,
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              // Back button
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 8,
+                left: 0,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: GestureDetector(
+                    onTap: () => _handleBackTap(context),
+                    child: const Icon(
+                      Icons.arrow_back_ios,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                ),
+              ),
+
+              // Main content
+              SafeArea(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 60),
+
+                    // Title
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Text(
+                        'addSocials.register.title'.tr(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // Subtitle
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Text(
+                        'addSocials.register.subtitle'.tr(),
+                        style: TextStyle(color: Colors.grey[400], fontSize: 14),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // Categories Grid
+                    Expanded(
+                      child: ListView(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        children: [
+                          ..._categories.entries.map((entry) {
+                            final categoryName = entry.key;
+                            final networks = _getNetworksForCategory(
+                              categoryName,
+                            );
+
+                            if (networks.isEmpty) {
+                              return const SizedBox.shrink();
+                            }
+
+                            return Container(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _categoryLabel(categoryName),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  GridView.builder(
+                                    padding: EdgeInsets.zero,
+                                    shrinkWrap: true,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    gridDelegate:
+                                        const SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: 3,
+                                          childAspectRatio: 2.3,
+                                          crossAxisSpacing: 8,
+                                          mainAxisSpacing: 8,
+                                        ),
+                                    itemCount: networks.length,
+                                    itemBuilder: (context, index) {
+                                      final network = networks[index];
+                                      final isSelected = _isNetworkSelected(
+                                        context,
+                                        network,
+                                      );
+                                      return _buildPlatformGridItem(
+                                        context,
+                                        network,
+                                        isSelected,
+                                      );
+                                    },
+                                  ),
+                                  const SizedBox(height: 10),
+                                ],
+                              ),
+                            );
+                          }),
+
+                          // Add Custom Link Section
+                          Container(
+                            margin: const EdgeInsets.only(bottom: 10),
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'addSocials.customLink.title'.tr(),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                GridView.builder(
+                                  padding: EdgeInsets.zero,
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  gridDelegate:
+                                      const SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: 3,
+                                        childAspectRatio: 2.3,
+                                        crossAxisSpacing: 8,
+                                        mainAxisSpacing: 8,
+                                      ),
+                                  itemCount: 1,
+                                  itemBuilder: (context, index) =>
+                                      _buildCustomLinkGridItem(context),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 32),
+                        ],
+                      ),
+                    ),
+
+                    // Continue Button
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 16,
+                      ),
+                      child: userDetailsButton(
+                        cubit: context.read<RegisterCubit>(),
+                        controller: controller,
+                        context: context,
+                        action: UserDetailsAction.back,
+                        mode: MoreUserDetailsMode.register,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlatformGridItem(
+    BuildContext context,
+    NetworkConfig network,
+    bool isSelected,
+  ) {
+    return GestureDetector(
+      onTap: () => _handleSocialTap(context, network),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isSelected
+              ? Colors.white.withValues(alpha: 0.1)
+              : Colors.white.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected
+                ? Colors.white.withValues(alpha: 0.2)
+                : Colors.white.withValues(alpha: 0.08),
+            width: isSelected ? 1.5 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.25),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final h = constraints.maxHeight;
+            final iconSize = (h * 0.44).clamp(20.0, 28.0).toDouble();
+            final baseFontSize = (h * 0.33).clamp(12.0, 15.0).toDouble();
+            final availableTextWidth =
+                constraints.maxWidth - iconSize - 8 - 6 - 6;
+            final fitFontSize =
+                (availableTextWidth / (network.displayName.length * 0.6))
+                    .clamp(10.0, baseFontSize)
+                    .toDouble();
+            final fontSize = fitFontSize;
+
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                SvgPicture.asset(
+                  network.iconPath,
+                  width: iconSize,
+                  height: iconSize,
+                  fit: BoxFit.contain,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    network.displayName,
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : Colors.white70,
+                      fontSize: fontSize,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.w500,
+                    ),
+                    textAlign: TextAlign.start,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: false,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCustomLinkGridItem(BuildContext context) {
+    return GestureDetector(
+      onTap: () async {
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const AddAnotherNetworkScreen()),
+        );
+        if (result == 'done' && context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('addSocials.customLink.updated'.tr()),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.08),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.25),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final h = constraints.maxHeight;
+            final iconSize = (h * 0.44).clamp(20.0, 28.0).toDouble();
+            final baseFontSize = (h * 0.33).clamp(12.0, 15.0).toDouble();
+            final availableTextWidth =
+                constraints.maxWidth - iconSize - 8 - 6 - 6;
+            final label = 'addSocials.customLink.newLabel'.tr();
+            final fitFontSize = (availableTextWidth / (label.length * 0.6))
+                .clamp(10.0, baseFontSize)
+                .toDouble();
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                SvgPicture.asset(
+                  iconByLabel['Enlace'] ??
+                      'assets/icons/social_networks/OtherIconDefault.svg',
+                  width: iconSize,
+                  height: iconSize,
+                  fit: BoxFit.contain,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: fitFontSize,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    textAlign: TextAlign.start,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: false,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

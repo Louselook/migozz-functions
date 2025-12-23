@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:migozz_app/core/color.dart';
+import 'package:migozz_app/core/components/compuestos/custom_snackbar.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/components/user_details_button.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
 import 'package:migozz_app/features/auth/services/add_networks/network_config.dart';
 import 'package:migozz_app/features/profile/components/utils/Loader.dart';
@@ -171,8 +173,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
 
           // Always hide the dialog
           if (Navigator.of(context).canPop()) {
-  Navigator.of(context).pop();
-}
+            Navigator.of(context).pop();
+          }
 
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -298,7 +300,6 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
         debugPrint(
           '🔵 [Register Mode] Network not connected, opening bottom sheet',
         );
-        // <-- aquí pasamos platformName en vez de config.name
         await cubit.startSocialAuth(
           context,
           platformName,
@@ -309,6 +310,17 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
         debugPrint(
           '🔵 [Register Mode] Network already connected, showing edit dialog',
         );
+
+        // ✅ Check if it's the last network before removing
+        if (current.length == 1) {
+          CustomSnackbar.show(
+            context: context,
+            message: 'addSocials.validation.atLeastOne'.tr(),
+            type: SnackbarType.warning,
+          );
+          return;
+        }
+
         final socialData = current[index];
         final remove = await _showEditSocialDialog(config, socialData);
         if (remove == true) {
@@ -344,7 +356,6 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
         debugPrint(
           '🔵 [Edit Mode] Network not connected, opening bottom sheet',
         );
-        // <-- aquí también pasamos platformName
         await registerCubit.startSocialAuth(
           context,
           platformName,
@@ -469,7 +480,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                       },
                       child: Container(
                         padding: const EdgeInsets.all(8),
-                        child: Icon(
+                        child: const Icon(
                           Icons.arrow_back_ios,
                           color: Colors.white,
                           size: 24,
@@ -574,8 +585,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                             final cubit = context.read<RegisterCubit>();
                             final current =
                                 List<Map<String, Map<String, dynamic>>>.from(
-                              cubit.state.socialEcosystem ?? [],
-                            );
+                                  cubit.state.socialEcosystem ?? [],
+                                );
 
                             final index = current.indexWhere((e) {
                               final platformKey = e.keys.first.toLowerCase();
@@ -663,10 +674,11 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                                         content: Text(
                                           'addSocials.messages.usernameUpdatedSuccess'
                                               .tr(
-                                            namedArgs: {
-                                              'platform': config.displayName,
-                                            },
-                                          ),
+                                                namedArgs: {
+                                                  'platform':
+                                                      config.displayName,
+                                                },
+                                              ),
                                         ),
                                         backgroundColor: Colors.green,
                                         duration: const Duration(seconds: 2),
@@ -711,7 +723,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                           child: Center(
                             child: Text(
                               'buttons.save'.tr(),
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -875,10 +887,25 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     void _handleBackTap() {
       // Si estamos en modo registro, intentamos navegar dentro del PageView.
       if (widget.mode == MoreUserDetailsMode.register) {
+        // ✅ Validate at least one network is added before going back
+        final socialEcosystem =
+            context.read<RegisterCubit>().state.socialEcosystem ?? [];
+
+        if (socialEcosystem.isEmpty) {
+          CustomSnackbar.show(
+            context: context,
+            message: 'addSocials.validation.atLeastOne'.tr(),
+            type: SnackbarType.warning,
+          );
+          return;
+        }
+
         try {
           if (widget.controller.hasClients) {
             // obtener página actual (puede ser decimal)
-            final currentPage = (widget.controller.page ?? widget.controller.initialPage).round();
+            final currentPage =
+                (widget.controller.page ?? widget.controller.initialPage)
+                    .round();
             if (currentPage > 0) {
               widget.controller.previousPage(
                 duration: const Duration(milliseconds: 300),
@@ -952,51 +979,85 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                 ),
               ),
 
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0.43 * size.height,
-                child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
-              ),
+              // Only show profile image in edit mode
+              if (widget.mode == MoreUserDetailsMode.edit)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0.43 * size.height,
+                  child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
+                ),
+
               // Main content
               SafeArea(
                 child: Column(
                   children: [
-                    SizedBox(height: size.height * 0.33),
-                    Text(
-                      formatDisplayName(
-                        widget.user?.displayName,
-                        format: FormatName.short,
+                    // Only show profile info in edit mode
+                    if (widget.mode == MoreUserDetailsMode.edit) ...[
+                      SizedBox(height: size.height * 0.33),
+                      Text(
+                        formatDisplayName(
+                          widget.user?.displayName,
+                          format: FormatName.short,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 27,
+                          fontWeight: FontWeight.w700,
+                          height: 1.1,
+                        ),
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 27,
-                        fontWeight: FontWeight.w700,
-                        height: 1.1,
-                      ),
-                    ),
 
-                    // DisplayName (@username)
-                    const SizedBox(height: 3),
-                    Text(
-                      username,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        height: 1.2,
+                      // DisplayName (@username)
+                      const SizedBox(height: 3),
+                      Text(
+                        username,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          height: 1.2,
+                        ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8, bottom: 0),
-                      child: SocialCirclesMobileV3(links: socialLinks),
-                    ),
-                    // Contador de comunidad
-                    const SizedBox(height: 11),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8, bottom: 0),
+                        child: SocialCirclesMobileV3(links: socialLinks),
+                      ),
+                      const SizedBox(height: 11),
+                    ] else ...[
+                      // In register mode, add spacing at top and title
+                      const SizedBox(height: 60),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Text(
+                          'addSocials.register.title'.tr(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Text(
+                          'addSocials.register.subtitle'.tr(),
+                          style: TextStyle(
+                            color: Colors.grey[400],
+                            fontSize: 14,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: TextField(
@@ -1045,6 +1106,22 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                           ? _buildSearchResults()
                           : _buildCategorizedGrid(),
                     ),
+
+                    // Continue Button - only in register mode
+                    if (widget.mode == MoreUserDetailsMode.register)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 16,
+                        ),
+                        child: userDetailsButton(
+                          cubit: context.read<RegisterCubit>(),
+                          controller: widget.controller,
+                          context: context,
+                          action: UserDetailsAction.back,
+                          mode: MoreUserDetailsMode.register,
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -1054,8 +1131,6 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
       ),
     );
   }
-
-  // ... resto de métodos sin cambios (_buildSearchResults, _buildCategorizedGrid, etc.)
 
   Widget _buildSearchResults() {
     final filteredNetworks = _getFilteredNetworks();

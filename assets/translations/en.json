@@ -393,6 +393,10 @@
         }
     },
     "addSocials": {
+        "addOtherNetworks": "Add Other Networks",
+        "validation":{
+          "atLeastOne": "At least one social network is required"
+        },
         "register": {
             "title": "Your Social Ecosystem",
             "subtitle": "Add your platforms"
