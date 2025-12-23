@@ -397,13 +397,13 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
             debugPrint('💾 [Edit Mode] Auto-saving after removal...');
 
             // Show loading dialog
-              if (mounted) {
-                showProfileLoader(
-                  context,
-                  message: 'common.removing'.tr(),
-                  onCancel: () {},
-                );
-              }
+            if (mounted) {
+              showProfileLoader(
+                context,
+                message: 'common.removing'.tr(),
+                onCancel: () {},
+              );
+            }
 
             try {
               await editCubit.saveAllPendingChanges(userId);
@@ -412,18 +412,18 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
               // Always hide the dialog
               if (mounted) Navigator.of(context).pop();
 
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'addSocials.messages.removed'.tr(
-                          namedArgs: {'platform': config.displayName},
-                        ),
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'addSocials.messages.removed'.tr(
+                        namedArgs: {'platform': config.displayName},
                       ),
-                      backgroundColor: Colors.green,
-                      duration: const Duration(seconds: 2),
                     ),
-                  );
+                    backgroundColor: Colors.green,
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
               }
             } catch (e) {
               debugPrint('❌ [Edit Mode] Auto-save after removal failed: $e');
@@ -431,18 +431,18 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
               // Always hide the dialog
               if (mounted) Navigator.of(context).pop();
 
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'addSocials.messages.errorRemove'.tr(
-                          namedArgs: {'error': e.toString()},
-                        ),
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'addSocials.messages.errorRemove'.tr(
+                        namedArgs: {'error': e.toString()},
                       ),
-                      backgroundColor: Colors.red,
-                      duration: const Duration(seconds: 2),
                     ),
-                  );
+                    backgroundColor: Colors.red,
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
               }
             }
           }
@@ -712,9 +712,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                                       SnackBar(
                                         content: Text(
                                           'addSocials.messages.errorSave'.tr(
-                                            namedArgs: {
-                                              'error': e.toString(),
-                                            },
+                                            namedArgs: {'error': e.toString()},
                                           ),
                                         ),
                                         backgroundColor: Colors.red,
@@ -1167,71 +1165,85 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
   }
 
   Widget _buildPlatformGridItem(NetworkConfig network, bool isSelected) {
+    const double borderRadiusValue = 8;
+    const double selectedBorderWidth = 1.5;
+    final borderRadius = BorderRadius.circular(borderRadiusValue);
+    final boxShadow = BoxShadow(
+      color: Colors.black.withValues(alpha: 0.25),
+      blurRadius: 4,
+      offset: const Offset(0, 1),
+    );
+    final baseDecoration = BoxDecoration(
+      color: Colors.white.withValues(alpha: 0.06),
+      borderRadius: borderRadius,
+      boxShadow: [boxShadow],
+    );
+    final unselectedDecoration = BoxDecoration(
+      color: Colors.white.withValues(alpha: 0.06),
+      borderRadius: borderRadius,
+      border: Border.all(
+        color: Colors.white.withValues(alpha: 0.08),
+        width: 1,
+      ),
+      boxShadow: [boxShadow],
+    );
+
     return GestureDetector(
       onTap: () => _handleSocialTap(network),
-      child: Container(
-        decoration: BoxDecoration(
-          color: isSelected
-              ? Colors.white.withValues(alpha: 0.1)
-              : Colors.white.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isSelected
-                ? Colors.white.withValues(alpha: 0.2)
-                : Colors.white.withValues(alpha: 0.08),
-            width: isSelected ? 1.5 : 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.25),
-              blurRadius: 4,
-              offset: const Offset(0, 1),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final h = constraints.maxHeight;
-            final iconSize = (h * 0.44).clamp(20.0, 28.0).toDouble();
-            final baseFontSize = (h * 0.33).clamp(12.0, 15.0).toDouble();
-            final availableTextWidth =
-                constraints.maxWidth - iconSize - 8 - 6 - 6;
-            final fitFontSize =
-                (availableTextWidth / (network.displayName.length * 0.6))
-                    .clamp(10.0, baseFontSize)
-                    .toDouble();
-            final fontSize = fitFontSize;
+      child: CustomPaint(
+        foregroundPainter: isSelected
+            ? _GradientBorderPainter(
+                gradient: AppColors.primaryGradient,
+                strokeWidth: selectedBorderWidth,
+                radius: borderRadiusValue,
+              )
+            : null,
+        child: Container(
+          decoration: isSelected ? baseDecoration : unselectedDecoration,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final h = constraints.maxHeight;
+              final iconSize = (h * 0.44).clamp(20.0, 28.0).toDouble();
+              final baseFontSize = (h * 0.33).clamp(12.0, 15.0).toDouble();
+              final availableTextWidth =
+                  constraints.maxWidth - iconSize - 8 - 6 - 6;
+              final fitFontSize =
+                  (availableTextWidth / (network.displayName.length * 0.6))
+                      .clamp(10.0, baseFontSize)
+                      .toDouble();
+              final fontSize = fitFontSize;
 
-            return Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                SvgPicture.asset(
-                  network.iconPath,
-                  width: iconSize,
-                  height: iconSize,
-                  fit: BoxFit.contain,
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    network.displayName,
-                    style: TextStyle(
-                      color: isSelected ? Colors.white : Colors.white70,
-                      fontSize: fontSize,
-                      fontWeight: isSelected
-                          ? FontWeight.w600
-                          : FontWeight.w500,
-                    ),
-                    textAlign: TextAlign.start,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    softWrap: false,
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  SvgPicture.asset(
+                    network.iconPath,
+                    width: iconSize,
+                    height: iconSize,
+                    fit: BoxFit.contain,
                   ),
-                ),
-              ],
-            );
-          },
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      network.displayName,
+                      style: TextStyle(
+                        color: isSelected ? Colors.white : Colors.white70,
+                        fontSize: fontSize,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.w500,
+                      ),
+                      textAlign: TextAlign.start,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: false,
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -1280,10 +1292,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
             final availableTextWidth =
                 constraints.maxWidth - iconSize - 8 - 6 - 6;
             final label = 'addSocials.customLink.newLabel'.tr();
-            final fitFontSize =
-                (availableTextWidth / (label.length * 0.6))
-                    .clamp(10.0, baseFontSize)
-                    .toDouble();
+            final fitFontSize = (availableTextWidth / (label.length * 0.6))
+                .clamp(10.0, baseFontSize)
+                .toDouble();
             return Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
@@ -1419,5 +1430,38 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     }
 
     return {'asset': asset, 'url': url};
+  }
+}
+
+class _GradientBorderPainter extends CustomPainter {
+  final Gradient gradient;
+  final double strokeWidth;
+  final double radius;
+
+  _GradientBorderPainter({
+    required this.gradient,
+    required this.strokeWidth,
+    required this.radius,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final rrect = RRect.fromRectAndRadius(
+      rect.deflate(strokeWidth / 2),
+      Radius.circular(radius),
+    );
+    final paint = Paint()
+      ..shader = gradient.createShader(rect)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth;
+    canvas.drawRRect(rrect, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _GradientBorderPainter oldDelegate) {
+    return oldDelegate.gradient != gradient ||
+        oldDelegate.strokeWidth != strokeWidth ||
+        oldDelegate.radius != radius;
   }
 }
