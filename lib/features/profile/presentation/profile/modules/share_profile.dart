@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
@@ -928,10 +929,51 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
                                         size: 256,
                                       ),
                                       // Center logo
-                                      Image.asset(
-                                        'assets/images/Migozz.webp',
-                                        width: 50,
-                                        height: 50,
+                                     Positioned(top: 17,right: 17,
+                                       child: Container(
+                                         width: 45,
+                                         height: 45,
+
+                                         decoration: BoxDecoration(
+                                           color: Colors.white,border: Border.all(color: _qrColor,width: 2),
+
+                                         ),
+                                         child: Image.asset(
+                                           'assets/icons/Migozz_Icon.png',
+                                           width: 35,
+                                           height: 35,color:  _qrColor,
+                                         ),
+                                       ),
+                                     ),Positioned(top: 17,left: 17,
+                                        child: Container(
+                                          width: 45,
+                                          height: 45,
+
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,border: Border.all(color: _qrColor,width: 2),
+
+                                          ),
+                                          child: Image.asset(
+                                            'assets/icons/Migozz_Icon.png',
+                                            width: 35,
+                                            height: 35,color:  _qrColor,
+                                          ),
+                                        )
+                                      ),Positioned(bottom: 17,left: 17,
+                                        child: Container(
+                                          width: 45,
+                                          height: 45,
+
+                                          decoration: BoxDecoration(
+                                          color: Colors.white,border: Border.all(color: _qrColor,width: 2),
+
+                                        ),
+                                          child: Image.asset(
+                                            'assets/icons/Migozz_Icon.png',
+                                            width: 35,
+                                            height: 35,color:  _qrColor,
+                                          ),
+                                        ),
                                       ),
                                     ],
                                   ),
