@@ -16,6 +16,7 @@ class ChatNavigationHandler {
     if (action == null) return;
 
     final cubit = context.read<RegisterCubit>();
+    
 
     switch (action) {
       case 0:

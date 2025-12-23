@@ -51,17 +51,17 @@ final List<Map<String, Object>> questionsTopics = [
   //   },
   //   "keyboardType": "text",
   // },
-  // {
-  //   "id": "socialEcosystem",
-  //   "description":
-  //       "Permite al usuario agregar redes sociales. Solo preguntar si aún no tiene datos.",
-  //   "text": {
-  //     "en": "Let's add your social platforms!",
-  //     "es": "¡Agreguemos tus plataformas sociales!",
-  //   },
-  //   "options": {"en": [], "es": []},
-  //   "action": 0,
-  // },
+  {
+    "id": "socialEcosystem",
+    "description":
+        "Permite al usuario agregar redes sociales. Solo preguntar si aún no tiene datos.",
+    "text": {
+      "en": "Let's add your social platforms!",
+      "es": "¡Agreguemos tus plataformas sociales!",
+    },
+    "options": {"en": [], "es": []},
+    "action": 0,
+  },
   {
     "id": "location",
     "description":

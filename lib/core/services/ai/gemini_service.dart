@@ -77,7 +77,7 @@ class GeminiService {
     'fullName', // 1
     'username', // 2
     // 'gender', // 3
-    // 'socialEcosystem', // 4
+    'socialEcosystem', // 4
     'location', // 5
     'sendOTP', // 6
     'emailVerification', // 7
@@ -93,7 +93,7 @@ class GeminiService {
   final List<String> _questionFlowAuth = [
     // 'language', // 0
     // 'gender', // 1
-    // 'socialEcosystem', // 2
+    'socialEcosystem', // 2
     'location', // 3
     'phone', // 4
     'voiceNoteUrl', // 5

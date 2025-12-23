@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -21,12 +23,12 @@ import '../../../../../data/domain/models/user/user_dto.dart';
 class SocialEcosystemStepV3 extends StatefulWidget {
   final PageController controller;
   final MoreUserDetailsMode mode;
-  final UserDTO user;
+  final UserDTO? user;
 
   const SocialEcosystemStepV3({
     super.key,
     required this.controller,
-    required this.user,
+    this.user,
     this.mode = MoreUserDetailsMode.register,
   });
 
@@ -151,7 +153,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
           debugPrint('✅ [V3] Auto-save completed successfully!');
 
           // Always hide the dialog
-          if (context.mounted) Navigator.of(context).pop();
+          if (Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          }
 
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -166,7 +170,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
           debugPrint('❌ [V3] Auto-save failed: $e');
 
           // Always hide the dialog
-          if (context.mounted) Navigator.of(context).pop();
+          if (Navigator.of(context).canPop()) {
+  Navigator.of(context).pop();
+}
 
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -186,6 +192,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     };
   }
 
+  StreamSubscription? _editCubitSubscription;
+
   // ✅ NUEVO: Configurar listener para auto-save
   void _setupAutoSave() {
     final editCubit = context.read<EditCubit>();
@@ -193,65 +201,28 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
 
     debugPrint('🔄 [V3] Setting up auto-save listener');
 
-    // Listen to EditCubit state changes
-    editCubit.stream.listen((editState) async {
-      // Check if social ecosystem changed
+    _editCubitSubscription?.cancel(); // seguridad
+
+    _editCubitSubscription = editCubit.stream.listen((editState) async {
       final currentCount = editState.socialEcosystem?.length ?? 0;
 
       if (currentCount != _previousSocialCount && editState.hasChanges) {
-        debugPrint('💾 [V3] Detected change in social ecosystem');
-        debugPrint('   Previous count: $_previousSocialCount');
-        debugPrint('   Current count: $currentCount');
-
         _previousSocialCount = currentCount;
 
-        // Auto-save
         final userId = authCubit.state.firebaseUser?.uid;
-        if (userId != null && mounted) {
-          debugPrint('💾 [V3] Auto-saving changes...');
+        if (userId == null || !mounted) return;
 
-          if (mounted) {
-            showProfileLoader(
-              context,
-              message: 'common.saving'.tr(),
-              onCancel: () {},
-            );
-          }
+        showProfileLoader(
+          context,
+          message: 'common.saving'.tr(),
+          onCancel: () {},
+        );
 
-          try {
-            await editCubit.saveAllPendingChanges(userId);
-            debugPrint('✅ [V3] Auto-save completed successfully!');
-
-            if (mounted) Navigator.of(context).pop();
-
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('addSocials.messages.saved'.tr()),
-                  backgroundColor: Colors.green,
-                  duration: const Duration(seconds: 2),
-                ),
-              );
-            }
-          } catch (e) {
-            debugPrint('❌ [V3] Auto-save failed: $e');
-
-            if (mounted) Navigator.of(context).pop();
-
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'addSocials.messages.errorSave'.tr(
-                      namedArgs: {'error': e.toString()},
-                    ),
-                  ),
-                  backgroundColor: Colors.red,
-                  duration: const Duration(seconds: 2),
-                ),
-              );
-            }
-          }
+        try {
+          await editCubit.saveAllPendingChanges(userId);
+          if (mounted) Navigator.of(context).pop();
+        } catch (e) {
+          if (mounted) Navigator.of(context).pop();
         }
       }
     });
@@ -259,6 +230,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
 
   @override
   void dispose() {
+    _editCubitSubscription?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -292,7 +264,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
         ? context.watch<RegisterCubit>().state.socialEcosystem ?? []
         : context.watch<EditCubit>().state.socialEcosystem ?? [];
 
+    // Defensive: ensure map not empty before accessing keys.first
     return selectedList.any((e) {
+      if (e.isEmpty) return false;
       final platformKey = e.keys.first.toLowerCase();
       return platformKey == config.name.toLowerCase();
     });
@@ -397,13 +371,13 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
             debugPrint('💾 [Edit Mode] Auto-saving after removal...');
 
             // Show loading dialog
-              if (mounted) {
-                showProfileLoader(
-                  context,
-                  message: 'common.removing'.tr(),
-                  onCancel: () {},
-                );
-              }
+            if (mounted) {
+              showProfileLoader(
+                context,
+                message: 'common.removing'.tr(),
+                onCancel: () {},
+              );
+            }
 
             try {
               await editCubit.saveAllPendingChanges(userId);
@@ -412,18 +386,18 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
               // Always hide the dialog
               if (mounted) Navigator.of(context).pop();
 
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'addSocials.messages.removed'.tr(
-                          namedArgs: {'platform': config.displayName},
-                        ),
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'addSocials.messages.removed'.tr(
+                        namedArgs: {'platform': config.displayName},
                       ),
-                      backgroundColor: Colors.green,
-                      duration: const Duration(seconds: 2),
                     ),
-                  );
+                    backgroundColor: Colors.green,
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
               }
             } catch (e) {
               debugPrint('❌ [Edit Mode] Auto-save after removal failed: $e');
@@ -431,18 +405,18 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
               // Always hide the dialog
               if (mounted) Navigator.of(context).pop();
 
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'addSocials.messages.errorRemove'.tr(
-                          namedArgs: {'error': e.toString()},
-                        ),
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'addSocials.messages.errorRemove'.tr(
+                        namedArgs: {'error': e.toString()},
                       ),
-                      backgroundColor: Colors.red,
-                      duration: const Duration(seconds: 2),
                     ),
-                  );
+                    backgroundColor: Colors.red,
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
               }
             }
           }
@@ -485,18 +459,21 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
               children: [
                 // Close button
                 Positioned(
-                  top: 16,
-                  right: 16,
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.pop(dialogContext, false);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      child: const Icon(
-                        Icons.close,
-                        color: Colors.white,
-                        size: 24,
+                  top: MediaQuery.of(context).padding.top + 8,
+                  left: 0,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.of(context, rootNavigator: true).pop('back');
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        child: Icon(
+                          Icons.arrow_back_ios,
+                          color: Colors.white,
+                          size: 24,
+                        ),
                       ),
                     ),
                   ),
@@ -597,8 +574,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                             final cubit = context.read<RegisterCubit>();
                             final current =
                                 List<Map<String, Map<String, dynamic>>>.from(
-                                  cubit.state.socialEcosystem ?? [],
-                                );
+                              cubit.state.socialEcosystem ?? [],
+                            );
 
                             final index = current.indexWhere((e) {
                               final platformKey = e.keys.first.toLowerCase();
@@ -686,11 +663,10 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                                         content: Text(
                                           'addSocials.messages.usernameUpdatedSuccess'
                                               .tr(
-                                                namedArgs: {
-                                                  'platform':
-                                                      config.displayName,
-                                                },
-                                              ),
+                                            namedArgs: {
+                                              'platform': config.displayName,
+                                            },
+                                          ),
                                         ),
                                         backgroundColor: Colors.green,
                                         duration: const Duration(seconds: 2),
@@ -786,13 +762,14 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     return 'https://www.google.com/s2/favicons?domain=$domain&sz=128';
   }
 
+  // Ahora acepta username nullable y lo maneja defensivamente
   List<SocialLink> _buildSocialLinks(
     List<Map<String, dynamic>>? socialEcosystem,
-    String username,
+    String? username,
   ) {
     if (socialEcosystem == null || socialEcosystem.isEmpty) return [];
     final links = <SocialLink>[];
-    final cleanUsername = username.replaceFirst('@', '');
+    final cleanUsername = (username ?? '').replaceFirst('@', '').trim();
 
     for (final social in socialEcosystem) {
       final type = social['type']?.toString().toLowerCase();
@@ -813,8 +790,13 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
             ),
           );
         }
+        // custom links don't require username; continue to next social
         continue;
       }
+
+      // If it's not custom and we don't have a username, skip entries
+      if (cleanUsername.isEmpty) continue;
+
       for (final entry in social.entries) {
         final platform = entry.key.toLowerCase();
         final data = entry.value;
@@ -830,10 +812,17 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
 
         final socialInfo = _getSocialInfo(platform, cleanUsername, customUrl);
         if (socialInfo != null) {
+          final asset = socialInfo['asset'] ?? '';
+          final urlStr = socialInfo['url'] ?? '';
+          if (asset.isEmpty || urlStr.isEmpty) {
+            // skip invalid
+            continue;
+          }
+
           links.add(
             SocialLink(
-              asset: socialInfo['asset']!,
-              url: Uri.parse(socialInfo['url']!),
+              asset: asset,
+              url: Uri.parse(urlStr),
               followers: followers,
               shares: shares,
             ),
@@ -847,27 +836,83 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
 
   @override
   Widget build(BuildContext context) {
-    final user = widget.user;
+    String normalizeUsername(String username) {
+      if (username.isEmpty) return '';
+      return username.startsWith('@') ? username : '@$username';
+    }
+
     final size = MediaQuery.of(context).size;
-    final username = user.username.startsWith('@')
-        ? user.username
-        : '@${user.username}';
-    final avatarUrl = user.avatarUrl;
+
+    // RAW username depending on mode:
+    final rawUsername = widget.mode == MoreUserDetailsMode.edit
+        ? (widget.user?.username ?? '')
+        : (context.watch<RegisterCubit>().state.username ?? '');
+
+    final username = normalizeUsername(rawUsername);
+
+    // avatar only available in edit mode
+    final avatarUrl = widget.mode == MoreUserDetailsMode.edit
+        ? widget.user?.avatarUrl
+        : null;
 
     // Get social ecosystem from the appropriate cubit based on mode
     final List<Map<String, dynamic>> socialEcosystem;
     if (widget.mode == MoreUserDetailsMode.register) {
       // RegisterCubit has List<Map<String, Map<String, dynamic>>>
+      // Convert each item defensively to Map<String, dynamic>
       final registerEcosystem =
           context.watch<RegisterCubit>().state.socialEcosystem ?? [];
-      // Convert to List<Map<String, dynamic>>
-      socialEcosystem = registerEcosystem.cast<Map<String, dynamic>>();
+
+      socialEcosystem = registerEcosystem
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
     } else {
       // EditCubit already has List<Map<String, dynamic>>
       socialEcosystem = context.watch<EditCubit>().state.socialEcosystem ?? [];
     }
 
-    final socialLinks = _buildSocialLinks(socialEcosystem, user.username);
+    // Use the safe username variable (NO user! here)
+    final socialLinks = _buildSocialLinks(socialEcosystem, rawUsername);
+
+    void _handleBackTap() {
+      // Si estamos en modo registro, intentamos navegar dentro del PageView.
+      if (widget.mode == MoreUserDetailsMode.register) {
+        try {
+          if (widget.controller.hasClients) {
+            // obtener página actual (puede ser decimal)
+            final currentPage = (widget.controller.page ?? widget.controller.initialPage).round();
+            if (currentPage > 0) {
+              widget.controller.previousPage(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+              );
+              return;
+            } else {
+              // Estamos en la primera página del PageView -> cerrar la ruta
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop();
+                return;
+              }
+            }
+          } else {
+            // controller aún no está attached -> fallback a Navigator
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+              return;
+            }
+          }
+        } catch (e, st) {
+          debugPrint('[_handleBackTap] error: $e\n$st');
+          // fallback seguro
+          if (Navigator.of(context).canPop()) Navigator.of(context).pop();
+        }
+      } else {
+        // Modo edición: cerrar la ruta y volver al perfil
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+      }
+    }
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
@@ -888,11 +933,6 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                         Colors.black.withValues(alpha: 0.40),
                         Colors.black,
                       ],
-                      // stops: const [
-                      //   0.3,
-                      //   0.7,
-                      //   1.0,
-                      // ],
                     ),
                   ),
                 ),
@@ -904,17 +944,11 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: GestureDetector(
-                    onTap: () async {
-                      // Just navigate back - auto-save happens on add/remove
-                      Navigator.pop(context);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      child: Icon(
-                        Icons.arrow_back_ios,
-                        color: Colors.white,
-                        size: 24,
-                      ),
+                    onTap: _handleBackTap,
+                    child: const Icon(
+                      Icons.arrow_back_ios,
+                      color: Colors.white,
+                      size: 24,
                     ),
                   ),
                 ),
@@ -934,7 +968,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                     SizedBox(height: size.height * 0.33),
                     Text(
                       formatDisplayName(
-                        widget.user.displayName,
+                        widget.user?.displayName,
                         format: FormatName.short,
                       ),
                       maxLines: 1,

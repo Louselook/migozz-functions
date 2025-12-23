@@ -107,30 +107,30 @@ final List username = [
   // },
 // ];
 
-// final List socialEcosystem = [
-//   // Primera
-//   {
-//     "text": "¡Agreguemos tus redes sociales!",
-//     "step": "regProgress.socialEcosystem",
-//     "keepTalk": false,
-//   },
+final List socialEcosystem = [
+  // Primera
+  {
+    "text": "¡Agreguemos tus redes sociales!",
+    "step": "regProgress.socialEcosystem",
+    "keepTalk": false,
+  },
 
-//   // Rechazo
-//   {
-//     "text": "No se pudo conectar la red social. Inténtalo nuevamente.",
-//     "step": "regProgress.socialEcosystem",
-//     "keepTalk": false,
-//     "valid": false,
-//   },
+  // Rechazo
+  {
+    "text": "No se pudo conectar la red social. Inténtalo nuevamente.",
+    "step": "regProgress.socialEcosystem",
+    "keepTalk": false,
+    "valid": false,
+  },
 
-//   // Válida
-//   {
-//     "text": "Perfecto, redes conectadas. Confirmemos tu ubicación.",
-//     "step": "regProgress.location",
-//     "keepTalk": false,
-//     "valid": true,
-//   },
-// ];
+  // Válida
+  {
+    "text": "Perfecto, redes conectadas. Confirmemos tu ubicación.",
+    "step": "regProgress.location",
+    "keepTalk": false,
+    "valid": true,
+  },
+];
 
 final List location = [
   // Primera - Pregunta de autorización

@@ -5,8 +5,11 @@
       "onboardingTitle2": "Más conexiones. Mayor impacto",
       "onboardingTitle3": "Crea tu enlace inteligente y activa tu comunidad en segundos"
     },
+    "subtitles":{
+      "onboardingSubtitle1" : "Tu contenido. Tus reglas. Tu universo."
+    },
     "descriptions": {
-      "onboardingDescription1": "Tu contenido. Tus reglas. Tu universo. Centraliza todo lo que eres. Comparte al instante. Crece sin esfuerzo.",
+      "onboardingDescription1": "Centraliza todo lo que eres. Comparte al instante. Crece sin esfuerzo.",
       "onboardingDescription2": "Migozz fusiona tus redes y te presenta nuevas comunidades con un solo toque.",
       "onboardingDescription3": "Comparte publicaciones, enlaces, fotos, historias, música, servicios y más. Tu perfil de Migozz se convierte en tu centro de control para hacerte viral y unirte a círculos de creadores, fans o empresas."
     },

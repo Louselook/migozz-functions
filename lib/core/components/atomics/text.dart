@@ -7,6 +7,8 @@ class PrimaryText extends StatelessWidget {
   final String text;
   final Color? color;
   final TextAlign? textAlign;
+  final double? fontSize;
+  final String? fontfamily;
 
   const PrimaryText(
     this.text, {
@@ -15,6 +17,8 @@ class PrimaryText extends StatelessWidget {
     super.key,
     maxLines,
     TextOverflow? overflow,
+    this.fontSize,
+    this.fontfamily,
   });
 
   @override
@@ -38,6 +42,7 @@ class SecondaryText extends StatelessWidget {
   final TextAlign? textAlign;
   final double? fontSize;
   final FontWeight? fontWeight;
+  final String? fontfamily;
 
   const SecondaryText(
     this.text, {
@@ -45,6 +50,7 @@ class SecondaryText extends StatelessWidget {
     this.textAlign,
     this.fontSize = 12,
     this.fontWeight,
+    this.fontfamily,
     super.key,
   });
 

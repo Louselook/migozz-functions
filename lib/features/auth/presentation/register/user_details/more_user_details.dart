@@ -5,7 +5,8 @@ import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubi
 // import 'package:migozz_app/features/auth/presentation/register/user_details/modules/category_step.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/interests/interests_step.dart';
 // import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/save_changes_social.dart';
-import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/social_ecosystem_step.dart';
+// import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/social_ecosystem_step.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/social_ecosystem_step_v3.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 
 //  Modo de operación del componente
@@ -88,7 +89,7 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
   @override
   Widget build(BuildContext context) {
     final steps = [
-      SocialEcosystemStep(controller: pageController, mode: widget.mode),
+      SocialEcosystemStepV3(controller: pageController, mode: widget.mode),
       // CategoryStep(controller: pageController, mode: widget.mode),
       InterestsStep(controller: pageController, mode: widget.mode),
     ];
