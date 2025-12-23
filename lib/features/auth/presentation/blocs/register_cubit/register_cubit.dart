@@ -235,7 +235,9 @@ class RegisterCubit extends Cubit<RegisterState> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
-                      '${config.displayName}${'register.validations.socialConnected'.tr()}',
+                      'addSocials.messages.socialConnected'.tr(
+                        namedArgs: {'platform': config.displayName},
+                      ),
                     ),
                     backgroundColor: Colors.green,
                   ),

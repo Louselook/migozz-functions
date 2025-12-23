@@ -420,9 +420,9 @@
       "newLabel": "Nuevo"
     },
     "dialogs": {
-      "addTitle": "Agregar {{platform}}",
-      "editTitle": "Editar {{platform}}",
-      "addUsernameHint": "Agregar usuario de {{platform}}",
+      "addTitle": "Agregar {platform}",
+      "editTitle": "Editar {platform}",
+      "addUsernameHint": "Agregar usuario de {platform}",
       "usernameHint": "Ingresa usuario",
       "usernameRequired": "Por favor ingresa un usuario",
       "removeQuestion": "¿Quieres eliminar {platform}?",
@@ -432,17 +432,17 @@
       "cancel": "Cancelar"
     },
     "messages": {
-      "saved": "Red social guardada correctamente!",
-      "errorSave": "Error al guardar: {{error}}",
-      "errorRemove": "Error al eliminar: {{error}}",
-      "removed": "{{platform}} eliminada correctamente!",
-      "usernameUpdated": "¡Usuario de {{platform}} actualizado!",
-      "usernameUpdatedSuccess": "¡Usuario de {{platform}} actualizado correctamente!"
+      "socialConnected": "{platform} guardada correctamente!",
+      "errorSave": "Error al guardar: {error}",
+      "errorRemove": "Error al eliminar: {error}",
+      "removed": "{platform} eliminada correctamente!",
+      "usernameUpdated": "¡Usuario de {platform} actualizado!",
+      "usernameUpdatedSuccess": "¡Usuario de {platform} actualizado correctamente!"
     },
     "networkAuth": {
-      "connectTitle": "Conectar {{platform}}",
+      "connectTitle": "Conectar {platform}",
       "oneClickTitle": "Conectar con un clic",
-      "oneClickSubtitle": "Autoriza con {{platform}}",
+      "oneClickSubtitle": "Autoriza con {platform}",
       "manualTitle": "Ingresar manualmente",
       "manualSubtitle": "Pega usuario o enlace",
       "backToOptions": "Volver a opciones",

@@ -429,9 +429,9 @@
             "newLabel": "New"
         },
         "dialogs": {
-            "addTitle": "Add {{platform}}",
-            "editTitle": "Edit {{platform}}",
-            "addUsernameHint": "Add {{platform}} username",
+            "addTitle": "Add {platform}",
+            "editTitle": "Edit {platform}",
+            "addUsernameHint": "Add {platform} username",
             "usernameHint": "Enter username",
             "usernameRequired": "Please enter a username",
             "removeQuestion": "Do you want to remove {platform}?",
@@ -441,17 +441,17 @@
           "cancel": "Cancel"
         },
         "messages": {
-            "saved": "Social media saved successfully!",
-            "errorSave": "Error saving: {{error}}",
-            "errorRemove": "Error removing: {{error}}",
-            "removed": "{{platform}} removed successfully!",
-            "usernameUpdated": "{{platform}} username updated!",
-            "usernameUpdatedSuccess": "{{platform}} username updated successfully!"
+            "socialConnected": "{platform} saved successfully!",
+            "errorSave": "Error saving: {error}",
+            "errorRemove": "Error removing: {error}",
+            "removed": "{platform} removed successfully!",
+            "usernameUpdated": "{platform} username updated!",
+            "usernameUpdatedSuccess": "{platform} username updated successfully!"
         },
         "networkAuth": {
-            "connectTitle": "Connect {{platform}}",
+            "connectTitle": "Connect {platform}",
             "oneClickTitle": "Connect with one click",
-            "oneClickSubtitle": "Authorize via {{platform}}",
+            "oneClickSubtitle": "Authorize via {platform}",
             "manualTitle": "Enter manually",
             "manualSubtitle": "Paste username or link",
             "backToOptions": "Back to options",
