@@ -29,6 +29,7 @@ class _NotificationInitializerState extends State<NotificationInitializer> {
   @override
   void initState() {
     super.initState();
+    debugPrint('🔔🔔🔔 [NotificationInitializer] initState called - Widget created!');
     // Set up background message handler
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   }
@@ -41,18 +42,27 @@ class _NotificationInitializerState extends State<NotificationInitializer> {
 
   Future<void> _checkAndInitialize() async {
     final authState = context.read<AuthCubit>().state;
-    
-    if (authState.status == AuthStatus.authenticated && 
+
+    debugPrint('🔔 [NotificationInitializer] Checking auth state: ${authState.status}');
+    debugPrint('🔔 [NotificationInitializer] User profile: ${authState.userProfile?.email ?? "null"}');
+    debugPrint('🔔 [NotificationInitializer] Is initialized: $_isInitialized, Last user: $_lastUserId');
+
+    if (authState.status == AuthStatus.authenticated &&
         authState.userProfile != null) {
       final userId = authState.userProfile!.email;
-      
+
       // Only initialize if not already initialized or user changed
       if (!_isInitialized || _lastUserId != userId) {
+        debugPrint('🔔 [NotificationInitializer] Will initialize for user: $userId');
         await _initializeNotifications(userId);
+      } else {
+        debugPrint('🔔 [NotificationInitializer] Already initialized for this user, skipping');
       }
     } else if (authState.status == AuthStatus.notAuthenticated && _isInitialized) {
       // User logged out, clean up
       await _cleanupNotifications();
+    } else {
+      debugPrint('🔔 [NotificationInitializer] Not authenticated or no profile, skipping initialization');
     }
   }
 
@@ -133,8 +143,10 @@ class _NotificationInitializerState extends State<NotificationInitializer> {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('🔔🔔🔔 [NotificationInitializer] build called');
     return BlocListener<AuthCubit, AuthState>(
       listener: (context, state) {
+        debugPrint('🔔🔔🔔 [NotificationInitializer] BlocListener triggered - state: ${state.status}');
         _checkAndInitialize();
       },
       child: widget.child,

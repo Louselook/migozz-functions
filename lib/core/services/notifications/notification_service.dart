@@ -130,12 +130,18 @@ class NotificationService {
         debugPrint('🔔 [NotificationService] Web FCM not fully configured');
         return;
       } else {
+        debugPrint('🔔 [NotificationService] Getting FCM token...');
         token = await _messaging.getToken();
+        debugPrint('🔔 [NotificationService] FCM Token result: ${token != null ? "received" : "null"}');
       }
 
       if (token != null) {
         debugPrint('🔔 [NotificationService] FCM Token: ${token.substring(0, 20)}...');
+        debugPrint('🔔 [NotificationService] Full token length: ${token.length}');
         await _saveFCMToken(token);
+      } else {
+        debugPrint('⚠️ [NotificationService] FCM Token is null - push notifications will not work');
+        debugPrint('⚠️ [NotificationService] This may happen on iOS simulator or if APNs is not configured');
       }
 
       // Listen for token refresh
@@ -143,14 +149,20 @@ class NotificationService {
         debugPrint('🔔 [NotificationService] FCM Token refreshed');
         _saveFCMToken(newToken);
       });
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('❌ [NotificationService] Error getting FCM token: $e');
+      debugPrint('❌ [NotificationService] Stack trace: $stackTrace');
     }
   }
 
   /// Save FCM token to Firestore
   Future<void> _saveFCMToken(String token) async {
-    if (_currentUserId == null) return;
+    if (_currentUserId == null) {
+      debugPrint('⚠️ [NotificationService] Cannot save FCM token - currentUserId is null');
+      return;
+    }
+
+    debugPrint('🔔 [NotificationService] Saving FCM token for user: $_currentUserId');
 
     try {
       // _currentUserId is an email, so we need to query by email to find the user document
@@ -160,20 +172,25 @@ class NotificationService {
           .limit(1)
           .get();
 
+      debugPrint('🔔 [NotificationService] Query returned ${querySnapshot.docs.length} documents');
+
       if (querySnapshot.docs.isEmpty) {
         debugPrint('❌ [NotificationService] User not found for email: $_currentUserId');
         return;
       }
 
       final userDoc = querySnapshot.docs.first;
+      debugPrint('🔔 [NotificationService] Found user document: ${userDoc.id}');
+
       await userDoc.reference.update({
         'fcmTokens': FieldValue.arrayUnion([token]),
         'lastFcmToken': token,
         'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
       });
-      debugPrint('✅ [NotificationService] FCM token saved to Firestore');
-    } catch (e) {
+      debugPrint('✅ [NotificationService] FCM token saved to Firestore for user ${userDoc.id}');
+    } catch (e, stackTrace) {
       debugPrint('❌ [NotificationService] Error saving FCM token: $e');
+      debugPrint('❌ [NotificationService] Stack trace: $stackTrace');
     }
   }
 

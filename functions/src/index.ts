@@ -187,11 +187,16 @@ export const sendSupportEmail = onDocumentCreated(
 export const sendChatNotification = onDocumentCreated(
   "chat_rooms/{chatRoomId}/messages/{messageId}",
   async (event) => {
+    logger.info("🚀 sendChatNotification function triggered!");
+    logger.info(`Event params: chatRoomId=${event.params.chatRoomId}, messageId=${event.params.messageId}`);
+
     const messageData = event.data?.data();
     if (!messageData) {
       logger.warn("No message data found");
       return;
     }
+
+    logger.info(`Message data: ${JSON.stringify(messageData)}`);
 
     const chatRoomId = event.params.chatRoomId;
     const senderId = messageData.senderId as string; // This is an email
