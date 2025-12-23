@@ -36,13 +36,13 @@ final Map<String, Map<String, dynamic>> questionsEs = {
   //   "keyboardType": "text",
   // },
 
-  // "socialEcosystem": {
-  //   "text": "¡Agreguemos tus plataformas sociales!",
-  //   "options": [],
-  //   "step": "regProgress.socialEcosystem",
-  //   "keepTalk": false,
-  //   "action": 0,
-  // },
+  "socialEcosystem": {
+    "text": "¡Agreguemos tus plataformas sociales!",
+    "options": [],
+    "step": "regProgress.socialEcosystem",
+    "keepTalk": false,
+    "action": 0,
+  },
 
   "location": {
     "text":
@@ -152,13 +152,13 @@ final Map<String, Map<String, dynamic>> questionsEn = {
   //   "keyboardType": "text",
   // },
 
-  // "socialEcosystem": {
-  //   "text": "Let's add your social platforms!",
-  //   "options": [],
-  //   "step": "regProgress.socialEcosystem",
-  //   "keepTalk": false,
-  //   "action": 0,
-  // },
+  "socialEcosystem": {
+    "text": "Let's add your social platforms!",
+    "options": [],
+    "step": "regProgress.socialEcosystem",
+    "keepTalk": false,
+    "action": 0,
+  },
 
   "location": {
     "text":

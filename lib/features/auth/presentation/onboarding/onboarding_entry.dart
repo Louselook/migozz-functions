@@ -14,7 +14,6 @@ class OnboardingEntry extends StatelessWidget {
     if (PlatformUtils.isWeb) {
       return const web.OnboardingPage();
     }
-    // móvil / desktop -> usar la UI mobile (si quieres un desktop distinto, añade lógica)
     return const mobile.OnboardingScreen();
   }
 }

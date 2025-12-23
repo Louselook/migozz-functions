@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:migozz_app/app_initializer.dart';
 import 'package:migozz_app/bloc_providers.dart';
 import 'package:migozz_app/core/config/firebase_config.dart';
@@ -28,12 +29,20 @@ Future<void> main() async {
 
   setPathUrlStrategy();
   runApp(
-    EasyLocalization(
-      supportedLocales: const [Locale('en'), Locale('es')],
-      path: 'assets/translations',
-      fallbackLocale: const Locale('en'),
+    ScreenUtilInit(
+      designSize: const Size(375, 812),
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (context, child) {
+        return EasyLocalization(
+          supportedLocales: const [Locale('en'), Locale('es')],
+          path: 'assets/translations',
+          fallbackLocale: const Locale('en'),
+          child: child!,
+        );
+      },
       child: const MyApp(),
-    ),
+    )
   );
 }
 

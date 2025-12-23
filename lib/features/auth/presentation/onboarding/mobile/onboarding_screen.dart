@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
@@ -19,6 +20,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
+  // mantengo la propiedad gradient como estaba en tu código original
   get gradient => null;
 
   @override
@@ -34,20 +36,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Usa ScreenUtil valores escalados para paddings/medidas
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
       body: Column(
         children: [
           // Indicadores de progreso
           Padding(
-            padding: const EdgeInsets.only(top: 40, left: 20, right: 20),
+            padding: EdgeInsets.only(top: 40.h, left: 20.w, right: 20.w),
             child: Row(
               children: List.generate(
                 AppConstants.onboardingImages.length,
                 (index) => CustomProgressIndicator(
                   index,
                   currentIndex: _currentPage,
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(4.r),
                 ),
               ),
             ),
@@ -81,20 +84,33 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Parte superior → 40%
+        // Parte superior → 50%
         Expanded(
-          flex: screenHeight < 800 ? 4 : 3, // para no chocar componetes
+          flex: screenHeight < 800 ? 5 : 3, // para no chocar componetes
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(20.w),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 5),
-                PrimaryText(data.titleKey.tr()),
-                const SizedBox(height: 8),
+                SizedBox(height: 5.h),
+                PrimaryText(
+                  data.titleKey.tr(),
+                  fontSize: 28.sp,
+                  fontfamily: 'Inter',
+                ),
+                SizedBox(height: 8.h),
+                SecondaryText(
+                  data.subTitleKey != null ? data.subTitleKey!.tr() : "",
+                  textAlign: TextAlign.start,
+                  fontfamily: 'Inter',
+                  fontSize: 14.sp,
+                  color: AppColors.secondaryText,
+                ),
                 SecondaryText(
                   data.descriptionKey.tr(),
                   textAlign: TextAlign.start,
+                  fontfamily: 'Inter',
+                  fontSize: 14.sp,
                   color: AppColors.secondaryText.withValues(alpha: 0.53),
                 ),
                 const Spacer(),
@@ -119,11 +135,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             onPressed: () => context.go('/login'),
                           ),
                           SizedBox(
-                            width: 110,
+                            width: 110.w,
                             child: GradientButton(
                               child: TextWithIcon(
                                 "onboarding.buttons.next".tr(),
-                                spacing: 20,
+                                spacing: 20.w,
                                 icon: Icons.arrow_forward_ios_rounded,
                               ),
                               onPressed: () {
@@ -141,24 +157,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
         ),
 
-        // Parte inferior → 60%
+        // Parte inferior → 50%
         Expanded(
-          flex: 6,
+          flex: 5,
           child: Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: EdgeInsets.all(8.w),
             child: Container(
               width: double.infinity,
               decoration: BoxDecoration(
                 gradient: gradient ?? AppColors.verticalOnboarding,
                 borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(30),
-                  topRight: Radius.circular(30),
+                  topLeft: Radius.circular(30.r),
+                  topRight: Radius.circular(30.r),
                 ),
               ),
               child: ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(30),
-                  topRight: Radius.circular(30),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(30.r),
+                  topRight: Radius.circular(30.r),
                 ),
                 child: Stack(
                   children: [
@@ -196,11 +212,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           errorBuilder: (context, error, stackTrace) {
                             debugPrint('Error loading image ${data.imagePath}: $error');
                             return Container(
-                              color: Colors.grey.withOpacity(0.3),
-                              child: const Center(
+                              color: Colors.grey.withValues(alpha: 0.3),
+                              child: Center(
                                 child: Icon(
                                   Icons.image_not_supported,
-                                  size: 50,
+                                  size: 50.r,
                                   color: Colors.white54,
                                 ),
                               ),

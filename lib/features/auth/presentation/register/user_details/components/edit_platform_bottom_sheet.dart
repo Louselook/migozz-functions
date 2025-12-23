@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
@@ -77,7 +78,9 @@ class _EditPlatformBottomSheetState extends State<EditPlatformBottomSheet> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  "Edit ${widget.platform['name']}",
+                  "addSocials.dialogs.editTitle".tr(
+                    namedArgs: {'platform': widget.platform['name'] ?? ''},
+                  ),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -129,12 +132,12 @@ class _EditPlatformBottomSheetState extends State<EditPlatformBottomSheet> {
               child: TextField(
                 controller: _usernameController,
                 style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  hintText: "Enter username",
-                  hintStyle: TextStyle(color: Colors.grey),
+                decoration: InputDecoration(
+                  hintText: "addSocials.dialogs.usernameHint".tr(),
+                  hintStyle: const TextStyle(color: Colors.grey),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.all(16),
-                  prefixIcon: Icon(Icons.person, color: Colors.grey),
+                  contentPadding: const EdgeInsets.all(16),
+                  prefixIcon: const Icon(Icons.person, color: Colors.grey),
                 ),
               ),
             ),
@@ -184,8 +187,8 @@ class _EditPlatformBottomSheetState extends State<EditPlatformBottomSheet> {
                           borderRadius: BorderRadius.circular(25),
                         ),
                       ),
-                      child: const Text(
-                        "Delete",
+                      child: Text(
+                        "buttons.delete".tr(),
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,
@@ -217,8 +220,8 @@ class _EditPlatformBottomSheetState extends State<EditPlatformBottomSheet> {
                       width: double.infinity,
                       radius: 25,
                       gradient: AppColors.primaryGradient,
-                      child: const Text(
-                        "Save",
+                      child: Text(
+                        "buttons.save".tr(),
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,

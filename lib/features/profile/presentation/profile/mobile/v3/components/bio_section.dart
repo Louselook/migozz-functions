@@ -26,7 +26,11 @@ class BioSection extends StatelessWidget {
           final userId = authCubit.state.firebaseUser?.uid;
 
           if (userId == null) {
-            AlertGeneral.show(context, 4, message: 'Error: User not logged in');
+            AlertGeneral.show(
+              context,
+              4,
+              message: 'edit.validations.errorUserLogin'.tr(),
+            );
             return;
           }
 
@@ -37,11 +41,20 @@ class BioSection extends StatelessWidget {
             );
 
             if (context.mounted) {
-              AlertGeneral.show(context, 1, message: 'Bio updated successfully');
+              AlertGeneral.show(
+                context,
+                1,
+                message: 'profile.customization.bio.success'.tr(),
+              );
             }
           } catch (e) {
             if (context.mounted) {
-              AlertGeneral.show(context, 4, message: 'Error updating bio: $e');
+              AlertGeneral.show(
+                context,
+                4,
+                message:
+                    '${'profile.customization.bio.errorUpdate'.tr()}$e',
+              );
             }
           }
         },
@@ -80,7 +93,7 @@ class BioSection extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      'Bio',
+                      'profile.customization.bio.label'.tr(),
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 13,

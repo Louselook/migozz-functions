@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -20,12 +23,12 @@ import '../../../../../data/domain/models/user/user_dto.dart';
 class SocialEcosystemStepV3 extends StatefulWidget {
   final PageController controller;
   final MoreUserDetailsMode mode;
-  final UserDTO user;
+  final UserDTO? user;
 
   const SocialEcosystemStepV3({
     super.key,
     required this.controller,
-    required this.user,
+    this.user,
     this.mode = MoreUserDetailsMode.register,
   });
 
@@ -138,7 +141,11 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
 
         // Show loading dialog
         if (context.mounted) {
-          showProfileLoader(context, message: 'Saving...', onCancel: () {});
+          showProfileLoader(
+            context,
+            message: 'common.saving'.tr(),
+            onCancel: () {},
+          );
         }
 
         try {
@@ -146,14 +153,16 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
           debugPrint('✅ [V3] Auto-save completed successfully!');
 
           // Always hide the dialog
-          if (context.mounted) Navigator.of(context).pop();
+          if (Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          }
 
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Social media saved successfully!'),
+              SnackBar(
+                content: Text('addSocials.messages.saved'.tr()),
                 backgroundColor: Colors.green,
-                duration: Duration(seconds: 2),
+                duration: const Duration(seconds: 2),
               ),
             );
           }
@@ -161,12 +170,18 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
           debugPrint('❌ [V3] Auto-save failed: $e');
 
           // Always hide the dialog
-          if (context.mounted) Navigator.of(context).pop();
+          if (Navigator.of(context).canPop()) {
+  Navigator.of(context).pop();
+}
 
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Error saving: $e'),
+                content: Text(
+                  'addSocials.messages.errorSave'.tr(
+                    namedArgs: {'error': e.toString()},
+                  ),
+                ),
                 backgroundColor: Colors.red,
                 duration: const Duration(seconds: 2),
               ),
@@ -177,6 +192,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     };
   }
 
+  StreamSubscription? _editCubitSubscription;
+
   // ✅ NUEVO: Configurar listener para auto-save
   void _setupAutoSave() {
     final editCubit = context.read<EditCubit>();
@@ -184,57 +201,28 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
 
     debugPrint('🔄 [V3] Setting up auto-save listener');
 
-    // Listen to EditCubit state changes
-    editCubit.stream.listen((editState) async {
-      // Check if social ecosystem changed
+    _editCubitSubscription?.cancel(); // seguridad
+
+    _editCubitSubscription = editCubit.stream.listen((editState) async {
       final currentCount = editState.socialEcosystem?.length ?? 0;
 
       if (currentCount != _previousSocialCount && editState.hasChanges) {
-        debugPrint('💾 [V3] Detected change in social ecosystem');
-        debugPrint('   Previous count: $_previousSocialCount');
-        debugPrint('   Current count: $currentCount');
-
         _previousSocialCount = currentCount;
 
-        // Auto-save
         final userId = authCubit.state.firebaseUser?.uid;
-        if (userId != null && mounted) {
-          debugPrint('💾 [V3] Auto-saving changes...');
+        if (userId == null || !mounted) return;
 
-          if (mounted) {
-            showProfileLoader(context, message: 'Saving...', onCancel: () {});
-          }
+        showProfileLoader(
+          context,
+          message: 'common.saving'.tr(),
+          onCancel: () {},
+        );
 
-          try {
-            await editCubit.saveAllPendingChanges(userId);
-            debugPrint('✅ [V3] Auto-save completed successfully!');
-
-            if (mounted) Navigator.of(context).pop();
-
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Social media saved successfully!'),
-                  backgroundColor: Colors.green,
-                  duration: Duration(seconds: 2),
-                ),
-              );
-            }
-          } catch (e) {
-            debugPrint('❌ [V3] Auto-save failed: $e');
-
-            if (mounted) Navigator.of(context).pop();
-
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Error saving: $e'),
-                  backgroundColor: Colors.red,
-                  duration: const Duration(seconds: 2),
-                ),
-              );
-            }
-          }
+        try {
+          await editCubit.saveAllPendingChanges(userId);
+          if (mounted) Navigator.of(context).pop();
+        } catch (e) {
+          if (mounted) Navigator.of(context).pop();
         }
       }
     });
@@ -242,6 +230,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
 
   @override
   void dispose() {
+    _editCubitSubscription?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -265,12 +254,19 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     }).toList();
   }
 
+  String _categoryLabel(String category) {
+    final key = category.toLowerCase();
+    return 'addSocials.categories.$key'.tr();
+  }
+
   bool _isNetworkSelected(NetworkConfig config) {
     final selectedList = widget.mode == MoreUserDetailsMode.register
         ? context.watch<RegisterCubit>().state.socialEcosystem ?? []
         : context.watch<EditCubit>().state.socialEcosystem ?? [];
 
+    // Defensive: ensure map not empty before accessing keys.first
     return selectedList.any((e) {
+      if (e.isEmpty) return false;
       final platformKey = e.keys.first.toLowerCase();
       return platformKey == config.name.toLowerCase();
     });
@@ -378,7 +374,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
             if (mounted) {
               showProfileLoader(
                 context,
-                message: 'Removing...',
+                message: 'common.removing'.tr(),
                 onCancel: () {},
               );
             }
@@ -394,7 +390,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
-                      '${config.displayName} removed successfully!',
+                      'addSocials.messages.removed'.tr(
+                        namedArgs: {'platform': config.displayName},
+                      ),
                     ),
                     backgroundColor: Colors.green,
                     duration: const Duration(seconds: 2),
@@ -410,7 +408,11 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Error removing: $e'),
+                    content: Text(
+                      'addSocials.messages.errorRemove'.tr(
+                        namedArgs: {'error': e.toString()},
+                      ),
+                    ),
                     backgroundColor: Colors.red,
                     duration: const Duration(seconds: 2),
                   ),
@@ -457,18 +459,21 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
               children: [
                 // Close button
                 Positioned(
-                  top: 16,
-                  right: 16,
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.pop(dialogContext, false);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      child: const Icon(
-                        Icons.close,
-                        color: Colors.white,
-                        size: 24,
+                  top: MediaQuery.of(context).padding.top + 8,
+                  left: 0,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.of(context, rootNavigator: true).pop('back');
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        child: Icon(
+                          Icons.arrow_back_ios,
+                          color: Colors.white,
+                          size: 24,
+                        ),
                       ),
                     ),
                   ),
@@ -503,7 +508,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
 
                       // Title
                       Text(
-                        'Add ${config.displayName}',
+                        'addSocials.dialogs.addTitle'.tr(
+                          namedArgs: {'platform': config.displayName},
+                        ),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 20,
@@ -523,7 +530,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: Colors.white.withValues(alpha: 0.1),
-                          hintText: 'Add ${config.displayName} username',
+                          hintText: 'addSocials.dialogs.addUsernameHint'.tr(
+                            namedArgs: {'platform': config.displayName},
+                          ),
                           hintStyle: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 14,
@@ -546,10 +555,12 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                           final newUsername = usernameController.text.trim();
                           if (newUsername.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Please enter a username'),
+                              SnackBar(
+                                content: Text(
+                                  'addSocials.dialogs.usernameRequired'.tr(),
+                                ),
                                 backgroundColor: Colors.red,
-                                duration: Duration(seconds: 2),
+                                duration: const Duration(seconds: 2),
                               ),
                             );
                             return;
@@ -563,8 +574,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                             final cubit = context.read<RegisterCubit>();
                             final current =
                                 List<Map<String, Map<String, dynamic>>>.from(
-                                  cubit.state.socialEcosystem ?? [],
-                                );
+                              cubit.state.socialEcosystem ?? [],
+                            );
 
                             final index = current.indexWhere((e) {
                               final platformKey = e.keys.first.toLowerCase();
@@ -584,7 +595,11 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(
-                                      '${config.displayName} username updated!',
+                                      'addSocials.messages.usernameUpdated'.tr(
+                                        namedArgs: {
+                                          'platform': config.displayName,
+                                        },
+                                      ),
                                     ),
                                     backgroundColor: Colors.green,
                                     duration: const Duration(seconds: 2),
@@ -626,7 +641,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                                 if (context.mounted) {
                                   showProfileLoader(
                                     context,
-                                    message: 'Saving...',
+                                    message: 'common.saving'.tr(),
                                     onCancel: () {},
                                   );
                                 }
@@ -646,7 +661,12 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Text(
-                                          '${config.displayName} username updated successfully!',
+                                          'addSocials.messages.usernameUpdatedSuccess'
+                                              .tr(
+                                            namedArgs: {
+                                              'platform': config.displayName,
+                                            },
+                                          ),
                                         ),
                                         backgroundColor: Colors.green,
                                         duration: const Duration(seconds: 2),
@@ -666,7 +686,11 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
-                                        content: Text('Error saving: $e'),
+                                        content: Text(
+                                          'addSocials.messages.errorSave'.tr(
+                                            namedArgs: {'error': e.toString()},
+                                          ),
+                                        ),
                                         backgroundColor: Colors.red,
                                         duration: const Duration(seconds: 2),
                                       ),
@@ -684,9 +708,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                             gradient: AppColors.primaryGradient,
                             borderRadius: BorderRadius.circular(25),
                           ),
-                          child: const Center(
+                          child: Center(
                             child: Text(
-                              'Save',
+                              'buttons.save'.tr(),
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
@@ -704,9 +728,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                         onTap: () {
                           Navigator.pop(dialogContext, true);
                         },
-                        child: const Text(
-                          'Delete Link',
-                          style: TextStyle(
+                        child: Text(
+                          'addSocials.dialogs.deleteLink'.tr(),
+                          style: const TextStyle(
                             color: Colors.red,
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
@@ -736,13 +760,14 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     return 'https://www.google.com/s2/favicons?domain=$domain&sz=128';
   }
 
+  // Ahora acepta username nullable y lo maneja defensivamente
   List<SocialLink> _buildSocialLinks(
     List<Map<String, dynamic>>? socialEcosystem,
-    String username,
+    String? username,
   ) {
     if (socialEcosystem == null || socialEcosystem.isEmpty) return [];
     final links = <SocialLink>[];
-    final cleanUsername = username.replaceFirst('@', '');
+    final cleanUsername = (username ?? '').replaceFirst('@', '').trim();
 
     for (final social in socialEcosystem) {
       final type = social['type']?.toString().toLowerCase();
@@ -763,8 +788,13 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
             ),
           );
         }
+        // custom links don't require username; continue to next social
         continue;
       }
+
+      // If it's not custom and we don't have a username, skip entries
+      if (cleanUsername.isEmpty) continue;
+
       for (final entry in social.entries) {
         final platform = entry.key.toLowerCase();
         final data = entry.value;
@@ -780,10 +810,17 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
 
         final socialInfo = _getSocialInfo(platform, cleanUsername, customUrl);
         if (socialInfo != null) {
+          final asset = socialInfo['asset'] ?? '';
+          final urlStr = socialInfo['url'] ?? '';
+          if (asset.isEmpty || urlStr.isEmpty) {
+            // skip invalid
+            continue;
+          }
+
           links.add(
             SocialLink(
-              asset: socialInfo['asset']!,
-              url: Uri.parse(socialInfo['url']!),
+              asset: asset,
+              url: Uri.parse(urlStr),
               followers: followers,
               shares: shares,
             ),
@@ -797,27 +834,83 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
 
   @override
   Widget build(BuildContext context) {
-    final user = widget.user;
+    String normalizeUsername(String username) {
+      if (username.isEmpty) return '';
+      return username.startsWith('@') ? username : '@$username';
+    }
+
     final size = MediaQuery.of(context).size;
-    final username = user.username.startsWith('@')
-        ? user.username
-        : '@${user.username}';
-    final avatarUrl = user.avatarUrl;
+
+    // RAW username depending on mode:
+    final rawUsername = widget.mode == MoreUserDetailsMode.edit
+        ? (widget.user?.username ?? '')
+        : (context.watch<RegisterCubit>().state.username ?? '');
+
+    final username = normalizeUsername(rawUsername);
+
+    // avatar only available in edit mode
+    final avatarUrl = widget.mode == MoreUserDetailsMode.edit
+        ? widget.user?.avatarUrl
+        : null;
 
     // Get social ecosystem from the appropriate cubit based on mode
     final List<Map<String, dynamic>> socialEcosystem;
     if (widget.mode == MoreUserDetailsMode.register) {
       // RegisterCubit has List<Map<String, Map<String, dynamic>>>
+      // Convert each item defensively to Map<String, dynamic>
       final registerEcosystem =
           context.watch<RegisterCubit>().state.socialEcosystem ?? [];
-      // Convert to List<Map<String, dynamic>>
-      socialEcosystem = registerEcosystem.cast<Map<String, dynamic>>();
+
+      socialEcosystem = registerEcosystem
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
     } else {
       // EditCubit already has List<Map<String, dynamic>>
       socialEcosystem = context.watch<EditCubit>().state.socialEcosystem ?? [];
     }
 
-    final socialLinks = _buildSocialLinks(socialEcosystem, user.username);
+    // Use the safe username variable (NO user! here)
+    final socialLinks = _buildSocialLinks(socialEcosystem, rawUsername);
+
+    void _handleBackTap() {
+      // Si estamos en modo registro, intentamos navegar dentro del PageView.
+      if (widget.mode == MoreUserDetailsMode.register) {
+        try {
+          if (widget.controller.hasClients) {
+            // obtener página actual (puede ser decimal)
+            final currentPage = (widget.controller.page ?? widget.controller.initialPage).round();
+            if (currentPage > 0) {
+              widget.controller.previousPage(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+              );
+              return;
+            } else {
+              // Estamos en la primera página del PageView -> cerrar la ruta
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop();
+                return;
+              }
+            }
+          } else {
+            // controller aún no está attached -> fallback a Navigator
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+              return;
+            }
+          }
+        } catch (e, st) {
+          debugPrint('[_handleBackTap] error: $e\n$st');
+          // fallback seguro
+          if (Navigator.of(context).canPop()) Navigator.of(context).pop();
+        }
+      } else {
+        // Modo edición: cerrar la ruta y volver al perfil
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+      }
+    }
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
@@ -838,11 +931,6 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                         Colors.black.withValues(alpha: 0.40),
                         Colors.black,
                       ],
-                      // stops: const [
-                      //   0.3,
-                      //   0.7,
-                      //   1.0,
-                      // ],
                     ),
                   ),
                 ),
@@ -854,17 +942,11 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: GestureDetector(
-                    onTap: () async {
-                      // Just navigate back - auto-save happens on add/remove
-                      Navigator.pop(context);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      child: Icon(
-                        Icons.arrow_back_ios,
-                        color: Colors.white,
-                        size: 24,
-                      ),
+                    onTap: _handleBackTap,
+                    child: const Icon(
+                      Icons.arrow_back_ios,
+                      color: Colors.white,
+                      size: 24,
                     ),
                   ),
                 ),
@@ -884,7 +966,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                     SizedBox(height: size.height * 0.33),
                     Text(
                       formatDisplayName(
-                        widget.user.displayName,
+                        widget.user?.displayName,
                         format: FormatName.short,
                       ),
                       maxLines: 1,
@@ -929,7 +1011,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                           fillColor: AppColors.greyBackground.withValues(
                             alpha: 0.4,
                           ),
-                          hintText: 'Search For Platforms',
+                          hintText: 'addSocials.search.hint'.tr(),
                           hintStyle: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 12,
@@ -986,7 +1068,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
             Icon(Icons.search_off, size: 64, color: Colors.grey[700]),
             const SizedBox(height: 16),
             Text(
-              'No platforms found',
+              'addSocials.search.noResults'.tr(),
               style: TextStyle(color: Colors.grey[600], fontSize: 14),
             ),
           ],
@@ -1000,9 +1082,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Search Results',
-            style: TextStyle(
+          Text(
+            'addSocials.search.results'.tr(),
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 13,
               fontWeight: FontWeight.w800,
@@ -1047,7 +1129,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  categoryName,
+                  _categoryLabel(categoryName),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
@@ -1085,9 +1167,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Add Custom Link',
-                style: TextStyle(
+              Text(
+                'addSocials.customLink.title'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
@@ -1117,71 +1199,85 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
   }
 
   Widget _buildPlatformGridItem(NetworkConfig network, bool isSelected) {
+    const double borderRadiusValue = 8;
+    const double selectedBorderWidth = 1.5;
+    final borderRadius = BorderRadius.circular(borderRadiusValue);
+    final boxShadow = BoxShadow(
+      color: Colors.black.withValues(alpha: 0.25),
+      blurRadius: 4,
+      offset: const Offset(0, 1),
+    );
+    final baseDecoration = BoxDecoration(
+      color: Colors.white.withValues(alpha: 0.06),
+      borderRadius: borderRadius,
+      boxShadow: [boxShadow],
+    );
+    final unselectedDecoration = BoxDecoration(
+      color: Colors.white.withValues(alpha: 0.06),
+      borderRadius: borderRadius,
+      border: Border.all(
+        color: Colors.white.withValues(alpha: 0.08),
+        width: 1,
+      ),
+      boxShadow: [boxShadow],
+    );
+
     return GestureDetector(
       onTap: () => _handleSocialTap(network),
-      child: Container(
-        decoration: BoxDecoration(
-          color: isSelected
-              ? Colors.white.withValues(alpha: 0.1)
-              : Colors.white.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isSelected
-                ? Colors.white.withValues(alpha: 0.2)
-                : Colors.white.withValues(alpha: 0.08),
-            width: isSelected ? 1.5 : 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.25),
-              blurRadius: 4,
-              offset: const Offset(0, 1),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final h = constraints.maxHeight;
-            final iconSize = (h * 0.44).clamp(20.0, 28.0).toDouble();
-            final baseFontSize = (h * 0.33).clamp(12.0, 15.0).toDouble();
-            final availableTextWidth =
-                constraints.maxWidth - iconSize - 8 - 6 - 6;
-            final fitFontSize =
-                (availableTextWidth / (network.displayName.length * 0.6))
-                    .clamp(10.0, baseFontSize)
-                    .toDouble();
-            final fontSize = fitFontSize;
+      child: CustomPaint(
+        foregroundPainter: isSelected
+            ? _GradientBorderPainter(
+                gradient: AppColors.primaryGradient,
+                strokeWidth: selectedBorderWidth,
+                radius: borderRadiusValue,
+              )
+            : null,
+        child: Container(
+          decoration: isSelected ? baseDecoration : unselectedDecoration,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final h = constraints.maxHeight;
+              final iconSize = (h * 0.44).clamp(20.0, 28.0).toDouble();
+              final baseFontSize = (h * 0.33).clamp(12.0, 15.0).toDouble();
+              final availableTextWidth =
+                  constraints.maxWidth - iconSize - 8 - 6 - 6;
+              final fitFontSize =
+                  (availableTextWidth / (network.displayName.length * 0.6))
+                      .clamp(10.0, baseFontSize)
+                      .toDouble();
+              final fontSize = fitFontSize;
 
-            return Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                SvgPicture.asset(
-                  network.iconPath,
-                  width: iconSize,
-                  height: iconSize,
-                  fit: BoxFit.contain,
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    network.displayName,
-                    style: TextStyle(
-                      color: isSelected ? Colors.white : Colors.white70,
-                      fontSize: fontSize,
-                      fontWeight: isSelected
-                          ? FontWeight.w600
-                          : FontWeight.w500,
-                    ),
-                    textAlign: TextAlign.start,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    softWrap: false,
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  SvgPicture.asset(
+                    network.iconPath,
+                    width: iconSize,
+                    height: iconSize,
+                    fit: BoxFit.contain,
                   ),
-                ),
-              ],
-            );
-          },
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      network.displayName,
+                      style: TextStyle(
+                        color: isSelected ? Colors.white : Colors.white70,
+                        fontSize: fontSize,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.w500,
+                      ),
+                      textAlign: TextAlign.start,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: false,
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -1196,10 +1292,10 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
         );
         if (result == 'done' && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Custom link updated'),
+            SnackBar(
+              content: Text('addSocials.customLink.updated'.tr()),
               backgroundColor: Colors.green,
-              duration: Duration(seconds: 2),
+              duration: const Duration(seconds: 2),
             ),
           );
         }
@@ -1229,7 +1325,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
             final baseFontSize = (h * 0.33).clamp(12.0, 15.0).toDouble();
             final availableTextWidth =
                 constraints.maxWidth - iconSize - 8 - 6 - 6;
-            final fitFontSize = (availableTextWidth / ('New'.length * 0.6))
+            final label = 'addSocials.customLink.newLabel'.tr();
+            final fitFontSize = (availableTextWidth / (label.length * 0.6))
                 .clamp(10.0, baseFontSize)
                 .toDouble();
             return Row(
@@ -1245,7 +1342,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    'New',
+                    label,
                     style: TextStyle(
                       color: Colors.white70,
                       fontSize: fitFontSize,
@@ -1367,5 +1464,38 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     }
 
     return {'asset': asset, 'url': url};
+  }
+}
+
+class _GradientBorderPainter extends CustomPainter {
+  final Gradient gradient;
+  final double strokeWidth;
+  final double radius;
+
+  _GradientBorderPainter({
+    required this.gradient,
+    required this.strokeWidth,
+    required this.radius,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final rrect = RRect.fromRectAndRadius(
+      rect.deflate(strokeWidth / 2),
+      Radius.circular(radius),
+    );
+    final paint = Paint()
+      ..shader = gradient.createShader(rect)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth;
+    canvas.drawRRect(rrect, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _GradientBorderPainter oldDelegate) {
+    return oldDelegate.gradient != gradient ||
+        oldDelegate.strokeWidth != strokeWidth ||
+        oldDelegate.radius != radius;
   }
 }

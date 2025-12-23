@@ -33,6 +33,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final genderCtrl = TextEditingController();
   final birthCtrl = TextEditingController();
   DateTime? _dob;
+  String? _selectedGender;
 
   @override
   void dispose() {
@@ -75,7 +76,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       await editCubit.saveUserProfileField(userId: userId, updatedFields: data);
 
       if (mounted) {
-        AlertGeneral.show(context, 1, message: "edit.validations.updateProfile".tr());
+        AlertGeneral.show(
+          context,
+          1,
+          message: "edit.validations.updateProfile".tr(),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -92,14 +97,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final svc = LocationService();
 
     if (mounted) {
-      AlertGeneral.show(context, 2, message: "edit.validations.detectLocation".tr());
+      AlertGeneral.show(
+        context,
+        2,
+        message: "edit.validations.detectLocation".tr(),
+      );
     }
 
     final newLocation = await svc.initAndFetchAddress();
 
     if (newLocation == null) {
       if (!mounted) return;
-      AlertGeneral.show(context, 4, message: "edit.validations.errorDetecLocation".tr());
+      AlertGeneral.show(
+        context,
+        4,
+        message: "edit.validations.errorDetecLocation".tr(),
+      );
       return;
     }
 
@@ -135,7 +148,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         final userId = context.read<AuthCubit>().state.firebaseUser?.uid;
 
         if (userId == null) {
-          AlertGeneral.show(context, 4, message: 'edit.validations.errorUserLogin'.tr());
+          AlertGeneral.show(
+            context,
+            4,
+            message: 'edit.validations.errorUserLogin'.tr(),
+          );
           return;
         }
 
@@ -168,9 +185,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         AlertGeneral.show(
           context,
           4,
-          message: "edit.validations.errorUpdateLocation"
-              .tr()
-              .replaceAll("\$e", e.toString()),
+          message: "edit.validations.errorUpdateLocation".tr().replaceAll(
+            "\$e",
+            e.toString(),
+          ),
         );
       }
     } else {
@@ -178,15 +196,44 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
+  String? _normalizeGender(String? raw) {
+    if (raw == null) return null;
+    final value = raw.trim().toLowerCase();
+    if (value.isEmpty) return null;
+    switch (value) {
+      case 'male':
+      case 'masculino':
+      case 'm':
+        return 'male';
+      case 'female':
+      case 'famale':
+      case 'femenino':
+      case 'f':
+        return 'female';
+      case 'other':
+      case 'otro':
+        return 'other';
+      default:
+        return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
         title: Text(
           'edit.presentation.title'.tr(),
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         centerTitle: true,
         // leading: IconButton(
@@ -200,219 +247,504 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         //   ),
         // ],
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final width = constraints.maxWidth;
-          final height = constraints.maxHeight;
-          final isTablet = width > 600;
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          const _EditProfileBackground(),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth;
+              final height = constraints.maxHeight;
+              final isTablet = width > 600;
+              final horizontalPadding = isTablet ? width * 0.2 : width * 0.08;
+              final topPadding =
+                  MediaQuery.of(context).padding.top + (kToolbarHeight * 0.35);
 
-          return BlocBuilder<AuthCubit, AuthState>(
-            builder: (context, state) {
-              if (state.isLoadingProfile) {
-                return const Center(child: LoaderDialog(message: 'Loading profile...'));
-              }
-              final user = state.userProfile;
-              if (user == null) {
-                return Center(
-                  child: Text(
-                    'edit.presentation.errorUserEmpty'.tr(),
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                );
-              }
+              return BlocBuilder<AuthCubit, AuthState>(
+                builder: (context, state) {
+                  if (state.isLoadingProfile) {
+                    return Center(
+                      child: LoaderDialog(
+                        message: 'edit.presentation.loadingProfile'.tr(),
+                      ),
+                    );
+                  }
+                  final user = state.userProfile;
+                  if (user == null) {
+                    return Center(
+                      child: Text(
+                        'edit.presentation.errorUserEmpty'.tr(),
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    );
+                  }
 
-              if (user.avatarUrl == null || user.avatarUrl!.isEmpty) {
-              } else {}
+                  if (user.avatarUrl == null || user.avatarUrl!.isEmpty) {
+                  } else {}
 
-              if (nameCtrl.text.isEmpty) {
-                nameCtrl.text = user.displayName;
-                usernameCtrl.text = user.username;
-                emailCtrl.text = user.email;
-                phoneCtrl.text = user.phone ?? '';
-                genderCtrl.text = user.gender ?? '';
+                  if (nameCtrl.text.isEmpty) {
+                    nameCtrl.text = user.displayName;
+                    usernameCtrl.text = user.username;
+                    emailCtrl.text = user.email;
+                    phoneCtrl.text = user.phone ?? '';
+                    _selectedGender = _normalizeGender(user.gender);
+                    genderCtrl.text = _selectedGender ?? (user.gender ?? '');
 
-                if (user.birthDate != null) {
-                  _dob = user.birthDate;
-                  birthCtrl.text =
-                      "${user.birthDate!.year}-${user.birthDate!.month.toString().padLeft(2, '0')}-${user.birthDate!.day.toString().padLeft(2, '0')}";
-                }
-              }
+                    if (user.birthDate != null) {
+                      _dob = user.birthDate;
+                      birthCtrl.text =
+                          "${user.birthDate!.year}-${user.birthDate!.month.toString().padLeft(2, '0')}-${user.birthDate!.day.toString().padLeft(2, '0')}";
+                    }
+                  }
 
-              String formattedLocation = 'Location not set';
+                  String formattedLocation = 'edit.presentation.locationNotSet'
+                      .tr();
 
-              if (user.location.isEmpty) {
-                formattedLocation = 'Location not set';
-              } else {
-                final locationParts = <String>[];
-                if (user.location.city.isNotEmpty) {
-                  locationParts.add(user.location.city);
-                }
-                if (user.location.state.isNotEmpty) {
-                  locationParts.add(user.location.state);
-                }
-                if (user.location.country.isNotEmpty) {
-                  locationParts.add(user.location.country);
-                }
+                  if (user.location.isEmpty) {
+                    formattedLocation = 'edit.presentation.locationNotSet'.tr();
+                  } else {
+                    final locationParts = <String>[];
+                    if (user.location.city.isNotEmpty) {
+                      locationParts.add(user.location.city);
+                    }
+                    if (user.location.state.isNotEmpty) {
+                      locationParts.add(user.location.state);
+                    }
+                    if (user.location.country.isNotEmpty) {
+                      locationParts.add(user.location.country);
+                    }
 
-                if (locationParts.isNotEmpty) {
-                  formattedLocation = locationParts.join(', ');
-                }
-              }
+                    if (locationParts.isNotEmpty) {
+                      formattedLocation = locationParts.join(', ');
+                    }
+                  }
 
-              return SingleChildScrollView(
-                padding: EdgeInsets.symmetric(
-                  horizontal: isTablet ? width * 0.2 : width * 0.08,
-                ),
-                child: Column(
-                  children: [
-                    SizedBox(height: height * 0.02),
+                  final genderOptions = <String, String>{
+                    'male': 'edit.presentation.genderOptions.male'.tr(),
+                    'female': 'edit.presentation.genderOptions.female'.tr(),
+                    'other': 'edit.presentation.genderOptions.other'.tr(),
+                  };
 
-                    ProfileField(
-                      hint: 'edit.presentation.fields.fullName'.tr(),
-                      controller: nameCtrl,
-                      icon: Icons.account_box,
+                  final fieldDecoration = BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.white.withValues(alpha: 0.08),
+                        Colors.white.withValues(alpha: 0.03),
+                      ],
                     ),
-                    ProfileField(
-                      hint: 'edit.presentation.fields.nickname'.tr(),
-                      controller: usernameCtrl,
-                      icon: Icons.alternate_email,
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.12),
                     ),
-                    ProfileField(
-                      hint: 'edit.presentation.fields.email'.tr(),
-                      controller: emailCtrl,
-                      icon: Icons.mail,
-                      readOnly: true,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.35),
+                        blurRadius: 16,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  );
+
+                  final cardDecoration = BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.03),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.08),
                     ),
-                    ProfileField(
-                      hint: 'edit.presentation.fields.cellPhone'.tr(),
-                      controller: phoneCtrl,
-                      icon: Icons.phone,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.4),
+                        blurRadius: 20,
+                        offset: const Offset(0, 12),
+                      ),
+                    ],
+                  );
+
+                  final actionRadius = width * 0.02;
+
+                  return SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: EdgeInsets.fromLTRB(
+                      horizontalPadding,
+                      topPadding,
+                      horizontalPadding,
+                      height * 0.08,
                     ),
-                    ProfileField(
-                      hint: 'edit.presentation.fields.dateOfBirth'.tr(),
-                      controller: birthCtrl,
-                      icon: Icons.calendar_today,
-                      readOnly: true,
-                      onTap: _pickBirthday,
-                    ),
-                    ProfileField(
-                      hint: 'edit.presentation.fields.gender'.tr(),
-                      controller: genderCtrl,
-                      icon: Icons.transgender,
-                    ),
-                    ProfileField(
-                      hint: formattedLocation,
-                      icon: Icons.public,
-                      readOnly: true,
-                      onTap: () => _confirmAndChangeLocation(user.email),
-                    ),
-
-                    SizedBox(height: height * 0.025),
-
-                    // ProfileOptionButton(
-                    //   icon: Icons.share_outlined,
-                    //   text: 'edit.presentation.socials'.tr(),
-                    //   onTap: () {
-                    //     final userId = state.firebaseUser?.uid;
-                    //     if (userId == null) {
-                    //       ScaffoldMessenger.of(context).showSnackBar(
-                    //         SnackBar(
-                    //           content: Text(
-                    //             'edit.validations.errorUserLogin'.tr(),
-                    //           ),
-                    //           backgroundColor: Colors.red,
-                    //         ),
-                    //       );
-                    //       return;
-                    //     }
-
-                    //     final editCubit = context.read<EditCubit>();
-
-                    //     // ✅ CLAVE: Inicializar con datos actuales del AuthCubit
-                    //     final currentSocials =
-                    //         state.userProfile?.socialEcosystem ?? [];
-                    //     debugPrint(
-                    //       '📱 [EditProfile] Inicializando con ${currentSocials.length} redes',
-                    //     );
-
-                    //     editCubit.initializeFromUser(
-                    //       socialEcosystem: currentSocials,
-                    //       category: state.userProfile?.category,
-                    //       interests: state.userProfile?.interests,
-                    //     );
-
-                    //     editCubit.setEditItem(EditItem.socialEcosystem);
-
-                    //     Navigator.push(
-                    //       context,
-                    //       MaterialPageRoute(
-                    //         builder: (_) => BlocProvider.value(
-                    //           value: editCubit,
-                    //           child: MoreUserDetails(
-                    //             pageIndicator: 0,
-                    //             mode: MoreUserDetailsMode.edit,
-                    //             userId: userId,
-                    //           ),
-                    //         ),
-                    //       ),
-                    //     );
-                    //   },
-                    // ),
-                    ProfileOptionButton(
-                      icon: Icons.logout,
-                      text: 'edit.presentation.logOut'.tr(),
-                      onTap: () async => FirebaseAuth.instance.signOut(),
-                    ),
-
-                    SizedBox(height: height * 0.04),
-
-                    GradientButton(
-                      onPressed: _confirmDeleteAccount,
-                      width: double.infinity,
-                      height: height * 0.065,
-                      radius: width * 0.02,
-                      gradient: AppColors.verticalOrangeRed,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.delete_outline_outlined,
-                            color: Colors.white,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildHeaderCard(
+                          width: width,
+                          displayName: user.displayName,
+                          username: user.username,
+                          email: user.email,
+                          avatarUrl: user.avatarUrl,
+                        ),
+                        const SizedBox(height: 18),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: cardDecoration,
+                          child: Column(
+                            children: [
+                              ProfileField(
+                                hint: 'edit.presentation.fields.fullName'.tr(),
+                                controller: nameCtrl,
+                                icon: Icons.account_box,
+                              ),
+                              ProfileField(
+                                hint: 'edit.presentation.fields.nickname'.tr(),
+                                controller: usernameCtrl,
+                                icon: Icons.alternate_email,
+                              ),
+                              ProfileField(
+                                hint: 'edit.presentation.fields.email'.tr(),
+                                controller: emailCtrl,
+                                icon: Icons.mail,
+                                readOnly: true,
+                                // trailingIcon: Icons.lock_outline,
+                              ),
+                              ProfileField(
+                                hint: 'edit.presentation.fields.cellPhone'.tr(),
+                                controller: phoneCtrl,
+                                icon: Icons.phone,
+                              ),
+                              ProfileField(
+                                hint: 'edit.presentation.fields.dateOfBirth'
+                                    .tr(),
+                                controller: birthCtrl,
+                                icon: Icons.calendar_today,
+                                readOnly: true,
+                                onTap: _pickBirthday,
+                                // trailingIcon: Icons.calendar_month,
+                              ),
+                              Container(
+                                margin: const EdgeInsets.symmetric(vertical: 6),
+                                decoration: fieldDecoration,
+                                child: DropdownButtonFormField<String>(
+                                  value: _selectedGender,
+                                  isExpanded: true,
+                                  borderRadius: BorderRadius.circular(16),
+                                  iconEnabledColor: Colors.white.withValues(
+                                    alpha: 0.8,
+                                  ),
+                                  dropdownColor: const Color(0xFF141414),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  decoration: InputDecoration(
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      vertical: 16,
+                                    ),
+                                    border: InputBorder.none,
+                                    prefixIcon: Container(
+                                      margin: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 8,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                          colors: [
+                                            Colors.white.withValues(
+                                              alpha: 0.14,
+                                            ),
+                                            Colors.white.withValues(
+                                              alpha: 0.04,
+                                            ),
+                                          ],
+                                        ),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: Colors.white.withValues(
+                                            alpha: 0.16,
+                                          ),
+                                        ),
+                                      ),
+                                      child: const Icon(
+                                        Icons.transgender,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    hintText: 'edit.presentation.fields.gender'
+                                        .tr(),
+                                    hintStyle: TextStyle(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.6,
+                                      ),
+                                    ),
+                                  ),
+                                  items: genderOptions.entries
+                                      .map(
+                                        (entry) => DropdownMenuItem<String>(
+                                          value: entry.key,
+                                          child: Text(
+                                            entry.value,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                      .toList(),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _selectedGender = value;
+                                      genderCtrl.text = value ?? '';
+                                    });
+                                  },
+                                ),
+                              ),
+                              ProfileField(
+                                hint: formattedLocation,
+                                icon: Icons.public,
+                                readOnly: true,
+                                onTap: () =>
+                                    _confirmAndChangeLocation(user.email),
+                              ),
+                            ],
                           ),
-                          SizedBox(width: width * 0.02),
-                          const Text(
-                            'Delete Account',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
+                        ),
+                        SizedBox(height: height * 0.02),
+
+                        // ProfileOptionButton(
+                        //   icon: Icons.share_outlined,
+                        //   text: 'edit.presentation.socials'.tr(),
+                        //   onTap: () {
+                        //     final userId = state.firebaseUser?.uid;
+                        //     if (userId == null) {
+                        //       ScaffoldMessenger.of(context).showSnackBar(
+                        //         SnackBar(
+                        //           content: Text(
+                        //             'edit.validations.errorUserLogin'.tr(),
+                        //           ),
+                        //           backgroundColor: Colors.red,
+                        //         ),
+                        //       );
+                        //       return;
+                        //     }
+
+                        //     final editCubit = context.read<EditCubit>();
+
+                        //     // ✅ CLAVE: Inicializar con datos actuales del AuthCubit
+                        //     final currentSocials =
+                        //         state.userProfile?.socialEcosystem ?? [];
+                        //     debugPrint(
+                        //       '📱 [EditProfile] Inicializando con ${currentSocials.length} redes',
+                        //     );
+
+                        //     editCubit.initializeFromUser(
+                        //       socialEcosystem: currentSocials,
+                        //       category: state.userProfile?.category,
+                        //       interests: state.userProfile?.interests,
+                        //     );
+
+                        //     editCubit.setEditItem(EditItem.socialEcosystem);
+
+                        //     Navigator.push(
+                        //       context,
+                        //       MaterialPageRoute(
+                        //         builder: (_) => BlocProvider.value(
+                        //           value: editCubit,
+                        //           child: MoreUserDetails(
+                        //             pageIndicator: 0,
+                        //             mode: MoreUserDetailsMode.edit,
+                        //             userId: userId,
+                        //           ),
+                        //         ),
+                        //       ),
+                        //     );
+                        //   },
+                        // ),
+                        ProfileOptionButton(
+                          icon: Icons.logout,
+                          text: 'edit.presentation.logOut'.tr(),
+                          onTap: () async => FirebaseAuth.instance.signOut(),
+                        ),
+
+                        SizedBox(height: height * 0.03),
+
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(actionRadius),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.4),
+                                blurRadius: 18,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
+                          ),
+                          child: GradientButton(
+                            onPressed: _confirmDeleteAccount,
+                            width: double.infinity,
+                            height: height * 0.065,
+                            radius: actionRadius,
+                            gradient: AppColors.verticalOrangeRed,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  Icons.delete_outline_outlined,
+                                  color: Colors.white,
+                                ),
+                                SizedBox(width: width * 0.02),
+                                Text(
+                                  'edit.presentation.deleteAccount.title'.tr(),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-
-                    SizedBox(height: height * 0.012),
-
-                    GradientButton(
-                      onPressed: () => _saveProfile(state.firebaseUser!.uid),
-                      width: double.infinity,
-                      height: height * 0.065,
-                      radius: width * 0.02,
-                      child: Text(
-                        'buttons.save'.tr(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
                         ),
-                      ),
+
+                        SizedBox(height: height * 0.012),
+
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(actionRadius),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.35),
+                                blurRadius: 18,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
+                          ),
+                          child: GradientButton(
+                            onPressed: () =>
+                                _saveProfile(state.firebaseUser!.uid),
+                            width: double.infinity,
+                            height: height * 0.065,
+                            radius: actionRadius,
+                            child: Text(
+                              'buttons.save'.tr(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: height * 0.1),
+                      ],
                     ),
-                    SizedBox(height: height * 0.14),
-                  ],
-                ),
+                  );
+                },
               );
             },
-          );
-        },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderCard({
+    required double width,
+    required String displayName,
+    required String username,
+    required String email,
+    String? avatarUrl,
+  }) {
+    final handle = username.isNotEmpty
+        ? (username.startsWith('@') ? username : '@$username')
+        : '';
+    final avatarSize = (width * 0.14).clamp(56.0, 80.0).toDouble();
+    final paddingValue = (width * 0.04).clamp(14.0, 20.0);
+
+    return Container(
+      padding: EdgeInsets.all(paddingValue),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withValues(alpha: 0.08),
+            Colors.white.withValues(alpha: 0.02),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.45),
+            blurRadius: 20,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              gradient: AppColors.primaryGradient,
+              shape: BoxShape.circle,
+            ),
+            child: CircleAvatar(
+              radius: avatarSize / 2,
+              backgroundColor: Colors.black,
+              backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
+                  ? NetworkImage(avatarUrl)
+                  : null,
+              child: avatarUrl == null || avatarUrl.isEmpty
+                  ? Icon(
+                      Icons.person,
+                      color: Colors.white.withValues(alpha: 0.8),
+                      size: avatarSize * 0.55,
+                    )
+                  : null,
+            ),
+          ),
+          SizedBox(width: width * 0.04),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  displayName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                if (handle.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    handle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.7),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 4),
+                Text(
+                  email,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.55),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -422,25 +754,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text(
-          'Delete account',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          'edit.presentation.deleteAccount.title'.tr(),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        content: const Text(
-          'Are you sure you want to delete your account?\n\n'
-          'This action will start a deletion process that may take up to '
-          '30 business days to be fully completed. During this time, all your '
-          'data will be permanently removed and cannot be recovered.',
-        ),
+        content: Text('edit.presentation.deleteAccount.description'.tr()),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text('buttons.cancel'.tr()),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete account'),
+            child: Text('edit.presentation.deleteAccount.confirm'.tr()),
           ),
         ],
       ),
@@ -452,9 +779,49 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       AlertGeneral.show(
         context,
         2,
-        message:
-            'Account deletion request submitted. Your data will be permanently deleted within 30 business days.',
+        message: 'edit.presentation.deleteAccount.submitted'.tr(),
       );
     }
+  }
+}
+
+class _EditProfileBackground extends StatelessWidget {
+  const _EditProfileBackground();
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Positioned.fill(child: Container(color: Colors.black)),
+        Positioned.fill(
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                center: const Alignment(-0.9, -0.85),
+                radius: 0.7,
+                colors: [
+                  AppColors.primaryPurple.withValues(alpha: 0.35),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+          ),
+        ),
+        Positioned.fill(
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                center: const Alignment(0.9, 0.75),
+                radius: 0.9,
+                colors: [
+                  AppColors.primaryPink.withValues(alpha: 0.28),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

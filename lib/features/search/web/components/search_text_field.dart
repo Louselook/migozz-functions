@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 /// Campo de búsqueda personalizado con estilo
@@ -22,7 +23,7 @@ class SearchTextField extends StatelessWidget {
       cursorColor: Colors.white,
       style: const TextStyle(color: Colors.white, fontSize: 15),
       decoration: InputDecoration(
-        hintText: 'Search',
+        hintText: 'search.searchText'.tr(),
         hintStyle: TextStyle(
           color: Colors.white.withValues(alpha: 0.5),
           fontSize: 15,

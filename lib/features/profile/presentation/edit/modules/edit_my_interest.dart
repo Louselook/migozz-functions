@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -104,7 +105,9 @@ class _EditInterestsScreenState extends State<EditInterestsScreen>
     if (uid == null) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User not logged in')),
+          SnackBar(
+            content: Text('edit.validations.errorUserLogin'.tr()),
+          ),
         );
       }
       return;
@@ -128,7 +131,7 @@ class _EditInterestsScreenState extends State<EditInterestsScreen>
         if (context.mounted) {
       if(mounted){
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Interests saved successfully')),
+            SnackBar(content: Text('edit.editInterest.saveInterest'.tr())),
           );
           Navigator.pop(context, "done");
         }
@@ -138,7 +141,7 @@ class _EditInterestsScreenState extends State<EditInterestsScreen>
         debugPrint('Error saving interests: $e');
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Error saving interests')),
+            SnackBar(content: Text('edit.editInterest.errorSave'.tr())),
           );
         }
       }
@@ -153,9 +156,9 @@ class _EditInterestsScreenState extends State<EditInterestsScreen>
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: const BackButton(color: Colors.white),
-        title: const Text(
-          "Edit my Interest",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        title: Text(
+          "edit.editInterest.title".tr(),
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
@@ -208,7 +211,10 @@ class _EditInterestsScreenState extends State<EditInterestsScreen>
                     child: Container(
                       alignment: Alignment.center,
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      child: const Text("Save", style: TextStyle(fontSize: 18)),
+                      child: Text(
+                        "buttons.save".tr(),
+                        style: const TextStyle(fontSize: 18),
+                      ),
                     ),
                   ),
                 ),

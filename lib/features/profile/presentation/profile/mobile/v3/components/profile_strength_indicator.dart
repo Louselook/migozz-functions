@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/color.dart';
 
@@ -20,7 +21,7 @@ class ProfileStrengthIndicator extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Text(
-                'Profile Strength',
+                'profile.customization.profileStrength.title'.tr(),
                 style: TextStyle(
                   color: Colors.white70,
                   fontSize: 11,

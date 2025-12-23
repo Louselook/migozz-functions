@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
@@ -31,8 +32,10 @@ class _AddLinkBottomSheetState extends State<AddLinkBottomSheet> {
 
     if (url.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a URL'),
+        SnackBar(
+          content: Text(
+            'profile.customization.links.validationEmptyUrl'.tr(),
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -42,15 +45,20 @@ class _AddLinkBottomSheetState extends State<AddLinkBottomSheet> {
     // Validate URL
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('URL must start with http:// or https://'),
+        SnackBar(
+          content: Text(
+            'profile.customization.links.validationUrlFormat'.tr(),
+          ),
           backgroundColor: Colors.red,
         ),
       );
       return;
     }
 
-    widget.onLinkAdded(url, label.isEmpty ? 'Website' : label);
+    widget.onLinkAdded(
+      url,
+      label.isEmpty ? 'profile.customization.links.defaultLabel'.tr() : label,
+    );
     Navigator.pop(context);
   }
 
@@ -77,8 +85,8 @@ class _AddLinkBottomSheetState extends State<AddLinkBottomSheet> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Add Website Link',
+                  Text(
+                    'profile.customization.links.sheetTitle'.tr(),
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 20,
@@ -98,7 +106,7 @@ class _AddLinkBottomSheetState extends State<AddLinkBottomSheet> {
                 controller: _labelController,
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
-                  hintText: 'Label (optional)',
+                  hintText: 'profile.customization.links.labelHint'.tr(),
                   hintStyle: const TextStyle(color: Colors.white38),
                   filled: true,
                   fillColor: Colors.white10,
@@ -116,7 +124,7 @@ class _AddLinkBottomSheetState extends State<AddLinkBottomSheet> {
                 style: const TextStyle(color: Colors.white),
                 keyboardType: TextInputType.url,
                 decoration: InputDecoration(
-                  hintText: 'https://example.com',
+                  hintText: 'profile.customization.links.urlHint'.tr(),
                   hintStyle: const TextStyle(color: Colors.white38),
                   filled: true,
                   fillColor: Colors.white10,
@@ -136,8 +144,8 @@ class _AddLinkBottomSheetState extends State<AddLinkBottomSheet> {
                   gradient: AppColors.primaryGradient,
                   radius: 10,
                   height: 48,
-                  child: const Text(
-                    'Save Link',
+                  child: Text(
+                    'profile.customization.links.save'.tr(),
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.white,
