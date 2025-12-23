@@ -322,7 +322,7 @@ class SocialEcosystemSimpleStep extends StatelessWidget {
                 Expanded(
                   child: Center(
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 200),
+                      constraints: const BoxConstraints(maxWidth: 230),
                       child: ListView(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16,

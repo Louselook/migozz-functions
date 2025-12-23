@@ -93,10 +93,10 @@ class GeminiService {
   final List<String> _questionFlowAuth = [
     // 'language', // 0
     // 'gender', // 1
-    'socialEcosystem', // 2
     'location', // 3
     'phone', // 4
     'voiceNoteUrl', // 5
+    'socialEcosystem', // 2
     // 'category', // 6
   ];
 
@@ -109,7 +109,9 @@ class GeminiService {
       debugPrint('🔑 Usuario autenticado - usando flujo reducido');
       final flow = List<String>.from(_questionFlowAuth);
       if (kIsWeb) {
-        flow.removeWhere((step) => step == 'voiceNoteUrl' || step == 'avatarUrl');
+        flow.removeWhere(
+          (step) => step == 'voiceNoteUrl' || step == 'avatarUrl',
+        );
       }
       return flow;
     }
@@ -232,9 +234,10 @@ class GeminiService {
 
     debugPrint('🤖 Decisión: $decision');
 
-    // SI ES VÁLIDO → PROCESAR Y VERIFICAR 
+    // SI ES VÁLIDO → PROCESAR Y VERIFICAR
     if (decision['valid'] == true) {
-      if (kIsWeb &&(currentStepKey == 'voiceNoteUrl' || currentStepKey == 'avatarUrl')) {
+      if (kIsWeb &&
+          (currentStepKey == 'voiceNoteUrl' || currentStepKey == 'avatarUrl')) {
         final isSpanish = registerCubit.state.language == 'Español';
         final skipMessage = isSpanish
             ? 'Si deseas añadir tu foto o nota de voz, usa la app móvil 😉'
@@ -261,7 +264,9 @@ class GeminiService {
 
         // Saltar posibles mensajes "keepTalk"
         while (nextQuestion?['keepTalk'] == true) {
-          debugPrint('⏩ Saltando mensaje keepTalk (web): ${questionFlow[_currentQuestionIndex]}');
+          debugPrint(
+            '⏩ Saltando mensaje keepTalk (web): ${questionFlow[_currentQuestionIndex]}',
+          );
           _currentQuestionIndex++;
           if (_currentQuestionIndex >= questionFlow.length) break;
 
@@ -284,7 +289,7 @@ class GeminiService {
         decision,
         registerCubit: registerCubit,
       );
-      
+
       if (processResult != null && processResult['error'] == true) {
         debugPrint('❌ Error en procesamiento: ${processResult['message']}');
 
@@ -371,8 +376,7 @@ class GeminiService {
       return await _prepareQuestion(nextQuestion, registerCubit);
     }
 
-
-    // SI NO ES VÁLIDO → MENSAJE DE ERROR 
+    // SI NO ES VÁLIDO → MENSAJE DE ERROR
     if (decision['explainWhy'] == true) {
       final isSpanish = registerCubit.state.language == 'Español';
       final explain =
