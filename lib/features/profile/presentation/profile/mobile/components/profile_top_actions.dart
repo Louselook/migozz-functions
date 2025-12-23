@@ -116,7 +116,7 @@ class ProfileTopActions extends StatelessWidget {
                           ),
                         ),
                         child: const Icon(
-                          Icons.more_vert,
+                          Icons.edit_outlined,
                           color: Colors.white,
                           size: 20,
                         ),
