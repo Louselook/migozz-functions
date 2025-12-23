@@ -1,6 +1,7 @@
 // edit_record_screen.dart
 import 'dart:async';
 import 'dart:io';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:flutter_svg/svg.dart';
@@ -100,7 +101,9 @@ class _EditRecordScreenState extends State<EditRecordScreen>
     if (!hasPerm) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Permission to record denied')),
+        SnackBar(
+          content: Text('edit.editAudio.permissionDenied'.tr()),
+        ),
       );
       return;
     }
@@ -233,7 +236,9 @@ class _EditRecordScreenState extends State<EditRecordScreen>
   Future<void> _save() async {
     if (_audioPath == null || _seconds < 5) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Record at least 5 seconds')),
+        SnackBar(
+          content: Text('edit.editAudio.minDuration'.tr()),
+        ),
       );
       return;
     }
@@ -242,20 +247,22 @@ class _EditRecordScreenState extends State<EditRecordScreen>
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       final snack = ScaffoldMessenger.of(context);
-      snack.showSnackBar(const SnackBar(content: Text('Uploading audio...')));
+      snack.showSnackBar(
+        SnackBar(content: Text('edit.editAudio.uploading'.tr())),
+      );
 
       final url = await _uploadToStorageAndSaveFirestore(_audioPath!);
       if (url != null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Audio uploaded and saved ✅')),
+            SnackBar(content: Text('edit.editAudio.audioSaved'.tr())),
           );
           Navigator.pop(context, url); // regresamos la URL final
         }
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Upload failed — try again')),
+            SnackBar(content: Text('edit.editAudio.errorUploadAudio'.tr())),
           );
         }
       }
@@ -279,9 +286,9 @@ class _EditRecordScreenState extends State<EditRecordScreen>
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          "Edit Record",
-          style: TextStyle(
+        title: Text(
+          "edit.editAudio.title".tr(),
+          style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
             fontSize: 20,
@@ -295,8 +302,8 @@ class _EditRecordScreenState extends State<EditRecordScreen>
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             SizedBox(height: screenH * 0.04),
-            const Text(
-              "Record Your Voicenote",
+            Text(
+              "edit.editAudio.record".tr(),
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 20,
@@ -304,9 +311,9 @@ class _EditRecordScreenState extends State<EditRecordScreen>
               ),
             ),
             const SizedBox(height: 6),
-            const Text(
-              "Voice note: 1–10 seconds max.",
-              style: TextStyle(color: Colors.grey, fontSize: 14),
+            Text(
+              "edit.editAudio.maxLimit".tr(),
+              style: const TextStyle(color: Colors.grey, fontSize: 14),
             ),
             SizedBox(height: screenH * 0.05),
 
@@ -374,9 +381,9 @@ class _EditRecordScreenState extends State<EditRecordScreen>
                 ),
                 child: Column(
                   children: [
-                    const Text(
-                      "Listen to your audio",
-                      style: TextStyle(color: Colors.white, fontSize: 12),
+                    Text(
+                      "edit.editAudio.liste".tr(),
+                      style: const TextStyle(color: Colors.white, fontSize: 12),
                     ),
                     const SizedBox(height: 8),
                     Row(
@@ -444,9 +451,9 @@ class _EditRecordScreenState extends State<EditRecordScreen>
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   alignment: Alignment.center,
-                  child: const Text(
-                    "Save",
-                    style: TextStyle(fontSize: 20, color: Colors.white),
+                  child: Text(
+                    "buttons.save".tr(),
+                    style: const TextStyle(fontSize: 20, color: Colors.white),
                   ),
                 ),
               ),

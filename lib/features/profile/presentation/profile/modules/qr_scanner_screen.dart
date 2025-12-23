@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -102,7 +103,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
       final username = _extractUsername(code);
       
       if (username == null) {
-        _showError('Invalid QR code format');
+        _showError('profile.qrScanner.invalidFormat'.tr());
         setState(() {
           _isProcessing = false;
         });
@@ -110,7 +111,10 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
       }
 
       if (mounted) {
-        showProfileLoader(context, message: 'Loading profile...');
+        showProfileLoader(
+          context,
+          message: 'edit.presentation.loadingProfile'.tr(),
+        );
       }
 
       // Fetch user data
@@ -122,7 +126,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
       }
 
       if (user == null) {
-        _showError('User not found');
+        _showError('profile.qrScanner.userNotFound'.tr());
         setState(() {
           _isProcessing = false;
         });
@@ -154,7 +158,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
       }
     } catch (e) {
       debugPrint('Error handling QR code: $e');
-      _showError('Error processing QR code');
+      _showError('profile.qrScanner.errorProcessing'.tr());
       setState(() {
         _isProcessing = false;
       });
@@ -178,9 +182,9 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
           icon: const Icon(Icons.close, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Scan QR Code',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          'profile.qrScanner.title'.tr(),
+          style: const TextStyle(color: Colors.white),
         ),
         actions: [
           IconButton(
@@ -227,10 +231,10 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                 color: Colors.black.withValues(alpha: 0.7),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Text(
-                'Point your camera at a Migozz QR code',
+              child: Text(
+                'profile.qrScanner.instruction'.tr(),
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
@@ -325,4 +329,3 @@ class ScannerOverlayPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
-

@@ -1,4 +1,5 @@
 // lib/features/profile/presentation/profile/profile_entry.dart
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/utils/platform_utils.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/profile_screen.dart'
@@ -29,12 +30,12 @@ class ProfileEntry extends StatelessWidget {
       builder: (context, authState, receivedKeys) {
         final user = authState.userProfile;
         if (user == null) {
-          return const Scaffold(
+          return Scaffold(
             backgroundColor: Colors.black,
             body: Center(
               child: Text(
-                'No hay usuario',
-                style: TextStyle(color: Colors.white),
+                'profile.presentation.noAuthenticatedUser'.tr(),
+                style: const TextStyle(color: Colors.white),
               ),
             ),
           );

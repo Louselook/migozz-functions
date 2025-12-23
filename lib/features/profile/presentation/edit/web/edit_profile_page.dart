@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
 import 'package:migozz_app/features/auth/services/location_service.dart';
@@ -72,11 +73,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
       await editCubit.saveUserProfileField(userId: userId, updatedFields: data);
 
       if (mounted) {
-        AlertGeneral.show(context, 1, message: 'Profile updated successfully');
+        AlertGeneral.show(
+          context,
+          1,
+          message: 'edit.validations.updateProfile'.tr(),
+        );
       }
     } catch (e) {
       if (mounted) {
-        AlertGeneral.show(context, 4, message: 'Error saving profile: $e');
+        AlertGeneral.show(
+          context,
+          4,
+          message: '${'edit.validations.errorUpdateProfile'.tr()} $e',
+        );
       }
     }
   }
@@ -86,7 +95,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final newLocation = await svc.initAndFetchAddress();
     if (newLocation == null) {
       if (!mounted) return;
-      AlertGeneral.show(context, 4, message: 'Could not fetch current location');
+      AlertGeneral.show(
+        context,
+        4,
+        message: 'edit.validations.errorDetecLocation'.tr(),
+      );
       return;
     }
 
@@ -94,18 +107,21 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirm location'),
+        title: Text('edit.editLocation.title'.tr()),
         content: Text(
-          "The current location is ${newLocation.city}, ${newLocation.country}. Is that correct?",
+          "${"edit.editLocation.text1".tr()}"
+          "${newLocation.city}, ${newLocation.state}\n"
+          "${newLocation.country}\n\n"
+          "${"edit.editLocation.text4".tr()}",
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text('buttons.cancel'.tr()),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('OK'),
+            child: Text('buttons.confirm'.tr()),
           ),
         ],
       ),
@@ -115,7 +131,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
       AlertGeneral.show(
         context,
         1,
-        message: 'Location updated to ${newLocation.city}, ${newLocation.country}',
+        message:
+            "edit.validations.updateLocation".tr().replaceAll(
+              "\${newLocation.city}",
+              newLocation.city,
+            ).replaceAll(
+              "\${newLocation.country}",
+              newLocation.country,
+            ),
       );
     }
   }
@@ -142,9 +165,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
         ),
         centerTitle: true,
-        title: const Text(
-          'Edit Profile',
-          style: TextStyle(
+        title: Text(
+          'edit.presentation.title'.tr(),
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 28,
             fontWeight: FontWeight.bold,
@@ -156,15 +179,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
       body: BlocBuilder<AuthCubit, AuthState>(
         builder: (context, authState) {
           if (authState.isLoadingProfile) {
-            return const Center(child: LoaderDialog(message: 'Loading profile...'));
+            return Center(
+              child: LoaderDialog(
+                message: 'edit.presentation.loadingProfile'.tr(),
+              ),
+            );
           }
 
           final user = authState.userProfile;
           if (user == null) {
-            return const Center(
+            return Center(
               child: Text(
-                'No user data',
-                style: TextStyle(color: Colors.white),
+                'edit.presentation.errorUserEmpty'.tr(),
+                style: const TextStyle(color: Colors.white),
               ),
             );
           }
@@ -296,32 +323,32 @@ class _EditProfilePageState extends State<EditProfilePage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildTextField(
-          hint: 'Full name',
+          hint: 'edit.presentation.fields.fullName'.tr(),
           controller: nameCtrl,
           icon: Icons.account_box,
         ),
         const SizedBox(height: 16),
         _buildTextField(
-          hint: 'Nickname',
+          hint: 'edit.presentation.fields.nickname'.tr(),
           controller: usernameCtrl,
           icon: Icons.alternate_email,
         ),
         const SizedBox(height: 16),
         _buildTextField(
-          hint: 'Email',
+          hint: 'edit.presentation.fields.email'.tr(),
           controller: emailCtrl,
           icon: Icons.mail,
           readOnly: true,
         ),
         const SizedBox(height: 16),
         _buildTextField(
-          hint: 'Cell Phone',
+          hint: 'edit.presentation.fields.cellPhone'.tr(),
           controller: phoneCtrl,
           icon: Icons.phone,
         ),
         const SizedBox(height: 16),
         _buildTextField(
-          hint: 'Date of birth',
+          hint: 'edit.presentation.fields.dateOfBirth'.tr(),
           controller: birthCtrl,
           icon: Icons.calendar_today,
           readOnly: true,
@@ -329,13 +356,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ),
         const SizedBox(height: 16),
         _buildTextField(
-          hint: 'Gender',
+          hint: 'edit.presentation.fields.gender'.tr(),
           controller: genderCtrl,
           icon: Icons.transgender,
         ),
         const SizedBox(height: 16),
         _buildTextField(
-          hint: formattedLocation.isNotEmpty ? formattedLocation : 'Location',
+          hint: formattedLocation.isNotEmpty
+              ? formattedLocation
+              : 'edit.presentation.fields.location'.tr(),
           icon: Icons.public,
           readOnly: true,
           onTap: () => _confirmAndChangeLocation(user.email),
@@ -349,8 +378,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
             child: ElevatedButton.icon(
               onPressed: () async => FirebaseAuth.instance.signOut(),
               icon: const Icon(Icons.logout, color: Colors.white),
-              label: const Text(
-                'Logout',
+              label: Text(
+                'edit.presentation.logOut'.tr(),
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 16,
@@ -371,7 +400,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
         const SizedBox(height: 30),
         EditProfileOptions(
           onEditRecord: () {
-            AlertGeneral.show(context, 2, message: "Use the app to change your audio");
+            AlertGeneral.show(
+              context,
+              2,
+              message: "edit.presentation.webRestriction.audio".tr(),
+            );
           },
           onEditInterest: () => Navigator.push(
             context,
@@ -379,7 +412,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ),
           onEditSocials: () {
             if (userId == null) {
-              AlertGeneral.show(context, 4, message: 'Error: User not logged in');
+              AlertGeneral.show(
+                context,
+                4,
+                message: 'edit.validations.errorUserLogin'.tr(),
+              );
               return;
             }
 

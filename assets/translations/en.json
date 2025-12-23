@@ -245,6 +245,19 @@
             "statsStep" : "Check your social media statistics; if you haven't synced any, do so!",
             "settings" : "Modify your information and synchronize your socials"
         },
+        "presentation": {
+            "emptyName": "Name not set",
+            "community": "Community",
+            "noAuthenticatedUser": "No authenticated user",
+            "redirectCompleteProfile": "Redirecting to complete profile..."
+        },
+        "qrScanner": {
+            "title": "Scan QR Code",
+            "instruction": "Point your camera at a Migozz QR code",
+            "invalidFormat": "Invalid QR code format",
+            "userNotFound": "User not found",
+            "errorProcessing": "Error processing QR code"
+        },
         "customization":{
           "uploadingProfilePicture": {
             "title": "Upload",
@@ -256,11 +269,17 @@
             "title" : "Email Contact Form",
             "subtitle" : "Visitors can share their email with you through a contact form on your profile."
           },
+          "profileStrength": {
+            "title": "Profile Strength"
+          },
           "bio" : {
             "title" : "Edit Bio",
+            "label": "Bio",
             "add" : "Tap to add your bio.",
             "hint": "Tell people about yourself...",
-            "save" : "Save Bio"
+            "save" : "Save Bio",
+            "success": "Bio updated successfully",
+            "errorUpdate": "Error updating bio:"
           },
           "plataform" : {
             "title" : "Add New Platform",
@@ -277,9 +296,32 @@
           "links": {
             "title" : "Featured Links",
             "add" : "+ Add link.",
+            "sheetTitle": "Add Website Link",
+            "labelHint": "Label (optional)",
+            "urlHint": "https://example.com",
+            "save": "Save Link",
+            "defaultLabel": "Website",
+            "validationEmptyUrl": "Please enter a URL",
+            "validationUrlFormat": "URL must start with http:// or https://",
             "successAdd" : "Link added successfully",
             "errorAdd" : "Error adding link:",
             "maximumLinks" : "Maximum 2 links allowed."
+          },
+          "customLink": {
+            "title": "Custom Link Icon",
+            "linkHint": "Add custom link",
+            "applyIconFromLink": "Apply custom icon from link",
+            "deleteLink": "Delete Link",
+            "deleted": "Link deleted",
+            "saved": "Custom link saved",
+            "errorSave": "Error saving: ",
+            "imageTypeNotAllowed": "Image type not allowed",
+            "imageTooLarge": "Image exceeds 5MB",
+            "validation": {
+              "required": "Link is required",
+              "invalidFormat": "Invalid link format",
+              "invalidScheme": "Link must start with http/https"
+            }
           },
           "contact": {
             "title" : "Contact information",
@@ -289,7 +331,27 @@
             "infoAdded" : "Contact info added successfully",
             "infoAddError" : "Error adding contact info:",
             "infodeleted" : "Contact info deleted successfully",
-            "infoDeleteError" : "Error deleting contact info:"
+            "infoDeleteError" : "Error deleting contact info:",
+            "sheetTitle": {
+              "add": "Add {{type}}",
+              "edit": "Edit {{type}}"
+            },
+            "sheetType": {
+              "website": "Website",
+              "phone": "Phone Number",
+              "email": "Email"
+            },
+            "hints": {
+              "website": "https://example.com",
+              "phone": "+1 234 567 8900",
+              "email": "email@example.com"
+            },
+            "validation": {
+              "required": "Please enter a value",
+              "websiteFormat": "Website must start with http:// or https://",
+              "emailFormat": "Please enter a valid email address",
+              "phoneFormat": "Please enter a valid phone number"
+            }
           }
         }
     },
@@ -320,6 +382,11 @@
           "likes" : "Likes:",
           "shares" : "Shares:",
           "followers" : "Followers:"
+        },
+        "metrics": {
+          "likes": "likes",
+          "shares": "shares",
+          "followers": "followers"
         }
     },
     "addSocials": {
@@ -336,6 +403,69 @@
             "subtitle": "Are you sure you want to unlink ",
             "yes": "Yes",
             "no": "No"
+        },
+        "categories": {
+            "social": "Social",
+            "streaming": "Streaming",
+            "music": "Music",
+            "stores": "Stores",
+            "chat": "Chat"
+        },
+        "search": {
+            "hint": "Search for platforms",
+            "results": "Search Results",
+            "noResults": "No platforms found"
+        },
+        "customLink": {
+            "title": "Add Custom Link",
+            "updated": "Custom link updated",
+            "newLabel": "New"
+        },
+        "dialogs": {
+            "addTitle": "Add {{platform}}",
+            "editTitle": "Edit {{platform}}",
+            "addUsernameHint": "Add {{platform}} username",
+            "usernameHint": "Enter username",
+            "usernameRequired": "Please enter a username",
+            "deleteLink": "Delete Link"
+        },
+        "messages": {
+            "saved": "Social media saved successfully!",
+            "errorSave": "Error saving: {{error}}",
+            "errorRemove": "Error removing: {{error}}",
+            "removed": "{{platform}} removed successfully!",
+            "usernameUpdated": "{{platform}} username updated!",
+            "usernameUpdatedSuccess": "{{platform}} username updated successfully!"
+        },
+        "networkAuth": {
+            "connectTitle": "Connect {{platform}}",
+            "oneClickTitle": "Connect with one click",
+            "oneClickSubtitle": "Authorize via {{platform}}",
+            "manualTitle": "Enter manually",
+            "manualSubtitle": "Paste username or link",
+            "backToOptions": "Back to options",
+            "phoneInvalid": "Please enter a valid phone number",
+            "searchCountry": "Search country",
+            "hints": {
+                "instagram": "Enter Instagram username or link",
+                "tiktok": "Enter TikTok username or link",
+                "youtube": "Enter YouTube channel or user link",
+                "twitter": "Enter X username or link",
+                "facebook": "Enter Facebook username or link",
+                "whatsapp": "1234567890",
+                "telegram": "1234567890",
+                "default": "Enter username or link"
+            },
+            "examples": {
+                "instagram": "https://www.instagram.com/username",
+                "tiktok": "https://www.tiktok.com/@username",
+                "youtube": "https://www.youtube.com/@username",
+                "twitter": "https://x.com/username",
+                "facebook": "https://www.facebook.com/username",
+                "whatsapp": "Enter your phone number with country code",
+                "telegram": "Enter your phone number with country code",
+                "default": "https://www.{{platform}}.com/username"
+            }
         }
     },
     "edit" : {
@@ -352,23 +482,42 @@
         },
         "presentation" : {
             "title" : "Edit Profile",
+            "loadingProfile" : "Loading profile...",
             "errorUserEmpty" : "No user data",
+            "locationNotSet" : "Location not set",
             "fields" : {
                 "fullName" : "Full Name",
                 "nickname" : "Nickname",
                 "email" : "Email",
                 "cellPhone" : "Cell Phone",
                 "dateOfBirth" : "Date of birth",
-                "gender" : "Gender"
+                "gender" : "Gender",
+                "location" : "Location"
+            },
+            "genderOptions" : {
+                "male" : "Male",
+                "female" : "Female",
+                "other" : "Other"
             },
             "record" : "Edit Record",
             "interest" : "Edit My Interests",
             "socials" : "Edit Socials",
-            "logOut" : "Logout"
+            "logOut" : "Logout",
+            "deleteAccount": {
+                "title": "Delete account",
+                "description": "Are you sure you want to delete your account?\n\nThis action will start a deletion process that may take up to 30 business days to be fully completed. During this time, all your data will be permanently removed and cannot be recovered.",
+                "confirm": "Delete account",
+                "submitted": "Account deletion request submitted. Your data will be permanently deleted within 30 business days."
+            },
+            "webRestriction": {
+                "audio": "Use the app to change your audio"
+            }
         },
         "editAudio": {
             "title" : "Edit Audio",
             "permissionDenied" : "Permission to record denied",
+            "uploading" : "Uploading audio...",
+            "minDuration" : "Record at least 5 seconds",
             "audioSaved" : "Audio uploaded and saved ✅",
             "errorUploadAudio" : "Upload failed — try again",
             "record" : "Record Your Voicenote",
@@ -376,6 +525,7 @@
             "liste" : "Listen to your audio"
         },
         "editLocation" : {
+            "title": "Confirm location",
             "text1" : "We detected you're in:\n\n",
             "text2" : "${newLocation.city}, ${newLocation.state}\n",
             "text3" : "${newLocation.country}\n\n",
@@ -383,18 +533,35 @@
         },
         "editInterest" : {
             "title" : "Edit my Interest",
-            "saveInterest" : "Interests saved successfully"
+            "saveInterest" : "Interests saved successfully",
+            "errorSave": "Error saving interests"
         }
     },
     "share" : {
-        "title" : "Mira el perfil de ${data.displayName} en Migozz: ${data.link}",
-        "subject" : "Perfil de ${data.displayName}",
-        "label" : "Share Profile"
+        "title" : "Check out {{displayName}} on Migozz: {{link}}",
+        "subject" : "Profile of {{displayName}}",
+        "label" : "Share Profile",
+        "customization": {
+            "emoji": "Emoji",
+            "colors": "Colors",
+            "image": "Image",
+            "default": "Default",
+            "chooseImage": "Choose Image"
+        }
+    },
+    "common": {
+        "loading": "Loading...",
+        "saving": "Saving...",
+        "removing": "Removing...",
+        "loader": "Loader",
+        "unknown": "Unknown",
+        "noData": "No data"
     },
     "buttons" : {
         "confirm" : "confirm",
         "cancel" : "cancel",
         "save" : "save",
+        "delete": "delete",
         "continue" : "continue"
     },
     "category" : {
@@ -657,3 +824,4 @@
     }
   }
 }
+
