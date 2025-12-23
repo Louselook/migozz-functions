@@ -2,7 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:migozz_app/core/color.dart';
+// import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/user_details_button.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
@@ -158,7 +158,7 @@ class SocialEcosystemInitialStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
+    // final size = MediaQuery.of(context).size;
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),

@@ -23,9 +23,10 @@ import '../../../../../../profile/presentation/profile/mobile/v3/components/soci
 import '../../../../../data/domain/models/user/user_dto.dart';
 
 class SocialEcosystemStepV3 extends StatefulWidget {
-  final PageController controller;
+  // final PageController controller;
   final MoreUserDetailsMode mode;
   final UserDTO? user;
+  final PageController controller;
 
   const SocialEcosystemStepV3({
     super.key,
@@ -468,27 +469,6 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
             ),
             child: Stack(
               children: [
-                // Close button
-                Positioned(
-                  top: MediaQuery.of(context).padding.top + 8,
-                  left: 0,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.of(context, rootNavigator: true).pop('back');
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        child: const Icon(
-                          Icons.arrow_back_ios,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
 
                 // Main content
                 Padding(
@@ -884,61 +864,6 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     // Use the safe username variable (NO user! here)
     final socialLinks = _buildSocialLinks(socialEcosystem, rawUsername);
 
-    void _handleBackTap() {
-      // Si estamos en modo registro, intentamos navegar dentro del PageView.
-      if (widget.mode == MoreUserDetailsMode.register) {
-        // ✅ Validate at least one network is added before going back
-        final socialEcosystem =
-            context.read<RegisterCubit>().state.socialEcosystem ?? [];
-
-        if (socialEcosystem.isEmpty) {
-          CustomSnackbar.show(
-            context: context,
-            message: 'addSocials.validation.atLeastOne'.tr(),
-            type: SnackbarType.warning,
-          );
-          return;
-        }
-
-        try {
-          if (widget.controller.hasClients) {
-            // obtener página actual (puede ser decimal)
-            final currentPage =
-                (widget.controller.page ?? widget.controller.initialPage)
-                    .round();
-            if (currentPage > 0) {
-              widget.controller.previousPage(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOut,
-              );
-              return;
-            } else {
-              // Estamos en la primera página del PageView -> cerrar la ruta
-              if (Navigator.of(context).canPop()) {
-                Navigator.of(context).pop();
-                return;
-              }
-            }
-          } else {
-            // controller aún no está attached -> fallback a Navigator
-            if (Navigator.of(context).canPop()) {
-              Navigator.of(context).pop();
-              return;
-            }
-          }
-        } catch (e, st) {
-          debugPrint('[_handleBackTap] error: $e\n$st');
-          // fallback seguro
-          if (Navigator.of(context).canPop()) Navigator.of(context).pop();
-        }
-      } else {
-        // Modo edición: cerrar la ruta y volver al perfil
-        if (Navigator.of(context).canPop()) {
-          Navigator.of(context).pop();
-        }
-      }
-    }
-
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: SafeArea(
@@ -964,31 +889,39 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
               ),
 
               Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0.43 * size.height,
+                child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
+              ),
+
+              Positioned(
                 top: MediaQuery.of(context).padding.top + 8,
                 left: 0,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: GestureDetector(
-                    onTap: _handleBackTap,
                     child: const Icon(
                       Icons.arrow_back_ios,
                       color: Colors.white,
                       size: 24,
                     ),
+                    onTap: () {
+                      debugPrint('⤴️ Back pressed in SocialEcosystemStepV3. canPop=${Navigator.of(context).canPop()}');
+
+                      // Intenta pop normal (cierra page o dialog cercano)
+                      if (Navigator.of(context).canPop()) {
+                        Navigator.of(context).pop();
+                        return;
+                      }
+                      // Si no puede pop desde este navigator, intenta el Navigator raíz
+                      // (útil si por alguna razón tu dialog/route fue abierto en un navigator anidado)
+                      Navigator.of(context, rootNavigator: true).maybePop();
+                    },
                   ),
                 ),
               ),
-
-              // Only show profile image in edit mode
-              if (widget.mode == MoreUserDetailsMode.edit)
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0.43 * size.height,
-                  child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
-                ),
-
               // Main content
               SafeArea(
                 child: Column(
