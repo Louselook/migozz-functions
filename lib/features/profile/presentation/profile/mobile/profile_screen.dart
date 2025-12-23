@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -132,10 +133,10 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                     ),
                     child: _InfoCardGlass(
                       child: InfoUserProfile(
-                        name: name.isNotEmpty ? name : 'NOMBRE VACÍO',
+                        name: name.isNotEmpty ? name : 'profile.presentation.emptyName'.tr(),
                         displayName: username,
                         comunityCount: totalFollowers.toString(),
-                        nameComunity: 'Community',
+                        nameComunity: 'profile.presentation.community'.tr(),
                         voiceNoteUrl: voiceNoteUrl,
                         bio: user.bio,
                         tutorialKeys: widget.tutorialKeys,
@@ -184,10 +185,10 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                     SizedBox(height: size.height * 0.38),
                     // Info del usuario
                     InfoUserProfile(
-                      name: name.isNotEmpty ? name : 'NOMBRE VACÍO',
+                      name: name.isNotEmpty ? name : 'profile.presentation.emptyName'.tr(),
                       displayName: username,
                       comunityCount: totalFollowers.toString(),
-                      nameComunity: 'Community',
+                      nameComunity: 'profile.presentation.community'.tr(),
                       voiceNoteUrl: voiceNoteUrl,
                       bio: user.bio,
                       tutorialKeys: widget.tutorialKeys,
@@ -466,3 +467,5 @@ class _InfoCardGlass extends StatelessWidget {
     );
   }
 }
+
+

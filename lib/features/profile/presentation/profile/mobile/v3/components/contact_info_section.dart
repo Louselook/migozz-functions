@@ -49,7 +49,7 @@ class ContactInfoSection extends StatelessWidget {
         AlertGeneral.show(
           context,
           1,
-          message: 'profile.customization.contact.infoDeleted'.tr(),
+          message: 'profile.customization.contact.infodeleted'.tr(),
         );
       }
     } catch (e) {
@@ -57,7 +57,7 @@ class ContactInfoSection extends StatelessWidget {
         AlertGeneral.show(
           context,
           4,
-          message: 'profile.customization.contact.infoDeletedError'.tr(),
+          message: 'profile.customization.contact.infoDeleteError'.tr(),
         );
       }
     }
@@ -106,7 +106,7 @@ class ContactInfoSection extends StatelessWidget {
               AlertGeneral.show(
                 context,
                 4,
-                message: 'profile.customization.contact.infoAddedError'.tr(),
+                message: 'profile.customization.contact.infoAddError'.tr(),
               );
             }
           }

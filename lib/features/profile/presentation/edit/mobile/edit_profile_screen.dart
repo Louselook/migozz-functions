@@ -33,6 +33,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final genderCtrl = TextEditingController();
   final birthCtrl = TextEditingController();
   DateTime? _dob;
+  String? _selectedGender;
 
   @override
   void dispose() {
@@ -75,7 +76,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       await editCubit.saveUserProfileField(userId: userId, updatedFields: data);
 
       if (mounted) {
-        AlertGeneral.show(context, 1, message: "edit.validations.updateProfile".tr());
+        AlertGeneral.show(
+          context,
+          1,
+          message: "edit.validations.updateProfile".tr(),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -92,14 +97,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final svc = LocationService();
 
     if (mounted) {
-      AlertGeneral.show(context, 2, message: "edit.validations.detectLocation".tr());
+      AlertGeneral.show(
+        context,
+        2,
+        message: "edit.validations.detectLocation".tr(),
+      );
     }
 
     final newLocation = await svc.initAndFetchAddress();
 
     if (newLocation == null) {
       if (!mounted) return;
-      AlertGeneral.show(context, 4, message: "edit.validations.errorDetecLocation".tr());
+      AlertGeneral.show(
+        context,
+        4,
+        message: "edit.validations.errorDetecLocation".tr(),
+      );
       return;
     }
 
@@ -135,7 +148,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         final userId = context.read<AuthCubit>().state.firebaseUser?.uid;
 
         if (userId == null) {
-          AlertGeneral.show(context, 4, message: 'edit.validations.errorUserLogin'.tr());
+          AlertGeneral.show(
+            context,
+            4,
+            message: 'edit.validations.errorUserLogin'.tr(),
+          );
           return;
         }
 
@@ -168,13 +185,36 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         AlertGeneral.show(
           context,
           4,
-          message: "edit.validations.errorUpdateLocation"
-              .tr()
-              .replaceAll("\$e", e.toString()),
+          message: "edit.validations.errorUpdateLocation".tr().replaceAll(
+            "\$e",
+            e.toString(),
+          ),
         );
       }
     } else {
       debugPrint('🚫 [EditProfile] Usuario canceló el cambio de ubicación');
+    }
+  }
+
+  String? _normalizeGender(String? raw) {
+    if (raw == null) return null;
+    final value = raw.trim().toLowerCase();
+    if (value.isEmpty) return null;
+    switch (value) {
+      case 'male':
+      case 'masculino':
+      case 'm':
+        return 'male';
+      case 'female':
+      case 'famale':
+      case 'femenino':
+      case 'f':
+        return 'female';
+      case 'other':
+      case 'otro':
+        return 'other';
+      default:
+        return null;
     }
   }
 
@@ -209,7 +249,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           return BlocBuilder<AuthCubit, AuthState>(
             builder: (context, state) {
               if (state.isLoadingProfile) {
-                return const Center(child: LoaderDialog(message: 'Loading profile...'));
+                return Center(
+                  child: LoaderDialog(
+                    message: 'edit.presentation.loadingProfile'.tr(),
+                  ),
+                );
               }
               final user = state.userProfile;
               if (user == null) {
@@ -229,7 +273,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 usernameCtrl.text = user.username;
                 emailCtrl.text = user.email;
                 phoneCtrl.text = user.phone ?? '';
-                genderCtrl.text = user.gender ?? '';
+                _selectedGender = _normalizeGender(user.gender);
+                genderCtrl.text = _selectedGender ?? (user.gender ?? '');
 
                 if (user.birthDate != null) {
                   _dob = user.birthDate;
@@ -238,10 +283,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 }
               }
 
-              String formattedLocation = 'Location not set';
+              String formattedLocation =
+                  'edit.presentation.locationNotSet'.tr();
 
               if (user.location.isEmpty) {
-                formattedLocation = 'Location not set';
+                formattedLocation = 'edit.presentation.locationNotSet'.tr();
               } else {
                 final locationParts = <String>[];
                 if (user.location.city.isNotEmpty) {
@@ -258,6 +304,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   formattedLocation = locationParts.join(', ');
                 }
               }
+
+              final genderOptions = <String, String>{
+                'male': 'edit.presentation.genderOptions.male'.tr(),
+                'female': 'edit.presentation.genderOptions.female'.tr(),
+                'other': 'edit.presentation.genderOptions.other'.tr(),
+              };
 
               return SingleChildScrollView(
                 padding: EdgeInsets.symmetric(
@@ -295,10 +347,64 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       readOnly: true,
                       onTap: _pickBirthday,
                     ),
-                    ProfileField(
-                      hint: 'edit.presentation.fields.gender'.tr(),
-                      controller: genderCtrl,
-                      icon: Icons.transgender,
+                    Container(
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.06),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.12),
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: DropdownButtonFormField<String>(
+                        value: _selectedGender,
+                        isExpanded: true,
+                        iconEnabledColor: Colors.white,
+                        dropdownColor: Colors.black,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 14,
+                          ),
+                          border: InputBorder.none,
+                          prefixIcon: Container(
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.14),
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.transgender,
+                              color: Colors.white,
+                            ),
+                          ),
+                          hintText: 'edit.presentation.fields.gender'.tr(),
+                          hintStyle: const TextStyle(color: Colors.white70),
+                        ),
+                        items: genderOptions.entries
+                            .map(
+                              (entry) => DropdownMenuItem<String>(
+                                value: entry.key,
+                                child: Text(
+                                  entry.value,
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedGender = value;
+                            genderCtrl.text = value ?? '';
+                          });
+                        },
+                      ),
                     ),
                     ProfileField(
                       hint: formattedLocation,
@@ -380,8 +486,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             color: Colors.white,
                           ),
                           SizedBox(width: width * 0.02),
-                          const Text(
-                            'Delete Account',
+                          Text(
+                            'edit.presentation.deleteAccount.title'.tr(),
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -422,25 +528,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text(
-          'Delete account',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          'edit.presentation.deleteAccount.title'.tr(),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        content: const Text(
-          'Are you sure you want to delete your account?\n\n'
-          'This action will start a deletion process that may take up to '
-          '30 business days to be fully completed. During this time, all your '
-          'data will be permanently removed and cannot be recovered.',
-        ),
+        content: Text('edit.presentation.deleteAccount.description'.tr()),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text('buttons.cancel'.tr()),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete account'),
+            child: Text('edit.presentation.deleteAccount.confirm'.tr()),
           ),
         ],
       ),
@@ -452,8 +553,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       AlertGeneral.show(
         context,
         2,
-        message:
-            'Account deletion request submitted. Your data will be permanently deleted within 30 business days.',
+        message: 'edit.presentation.deleteAccount.submitted'.tr(),
       );
     }
   }

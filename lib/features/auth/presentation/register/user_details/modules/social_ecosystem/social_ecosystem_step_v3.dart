@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -138,7 +139,11 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
 
         // Show loading dialog
         if (context.mounted) {
-          showProfileLoader(context, message: 'Saving...', onCancel: () {});
+          showProfileLoader(
+            context,
+            message: 'common.saving'.tr(),
+            onCancel: () {},
+          );
         }
 
         try {
@@ -150,10 +155,10 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
 
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Social media saved successfully!'),
+              SnackBar(
+                content: Text('addSocials.messages.saved'.tr()),
                 backgroundColor: Colors.green,
-                duration: Duration(seconds: 2),
+                duration: const Duration(seconds: 2),
               ),
             );
           }
@@ -166,7 +171,11 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Error saving: $e'),
+                content: Text(
+                  'addSocials.messages.errorSave'.tr(
+                    namedArgs: {'error': e.toString()},
+                  ),
+                ),
                 backgroundColor: Colors.red,
                 duration: const Duration(seconds: 2),
               ),
@@ -202,7 +211,11 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
           debugPrint('💾 [V3] Auto-saving changes...');
 
           if (mounted) {
-            showProfileLoader(context, message: 'Saving...', onCancel: () {});
+            showProfileLoader(
+              context,
+              message: 'common.saving'.tr(),
+              onCancel: () {},
+            );
           }
 
           try {
@@ -213,10 +226,10 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
 
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Social media saved successfully!'),
+                SnackBar(
+                  content: Text('addSocials.messages.saved'.tr()),
                   backgroundColor: Colors.green,
-                  duration: Duration(seconds: 2),
+                  duration: const Duration(seconds: 2),
                 ),
               );
             }
@@ -228,7 +241,11 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Error saving: $e'),
+                  content: Text(
+                    'addSocials.messages.errorSave'.tr(
+                      namedArgs: {'error': e.toString()},
+                    ),
+                  ),
                   backgroundColor: Colors.red,
                   duration: const Duration(seconds: 2),
                 ),
@@ -263,6 +280,11 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     return SocialNetworks.enabledNetworks.where((network) {
       return categoryNetworks.contains(network.name.toLowerCase());
     }).toList();
+  }
+
+  String _categoryLabel(String category) {
+    final key = category.toLowerCase();
+    return 'addSocials.categories.$key'.tr();
   }
 
   bool _isNetworkSelected(NetworkConfig config) {
@@ -375,13 +397,13 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
             debugPrint('💾 [Edit Mode] Auto-saving after removal...');
 
             // Show loading dialog
-            if (mounted) {
-              showProfileLoader(
-                context,
-                message: 'Removing...',
-                onCancel: () {},
-              );
-            }
+              if (mounted) {
+                showProfileLoader(
+                  context,
+                  message: 'common.removing'.tr(),
+                  onCancel: () {},
+                );
+              }
 
             try {
               await editCubit.saveAllPendingChanges(userId);
@@ -390,16 +412,18 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
               // Always hide the dialog
               if (mounted) Navigator.of(context).pop();
 
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      '${config.displayName} removed successfully!',
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'addSocials.messages.removed'.tr(
+                          namedArgs: {'platform': config.displayName},
+                        ),
+                      ),
+                      backgroundColor: Colors.green,
+                      duration: const Duration(seconds: 2),
                     ),
-                    backgroundColor: Colors.green,
-                    duration: const Duration(seconds: 2),
-                  ),
-                );
+                  );
               }
             } catch (e) {
               debugPrint('❌ [Edit Mode] Auto-save after removal failed: $e');
@@ -407,14 +431,18 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
               // Always hide the dialog
               if (mounted) Navigator.of(context).pop();
 
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Error removing: $e'),
-                    backgroundColor: Colors.red,
-                    duration: const Duration(seconds: 2),
-                  ),
-                );
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'addSocials.messages.errorRemove'.tr(
+                          namedArgs: {'error': e.toString()},
+                        ),
+                      ),
+                      backgroundColor: Colors.red,
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
               }
             }
           }
@@ -503,7 +531,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
 
                       // Title
                       Text(
-                        'Add ${config.displayName}',
+                        'addSocials.dialogs.addTitle'.tr(
+                          namedArgs: {'platform': config.displayName},
+                        ),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 20,
@@ -523,7 +553,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: Colors.white.withValues(alpha: 0.1),
-                          hintText: 'Add ${config.displayName} username',
+                          hintText: 'addSocials.dialogs.addUsernameHint'.tr(
+                            namedArgs: {'platform': config.displayName},
+                          ),
                           hintStyle: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 14,
@@ -546,10 +578,12 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                           final newUsername = usernameController.text.trim();
                           if (newUsername.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Please enter a username'),
+                              SnackBar(
+                                content: Text(
+                                  'addSocials.dialogs.usernameRequired'.tr(),
+                                ),
                                 backgroundColor: Colors.red,
-                                duration: Duration(seconds: 2),
+                                duration: const Duration(seconds: 2),
                               ),
                             );
                             return;
@@ -584,7 +618,11 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(
-                                      '${config.displayName} username updated!',
+                                      'addSocials.messages.usernameUpdated'.tr(
+                                        namedArgs: {
+                                          'platform': config.displayName,
+                                        },
+                                      ),
                                     ),
                                     backgroundColor: Colors.green,
                                     duration: const Duration(seconds: 2),
@@ -626,7 +664,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                                 if (context.mounted) {
                                   showProfileLoader(
                                     context,
-                                    message: 'Saving...',
+                                    message: 'common.saving'.tr(),
                                     onCancel: () {},
                                   );
                                 }
@@ -646,7 +684,13 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Text(
-                                          '${config.displayName} username updated successfully!',
+                                          'addSocials.messages.usernameUpdatedSuccess'
+                                              .tr(
+                                                namedArgs: {
+                                                  'platform':
+                                                      config.displayName,
+                                                },
+                                              ),
                                         ),
                                         backgroundColor: Colors.green,
                                         duration: const Duration(seconds: 2),
@@ -666,7 +710,13 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
-                                        content: Text('Error saving: $e'),
+                                        content: Text(
+                                          'addSocials.messages.errorSave'.tr(
+                                            namedArgs: {
+                                              'error': e.toString(),
+                                            },
+                                          ),
+                                        ),
                                         backgroundColor: Colors.red,
                                         duration: const Duration(seconds: 2),
                                       ),
@@ -684,9 +734,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                             gradient: AppColors.primaryGradient,
                             borderRadius: BorderRadius.circular(25),
                           ),
-                          child: const Center(
+                          child: Center(
                             child: Text(
-                              'Save',
+                              'buttons.save'.tr(),
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
@@ -704,9 +754,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                         onTap: () {
                           Navigator.pop(dialogContext, true);
                         },
-                        child: const Text(
-                          'Delete Link',
-                          style: TextStyle(
+                        child: Text(
+                          'addSocials.dialogs.deleteLink'.tr(),
+                          style: const TextStyle(
                             color: Colors.red,
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
@@ -929,7 +979,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                           fillColor: AppColors.greyBackground.withValues(
                             alpha: 0.4,
                           ),
-                          hintText: 'Search For Platforms',
+                          hintText: 'addSocials.search.hint'.tr(),
                           hintStyle: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 12,
@@ -986,7 +1036,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
             Icon(Icons.search_off, size: 64, color: Colors.grey[700]),
             const SizedBox(height: 16),
             Text(
-              'No platforms found',
+              'addSocials.search.noResults'.tr(),
               style: TextStyle(color: Colors.grey[600], fontSize: 14),
             ),
           ],
@@ -1000,9 +1050,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Search Results',
-            style: TextStyle(
+          Text(
+            'addSocials.search.results'.tr(),
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 13,
               fontWeight: FontWeight.w800,
@@ -1047,7 +1097,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  categoryName,
+                  _categoryLabel(categoryName),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
@@ -1085,9 +1135,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Add Custom Link',
-                style: TextStyle(
+              Text(
+                'addSocials.customLink.title'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
@@ -1196,10 +1246,10 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
         );
         if (result == 'done' && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Custom link updated'),
+            SnackBar(
+              content: Text('addSocials.customLink.updated'.tr()),
               backgroundColor: Colors.green,
-              duration: Duration(seconds: 2),
+              duration: const Duration(seconds: 2),
             ),
           );
         }
@@ -1229,9 +1279,11 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
             final baseFontSize = (h * 0.33).clamp(12.0, 15.0).toDouble();
             final availableTextWidth =
                 constraints.maxWidth - iconSize - 8 - 6 - 6;
-            final fitFontSize = (availableTextWidth / ('New'.length * 0.6))
-                .clamp(10.0, baseFontSize)
-                .toDouble();
+            final label = 'addSocials.customLink.newLabel'.tr();
+            final fitFontSize =
+                (availableTextWidth / (label.length * 0.6))
+                    .clamp(10.0, baseFontSize)
+                    .toDouble();
             return Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
@@ -1245,7 +1297,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    'New',
+                    label,
                     style: TextStyle(
                       color: Colors.white70,
                       fontSize: fitFontSize,

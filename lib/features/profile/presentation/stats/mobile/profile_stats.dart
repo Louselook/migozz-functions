@@ -194,8 +194,8 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
 
     if (userId == null || userProfile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Error: User not logged in'),
+        SnackBar(
+          content: Text('edit.validations.errorUserLogin'.tr()),
           backgroundColor: Colors.red,
         ),
       );
@@ -287,17 +287,17 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
                                     _Metric(
                                       icon: Icons.favorite,
                                       label:
-                                          '${_formatNum(_totalsGlobal['likes'] ?? 0)} likes',
+                                          '${_formatNum(_totalsGlobal['likes'] ?? 0)} ${'stats.metrics.likes'.tr()}',
                                     ),
                                     _Metric(
                                       icon: Icons.reply,
                                       label:
-                                          '${_formatNum(_totalsGlobal['shares'] ?? 0)} shares',
+                                          '${_formatNum(_totalsGlobal['shares'] ?? 0)} ${'stats.metrics.shares'.tr()}',
                                     ),
                                     _Metric(
                                       icon: Icons.people,
                                       label:
-                                          '${_formatNum(_totalsGlobal['followers'] ?? 0)} followers',
+                                          '${_formatNum(_totalsGlobal['followers'] ?? 0)} ${'stats.metrics.followers'.tr()}',
                                     ),
                                   ],
                                 ),
@@ -326,7 +326,7 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
                                 const SizedBox(height: 20),
                                 _DataCard(
                                   iconKey: 'global',
-                                  title: "Overview",
+                                  title: "stats.dataCardLabel.title".tr(),
                                   rows: [
                                     _RowData(
                                       label: "stats.dataCardLabel.likes".tr(),

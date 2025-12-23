@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/features/search/web/components/location_display.dart';
 import 'package:migozz_app/features/search/web/components/user_avatar.dart';
@@ -35,7 +36,7 @@ class SearchResultCard extends StatelessWidget {
           'full_name',
         ]) ??
         _pickString(userData, ['userName', 'username']) ??
-        'Unknown';
+        'common.unknown'.tr();
 
     final username =
         _pickString(userData, ['userName', 'username', 'user', 'user_name']) ??

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
@@ -68,8 +69,8 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
           children: [
             ListTile(
               leading: const Icon(Icons.photo_library, color: Colors.white),
-              title: const Text(
-                'Gallery',
+              title: Text(
+                'profile.customization.plataform.gallery'.tr(),
                 style: TextStyle(color: Colors.white),
               ),
               onTap: () async {
@@ -79,8 +80,8 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.photo_camera, color: Colors.white),
-              title: const Text(
-                'Camera',
+              title: Text(
+                'profile.customization.plataform.camera'.tr(),
                 style: TextStyle(color: Colors.white),
               ),
               onTap: () async {
@@ -105,7 +106,10 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
 
       await _validateAndSetImage(imagePath);
     } catch (e) {
-      setState(() => _error = 'Error seleccionando imagen: $e');
+      setState(
+        () =>
+            _error = '${'profile.customization.plataform.imageError'.tr()} $e',
+      );
     }
   }
 
@@ -120,7 +124,10 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
 
       await _validateAndSetImage(imagePath);
     } catch (e) {
-      setState(() => _error = 'Error capturando imagen: $e');
+      setState(
+        () =>
+            _error = '${'profile.customization.plataform.imageError'.tr()} $e',
+      );
     }
   }
 
@@ -136,11 +143,17 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
         lower.endsWith('.webp');
 
     if (!allowed) {
-      setState(() => _error = 'Tipo de imagen no permitido');
+      setState(
+        () =>
+            _error = 'profile.customization.customLink.imageTypeNotAllowed'
+                .tr(),
+      );
       return;
     }
     if (sizeBytes > 5 * 1024 * 1024) {
-      setState(() => _error = 'La imagen supera 5MB');
+      setState(
+        () => _error = 'profile.customization.customLink.imageTooLarge'.tr(),
+      );
       return;
     }
 
@@ -151,9 +164,15 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
     });
   }
 
-  Future<void> _showLoader({String message = 'Cargando...'}) async {
+  Future<void> _showLoader({
+    String? message,
+  }) async {
     _loaderStart = DateTime.now();
-    showProfileLoader(context, message: message, barrierDismissible: false);
+    showProfileLoader(
+      context,
+      message: message ?? 'common.loading'.tr(),
+      barrierDismissible: false,
+    );
   }
 
   Future<void> _ensureMinLoaderThenPop([
@@ -175,13 +194,13 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
 
   String? _validateLink(String input) {
     final trimmed = input.trim();
-    if (trimmed.isEmpty) return 'El link es obligatorio';
+    if (trimmed.isEmpty) return 'profile.customization.customLink.validation.required'.tr();
     final uri = Uri.tryParse(trimmed);
     if (uri == null || !(uri.hasScheme && uri.host.isNotEmpty)) {
-      return 'Formato de link inválido';
+      return 'profile.customization.customLink.validation.invalidFormat'.tr();
     }
     if (!(uri.scheme == 'http' || uri.scheme == 'https')) {
-      return 'El link debe iniciar con http/https';
+      return 'profile.customization.customLink.validation.invalidScheme'.tr();
     }
     return null;
   }
@@ -247,7 +266,7 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
       _isSaving = true;
       _error = null;
     });
-    await _showLoader(message: 'Guardando...');
+    await _showLoader(message: 'common.saving'.tr());
 
     final linkError = _validateLink(_linkCtrl.text);
     if (linkError != null) {
@@ -264,7 +283,11 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
     if (userId == null) {
       await _ensureMinLoaderThenPop();
       setState(() => _isSaving = false);
-      await AlertGeneral.show(context, 4, message: 'Error: User not logged in');
+      await AlertGeneral.show(
+        context,
+        4,
+        message: 'edit.validations.errorUserLogin'.tr(),
+      );
       return;
     }
 
@@ -313,7 +336,7 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
       await AlertGeneral.show(
         context,
         1,
-        message: 'Red personalizada guardada',
+        message: 'profile.customization.customLink.saved'.tr(),
       );
       if (mounted) {
         Navigator.pop(context, 'done');
@@ -321,7 +344,11 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
     } catch (e) {
       await _ensureMinLoaderThenPop();
       setState(() => _isSaving = false);
-      await AlertGeneral.show(context, 4, message: 'Error guardando: $e');
+      await AlertGeneral.show(
+        context,
+        4,
+        message: '${'profile.customization.customLink.errorSave'.tr()}$e',
+      );
     }
   }
 
@@ -360,8 +387,8 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Link eliminado'),
+        SnackBar(
+          content: Text('profile.customization.customLink.deleted'.tr()),
           backgroundColor: Colors.green,
         ),
       );
@@ -418,8 +445,8 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      'Custom Link Icon',
+                    Text(
+                      'profile.customization.customLink.title'.tr(),
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 22,
@@ -440,7 +467,8 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
                       keyboardType: TextInputType.url,
                       style: const TextStyle(color: Colors.white),
                       decoration: InputDecoration(
-                        hintText: 'Add custom Link',
+                        hintText:
+                            'profile.customization.customLink.linkHint'.tr(),
                         hintStyle: const TextStyle(color: Color(0xFFE0E0E0)),
                         filled: true,
                         fillColor: const Color(0xFF7C7480),
@@ -453,10 +481,11 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
                     const SizedBox(height: 18),
                     Row(
                       children: [
-                        const Expanded(
+                        Expanded(
                           child: Text(
-                            'Apply Custom Icon from Link',
-                            style: TextStyle(color: Colors.white),
+                            'profile.customization.customLink.applyIconFromLink'
+                                .tr(),
+                            style: const TextStyle(color: Colors.white),
                           ),
                         ),
                         Switch(
@@ -506,8 +535,8 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
                                   color: Colors.white,
                                 ),
                               )
-                            : const Text(
-                                'Save',
+                            : Text(
+                                'buttons.save'.tr(),
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 16,
@@ -518,8 +547,8 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
                     const SizedBox(height: 10),
                     TextButton(
                       onPressed: _deleteIfExists,
-                      child: const Text(
-                        'Delete Link',
+                      child: Text(
+                        'profile.customization.customLink.deleteLink'.tr(),
                         style: TextStyle(color: Colors.red),
                       ),
                     ),
@@ -533,3 +562,5 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
     );
   }
 }
+
+

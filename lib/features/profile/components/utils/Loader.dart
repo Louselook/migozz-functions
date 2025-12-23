@@ -1,19 +1,21 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 Future<void> showProfileLoader(
   BuildContext context, {
-  String message = 'Loading...',
+  String? message,
   VoidCallback? onCancel,
   bool barrierDismissible = false,
 }) {
+  final resolvedMessage = message ?? 'common.loading'.tr();
   return showGeneralDialog(
     context: context,
     barrierDismissible: barrierDismissible,
-    barrierLabel: 'Loader',
+    barrierLabel: 'common.loader'.tr(),
     barrierColor: Colors.black.withValues(alpha: 0.7),
     transitionDuration: const Duration(milliseconds: 200),
     pageBuilder: (ctx, a1, a2) => Center(
-      child: LoaderDialog(message: message, onCancel: onCancel),
+      child: LoaderDialog(message: resolvedMessage, onCancel: onCancel),
     ),
     transitionBuilder: (ctx, anim, _, child) => FadeTransition(
       opacity: CurvedAnimation(parent: anim, curve: Curves.easeOut),

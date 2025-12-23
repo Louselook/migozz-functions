@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -37,20 +38,20 @@ class _ProfileWrapperState extends State<ProfileWrapper> {
       builder: (context, authState) {
         // Si estamos chequeando estado global -> mostrar splash neutral
         if (authState.status == AuthStatus.checking) {
-          return const Scaffold(
+          return Scaffold(
             backgroundColor: Colors.black,
-            body: Center(child: LoaderDialog(message: 'Loading...')),
+            body: Center(child: LoaderDialog(message: 'common.loading'.tr())),
           );
         }
 
         // Usuario no autenticado
         if (!authState.isAuthenticated) {
-          return const Scaffold(
+          return Scaffold(
             backgroundColor: Colors.black,
             body: Center(
               child: Text(
-                'No hay usuario autenticado',
-                style: TextStyle(color: Colors.white),
+                'profile.presentation.noAuthenticatedUser'.tr(),
+                style: const TextStyle(color: Colors.white),
               ),
             ),
           );
@@ -58,9 +59,13 @@ class _ProfileWrapperState extends State<ProfileWrapper> {
 
         // Cargando perfil
         if (authState.isLoadingProfile) {
-          return const Scaffold(
+          return Scaffold(
             backgroundColor: Colors.black,
-            body: Center(child: LoaderDialog(message: 'Loading profile...')),
+            body: Center(
+              child: LoaderDialog(
+                message: 'edit.presentation.loadingProfile'.tr(),
+              ),
+            ),
           );
         }
 
@@ -71,12 +76,12 @@ class _ProfileWrapperState extends State<ProfileWrapper> {
             context.push('/complete-profile');
           });
 
-          return const Scaffold(
+          return Scaffold(
             backgroundColor: Colors.black,
             body: Center(
               child: Text(
-                'Redirigiendo a completar perfil...',
-                style: TextStyle(color: Colors.white),
+                'profile.presentation.redirectCompleteProfile'.tr(),
+                style: const TextStyle(color: Colors.white),
               ),
             ),
           );

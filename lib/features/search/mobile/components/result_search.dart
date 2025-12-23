@@ -238,7 +238,7 @@ class _ResultSearchState extends State<ResultSearch> {
                   'full_name',
                 ]) ??
                 pickString(item, ['userName', 'username']) ??
-                'Unknown';
+                'common.unknown'.tr();
 
             final username =
                 pickString(item, [
