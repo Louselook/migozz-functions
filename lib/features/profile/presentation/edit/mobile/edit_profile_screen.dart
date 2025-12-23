@@ -423,7 +423,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                 margin: const EdgeInsets.symmetric(vertical: 6),
                                 decoration: fieldDecoration,
                                 child: DropdownButtonFormField<String>(
-                                  initialValue: _selectedGender,
+                                  value: _selectedGender,
                                   isExpanded: true,
                                   borderRadius: BorderRadius.circular(16),
                                   iconEnabledColor: Colors.white.withValues(

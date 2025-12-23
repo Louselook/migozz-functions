@@ -425,7 +425,11 @@
       "addUsernameHint": "Agregar usuario de {{platform}}",
       "usernameHint": "Ingresa usuario",
       "usernameRequired": "Por favor ingresa un usuario",
-      "deleteLink": "Eliminar enlace"
+      "removeQuestion": "¿Quieres eliminar {platform}?",
+      "deleteLink": "Eliminar"
+    },
+    "buttons": {
+      "cancel": "Cancelar"
     },
     "messages": {
       "saved": "Red social guardada correctamente!",

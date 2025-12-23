@@ -3,9 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/interests/interests_step.dart';
-// import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/save_changes_social.dart';
-// import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/social_ecosystem_step.dart';
-// import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/social_ecosystem_step_v3.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/social_ecosystem_simple_step.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/social_ecosystem_step_v3.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 
 //  Modo de operación del componente
@@ -33,7 +32,7 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
   // For register mode: track which view to show
   // false = simple list view (default)
   // true = full grid view with categories
-  // bool _showFullSocialView = false;
+  bool _showFullSocialView = false;
 
   @override
   void initState() {
@@ -84,19 +83,19 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
     );
   }
 
-  // void _navigateToFullSocialView() {
-  //   // Navigate from simple list to full grid view
-  //   setState(() {
-  //     _showFullSocialView = true;
-  //   });
-  // }
+  void _navigateToFullSocialView() {
+    // Navigate from simple list to full grid view
+    setState(() {
+      _showFullSocialView = true;
+    });
+  }
 
-  // void _navigateBackToSimpleView() {
-  //   // Navigate back to simple list view
-  //   setState(() {
-  //     _showFullSocialView = false;
-  //   });
-  // }
+  void _navigateBackToSimpleView() {
+    // Navigate back to simple list view
+    setState(() {
+      _showFullSocialView = false;
+    });
+  }
 
   @override
   void dispose() {
@@ -106,11 +105,33 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
 
   @override
   Widget build(BuildContext context) {
-    final steps = [
-      // SocialEcosystemStepV3(controller: pageController, mode: widget.mode),
-      // CategoryStep(controller: pageController, mode: widget.mode),
-      InterestsStep(controller: pageController, mode: widget.mode),
-    ];
+    List<Widget> steps;
+
+    if (widget.mode == MoreUserDetailsMode.register) {
+      // In register mode, show simple or full view based on state
+      if (_showFullSocialView) {
+        // Full view with all categories and search
+        steps = [
+          SocialEcosystemStepV3(controller: pageController, mode: widget.mode),
+          InterestsStep(controller: pageController, mode: widget.mode),
+        ];
+      } else {
+        // Simple view with main networks only
+        steps = [
+          SocialEcosystemSimpleStep(
+            controller: pageController,
+            onAddOtherNetworks: _navigateToFullSocialView,
+          ),
+          InterestsStep(controller: pageController, mode: widget.mode),
+        ];
+      }
+    } else {
+      // In edit mode, always show full v3 view
+      steps = [
+        SocialEcosystemStepV3(controller: pageController, mode: widget.mode),
+        InterestsStep(controller: pageController, mode: widget.mode),
+      ];
+    }
 
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,

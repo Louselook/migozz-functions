@@ -434,7 +434,11 @@
             "addUsernameHint": "Add {{platform}} username",
             "usernameHint": "Enter username",
             "usernameRequired": "Please enter a username",
-            "deleteLink": "Delete Link"
+            "removeQuestion": "Do you want to remove {platform}?",
+            "deleteLink": "Delete"
+        },
+        "buttons": {
+          "cancel": "Cancel"
         },
         "messages": {
             "saved": "Social media saved successfully!",

@@ -83,7 +83,7 @@ class SocialEcosystemSimpleStep extends StatelessWidget {
         return;
       }
 
-      final remove = await _showRemoveDialog(context, config.displayName);
+      final remove = await _showRemoveDialog(context, config);
       if (remove == true) {
         current.removeAt(index);
         cubit.setSocialEcosystem(current);
@@ -91,22 +91,141 @@ class SocialEcosystemSimpleStep extends StatelessWidget {
     }
   }
 
-  Future<bool?> _showRemoveDialog(BuildContext context, String label) {
+  Future<bool?> _showRemoveDialog(BuildContext context, NetworkConfig config) {
     return showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
-        title: Text("${"addSocials.popUp.title".tr()} $label?"),
-        content: Text("${"addSocials.popUp.subtitle".tr()} $label?"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text("addSocials.popUp.no".tr()),
+      barrierColor: Colors.black.withValues(alpha: 0.8),
+      builder: (dialogContext) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.85,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF2D1B3D), Color(0xFF1A0F2E)],
+            ),
+            borderRadius: BorderRadius.circular(20),
           ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text("addSocials.popUp.yes".tr()),
+          child: Stack(
+            children: [
+              // Main content
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(height: 20),
+
+                    // Platform icon
+                    Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      padding: const EdgeInsets.all(20),
+                      child: SvgPicture.asset(
+                        config.iconPath,
+                        width: 60,
+                        height: 60,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Title
+                    Text(
+                      config.displayName,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // Subtitle
+                    Text(
+                      'addSocials.dialogs.removeQuestion'.tr(
+                        namedArgs: {'platform': config.displayName},
+                      ),
+                      style: TextStyle(color: Colors.grey[400], fontSize: 14),
+                      textAlign: TextAlign.center,
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // Delete button with gradient
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pop(dialogContext, true);
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFFF6B6B), Color(0xFFFF4757)],
+                          ),
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'addSocials.dialogs.deleteLink'.tr(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Cancel button
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pop(dialogContext, false);
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(25),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            width: 1,
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'buttons.cancel'.tr(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -210,7 +329,6 @@ class SocialEcosystemSimpleStep extends StatelessWidget {
                           vertical: 8,
                         ),
                         children: [
-                          // Espacio superior para dar separación visual
                           const SizedBox(height: 8),
 
                           // Main networks
@@ -228,7 +346,7 @@ class SocialEcosystemSimpleStep extends StatelessWidget {
 
                           const SizedBox(height: 8),
 
-                          // Add other networks button (con icono rosa circular)
+                          // Add other networks button
                           _buildAddOtherNetworksButton(context),
 
                           const SizedBox(height: 24),
@@ -317,7 +435,7 @@ class SocialEcosystemSimpleStep extends StatelessWidget {
           ),
           child: Row(
             children: [
-              // Icon box (ícono centrado dentro del cuadrado)
+              // Icon box
               Center(
                 child: SizedBox(
                   width: 28,
@@ -331,7 +449,7 @@ class SocialEcosystemSimpleStep extends StatelessWidget {
 
               const SizedBox(width: 18),
 
-              // Network name centrado verticalmente
+              // Network name
               Expanded(
                 child: Text(
                   network.displayName,
@@ -346,7 +464,7 @@ class SocialEcosystemSimpleStep extends StatelessWidget {
                 ),
               ),
 
-              // Checkmark si está seleccionado
+              // Checkmark if selected
               if (isSelected)
                 Icon(
                   Icons.check_circle,
@@ -375,7 +493,7 @@ class SocialEcosystemSimpleStep extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // Pink circular + icon (similar a la imagen)
+            // Pink circular + icon
             Container(
               width: 40,
               height: 40,
