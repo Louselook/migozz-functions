@@ -81,12 +81,12 @@ class GeminiService {
     'fullName', // 1
     'username', // 2
     // 'gender', // 3
-    'socialEcosystem', // 4
     'location', // 5
     'sendOTP', // 6
     'emailVerification', // 7
     'otpInput', // 8
     'emailSuccess', // 9
+    'socialEcosystem', // 4
     'avatarUrl', // 10
     'phone', // 11
     'voiceNoteUrl', // 12
