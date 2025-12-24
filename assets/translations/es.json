@@ -50,7 +50,8 @@
       "validationEmail": "Por favor ingrese un correo válido",
       "registerEmail": "Este correo ya está registrado",
       "audioMinLimit": "El audio es muy corto (${durationInSeconds.toStringAsFixed(1)}s). Debe durar entre 1 y 10 segundos.",
-      "audioMaxLimit": "El audio es muy largo (${durationInSeconds.toStringAsFixed(1)}s). Debe durar entre 1 y 10 segundos."
+      "audioMaxLimit": "El audio es muy largo (${durationInSeconds.toStringAsFixed(1)}s). Debe durar entre 1 y 10 segundos.",
+      "picConfirmation": "✅ Foto de ${photo['platform']} seleccionada"
     },
     "presentation": {
       "title": "¡Regístrate ahora!",
@@ -58,6 +59,8 @@
       "inputText": "Ingresa tu correo",
       "buttonText": "Crear cuenta",
       "social": "Aquí está la información extraída de sus redes sociales.",
+      "socialName": "Foto de ${photo['label'] ?? photo['platform'] ?? 'red social'}",
+      "profilePic": "Usar esta foto",
       "bottonText": {
         "login": "¿Ya tienes una cuenta?",
         "LoginReturn": "Inicia sesión"
@@ -552,10 +555,11 @@
     }
   },
   "buttons": {
-    "confirm": "confirmar",
-    "cancel": "cancelar",
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
     "save": "Guardar",
-    "continue": "continuar",
+    "Close": "Cerrar",
+    "continue": "Continuar",
     "delete": "Eliminar"
   },
   "category": {

@@ -51,7 +51,8 @@
             "registerEmail" : "This email is already registered",
             "audioLimit" : "This email is already registered",
             "audioMinLimit": "The audio is very short (${durationInSeconds.toStringAsFixed(1)}s). It must last between 1 and 10 seconds.",
-            "audioMaxLimit": "The audio is very long (${durationInSeconds.toStringAsFixed(1)}s). It must last between 1 and 10 seconds."
+            "audioMaxLimit": "The audio is very long (${durationInSeconds.toStringAsFixed(1)}s). It must last between 1 and 10 seconds.",
+            "picConfirmation": "✅ Photo of ${photo['platform']} selected"
         },
         "presentation":{
             "title" : "Register Now!",
@@ -59,6 +60,8 @@
             "inputText" : "Enter email",
             "buttonText" : "Create Account",
             "social": "Here is the information extracted from their social networks.",
+            "socialName": "Photo from ${photo['label'] ?? photo['platform'] ?? 'social network'}",
+            "profilePic": "Use this photo",
             "bottonText" : {
                 "login" : "Already a member?",
                 "LoginReturn" : "Login"

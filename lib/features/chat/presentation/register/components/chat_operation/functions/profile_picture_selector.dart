@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/features/chat/controllers/register_chat_controller.dart';
@@ -65,7 +66,7 @@ class ProfilePictureSelector extends StatelessWidget {
     showGeneralDialog(
       context: context,
       barrierDismissible: true,
-      barrierLabel: 'Cerrar',
+      barrierLabel: 'buttons.cancel'.tr(),
       barrierColor: Colors.black87,
       transitionDuration: const Duration(milliseconds: 300),
       pageBuilder: (context, anim, secondaryAnim) {
@@ -98,7 +99,7 @@ class ProfilePictureSelector extends StatelessWidget {
     // Mostrar confirmación
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('✅ Foto de ${photo["platform"]} seleccionada'),
+        content: Text('register.validations.picConfirmation'.tr()),
         duration: const Duration(seconds: 2),
         backgroundColor: Colors.green,
       ),
@@ -196,7 +197,7 @@ class _PhotoPreviewDialog extends StatelessWidget {
                       ),
                       const SizedBox(width: 12),
                       Text(
-                        'Usar esta foto',
+                        'register.presentation.profilePic'.tr(),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 18,
@@ -212,7 +213,7 @@ class _PhotoPreviewDialog extends StatelessWidget {
 
               // Texto: nombre de la plataforma
               Text(
-                'Foto de ${photo["label"] ?? photo["platform"] ?? "red social"}',
+                'register.presentation.socialName'.tr(),
                 style: const TextStyle(color: Colors.white70, fontSize: 14),
               ),
 
@@ -221,8 +222,8 @@ class _PhotoPreviewDialog extends StatelessWidget {
               // Botón cerrar
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text(
-                  'Cancelar',
+                child: Text(
+                  "buttons.cancel".tr(),
                   style: TextStyle(color: Colors.white54, fontSize: 16),
                 ),
               ),
