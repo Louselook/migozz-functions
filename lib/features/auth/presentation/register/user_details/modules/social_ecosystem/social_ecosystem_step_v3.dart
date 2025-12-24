@@ -750,193 +750,216 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
       }
     }
 
-    return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(),
-      child: SafeArea(
-        top: false,
-        child: Scaffold(
-          backgroundColor: Colors.black,
-          body: Stack(
-            children: [
-              Positioned.fill(
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.purpleAccent.withValues(alpha: 0.35),
-                        Colors.black.withValues(alpha: 0.40),
-                        Colors.black,
-                      ],
+    return WillPopScope(
+      onWillPop: () async {
+        // Si estamos en modo registro, validar que haya al menos una red social
+        if (widget.mode == MoreUserDetailsMode.register) {
+          final socialEcosystem =
+              context.read<RegisterCubit>().state.socialEcosystem ?? [];
+
+          if (socialEcosystem.isEmpty) {
+            CustomSnackbar.show(
+              context: context,
+              message: 'addSocials.validation.atLeastOne'.tr(),
+              type: SnackbarType.warning,
+            );
+            return false;
+          }
+        }
+
+        return true;
+      },
+      child: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SafeArea(
+          top: false,
+          child: Scaffold(
+            backgroundColor: Colors.black,
+            body: Stack(
+              children: [
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.purpleAccent.withValues(alpha: 0.35),
+                          Colors.black.withValues(alpha: 0.40),
+                          Colors.black,
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
 
-              Positioned(
-                top: MediaQuery.of(context).padding.top + 8,
-                left: 0,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: GestureDetector(
-                    onTap: _handleBackTap,
-                    child: const Icon(
-                      Icons.arrow_back_ios,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                ),
-              ),
-
-              // Only show profile image in edit mode
-              if (widget.mode == MoreUserDetailsMode.edit)
                 Positioned(
-                  top: 0,
+                  top: MediaQuery.of(context).padding.top + 8,
                   left: 0,
-                  right: 0,
-                  bottom: 0.43 * size.height,
-                  child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: GestureDetector(
+                      onTap: _handleBackTap,
+                      child: const Icon(
+                        Icons.arrow_back_ios,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                  ),
                 ),
 
-              // Main content
-              SafeArea(
-                child: Column(
-                  children: [
-                    // Only show profile info in edit mode
-                    if (widget.mode == MoreUserDetailsMode.edit) ...[
-                      SizedBox(height: size.height * 0.33),
-                      Text(
-                        formatDisplayName(
-                          widget.user?.displayName,
-                          format: FormatName.short,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 27,
-                          fontWeight: FontWeight.w700,
-                          height: 1.1,
-                        ),
-                      ),
+                // Only show profile image in edit mode
+                if (widget.mode == MoreUserDetailsMode.edit)
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0.43 * size.height,
+                    child: ProfileImageMobileV3(
+                      avatarUrl: avatarUrl,
+                      size: size,
+                    ),
+                  ),
 
-                      // DisplayName (@username)
-                      const SizedBox(height: 3),
-                      Text(
-                        username,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          height: 1.2,
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8, bottom: 0),
-                        child: SocialCirclesMobileV3(links: socialLinks),
-                      ),
-                      const SizedBox(height: 11),
-                    ] else ...[
-                      // In register mode, add spacing at top and title
-                      const SizedBox(height: 60),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: Text(
-                          'addSocials.register.title'.tr(),
+                // Main content
+                SafeArea(
+                  child: Column(
+                    children: [
+                      // Only show profile info in edit mode
+                      if (widget.mode == MoreUserDetailsMode.edit) ...[
+                        SizedBox(height: size.height * 0.33),
+                        Text(
+                          formatDisplayName(
+                            widget.user?.displayName,
+                            format: FormatName.short,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 24,
+                            fontSize: 27,
                             fontWeight: FontWeight.w700,
+                            height: 1.1,
                           ),
-                          textAlign: TextAlign.center,
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: Text(
-                          'addSocials.register.subtitle'.tr(),
-                          style: TextStyle(
-                            color: Colors.grey[400],
-                            fontSize: 14,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
 
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: TextField(
-                        controller: _searchController,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                        ),
-                        decoration: InputDecoration(
-                          isDense: true, // decrease height
-                          filled: true,
-                          fillColor: AppColors.greyBackground.withValues(
-                            alpha: 0.4,
+                        // DisplayName (@username)
+                        const SizedBox(height: 3),
+                        Text(
+                          username,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            height: 1.2,
                           ),
-                          hintText: 'addSocials.search.hint'.tr(),
-                          hintStyle: TextStyle(
-                            color: Colors.grey[600],
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8, bottom: 0),
+                          child: SocialCirclesMobileV3(links: socialLinks),
+                        ),
+                        const SizedBox(height: 11),
+                      ] else ...[
+                        // In register mode, add spacing at top and title
+                        const SizedBox(height: 60),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: Text(
+                            'addSocials.register.title'.tr(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: Text(
+                            'addSocials.register.subtitle'.tr(),
+                            style: TextStyle(
+                              color: Colors.grey[400],
+                              fontSize: 14,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: TextField(
+                          controller: _searchController,
+                          style: const TextStyle(
+                            color: Colors.white,
                             fontSize: 12,
                           ),
-                          suffixIcon: Icon(
-                            Icons.search,
-                            color: Colors.grey[600],
-                            size: 20,
+                          decoration: InputDecoration(
+                            isDense: true, // decrease height
+                            filled: true,
+                            fillColor: AppColors.greyBackground.withValues(
+                              alpha: 0.4,
+                            ),
+                            hintText: 'addSocials.search.hint'.tr(),
+                            hintStyle: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 12,
+                            ),
+                            suffixIcon: Icon(
+                              Icons.search,
+                              color: Colors.grey[600],
+                              size: 20,
+                            ),
+                            // Rounded corners
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 5, // lower vertical padding
+                            ),
                           ),
-                          // Rounded corners
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 5, // lower vertical padding
-                          ),
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            _searchQuery = value;
-                          });
-                        },
-                      ),
-                    ),
-
-                    // Content
-                    Expanded(
-                      child: _searchQuery.isNotEmpty
-                          ? _buildSearchResults()
-                          : _buildCategorizedGrid(),
-                    ),
-
-                    // Continue Button - only in register mode
-                    if (widget.mode == MoreUserDetailsMode.register)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 16,
-                        ),
-                        child: userDetailsButton(
-                          cubit: context.read<RegisterCubit>(),
-                          controller: widget.controller,
-                          context: context,
-                          action: UserDetailsAction.back,
-                          mode: MoreUserDetailsMode.register,
+                          onChanged: (value) {
+                            setState(() {
+                              _searchQuery = value;
+                            });
+                          },
                         ),
                       ),
-                  ],
+
+                      // Content
+                      Expanded(
+                        child: _searchQuery.isNotEmpty
+                            ? _buildSearchResults()
+                            : _buildCategorizedGrid(),
+                      ),
+
+                      // Continue Button - only in register mode
+                      if (widget.mode == MoreUserDetailsMode.register)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 16,
+                          ),
+                          child: userDetailsButton(
+                            cubit: context.read<RegisterCubit>(),
+                            controller: widget.controller,
+                            context: context,
+                            action: UserDetailsAction.back,
+                            mode: MoreUserDetailsMode.register,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

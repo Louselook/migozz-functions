@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/interests/interests_step.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/social_ecosystem_simple_step.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/social_ecosystem_step_v3.dart';
@@ -133,30 +135,51 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
       ];
     }
 
-    return Scaffold(
-      backgroundColor: AppColors.backgroundDark,
-      appBar: widget.mode == MoreUserDetailsMode.edit
-          ? AppBar(
-              backgroundColor: AppColors.backgroundDark,
-              title: const Text('Edit Profile'),
-              elevation: 0,
-            )
-          : null,
-      body: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 0.0),
-            child: PageView.builder(
-              controller: pageController,
-              itemCount: steps.length,
-              physics: const NeverScrollableScrollPhysics(),
-              onPageChanged: (index) {
-                setState(() {});
-              },
-              itemBuilder: (_, index) => steps[index],
+    return WillPopScope(
+      onWillPop: () async {
+        // Prevent back navigation in register mode if no social network is added
+        if (widget.mode == MoreUserDetailsMode.register) {
+          final registerState = context.read<RegisterCubit>().state;
+          final socialEcosystem = registerState.socialEcosystem ?? [];
+
+          if (socialEcosystem.isEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('addSocials.validation.atLeastOne'.tr()),
+                backgroundColor: Colors.orange,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+            return false;
+          }
+        }
+        return true;
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.backgroundDark,
+        appBar: widget.mode == MoreUserDetailsMode.edit
+            ? AppBar(
+                backgroundColor: AppColors.backgroundDark,
+                title: const Text('Edit Profile'),
+                elevation: 0,
+              )
+            : null,
+        body: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 0.0),
+              child: PageView.builder(
+                controller: pageController,
+                itemCount: steps.length,
+                physics: const NeverScrollableScrollPhysics(),
+                onPageChanged: (index) {
+                  setState(() {});
+                },
+                itemBuilder: (_, index) => steps[index],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

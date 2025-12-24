@@ -275,98 +275,116 @@ class SocialEcosystemSimpleStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final mainNetworks = _getMainNetworks();
 
-    return SafeArea(
-      top: false,
-      child: Scaffold(
-        backgroundColor: Colors.black,
-        body: Stack(
-          children: [
-            // Gradient background
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.purpleAccent.withValues(alpha: 0.35),
-                      Colors.black.withValues(alpha: 0.40),
-                      Colors.black,
-                    ],
-                  ),
-                ),
-              ),
-            ),
+    return WillPopScope(
+      onWillPop: () async {
+        // Prevent back navigation if no network is added
+        final cubit = context.read<RegisterCubit>();
+        final socialEcosystem = cubit.state.socialEcosystem ?? [];
 
-            // Back button
-            Positioned(
-              top: MediaQuery.of(context).padding.top + 8,
-              left: 0,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: GestureDetector(
-                  onTap: () => _handleBackTap(context),
-                  child: const Icon(
-                    Icons.arrow_back_ios,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-              ),
-            ),
+        if (socialEcosystem.isEmpty) {
+          CustomSnackbar.show(
+            context: context,
+            message: 'addSocials.validation.atLeastOne'.tr(),
+            type: SnackbarType.warning,
+          );
+          return false;
+        }
 
-            // Main content
-            Column(
-              children: [
-                const SizedBox(height: 100),
-                Expanded(
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 230),
-                      child: ListView(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        children: [
-                          const SizedBox(height: 8),
-
-                          // Main networks
-                          ...mainNetworks.map((network) {
-                            final isSelected = _isNetworkSelected(
-                              context,
-                              network,
-                            );
-                            return _buildNetworkItem(
-                              context,
-                              network,
-                              isSelected,
-                            );
-                          }),
-
-                          const SizedBox(height: 8),
-
-                          // Add other networks button
-                          _buildAddOtherNetworksButton(context),
-
-                          const SizedBox(height: 24),
-                        ],
-                      ),
+        return true;
+      },
+      child: SafeArea(
+        top: false,
+        child: Scaffold(
+          backgroundColor: Colors.black,
+          body: Stack(
+            children: [
+              // Gradient background
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.purpleAccent.withValues(alpha: 0.35),
+                        Colors.black.withValues(alpha: 0.40),
+                        Colors.black,
+                      ],
                     ),
                   ),
                 ),
+              ),
 
-                // Continue Button with validation
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 16,
+              // Back button
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 8,
+                left: 0,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: GestureDetector(
+                    onTap: () => _handleBackTap(context),
+                    child: const Icon(
+                      Icons.arrow_back_ios,
+                      color: Colors.white,
+                      size: 24,
+                    ),
                   ),
-                  child: _buildContinueButton(context),
                 ),
-              ],
-            ),
-          ],
+              ),
+
+              // Main content
+              Column(
+                children: [
+                  const SizedBox(height: 100),
+                  Expanded(
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 230),
+                        child: ListView(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          children: [
+                            const SizedBox(height: 8),
+
+                            // Main networks
+                            ...mainNetworks.map((network) {
+                              final isSelected = _isNetworkSelected(
+                                context,
+                                network,
+                              );
+                              return _buildNetworkItem(
+                                context,
+                                network,
+                                isSelected,
+                              );
+                            }),
+
+                            const SizedBox(height: 8),
+
+                            // Add other networks button
+                            _buildAddOtherNetworksButton(context),
+
+                            const SizedBox(height: 24),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Continue Button with validation
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 16,
+                    ),
+                    child: _buildContinueButton(context),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
