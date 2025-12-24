@@ -10,7 +10,6 @@ final Map<String, Map<String, dynamic>> questionsEs = {
   //   "keepTalk": false,
   //   "keyboardType": "text",
   // },
-
   "fullName": {
     "text": "¡Genial! Continuemos en Español. ¿Cuál es tu nombre completo?",
     "options": [],
@@ -35,7 +34,6 @@ final Map<String, Map<String, dynamic>> questionsEs = {
   //   "keepTalk": false,
   //   "keyboardType": "text",
   // },
-
   "socialEcosystem": {
     "text": "¡Agreguemos tus plataformas sociales!",
     "options": [],
@@ -57,6 +55,14 @@ final Map<String, Map<String, dynamic>> questionsEs = {
     "options": ["Sí", "No"],
     "step": "regProgress.sendOTP",
     "keepTalk": false,
+  },
+
+  "emailChange": {
+    "text": "Por favor, ingresa tu nuevo correo electrónico:",
+    "options": [],
+    "step": "regProgress.emailChange",
+    "keepTalk": false,
+    "keyboardType": "email",
   },
 
   "emailVerification": {
@@ -126,7 +132,6 @@ final Map<String, Map<String, dynamic>> questionsEn = {
   //   "keepTalk": false,
   //   "keyboardType": "text",
   // },
-
   "fullName": {
     "text": "Great! Let's continue in English. What is your full name?",
     "options": [],
@@ -151,7 +156,6 @@ final Map<String, Map<String, dynamic>> questionsEn = {
   //   "keepTalk": false,
   //   "keyboardType": "text",
   // },
-
   "socialEcosystem": {
     "text": "Let's add your social platforms!",
     "options": [],
@@ -173,6 +177,14 @@ final Map<String, Map<String, dynamic>> questionsEn = {
     "options": ["Yes", "No"],
     "step": "regProgress.sendOTP",
     "keepTalk": false,
+  },
+
+  "emailChange": {
+    "text": "Please enter your new email address:",
+    "options": [],
+    "step": "regProgress.emailChange",
+    "keepTalk": false,
+    "keyboardType": "email",
   },
 
   "emailVerification": {
@@ -239,7 +251,6 @@ final Map<String, Map<String, dynamic>> errorMessagesEs = {
   //   "step": "regProgress.language",
   //   "keepTalk": false,
   // },
-
   "fullName": {
     "text": "Por favor ingresa tu nombre completo (nombre y apellido).",
     "options": [],
@@ -261,7 +272,6 @@ final Map<String, Map<String, dynamic>> errorMessagesEs = {
   //   "step": "regProgress.gender",
   //   "keepTalk": false,
   // },
-
   "location": {
     "text": "Por favor responde 'Sí' o 'No'.",
     "options": ["Sí", "No"],
@@ -306,7 +316,6 @@ final Map<String, Map<String, dynamic>> errorMessagesEn = {
   //   "step": "regProgress.language",
   //   "keepTalk": false,
   // },
-
   "fullName": {
     "text": "Please enter your full name (first and last name).",
     "options": [],
@@ -327,7 +336,6 @@ final Map<String, Map<String, dynamic>> errorMessagesEn = {
   //   "step": "regProgress.gender",
   //   "keepTalk": false,
   // },
-
   "location": {
     "text": "Please answer 'Yes' or 'No'.",
     "options": ["Yes", "No"],

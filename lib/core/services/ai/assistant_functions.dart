@@ -22,7 +22,9 @@ class AssistantFunctions {
     }
     try {
       if (questionFlow.isEmpty) {
-        debugPrint('AssistantFunctions.getCurrentQuestion: questionFlow vacío o null');
+        debugPrint(
+          'AssistantFunctions.getCurrentQuestion: questionFlow vacío o null',
+        );
         return null;
       }
 
@@ -44,7 +46,9 @@ class AssistantFunctions {
         // fallback: intentar 'done'
         final doneQ = getQuestion('done', isSpanish);
         if (doneQ == null) {
-          debugPrint('AssistantFunctions: fallback getQuestion("done") también devolvió null');
+          debugPrint(
+            'AssistantFunctions: fallback getQuestion("done") también devolvió null',
+          );
         }
         question = doneQ;
       }
@@ -99,6 +103,9 @@ class AssistantFunctions {
       case 'sendOTP': //  SEPARADO de emailVerification
         return _evaluateSendOTP(normalized, userInput);
 
+      case 'emailChange': // NUEVO: Cambiar email
+        return _evaluateEmailChange(normalized, userInput);
+
       case 'otpInput': // AGREGADO: Validar código OTP
         return _evaluateOTP(normalized, userInput, cubit);
 
@@ -139,12 +146,37 @@ class AssistantFunctions {
     } else if (normalized.contains('no')) {
       return {
         "step": "regProgress.sendOTP",
-        "valid": false,
+        "valid": true,
         "userResponse": "No",
+        "changeEmail": true, // Bandera para indicar cambio de email
       };
     }
     return {
       "step": "regProgress.sendOTP",
+      "valid": false,
+      "userResponse": original.trim(),
+    };
+  }
+
+  // NUEVO: Evaluación para cambio de correo electrónico
+  static Map<String, dynamic> _evaluateEmailChange(
+    String normalized,
+    String original,
+  ) {
+    // Validar formato básico de email
+    final emailRegex = RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+    );
+
+    if (emailRegex.hasMatch(original.trim())) {
+      return {
+        "step": "regProgress.emailChange",
+        "valid": true,
+        "userResponse": original.trim(),
+      };
+    }
+    return {
+      "step": "regProgress.emailChange",
       "valid": false,
       "userResponse": original.trim(),
     };
@@ -336,7 +368,34 @@ class AssistantFunctions {
     String original,
     RegisterCubit cubit,
   ) {
-    if (RegExp(r'^\d+$').hasMatch(original.trim())) {
+    // Detectar si el usuario quiere reenviar código
+    if (normalized.contains('reenviar') ||
+        normalized.contains('resend') ||
+        normalized.contains('send again') ||
+        normalized.contains('enviar de nuevo')) {
+      return {
+        "step": "regProgress.emailVerification",
+        "valid": true,
+        "userResponse": "resendCode",
+        "resendCode": true,
+      };
+    }
+
+    // Detectar si el usuario quiere cambiar correo
+    if (normalized.contains('cambiar correo') ||
+        normalized.contains('change email') ||
+        normalized.contains('different email') ||
+        normalized.contains('otro correo')) {
+      return {
+        "step": "regProgress.emailVerification",
+        "valid": true,
+        "userResponse": "changeEmail",
+        "changeEmailFromOTP": true,
+      };
+    }
+
+    // Validar código OTP (solo números, al menos 4 dígitos)
+    if (RegExp(r'^\d{4,}$').hasMatch(original.trim())) {
       return {
         "step": "regProgress.emailVerification",
         "valid": true,
@@ -375,7 +434,10 @@ class AssistantFunctions {
 
       if (imageUrl != null) {
         final label =
-            data["title"] ?? data["username"] ?? data["full_name"] ?? key.toUpperCase();
+            data["title"] ??
+            data["username"] ??
+            data["full_name"] ??
+            key.toUpperCase();
 
         pictureCards.add({
           "imageUrl": imageUrl,

@@ -13,6 +13,7 @@ enum RegisterStatusProgress {
   socialEcosystem,
   location,
   sendOTP,
+  emailChange,
   emailVerification,
   avatarUrl,
   phone,
@@ -122,7 +123,8 @@ class RegisterState extends Equatable {
       username: username ?? "",
       gender: gender ?? "unspecified",
 
-      location: location ??
+      location:
+          location ??
           LocationDTO(
             country: "Colombia",
             state: "Antioquia",
@@ -141,6 +143,7 @@ class RegisterState extends Equatable {
       voiceNoteUrl: voiceNoteUrl,
     );
   }
+
   factory RegisterState.initial() {
     return const RegisterState(
       loadigAiResponse: false,

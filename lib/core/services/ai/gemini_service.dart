@@ -70,6 +70,10 @@ class GeminiService {
   }
 
   int _currentQuestionIndex = 0;
+  bool _awaitingEmailChange =
+      false; // Flag para rastrear si estamos esperando cambio de email
+  bool _comingFromOTPEmailChange =
+      false; // Flag para saber si viene de cambio de email desde OTP
 
   // Flujo completo para usuarios NO autenticados
   final List<String> _questionFlowNotAuth = [
@@ -224,7 +228,9 @@ class GeminiService {
     }
 
     // Evaluar respuesta
-    final currentStepKey = questionFlow[_currentQuestionIndex];
+    final currentStepKey = _awaitingEmailChange
+        ? 'emailChange'
+        : questionFlow[_currentQuestionIndex];
 
     final decision = AssistantFunctions.evaluateUserResponse(
       userInput,
@@ -308,6 +314,89 @@ class GeminiService {
         }
 
         return processResult;
+      }
+
+      // Manejar cambio de email: cuando usuario dice "No" en sendOTP
+      if (processResult != null && processResult['changeEmail'] == true) {
+        debugPrint(
+          '📧 Usuario quiere cambiar email - mostrando pantalla de cambio',
+        );
+        _awaitingEmailChange = true; // Establecer flag
+        final isSpanish = registerCubit.state.language == 'Español';
+        return {
+          "text": isSpanish
+              ? "Por favor, ingresa tu nuevo correo electrónico:"
+              : "Please enter your new email address:",
+          "options": const <String>[],
+          "step": "regProgress.emailChange",
+          "keepTalk": false,
+          "keyboardType": "email",
+        };
+      }
+
+      // Manejar después de cambiar email: cuando usuario ingresa nuevo email en emailChange
+      if (processResult != null && processResult['emailChanged'] == true) {
+        debugPrint(
+          '📧 Email cambiado exitosamente - volviendo a sendOTP para confirmar',
+        );
+        _awaitingEmailChange = false; // Limpiar flag
+
+        // Si viene de cambio de email desde OTP, resetear índice a sendOTP
+        if (_comingFromOTPEmailChange) {
+          debugPrint(
+            '📧 Volviendo desde cambio de email OTP - reseteando a sendOTP',
+          );
+          _currentQuestionIndex = questionFlow.indexOf('sendOTP');
+          _comingFromOTPEmailChange = false; // Limpiar flag
+        }
+
+        // Retroceder a sendOTP para que confirme el nuevo email
+        final emailQuestion = AssistantFunctions.getCurrentQuestion(
+          questionFlow,
+          questionFlow.indexOf('sendOTP'),
+          registerCubit,
+        );
+
+        if (emailQuestion != null) {
+          return await _prepareQuestion(emailQuestion, registerCubit);
+        }
+      }
+
+      // Manejar OTP enviado exitosamente
+      if (processResult != null && processResult['otpSent'] == true) {
+        debugPrint('📧 OTP enviado exitosamente');
+        _awaitingEmailChange = false; // Limpiar flag si estaba activo
+        // Continuar al siguiente paso (emailVerification)
+      }
+
+      // Manejar OTP reenviado
+      if (processResult != null && processResult['otpResent'] == true) {
+        debugPrint('📧 OTP reenviado exitosamente');
+        final isSpanish = registerCubit.state.language == 'Español';
+        return {
+          "text": processResult['message'],
+          "options": const <String>[],
+          "step": "regProgress.emailVerification",
+          "keepTalk": true,
+        };
+      }
+
+      // Manejar cambio de email desde pantalla de OTP
+      if (processResult != null &&
+          processResult['changeEmailFromOTP'] == true) {
+        debugPrint('📧 Usuario quiere cambiar email desde OTP');
+        _awaitingEmailChange = true; // Establecer flag
+        _comingFromOTPEmailChange = true; // Marcar que viene del OTP
+        final isSpanish = registerCubit.state.language == 'Español';
+        return {
+          "text": isSpanish
+              ? "Por favor, ingresa tu nuevo correo electrónico:"
+              : "Please enter your new email address:",
+          "options": const <String>[],
+          "step": "regProgress.emailChange",
+          "keepTalk": false,
+          "keyboardType": "email",
+        };
       }
 
       // Si no hubo errores, AHORA SÍ avanzar
