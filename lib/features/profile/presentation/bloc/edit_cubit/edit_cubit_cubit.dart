@@ -59,19 +59,15 @@ class EditCubit extends Cubit<EditCubitState> {
     required Map<String, dynamic> updatedFields,
   }) async {
     try {
-
       emit(state.copyWith(isSaving: true));
 
       await _userService.updateUserProfile(userId, updatedFields);
 
-
       //  Refresca el AuthCubit automáticamente
       await _authCubit.refreshUserProfile();
 
-
       // Al guardar, no quedan cambios pendientes
       emit(state.copyWith(isSaving: false, success: true, hasChanges: false));
-
     } catch (e) {
       emit(state.copyWith(isSaving: false, error: e.toString()));
     }
@@ -129,5 +125,8 @@ class EditCubit extends Cubit<EditCubitState> {
   }
 
   /// Limpiar estado
-  void clear() => emit(const EditCubitState());
+  void reset() {
+    emit(EditCubitState.initial());
+    debugPrint('✅ [EditCubit] Estado reseteado');
+  }
 }

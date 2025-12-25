@@ -99,7 +99,13 @@ class ProfilePictureSelector extends StatelessWidget {
     // Mostrar confirmación
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('register.validations.picConfirmation'.tr()),
+        content: Text(
+          'register.validations.picConfirmation'.tr(
+            namedArgs: {
+              'platform': photo['label'] ?? photo['platform'] ?? 'red social',
+            },
+          ),
+        ),
         duration: const Duration(seconds: 2),
         backgroundColor: Colors.green,
       ),
@@ -212,8 +218,14 @@ class _PhotoPreviewDialog extends StatelessWidget {
               const SizedBox(height: 16),
 
               // Texto: nombre de la plataforma
+              // Texto: nombre de la plataforma
               Text(
-                'register.presentation.socialName'.tr(),
+                'register.presentation.socialName'.tr(
+                  namedArgs: {
+                    'platform':
+                        photo['label'] ?? photo['platform'] ?? 'red social',
+                  },
+                ),
                 style: const TextStyle(color: Colors.white70, fontSize: 14),
               ),
 

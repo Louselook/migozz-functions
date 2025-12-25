@@ -51,7 +51,7 @@
       "registerEmail": "Este correo ya está registrado",
       "audioMinLimit": "El audio es muy corto (${durationInSeconds.toStringAsFixed(1)}s). Debe durar entre 1 y 10 segundos.",
       "audioMaxLimit": "El audio es muy largo (${durationInSeconds.toStringAsFixed(1)}s). Debe durar entre 1 y 10 segundos.",
-      "picConfirmation": "✅ Foto de ${photo['platform']} seleccionada"
+      "picConfirmation": "✅ Foto de {platform} seleccionada"
     },
     "presentation": {
       "title": "¡Regístrate ahora!",
@@ -59,7 +59,7 @@
       "inputText": "Ingresa tu correo",
       "buttonText": "Crear cuenta",
       "social": "Aquí está la información extraída de sus redes sociales.",
-      "socialName": "Foto de ${photo['label'] ?? photo['platform'] ?? 'red social'}",
+      "socialName": "Foto de {platform}",
       "profilePic": "Usar esta foto",
       "bottonText": {
         "login": "¿Ya tienes una cuenta?",

@@ -38,12 +38,32 @@ Future<void> main() async {
           supportedLocales: const [Locale('en'), Locale('es')],
           path: 'assets/translations',
           fallbackLocale: const Locale('en'),
+          startLocale: _getStartLocale(),
           child: child!,
         );
       },
       child: const MyApp(),
-    )
+    ),
   );
+}
+
+/// ✅ Determina el locale inicial según el idioma del dispositivo
+Locale _getStartLocale() {
+  final platformLocale = WidgetsBinding.instance.platformDispatcher.locale;
+
+  // Si el idioma del dispositivo es español (cualquier variante)
+  if (platformLocale.languageCode == 'es') {
+    debugPrint(
+      '🌍 Idioma detectado: Español (${platformLocale.toLanguageTag()})',
+    );
+    return const Locale('es');
+  }
+
+  // Para CUALQUIER otro idioma (chino, japonés, alemán, francés, etc.)
+  debugPrint(
+    '🌍 Idioma detectado: ${platformLocale.toLanguageTag()} → usando English',
+  );
+  return const Locale('en');
 }
 
 class MyApp extends StatelessWidget {
@@ -51,78 +71,89 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: blocProviders,
-      child: Builder(
-        builder: (context) {
-          final goRouterNotifier = GoRouterNotifier(context.read<AuthCubit>());
-          final router = createRouter(goRouterNotifier);
+    // ✅ Crear providers usando la función que configura los callbacks
+    return Builder(
+      builder: (context) {
+        final providers = createBlocProviders(context);
 
-          ProfileDeeplinkService.setRouter(router);
+        return MultiBlocProvider(
+          providers: providers,
+          child: Builder(
+            builder: (context) {
+              final goRouterNotifier = GoRouterNotifier(
+                context.read<AuthCubit>(),
+              );
+              final router = createRouter(goRouterNotifier);
 
-          // Inicializar deeplinks solo en mobile
-          if (!kIsWeb) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              DeeplinkService.initialize(context);
-            });
-          }
+              ProfileDeeplinkService.setRouter(router);
 
-          return AppInitializer(
-            builder: (context, initResult) {
-              if (initResult?.location != null) {
-                context.read<RegisterCubit>().updateLocation(
-                  initResult!.location,
-                );
-              }
-
-              final deviceLocale = context.locale;
-              final deviceLang = deviceLocale.languageCode;
-              final langLabel = deviceLang == 'es' ? 'Español' : 'English';
-
-              GeminiService.instance.setLanguage(langLabel);
-
-              if (initResult?.location != null) {
-                // Navegar post-frame para esperar a que EasyLocalization y el árbol estén listos.
+              // Inicializar deeplinks solo en mobile
+              if (!kIsWeb) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
-                  try {
-                    final initialLocation =
-                        Uri.base.path; // ESTA ES LA RUTA QUE QUEREMOS
-
-                    // Evitamos navegar si es "/" o vacío
-                    if (initialLocation.isNotEmpty && initialLocation != "/") {
-                      debugPrint(
-                        "➡️ Deep link real detectado: $initialLocation",
-                      );
-                      router.go(initialLocation);
-                    }
-                  } catch (e, st) {
-                    debugPrint(
-                      "⚠️ Error al navegar al deep link inicial: $e\n$st",
-                    );
-                  }
+                  DeeplinkService.initialize(context);
                 });
               }
 
-              return NotificationInitializer(
-                child: MaterialApp.router(
-                  debugShowCheckedModeBanner: false,
-                  title: 'Migozz App',
-                  routerConfig: router, // 👈 ahora es estable
-                  theme: ThemeData(
-                    colorScheme: ColorScheme.fromSeed(
-                      seedColor: Colors.deepPurple,
+              return AppInitializer(
+                builder: (context, initResult) {
+                  if (initResult?.location != null) {
+                    context.read<RegisterCubit>().updateLocation(
+                      initResult!.location,
+                    );
+                  }
+
+                  // ✅ Configurar idioma para Gemini
+                  final deviceLocale = context.locale;
+                  final langLabel = deviceLocale.languageCode == 'es'
+                      ? 'Español'
+                      : 'English';
+
+                  debugPrint('🌐 Configurando Gemini con idioma: $langLabel');
+                  GeminiService.instance.setLanguage(langLabel);
+
+                  // Manejar deep links iniciales
+                  if (initResult?.location != null) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      try {
+                        final initialLocation = Uri.base.path;
+
+                        if (initialLocation.isNotEmpty &&
+                            initialLocation != "/") {
+                          debugPrint(
+                            "➡️ Deep link detectado: $initialLocation",
+                          );
+                          router.go(initialLocation);
+                        }
+                      } catch (e, st) {
+                        debugPrint(
+                          "⚠️ Error al navegar al deep link inicial: $e\n$st",
+                        );
+                      }
+                    });
+                  }
+
+                  return NotificationInitializer(
+                    child: MaterialApp.router(
+                      debugShowCheckedModeBanner: false,
+                      title: 'Migozz App',
+                      routerConfig: router,
+                      theme: ThemeData(
+                        colorScheme: ColorScheme.fromSeed(
+                          seedColor: Colors.deepPurple,
+                        ),
+                        useMaterial3: true,
+                      ),
+                      localizationsDelegates: context.localizationDelegates,
+                      supportedLocales: context.supportedLocales,
+                      locale: context.locale,
                     ),
-                    useMaterial3: true,
-                  ),
-                  localizationsDelegates: context.localizationDelegates,
-                  supportedLocales: context.supportedLocales,
-                  locale: context.locale,
-                ),
+                  );
+                },
               );
             },
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }

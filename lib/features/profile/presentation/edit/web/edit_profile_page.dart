@@ -131,14 +131,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
       AlertGeneral.show(
         context,
         1,
-        message:
-            "edit.validations.updateLocation".tr().replaceAll(
-              "\${newLocation.city}",
-              newLocation.city,
-            ).replaceAll(
-              "\${newLocation.country}",
-              newLocation.country,
-            ),
+        message: "edit.validations.updateLocation"
+            .tr()
+            .replaceAll("\${newLocation.city}", newLocation.city)
+            .replaceAll("\${newLocation.country}", newLocation.country),
       );
     }
   }
@@ -376,7 +372,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
           child: SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: () async => FirebaseAuth.instance.signOut(),
+              onPressed: () async {
+                await context.read<AuthCubit>().logout();
+              },
               icon: const Icon(Icons.logout, color: Colors.white),
               label: Text(
                 'edit.presentation.logOut'.tr(),

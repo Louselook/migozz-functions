@@ -381,7 +381,7 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
                                           bottom: 12,
                                         ),
                                         child: _DataCard(
-                                          iconKey: name, 
+                                          iconKey: name,
                                           title: name,
                                           rows: filteredEntries.map((e) {
                                             final displayKey = _applyFieldRules(
@@ -408,14 +408,6 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
               ),
             ),
           ),
-          // Align(
-          //   alignment: Alignment.bottomCenter,
-          //   child: GradientBottomNav(
-          //     currentIndex: _tab,
-          //     onItemSelected: (i) => setState(() => _tab = i),
-          //     onCenterTap: () async => await FirebaseAuth.instance.signOut(),
-          //   ),
-          // ),
         ],
       ),
     );
@@ -528,16 +520,13 @@ class _DataCard extends StatelessWidget {
   final String? iconKey; // clave lógica (instagram, twitter, etc)
   final List<_RowData> rows;
 
-  const _DataCard({
-    required this.title,
-    required this.rows,
-    this.iconKey,
-  });
+  const _DataCard({required this.title, required this.rows, this.iconKey});
 
   @override
   Widget build(BuildContext context) {
-    final String? iconPath =
-        iconKey != null ? SocialIconResolver.resolve(iconKey!) : null;
+    final String? iconPath = iconKey != null
+        ? SocialIconResolver.resolve(iconKey!)
+        : null;
 
     return Card(
       color: Colors.grey[900],
@@ -551,11 +540,7 @@ class _DataCard extends StatelessWidget {
             Row(
               children: [
                 if (iconPath != null)
-                  SvgPicture.asset(
-                    iconPath,
-                    width: 22,
-                    height: 22,
-                  ),
+                  SvgPicture.asset(iconPath, width: 22, height: 22),
                 if (iconPath != null) const SizedBox(width: 8),
                 Text(
                   title,
@@ -574,7 +559,6 @@ class _DataCard extends StatelessWidget {
     );
   }
 }
-
 
 class _RowData extends StatelessWidget {
   final String label, value;

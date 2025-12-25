@@ -563,7 +563,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ProfileOptionButton(
                           icon: Icons.logout,
                           text: 'edit.presentation.logOut'.tr(),
-                          onTap: () async => FirebaseAuth.instance.signOut(),
+                          onTap: () async {
+                            await context.read<AuthCubit>().logout();
+                          },
                         ),
 
                         SizedBox(height: height * 0.03),
