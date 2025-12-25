@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:migozz_app/core/assets_constants.dart';
@@ -11,6 +12,8 @@ class ProfileImageMobileV3 extends StatelessWidget {
   final Size size;
   final double? height;
   final int minHeight;
+  final bool isOwnProfile;
+  final VoidCallback? onTapAddCover;
 
   const ProfileImageMobileV3({
     super.key,
@@ -18,6 +21,8 @@ class ProfileImageMobileV3 extends StatelessWidget {
     required this.size,
     this.height,
     this.minHeight = 600,
+    this.isOwnProfile = false,
+    this.onTapAddCover,
   });
 
   bool _isSvg(String? url) =>
@@ -145,21 +150,72 @@ class ProfileImageMobileV3 extends StatelessWidget {
     );
   }
 
-    Widget _buildPlaceholderOverlay() {
-    return Align(
-      alignment: const Alignment(0, 0), 
-      child: SizedBox(
-        width: size.width,  
-        height: size.width,
-        child: SvgPicture.asset(
-          AssetsConstants.placeholderIcon,
-          fit: BoxFit.contain,
-          colorFilter: const ColorFilter.mode(
-            Colors.black,
-            BlendMode.srcIn,
+  Widget _buildPlaceholderOverlay() {
+    return Stack(
+      children: [
+        Align(
+          alignment: const Alignment(0, 0),
+          child: SizedBox(
+            width: size.width,
+            height: size.width,
+            child: SvgPicture.asset(
+              AssetsConstants.placeholderIcon,
+              fit: BoxFit.contain,
+              colorFilter: const ColorFilter.mode(
+                Colors.black,
+                BlendMode.srcIn,
+              ),
+            ),
           ),
         ),
-      ),
+        // Empty state overlay for own profile
+        if (isOwnProfile)
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: onTapAddCover,
+              child: Container(
+                color: Colors.black.withValues(alpha: 0.3),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.add_photo_alternate_outlined,
+                          color: Colors.white,
+                          size: 32,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'profile.customization.coverImage.add'.tr(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'profile.customization.coverImage.subtitle'.tr(),
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.7),
+                          fontSize: 11,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
