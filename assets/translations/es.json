@@ -261,6 +261,11 @@
         "title": "Formulario de contacto por correo electrónico",
         "subtitle": "Los visitantes pueden compartir su correo electrónico contigo a través de un formulario de contacto en tu perfil."
       },
+      "coverImage": {
+        "add": "Agregar portada",
+        "subtitle": "Haz que tu enlace sea instantáneamente reconocible",
+        "success": "Portada agregada"
+      },
       "bio": {
         "title": "Editar biografía",
         "add": "Toca para añadir tu biografía",
