@@ -27,6 +27,9 @@ Future<void> main() async {
   await dotenv.load(fileName: ".env");
   SocialAuthService().init();
 
+  // ✅ Inicializar providers ANTES de runApp
+  initializeBlocProviders();
+
   setPathUrlStrategy();
   runApp(
     ScreenUtilInit(
@@ -71,89 +74,78 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ Crear providers usando la función que configura los callbacks
-    return Builder(
-      builder: (context) {
-        final providers = createBlocProviders(context);
+    // ✅ Usar providers estáticos que se crearon UNA SOLA VEZ
+    return MultiBlocProvider(
+      providers: blocProviders,
+      child: Builder(
+        builder: (context) {
+          final goRouterNotifier = GoRouterNotifier(context.read<AuthCubit>());
+          final router = createRouter(goRouterNotifier);
 
-        return MultiBlocProvider(
-          providers: providers,
-          child: Builder(
-            builder: (context) {
-              final goRouterNotifier = GoRouterNotifier(
-                context.read<AuthCubit>(),
-              );
-              final router = createRouter(goRouterNotifier);
+          ProfileDeeplinkService.setRouter(router);
 
-              ProfileDeeplinkService.setRouter(router);
+          // Inicializar deeplinks solo en mobile
+          if (!kIsWeb) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              DeeplinkService.initialize(context);
+            });
+          }
 
-              // Inicializar deeplinks solo en mobile
-              if (!kIsWeb) {
+          return AppInitializer(
+            builder: (context, initResult) {
+              if (initResult?.location != null) {
+                context.read<RegisterCubit>().updateLocation(
+                  initResult!.location,
+                );
+              }
+
+              // ✅ Configurar idioma para Gemini
+              final deviceLocale = context.locale;
+              final langLabel = deviceLocale.languageCode == 'es'
+                  ? 'Español'
+                  : 'English';
+
+              debugPrint('🌐 Configurando Gemini con idioma: $langLabel');
+              GeminiService.instance.setLanguage(langLabel);
+
+              // Manejar deep links iniciales
+              if (initResult?.location != null) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
-                  DeeplinkService.initialize(context);
+                  try {
+                    final initialLocation = Uri.base.path;
+
+                    if (initialLocation.isNotEmpty && initialLocation != "/") {
+                      debugPrint("➡️ Deep link detectado: $initialLocation");
+                      router.go(initialLocation);
+                    }
+                  } catch (e, st) {
+                    debugPrint(
+                      "⚠️ Error al navegar al deep link inicial: $e\n$st",
+                    );
+                  }
                 });
               }
 
-              return AppInitializer(
-                builder: (context, initResult) {
-                  if (initResult?.location != null) {
-                    context.read<RegisterCubit>().updateLocation(
-                      initResult!.location,
-                    );
-                  }
-
-                  // ✅ Configurar idioma para Gemini
-                  final deviceLocale = context.locale;
-                  final langLabel = deviceLocale.languageCode == 'es'
-                      ? 'Español'
-                      : 'English';
-
-                  debugPrint('🌐 Configurando Gemini con idioma: $langLabel');
-                  GeminiService.instance.setLanguage(langLabel);
-
-                  // Manejar deep links iniciales
-                  if (initResult?.location != null) {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      try {
-                        final initialLocation = Uri.base.path;
-
-                        if (initialLocation.isNotEmpty &&
-                            initialLocation != "/") {
-                          debugPrint(
-                            "➡️ Deep link detectado: $initialLocation",
-                          );
-                          router.go(initialLocation);
-                        }
-                      } catch (e, st) {
-                        debugPrint(
-                          "⚠️ Error al navegar al deep link inicial: $e\n$st",
-                        );
-                      }
-                    });
-                  }
-
-                  return NotificationInitializer(
-                    child: MaterialApp.router(
-                      debugShowCheckedModeBanner: false,
-                      title: 'Migozz App',
-                      routerConfig: router,
-                      theme: ThemeData(
-                        colorScheme: ColorScheme.fromSeed(
-                          seedColor: Colors.deepPurple,
-                        ),
-                        useMaterial3: true,
-                      ),
-                      localizationsDelegates: context.localizationDelegates,
-                      supportedLocales: context.supportedLocales,
-                      locale: context.locale,
+              return NotificationInitializer(
+                child: MaterialApp.router(
+                  debugShowCheckedModeBanner: false,
+                  title: 'Migozz App',
+                  routerConfig: router,
+                  theme: ThemeData(
+                    colorScheme: ColorScheme.fromSeed(
+                      seedColor: Colors.deepPurple,
                     ),
-                  );
-                },
+                    useMaterial3: true,
+                  ),
+                  localizationsDelegates: context.localizationDelegates,
+                  supportedLocales: context.supportedLocales,
+                  locale: context.locale,
+                ),
               );
             },
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }

@@ -9,15 +9,15 @@ import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cu
 import 'package:migozz_app/features/profile/data/datasources/user_service.dart';
 import 'package:migozz_app/injection.dart';
 
-/// Crea los providers globales de la app con callbacks configurados
-List<BlocProvider> createBlocProviders(BuildContext context) {
-  // ✅ Crear instancias de los cubits
-  final loginCubit = LoginCubit();
-  final registerCubit = RegisterCubit(locator<LocationService>());
-  final authCubit = AuthCubit(locator<AuthUseCases>(), locator<UserService>());
-  late final EditCubit editCubit;
+// ✅ Crear instancias de los cubits ANTES de los providers
+final loginCubit = LoginCubit();
+final registerCubit = RegisterCubit(locator<LocationService>());
+final authCubit = AuthCubit(locator<AuthUseCases>(), locator<UserService>());
+late final EditCubit editCubit;
 
-  // ✅ Configurar callback de logout en AuthCubit
+// ✅ Inicializar los cubits y configurar callbacks
+void initializeBlocProviders() {
+  // Configurar callback de logout en AuthCubit
   authCubit.onLogoutRequested = () {
     debugPrint('🧹 [Logout] Limpiando LoginCubit...');
     loginCubit.resetState();
@@ -31,13 +31,14 @@ List<BlocProvider> createBlocProviders(BuildContext context) {
     debugPrint('✅ [Logout] Todos los cubits limpiados');
   };
 
-  // ✅ Crear EditCubit después de configurar el callback
+  // Crear EditCubit después de configurar el callback
   editCubit = EditCubit(locator<UserService>(), authCubit);
-
-  return [
-    BlocProvider<AuthCubit>(create: (_) => authCubit),
-    BlocProvider<LoginCubit>(create: (_) => loginCubit),
-    BlocProvider<RegisterCubit>(create: (_) => registerCubit),
-    BlocProvider<EditCubit>(create: (_) => editCubit),
-  ];
 }
+
+/// Lista de providers globales de la app - ESTÁTICA, creada UNA SOLA VEZ
+final List<BlocProvider> blocProviders = [
+  BlocProvider<AuthCubit>(create: (_) => authCubit),
+  BlocProvider<LoginCubit>(create: (_) => loginCubit),
+  BlocProvider<RegisterCubit>(create: (_) => registerCubit),
+  BlocProvider<EditCubit>(create: (_) => editCubit),
+];

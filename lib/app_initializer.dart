@@ -1,9 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/location_dto.dart';
-import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
-import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
 import 'package:migozz_app/features/splash/splash_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:migozz_app/features/auth/services/location_service.dart';
@@ -99,7 +96,9 @@ class _AppInitializerState extends State<AppInitializer>
         }
         // If permanently denied or restricted, show settings dialog
         else if (locStatus.isPermanentlyDenied || locStatus.isRestricted) {
-          debugPrint('⛔ [LocationPermission] Permission permanently denied or restricted');
+          debugPrint(
+            '⛔ [LocationPermission] Permission permanently denied or restricted',
+          );
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (!mounted) return;
             _showLocationDeniedDialog(true);
@@ -108,7 +107,9 @@ class _AppInitializerState extends State<AppInitializer>
         }
         // If denied (including notDetermined), request permission (shows native dialog)
         else if (locStatus.isDenied) {
-          debugPrint('🔔 [LocationPermission] Requesting permission (status: denied/notDetermined)');
+          debugPrint(
+            '🔔 [LocationPermission] Requesting permission (status: denied/notDetermined)',
+          );
           finalLocStatus = await Permission.locationWhenInUse.request();
           debugPrint('📍 [LocationPermission] Request result: $finalLocStatus');
 
@@ -120,7 +121,9 @@ class _AppInitializerState extends State<AppInitializer>
               _showLocationDeniedDialog(false);
             });
           } else if (finalLocStatus.isPermanentlyDenied) {
-            debugPrint('⛔ [LocationPermission] Permission permanently denied after request');
+            debugPrint(
+              '⛔ [LocationPermission] Permission permanently denied after request',
+            );
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!mounted) return;
               _showLocationDeniedDialog(true);
@@ -129,7 +132,9 @@ class _AppInitializerState extends State<AppInitializer>
         }
         // Fallback: request permission
         else {
-          debugPrint('🔔 [LocationPermission] Fallback - requesting permission');
+          debugPrint(
+            '🔔 [LocationPermission] Fallback - requesting permission',
+          );
           finalLocStatus = await Permission.locationWhenInUse.request();
           debugPrint('📍 [LocationPermission] Request result: $finalLocStatus');
         }
@@ -226,16 +231,16 @@ class _AppInitializerState extends State<AppInitializer>
 
   @override
   Widget build(BuildContext context) {
-    // Mientras no haya permisos, muestra el splash
-    if (_result == null ||
-        context.read<AuthCubit>().state.status == AuthStatus.checking) {
+    // Solo espera a que se obtengan los permisos
+    // El AuthCubit ya se está inicializando en paralelo y el router maneja la navegación
+    if (_result == null) {
       return const MaterialApp(
         debugShowCheckedModeBanner: false,
         home: SplashScreen(),
       );
     }
 
-    //  Solo avanza si ya tiene permiso de ubicación
+    // Avanza solo cuando se obtuvieron los permisos
     return widget.builder(context, _result);
   }
 }
