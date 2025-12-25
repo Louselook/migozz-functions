@@ -266,7 +266,7 @@
         },
         "customization":{
           "uploadingProfilePicture": {
-            "title": "Upload",
+            "title": "Update avatar",
             "uploading": "Uploading",
             "success": "Profile picture updated successfully",
             "error": "Error updating profile picture:"
@@ -276,12 +276,23 @@
             "subtitle" : "Visitors can share their email with you through a contact form on your profile."
           },
           "profileStrength": {
-            "title": "Profile Strength"
+            "title": "Your link is",
+            "ready": "ready",
+            "subtitle": "Complete it to stand out"
+          },
+          "editButton": {
+            "tooltip": "Customize your link"
+          },
+          "coverImage": {
+            "addCover": "Add a cover",
+            "subtitle": "Make your link instantly recognizable",
+            "success": "Cover added"
           },
           "bio" : {
-            "title" : "Edit Bio",
-            "label": "Bio",
-            "add" : "Tap to add your bio.",
+            "title" : "About you",
+            "label": "About you",
+            "add" : "Tell visitors who you are in one line",
+            "editCta": "Edit bio",
             "hint": "Tell people about yourself...",
             "save" : "Save Bio",
             "success": "Bio updated successfully",
@@ -300,8 +311,10 @@
             "gallery": "Gallery"
           },
           "links": {
-            "title" : "Featured Links",
-            "add" : "+ Add link.",
+            "title" : "Your links",
+            "add" : "+ Add link",
+            "emptyTitle": "Your link is empty",
+            "emptySubtitle": "Add at least one link to get started",
             "sheetTitle": "Add Website Link",
             "labelHint": "Label (optional)",
             "urlHint": "https://example.com",
@@ -309,7 +322,7 @@
             "defaultLabel": "Website",
             "validationEmptyUrl": "Please enter a URL",
             "validationUrlFormat": "URL must start with http:// or https://",
-            "successAdd" : "Link added successfully",
+            "successAdd" : "Link added",
             "errorAdd" : "Error adding link:",
             "maximumLinks" : "Maximum 2 links allowed."
           },
@@ -330,7 +343,9 @@
             }
           },
           "contact": {
-            "title" : "Contact information",
+            "title" : "Get in touch",
+            "helperText": "Make it easy for people to reach you",
+            "addCta": "Add contact details",
             "website" : "Website",
             "number" : "Number",
             "email" : "Email",

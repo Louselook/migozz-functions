@@ -231,7 +231,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                     // Grid de fotos de perfil de redes sociales
                     SocialProfilePhotosGrid(
                       socialEcosystem: user.socialEcosystem,
-                    ),
+                    ),SizedBox(height: 100),
                   ],
                 ),
               ),

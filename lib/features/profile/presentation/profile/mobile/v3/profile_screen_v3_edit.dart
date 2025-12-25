@@ -100,7 +100,12 @@ class _MobileProfileContentV3EditState
             left: 0,
             right: 0,
             bottom: size.height * 0.40,
-            child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
+            child: ProfileImageMobileV3(
+              avatarUrl: avatarUrl,
+              size: size,
+              isOwnProfile: isOwnProfile,
+              onTapAddCover: _uploading ? null : _changeAvatar,
+            ),
           ),
 
           // 🔥 SCROLL REAL
@@ -203,7 +208,11 @@ class _MobileProfileContentV3EditState
                             ),
                             const SizedBox(height: 17),
 
-                            BioSection(bio: bio, isOwnProfile: isOwnProfile),
+                            BioSection(
+                              bio: bio,
+                              isOwnProfile: isOwnProfile,
+                              profilePercentage: _calculateProfileStrength(user),
+                            ),
 
                             const SizedBox(height: 10),
                             EmailContactFormSection(isOwnProfile: isOwnProfile),
@@ -305,8 +314,8 @@ class _MobileProfileContentV3EditState
     setState(() => _uploading = true);
 
     try {
-      await editCubit.changeAvatar(userId, context);
-      if (mounted) {
+      final wasChanged = await editCubit.changeAvatar(userId, context);
+      if (mounted && wasChanged) {
         AlertGeneral.show(
           context,
           1,
