@@ -244,6 +244,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
               child: SafeArea(
                 child: ProfileTopActions(
                   isOwnProfile: isOwnProfile,
+                  profilePercentage: _calculateProfileStrength(user),
                   onMenuTap: () {
                     if (isOwnProfile) {
                       Navigator.push(
@@ -445,6 +446,34 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
   String _faviconFromDomain(String domain) {
     if (domain.isEmpty) return '';
     return 'https://www.google.com/s2/favicons?domain=$domain&sz=128';
+  }
+
+  /// Calculate profile strength percentage
+  /// - 20% for at least 1 social media
+  /// - 20% for bio text
+  /// - 20% for profile picture
+  /// - 30% for interests
+  /// - 10% for category
+  int _calculateProfileStrength(UserDTO user) {
+    int strength = 0;
+
+    if (user.socialEcosystem != null && user.socialEcosystem!.isNotEmpty) {
+      strength += 20;
+    }
+    if (user.bio != null && user.bio!.trim().isNotEmpty) {
+      strength += 20;
+    }
+    if (user.avatarUrl != null && user.avatarUrl!.isNotEmpty) {
+      strength += 20;
+    }
+    if (user.interests.isNotEmpty) {
+      strength += 30;
+    }
+    if (user.category != null && user.category!.isNotEmpty) {
+      strength += 10;
+    }
+
+    return strength;
   }
 }
 
