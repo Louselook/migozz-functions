@@ -107,18 +107,24 @@ class EditCubit extends Cubit<EditCubitState> {
   }
 
   /// actualizar avatar
-  Future<void> changeAvatar(String userId, BuildContext context) async {
+  /// Returns true if avatar was changed, false if user cancelled
+  Future<bool> changeAvatar(String userId, BuildContext context) async {
     try {
       emit(state.copyWith(isSaving: true));
       final newUrl = await _userService.changeAvatar(userId, context);
 
       if (newUrl != null) {
         await _authCubit.refreshUserProfile();
+        emit(state.copyWith(isSaving: false, success: true));
+        return true;
       }
 
-      emit(state.copyWith(isSaving: false, success: true));
+      // User cancelled - no image selected
+      emit(state.copyWith(isSaving: false));
+      return false;
     } catch (e) {
       emit(state.copyWith(isSaving: false, error: e.toString()));
+      rethrow;
     }
   }
 
