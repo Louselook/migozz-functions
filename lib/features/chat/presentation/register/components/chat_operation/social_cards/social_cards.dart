@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:migozz_app/core/color.dart';
+import 'package:migozz_app/core/components/formart/text_formart.dart';
 
 class SocialCardMini extends StatelessWidget {
   final Map<String, dynamic> platformData;
@@ -113,29 +114,96 @@ class SocialCardMini extends StatelessWidget {
   }
 
   Widget dataCard() {
-    final items = {
-      "Followers": platformData["followers"],
-      "Following": platformData["following"],
-      "Likes": platformData["likes_count"],
-      "Content": platformData["mediaCount"],
-      "Views": platformData["viewCount"],
+    // Definir campos prioritarios por red social (en orden de relevancia)
+    final priorityMap = {
+      'tiktok': ['followers', 'likes', 'videos'],
+      'instagram': ['followers', 'mediaCount', 'following'],
+      'youtube': ['followers', 'viewCount', 'mediaCount'],
+      'twitter': ['followers', 'likes_count', 'mediaCount'],
+      'spotify': ['followers'],
+      'facebook': ['followers'],
+      'linkedin': ['followers', 'connections'],
+      'twitch': ['followers'],
+      'pinterest': ['followers', 'following'],
+      'reddit': ['followers', 'karma'],
+      'threads': ['followers', 'following'],
+      'soundcloud': ['followers', 'track_count'],
+      'kick': ['followers'],
+      'trovo': ['followers'],
     };
 
-    // Filtra los que no tienen valor
-    final validItems = items.entries.where((e) {
-      final v = e.value;
-      return v != null && v.toString().trim().isNotEmpty && v != 0;
-    });
+    // Obtener la red social (del label o de los datos)
+    final label = platformData["label"]?.toString().toLowerCase() ?? "";
+    final platformType = label.replaceAll(' ', '').toLowerCase();
+
+    // Obtener campos a mostrar (máximo 2 para mantener diseño limpio)
+    List<String> fieldsToShow = [];
+    final priorityFields = priorityMap[platformType] ?? [];
+
+    for (final field in priorityFields) {
+      if (platformData.containsKey(field) &&
+          platformData[field] != null &&
+          platformData[field] != 0) {
+        fieldsToShow.add(field);
+        if (fieldsToShow.length >= 2) break;
+      }
+    }
+
+    // Si no hay campos prioritarios, buscar el primero disponible
+    if (fieldsToShow.isEmpty) {
+      final metricsFields = [
+        'followers',
+        'following',
+        'likes',
+        'likes_count',
+        'mediaCount',
+        'viewCount',
+        'videos',
+        'karma',
+        'connections',
+        'track_count',
+      ];
+      for (final field in metricsFields) {
+        if (platformData.containsKey(field) &&
+            platformData[field] != null &&
+            platformData[field] != 0) {
+          fieldsToShow.add(field);
+          if (fieldsToShow.length >= 2) break;
+        }
+      }
+    }
+
+    // Construir los datos a mostrar
+    final displayItems = fieldsToShow.map((field) {
+      final value = platformData[field];
+      final displayLabel = _formatFieldLabel(field);
+      return "$displayLabel: ${formatNumber(value)}";
+    }).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: validItems
-          .map((e) => customCardTeext("${e.key}: ${e.value}"))
-          .toList(),
+      children: displayItems.map((text) => customCardText(text)).toList(),
     );
   }
 
-  Widget customCardTeext(String text) {
+  /// Formatea nombres de campos de manera legible
+  String _formatFieldLabel(String field) {
+    const labelMap = {
+      'followers': 'Followers',
+      'following': 'Following',
+      'likes': 'Likes',
+      'likes_count': 'Likes',
+      'mediaCount': 'Content',
+      'videos': 'Videos',
+      'viewCount': 'Views',
+      'connections': 'Connections',
+      'track_count': 'Tracks',
+      'karma': 'Karma',
+    };
+    return labelMap[field] ?? field;
+  }
+
+  Widget customCardText(String text) {
     return Text(
       text,
       style: TextStyle(color: AppColors.backgroundLight, fontSize: 10),
