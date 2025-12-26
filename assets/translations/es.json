@@ -269,6 +269,7 @@
       "bio": {
         "title": "Editar biografía",
         "add": "Toca para añadir tu biografía",
+        "editCta": "Editar tu biografía",
         "hint": "Cuéntale a la gente sobre ti...",
         "save": "Guardar biografía",
         "label": "Bio",
