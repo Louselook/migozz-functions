@@ -92,7 +92,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   Future<void> _confirmAndChangeLocation(String email) async {
     final svc = LocationService();
-    final newLocation = await svc.initAndFetchAddress();
+    final newLocation = await svc.initAndFetchAddress(
+      lang: context.locale.languageCode == 'es' ? 'es' : 'en',
+    );
     if (newLocation == null) {
       if (!mounted) return;
       AlertGeneral.show(

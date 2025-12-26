@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/location_dto.dart';
 import 'package:migozz_app/features/splash/splash_screen.dart';
@@ -32,12 +33,21 @@ class _AppInitializerState extends State<AppInitializer>
     with WidgetsBindingObserver {
   AppInitResult? _result;
   bool _isInitializing = false; //  Flag para evitar solicitudes concurrentes
+  bool _hasInitialized = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _runInit();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_hasInitialized) {
+      _hasInitialized = true;
+      _runInit();
+    }
   }
 
   @override
@@ -76,6 +86,7 @@ class _AppInitializerState extends State<AppInitializer>
       bool microphoneGranted = false;
       bool locationGranted = false;
       LocationDTO? locationDto;
+      final lang = context.locale.languageCode == 'es' ? 'es' : 'en';
 
       if (!kIsWeb) {
         //  Solo en móvil o desktop
@@ -144,7 +155,7 @@ class _AppInitializerState extends State<AppInitializer>
           locationGranted = true;
           try {
             final svc = LocationService();
-            locationDto = await svc.initAndFetchAddress();
+            locationDto = await svc.initAndFetchAddress(lang: lang);
           } catch (e) {
             debugPrint('❌ Error al obtener ubicación: $e');
           }
@@ -158,7 +169,7 @@ class _AppInitializerState extends State<AppInitializer>
 
         try {
           final svc = LocationService();
-          locationDto = await svc.initAndFetchAddress();
+          locationDto = await svc.initAndFetchAddress(lang: lang);
         } catch (e) {
           debugPrint('❌ Error obteniendo ubicación en web: $e');
         }

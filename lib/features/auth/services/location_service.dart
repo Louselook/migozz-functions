@@ -9,7 +9,7 @@ import 'package:migozz_app/features/auth/data/domain/models/user/location_dto.da
 class LocationService {
   final loc.Location _location = loc.Location();
 
-  Future<LocationDTO?> initAndFetchAddress() async {
+  Future<LocationDTO?> initAndFetchAddress({required String lang}) async {
     double? lat;
     double? lon;
 
@@ -68,7 +68,10 @@ class LocationService {
 
       // Llamar a tu API
       final uri = Uri.parse(
-        "${ApiConfig.apiBase}/users/location?lat=$lat&lon=$lon",
+        "${ApiConfig.apiBase}/users/location"
+        "?lat=$lat"
+        "&lon=$lon"
+        "&lang=${lang == 'es' ? 'es' : 'en'}",
       );
 
       final response = await http.get(uri);
