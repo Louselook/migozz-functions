@@ -40,7 +40,18 @@ class _AddContactInfoBottomSheetState extends State<AddContactInfoBottomSheet> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.currentValue ?? '');
+    // For website, pre-fill https:// if no current value
+    String initialValue;
+    if (widget.type == ContactType.website) {
+      if (widget.currentValue != null && widget.currentValue!.isNotEmpty) {
+        initialValue = widget.currentValue!;
+      } else {
+        initialValue = 'https://';
+      }
+    } else {
+      initialValue = widget.currentValue ?? '';
+    }
+    _controller = TextEditingController(text: initialValue);
   }
 
   @override

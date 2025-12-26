@@ -290,7 +290,8 @@
         "save": "Guardar enlace",
         "defaultLabel": "Sitio web",
         "validationEmptyUrl": "Ingresa una URL",
-        "validationUrlFormat": "La URL debe comenzar con http:// o https://"
+        "validationUrlFormat": "La URL debe comenzar con http:// o https://",
+        "validationInvalidUrl": "Formato de enlace inválido. Ingresa un sitio web válido (ej., www.ejemplo.com)"
       },
       "contact": {
         "title": "Información de contacto",
@@ -555,8 +556,8 @@
     }
   },
   "share": {
-    "title": "Mira el perfil de {{displayName}} en Migozz: {{link}}",
-    "subject": "Perfil de {{displayName}}",
+    "title": "🚀 ¡Hey! Conecta con @{displayName} en Migozz - donde todo su contenido vive en un solo lugar! 🔗\n\n{link}\n\n#Migozz #LinkInBio",
+    "subject": "🌟 Perfil de {displayName} en Migozz",
     "label": "Compartir perfil",
     "customization": {
       "emoji": "Emoji",
