@@ -70,40 +70,42 @@ class SocialCardMini extends StatelessWidget {
         color: Colors.grey[850],
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: SizedBox(
-          width: 200, // ancho fijo igual para todas
-          child: Row(
-            children: [
-              if (iconPath.isNotEmpty)
-                iconPath.endsWith('.svg')
-                    ? SvgPicture.asset(iconPath, width: 100, height: 100)
-                    : Image.asset(iconPath, width: 100, height: 100),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    label,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+          width: 200, // ancho fijo
+          height: 80,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                if (iconPath.isNotEmpty)
+                  iconPath.endsWith('.svg')
+                      ? SvgPicture.asset(iconPath, width: 40, height: 40)
+                      : Image.asset(iconPath, width: 40, height: 40),
+
+                const SizedBox(width: 10),
+
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
                     ),
-                  ),
-                  if (followers != null) ...[
-                    const SizedBox(height: 4),
-                    dataCard(),
-                    // Text(
-                    //   followers,
-                    //   style: TextStyle(
-                    //     color: Colors.white.withValues(alpha: 0.8),
-                    //     fontSize: 12,
-                    //   ),
-                    //   textAlign: TextAlign.center,
-                    // ),
+                    if (followers != null) ...[
+                      const SizedBox(height: 4),
+                      dataCard(),
+                    ],
                   ],
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
