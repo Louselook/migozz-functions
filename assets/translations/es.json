@@ -280,6 +280,8 @@
         "add": "+ Añadir enlace.",
         "successAdd": "Enlace añadido correctamente",
         "errorAdd": "Error al añadir el enlace:",
+        "emptyTitle": "Tu enlace esta vacio",
+        "emptySubtitle": "Añade al menos un enlace para comenzar",
         "maximumLinks": "Se permiten un máximo de 2 enlaces.",
         "sheetTitle": "Agregar enlace de sitio web",
         "labelHint": "Etiqueta (opcional)",
@@ -291,6 +293,8 @@
       },
       "contact": {
         "title": "Información de contacto",
+        "helperText": "Haz que sea fácil encontrarte",
+        "addCta": "+ Añadir información de contacto",
         "website": "Sitio web",
         "number": "Número",
         "email": "Correo electrónico",
@@ -320,7 +324,9 @@
         }
       },
       "profileStrength": {
-        "title": "Fuerza del perfil"
+        "title": "Fuerza del perfil",
+        "ready": "Listo",
+        "subtitle": "Completalo para destacar"
       },
       "customLink": {
         "title": "Icono de enlace personalizado",
