@@ -265,15 +265,55 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
   String _buildUrl(String username) =>
       '$_baseProfileUrl/${username.toLowerCase()}';
 
-  void _shareProfile(_ProfileData data) {
-    Share.share(
-      'share.title'.tr(
+  Future<void> _shareProfile(_ProfileData data) async {
+    try {
+      // Capture the screenshot
+      RenderRepaintBoundary boundary =
+          _screenshotKey.currentContext!.findRenderObject()
+              as RenderRepaintBoundary;
+      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      ByteData? byteData = await image.toByteData(
+        format: ui.ImageByteFormat.png,
+      );
+      Uint8List pngBytes = byteData!.buffer.asUint8List();
+
+      final shareMessage = 'share.title'.tr(
         namedArgs: {'displayName': data.displayName, 'link': data.link},
-      ),
-      subject: 'share.subject'.tr(
+      );
+      final shareSubject = 'share.subject'.tr(
         namedArgs: {'displayName': data.displayName},
-      ),
-    );
+      );
+
+      if (kIsWeb) {
+        // For web, just share the text with link
+        Share.share(shareMessage, subject: shareSubject);
+      } else {
+        // Mobile: Save to temp directory and share with image
+        final directory = await getApplicationDocumentsDirectory();
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        final imagePath = '${directory.path}/migozz_qr_share_$timestamp.png';
+        final imageFile = File(imagePath);
+        await imageFile.writeAsBytes(pngBytes);
+
+        // Share the image with message
+        await Share.shareXFiles(
+          [XFile(imagePath)],
+          text: shareMessage,
+          subject: shareSubject,
+        );
+      }
+    } catch (e) {
+      debugPrint('Error sharing profile: $e');
+      // Fallback to text-only share
+      Share.share(
+        'share.title'.tr(
+          namedArgs: {'displayName': data.displayName, 'link': data.link},
+        ),
+        subject: 'share.subject'.tr(
+          namedArgs: {'displayName': data.displayName},
+        ),
+      );
+    }
   }
 
   // Toggle between modes

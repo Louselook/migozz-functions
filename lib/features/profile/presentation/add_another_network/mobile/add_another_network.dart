@@ -21,7 +21,7 @@ class AddAnotherNetworkScreen extends StatefulWidget {
 }
 
 class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
-  final TextEditingController _linkCtrl = TextEditingController();
+  final TextEditingController _linkCtrl = TextEditingController(text: 'https://');
 
   File? _pickedImage;
   String? _pickedImageUrl;

@@ -322,6 +322,7 @@
             "defaultLabel": "Website",
             "validationEmptyUrl": "Please enter a URL",
             "validationUrlFormat": "URL must start with http:// or https://",
+            "validationInvalidUrl": "Invalid link format. Enter a valid website (e.g., www.example.com)",
             "successAdd" : "Link added",
             "errorAdd" : "Error adding link:",
             "maximumLinks" : "Maximum 2 links allowed."
@@ -567,8 +568,8 @@
         }
     },
     "share" : {
-        "title" : "Check out {{displayName}} on Migozz: {{link}}",
-        "subject" : "Profile of {{displayName}}",
+        "title" : "🚀 Hey! Connect with @{displayName} on Migozz - where all their content lives in one place! 🔗\n\n{link}\n\n#Migozz #LinkInBio",
+        "subject" : "🌟 {displayName}'s Migozz Profile",
         "label" : "Share Profile",
         "customization": {
             "emoji": "Emoji",
