@@ -85,16 +85,9 @@ class ChatListItem extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 4),
-                      // Username pequeño
-                      Text(
-                        '@${chat.username}',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 14,
-                          fontWeight: FontWeight.normal,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
+                      // 🆕 Icono de bloqueado
+                      if (chat.isBlocked)
+                        const Icon(Icons.block, color: Colors.red, size: 14),
                       // Badge de verificado
                       if (chat.isVerified)
                         const Icon(
@@ -173,21 +166,21 @@ class ChatListItem extends StatelessWidget {
                     ),
                   ),
                 ),
-              )
-            else
-              // Botón de cámara (solo si no hay no leídos)
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.grey[900],
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.camera_alt,
-                  color: Colors.grey[400],
-                  size: 20,
-                ),
               ),
+            // else
+            //   // Botón de cámara (solo si no hay no leídos)
+            //   Container(
+            //     padding: const EdgeInsets.all(8),
+            //     decoration: BoxDecoration(
+            //       color: Colors.grey[900],
+            //       shape: BoxShape.circle,
+            //     ),
+            //     child: Icon(
+            //       Icons.camera_alt,
+            //       color: Colors.grey[400],
+            //       size: 20,
+            //     ),
+            //   ),
           ],
         ),
       ),

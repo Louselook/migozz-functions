@@ -58,14 +58,20 @@ Future<Map<String, dynamic>?> processBotResponse(
     case RegisterStatusProgress.location:
       debugPrint('📍 [processBotResponse] Procesando ubicación');
       debugPrint('📍 [processBotResponse] isValid: $isValid');
-      debugPrint('📍 [processBotResponse] confirmLocation: ${resp['confirmLocation']}');
-      debugPrint('📍 [processBotResponse] emptyLocation: ${resp['emptyLocation']}');
-      
+      debugPrint(
+        '📍 [processBotResponse] confirmLocation: ${resp['confirmLocation']}',
+      );
+      debugPrint(
+        '📍 [processBotResponse] emptyLocation: ${resp['emptyLocation']}',
+      );
+
       // Opción 1: Usuario confirmó ubicación (Sí)
       if (resp['confirmLocation'] == true && isValid == true) {
         if (registerCubit.state.location != null) {
           registerCubit.confirmLocation();
-          debugPrint('✅ Ubicación confirmada: ${registerCubit.state.location!.city}, ${registerCubit.state.location!.country}');
+          debugPrint(
+            '✅ Ubicación confirmada: ${registerCubit.state.location!.city}, ${registerCubit.state.location!.country}',
+          );
           return null; // Sin errores, avanza al siguiente paso
         } else {
           debugPrint('⚠️ No hay ubicación para confirmar');
@@ -78,14 +84,14 @@ Future<Map<String, dynamic>?> processBotResponse(
           };
         }
       }
-      
       // Opción 2: Usuario rechazó usar ubicación (No)
       else if (resp['emptyLocation'] == true && isValid == true) {
         registerCubit.rejectLocation();
-        debugPrint('✅ Usuario rechazó ubicación - guardando LocationDTO.empty()');
+        debugPrint(
+          '✅ Usuario rechazó ubicación - guardando LocationDTO.empty()',
+        );
         return null; // Sin errores, avanza al siguiente paso
       }
-      
       // Opción 3: Ubicación incorrecta o respuesta inválida
       else if (isValid == false) {
         debugPrint('⚠️ Ubicación incorrecta o respuesta inválida');
@@ -93,7 +99,6 @@ Future<Map<String, dynamic>?> processBotResponse(
         // GeminiService se encargará de mostrarlo
         return null;
       }
-      
       // Caso inesperado
       else {
         debugPrint('⚠️ Caso de ubicación no manejado');
@@ -107,6 +112,18 @@ Future<Map<String, dynamic>?> processBotResponse(
       }
 
     case RegisterStatusProgress.sendOTP:
+      // Caso 1: Usuario quiere cambiar email (dijo "No")
+      if (resp['changeEmail'] == true) {
+        debugPrint('📝 Usuario solicitó cambiar email');
+        return {
+          "changeEmail": true,
+          "message": registerCubit.state.language == 'Español'
+              ? "De acuerdo, ingresa tu nuevo correo electrónico"
+              : "Okay, please enter your new email address",
+        };
+      }
+
+      // Caso 2: Usuario confirmó el email (dijo "Sí")
       if (isValid == true) {
         // Usuario confirmó el email
         if (registerCubit.state.email != null) {
@@ -134,13 +151,42 @@ Future<Map<String, dynamic>?> processBotResponse(
           }
         }
       } else {
-        // Usuario quiere cambiar email
-        debugPrint('📝 Usuario solicitó cambiar email');
+        // Respuesta inválida
+        debugPrint('❌ Respuesta inválida en sendOTP');
         return {
-          "changeEmail": true,
-          "message": "De acuerdo, ingresa tu nuevo correo electrónico",
+          "error": true,
+          "message": registerCubit.state.language == 'Español'
+              ? "Por favor responde 'Sí' o 'No'."
+              : "Please answer 'Yes' or 'No'.",
         };
       }
+      break;
+
+    case RegisterStatusProgress.emailChange:
+      if (isValid == true && userResponse != null) {
+        // Guardar el nuevo email
+        final newEmail = userResponse.trim();
+        registerCubit.setEmail(newEmail);
+        debugPrint('✅ Nuevo email guardado: $newEmail');
+
+        // Retornar indicador para que se vuelva a pedir confirmación
+        return {
+          "emailChanged": true,
+          "message": registerCubit.state.language == 'Español'
+              ? "¡Perfecto! Verificaremos tu nuevo correo."
+              : "Perfect! We'll verify your new email.",
+        };
+      } else {
+        // Email inválido
+        final isSpanish = registerCubit.state.language == 'Español';
+        return {
+          "error": true,
+          "message": isSpanish
+              ? "❌ Por favor ingresa un correo electrónico válido."
+              : "❌ Please enter a valid email address.",
+        };
+      }
+      // ignore: dead_code
       break;
 
     case RegisterStatusProgress.emailVerification:
@@ -151,7 +197,56 @@ Future<Map<String, dynamic>?> processBotResponse(
           return null; // No hacer nada, solo permitir avanzar
         }
 
-        // Validar OTP normalmente
+        // Opción 1: Usuario quiere reenviar código
+        if (resp['resendCode'] == true) {
+          debugPrint('📧 Usuario solicitó reenviar código OTP');
+          if (registerCubit.state.email != null) {
+            try {
+              debugPrint('📧 Reenviando OTP a: ${registerCubit.state.email}');
+              final result = await sendOTP(email: registerCubit.state.email!);
+
+              if (result['sent'] == true) {
+                registerCubit.setCurrentOTP(result['myOTP']);
+                debugPrint('✅ OTP reenviado: ${result['myOTP']}');
+                return {
+                  "otpResent": true,
+                  "message": registerCubit.state.language == 'Español'
+                      ? "✅ Código reenviado a tu correo. Intenta nuevamente."
+                      : "✅ Code resent to your email. Try again.",
+                };
+              } else {
+                debugPrint('❌ Fallo al reenviar OTP');
+                return {
+                  "error": true,
+                  "message": registerCubit.state.language == 'Español'
+                      ? "Error al reenviar el código. Intenta nuevamente."
+                      : "Error resending code. Please try again.",
+                };
+              }
+            } catch (e) {
+              debugPrint('❌ Error reenviando OTP: $e');
+              return {
+                "error": true,
+                "message": registerCubit.state.language == 'Español'
+                    ? "Error de conexión. Verifica tu internet."
+                    : "Connection error. Check your internet.",
+              };
+            }
+          }
+        }
+
+        // Opción 2: Usuario quiere cambiar correo desde la pantalla de OTP
+        if (resp['changeEmailFromOTP'] == true) {
+          debugPrint('📧 Usuario solicitó cambiar email desde pantalla de OTP');
+          return {
+            "changeEmailFromOTP": true,
+            "message": registerCubit.state.language == 'Español'
+                ? "De acuerdo, ingresa tu nuevo correo electrónico"
+                : "Okay, please enter your new email address",
+          };
+        }
+
+        // Opción 3: Validar OTP normalmente
         final storedOTP = registerCubit.state.currentOTP;
 
         debugPrint(
@@ -195,7 +290,11 @@ Future<Map<String, dynamic>?> processBotResponse(
 
     case RegisterStatusProgress.voiceNoteUrl:
       // El audio ya fue confirmado y guardado por el handler
-      if (userResponse != null && userResponse.isNotEmpty) {
+      // Si el usuario hizo Skip, no hay archivo de audio pero es válido
+      if (userResponse?.toLowerCase() == 'skip') {
+        debugPrint('⏭️ Usuario skipeo la nota de voz');
+        // Skip es válido, no requerir archivo de audio
+      } else if (userResponse != null && userResponse.isNotEmpty) {
         // Verificar que el archivo existe en el cubit
         final voiceFile = registerCubit.voiceNoteFile;
 
@@ -240,6 +339,7 @@ RegisterStatusProgress _parseStep(String raw) {
   // }
   if (raw.contains('location')) return RegisterStatusProgress.location;
   if (raw.contains('sendotp')) return RegisterStatusProgress.sendOTP;
+  if (raw.contains('emailchange')) return RegisterStatusProgress.emailChange;
 
   // IMPORTANTE: emailSuccess también mapea a emailVerification
   // porque ambos manejan el flujo de verificación de email

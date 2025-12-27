@@ -10,7 +10,6 @@ final Map<String, Map<String, dynamic>> questionsEs = {
   //   "keepTalk": false,
   //   "keyboardType": "text",
   // },
-
   "fullName": {
     "text": "¡Genial! Continuemos en Español. ¿Cuál es tu nombre completo?",
     "options": [],
@@ -35,14 +34,13 @@ final Map<String, Map<String, dynamic>> questionsEs = {
   //   "keepTalk": false,
   //   "keyboardType": "text",
   // },
-
-  // "socialEcosystem": {
-  //   "text": "¡Agreguemos tus plataformas sociales!",
-  //   "options": [],
-  //   "step": "regProgress.socialEcosystem",
-  //   "keepTalk": false,
-  //   "action": 0,
-  // },
+  "socialEcosystem": {
+    "text": "¡Agreguemos tus plataformas sociales!",
+    "options": [],
+    "step": "regProgress.socialEcosystem",
+    "keepTalk": false,
+    "action": 0,
+  },
 
   "location": {
     "text":
@@ -57,6 +55,14 @@ final Map<String, Map<String, dynamic>> questionsEs = {
     "options": ["Sí", "No"],
     "step": "regProgress.sendOTP",
     "keepTalk": false,
+  },
+
+  "emailChange": {
+    "text": "Por favor, ingresa tu nuevo correo electrónico:",
+    "options": [],
+    "step": "regProgress.emailChange",
+    "keepTalk": false,
+    "keyboardType": "email",
   },
 
   "emailVerification": {
@@ -87,7 +93,11 @@ final Map<String, Map<String, dynamic>> questionsEs = {
   "avatarUrl": {
     "text":
         "Personalicemos tu perfil. Puedes subir una nueva desde tu galeria o tomar una desde la camara. ¿Cuál prefieres? 📸",
-    "options": ["Saltar paso"],
+    "options": [
+      {"label": "Saltar", "action": "skip"},
+      {"label": "Tomar foto", "action": "open_camera"},
+      {"label": "Elegir de galería", "action": "open_gallery"},
+    ],
     "step": "regProgress.avatarUrl",
     "keepTalk": false,
     "showProfilePictures": true,
@@ -104,7 +114,9 @@ final Map<String, Map<String, dynamic>> questionsEs = {
   "voiceNoteUrl": {
     "text":
         "¡Genial! Ahora añadamos un toque personal. Por favor, graba una nota de voz corta (1-10 segundos) presentándote 🎤",
-    "options": [],
+    "options": [
+      {"label": "Saltar", "action": "skip"},
+    ],
     "step": "regProgress.voiceNoteUrl",
     "keepTalk": false,
   },
@@ -126,7 +138,6 @@ final Map<String, Map<String, dynamic>> questionsEn = {
   //   "keepTalk": false,
   //   "keyboardType": "text",
   // },
-
   "fullName": {
     "text": "Great! Let's continue in English. What is your full name?",
     "options": [],
@@ -151,14 +162,13 @@ final Map<String, Map<String, dynamic>> questionsEn = {
   //   "keepTalk": false,
   //   "keyboardType": "text",
   // },
-
-  // "socialEcosystem": {
-  //   "text": "Let's add your social platforms!",
-  //   "options": [],
-  //   "step": "regProgress.socialEcosystem",
-  //   "keepTalk": false,
-  //   "action": 0,
-  // },
+  "socialEcosystem": {
+    "text": "Let's add your social platforms!",
+    "options": [],
+    "step": "regProgress.socialEcosystem",
+    "keepTalk": false,
+    "action": 0,
+  },
 
   "location": {
     "text":
@@ -173,6 +183,14 @@ final Map<String, Map<String, dynamic>> questionsEn = {
     "options": ["Yes", "No"],
     "step": "regProgress.sendOTP",
     "keepTalk": false,
+  },
+
+  "emailChange": {
+    "text": "Please enter your new email address:",
+    "options": [],
+    "step": "regProgress.emailChange",
+    "keepTalk": false,
+    "keyboardType": "email",
   },
 
   "emailVerification": {
@@ -201,7 +219,11 @@ final Map<String, Map<String, dynamic>> questionsEn = {
   "avatarUrl": {
     "text":
         "Let's personalize your profile. You can upload a photo from your gallery or take a new one with your camera. Which do you prefer? 📸",
-    "options": ["Skip step"],
+    "options": [
+      {"label": "Skip step", "action": "skip"},
+      {"label": "Take photo", "action": "open_camera"},
+      {"label": "Choose from gallery", "action": "open_gallery"},
+    ],
     "step": "regProgress.avatarUrl",
     "keepTalk": false,
     "showProfilePictures": true,
@@ -218,7 +240,9 @@ final Map<String, Map<String, dynamic>> questionsEn = {
   "voiceNoteUrl": {
     "text":
         "Great! Now let's add a personal touch. Please record a short voice note (1-10 seconds) introducing yourself! 🎤",
-    "options": [],
+    "options": [
+      {"label": "Skip step", "action": "skip"},
+    ],
     "step": "regProgress.voiceNoteUrl",
     "keepTalk": false,
   },
@@ -239,7 +263,6 @@ final Map<String, Map<String, dynamic>> errorMessagesEs = {
   //   "step": "regProgress.language",
   //   "keepTalk": false,
   // },
-
   "fullName": {
     "text": "Por favor ingresa tu nombre completo (nombre y apellido).",
     "options": [],
@@ -261,7 +284,6 @@ final Map<String, Map<String, dynamic>> errorMessagesEs = {
   //   "step": "regProgress.gender",
   //   "keepTalk": false,
   // },
-
   "location": {
     "text": "Por favor responde 'Sí' o 'No'.",
     "options": ["Sí", "No"],
@@ -306,7 +328,6 @@ final Map<String, Map<String, dynamic>> errorMessagesEn = {
   //   "step": "regProgress.language",
   //   "keepTalk": false,
   // },
-
   "fullName": {
     "text": "Please enter your full name (first and last name).",
     "options": [],
@@ -327,7 +348,6 @@ final Map<String, Map<String, dynamic>> errorMessagesEn = {
   //   "step": "regProgress.gender",
   //   "keepTalk": false,
   // },
-
   "location": {
     "text": "Please answer 'Yes' or 'No'.",
     "options": ["Yes", "No"],

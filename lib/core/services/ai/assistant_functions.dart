@@ -22,7 +22,9 @@ class AssistantFunctions {
     }
     try {
       if (questionFlow.isEmpty) {
-        debugPrint('AssistantFunctions.getCurrentQuestion: questionFlow vacío o null');
+        debugPrint(
+          'AssistantFunctions.getCurrentQuestion: questionFlow vacío o null',
+        );
         return null;
       }
 
@@ -44,7 +46,9 @@ class AssistantFunctions {
         // fallback: intentar 'done'
         final doneQ = getQuestion('done', isSpanish);
         if (doneQ == null) {
-          debugPrint('AssistantFunctions: fallback getQuestion("done") también devolvió null');
+          debugPrint(
+            'AssistantFunctions: fallback getQuestion("done") también devolvió null',
+          );
         }
         question = doneQ;
       }
@@ -99,6 +103,9 @@ class AssistantFunctions {
       case 'sendOTP': //  SEPARADO de emailVerification
         return _evaluateSendOTP(normalized, userInput);
 
+      case 'emailChange': // NUEVO: Cambiar email
+        return _evaluateEmailChange(normalized, userInput);
+
       case 'otpInput': // AGREGADO: Validar código OTP
         return _evaluateOTP(normalized, userInput, cubit);
 
@@ -139,12 +146,37 @@ class AssistantFunctions {
     } else if (normalized.contains('no')) {
       return {
         "step": "regProgress.sendOTP",
-        "valid": false,
+        "valid": true,
         "userResponse": "No",
+        "changeEmail": true, // Bandera para indicar cambio de email
       };
     }
     return {
       "step": "regProgress.sendOTP",
+      "valid": false,
+      "userResponse": original.trim(),
+    };
+  }
+
+  // NUEVO: Evaluación para cambio de correo electrónico
+  static Map<String, dynamic> _evaluateEmailChange(
+    String normalized,
+    String original,
+  ) {
+    // Validar formato básico de email
+    final emailRegex = RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+    );
+
+    if (emailRegex.hasMatch(original.trim())) {
+      return {
+        "step": "regProgress.emailChange",
+        "valid": true,
+        "userResponse": original.trim(),
+      };
+    }
+    return {
+      "step": "regProgress.emailChange",
       "valid": false,
       "userResponse": original.trim(),
     };
@@ -336,7 +368,34 @@ class AssistantFunctions {
     String original,
     RegisterCubit cubit,
   ) {
-    if (RegExp(r'^\d+$').hasMatch(original.trim())) {
+    // Detectar si el usuario quiere reenviar código
+    if (normalized.contains('reenviar') ||
+        normalized.contains('resend') ||
+        normalized.contains('send again') ||
+        normalized.contains('enviar de nuevo')) {
+      return {
+        "step": "regProgress.emailVerification",
+        "valid": true,
+        "userResponse": "resendCode",
+        "resendCode": true,
+      };
+    }
+
+    // Detectar si el usuario quiere cambiar correo
+    if (normalized.contains('cambiar correo') ||
+        normalized.contains('change email') ||
+        normalized.contains('different email') ||
+        normalized.contains('otro correo')) {
+      return {
+        "step": "regProgress.emailVerification",
+        "valid": true,
+        "userResponse": "changeEmail",
+        "changeEmailFromOTP": true,
+      };
+    }
+
+    // Validar código OTP (solo números, al menos 4 dígitos)
+    if (RegExp(r'^\d{4,}$').hasMatch(original.trim())) {
       return {
         "step": "regProgress.emailVerification",
         "valid": true,
@@ -375,7 +434,10 @@ class AssistantFunctions {
 
       if (imageUrl != null) {
         final label =
-            data["title"] ?? data["username"] ?? data["full_name"] ?? key.toUpperCase();
+            data["title"] ??
+            data["username"] ??
+            data["full_name"] ??
+            key.toUpperCase();
 
         pictureCards.add({
           "imageUrl": imageUrl,
@@ -386,5 +448,99 @@ class AssistantFunctions {
     }
 
     return pictureCards;
+  }
+}
+
+/// High-level actions emitted by assistant when a suggestion is chosen.
+enum AssistantAction {
+  openCamera,
+  openGallery,
+  openRecorder,
+  sendText,
+  skip,
+  unknown,
+}
+
+/// Wrapper result for suggestion handling.
+class AssistantResult {
+  final AssistantAction action;
+  final String? payload;
+
+  AssistantResult(this.action, {this.payload});
+
+  factory AssistantResult.openCamera() =>
+      AssistantResult(AssistantAction.openCamera);
+  factory AssistantResult.openGallery() =>
+      AssistantResult(AssistantAction.openGallery);
+  factory AssistantResult.openRecorder() =>
+      AssistantResult(AssistantAction.openRecorder);
+  factory AssistantResult.sendText(String text) =>
+      AssistantResult(AssistantAction.sendText, payload: text);
+  factory AssistantResult.skip() => AssistantResult(AssistantAction.skip);
+  factory AssistantResult.unknown() => AssistantResult(AssistantAction.unknown);
+}
+
+/// Process a single option (from list_questions). This returns an AssistantResult
+/// that the UI (ia_chat_screen) will interpret and execute.
+/// - `option` can be either a String or a Map with keys "label" and/or "action".
+AssistantResult handleSuggestion(dynamic option) {
+  try {
+    if (option == null) return AssistantResult.unknown();
+
+    String? action;
+    String? label;
+
+    if (option is String) {
+      label = option;
+    } else if (option is Map<String, dynamic>) {
+      label = (option['label'] as String?) ?? (option['text'] as String?);
+      action = option['action'] as String?;
+    } else if (option is Map<String, String>) {
+      label = option['label'];
+      action = option['action'];
+    }
+
+    // Use explicit action first (recommended)
+    switch (action) {
+      case 'open_camera':
+        return AssistantResult.openCamera();
+      case 'open_gallery':
+        return AssistantResult.openGallery();
+      case 'open_recorder':
+        return AssistantResult.openRecorder();
+      case 'skip':
+        return AssistantResult.skip();
+    }
+
+    // Fallback: try to infer from label (only as last resort)
+    final normalized = (label ?? '').toLowerCase();
+    if (normalized.contains('camera') ||
+        normalized.contains('take photo') ||
+        normalized.contains('tomar foto')) {
+      return AssistantResult.openCamera();
+    }
+    if (normalized.contains('gallery') ||
+        normalized.contains('choose') ||
+        normalized.contains('galería')) {
+      return AssistantResult.openGallery();
+    }
+    if (normalized.contains('recorder') ||
+        normalized.contains('audio') ||
+        normalized.contains('grabar')) {
+      return AssistantResult.openRecorder();
+    }
+    if (normalized.contains('skip') || normalized.contains('saltar')) {
+      return AssistantResult.skip();
+    }
+
+    // Default: send label as text
+    if ((label ?? '').isNotEmpty) {
+      return AssistantResult.sendText(label!);
+    }
+
+    return AssistantResult.unknown();
+  } catch (e, st) {
+    debugPrint('assistant_functions.handleSuggestion error: $e\n$st');
+    return AssistantResult.unknown();
   }
 }

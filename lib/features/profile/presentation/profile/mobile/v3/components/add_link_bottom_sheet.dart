@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
@@ -15,8 +16,9 @@ class AddLinkBottomSheet extends StatefulWidget {
 }
 
 class _AddLinkBottomSheetState extends State<AddLinkBottomSheet> {
-  final TextEditingController _urlController = TextEditingController();
+  final TextEditingController _urlController = TextEditingController(text: 'https://');
   final TextEditingController _labelController = TextEditingController();
+  String? _urlError;
 
   @override
   void dispose() {
@@ -25,32 +27,52 @@ class _AddLinkBottomSheetState extends State<AddLinkBottomSheet> {
     super.dispose();
   }
 
+  bool _isValidUrl(String url) {
+    try {
+      final uri = Uri.parse(url);
+      // Check if it has a valid scheme and host
+      return (uri.scheme == 'http' || uri.scheme == 'https') &&
+          uri.host.isNotEmpty &&
+          uri.host.contains('.');
+    } catch (e) {
+      return false;
+    }
+  }
+
   void _handleSave() {
-    final url = _urlController.text.trim();
+    String url = _urlController.text.trim();
     final label = _labelController.text.trim();
 
-    if (url.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a URL'),
-          backgroundColor: Colors.red,
-        ),
-      );
+    // Clear previous error
+    setState(() {
+      _urlError = null;
+    });
+
+    // Check if URL is empty or just the prefix
+    if (url.isEmpty || url == 'https://' || url == 'http://') {
+      setState(() {
+        _urlError = 'profile.customization.links.validationEmptyUrl'.tr();
+      });
       return;
     }
 
-    // Validate URL
+    // Auto-add https:// prefix if user removed it
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('URL must start with http:// or https://'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      url = 'https://$url';
+    }
+
+    // Validate URL format
+    if (!_isValidUrl(url)) {
+      setState(() {
+        _urlError = 'profile.customization.links.validationInvalidUrl'.tr();
+      });
       return;
     }
 
-    widget.onLinkAdded(url, label.isEmpty ? 'Website' : label);
+    widget.onLinkAdded(
+      url,
+      label.isEmpty ? 'profile.customization.links.defaultLabel'.tr() : label,
+    );
     Navigator.pop(context);
   }
 
@@ -77,8 +99,8 @@ class _AddLinkBottomSheetState extends State<AddLinkBottomSheet> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Add Website Link',
+                  Text(
+                    'profile.customization.links.sheetTitle'.tr(),
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 20,
@@ -98,7 +120,7 @@ class _AddLinkBottomSheetState extends State<AddLinkBottomSheet> {
                 controller: _labelController,
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
-                  hintText: 'Label (optional)',
+                  hintText: 'profile.customization.links.labelHint'.tr(),
                   hintStyle: const TextStyle(color: Colors.white38),
                   filled: true,
                   fillColor: Colors.white10,
@@ -115,8 +137,16 @@ class _AddLinkBottomSheetState extends State<AddLinkBottomSheet> {
                 controller: _urlController,
                 style: const TextStyle(color: Colors.white),
                 keyboardType: TextInputType.url,
+                onChanged: (_) {
+                  // Clear error when user starts typing
+                  if (_urlError != null) {
+                    setState(() {
+                      _urlError = null;
+                    });
+                  }
+                },
                 decoration: InputDecoration(
-                  hintText: 'https://example.com',
+                  hintText: 'profile.customization.links.urlHint'.tr(),
                   hintStyle: const TextStyle(color: Colors.white38),
                   filled: true,
                   fillColor: Colors.white10,
@@ -124,6 +154,20 @@ class _AddLinkBottomSheetState extends State<AddLinkBottomSheet> {
                     borderRadius: BorderRadius.circular(10),
                     borderSide: BorderSide.none,
                   ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: _urlError != null
+                        ? const BorderSide(color: Colors.red, width: 1)
+                        : BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: _urlError != null
+                        ? const BorderSide(color: Colors.red, width: 1)
+                        : BorderSide.none,
+                  ),
+                  errorText: _urlError,
+                  errorStyle: const TextStyle(color: Colors.red),
                 ),
               ),
               const SizedBox(height: 20),
@@ -136,8 +180,8 @@ class _AddLinkBottomSheetState extends State<AddLinkBottomSheet> {
                   gradient: AppColors.primaryGradient,
                   radius: 10,
                   height: 48,
-                  child: const Text(
-                    'Save Link',
+                  child: Text(
+                    'profile.customization.links.save'.tr(),
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.white,

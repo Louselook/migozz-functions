@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
-// import 'package:migozz_app/features/auth/presentation/register/user_details/modules/category_step.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/interests/interests_step.dart';
-// import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/save_changes_social.dart';
-import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/social_ecosystem_step.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/social_ecosystem_simple_step.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/social_ecosystem_step_v3.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 
 //  Modo de operación del componente
@@ -29,6 +30,11 @@ class MoreUserDetails extends StatefulWidget {
 
 class _MoreUserDetailsState extends State<MoreUserDetails> {
   late PageController pageController;
+
+  // For register mode: track which view to show
+  // false = simple list view (default)
+  // true = full grid view with categories
+  bool _showFullSocialView = false;
 
   @override
   void initState() {
@@ -79,6 +85,21 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
     );
   }
 
+  void _navigateToFullSocialView() {
+    // Navigate from simple list to full grid view
+    setState(() {
+      _showFullSocialView = true;
+    });
+  }
+
+  // ignore: unused_element
+  void _navigateBackToSimpleView() {
+    // Navigate back to simple list view
+    setState(() {
+      _showFullSocialView = false;
+    });
+  }
+
   @override
   void dispose() {
     pageController.dispose();
@@ -87,59 +108,79 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
 
   @override
   Widget build(BuildContext context) {
-    final steps = [
-      SocialEcosystemStep(controller: pageController, mode: widget.mode),
-      // CategoryStep(controller: pageController, mode: widget.mode),
-      InterestsStep(controller: pageController, mode: widget.mode),
-    ];
+    List<Widget> steps;
 
-    return Scaffold(
-      backgroundColor: AppColors.backgroundDark,
-      appBar: widget.mode == MoreUserDetailsMode.edit
-          ? AppBar(
-              backgroundColor: AppColors.backgroundDark,
-              title: const Text('Edit Profile'),
-              elevation: 0,
-              // actions: [
-              //   // Botón para guardar cambios en modo edición
-              //   if (widget.mode == MoreUserDetailsMode.edit)
-              //     BlocBuilder<EditCubit, EditCubitState>(
-              //       builder: (context, state) {
-              //         return IconButton(
-              //           icon: state.isSaving
-              //               ? const SizedBox(
-              //                   width: 20,
-              //                   height: 20,
-              //                   child: CircularProgressIndicator(
-              //                     strokeWidth: 2,
-              //                     color: Colors.white,
-              //                   ),
-              //                 )
-              //               : const Icon(Icons.save),
-              //           onPressed: state.isSaving || widget.userId == null
-              //               ? null
-              //               : () => saveSocialChanges(context, widget.userId!),
-              //         );
-              //       },
-              //     ),
-              // ],
-            )
-          : null,
-      body: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 0.0),
-            child: PageView.builder(
-              controller: pageController,
-              itemCount: steps.length,
-              physics: const NeverScrollableScrollPhysics(),
-              onPageChanged: (index) {
-                setState(() {});
-              },
-              itemBuilder: (_, index) => steps[index],
-            ),
+    if (widget.mode == MoreUserDetailsMode.register) {
+      // In register mode, show simple or full view based on state
+      if (_showFullSocialView) {
+        // Full view with all categories and search
+        steps = [
+          SocialEcosystemStepV3(controller: pageController, mode: widget.mode),
+          InterestsStep(controller: pageController, mode: widget.mode),
+        ];
+      } else {
+        // Simple view with main networks only
+        steps = [
+          SocialEcosystemSimpleStep(
+            controller: pageController,
+            onAddOtherNetworks: _navigateToFullSocialView,
           ),
-        ],
+          InterestsStep(controller: pageController, mode: widget.mode),
+        ];
+      }
+    } else {
+      // In edit mode, always show full v3 view
+      steps = [
+        SocialEcosystemStepV3(controller: pageController, mode: widget.mode),
+        InterestsStep(controller: pageController, mode: widget.mode),
+      ];
+    }
+
+    return WillPopScope(
+      onWillPop: () async {
+        // Prevent back navigation in register mode if no social network is added
+        if (widget.mode == MoreUserDetailsMode.register) {
+          final registerState = context.read<RegisterCubit>().state;
+          final socialEcosystem = registerState.socialEcosystem ?? [];
+
+          if (socialEcosystem.isEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('addSocials.validation.atLeastOne'.tr()),
+                backgroundColor: Colors.orange,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+            return false;
+          }
+        }
+        return true;
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.backgroundDark,
+        appBar: widget.mode == MoreUserDetailsMode.edit
+            ? AppBar(
+                backgroundColor: AppColors.backgroundDark,
+                title: const Text('Edit Profile'),
+                elevation: 0,
+              )
+            : null,
+        body: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 0.0),
+              child: PageView.builder(
+                controller: pageController,
+                itemCount: steps.length,
+                physics: const NeverScrollableScrollPhysics(),
+                onPageChanged: (index) {
+                  setState(() {});
+                },
+                itemBuilder: (_, index) => steps[index],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

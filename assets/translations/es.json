@@ -1,19 +1,22 @@
 {
   "onboarding": {
     "titles": {
-      "onboardingTitle1": "Bienvenido",
-      "onboardingTitle2": "La mejor app social para hacer nuevos amigos",
-      "onboardingTitle3": "Crea, encuentra y únete a tu círculo ahora"
+      "onboardingTitle1": "⭐ Bienvenido a tu nuevo ecosistema social",
+      "onboardingTitle2": "Más conexiones. Mayor impacto",
+      "onboardingTitle3": "Crea tu enlace inteligente y activa tu comunidad en segundos"
+    },
+    "subtitles":{
+      "onboardingSubtitle1" : "Tu contenido. Tus reglas. Tu universo."
     },
     "descriptions": {
-      "onboardingDescription1": "Es un hecho establecido que un lector se distraerá con el contenido legible.",
-      "onboardingDescription2": "Integra contenido de diferentes plataformas sociales en una experiencia coherente.",
-      "onboardingDescription3": "La plataforma permite a los creadores compartir su contenido en varios formatos, como texto, fotos y videos, ¡e incluso volver a publicar contenido de otras plataformas!"
+      "onboardingDescription1": "Centraliza todo lo que eres. Comparte al instante. Crece sin esfuerzo.",
+      "onboardingDescription2": "Migozz fusiona tus redes y te presenta nuevas comunidades con un solo toque.",
+      "onboardingDescription3": "Comparte publicaciones, enlaces, fotos, historias, música, servicios y más. Tu perfil de Migozz se convierte en tu centro de control para hacerte viral y unirte a círculos de creadores, fans o empresas."
     },
     "buttons": {
       "skip": "Saltar",
       "next": "Siguiente",
-      "getStarted" : "Empecemos"
+      "getStarted": "Empecemos"
     }
   },
   "login": {
@@ -21,19 +24,23 @@
       "emptyEmail": "El correo no puede estar vacío",
       "invalidEmail": "Por favor ingrese un correo válido",
       "notExistEmail": "Este correo no está registrado. Por favor crea una cuenta primero.",
-      "validationEmail": "Error al verificar el correo: $e"
+      "validationEmail": "Error al verificar el correo: ",
+      "cancelledGoogle": "Se canceló el inicio de sesión con Google",
+      "cancelledApple": "Se canceló el inicio de sesión con Apple",
+      "errorGoogle": "Error al iniciar sesión con Google. Inténtalo de nuevo.",
+      "errorApple": "Error al iniciar sesión con Apple. Inténtalo de nuevo."
     },
     "presentation": {
-      "title": "Bienvenido a Migozz",
+      "title": "¡Bienvenido a Migozz!",
       "subtitle1": "Conecta tu comunidad",
       "inputText": "Ingresa tu correo",
       "buttonText": "Iniciar sesión",
       "subtitle2": "O inicia sesión con",
-      "bottonText": {
-        "Register": "¿No tienes una cuenta?",
-        "RegisterSpan": "Regístrate ahora\n",
-        "Terms&Conditions": "Al registrarte aceptas nuestros\n",
-        "Terms&ConditionsSpan": "Términos y condiciones"
+      "bottomText": {
+        "newUser": "¿NUEVO USUARIO?\n ",
+        "register": "¡REGÍSTRATE AQUÍ!",
+        "agreement": "Al registrarte aceptas nuestros ",
+        "terms": "Términos y condiciones"
       }
     }
   },
@@ -42,9 +49,11 @@
       "emptyEmail": "El correo no puede estar vacío",
       "validationEmail": "Por favor ingrese un correo válido",
       "registerEmail": "Este correo ya está registrado",
-      "socialNotAvailable": "no está disponible aún",
-      "socialError": "Error al conectar con ",
-      "socialConnected": "conectado exitosamente"
+      "audioMinLimit": "El audio es muy corto (${durationInSeconds.toStringAsFixed(1)}s). Debe durar entre 1 y 10 segundos.",
+      "audioMaxLimit": "El audio es muy largo (${durationInSeconds.toStringAsFixed(1)}s). Debe durar entre 1 y 10 segundos.",
+      "picConfirmation": "La foto seleccionada de ${photo['label'] ?? photo['platform'] ?? 'red social'} se ha establecido como tu foto de perfil.",
+      "avatarSkipped": "Paso de foto de perfil saltado",
+      "audioSkipped": "Paso de nota de voz saltado"
     },
     "presentation": {
       "title": "¡Regístrate ahora!",
@@ -52,19 +61,29 @@
       "inputText": "Ingresa tu correo",
       "buttonText": "Crear cuenta",
       "social": "Aquí está la información extraída de sus redes sociales.",
+      "socialName": "Foto de {platform}",
+      "profilePic": "Usar esta foto",
+      "skipAvatarButton": "Saltar paso",
+      "takeCameraButton": "Tomar foto",
+      "chooseGalleryButton": "Elegir de galería",
+      "skipAudioButton": "Saltar paso",
+      "recordAudioButton": "Grabar audio",
       "bottonText": {
         "login": "¿Ya tienes una cuenta?",
         "LoginReturn": "Inicia sesión"
       }
-    }
+    },
+     "warnings":{
+        "profilePic": "Tip: Las fotos de redes son prácticas, pero si prefieres máxima resolución, te recomendamos subir una original desde tu galería."
+      }
   },
   "complete_profile": {
-      "title": "Completa tu Perfil",
-      "description": "Para aprovechar al máximo Migozz,\ncompleta tu información de perfil",
-      "buttons": {
-        "completeNow": "Completar Ahora",
-        "completeLater": "Completar Más Tarde"
-      }
+    "title": "Completa tu Perfil",
+    "description": "Para aprovechar al máximo Migozz,\ncompleta tu información de perfil",
+    "buttons": {
+      "completeNow": "Completar Ahora",
+      "completeLater": "Completar Más Tarde"
+    }
   },
   "termsPrivacy": {
     "header": "Términos y Privacidad",
@@ -206,26 +225,26 @@
   },
   "profile": {
     "chat": {
-      "filter":"Nuevo",
-      "search":"Buscar"
+      "filter": "Nuevo",
+      "search": "Buscar"
     },
     "design": {
       "buttonText": "Diseño",
       "title": "Elige tu diseño de perfil",
       "subtitle": "Selecciona el estilo que más te guste",
       "versions": {
-          "classic": {
-              "name": "Versión 1 - Clásico",
-              "description": "Redes sociales flotantes en el lateral"
-          },
-          "modern": {
-              "name": "Versión 2 - Moderno",
-              "description": "Barras horizontales de redes sociales"
-          },
-          "minimalist": {
-              "name": "Versión 3 - Minimalista",
-              "description": "Círculos con iconos de redes"
-          }
+        "classic": {
+          "name": "Versión 1 - Clásico",
+          "description": "Redes sociales flotantes en el lateral"
+        },
+        "modern": {
+          "name": "Versión 2 - Moderno",
+          "description": "Barras horizontales de redes sociales"
+        },
+        "minimalist": {
+          "name": "Versión 3 - Minimalista",
+          "description": "Círculos con iconos de redes"
+        }
       },
       "cancelButton": "Cancelar"
     },
@@ -241,88 +260,240 @@
       "statsStep": "Revisa tus estadísticas de redes sociales; si no has sincronizado ninguna, ¡hazlo!",
       "settings": "Modifica tu información y sincroniza tus redes"
     },
-    "customization":{
+    "customization": {
       "uploadingProfilePicture": {
         "title": "Subir",
         "uploading": "Cargando",
         "success": "Foto de perfil actualizada exitosamente",
         "error": "Error al actualizar la foto de perfil:"
       },
-        "emailContactFormSection": {
-          "title": "Formulario de contacto por correo electrónico",
-          "subtitle": "Los visitantes pueden compartir su correo electrónico contigo a través de un formulario de contacto en tu perfil."
+      "emailContactFormSection": {
+        "title": "Formulario de contacto por correo electrónico",
+        "subtitle": "Los visitantes pueden compartir su correo electrónico contigo a través de un formulario de contacto en tu perfil."
+      },
+      "coverImage": {
+        "add": "Agregar portada",
+        "subtitle": "Haz que tu enlace sea instantáneamente reconocible",
+        "success": "Portada agregada"
+      },
+      "bio": {
+        "title": "Editar biografía",
+        "add": "Toca para añadir tu biografía",
+        "editCta": "Editar tu biografía",
+        "hint": "Cuéntale a la gente sobre ti...",
+        "save": "Guardar biografía",
+        "label": "Bio",
+        "success": "Biografia actualizada correctamente",
+        "errorUpdate": "Error al actualizar la biografia:"
+      },
+      "links": {
+        "title": "Enlaces destacados",
+        "add": "+ Añadir enlace.",
+        "successAdd": "Enlace añadido correctamente",
+        "errorAdd": "Error al añadir el enlace:",
+        "emptyTitle": "Tu enlace esta vacio",
+        "emptySubtitle": "Añade al menos un enlace para comenzar",
+        "maximumLinks": "Se permiten un máximo de 2 enlaces.",
+        "sheetTitle": "Agregar enlace de sitio web",
+        "labelHint": "Etiqueta (opcional)",
+        "urlHint": "https://ejemplo.com",
+        "save": "Guardar enlace",
+        "defaultLabel": "Sitio web",
+        "validationEmptyUrl": "Ingresa una URL",
+        "validationUrlFormat": "La URL debe comenzar con http:// o https://",
+        "validationInvalidUrl": "Formato de enlace inválido. Ingresa un sitio web válido (ej., www.ejemplo.com)"
+      },
+      "contact": {
+        "title": "Información de contacto",
+        "helperText": "Haz que sea fácil encontrarte",
+        "addCta": "+ Añadir información de contacto",
+        "website": "Sitio web",
+        "number": "Número",
+        "email": "Correo electrónico",
+        "infoAdded": "Información de contacto añadida correctamente",
+        "infoAddError": "Error al añadir la información de contacto:",
+        "infodeleted": "Información de contacto eliminada correctamente",
+        "infoDeleteError": "Error al eliminar la información de contacto:",
+        "sheetTitle": {
+          "add": "Agregar {{type}}",
+          "edit": "Editar {{type}}"
         },
-        "bio": {
-          "title": "Editar biografía",
-          "add": "Toca para añadir tu biografía",
-          "hint": "Cuéntale a la gente sobre ti...",
-          "save": "Guardar biografía"
-        },
-        "links": {
-          "title": "Enlaces destacados",
-          "add": "+ Añadir enlace.",
-          "successAdd": "Enlace añadido correctamente",
-          "errorAdd": "Error al añadir el enlace:",
-          "maximumLinks": "Se permiten un máximo de 2 enlaces." },
-        "contact": {
-          "title": "Información de contacto",
+        "sheetType": {
           "website": "Sitio web",
-          "number": "Número",
-          "email": "Correo electrónico",
-          "infoAdded": "Información de contacto añadida correctamente",
-          "infoAddError": "Error al añadir la información de contacto:",
-          "infodeleted": "Información de contacto eliminada correctamente",
-          "infoDeleteError": "Error al eliminar la información de contacto:"
+          "phone": "Numero de telefono",
+          "email": "Correo electronico"
+        },
+        "hints": {
+          "website": "https://ejemplo.com",
+          "phone": "+1 234 567 8900",
+          "email": "correo@ejemplo.com"
+        },
+        "validation": {
+          "required": "Por favor ingresa un valor",
+          "websiteFormat": "El sitio web debe comenzar con http:// o https://",
+          "emailFormat": "Ingresa un correo valido",
+          "phoneFormat": "Ingresa un numero de telefono valido"
         }
+      },
+      "profileStrength": {
+        "title": "Fuerza del perfil",
+        "ready": "Listo",
+        "subtitle": "Completalo para destacar"
+      },
+      "customLink": {
+        "title": "Icono de enlace personalizado",
+        "linkHint": "Agregar enlace personalizado",
+        "applyIconFromLink": "Aplicar icono personalizado desde el enlace",
+        "deleteLink": "Eliminar enlace",
+        "deleted": "Enlace eliminado",
+        "saved": "Enlace personalizado guardado",
+        "errorSave": "Error guardando: ",
+        "imageTypeNotAllowed": "Tipo de imagen no permitido",
+        "imageTooLarge": "La imagen supera 5MB",
+        "validation": {
+          "required": "El enlace es obligatorio",
+          "invalidFormat": "Formato de enlace invalido",
+          "invalidScheme": "El enlace debe iniciar con http/https"
+        }
+      }
+    },
+    "presentation": {
+      "emptyName": "Nombre no disponible",
+      "community": "Comunidad",
+      "noAuthenticatedUser": "No hay usuario autenticado",
+      "redirectCompleteProfile": "Redirigiendo a completar perfil..."
+    },
+    "qrScanner": {
+      "title": "Escanear codigo QR",
+      "instruction": "Apunta tu camara a un codigo QR de Migozz",
+      "invalidFormat": "Formato de QR invalido",
+      "userNotFound": "Usuario no encontrado",
+      "errorProcessing": "Error al procesar el codigo QR"
     }
   },
   "search": {
-      "searchText": "Buscar...",
-      "notFound": {
-        "searchNoResult": "No se encontraron coincidencias",
-        "suggestedNoResult": "No se encontraron usuarios"
-      },
-      "options": {
-        "forYou": "Para ti",
-        "accounts": "Cuentas",
-        "reels": "Reels",
-        "audio": "Audio",
-        "hashtags": "Hashtags"
-      },
-      "validations": {
-        "emptySearch": "Por favor ingresa un término de búsqueda",
-        "emptyInterest": "Agrega al menos 1 interés para mejorar tus recomendaciones"
-      }
+    "searchText": "Buscar...",
+    "notFound": {
+      "searchNoResult": "No se encontraron coincidencias",
+      "suggestedNoResult": "No se encontraron usuarios"
+    },
+    "options": {
+      "forYou": "Para ti",
+      "accounts": "Cuentas",
+      "reels": "Reels",
+      "audio": "Audio",
+      "hashtags": "Hashtags"
+    },
+    "validations": {
+      "emptySearch": "Por favor ingresa un término de búsqueda",
+      "emptyInterest": "Agrega al menos 1 interés para mejorar tus recomendaciones"
+    }
   },
-  "stats":{
-    "title":"Mis Estadísticas",
+  "stats": {
+    "title": "Mis Estadísticas",
     "rangeText": "No seleccionado",
-    "noStats":{
+    "noStats": {
       "notSocials": "Aún no tienes redes sociales conectadas, ¡conéctalas!",
       "addButton": "Agregar redes"
     },
     "date": "Fecha",
     "dataCardLabel": {
-      "title" : "Resumen",
-      "likes" : "Me gustas:",
-      "shares" : "Compartidos:",
-      "followers" : "Seguidores:"
+      "title": "Resumen",
+      "likes": "Me gustas:",
+      "shares": "Compartidos:",
+      "followers": "Seguidores:"
+    },
+    "metrics": {
+      "likes": "me gusta",
+      "shares": "compartidos",
+      "followers": "seguidores"
     }
   },
   "addSocials": {
+    "addOtherNetworks": "Agregar otras redes",
+    "validation": {
+      "atLeastOne": "Se requiere al menos una red social"
+    },
     "register": {
       "title": "Tu Ecosistema Social",
       "subtitle": "Agrega tus plataformas"
     },
     "edit": {
-        "title": "Editar Ecosistema Social",
-        "subtitle": "Agrega o elimina plataformas"
+      "title": "Editar Ecosistema Social",
+      "subtitle": "Agrega o elimina plataformas"
     },
-    "popUp":{
-        "title": "Desvincular ",
-        "subtitle": "¿Estás seguro que quieres desvincular ",
-        "yes": "Si",
-        "no": "No"
+    "popUp": {
+      "title": "Desvincular ",
+      "subtitle": "¿Estás seguro que quieres desvincular ",
+      "yes": "Si",
+      "no": "No"
+    },
+    "categories": {
+      "social": "Social",
+      "streaming": "Streaming",
+      "music": "Música",
+      "stores": "Tiendas",
+      "chat": "Chat"
+    },
+    "search": {
+      "hint": "Buscar plataformas",
+      "results": "Resultados de búsqueda",
+      "noResults": "No se encontraron plataformas"
+    },
+    "customLink": {
+      "title": "Agregar enlace personalizado",
+      "updated": "Enlace personalizado actualizado",
+      "newLabel": "Nuevo"
+    },
+    "dialogs": {
+      "addTitle": "Agregar {platform}",
+      "editTitle": "Editar {platform}",
+      "addUsernameHint": "Agregar usuario de {platform}",
+      "usernameHint": "Ingresa usuario",
+      "usernameRequired": "Por favor ingresa un usuario",
+      "removeQuestion": "¿Quieres eliminar {platform}?",
+      "deleteLink": "Eliminar"
+    },
+    "buttons": {
+      "cancel": "Cancelar"
+    },
+    "messages": {
+      "socialConnected": "{platform} guardada correctamente!",
+      "errorSave": "Error al guardar: {error}",
+      "errorRemove": "Error al eliminar: {error}",
+      "removed": "{platform} eliminada correctamente!",
+      "usernameUpdated": "¡Usuario de {platform} actualizado!",
+      "usernameUpdatedSuccess": "¡Usuario de {platform} actualizado correctamente!"
+    },
+    "networkAuth": {
+      "connectTitle": "Conectar {platform}",
+      "oneClickTitle": "Conectar con un clic",
+      "oneClickSubtitle": "Autoriza con {platform}",
+      "manualTitle": "Ingresar manualmente",
+      "manualSubtitle": "Pega usuario o enlace",
+      "backToOptions": "Volver a opciones",
+      "phoneInvalid": "Por favor ingresa un número de teléfono válido",
+      "searchCountry": "Buscar país",
+      "hints": {
+        "instagram": "Ingresa usuario o enlace de Instagram",
+        "tiktok": "Ingresa usuario o enlace de TikTok",
+        "youtube": "Ingresa enlace de canal o usuario de YouTube",
+        "twitter": "Ingresa usuario o enlace de X",
+        "facebook": "Ingresa usuario o enlace de Facebook",
+        "whatsapp": "1234567890",
+        "telegram": "1234567890",
+        "default": "Ingresa usuario o enlace"
+      },
+      "examples": {
+        "instagram": "https://www.instagram.com/usuario",
+        "tiktok": "https://www.tiktok.com/@usuario",
+        "youtube": "https://www.youtube.com/@usuario",
+        "twitter": "https://x.com/usuario",
+        "facebook": "https://www.facebook.com/usuario",
+        "whatsapp": "Ingresa tu número con código de país",
+        "telegram": "Ingresa tu número con código de país",
+        "default": "https://www.{{platform}}.com/usuario"
+      }
     }
   },
   "edit": {
@@ -346,12 +517,29 @@
         "email": "Correo electrónico",
         "cellPhone": "Teléfono celular",
         "dateOfBirth": "Fecha de nacimiento",
-        "gender": "Género"
+        "gender": "Género",
+        "location": "Ubicacion"
+      },
+      "genderOptions": {
+        "male": "Masculino",
+        "female": "Femenino",
+        "other": "Otro"
       },
       "record": "Editar grabación",
       "interest": "Editar mis intereses",
       "socials": "Editar redes sociales",
-      "logOut": "Cerrar sesión"
+      "logOut": "Cerrar sesión",
+      "loadingProfile": "Cargando perfil...",
+      "locationNotSet": "Ubicacion no establecida",
+      "deleteAccount": {
+        "title": "Eliminar cuenta",
+        "description": "?Seguro que quieres eliminar tu cuenta?\n\nEsta accion iniciara un proceso de eliminacion que puede tardar hasta 30 dias habiles en completarse. Durante este tiempo, todos tus datos se eliminaran de forma permanente y no se podran recuperar.",
+        "confirm": "Eliminar cuenta",
+        "submitted": "Solicitud de eliminacion enviada. Tus datos se eliminaran permanentemente en un maximo de 30 dias habiles."
+      },
+      "webRestriction": {
+        "audio": "Usa la app para cambiar tu audio"
+      }
     },
     "editAudio": {
       "title": "Editar audio",
@@ -359,30 +547,43 @@
       "audioSaved": "Audio subido y guardado ✅",
       "errorUploadAudio": "Error al subir — inténtalo de nuevo",
       "record": "Graba tu nota de voz",
-      "maxLimit": "Nota de voz: máximo 5–15 segundos.",
-      "liste": "Escucha tu audio"
+      "maxLimit": "Nota de voz: máximo 1–10 segundos.",
+      "liste": "Escucha tu audio",
+      "uploading": "Subiendo audio...",
+      "minDuration": "Graba al menos 5 segundos"
     },
     "editLocation": {
       "text1": "Detectamos que estás en:\n\n",
       "text2": "${newLocation.city}, ${newLocation.state}\n",
       "text3": "${newLocation.country}\n\n",
-      "text4": "¿Es correcto?"
+      "text4": "¿Es correcto?",
+      "title": "Confirmar ubicacion"
     },
     "editInterest": {
       "title": "Editar mis intereses",
-      "saveInterest": "Intereses guardados correctamente"
+      "saveInterest": "Intereses guardados correctamente",
+      "errorSave": "Error al guardar intereses"
     }
   },
   "share": {
-    "title": "Mira el perfil de ${data.displayName} en Migozz: ${data.link}",
-    "subject": "Perfil de ${data.displayName}",
-    "label": "Compartir perfil"
+    "title": "🚀 ¡Hey! Conecta con @{displayName} en Migozz - donde todo su contenido vive en un solo lugar! 🔗\n\n{link}\n\n#Migozz #LinkInBio",
+    "subject": "🌟 Perfil de {displayName} en Migozz",
+    "label": "Compartir perfil",
+    "customization": {
+      "emoji": "Emoji",
+      "colors": "Colores",
+      "image": "Imagen",
+      "default": "Predeterminado",
+      "chooseImage": "Elegir imagen"
+    }
   },
   "buttons": {
-    "confirm": "confirmar",
-    "cancel": "cancelar",
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
     "save": "Guardar",
-    "continue": "continuar"
+    "Close": "Cerrar",
+    "continue": "Continuar",
+    "delete": "Eliminar"
   },
   "category": {
     "title": "Elige tu categoría",
@@ -396,12 +597,10 @@
   },
   "support": {
     "header": "Soporte / Reportar un problema",
-
     "button": {
       "send": "Enviar reporte",
       "back": "Volver"
     },
-
     "form": {
       "name": {
         "label": "Nombre",
@@ -421,11 +620,99 @@
         "selected": "Archivo seleccionado"
       }
     },
-
     "snackbar": {
       "success": "Reporte enviado correctamente",
       "validationError": "Por favor completa los campos requeridos",
       "invalidEmail": "Ingresa un correo válido"
     }
+  },
+  "chat": {
+    "input": {
+      "webRestriction": "Si deseas agregar imágenes o audio, ¡por favor usa la app!",
+      "holdToRecord": "Mantén pulsado para grabar",
+      "typeMessage": "Escribe algo...",
+      "phoneHint": "Número de teléfono",
+      "searchCountry": "Buscar país",
+      "photoError": "Error al seleccionar la foto. Por favor intenta de nuevo.",
+      "audioError": "Error al iniciar la grabación de audio. Por favor intenta de nuevo.",
+      "recordingStarted": "Grabación iniciada..."
+    },
+    "attachments": {
+      "gallery": "Galería",
+      "camera": "Cámara"
+    },
+    "assistant": {
+      "title": "ASISTENTE IA"
+    },
+    "validations": {
+      "missingData": "Faltan datos para completar el registro",
+      "missingEmailOTP": "Falta email o código OTP. Revisa el chat.",
+      "errorCompleting": "Error finalizando registro: "
+    },
+    "userChat": {
+      "appBar": {
+        "tapToViewProfile": "Toca para ver perfil"
+      },
+      "menu": {
+        "viewProfile": "Ver perfil",
+        "deleteChat": "Eliminar chat",
+        "block": "Bloquear",
+        "unblock": "Desbloquear"
+      },
+      "dialogs": {
+        "deleteTitle": "¿Eliminar chat?",
+        "deleteMessage": "El chat se eliminará solo para ti. El otro usuario podrá seguir viéndolo.",
+        "blockTitle": "¿Bloquear a {{name}}?",
+        "unblockTitle": "¿Desbloquear a {{name}}?",
+        "blockMessage": "No recibirás mensajes de este usuario mientras esté bloqueado. El usuario no sabrá que lo bloqueaste.",
+        "unblockMessage": "Volverás a recibir mensajes de este usuario.",
+        "cancel": "Cancelar",
+        "delete": "Eliminar",
+        "block": "Bloquear",
+        "unblock": "Desbloquear"
+      },
+      "messages": {
+        "sending": "Enviando...",
+        "you": "Tú",
+        "image": "Imagen",
+        "chatDeleted": "Chat eliminado",
+        "userBlocked": "{{name}} ha sido bloqueado",
+        "userUnblocked": "{{name}} ha sido desbloqueado"
+      },
+      "errors": {
+        "sendMessage": "Error al enviar mensaje: ",
+        "profileNotFound": "No se pudo encontrar el perfil del usuario",
+        "loadProfile": "Error al cargar perfil: ",
+        "deleteChat": "Error al eliminar: ",
+        "blockUser": "Error al bloquear: ",
+        "sendAudio": "Error al enviar audio: ",
+        "sendImage": "Error al enviar imagen: "
+      },
+      "webRestrictions": {
+        "audio": "¡Por favor usa la app para enviar audio!",
+        "image": "¡Por favor usa la app para enviar imágenes!"
+      }
+    }
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "empty": {
+      "title": "Sin notificaciones",
+      "subtitle": "Cuando recibas mensajes, aparecerán aquí"
+    },
+    "clearAll": {
+      "title": "Borrar todas las notificaciones",
+      "message": "¿Estás seguro de que quieres eliminar todas las notificaciones?",
+      "cancel": "Cancelar",
+      "confirm": "Eliminar todo"
+    }
+  },
+  "common": {
+    "loading": "Cargando...",
+    "saving": "Guardando...",
+    "removing": "Eliminando...",
+    "loader": "Cargador",
+    "unknown": "Desconocido",
+    "noData": "Sin datos"
   }
 }

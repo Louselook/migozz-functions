@@ -59,19 +59,15 @@ class EditCubit extends Cubit<EditCubitState> {
     required Map<String, dynamic> updatedFields,
   }) async {
     try {
-
       emit(state.copyWith(isSaving: true));
 
       await _userService.updateUserProfile(userId, updatedFields);
 
-
       //  Refresca el AuthCubit automáticamente
       await _authCubit.refreshUserProfile();
 
-
       // Al guardar, no quedan cambios pendientes
       emit(state.copyWith(isSaving: false, success: true, hasChanges: false));
-
     } catch (e) {
       emit(state.copyWith(isSaving: false, error: e.toString()));
     }
@@ -107,21 +103,30 @@ class EditCubit extends Cubit<EditCubitState> {
   }
 
   /// actualizar avatar
-  Future<void> changeAvatar(String userId) async {
+  /// Returns true if avatar was changed, false if user cancelled
+  Future<bool> changeAvatar(String userId, BuildContext context) async {
     try {
       emit(state.copyWith(isSaving: true));
-      final newUrl = await _userService.changeAvatar(userId);
+      final newUrl = await _userService.changeAvatar(userId, context);
 
       if (newUrl != null) {
         await _authCubit.refreshUserProfile();
+        emit(state.copyWith(isSaving: false, success: true));
+        return true;
       }
 
-      emit(state.copyWith(isSaving: false, success: true));
+      // User cancelled - no image selected
+      emit(state.copyWith(isSaving: false));
+      return false;
     } catch (e) {
       emit(state.copyWith(isSaving: false, error: e.toString()));
+      rethrow;
     }
   }
 
   /// Limpiar estado
-  void clear() => emit(const EditCubitState());
+  void reset() {
+    emit(EditCubitState.initial());
+    debugPrint('✅ [EditCubit] Estado reseteado');
+  }
 }

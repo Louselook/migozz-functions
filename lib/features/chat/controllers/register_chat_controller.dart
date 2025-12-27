@@ -43,7 +43,7 @@ class RegisterChatController extends GenericChatController {
   RegisterChatController({required this.registerCubit, this.firebaseUid});
 
   /// Inicializar el chat de registro con IA
-    void initializeChat({
+  void initializeChat({
     void Function(Map<String, dynamic>)? onActionRequired,
     Future<void> Function()? onRegistrationComplete,
   }) {
@@ -318,18 +318,36 @@ class RegisterChatController extends GenericChatController {
 
       // Protege campos que podrían ser null
       final botText = (botResponse["text"]?.toString() ?? '');
-      final botOptions = botResponse["options"] ?? [];
+      // final botOptions = botResponse["options"] ?? [];
       final botStep = botResponse["step"]?.toString() ?? '';
       final botValid = botResponse["valid"];
       final botAction = botResponse["action"];
       final botIsError = botResponse["isError"] == true;
       final botProfilePictures = botResponse["profilePictures"];
+      final rawBotOptions = botResponse["options"];
+      // Build safe list of labels for the bot/UI that expects String list
+      final safeBotOptions = <String>[];
+      if (rawBotOptions is List) {
+        for (final o in rawBotOptions) {
+          if (o == null) continue;
+          if (o is String) {
+            safeBotOptions.add(o);
+          } else if (o is Map) {
+            final label = (o['label'] ?? o['text'])?.toString() ?? o.toString();
+            safeBotOptions.add(label);
+          } else {
+            safeBotOptions.add(o.toString());
+          }
+        }
+      }
 
       final message = {
         "other": true,
         "type": MessageType.text,
         "text": botText,
-        "options": botOptions,
+        "options": safeBotOptions, // <- siempre List<String>
+        "rawOptions":
+            rawBotOptions, // <- original (List<dynamic>) para UI si quiere actions
         "step": botStep,
         "valid": botValid,
         "action": botAction,
@@ -374,18 +392,14 @@ class RegisterChatController extends GenericChatController {
       }
 
       // Mostrar tutorial voice note
+      // NOTA: No mostrar tutorial automáticamente para voiceNoteUrl
+      // El usuario verá opciones de Skip y podrá elegir grabar si quiere
+      // El tutorial se mostrará más adelante cuando esté listo para grabar
       if (isOnVoiceNoteStep && !isWeb) {
-        debugPrint('🎤 [RegisterChat] Detectado paso de voice note');
-        Future.delayed(const Duration(milliseconds: 500), () {
-          if (!isActive) return;
-          if (localOnShowVoiceNoteTutorial != null) {
-            try {
-              localOnShowVoiceNoteTutorial();
-            } catch (e, st) {
-              debugPrint('Error en voice tutorial callback: $e\n$st');
-            }
-          }
-        });
+        debugPrint(
+          '🎤 [RegisterChat] Detectado paso de voice note - Opciones disponibles',
+        );
+        // Tutorial removido - las opciones se mostrarán sin obstrucciones
       }
 
       // Auto-skip voice step en WEB
@@ -418,7 +432,9 @@ class RegisterChatController extends GenericChatController {
 
       // AutoAdvance (por ejemplo: "registro completado")
       if (botResponse["autoAdvance"] == true) {
-        debugPrint('🎉 Mensaje de éxito detectado, avanzando automáticamente...');
+        debugPrint(
+          '🎉 Mensaje de éxito detectado, avanzando automáticamente...',
+        );
         await Future.delayed(const Duration(milliseconds: 1500));
         if (!isActive) return;
         _lastUserMessage = 'continue';
@@ -428,9 +444,12 @@ class RegisterChatController extends GenericChatController {
 
       final stepStr = botResponse["step"]?.toString() ?? '';
 
-      // Si el bot indica que el flujo terminó, llamamos al callback de registro 
-      if (stepStr == 'finished' || botResponse["action"] == 'complete_registration') {
-        debugPrint('🎯 [RegisterChat] Bot indica FIN del flujo, disparando registro final...');
+      // Si el bot indica que el flujo terminó, llamamos al callback de registro
+      if (stepStr == 'finished' ||
+          botResponse["action"] == 'complete_registration') {
+        debugPrint(
+          '🎯 [RegisterChat] Bot indica FIN del flujo, disparando registro final...',
+        );
         final localComplete = onRegistrationComplete;
         if (localComplete != null) {
           // ejecutarlo sin bloquear el hilo principal del showNextBotMessage
@@ -442,7 +461,9 @@ class RegisterChatController extends GenericChatController {
             }
           });
         } else {
-          debugPrint('⚠️ onRegistrationComplete no está definido; nadie completará el registro automáticamente.');
+          debugPrint(
+            '⚠️ onRegistrationComplete no está definido; nadie completará el registro automáticamente.',
+          );
         }
       }
 
@@ -489,7 +510,6 @@ class RegisterChatController extends GenericChatController {
     }
   }
 
-
   /// Mostrar tutorial de avatar si es necesario
   void showAvatarTutorialIfNeeded(BuildContext context) {
     final currentStep = GeminiService.instance.currentStep;
@@ -509,6 +529,7 @@ class RegisterChatController extends GenericChatController {
     if (text.trim().isEmpty) return;
 
     // Si estamos en el paso de audio y NO estamos esperando confirmación
+    // PERO permite que "Skip" u otros mensajes se procesen normalmente
     if (GeminiService.instance.isOnVoiceNoteStep &&
         !_audioHandler.isWaitingForAudioConfirmation) {
       // En web, mostrar mensaje de que debe usar la app
@@ -521,7 +542,9 @@ class RegisterChatController extends GenericChatController {
         });
         return;
       }
-      return;
+
+      // Si el usuario envía "Skip" o cualquier otro texto, permitir que se procese
+      // No hacer return aquí, dejar que continúe el flujo normal
     }
 
     // Manejar respuesta de confirmación de audio

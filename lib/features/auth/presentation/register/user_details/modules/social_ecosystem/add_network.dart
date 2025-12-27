@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
@@ -54,8 +55,8 @@ class _AddNetworkBottomSheetState extends State<AddNetworkBottomSheet> {
         widget.onOptionSelected(NetworkAuthMode.manual, _completePhoneNumber);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please enter a valid phone number'),
+          SnackBar(
+            content: Text('addSocials.networkAuth.phoneInvalid'.tr()),
             backgroundColor: Colors.orange,
           ),
         );
@@ -93,7 +94,9 @@ class _AddNetworkBottomSheetState extends State<AddNetworkBottomSheet> {
           children: [
             // Header
             Text(
-              "Connect ${config.displayName}",
+              "addSocials.networkAuth.connectTitle".tr(
+                namedArgs: {'platform': config.displayName},
+              ),
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 18,
@@ -112,8 +115,10 @@ class _AddNetworkBottomSheetState extends State<AddNetworkBottomSheet> {
               if (config.capability == NetworkAuthCapability.oauth)
                 _buildSingleOption(
                   icon: Icons.link,
-                  title: "Connect with one click",
-                  subtitle: "Authorize via ${config.displayName}",
+                  title: "addSocials.networkAuth.oneClickTitle".tr(),
+                  subtitle: "addSocials.networkAuth.oneClickSubtitle".tr(
+                    namedArgs: {'platform': config.displayName},
+                  ),
                   onTap: _handleClickAuth,
                 )
               // Si solo soporta manual, mostrar directamente el formulario
@@ -123,15 +128,17 @@ class _AddNetworkBottomSheetState extends State<AddNetworkBottomSheet> {
               else ...[
                 _buildOptionButton(
                   icon: Icons.link,
-                  title: "Connect with one click",
-                  subtitle: "Authorize via ${config.displayName}",
+                  title: "addSocials.networkAuth.oneClickTitle".tr(),
+                  subtitle: "addSocials.networkAuth.oneClickSubtitle".tr(
+                    namedArgs: {'platform': config.displayName},
+                  ),
                   onTap: _handleClickAuth,
                 ),
                 const SizedBox(height: 12),
                 _buildOptionButton(
                   icon: Icons.edit,
-                  title: "Enter manually",
-                  subtitle: "Paste username or link",
+                  title: "addSocials.networkAuth.manualTitle".tr(),
+                  subtitle: "addSocials.networkAuth.manualSubtitle".tr(),
                   onTap: _handleManualAuth,
                 ),
               ],
@@ -283,10 +290,10 @@ class _AddNetworkBottomSheetState extends State<AddNetworkBottomSheet> {
                 width: 350,
                 countryCodeStyle: const TextStyle(color: Colors.black),
                 countryNameStyle: const TextStyle(color: Colors.black87),
-                searchFieldInputDecoration: const InputDecoration(
-                  hintText: 'Search country',
-                  hintStyle: TextStyle(color: Colors.black87),
-                  border: OutlineInputBorder(),
+                searchFieldInputDecoration: InputDecoration(
+                  hintText: 'addSocials.networkAuth.searchCountry'.tr(),
+                  hintStyle: const TextStyle(color: Colors.black87),
+                  border: const OutlineInputBorder(),
                 ),
               ),
             ),
@@ -327,9 +334,9 @@ class _AddNetworkBottomSheetState extends State<AddNetworkBottomSheet> {
           TextButton.icon(
             onPressed: () => setState(() => _selectedMode = null),
             icon: const Icon(Icons.arrow_back, color: Colors.white70),
-            label: const Text(
-              "Back to options",
-              style: TextStyle(color: Colors.white70),
+            label: Text(
+              "addSocials.networkAuth.backToOptions".tr(),
+              style: const TextStyle(color: Colors.white70),
             ),
           ),
           const SizedBox(height: 10),
@@ -343,9 +350,9 @@ class _AddNetworkBottomSheetState extends State<AddNetworkBottomSheet> {
             gradient: AppColors.primaryGradient,
             radius: 20,
             height: 48,
-            child: const Text(
-              "Save",
-              style: TextStyle(fontSize: 16, color: Colors.white),
+            child: Text(
+              "buttons.save".tr(),
+              style: const TextStyle(fontSize: 16, color: Colors.white),
             ),
           ),
         ),
@@ -359,50 +366,52 @@ class _AddNetworkBottomSheetState extends State<AddNetworkBottomSheet> {
     switch (name) {
       case 'instagram':
         return {
-          'hint': 'Enter Instagram username or link',
-          'example': 'https://www.instagram.com/username',
+          'hint': 'addSocials.networkAuth.hints.instagram'.tr(),
+          'example': 'addSocials.networkAuth.examples.instagram'.tr(),
         };
 
       case 'tiktok':
         return {
-          'hint': 'Enter TikTok username or link',
-          'example': 'https://www.tiktok.com/@username',
+          'hint': 'addSocials.networkAuth.hints.tiktok'.tr(),
+          'example': 'addSocials.networkAuth.examples.tiktok'.tr(),
         };
 
       case 'youtube':
         return {
-          'hint': 'Enter YouTube channel or user link',
-          'example': 'https://www.youtube.com/@username',
+          'hint': 'addSocials.networkAuth.hints.youtube'.tr(),
+          'example': 'addSocials.networkAuth.examples.youtube'.tr(),
         };
 
       case 'twitter':
         return {
-          'hint': 'Enter Twitter username or link',
-          'example': 'https://twitter.com/username',
+          'hint': 'addSocials.networkAuth.hints.twitter'.tr(),
+          'example': 'addSocials.networkAuth.examples.twitter'.tr(),
         };
 
       case 'facebook':
         return {
-          'hint': 'Enter Facebook username or link',
-          'example': 'https://www.facebook.com/username',
+          'hint': 'addSocials.networkAuth.hints.facebook'.tr(),
+          'example': 'addSocials.networkAuth.examples.facebook'.tr(),
         };
 
       case 'whatsapp':
         return {
-          'hint': '1234567890',
-          'example': 'Enter your phone number with country code',
+          'hint': 'addSocials.networkAuth.hints.whatsapp'.tr(),
+          'example': 'addSocials.networkAuth.examples.whatsapp'.tr(),
         };
 
       case 'telegram':
         return {
-          'hint': '1234567890',
-          'example': 'Enter your phone number with country code',
+          'hint': 'addSocials.networkAuth.hints.telegram'.tr(),
+          'example': 'addSocials.networkAuth.examples.telegram'.tr(),
         };
 
       default:
         return {
-          'hint': 'Enter username or link',
-          'example': 'https://www.$name.com/username',
+          'hint': 'addSocials.networkAuth.hints.default'.tr(),
+          'example': 'addSocials.networkAuth.examples.default'.tr(
+            namedArgs: {'platform': name},
+          ),
         };
     }
   }

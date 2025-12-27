@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
@@ -116,7 +117,7 @@ class EditProfileImageSection extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                'Delete Account',
+                'edit.presentation.deleteAccount.title'.tr(),
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: isSmallScreen ? 13 : 14,
@@ -136,7 +137,7 @@ class EditProfileImageSection extends StatelessWidget {
           height: isSmallScreen ? 48 : 54,
           radius: 10,
           child: Text(
-            'Save',
+            'buttons.save'.tr(),
             style: TextStyle(
               color: Colors.white,
               fontSize: isSmallScreen ? 13 : 14,

@@ -28,7 +28,7 @@ final List<String> socials = [
   // Messaging
   "Whatsapp",
   "Telegram",
-  "Discord",
+  // "Discord",
 
   // Websites & Stores
   "Website",

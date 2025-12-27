@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
+import 'package:migozz_app/core/components/compuestos/custom_snackbar.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
 
@@ -39,7 +42,21 @@ Widget userDetailsButton({
         case UserDetailsAction.back:
           //  MODIFICADO: Comportamiento diferente según el modo
           if (mode == MoreUserDetailsMode.register) {
-            // Modo registro: limpiar y cerrar
+            // ✅ Validar que hay al menos una red social en modo registro
+            final registerState = context.read<RegisterCubit>().state;
+            final socialEcosystem = registerState.socialEcosystem ?? [];
+
+            if (socialEcosystem.isEmpty) {
+              // No hay redes sociales: mostrar snackbar y no continuar
+              CustomSnackbar.show(
+                context: context,
+                message: 'addSocials.validation.atLeastOne'.tr(),
+                type: SnackbarType.warning,
+              );
+              return;
+            }
+
+            // Hay redes sociales: limpiar y cerrar
             cubit?.setSocialEcosystemEmty();
             context.pop('done');
           } else {

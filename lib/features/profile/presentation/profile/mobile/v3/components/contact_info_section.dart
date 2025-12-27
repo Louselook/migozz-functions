@@ -49,7 +49,7 @@ class ContactInfoSection extends StatelessWidget {
         AlertGeneral.show(
           context,
           1,
-          message: 'profile.customization.contact.infoDeleted'.tr(),
+          message: 'profile.customization.contact.infodeleted'.tr(),
         );
       }
     } catch (e) {
@@ -57,7 +57,7 @@ class ContactInfoSection extends StatelessWidget {
         AlertGeneral.show(
           context,
           4,
-          message: 'profile.customization.contact.infoDeletedError'.tr(),
+          message: 'profile.customization.contact.infoDeleteError'.tr(),
         );
       }
     }
@@ -106,7 +106,7 @@ class ContactInfoSection extends StatelessWidget {
               AlertGeneral.show(
                 context,
                 4,
-                message: 'profile.customization.contact.infoAddedError'.tr(),
+                message: 'profile.customization.contact.infoAddError'.tr(),
               );
             }
           }
@@ -138,6 +138,11 @@ class ContactInfoSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Check if any contact info is filled
+    final hasAnyContact = (user.contactWebsite != null && user.contactWebsite!.isNotEmpty) ||
+        (user.contactPhone != null && user.contactPhone!.isNotEmpty) ||
+        (user.contactEmail != null && user.contactEmail!.isNotEmpty);
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 15),
       padding: const EdgeInsets.all(12),
@@ -155,26 +160,13 @@ class ContactInfoSection extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Text(
-                    'profile.customization.contact.title'.tr(),
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '+5 %',
-                    style: TextStyle(
-                      color: Colors.purple.shade400,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ],
+              Text(
+                'profile.customization.contact.title'.tr(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
               GestureDetector(
                 onTap: () {
@@ -183,11 +175,11 @@ class ContactInfoSection extends StatelessWidget {
                 },
                 child: Container(
                   padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: Colors.white10,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.remove_red_eye_outlined,
                     color: Colors.white70,
                     size: 12,
@@ -195,6 +187,14 @@ class ContactInfoSection extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'profile.customization.contact.helperText'.tr(),
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.5),
+              fontSize: 10,
+            ),
           ),
           const SizedBox(height: 10),
           _buildContactItem(
@@ -223,6 +223,21 @@ class ContactInfoSection extends StatelessWidget {
             type: ContactType.email,
             isOwnProfile: isOwnProfile,
           ),
+          // Show CTA if no contact info and is own profile
+          if (isOwnProfile && !hasAnyContact) ...[
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: () => _addOrEditContactInfo(context, ContactType.email, null),
+              child: Text(
+                'profile.customization.contact.addCta'.tr(),
+                style: TextStyle(
+                  color: Colors.purple.shade300,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

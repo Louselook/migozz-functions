@@ -16,6 +16,7 @@ import 'package:migozz_app/features/profile/presentation/edit/web/edit_profile_p
     show EditProfilePage;
 import 'package:migozz_app/features/profile/presentation/profile/modules/complete_profile.dart';
 import 'package:migozz_app/features/chat/presentation/register/ia_chat_screen.dart';
+import 'package:migozz_app/features/chat/presentation/user/user_chat_screen.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/profile/presentation/profile_entry.dart';
@@ -26,6 +27,7 @@ import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/features/search/web/presentation/search_screen.dart'
     as web_search;
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
+import 'package:migozz_app/features/notifications/presentation/notifications_list_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:migozz_app/features/profile/components/utils/Loader.dart';
 
@@ -241,6 +243,43 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         builder: (context, state) =>
             WebProfileStats(user: context.read<AuthCubit>().state.userProfile!),
       ),
+      GoRoute(
+        path: '/notifications',
+        name: 'notifications',
+        builder: (context, state) => const NotificationsListScreen(),
+      ),
+      GoRoute(
+        path: '/chat/:userId',
+        name: 'chat',
+        builder: (context, state) {
+          final otherUserId = state.pathParameters['userId'] ?? '';
+          final authState = context.read<AuthCubit>().state;
+          final currentUserId = authState.userProfile?.email ?? '';
+
+          // Load other user's data
+          return FutureBuilder<Map<String, dynamic>?>(
+            future: _loadUserDataByEmail(otherUserId),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Scaffold(
+                  body: Center(child: LoaderDialog(message: 'Loading...')),
+                );
+              }
+
+              final userData = snapshot.data;
+              final otherUserName = userData?['displayName'] ?? userData?['username'] ?? 'User';
+              final otherUserAvatar = userData?['avatarUrl'] as String?;
+
+              return UserChatScreen(
+                otherUserId: otherUserId,
+                otherUserName: otherUserName,
+                otherUserAvatar: otherUserAvatar,
+                currentUserId: currentUserId,
+              );
+            },
+          );
+        },
+      ),
     ],
     redirect: (context, state) {
       final localization = EasyLocalization.of(context);
@@ -337,6 +376,8 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
           '/edit-profile',
           '/stats',
           '/search',
+          '/notifications',
+          '/chat',
         };
 
         final allowed =
@@ -374,6 +415,26 @@ Future<UserDTO?> _loadUserByUsername(String username) async {
     return UserDTO.fromMap(userData);
   } catch (e) {
     debugPrint('Error loading user by username: $e');
+    return null;
+  }
+}
+
+/// Función helper para cargar datos de usuario por email
+Future<Map<String, dynamic>?> _loadUserDataByEmail(String email) async {
+  try {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .where('email', isEqualTo: email)
+        .limit(1)
+        .get();
+
+    if (querySnapshot.docs.isEmpty) {
+      return null;
+    }
+
+    return querySnapshot.docs.first.data();
+  } catch (e) {
+    debugPrint('Error loading user by email: $e');
     return null;
   }
 }

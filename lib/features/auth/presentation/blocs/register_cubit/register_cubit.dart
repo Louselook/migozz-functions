@@ -26,9 +26,7 @@ class RegisterCubit extends Cubit<RegisterState> {
   File? avatarFile;
   File? voiceNoteFile;
 
-  RegisterCubit(this._locationService) : super(const RegisterState()) {
-    fetchLocation();
-  }
+  RegisterCubit(this._locationService) : super(const RegisterState());
 
   // ==================== RESPUESTA IA ====================
   void setAiResponse(bool value) {
@@ -36,8 +34,8 @@ class RegisterCubit extends Cubit<RegisterState> {
   }
 
   // ==================== UBICACIÓN ====================
-  Future<void> fetchLocation() async {
-    final location = await _locationService.initAndFetchAddress();
+  Future<void> fetchLocation(String lang) async {
+    final location = await _locationService.initAndFetchAddress(lang: lang);
     if (location != null) {
       debugPrint(
         '📍 [Cubit] Ubicación detectada: ${location.city}, ${location.state}, ${location.country}',
@@ -235,7 +233,9 @@ class RegisterCubit extends Cubit<RegisterState> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
-                      '${config.displayName}${'register.validations.socialConnected'.tr()}',
+                      'addSocials.messages.socialConnected'.tr(
+                        namedArgs: {'platform': config.displayName},
+                      ),
                     ),
                     backgroundColor: Colors.green,
                   ),

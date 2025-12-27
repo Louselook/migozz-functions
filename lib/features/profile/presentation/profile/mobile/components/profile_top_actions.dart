@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
-class ProfileTopActions extends StatelessWidget {
+class ProfileTopActions extends StatefulWidget {
   final bool isOwnProfile;
   final VoidCallback onChatTap;
   final VoidCallback? onNotificationsTap;
   final VoidCallback? onQrScanTap;
   final VoidCallback? onMenuTap;
+  final int profilePercentage;
 
   const ProfileTopActions({
     super.key,
@@ -14,10 +15,57 @@ class ProfileTopActions extends StatelessWidget {
     this.onNotificationsTap,
     this.onQrScanTap,
     this.onMenuTap,
+    this.profilePercentage = 100,
   });
 
   @override
+  State<ProfileTopActions> createState() => _ProfileTopActionsState();
+}
+
+class _ProfileTopActionsState extends State<ProfileTopActions>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+  int _pulseCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+
+    _pulseController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _pulseController.reverse();
+      } else if (status == AnimationStatus.dismissed) {
+        _pulseCount++;
+        if (_pulseCount < 3 && widget.profilePercentage < 80 && widget.isOwnProfile) {
+          _pulseController.forward();
+        }
+      }
+    });
+
+    // Start pulse animation if profile is incomplete
+    if (widget.profilePercentage < 80 && widget.isOwnProfile) {
+      _pulseController.forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final shouldPulse = widget.profilePercentage < 80 && widget.isOwnProfile;
+
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.only(left: 10, right: 10, top: 0),
@@ -25,9 +73,9 @@ class ProfileTopActions extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             // ✅ BOTÓN IZQUIERDO (menú o regresar)
-            !isOwnProfile
+            !widget.isOwnProfile
                 ? GestureDetector(
-                    onTap: onMenuTap,
+                    onTap: widget.onMenuTap,
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
@@ -46,7 +94,7 @@ class ProfileTopActions extends StatelessWidget {
                     ),
                   )
                 : GestureDetector(
-                    onTap: onNotificationsTap ?? () {},
+                    onTap: widget.onNotificationsTap ?? () {},
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
@@ -79,9 +127,9 @@ class ProfileTopActions extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (isOwnProfile && onQrScanTap != null) ...[
+                  if (widget.isOwnProfile && widget.onQrScanTap != null) ...[
                     GestureDetector(
-                      onTap: onQrScanTap,
+                      onTap: widget.onQrScanTap,
                       child: Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
@@ -102,23 +150,26 @@ class ProfileTopActions extends StatelessWidget {
                     const SizedBox(width: 8),
                   ],
 
-                  if (isOwnProfile) ...[
+                  if (widget.isOwnProfile) ...[
                     GestureDetector(
-                      onTap: onMenuTap ?? () {},
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.06),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.12),
-                            width: 1,
+                      onTap: widget.onMenuTap ?? () {},
+                      child: ScaleTransition(
+                        scale: shouldPulse ? _pulseAnimation : const AlwaysStoppedAnimation(1.0),
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.06),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.12),
+                              width: 1,
+                            ),
                           ),
-                        ),
-                        child: const Icon(
-                          Icons.more_vert,
-                          color: Colors.white,
-                          size: 20,
+                          child: const Icon(
+                            Icons.edit_outlined,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                         ),
                       ),
                     ),

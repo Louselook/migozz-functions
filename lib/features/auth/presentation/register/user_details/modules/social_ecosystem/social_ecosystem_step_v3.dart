@@ -1,9 +1,14 @@
+import 'dart:async';
+
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:migozz_app/core/color.dart';
+import 'package:migozz_app/core/components/compuestos/custom_snackbar.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/components/user_details_button.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
 import 'package:migozz_app/features/auth/services/add_networks/network_config.dart';
 import 'package:migozz_app/features/profile/components/utils/Loader.dart';
@@ -20,12 +25,12 @@ import '../../../../../data/domain/models/user/user_dto.dart';
 class SocialEcosystemStepV3 extends StatefulWidget {
   final PageController controller;
   final MoreUserDetailsMode mode;
-  final UserDTO user;
+  final UserDTO? user;
 
   const SocialEcosystemStepV3({
     super.key,
     required this.controller,
-    required this.user,
+    this.user,
     this.mode = MoreUserDetailsMode.register,
   });
 
@@ -138,7 +143,11 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
 
         // Show loading dialog
         if (context.mounted) {
-          showProfileLoader(context, message: 'Saving...', onCancel: () {});
+          showProfileLoader(
+            context,
+            message: 'common.saving'.tr(),
+            onCancel: () {},
+          );
         }
 
         try {
@@ -146,14 +155,16 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
           debugPrint('✅ [V3] Auto-save completed successfully!');
 
           // Always hide the dialog
-          if (context.mounted) Navigator.of(context).pop();
+          if (Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          }
 
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Social media saved successfully!'),
+              SnackBar(
+                content: Text('addSocials.messages.saved'.tr()),
                 backgroundColor: Colors.green,
-                duration: Duration(seconds: 2),
+                duration: const Duration(seconds: 2),
               ),
             );
           }
@@ -161,12 +172,18 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
           debugPrint('❌ [V3] Auto-save failed: $e');
 
           // Always hide the dialog
-          if (context.mounted) Navigator.of(context).pop();
+          if (Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          }
 
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Error saving: $e'),
+                content: Text(
+                  'addSocials.messages.errorSave'.tr(
+                    namedArgs: {'error': e.toString()},
+                  ),
+                ),
                 backgroundColor: Colors.red,
                 duration: const Duration(seconds: 2),
               ),
@@ -177,6 +194,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     };
   }
 
+  StreamSubscription? _editCubitSubscription;
+
   // ✅ NUEVO: Configurar listener para auto-save
   void _setupAutoSave() {
     final editCubit = context.read<EditCubit>();
@@ -184,57 +203,28 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
 
     debugPrint('🔄 [V3] Setting up auto-save listener');
 
-    // Listen to EditCubit state changes
-    editCubit.stream.listen((editState) async {
-      // Check if social ecosystem changed
+    _editCubitSubscription?.cancel(); // seguridad
+
+    _editCubitSubscription = editCubit.stream.listen((editState) async {
       final currentCount = editState.socialEcosystem?.length ?? 0;
 
       if (currentCount != _previousSocialCount && editState.hasChanges) {
-        debugPrint('💾 [V3] Detected change in social ecosystem');
-        debugPrint('   Previous count: $_previousSocialCount');
-        debugPrint('   Current count: $currentCount');
-
         _previousSocialCount = currentCount;
 
-        // Auto-save
         final userId = authCubit.state.firebaseUser?.uid;
-        if (userId != null && mounted) {
-          debugPrint('💾 [V3] Auto-saving changes...');
+        if (userId == null || !mounted) return;
 
-          if (mounted) {
-            showProfileLoader(context, message: 'Saving...', onCancel: () {});
-          }
+        showProfileLoader(
+          context,
+          message: 'common.saving'.tr(),
+          onCancel: () {},
+        );
 
-          try {
-            await editCubit.saveAllPendingChanges(userId);
-            debugPrint('✅ [V3] Auto-save completed successfully!');
-
-            if (mounted) Navigator.of(context).pop();
-
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Social media saved successfully!'),
-                  backgroundColor: Colors.green,
-                  duration: Duration(seconds: 2),
-                ),
-              );
-            }
-          } catch (e) {
-            debugPrint('❌ [V3] Auto-save failed: $e');
-
-            if (mounted) Navigator.of(context).pop();
-
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Error saving: $e'),
-                  backgroundColor: Colors.red,
-                  duration: const Duration(seconds: 2),
-                ),
-              );
-            }
-          }
+        try {
+          await editCubit.saveAllPendingChanges(userId);
+          if (mounted) Navigator.of(context).pop();
+        } catch (e) {
+          if (mounted) Navigator.of(context).pop();
         }
       }
     });
@@ -242,6 +232,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
 
   @override
   void dispose() {
+    _editCubitSubscription?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -265,19 +256,30 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     }).toList();
   }
 
+  String _categoryLabel(String category) {
+    final key = category.toLowerCase();
+    return 'addSocials.categories.$key'.tr();
+  }
+
   bool _isNetworkSelected(NetworkConfig config) {
     final selectedList = widget.mode == MoreUserDetailsMode.register
         ? context.watch<RegisterCubit>().state.socialEcosystem ?? []
         : context.watch<EditCubit>().state.socialEcosystem ?? [];
 
+    // Defensive: ensure map not empty before accessing keys.first
     return selectedList.any((e) {
+      if (e.isEmpty) return false;
       final platformKey = e.keys.first.toLowerCase();
       return platformKey == config.name.toLowerCase();
     });
   }
 
   Future<void> _handleSocialTap(NetworkConfig config) async {
-    debugPrint('🔵 [_handleSocialTap] Tapped on: ${config.name}');
+    final platformName = config.name.toLowerCase() == 'x'
+        ? 'twitter'
+        : config.name.toLowerCase();
+
+    debugPrint('🔵 [_handleSocialTap] Tapped on: $platformName');
 
     if (widget.mode == MoreUserDetailsMode.register) {
       final cubit = context.read<RegisterCubit>();
@@ -289,7 +291,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
 
       final index = current.indexWhere((e) {
         final platformKey = e.keys.first.toLowerCase();
-        return platformKey == config.name.toLowerCase();
+        return platformKey == platformName;
       });
 
       debugPrint('🔵 [Register Mode] Index found: $index');
@@ -300,7 +302,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
         );
         await cubit.startSocialAuth(
           context,
-          config.name,
+          platformName,
           config.iconPath,
           inEditMode: false,
         );
@@ -308,6 +310,17 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
         debugPrint(
           '🔵 [Register Mode] Network already connected, showing edit dialog',
         );
+
+        // ✅ Check if it's the last network before removing
+        if (current.length == 1) {
+          CustomSnackbar.show(
+            context: context,
+            message: 'addSocials.validation.atLeastOne'.tr(),
+            type: SnackbarType.warning,
+          );
+          return;
+        }
+
         final socialData = current[index];
         final remove = await _showEditSocialDialog(config, socialData);
         if (remove == true) {
@@ -332,9 +345,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
       final index = current.indexWhere((e) {
         final platformKey = e.keys.first.toLowerCase();
         debugPrint(
-          '🔵 [Edit Mode] Checking platform: $platformKey vs ${config.name.toLowerCase()}',
+          '🔵 [Edit Mode] Checking platform: $platformKey vs $platformName',
         );
-        return platformKey == config.name.toLowerCase();
+        return platformKey == platformName;
       });
 
       debugPrint('🔵 [Edit Mode] Index found: $index');
@@ -345,7 +358,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
         );
         await registerCubit.startSocialAuth(
           context,
-          config.name,
+          platformName,
           config.iconPath,
           inEditMode: true,
         );
@@ -372,7 +385,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
             if (mounted) {
               showProfileLoader(
                 context,
-                message: 'Removing...',
+                message: 'common.removing'.tr(),
                 onCancel: () {},
               );
             }
@@ -388,7 +401,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
-                      '${config.displayName} removed successfully!',
+                      'addSocials.messages.removed'.tr(
+                        namedArgs: {'platform': config.displayName},
+                      ),
                     ),
                     backgroundColor: Colors.green,
                     duration: const Duration(seconds: 2),
@@ -404,7 +419,11 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Error removing: $e'),
+                    content: Text(
+                      'addSocials.messages.errorRemove'.tr(
+                        namedArgs: {'error': e.toString()},
+                      ),
+                    ),
                     backgroundColor: Colors.red,
                     duration: const Duration(seconds: 2),
                   ),
@@ -421,308 +440,142 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     NetworkConfig config,
     Map<String, dynamic> socialData,
   ) {
-    final TextEditingController usernameController = TextEditingController();
-
-    // Extract username from the social data
-    final platformKey = config.name.toLowerCase();
-    final data = socialData[platformKey];
-    if (data is Map<String, dynamic>) {
-      usernameController.text = data['username']?.toString() ?? '';
-    }
-
     return showDialog<bool>(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.8),
       builder: (dialogContext) => Dialog(
         backgroundColor: Colors.transparent,
         insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-        child: SingleChildScrollView(
-          child: Container(
-            width: MediaQuery.of(context).size.width * 0.85,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF2D1B3D), Color(0xFF1A0F2E)],
-              ),
-              borderRadius: BorderRadius.circular(20),
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.85,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF2D1B3D), Color(0xFF1A0F2E)],
             ),
-            child: Stack(
-              children: [
-                // Close button
-                Positioned(
-                  top: 16,
-                  right: 16,
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.pop(dialogContext, false);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      child: const Icon(
-                        Icons.close,
-                        color: Colors.white,
-                        size: 24,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Stack(
+            children: [
+              // Main content
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(height: 20),
+
+                    // Platform icon
+                    Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      padding: const EdgeInsets.all(20),
+                      child: SvgPicture.asset(
+                        config.iconPath,
+                        width: 60,
+                        height: 60,
+                        fit: BoxFit.contain,
                       ),
                     ),
-                  ),
-                ),
 
-                // Main content
-                Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const SizedBox(height: 20),
+                    const SizedBox(height: 24),
 
-                      // Platform icon
-                      Container(
-                        width: 100,
-                        height: 100,
+                    // Title
+                    Text(
+                      config.displayName,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // Subtitle
+                    Text(
+                      'addSocials.dialogs.removeQuestion'.tr(
+                        namedArgs: {'platform': config.displayName},
+                      ),
+                      style: TextStyle(color: Colors.grey[400], fontSize: 14),
+                      textAlign: TextAlign.center,
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // Delete button with gradient
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pop(dialogContext, true);
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        height: 50,
                         decoration: BoxDecoration(
-                          color: Colors.black,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        padding: const EdgeInsets.all(20),
-                        child: SvgPicture.asset(
-                          config.iconPath,
-                          width: 60,
-                          height: 60,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // Title
-                      Text(
-                        'Add ${config.displayName}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // Username input field
-                      TextField(
-                        controller: usernameController,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                        ),
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.white.withValues(alpha: 0.1),
-                          hintText: 'Add ${config.displayName} username',
-                          hintStyle: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 14,
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFFF6B6B), Color(0xFFFF4757)],
                           ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 14,
-                          ),
+                          borderRadius: BorderRadius.circular(25),
                         ),
-                      ),
-
-                      const SizedBox(height: 24),
-                      // Save button with gradient
-                      GestureDetector(
-                        onTap: () async {
-                          final newUsername = usernameController.text.trim();
-                          if (newUsername.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Please enter a username'),
-                                backgroundColor: Colors.red,
-                                duration: Duration(seconds: 2),
-                              ),
-                            );
-                            return;
-                          }
-
-                          // Close the dialog first
-                          Navigator.pop(dialogContext, null);
-
-                          // Update the username in the social data
-                          if (widget.mode == MoreUserDetailsMode.register) {
-                            final cubit = context.read<RegisterCubit>();
-                            final current =
-                                List<Map<String, Map<String, dynamic>>>.from(
-                                  cubit.state.socialEcosystem ?? [],
-                                );
-
-                            final index = current.indexWhere((e) {
-                              final platformKey = e.keys.first.toLowerCase();
-                              return platformKey == config.name.toLowerCase();
-                            });
-
-                            if (index != -1) {
-                              final platformKey = current[index].keys.first;
-                              final platformData = Map<String, dynamic>.from(
-                                current[index][platformKey]!,
-                              );
-                              platformData['username'] = newUsername;
-                              current[index] = {platformKey: platformData};
-                              cubit.setSocialEcosystem(current);
-
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      '${config.displayName} username updated!',
-                                    ),
-                                    backgroundColor: Colors.green,
-                                    duration: const Duration(seconds: 2),
-                                  ),
-                                );
-                              }
-                            }
-                          } else {
-                            // Edit mode
-                            final editCubit = context.read<EditCubit>();
-                            final current = List<Map<String, dynamic>>.from(
-                              editCubit.state.socialEcosystem ?? [],
-                            );
-
-                            final index = current.indexWhere((e) {
-                              final platformKey = e.keys.first.toLowerCase();
-                              return platformKey == config.name.toLowerCase();
-                            });
-
-                            if (index != -1) {
-                              final platformKey = current[index].keys.first;
-                              final platformData = Map<String, dynamic>.from(
-                                current[index][platformKey],
-                              );
-                              platformData['username'] = newUsername;
-                              current[index] = {platformKey: platformData};
-                              editCubit.updateSocialEcosystem(current);
-
-                              // Auto-save after updating
-                              final authCubit = context.read<AuthCubit>();
-                              final userId = authCubit.state.firebaseUser?.uid;
-
-                              if (userId != null) {
-                                debugPrint(
-                                  '💾 [Edit Mode] Auto-saving after username update...',
-                                );
-
-                                // Show loading dialog
-                                if (context.mounted) {
-                                  showProfileLoader(
-                                    context,
-                                    message: 'Saving...',
-                                    onCancel: () {},
-                                  );
-                                }
-
-                                try {
-                                  await editCubit.saveAllPendingChanges(userId);
-                                  debugPrint(
-                                    '✅ [Edit Mode] Auto-save after update completed!',
-                                  );
-
-                                  // Always hide the dialog
-                                  if (context.mounted) {
-                                    Navigator.of(context).pop();
-                                  }
-
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          '${config.displayName} username updated successfully!',
-                                        ),
-                                        backgroundColor: Colors.green,
-                                        duration: const Duration(seconds: 2),
-                                      ),
-                                    );
-                                  }
-                                } catch (e) {
-                                  debugPrint(
-                                    '❌ [Edit Mode] Auto-save after update failed: $e',
-                                  );
-
-                                  // Always hide the dialog
-                                  if (context.mounted) {
-                                    Navigator.of(context).pop();
-                                  }
-
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text('Error saving: $e'),
-                                        backgroundColor: Colors.red,
-                                        duration: const Duration(seconds: 2),
-                                      ),
-                                    );
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        },
-                        child: Container(
-                          width: double.infinity,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            gradient: AppColors.primaryGradient,
-                            borderRadius: BorderRadius.circular(25),
-                          ),
-                          child: const Center(
-                            child: Text(
-                              'Save',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
+                        child: Center(
+                          child: Text(
+                            'addSocials.dialogs.deleteLink'.tr(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
                       ),
+                    ),
 
-                      const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                      // Delete Link button
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.pop(dialogContext, true);
-                        },
-                        child: const Text(
-                          'Delete Link',
-                          style: TextStyle(
-                            color: Colors.red,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
+                    // Cancel button
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pop(dialogContext, false);
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(25),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            width: 1,
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'buttons.cancel'.tr(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ),
+                    ),
 
-                      const SizedBox(height: 8),
-                    ],
-                  ),
+                    const SizedBox(height: 8),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
-    ).whenComplete(() {
-      // Dispose controller after dialog is completely closed
-      Future.delayed(const Duration(milliseconds: 300), () {
-        usernameController.dispose();
-      });
-    });
+    );
   }
 
   String _faviconFromDomain(String domain) {
@@ -730,13 +583,14 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     return 'https://www.google.com/s2/favicons?domain=$domain&sz=128';
   }
 
+  // Ahora acepta username nullable y lo maneja defensivamente
   List<SocialLink> _buildSocialLinks(
     List<Map<String, dynamic>>? socialEcosystem,
-    String username,
+    String? username,
   ) {
     if (socialEcosystem == null || socialEcosystem.isEmpty) return [];
     final links = <SocialLink>[];
-    final cleanUsername = username.replaceFirst('@', '');
+    final cleanUsername = (username ?? '').replaceFirst('@', '').trim();
 
     for (final social in socialEcosystem) {
       final type = social['type']?.toString().toLowerCase();
@@ -757,8 +611,13 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
             ),
           );
         }
+        // custom links don't require username; continue to next social
         continue;
       }
+
+      // If it's not custom and we don't have a username, skip entries
+      if (cleanUsername.isEmpty) continue;
+
       for (final entry in social.entries) {
         final platform = entry.key.toLowerCase();
         final data = entry.value;
@@ -774,10 +633,17 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
 
         final socialInfo = _getSocialInfo(platform, cleanUsername, customUrl);
         if (socialInfo != null) {
+          final asset = socialInfo['asset'] ?? '';
+          final urlStr = socialInfo['url'] ?? '';
+          if (asset.isEmpty || urlStr.isEmpty) {
+            // skip invalid
+            continue;
+          }
+
           links.add(
             SocialLink(
-              asset: socialInfo['asset']!,
-              url: Uri.parse(socialInfo['url']!),
+              asset: asset,
+              url: Uri.parse(urlStr),
               followers: followers,
               shares: shares,
             ),
@@ -791,72 +657,150 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
 
   @override
   Widget build(BuildContext context) {
-    final user = widget.user;
+    String normalizeUsername(String username) {
+      if (username.isEmpty) return '';
+      return username.startsWith('@') ? username : '@$username';
+    }
+
     final size = MediaQuery.of(context).size;
-    final username = user.username.startsWith('@')
-        ? user.username
-        : '@${user.username}';
-    final avatarUrl = user.avatarUrl;
+
+    // RAW username depending on mode:
+    final rawUsername = widget.mode == MoreUserDetailsMode.edit
+        ? (widget.user?.username ?? '')
+        : (context.watch<RegisterCubit>().state.username ?? '');
+
+    final username = normalizeUsername(rawUsername);
+
+    // avatar only available in edit mode
+    final avatarUrl = widget.mode == MoreUserDetailsMode.edit
+        ? widget.user?.avatarUrl
+        : null;
 
     // Get social ecosystem from the appropriate cubit based on mode
     final List<Map<String, dynamic>> socialEcosystem;
     if (widget.mode == MoreUserDetailsMode.register) {
       // RegisterCubit has List<Map<String, Map<String, dynamic>>>
+      // Convert each item defensively to Map<String, dynamic>
       final registerEcosystem =
           context.watch<RegisterCubit>().state.socialEcosystem ?? [];
-      // Convert to List<Map<String, dynamic>>
-      socialEcosystem = registerEcosystem.cast<Map<String, dynamic>>();
+
+      socialEcosystem = registerEcosystem
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
     } else {
       // EditCubit already has List<Map<String, dynamic>>
       socialEcosystem = context.watch<EditCubit>().state.socialEcosystem ?? [];
     }
 
-    final socialLinks = _buildSocialLinks(socialEcosystem, user.username);
+    // Use the safe username variable (NO user! here)
+    final socialLinks = _buildSocialLinks(socialEcosystem, rawUsername);
 
-    return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(),
-      child: SafeArea(
-        top: false,
-        child: Scaffold(
-          backgroundColor: Colors.black,
-          body: Stack(
-            
-            children: [
-              Positioned.fill(
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.purpleAccent.withValues(alpha: 0.35),
-                        Colors.black.withValues(alpha: 0.40),
-                        Colors.black,
-                      ],
-                      // stops: const [
-                      //   0.3,
-                      //   0.7,
-                      //   1.0,
-                      // ],
+    void _handleBackTap() {
+      // Si estamos en modo registro, intentamos navegar dentro del PageView.
+      if (widget.mode == MoreUserDetailsMode.register) {
+        // ✅ Validate at least one network is added before going back
+        final socialEcosystem =
+            context.read<RegisterCubit>().state.socialEcosystem ?? [];
+
+        if (socialEcosystem.isEmpty) {
+          CustomSnackbar.show(
+            context: context,
+            message: 'addSocials.validation.atLeastOne'.tr(),
+            type: SnackbarType.warning,
+          );
+          return;
+        }
+
+        try {
+          if (widget.controller.hasClients) {
+            // obtener página actual (puede ser decimal)
+            final currentPage =
+                (widget.controller.page ?? widget.controller.initialPage)
+                    .round();
+            if (currentPage > 0) {
+              widget.controller.previousPage(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+              );
+              return;
+            } else {
+              // Estamos en la primera página del PageView -> cerrar la ruta
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop();
+                return;
+              }
+            }
+          } else {
+            // controller aún no está attached -> fallback a Navigator
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+              return;
+            }
+          }
+        } catch (e, st) {
+          debugPrint('[_handleBackTap] error: $e\n$st');
+          // fallback seguro
+          if (Navigator.of(context).canPop()) Navigator.of(context).pop();
+        }
+      } else {
+        // Modo edición: cerrar la ruta y volver al perfil
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+      }
+    }
+
+    return WillPopScope(
+      onWillPop: () async {
+        // Si estamos en modo registro, validar que haya al menos una red social
+        if (widget.mode == MoreUserDetailsMode.register) {
+          final socialEcosystem =
+              context.read<RegisterCubit>().state.socialEcosystem ?? [];
+
+          if (socialEcosystem.isEmpty) {
+            CustomSnackbar.show(
+              context: context,
+              message: 'addSocials.validation.atLeastOne'.tr(),
+              type: SnackbarType.warning,
+            );
+            return false;
+          }
+        }
+
+        return true;
+      },
+      child: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SafeArea(
+          top: false,
+          child: Scaffold(
+            backgroundColor: Colors.black,
+            body: Stack(
+              children: [
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.purpleAccent.withValues(alpha: 0.35),
+                          Colors.black.withValues(alpha: 0.40),
+                          Colors.black,
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
 
-              
-              Positioned(
-                top: MediaQuery.of(context).padding.top + 8,
-                left: 0,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: GestureDetector(
-                    onTap: () async {
-                      // Just navigate back - auto-save happens on add/remove
-                      Navigator.pop(context);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      child: Icon(
+                Positioned(
+                  top: MediaQuery.of(context).padding.top + 8,
+                  left: 0,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: GestureDetector(
+                      onTap: _handleBackTap,
+                      child: const Icon(
                         Icons.arrow_back_ios,
                         color: Colors.white,
                         size: 24,
@@ -864,112 +808,163 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                     ),
                   ),
                 ),
-              ),
 
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0.43 * size.height,
-                child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
-              ),
-              // Main content
-              SafeArea(
-                child: Column(
-                  children: [
-                    SizedBox(height: size.height * 0.33),
-                    Text(
-                      formatDisplayName(
-                        widget.user.displayName,
-                        format: FormatName.short,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 27,
-                        fontWeight: FontWeight.w700,
-                        height: 1.1,
-                      ),
+                // Only show profile image in edit mode
+                if (widget.mode == MoreUserDetailsMode.edit)
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0.43 * size.height,
+                    child: ProfileImageMobileV3(
+                      avatarUrl: avatarUrl,
+                      size: size,
                     ),
+                  ),
 
-                    // DisplayName (@username)
-                    const SizedBox(height: 3),
-                    Text(
-                      username,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        height: 1.2,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8, bottom: 0),
-                      child: SocialCirclesMobileV3(links: socialLinks),
-                    ),
-                    // Contador de comunidad
-                    const SizedBox(height: 11),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: TextField(
-                        controller: _searchController,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                        ),
-                        decoration: InputDecoration(
-                          isDense: true, // decrease height
-                          filled: true,
-                          fillColor: AppColors.greyBackground.withValues(
-                            alpha: 0.4,
+                // Main content
+                SafeArea(
+                  child: Column(
+                    children: [
+                      // Only show profile info in edit mode
+                      if (widget.mode == MoreUserDetailsMode.edit) ...[
+                        SizedBox(height: size.height * 0.33),
+                        Text(
+                          formatDisplayName(
+                            widget.user?.displayName,
+                            format: FormatName.short,
                           ),
-                          hintText: 'Search For Platforms',
-                          hintStyle: TextStyle(
-                            color: Colors.grey[600],
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 27,
+                            fontWeight: FontWeight.w700,
+                            height: 1.1,
+                          ),
+                        ),
+
+                        // DisplayName (@username)
+                        const SizedBox(height: 3),
+                        Text(
+                          username,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            height: 1.2,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8, bottom: 0),
+                          child: SocialCirclesMobileV3(links: socialLinks),
+                        ),
+                        const SizedBox(height: 11),
+                      ] else ...[
+                        // In register mode, add spacing at top and title
+                        const SizedBox(height: 60),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: Text(
+                            'addSocials.register.title'.tr(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: Text(
+                            'addSocials.register.subtitle'.tr(),
+                            style: TextStyle(
+                              color: Colors.grey[400],
+                              fontSize: 14,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: TextField(
+                          controller: _searchController,
+                          style: const TextStyle(
+                            color: Colors.white,
                             fontSize: 12,
                           ),
-                          suffixIcon: Icon(
-                            Icons.search,
-                            color: Colors.grey[600],
-                            size: 20,
+                          decoration: InputDecoration(
+                            isDense: true, // decrease height
+                            filled: true,
+                            fillColor: AppColors.greyBackground.withValues(
+                              alpha: 0.4,
+                            ),
+                            hintText: 'addSocials.search.hint'.tr(),
+                            hintStyle: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 12,
+                            ),
+                            suffixIcon: Icon(
+                              Icons.search,
+                              color: Colors.grey[600],
+                              size: 20,
+                            ),
+                            // Rounded corners
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 5, // lower vertical padding
+                            ),
                           ),
-                          // Rounded corners
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
+                          onChanged: (value) {
+                            setState(() {
+                              _searchQuery = value;
+                            });
+                          },
+                        ),
+                      ),
+
+                      // Content
+                      Expanded(
+                        child: _searchQuery.isNotEmpty
+                            ? _buildSearchResults()
+                            : _buildCategorizedGrid(),
+                      ),
+
+                      // Continue Button - only in register mode
+                      if (widget.mode == MoreUserDetailsMode.register)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 16,
                           ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 5, // lower vertical padding
+                          child: userDetailsButton(
+                            cubit: context.read<RegisterCubit>(),
+                            controller: widget.controller,
+                            context: context,
+                            action: UserDetailsAction.back,
+                            mode: MoreUserDetailsMode.register,
                           ),
                         ),
-                        onChanged: (value) {
-                          setState(() {
-                            _searchQuery = value;
-                          });
-                        },
-                      ),
-                    ),
-
-                    // Content
-                    Expanded(
-                      child: _searchQuery.isNotEmpty
-                          ? _buildSearchResults()
-                          : _buildCategorizedGrid(),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
-
-  // ... resto de métodos sin cambios (_buildSearchResults, _buildCategorizedGrid, etc.)
 
   Widget _buildSearchResults() {
     final filteredNetworks = _getFilteredNetworks();
@@ -982,7 +977,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
             Icon(Icons.search_off, size: 64, color: Colors.grey[700]),
             const SizedBox(height: 16),
             Text(
-              'No platforms found',
+              'addSocials.search.noResults'.tr(),
               style: TextStyle(color: Colors.grey[600], fontSize: 14),
             ),
           ],
@@ -996,9 +991,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Search Results',
-            style: TextStyle(
+          Text(
+            'addSocials.search.results'.tr(),
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 13,
               fontWeight: FontWeight.w800,
@@ -1043,7 +1038,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  categoryName,
+                  _categoryLabel(categoryName),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
@@ -1081,9 +1076,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Add Custom Link',
-                style: TextStyle(
+              Text(
+                'addSocials.customLink.title'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
@@ -1192,10 +1187,10 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
         );
         if (result == 'done' && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Custom link updated'),
+            SnackBar(
+              content: Text('addSocials.customLink.updated'.tr()),
               backgroundColor: Colors.green,
-              duration: Duration(seconds: 2),
+              duration: const Duration(seconds: 2),
             ),
           );
         }
@@ -1225,7 +1220,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
             final baseFontSize = (h * 0.33).clamp(12.0, 15.0).toDouble();
             final availableTextWidth =
                 constraints.maxWidth - iconSize - 8 - 6 - 6;
-            final fitFontSize = (availableTextWidth / ('New'.length * 0.6))
+            final label = 'addSocials.customLink.newLabel'.tr();
+            final fitFontSize = (availableTextWidth / (label.length * 0.6))
                 .clamp(10.0, baseFontSize)
                 .toDouble();
             return Row(
@@ -1241,7 +1237,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    'New',
+                    label,
                     style: TextStyle(
                       color: Colors.white70,
                       fontSize: fitFontSize,

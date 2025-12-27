@@ -3,7 +3,7 @@ description: "A new Flutter project."
 
 publish_to: "none"
 
-version: 1.1.0+2
+version: 1.2.8+2
 
 environment:
   sdk: ^3.8.1
@@ -37,7 +37,6 @@ dependencies:
 
   flutter_bloc: ^9.1.1
   equatable: ^2.0.7
-  
 
   http: ^1.5.0 # validar email con OTP
   flutter_svg: ^2.0.9
@@ -66,6 +65,9 @@ dependencies:
   pull_to_refresh: ^2.0.0
   sign_in_with_apple: ^7.0.1
   flutter_staggered_grid_view: ^0.7.0
+  firebase_messaging: ^15.2.10
+  awesome_notifications: ^0.10.1
+  flutter_screenutil: ^5.9.3 # responsive design
 
 dev_dependencies:
   flutter_test:

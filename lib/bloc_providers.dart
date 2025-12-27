@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/data/domain/use_cases/auth_use_cases.dart';
 import 'package:migozz_app/features/auth/services/location_service.dart';
@@ -6,27 +7,38 @@ import 'package:migozz_app/features/auth/presentation/blocs/login_cubit/login_cu
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 import 'package:migozz_app/features/profile/data/datasources/user_service.dart';
-import 'package:migozz_app/injection.dart'; // Tu archivo de inyección de dependencias
+import 'package:migozz_app/injection.dart';
 
-/// Lista de providers globales de la app
+// ✅ Crear instancias de los cubits ANTES de los providers
+final loginCubit = LoginCubit();
+final registerCubit = RegisterCubit(locator<LocationService>());
+final authCubit = AuthCubit(locator<AuthUseCases>(), locator<UserService>());
+late final EditCubit editCubit;
+
+// ✅ Inicializar los cubits y configurar callbacks
+void initializeBlocProviders() {
+  // Configurar callback de logout en AuthCubit
+  authCubit.onLogoutRequested = () {
+    debugPrint('🧹 [Logout] Limpiando LoginCubit...');
+    loginCubit.resetState();
+
+    debugPrint('🧹 [Logout] Limpiando RegisterCubit...');
+    registerCubit.reset();
+
+    debugPrint('🧹 [Logout] Limpiando EditCubit...');
+    editCubit.reset();
+
+    debugPrint('✅ [Logout] Todos los cubits limpiados');
+  };
+
+  // Crear EditCubit después de configurar el callback
+  editCubit = EditCubit(locator<UserService>(), authCubit);
+}
+
+/// Lista de providers globales de la app - ESTÁTICA, creada UNA SOLA VEZ
 final List<BlocProvider> blocProviders = [
-  // AuthCubit con arquitectura limpia
-  BlocProvider<AuthCubit>(
-    create: (context) =>
-        AuthCubit(locator<AuthUseCases>(), locator<UserService>()),
-  ),
-
-  // LoginCubit - mantener como está por ahora
-  BlocProvider<LoginCubit>(create: (context) => LoginCubit()),
-
-  // RegisterCubit - mantener como está por ahora
-  BlocProvider<RegisterCubit>(
-    create: (context) => RegisterCubit(locator<LocationService>()),
-  ),
-
-  // EditCubit - mantener como está por ahora
-  BlocProvider<EditCubit>(
-    create: (context) =>
-        EditCubit(locator<UserService>(), context.read<AuthCubit>()),
-  ),
+  BlocProvider<AuthCubit>(create: (_) => authCubit),
+  BlocProvider<LoginCubit>(create: (_) => loginCubit),
+  BlocProvider<RegisterCubit>(create: (_) => registerCubit),
+  BlocProvider<EditCubit>(create: (_) => editCubit),
 ];

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:migozz_app/core/color.dart';
@@ -39,7 +40,18 @@ class _AddContactInfoBottomSheetState extends State<AddContactInfoBottomSheet> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.currentValue ?? '');
+    // For website, pre-fill https:// if no current value
+    String initialValue;
+    if (widget.type == ContactType.website) {
+      if (widget.currentValue != null && widget.currentValue!.isNotEmpty) {
+        initialValue = widget.currentValue!;
+      } else {
+        initialValue = 'https://';
+      }
+    } else {
+      initialValue = widget.currentValue ?? '';
+    }
+    _controller = TextEditingController(text: initialValue);
   }
 
   @override
@@ -48,28 +60,33 @@ class _AddContactInfoBottomSheetState extends State<AddContactInfoBottomSheet> {
     super.dispose();
   }
 
-  String _getTitle() {
-    final isEditing = widget.currentValue != null && widget.currentValue!.isNotEmpty;
-    final action = isEditing ? 'Edit' : 'Add';
-
+  String _getTypeLabel(BuildContext context) {
     switch (widget.type) {
       case ContactType.website:
-        return '$action Website';
+        return 'profile.customization.contact.sheetType.website'.tr();
       case ContactType.phone:
-        return '$action Phone Number';
+        return 'profile.customization.contact.sheetType.phone'.tr();
       case ContactType.email:
-        return '$action Email';
+        return 'profile.customization.contact.sheetType.email'.tr();
     }
   }
 
-  String _getHint() {
+  String _getTitle(BuildContext context) {
+    final isEditing = widget.currentValue != null && widget.currentValue!.isNotEmpty;
+    final actionKey = isEditing
+        ? 'profile.customization.contact.sheetTitle.edit'
+        : 'profile.customization.contact.sheetTitle.add';
+    return actionKey.tr(namedArgs: {'type': _getTypeLabel(context)});
+  }
+
+  String _getHint(BuildContext context) {
     switch (widget.type) {
       case ContactType.website:
-        return 'https://example.com';
+        return 'profile.customization.contact.hints.website'.tr();
       case ContactType.phone:
-        return '+1 234 567 8900';
+        return 'profile.customization.contact.hints.phone'.tr();
       case ContactType.email:
-        return 'email@example.com';
+        return 'profile.customization.contact.hints.email'.tr();
     }
   }
 
@@ -86,23 +103,23 @@ class _AddContactInfoBottomSheetState extends State<AddContactInfoBottomSheet> {
 
   String? _validate(String value) {
     if (value.isEmpty) {
-      return 'Please enter a value';
+      return 'profile.customization.contact.validation.required'.tr();
     }
 
     switch (widget.type) {
       case ContactType.website:
         if (!value.startsWith('http://') && !value.startsWith('https://')) {
-          return 'Website must start with http:// or https://';
+          return 'profile.customization.contact.validation.websiteFormat'.tr();
         }
         break;
       case ContactType.email:
         if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-          return 'Please enter a valid email address';
+          return 'profile.customization.contact.validation.emailFormat'.tr();
         }
         break;
       case ContactType.phone:
         if (!RegExp(r'^\+?[\d\s\-\(\)]+$').hasMatch(value)) {
-          return 'Please enter a valid phone number';
+          return 'profile.customization.contact.validation.phoneFormat'.tr();
         }
         break;
     }
@@ -146,7 +163,7 @@ class _AddContactInfoBottomSheetState extends State<AddContactInfoBottomSheet> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    _getTitle(),
+                    _getTitle(context),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 20,
@@ -168,7 +185,7 @@ class _AddContactInfoBottomSheetState extends State<AddContactInfoBottomSheet> {
                 keyboardType: _getKeyboardType(),
                 autofocus: true,
                 decoration: InputDecoration(
-                  hintText: _getHint(),
+                  hintText: _getHint(context),
                   hintStyle: const TextStyle(color: Colors.white38),
                   filled: true,
                   fillColor: Colors.white10,
@@ -188,8 +205,8 @@ class _AddContactInfoBottomSheetState extends State<AddContactInfoBottomSheet> {
                   gradient: AppColors.primaryGradient,
                   radius: 10,
                   height: 48,
-                  child: const Text(
-                    'Save',
+                  child: Text(
+                    'buttons.save'.tr(),
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.white,
@@ -216,8 +233,8 @@ class _AddContactInfoBottomSheetState extends State<AddContactInfoBottomSheet> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    child: const Text(
-                      'Delete',
+                    child: Text(
+                      'buttons.delete'.tr(),
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.red,
@@ -234,4 +251,3 @@ class _AddContactInfoBottomSheetState extends State<AddContactInfoBottomSheet> {
     );
   }
 }
-

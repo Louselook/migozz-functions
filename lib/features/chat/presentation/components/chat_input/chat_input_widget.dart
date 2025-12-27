@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
@@ -8,6 +9,7 @@ import 'package:migozz_app/core/components/compuestos/chat/chat_attachment_sheet
 import 'package:migozz_app/core/components/compuestos/custom_textfield.dart';
 import 'package:migozz_app/core/components/compuestos/custom_tooltip.dart';
 import 'package:audio_waveforms/audio_waveforms.dart';
+import 'package:migozz_app/core/utils/camera_permission_handler.dart';
 import 'audio_recorder_manager.dart';
 import 'recording_display.dart';
 import 'audio_player_display.dart';
@@ -48,6 +50,112 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
 
   GlobalKey get attachButtonKey => _attachButtonKey;
   GlobalKey get micButtonKey => _micButtonKey;
+
+  /// Called by external UI (eg. ia_chat_screen) when a suggestion requests camera.
+  Future<void> openCameraFromSuggestions({int imageQuality = 80}) async {
+    if (kIsWeb) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("chat.input.webRestriction".tr()),
+          backgroundColor: Colors.blue,
+        ),
+      );
+      return;
+    }
+
+    try {
+      // Option A: Toggle attachments UI first (si quieres mostrar el sheet)
+      // setState(() => _showAttachments = true);
+
+      final photoPath = await CameraPermissionHandler.openCamera(
+        imageQuality: imageQuality,
+        context: context,
+      );
+
+      if (photoPath != null) {
+        // reuse existing onSendImage callback so parent decides preview/upload
+        widget.onSendImage?.call(photoPath);
+      }
+    } catch (e, st) {
+      debugPrint('openCameraFromSuggestions error: $e\n$st');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('chat.input.photoError'.tr()),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
+  }
+
+  /// Called by external UI when a suggestion requests gallery.
+  Future<void> openGalleryFromSuggestions({int imageQuality = 80}) async {
+    if (kIsWeb) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("chat.input.webRestriction".tr()),
+          backgroundColor: Colors.blue,
+        ),
+      );
+      return;
+    }
+
+    try {
+      final imagePath = await CameraPermissionHandler.openGallery(
+        imageQuality: imageQuality,
+        context: context,
+      );
+
+      if (imagePath != null) {
+        widget.onSendImage?.call(imagePath);
+      }
+    } catch (e, st) {
+      debugPrint('openGalleryFromSuggestions error: $e\n$st');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('chat.input.photoError'.tr()),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
+  }
+
+  /// Called by external UI when a suggestion requests audio recording.
+  Future<void> startRecordingFromSuggestions() async {
+    if (kIsWeb) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("chat.input.webRestriction".tr()),
+          backgroundColor: Colors.blue,
+        ),
+      );
+      return;
+    }
+
+    try {
+      // Inicia la grabación de audio
+      await _audioManager.startRecording();
+
+      if (mounted) {
+        setState(() {});
+        // Optionally show feedback to user
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('chat.input.recordingStarted'.tr()),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e, st) {
+      debugPrint('startRecordingFromSuggestions error: $e\n$st');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('chat.input.audioError'.tr()),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
+  }
 
   @override
   void initState() {
@@ -94,10 +202,8 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
     // Solo permitir abrir attachments en MOBILE
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "If you'd like to add images or audio, please use the app!",
-          ),
+        SnackBar(
+          content: Text("chat.input.webRestriction".tr()),
           backgroundColor: Colors.blue,
         ),
       );
@@ -110,10 +216,8 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
     // Si estamos en web, avisar y no enviar audio
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "If you'd like to add images or audio, please use the app!",
-          ),
+        SnackBar(
+          content: Text("chat.input.webRestriction".tr()),
           backgroundColor: Colors.blue,
         ),
       );
@@ -144,8 +248,8 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
             SnackBar(
               content: Text(
                 durationInSeconds < 1.0
-                    ? 'El audio es muy corto (${durationInSeconds.toStringAsFixed(1)}s). Debe durar entre 1 y 10 segundos'
-                    : 'El audio es muy largo (${durationInSeconds.toStringAsFixed(1)}s). Debe durar entre 1 y 10 segundos',
+                    ? "register.validations.audioMinLimit".tr()
+                    : "register.validations.audioMaxLimit".tr(),
               ),
               backgroundColor: Colors.orange,
             ),
@@ -214,7 +318,7 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
       _handleSendAudio();
     } else {
       // Si no hay texto ni audio, abrir tooltip instruccional
-      _showTooltip(context, "Mantén pulsado para grabar");
+      _showTooltip(context, "chat.input.holdToRecord".tr());
     }
   }
 
@@ -222,10 +326,8 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
     // En web, no permitimos grabar (mostramos mensaje)
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "If you'd like to add images or audio, please use the app!",
-          ),
+        SnackBar(
+          content: Text("chat.input.webRestriction".tr()),
           backgroundColor: Colors.blue,
         ),
       );
@@ -339,7 +441,7 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
           ),
           child: IntlPhoneField(
             decoration: InputDecoration(
-              hintText: '1234',
+              hintText: "chat.input.phoneHint".tr(),
               hintStyle: const TextStyle(color: Colors.white54, fontSize: 15),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(vertical: 12),
@@ -373,10 +475,10 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
               width: 350,
               countryCodeStyle: const TextStyle(color: Colors.black),
               countryNameStyle: const TextStyle(color: Colors.black87),
-              searchFieldInputDecoration: const InputDecoration(
-                hintText: 'Search country',
-                hintStyle: TextStyle(color: Colors.black87),
-                border: OutlineInputBorder(),
+              searchFieldInputDecoration: InputDecoration(
+                hintText: "chat.input.searchCountry".tr(),
+                hintStyle: const TextStyle(color: Colors.black87),
+                border: const OutlineInputBorder(),
               ),
             ),
           ),
@@ -404,7 +506,7 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
       child: CustomTextField(
         key: const ValueKey('text_input'),
         controller: widget.controller,
-        hintText: "Escribe algo...",
+        hintText: "chat.input.typeMessage".tr(),
         radius: 8,
         keyboardType: widget.keyboardType,
         textInputAction: TextInputAction.send,
@@ -554,7 +656,7 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
         if (_isLongPressValid) {
           _stopRecordingRelease();
         } else {
-          _showTooltip(context, "Mantén pulsado para grabar");
+          _showTooltip(context, "chat.input.holdToRecord".tr());
         }
       },
       onPointerCancel: (_) {

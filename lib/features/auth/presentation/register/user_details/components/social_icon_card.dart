@@ -9,7 +9,7 @@ class SocialIconCard extends StatelessWidget {
   final VoidCallback? onTap;
   final Size? sizeIcon;
   final bool isSelected;
-  final double iconSize; // Tamaño específico del icono interno
+  final double iconSize; // Tamano especifico del icono interno
 
   const SocialIconCard({
     super.key,
@@ -33,135 +33,171 @@ class SocialIconCard extends StatelessWidget {
       minValue: 12.0,
       maxValue: 20.0,
     );
+    final borderWidth = ResponsiveUtils.scaleValue(
+      2.0,
+      scaleFactor,
+      minValue: 2.0,
+      maxValue: 2.0,
+    );
+    final innerRadius = (responsiveBorderRadius - borderWidth)
+        .clamp(0.0, responsiveBorderRadius)
+        .toDouble();
+    final backgroundGradient = LinearGradient(
+      colors: AppColors.primaryGradient.colors
+          .map((color) => color.withValues(alpha: 0.25))
+          .toList(),
+      begin: AppColors.primaryGradient.begin,
+      end: AppColors.primaryGradient.end,
+    );
+    final cardWidth = sizeIcon?.width ?? 65;
+    final cardHeight = sizeIcon?.height ?? 65;
+
+    final cardContent = Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        if (assetPath != null) ...[
+          Container(
+            width: iconSize + 15,
+            height: iconSize + 15,
+            // Agregamos un color de fondo temporal para debug
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: _isSvg
+                ? SvgPicture.asset(
+                    assetPath!,
+                    width: iconSize,
+                    height: iconSize,
+                    fit: BoxFit.contain,
+                    placeholderBuilder: (context) {
+                      return Container(
+                        color: const Color.fromARGB(255, 255, 235, 59),
+                        child: const Center(
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      debugPrint('SVG Error for $label:');
+                      debugPrint('   Path: $assetPath');
+                      debugPrint('   Error: $error');
+                      debugPrint('   Stack: $stackTrace');
+
+                      return Container(
+                        width: iconSize,
+                        height: iconSize,
+                        color: Colors.red.withValues(),
+                        child: Icon(
+                          Icons.error_outline,
+                          color: Colors.red,
+                          size: iconSize * 0.5,
+                        ),
+                      );
+                    },
+                    // Agregamos callback para cuando carga exitosamente
+                    semanticsLabel: label,
+                  )
+                : Image.asset(
+                    assetPath!,
+                    width: iconSize,
+                    height: iconSize,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      debugPrint('Image Error: $assetPath - $error');
+                      return Container(
+                        width: iconSize,
+                        height: iconSize,
+                        color: Colors.red.withValues(),
+                        child: Icon(
+                          Icons.error_outline,
+                          color: Colors.red,
+                          size: iconSize * 0.5,
+                        ),
+                      );
+                    },
+                  ),
+          ),
+          SizedBox(
+            height: ResponsiveUtils.scaleValue(
+              8.0,
+              scaleFactor,
+              minValue: 6.0,
+              maxValue: 12.0,
+            ),
+          ),
+        ] else ...[
+          Container(
+            width: iconSize,
+            height: iconSize,
+            color: Colors.grey.withValues(),
+            child: Icon(
+              Icons.image_not_supported,
+              color: Colors.grey,
+              size: iconSize * 0.5,
+            ),
+          ),
+          SizedBox(
+            height: ResponsiveUtils.scaleValue(
+              8.0,
+              scaleFactor,
+              minValue: 6.0,
+              maxValue: 12.0,
+            ),
+          ),
+        ],
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: ResponsiveUtils.getResponsiveFontSize(
+              12.0,
+              scaleFactor,
+            ),
+            fontWeight: FontWeight.w500,
+          ),
+          textAlign: TextAlign.center,
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
+        ),
+      ],
+    );
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: Container(
-        width: sizeIcon?.width ?? 65,
-        height: sizeIcon?.height ?? 65,
-        decoration: BoxDecoration(
-          gradient: isSelected ? AppColors.primaryGradient : null,
-          color: isSelected ? null : const Color(0xFF404040),
-          borderRadius: BorderRadius.circular(responsiveBorderRadius),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (assetPath != null) ...[
-              Container(
-                width: iconSize + 15,
-                height: iconSize + 15,
-                // Agregamos un color de fondo temporal para debug
+      child: isSelected
+          ? Container(
+              width: cardWidth,
+              height: cardHeight,
+              decoration: BoxDecoration(
+                gradient: AppColors.primaryGradient,
+                borderRadius: BorderRadius.circular(responsiveBorderRadius),
+              ),
+              padding: EdgeInsets.all(borderWidth),
+              child: Container(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(4),
+                  gradient: backgroundGradient,
+                  borderRadius: BorderRadius.circular(innerRadius),
                 ),
-                child: _isSvg
-                    ? SvgPicture.asset(
-                        assetPath!,
-                        width: iconSize,
-                        height: iconSize,
-                        fit: BoxFit.contain,
-                        placeholderBuilder: (context) {
-                          return Container(
-                            color: const Color.fromARGB(255, 255, 235, 59),
-                            child: const Center(
-                              child: SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                        errorBuilder: (context, error, stackTrace) {
-                          debugPrint('❌ SVG Error para $label:');
-                          debugPrint('   Path: $assetPath');
-                          debugPrint('   Error: $error');
-                          debugPrint('   Stack: $stackTrace');
-
-                          return Container(
-                            width: iconSize,
-                            height: iconSize,
-                            color: Colors.red.withValues(),
-                            child: Icon(
-                              Icons.error_outline,
-                              color: Colors.red,
-                              size: iconSize * 0.5,
-                            ),
-                          );
-                        },
-                        // Agregamos callback para cuando carga exitosamente
-                        semanticsLabel: label,
-                      )
-                    : Image.asset(
-                        assetPath!,
-                        width: iconSize,
-                        height: iconSize,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) {
-                          debugPrint('❌ Image Error: $assetPath - $error');
-                          return Container(
-                            width: iconSize,
-                            height: iconSize,
-                            color: Colors.red.withValues(),
-                            child: Icon(
-                              Icons.error_outline,
-                              color: Colors.red,
-                              size: iconSize * 0.5,
-                            ),
-                          );
-                        },
-                      ),
+                child: cardContent,
               ),
-              SizedBox(
-                height: ResponsiveUtils.scaleValue(
-                  8.0,
-                  scaleFactor,
-                  minValue: 6.0,
-                  maxValue: 12.0,
-                ),
+            )
+          : Container(
+              width: cardWidth,
+              height: cardHeight,
+              decoration: BoxDecoration(
+                color: const Color(0xFF404040),
+                borderRadius: BorderRadius.circular(responsiveBorderRadius),
               ),
-            ] else ...[
-              Container(
-                width: iconSize,
-                height: iconSize,
-                color: Colors.grey.withValues(),
-                child: Icon(
-                  Icons.image_not_supported,
-                  color: Colors.grey,
-                  size: iconSize * 0.5,
-                ),
-              ),
-              SizedBox(
-                height: ResponsiveUtils.scaleValue(
-                  8.0,
-                  scaleFactor,
-                  minValue: 6.0,
-                  maxValue: 12.0,
-                ),
-              ),
-            ],
-            Text(
-              label,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: ResponsiveUtils.getResponsiveFontSize(
-                  12.0,
-                  scaleFactor,
-                ),
-                fontWeight: FontWeight.w500,
-              ),
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
+              child: cardContent,
             ),
-          ],
-        ),
-      ),
     );
   }
 }

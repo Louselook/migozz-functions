@@ -1,12 +1,11 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:migozz_app/core/utils/camera_permission_handler.dart';
 import 'package:migozz_app/features/auth/services/media_service.dart';
 
 class UserService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final ImagePicker _picker = ImagePicker();
   final UserMediaService _mediaService;
 
   UserService(this._mediaService);
@@ -37,24 +36,21 @@ class UserService {
   }
 
   /// ---------------------------
-  /// 🔹 PICKER GENÉRICO
-  /// ---------------------------
-  Future<File?> _pickImage({ImageSource source = ImageSource.gallery}) async {
-    final picked = await _picker.pickImage(source: source, imageQuality: 40);
-    return picked != null ? File(picked.path) : null;
-  }
-
-  /// ---------------------------
   /// 🔹 CAMBIAR AVATAR
   /// ---------------------------
-  Future<String?> changeAvatar(String userId) async {
+  /// Shows a bottom sheet to select image source (camera or gallery)
+  /// Uses proper permission handling for camera access
+  Future<String?> changeAvatar(String userId, BuildContext context) async {
     try {
-      final file = await _pickImage();
-      if (file == null) {
+      // Show bottom sheet to select source
+      final imagePath = await _showImageSourceBottomSheet(context);
+
+      if (imagePath == null) {
         debugPrint('⚠️ [UserService] No se seleccionó imagen.');
         return null;
       }
 
+      final file = File(imagePath);
       final urls = await _mediaService.uploadFiles(
         uid: userId,
         files: {MediaType.avatar: file},
@@ -72,5 +68,68 @@ class UserService {
       debugPrint(stack.toString());
       throw Exception('Error cambiando avatar');
     }
+  }
+
+  /// Show bottom sheet to select image source
+  Future<String?> _showImageSourceBottomSheet(BuildContext context) async {
+    return showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.grey[900],
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.camera_alt, color: Colors.purple),
+                  title: const Text(
+                    'Take Photo',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  onTap: () async {
+                    final path = await CameraPermissionHandler.openCamera(
+                      imageQuality: 40,
+                      context: context,
+                    );
+                    if (context.mounted) {
+                      Navigator.pop(context, path);
+                    }
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.photo_library, color: Colors.purple),
+                  title: const Text(
+                    'Choose from Gallery',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  onTap: () async {
+                    final path = await CameraPermissionHandler.openGallery(
+                      imageQuality: 40,
+                      context: context,
+                    );
+                    if (context.mounted) {
+                      Navigator.pop(context, path);
+                    }
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.cancel, color: Colors.grey),
+                  title: const Text(
+                    'Cancel',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                  onTap: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 }

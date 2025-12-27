@@ -9,6 +9,7 @@ class ChatPreview {
   final bool isVerified;
   final bool isOnline;
   final int unreadCount; //  Contador de mensajes no leídos
+  final bool isBlocked; // 🆕 Si el usuario está bloqueado
 
   ChatPreview({
     required this.userId,
@@ -19,6 +20,7 @@ class ChatPreview {
     required this.timeAgo,
     this.isVerified = false,
     this.isOnline = false,
-    this.unreadCount = 0, 
+    this.unreadCount = 0,
+    this.isBlocked = false,
   });
 }

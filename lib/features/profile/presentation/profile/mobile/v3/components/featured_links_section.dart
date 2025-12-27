@@ -123,6 +123,7 @@ class FeaturedLinksSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final links = user.featuredLinks ?? [];
+    final isEmpty = links.isEmpty;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 15),
@@ -140,7 +141,7 @@ class FeaturedLinksSection extends StatelessWidget {
         children: [
           Text(
             'profile.customization.links.title'.tr(),
-            style: TextStyle(
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 12,
               fontWeight: FontWeight.w800,
@@ -148,13 +149,40 @@ class FeaturedLinksSection extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // Display existing links
+          // Empty state
+          if (isEmpty && isOwnProfile) ...[
+            Center(
+              child: Column(
+                children: [
+                  Text(
+                    'profile.customization.links.emptyTitle'.tr(),
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'profile.customization.links.emptySubtitle'.tr(),
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.5),
+                      fontSize: 11,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              ),
+            ),
+          ],
+
+          // Display existing links with animation
           ...links.asMap().entries.map((entry) {
             final index = entry.key;
             final link = entry.value;
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: _LinkItem(
+              child: _AnimatedLinkItem(
                 link: link,
                 isOwnProfile: isOwnProfile,
                 onRemove: () => _removeLink(context, index),
@@ -171,6 +199,128 @@ class FeaturedLinksSection extends StatelessWidget {
   }
 }
 
+/// Animated link item with fade + scale animation
+class _AnimatedLinkItem extends StatefulWidget {
+  final Map<String, dynamic> link;
+  final bool isOwnProfile;
+  final VoidCallback onRemove;
+
+  const _AnimatedLinkItem({
+    required this.link,
+    required this.isOwnProfile,
+    required this.onRemove,
+  });
+
+  @override
+  State<_AnimatedLinkItem> createState() => _AnimatedLinkItemState();
+}
+
+class _AnimatedLinkItemState extends State<_AnimatedLinkItem>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
+    );
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _launchLink() async {
+    final url = widget.link['url'] as String;
+    final uri = Uri.parse(url);
+
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final label = widget.link['label'] as String;
+    final url = widget.link['url'] as String;
+
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: GestureDetector(
+          onTap: _launchLink,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.14),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.language, color: Colors.white70, size: 18),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        url,
+                        style: const TextStyle(color: Colors.white54, fontSize: 11),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                if (widget.isOwnProfile)
+                  GestureDetector(
+                    onTap: widget.onRemove,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white54,
+                        size: 16,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ignore: unused_element
 class _LinkItem extends StatelessWidget {
   final Map<String, dynamic> link;
   final bool isOwnProfile;
@@ -210,7 +360,7 @@ class _LinkItem extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(Icons.language, color: Colors.white70, size: 18),
+            const Icon(Icons.language, color: Colors.white70, size: 18),
             const SizedBox(width: 12),
             Expanded(
               child: Column(

@@ -5,11 +5,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 Widget googleButton({required VoidCallback onPressed, String text = 'Google'}) {
   return Container(
-
-
+    constraints: const BoxConstraints(minWidth: 150),
     decoration: BoxDecoration(
-      color: AppColors.backgroundDark,
-      border: Border.all(color: AppColors.grey.withValues(alpha: 0.3), width: 1),
+      color: AppColors.greyBackground.withValues(alpha: 0.5),
       borderRadius: BorderRadius.circular(19),
     ),
     child: ElevatedButton.icon(
@@ -27,7 +25,7 @@ Widget googleButton({required VoidCallback onPressed, String text = 'Google'}) {
         placeholderBuilder: (context) =>
             const Icon(Icons.g_mobiledata, color: AppColors.textLight),
       ),
-      label: SecondaryText(text, color: AppColors.grey,fontSize: 17,),
+      label: SecondaryText(text, color: AppColors.grey, fontSize: 17),
     ),
   );
 }

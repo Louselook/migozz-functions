@@ -140,7 +140,7 @@ class _LoginScreenState extends State<LoginScreen> {
           !msg.contains("ProviderInstaller")) {
         CustomSnackbar.show(
           context: context,
-          message: 'Error logging in with Google: $e',
+          message: "login.validations.cancelledGoogle".tr(),
           type: SnackbarType.error,
         );
       }
@@ -168,7 +168,7 @@ class _LoginScreenState extends State<LoginScreen> {
           !msg.contains("cancelled_by_user")) {
         CustomSnackbar.show(
           context: context,
-          message: 'Error logging in with Apple: $e',
+          message: "login.validations.cancelledApple".tr(),
           type: SnackbarType.error,
         );
       }
@@ -229,7 +229,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     keyboardType: TextInputType.emailAddress,
                   ),
 
-                  const SizedBox(height: 35),
+                  const SizedBox(height: 15),
 
                   // Login button
                   GradientButton(
@@ -241,7 +241,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             _handleEmailLoginCheck();
                           },
                     child: SecondaryText(
-                      "login.presentation.buttonText".tr(),fontSize: 17,
+                      "login.presentation.buttonText".tr(),
+                      fontSize: 17,
                     ),
                   ),
 
@@ -252,35 +253,22 @@ class _LoginScreenState extends State<LoginScreen> {
                     fontSize: 16,
                   ),
 
-                  const SizedBox(height: 20),
-
+                  const SizedBox(height: 5),
                   // Social login buttons
                   PlatformUtils.isIOS
                       ? Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Expanded(
-                              child: googleButton(
-                                onPressed: _handleGoogleSignIn,
-                              ),
-                            ),
+                            googleButton(onPressed: _handleGoogleSignIn),
                             const SizedBox(width: 10),
-                            Expanded(
-                              child: appleButton(onPressed: _handleAppleSignIn),
-                            ),
+                            appleButton(onPressed: _handleAppleSignIn),
                           ],
                         )
-                      : Row(
-                          children: [
-                            Expanded(
-                              child: googleButton(
-                                onPressed: _handleGoogleSignIn,
-                              ),
-                            ),
-                          ],
+                      : Center(
+                          child: googleButton(onPressed: _handleGoogleSignIn),
                         ),
 
-                  const SizedBox(height: 50),
+                  const SizedBox(height: 30),
 
                   // Register
                   bottomText(context: context),

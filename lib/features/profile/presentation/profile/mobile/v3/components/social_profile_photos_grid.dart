@@ -17,7 +17,66 @@ class SocialProfilePhotosGrid extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      child: StaggeredGrid.count(
+      child: photos.length==1?Container(width: MediaQuery.of(context).size.width*0.6,height: MediaQuery.of(context).size.height*0.27,
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(5),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.25),
+            width: 1,
+          ),
+
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(0),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              CachedNetworkImage(
+                imageUrl: photos.first.imageUrl,
+                fit: BoxFit.cover,
+                errorWidget: (context, error, stackTrace) {
+                  return Container(
+                    color: Colors.grey[900],
+                    child: const Icon(
+                      Icons.person,
+                      color: Colors.white54,
+                      size: 40,
+                    ),
+                  );
+                },
+                placeholder: (context, url) => const Center(
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 6,
+                right: 6,
+                child: Container(
+                  // decoration: BoxDecoration(
+                  //   color: Colors.black.withValues(alpha: 0.35),
+                  //   borderRadius: BorderRadius.circular(8),
+                  //   border: Border.all(
+                  //     color: Colors.white.withValues(alpha: 0.18),
+                  //     width: 1,
+                  //   ),
+                  // ),
+                  padding: const EdgeInsets.all(3),
+                  child: SvgPicture.asset(
+                    photos.first.iconAsset,
+                    fit: BoxFit.contain,
+                    width: 16,
+                    height: 16,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ):photos.length>2?StaggeredGrid.count(
         crossAxisCount: 4,
         mainAxisSpacing: 0,
         crossAxisSpacing: 0,
@@ -44,6 +103,72 @@ class SocialProfilePhotosGrid extends StatelessWidget {
             child: _PhotoCard(photo: photos[index], aspectRatio: aspectRatio),
           );
         }),
+      ):ListView.builder(
+        scrollDirection: Axis.vertical,padding: EdgeInsets.symmetric(horizontal: 60, vertical: 0),
+        itemCount: photos.length,shrinkWrap: true,
+        itemBuilder: (context, index) {
+          return index==0?Container(width: MediaQuery.of(context).size.width*0.5,height: MediaQuery.of(context).size.height*0.21,
+          margin: EdgeInsets.only(bottom: 5),
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(5),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.25),
+                width: 1,
+              ),
+
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(0),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  CachedNetworkImage(
+                    imageUrl: photos[index].imageUrl,
+                    fit: BoxFit.cover,
+                    errorWidget: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.grey[900],
+                        child: const Icon(
+                          Icons.person,
+                          color: Colors.white54,
+                          size: 40,
+                        ),
+                      );
+                    },
+                    placeholder: (context, url) => const Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 6,
+                    right: 6,
+                    child: Container(
+                      // decoration: BoxDecoration(
+                      //   color: Colors.black.withValues(alpha: 0.35),
+                      //   borderRadius: BorderRadius.circular(8),
+                      //   border: Border.all(
+                      //     color: Colors.white.withValues(alpha: 0.18),
+                      //     width: 1,
+                      //   ),
+                      // ),
+                      padding: const EdgeInsets.all(3),
+                      child: SvgPicture.asset(
+                        photos[index].iconAsset,
+                        fit: BoxFit.contain,
+                        width: 16,
+                        height: 16,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ):_PhotoCard(photo: photos[index], aspectRatio:2.8);
+        },
       ),
     );
   }

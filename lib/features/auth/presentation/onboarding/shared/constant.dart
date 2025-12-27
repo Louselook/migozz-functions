@@ -10,6 +10,7 @@ class AppConstants {
     OnboardingData(
       imagePath: "assets/images/onboarding_1.webp",
       titleKey: "onboarding.titles.onboardingTitle1",
+      subTitleKey: "onboarding.subtitles.onboardingSubtitle1",
       descriptionKey: "onboarding.descriptions.onboardingDescription1",
     ),
     OnboardingData(

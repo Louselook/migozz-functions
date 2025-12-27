@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
@@ -43,7 +44,9 @@ class _AddUsernameBottomSheetState extends State<AddUsernameBottomSheet> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  "Add ${widget.platformData['name']}",
+                  "addSocials.dialogs.addTitle".tr(
+                    namedArgs: {'platform': widget.platformData['name'] ?? ''},
+                  ),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -95,12 +98,12 @@ class _AddUsernameBottomSheetState extends State<AddUsernameBottomSheet> {
               child: TextField(
                 controller: _usernameController,
                 style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  hintText: "Enter username",
-                  hintStyle: TextStyle(color: Colors.grey),
+                decoration: InputDecoration(
+                  hintText: "addSocials.dialogs.usernameHint".tr(),
+                  hintStyle: const TextStyle(color: Colors.grey),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.all(16),
-                  prefixIcon: Icon(Icons.person, color: Colors.grey),
+                  contentPadding: const EdgeInsets.all(16),
+                  prefixIcon: const Icon(Icons.person, color: Colors.grey),
                 ),
               ),
             ),
@@ -160,8 +163,10 @@ class _AddUsernameBottomSheetState extends State<AddUsernameBottomSheet> {
                   } else {
                     // Mostrar mensaje de error si no hay username
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Please enter a username'),
+                      SnackBar(
+                        content: Text(
+                          'addSocials.dialogs.usernameRequired'.tr(),
+                        ),
                         backgroundColor: Colors.red,
                       ),
                     );
@@ -170,8 +175,8 @@ class _AddUsernameBottomSheetState extends State<AddUsernameBottomSheet> {
                 width: double.infinity,
                 radius: 25,
                 gradient: AppColors.primaryGradient,
-                child: const Text(
-                  "Save",
+                child: Text(
+                  "buttons.save".tr(),
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,

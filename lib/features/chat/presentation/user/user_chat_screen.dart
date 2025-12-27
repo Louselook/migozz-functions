@@ -1,15 +1,23 @@
+// user_chat_screen.dart - VERSIÓN CON TRADUCCIONES
+import 'dart:async';
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/color.dart';
-import 'package:migozz_app/core/components/compuestos/chat/chat_message_builder.dart';
+import 'package:migozz_app/core/services/notifications/active_chat_manager.dart';
+
+import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/features/chat/controllers/user_chat_controller.dart';
 import 'package:migozz_app/features/chat/data/datasources/chat_service.dart';
 import 'package:migozz_app/features/chat/data/datasources/message_adapter.dart';
 import 'package:migozz_app/features/chat/data/domain/models/chat_model.dart';
 import 'package:migozz_app/features/chat/presentation/components/chat_input/chat_input_widget.dart';
+import 'package:migozz_app/features/chat/presentation/components/generic_chat_screen.dart';
 
-/// Pantalla de chat entre dos usuarios con ChatInputWidget completo
+/// Pantalla de chat entre dos usuarios
 class UserChatScreen extends StatefulWidget {
   final String otherUserId;
   final String otherUserName;
@@ -28,16 +36,22 @@ class UserChatScreen extends StatefulWidget {
   State<UserChatScreen> createState() => _UserChatScreenState();
 }
 
-class _UserChatScreenState extends State<UserChatScreen> {
+class _UserChatScreenState extends State<UserChatScreen>
+    with WidgetsBindingObserver {
   late UserChatController _chatController;
   late String _chatRoomId;
   final ChatService _chatService = ChatService();
   final TextEditingController _textController = TextEditingController();
   bool _isInitialized = false;
+  bool _isBlocked = false;
+  StreamSubscription? _messagesSubscription;
+  late GlobalKey<GenericChatScreenState> _genericChatKey;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _genericChatKey = GlobalKey<GenericChatScreenState>();
 
     _chatController = UserChatController(
       currentUserId: widget.currentUserId,
@@ -48,7 +62,30 @@ class _UserChatScreenState extends State<UserChatScreen> {
       onMarkAsRead: _markMessageAsRead,
     );
 
+    _chatController.setAutoScroll(false);
+
     _initializeChat();
+  }
+
+  @override
+  void dispose() {
+    // Leave the active chat to allow notifications again
+    ActiveChatManager.instance.leaveChat();
+
+    _messagesSubscription?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    _chatController.dispose();
+    _textController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    if (state == AppLifecycleState.resumed) {
+      _markAllAsReadSilently();
+    }
   }
 
   Future<void> _initializeChat() async {
@@ -62,11 +99,20 @@ class _UserChatScreenState extends State<UserChatScreen> {
         otherUserId: widget.otherUserId,
       );
 
+      // Register this chat as active to suppress notifications
+      ActiveChatManager.instance.enterChat(
+        otherUserId: widget.otherUserId,
+        chatRoomId: _chatRoomId,
+      );
+
       _loadMessages();
 
-      await _chatService.markAllMessagesAsRead(
+      await _markAllAsReadSilently();
+
+      _isBlocked = await _chatService.isUserBlocked(
         chatRoomId: _chatRoomId,
         userId: widget.currentUserId,
+        otherUserId: widget.otherUserId,
       );
 
       setState(() {
@@ -77,18 +123,28 @@ class _UserChatScreenState extends State<UserChatScreen> {
     }
   }
 
-  @override
-  void dispose() {
-    _chatController.dispose();
-    _textController.dispose();
-    super.dispose();
+  Future<void> _markAllAsReadSilently() async {
+    try {
+      await _chatService.markAllMessagesAsRead(
+        chatRoomId: _chatRoomId,
+        userId: widget.currentUserId,
+      );
+      debugPrint('✅ [UserChat] Todos los mensajes marcados como leídos');
+    } catch (e) {
+      debugPrint('❌ [UserChat] Error al marcar mensajes: $e');
+    }
   }
 
   void _loadMessages() {
-    _chatService
-        .getMessagesStream(_chatRoomId)
+    _messagesSubscription = _chatService
+        .getMessagesStreamForUser(
+          chatRoomId: _chatRoomId,
+          userId: widget.currentUserId,
+        )
         .listen(
           (firestoreMessages) {
+            if (!mounted) return;
+
             _chatController.clearMessages();
 
             final uiMessages = MessageAdapter.toUiMessages(
@@ -99,11 +155,29 @@ class _UserChatScreenState extends State<UserChatScreen> {
             if (uiMessages.isNotEmpty) {
               _chatController.addMessages(uiMessages);
             }
+
+            _markNewMessagesAsRead(firestoreMessages);
           },
           onError: (error) {
             debugPrint('❌ [UserChat] Error al cargar mensajes: $error');
           },
         );
+  }
+
+  Future<void> _markNewMessagesAsRead(List<dynamic> messages) async {
+    try {
+      for (final msg in messages) {
+        if (msg.receiverId == widget.currentUserId && !msg.isRead) {
+          await _chatService.markMessageAsRead(
+            chatRoomId: _chatRoomId,
+            messageId: msg.messageId,
+            userId: widget.currentUserId,
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ [UserChat] Error al marcar nuevos mensajes: $e');
+    }
   }
 
   Future<void> _sendMessageToBackend(String message) async {
@@ -124,7 +198,7 @@ class _UserChatScreenState extends State<UserChatScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al enviar mensaje: $e'),
+            content: Text("${"chat.userChat.errors.sendMessage".tr()}$e"),
             backgroundColor: Colors.red,
           ),
         );
@@ -138,18 +212,215 @@ class _UserChatScreenState extends State<UserChatScreen> {
       await _chatService.markMessageAsRead(
         chatRoomId: _chatRoomId,
         messageId: messageId,
+        userId: widget.currentUserId,
       );
     } catch (e) {
       debugPrint('❌ [UserChat] Error al marcar como leído: $e');
     }
   }
 
-  // Enviar audio - CORREGIDO
+  // ==================== ACCIONES DEL MENÚ ====================
+
+  Future<void> _goToProfile() async {
+    try {
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .where('email', isEqualTo: widget.otherUserId)
+          .limit(1)
+          .get();
+
+      if (userDoc.docs.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("chat.userChat.errors.profileNotFound".tr()),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      final userData = userDoc.docs.first.data();
+      final user = UserDTO.fromMap({...userData, 'id': userDoc.docs.first.id});
+
+      if (mounted) {
+        context.push('/profile-view', extra: user);
+      }
+    } catch (e) {
+      debugPrint('❌ [UserChat] Error al ir al perfil: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("${"chat.userChat.errors.loadProfile".tr()}$e"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteChat() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF2C2C2E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          "chat.userChat.dialogs.deleteTitle".tr(),
+          style: const TextStyle(color: Colors.white),
+        ),
+        content: Text(
+          "chat.userChat.dialogs.deleteMessage".tr(),
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              "chat.userChat.dialogs.cancel".tr(),
+              style: const TextStyle(color: Colors.grey),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(
+              "chat.userChat.dialogs.delete".tr(),
+              style: const TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await _chatService.deleteChatForUser(
+          chatRoomId: _chatRoomId,
+          userId: widget.currentUserId,
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("chat.userChat.messages.chatDeleted".tr()),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.of(context).pop();
+        }
+      } catch (e) {
+        debugPrint('❌ [UserChat] Error al eliminar chat: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("${"chat.userChat.errors.deleteChat".tr()}$e"),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _toggleBlockUser() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF2C2C2E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          _isBlocked
+              ? "chat.userChat.dialogs.unblockTitle".tr(
+                  namedArgs: {'name': widget.otherUserName},
+                )
+              : "chat.userChat.dialogs.blockTitle".tr(
+                  namedArgs: {'name': widget.otherUserName},
+                ),
+          style: const TextStyle(color: Colors.white),
+        ),
+        content: Text(
+          _isBlocked
+              ? "chat.userChat.dialogs.unblockMessage".tr()
+              : "chat.userChat.dialogs.blockMessage".tr(),
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              "chat.userChat.dialogs.cancel".tr(),
+              style: const TextStyle(color: Colors.grey),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(
+              _isBlocked
+                  ? "chat.userChat.dialogs.unblock".tr()
+                  : "chat.userChat.dialogs.block".tr(),
+              style: TextStyle(color: _isBlocked ? Colors.green : Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        if (_isBlocked) {
+          await _chatService.unblockUser(
+            chatRoomId: _chatRoomId,
+            userId: widget.currentUserId,
+            blockedUserId: widget.otherUserId,
+          );
+        } else {
+          await _chatService.blockUser(
+            chatRoomId: _chatRoomId,
+            userId: widget.currentUserId,
+            blockedUserId: widget.otherUserId,
+          );
+        }
+
+        setState(() {
+          _isBlocked = !_isBlocked;
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                _isBlocked
+                    ? "chat.userChat.messages.userBlocked".tr(
+                        namedArgs: {'name': widget.otherUserName},
+                      )
+                    : "chat.userChat.messages.userUnblocked".tr(
+                        namedArgs: {'name': widget.otherUserName},
+                      ),
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        debugPrint('❌ [UserChat] Error al bloquear/desbloquear: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("${"chat.userChat.errors.blockUser".tr()}$e"),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
   Future<void> _sendAudioMessage(String audioPath) async {
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please use the app to send audio!"),
+        SnackBar(
+          content: Text("chat.userChat.webRestrictions.audio".tr()),
           backgroundColor: Colors.blue,
         ),
       );
@@ -159,22 +430,20 @@ class _UserChatScreenState extends State<UserChatScreen> {
     try {
       debugPrint('🎤 [UserChat] Enviando audio a ${widget.otherUserName}');
 
-      // Agregar mensaje visual inmediatamente (TUYO)
       _chatController.addMessage({
-        'other': false, // TÚ lo enviaste
-        'type': MessageType.audio, //  CRÍTICO: audioPlayback, NO audio
+        'other': false,
+        'type': MessageType.audio,
         'audio': audioPath,
-        'time': 'Enviando...',
+        'time': "chat.userChat.messages.sending".tr(),
         'chatController': _chatController,
       });
 
-      // Enviar a Firebase
       await _chatService.sendAudioMessage(
         chatRoomId: _chatRoomId,
         senderId: widget.currentUserId,
         receiverId: widget.otherUserId,
         audioFile: File(audioPath),
-        durationSeconds: 0, // Se calculará en el servicio
+        durationSeconds: 0,
       );
 
       debugPrint('✅ [UserChat] Audio enviado');
@@ -184,7 +453,7 @@ class _UserChatScreenState extends State<UserChatScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al enviar audio: $e'),
+            content: Text("${"chat.userChat.errors.sendAudio".tr()}$e"),
             backgroundColor: Colors.red,
           ),
         );
@@ -192,12 +461,11 @@ class _UserChatScreenState extends State<UserChatScreen> {
     }
   }
 
-  // Enviar imagen - MEJORADO
   Future<void> _sendImageMessage(String imagePath) async {
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please use the app to send images!"),
+        SnackBar(
+          content: Text("chat.userChat.webRestrictions.image".tr()),
           backgroundColor: Colors.blue,
         ),
       );
@@ -207,19 +475,17 @@ class _UserChatScreenState extends State<UserChatScreen> {
     try {
       debugPrint('📸 [UserChat] Enviando imagen a ${widget.otherUserName}');
 
-      // Agregar mensaje visual con información del usuario
       _chatController.addMessage({
         'other': false,
         'type': MessageType.pictureCard,
         'pictures': [
-          {'imageUrl': imagePath, 'label': 'Imagen'},
+          {'imageUrl': imagePath, 'label': "chat.userChat.messages.image".tr()},
         ],
-        'time': 'Enviando...',
-        'senderName': 'Tú', //  Info del remitente
+        'time': "chat.userChat.messages.sending".tr(),
+        'senderName': "chat.userChat.messages.you".tr(),
         'senderAvatar': null,
       });
 
-      // Enviar a Firebase
       await _chatService.sendImageMessage(
         chatRoomId: _chatRoomId,
         senderId: widget.currentUserId,
@@ -234,7 +500,7 @@ class _UserChatScreenState extends State<UserChatScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al enviar imagen: $e'),
+            content: Text("${"chat.userChat.errors.sendImage".tr()}$e"),
             backgroundColor: Colors.red,
           ),
         );
@@ -254,48 +520,26 @@ class _UserChatScreenState extends State<UserChatScreen> {
       );
     }
 
-    return Scaffold(
+    return GenericChatScreen(
+      key: _genericChatKey,
+      chatController: _chatController,
       backgroundColor: AppColors.backgroundDark,
-      appBar: _buildAppBar(),
-      body: Column(
-        children: [
-          // Lista de mensajes
-          Expanded(
-            child: ListenableBuilder(
-              listenable: _chatController,
-              builder: (context, child) {
-                return ListView.builder(
-                  controller: _chatController.scrollController,
-                  padding: const EdgeInsets.all(10),
-                  itemCount: _chatController.messages.length,
-                  itemBuilder: (context, index) {
-                    final message = _chatController.messages[index];
-                    return ChatMessageBuilder.buildMessage(
-                      message,
-                      chatController: null,
-                      // Pasar info del otro usuario
-                      otherUserName: widget.otherUserName,
-                      otherUserAvatar: widget.otherUserAvatar,
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-
-          // Input con audio e imágenes
-          ChatInputWidget(
-            controller: _textController,
-            onSend: () {
-              if (_textController.text.trim().isNotEmpty) {
-                _chatController.sendTextMessage(_textController.text);
-                _textController.clear();
-              }
-            },
-            onSendAudio: _sendAudioMessage,
-            onSendImage: _sendImageMessage,
-          ),
-        ],
+      reverseMessages: true,
+      showSuggestions: false,
+      showLoading: false,
+      customAppBar: _buildAppBar(),
+      otherUserName: widget.otherUserName,
+      otherUserAvatar: widget.otherUserAvatar,
+      customInput: ChatInputWidget(
+        controller: _textController,
+        onSend: () {
+          if (_textController.text.trim().isNotEmpty) {
+            _chatController.sendTextMessage(_textController.text);
+            _textController.clear();
+          }
+        },
+        onSendAudio: _sendAudioMessage,
+        onSendImage: _sendImageMessage,
       ),
     );
   }
@@ -308,107 +552,122 @@ class _UserChatScreenState extends State<UserChatScreen> {
         icon: const Icon(Icons.arrow_back, color: Colors.white),
         onPressed: () => Navigator.of(context).pop(),
       ),
-      title: Row(
-        children: [
-          // Avatar
-          CircleAvatar(
-            radius: 18,
-            backgroundImage: widget.otherUserAvatar?.isNotEmpty == true
-                ? NetworkImage(widget.otherUserAvatar!)
-                : null,
-            backgroundColor: Colors.grey[800],
-            child: widget.otherUserAvatar?.isEmpty ?? true
-                ? Text(
-                    widget.otherUserName.isNotEmpty
-                        ? widget.otherUserName[0].toUpperCase()
-                        : '?',
-                    style: const TextStyle(color: Colors.white),
-                  )
-                : null,
-          ),
-          const SizedBox(width: 12),
-
-          // Nombre
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  widget.otherUserName,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const Text(
-                  "Toca para ver perfil",
-                  style: TextStyle(color: Colors.white54, fontSize: 12),
-                ),
-              ],
+      title: GestureDetector(
+        onTap: _goToProfile,
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 18,
+              backgroundImage: widget.otherUserAvatar?.isNotEmpty == true
+                  ? NetworkImage(widget.otherUserAvatar!)
+                  : null,
+              backgroundColor: Colors.grey[800],
+              child: widget.otherUserAvatar?.isEmpty ?? true
+                  ? Text(
+                      widget.otherUserName.isNotEmpty
+                          ? widget.otherUserName[0].toUpperCase()
+                          : '?',
+                      style: const TextStyle(color: Colors.white),
+                    )
+                  : null,
             ),
-          ),
-        ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          widget.otherUserName,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (_isBlocked) ...[
+                        const SizedBox(width: 6),
+                        const Icon(Icons.block, color: Colors.red, size: 14),
+                      ],
+                    ],
+                  ),
+                  Text(
+                    "chat.userChat.appBar.tapToViewProfile".tr(),
+                    style: const TextStyle(color: Colors.white54, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
       actions: [
         PopupMenuButton<String>(
           icon: const Icon(Icons.more_vert, color: Colors.white),
+          color: const Color(0xFF2C2C2E),
           onSelected: (value) {
             switch (value) {
               case 'profile':
-                debugPrint('👤 Ver perfil de ${widget.otherUserName}');
+                _goToProfile();
                 break;
               case 'delete':
-                debugPrint('👤 Eliminar perfil de ${widget.otherUserName}');
+                _deleteChat();
                 break;
               case 'block':
-                debugPrint('🚫 Bloquear a ${widget.otherUserName}');
-                break;
-              case 'report':
-                debugPrint('⚠️ Reportar a ${widget.otherUserName}');
+                _toggleBlockUser();
                 break;
             }
           },
           itemBuilder: (context) => [
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'profile',
               child: Row(
                 children: [
-                  Icon(Icons.person, size: 20),
-                  SizedBox(width: 12),
-                  Text('Ver perfil'),
+                  const Icon(Icons.person, size: 20, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Text(
+                    "chat.userChat.menu.viewProfile".tr(),
+                    style: const TextStyle(color: Colors.white),
+                  ),
                 ],
               ),
             ),
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'delete',
               child: Row(
                 children: [
-                  Icon(Icons.delete, size: 20, color: Colors.red),
-                  SizedBox(width: 12),
-                  Text('Eliminar chat', style: TextStyle(color: Colors.red)),
+                  const Icon(Icons.delete, size: 20, color: Colors.red),
+                  const SizedBox(width: 12),
+                  Text(
+                    "chat.userChat.menu.deleteChat".tr(),
+                    style: const TextStyle(color: Colors.red),
+                  ),
                 ],
               ),
             ),
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'block',
               child: Row(
                 children: [
-                  Icon(Icons.block, size: 20),
-                  SizedBox(width: 12),
-                  Text('Bloquear'),
-                ],
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'report',
-              child: Row(
-                children: [
-                  Icon(Icons.flag, size: 20),
-                  SizedBox(width: 12),
-                  Text('Reportar'),
+                  Icon(
+                    _isBlocked ? Icons.check_circle : Icons.block,
+                    size: 20,
+                    color: _isBlocked ? Colors.green : Colors.orange,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    _isBlocked
+                        ? "chat.userChat.menu.unblock".tr()
+                        : "chat.userChat.menu.block".tr(),
+                    style: TextStyle(
+                      color: _isBlocked ? Colors.green : Colors.orange,
+                    ),
+                  ),
                 ],
               ),
             ),

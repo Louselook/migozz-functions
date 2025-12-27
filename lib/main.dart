@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:migozz_app/app_initializer.dart';
 import 'package:migozz_app/bloc_providers.dart';
 import 'package:migozz_app/core/config/firebase_config.dart';
@@ -10,6 +11,7 @@ import 'package:migozz_app/core/router/app_router.dart';
 import 'package:migozz_app/core/router/app_router_notifier.dart';
 import 'package:migozz_app/core/services/deeplink/deeplink_functions/users/profile_deeplink_service.dart';
 import 'package:migozz_app/core/services/deeplink/deeplink_service.dart';
+import 'package:migozz_app/core/services/notifications/notification_initializer.dart';
 import 'package:migozz_app/core/services/social_auth_service.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
@@ -25,15 +27,46 @@ Future<void> main() async {
   await dotenv.load(fileName: ".env");
   SocialAuthService().init();
 
+  // ✅ Inicializar providers ANTES de runApp
+  initializeBlocProviders();
+
   setPathUrlStrategy();
   runApp(
-    EasyLocalization(
-      supportedLocales: const [Locale('en'), Locale('es')],
-      path: 'assets/translations',
-      fallbackLocale: const Locale('en'),
+    ScreenUtilInit(
+      designSize: const Size(375, 812),
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (context, child) {
+        return EasyLocalization(
+          supportedLocales: const [Locale('en'), Locale('es')],
+          path: 'assets/translations',
+          fallbackLocale: const Locale('en'),
+          startLocale: _getStartLocale(),
+          child: child!,
+        );
+      },
       child: const MyApp(),
     ),
   );
+}
+
+/// ✅ Determina el locale inicial según el idioma del dispositivo
+Locale _getStartLocale() {
+  final platformLocale = WidgetsBinding.instance.platformDispatcher.locale;
+
+  // Si el idioma del dispositivo es español (cualquier variante)
+  if (platformLocale.languageCode == 'es') {
+    debugPrint(
+      '🌍 Idioma detectado: Español (${platformLocale.toLanguageTag()})',
+    );
+    return const Locale('es');
+  }
+
+  // Para CUALQUIER otro idioma (chino, japonés, alemán, francés, etc.)
+  debugPrint(
+    '🌍 Idioma detectado: ${platformLocale.toLanguageTag()} → usando English',
+  );
+  return const Locale('en');
 }
 
 class MyApp extends StatelessWidget {
@@ -41,6 +74,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ✅ Usar providers estáticos que se crearon UNA SOLA VEZ
     return MultiBlocProvider(
       providers: blocProviders,
       child: Builder(
@@ -48,7 +82,6 @@ class MyApp extends StatelessWidget {
           final goRouterNotifier = GoRouterNotifier(context.read<AuthCubit>());
           final router = createRouter(goRouterNotifier);
 
-          // 🔥 AGREGAR ESTA LÍNEA:
           ProfileDeeplinkService.setRouter(router);
 
           // Inicializar deeplinks solo en mobile
@@ -66,24 +99,23 @@ class MyApp extends StatelessWidget {
                 );
               }
 
+              // ✅ Configurar idioma para Gemini
               final deviceLocale = context.locale;
-              final deviceLang = deviceLocale.languageCode;
-              final langLabel = deviceLang == 'es' ? 'Español' : 'English';
+              final langLabel = deviceLocale.languageCode == 'es'
+                  ? 'Español'
+                  : 'English';
 
+              debugPrint('🌐 Configurando Gemini con idioma: $langLabel');
               GeminiService.instance.setLanguage(langLabel);
 
+              // Manejar deep links iniciales
               if (initResult?.location != null) {
-                // Navegar post-frame para esperar a que EasyLocalization y el árbol estén listos.
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   try {
-                    final initialLocation =
-                        Uri.base.path; // ESTA ES LA RUTA QUE QUEREMOS
+                    final initialLocation = Uri.base.path;
 
-                    // Evitamos navegar si es "/" o vacío
                     if (initialLocation.isNotEmpty && initialLocation != "/") {
-                      debugPrint(
-                        "➡️ Deep link real detectado: $initialLocation",
-                      );
+                      debugPrint("➡️ Deep link detectado: $initialLocation");
                       router.go(initialLocation);
                     }
                   } catch (e, st) {
@@ -94,19 +126,21 @@ class MyApp extends StatelessWidget {
                 });
               }
 
-              return MaterialApp.router(
-                debugShowCheckedModeBanner: false,
-                title: 'Migozz App',
-                routerConfig: router, // 👈 ahora es estable
-                theme: ThemeData(
-                  colorScheme: ColorScheme.fromSeed(
-                    seedColor: Colors.deepPurple,
+              return NotificationInitializer(
+                child: MaterialApp.router(
+                  debugShowCheckedModeBanner: false,
+                  title: 'Migozz App',
+                  routerConfig: router,
+                  theme: ThemeData(
+                    colorScheme: ColorScheme.fromSeed(
+                      seedColor: Colors.deepPurple,
+                    ),
+                    useMaterial3: true,
                   ),
-                  useMaterial3: true,
+                  localizationsDelegates: context.localizationDelegates,
+                  supportedLocales: context.supportedLocales,
+                  locale: context.locale,
                 ),
-                localizationsDelegates: context.localizationDelegates,
-                supportedLocales: context.supportedLocales,
-                locale: context.locale,
               );
             },
           );

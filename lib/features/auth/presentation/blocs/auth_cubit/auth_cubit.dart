@@ -15,6 +15,9 @@ class AuthCubit extends Cubit<AuthState> {
   late final StreamSubscription<User?> _authSub;
   StreamSubscription<DocumentSnapshot>? _userProfileSub; // ✅ Nuevo listener
 
+  // ✅ Callback para limpiar otros cubits
+  VoidCallback? onLogoutRequested;
+
   AuthCubit(this._authUseCases, this._userService)
     : super(const AuthState.checking()) {
     _authSub = _authUseCases.authStateChanges.listen(
@@ -256,8 +259,19 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> logout() async {
-    _cancelUserProfileListener(); // ✅ Cancelar listener al cerrar sesión
+    debugPrint('🚪 [AuthCubit] Iniciando logout...');
+
+    _cancelUserProfileListener();
+
+    // ✅ Notificar a otros cubits para que se limpien
+    if (onLogoutRequested != null) {
+      debugPrint('🧹 [AuthCubit] Limpiando otros cubits...');
+      onLogoutRequested!();
+    }
+
     await _authUseCases.signout.run();
+
+    debugPrint('✅ [AuthCubit] Logout completado');
   }
 
   @override

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -231,7 +232,7 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
     if (targetId == null) {
       return _ProfileData(
         username: 'unknown',
-        displayName: 'Unknown',
+        displayName: 'common.unknown'.tr(),
         link: _buildUrl('unknown'),
       );
     }
@@ -264,11 +265,55 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
   String _buildUrl(String username) =>
       '$_baseProfileUrl/${username.toLowerCase()}';
 
-  void _shareProfile(_ProfileData data) {
-    Share.share(
-      'Mira el perfil de ${data.displayName} en Migozz: ${data.link}',
-      subject: 'Perfil de ${data.displayName}',
-    );
+  Future<void> _shareProfile(_ProfileData data) async {
+    try {
+      // Capture the screenshot
+      RenderRepaintBoundary boundary =
+          _screenshotKey.currentContext!.findRenderObject()
+              as RenderRepaintBoundary;
+      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      ByteData? byteData = await image.toByteData(
+        format: ui.ImageByteFormat.png,
+      );
+      Uint8List pngBytes = byteData!.buffer.asUint8List();
+
+      final shareMessage = 'share.title'.tr(
+        namedArgs: {'displayName': data.displayName, 'link': data.link},
+      );
+      final shareSubject = 'share.subject'.tr(
+        namedArgs: {'displayName': data.displayName},
+      );
+
+      if (kIsWeb) {
+        // For web, just share the text with link
+        Share.share(shareMessage, subject: shareSubject);
+      } else {
+        // Mobile: Save to temp directory and share with image
+        final directory = await getApplicationDocumentsDirectory();
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        final imagePath = '${directory.path}/migozz_qr_share_$timestamp.png';
+        final imageFile = File(imagePath);
+        await imageFile.writeAsBytes(pngBytes);
+
+        // Share the image with message
+        await Share.shareXFiles(
+          [XFile(imagePath)],
+          text: shareMessage,
+          subject: shareSubject,
+        );
+      }
+    } catch (e) {
+      debugPrint('Error sharing profile: $e');
+      // Fallback to text-only share
+      Share.share(
+        'share.title'.tr(
+          namedArgs: {'displayName': data.displayName, 'link': data.link},
+        ),
+        subject: 'share.subject'.tr(
+          namedArgs: {'displayName': data.displayName},
+        ),
+      );
+    }
   }
 
   // Toggle between modes
@@ -293,11 +338,11 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
   String _getButtonLabel() {
     switch (_currentMode) {
       case BackgroundMode.emoji:
-        return 'Emoji';
+        return 'share.customization.emoji'.tr();
       case BackgroundMode.colors:
-        return 'Colors';
+        return 'share.customization.colors'.tr();
       case BackgroundMode.image:
-        return 'Image';
+        return 'share.customization.image'.tr();
     }
   }
 
@@ -338,9 +383,9 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Emoji',
-              style: TextStyle(
+            Text(
+              'share.customization.emoji'.tr(),
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
@@ -394,10 +439,10 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
                             ],
                           ),
                         ),
-                        child: const Center(
+                        child: Center(
                           child: Text(
-                            'Default',
-                            style: TextStyle(
+                            'share.customization.default'.tr(),
+                            style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -472,9 +517,9 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Colors',
-              style: TextStyle(
+            Text(
+              'share.customization.colors'.tr(),
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
@@ -596,9 +641,9 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Choose Image',
-              style: TextStyle(
+            Text(
+              'share.customization.chooseImage'.tr(),
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
@@ -610,12 +655,12 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
               children: [
                 _buildImageSourceButton(
                   icon: Icons.camera_alt,
-                  label: 'Camera',
+                  label: 'profile.customization.plataform.camera'.tr(),
                   onTap: () => _pickImage(ImageSource.camera),
                 ),
                 _buildImageSourceButton(
                   icon: Icons.photo_library,
-                  label: 'Gallery',
+                  label: 'profile.customization.plataform.gallery'.tr(),
                   onTap: () => _pickImage(ImageSource.gallery),
                 ),
               ],
@@ -884,14 +929,14 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
                     future: _futureProfile,
                     builder: (context, snap) {
                       if (snap.connectionState == ConnectionState.waiting) {
-                        return const Center(
-                          child: LoaderDialog(message: 'Loading...'),
+                        return Center(
+                          child: LoaderDialog(message: 'common.loading'.tr()),
                         );
                       }
                       if (!snap.hasData) {
-                        return const Text(
-                          'No data',
-                          style: TextStyle(color: Colors.white),
+                        return Text(
+                          'common.noData'.tr(),
+                          style: const TextStyle(color: Colors.white),
                         );
                       }
                       final data = snap.data!;
@@ -928,10 +973,51 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
                                         size: 256,
                                       ),
                                       // Center logo
-                                      Image.asset(
-                                        'assets/images/Migozz.webp',
-                                        width: 50,
-                                        height: 50,
+                                     Positioned(top: 17,right: 17,
+                                       child: Container(
+                                         width: 45,
+                                         height: 45,
+
+                                         decoration: BoxDecoration(
+                                           color: Colors.white,border: Border.all(color: _qrColor,width: 2),
+
+                                         ),
+                                         child: Image.asset(
+                                           'assets/icons/Migozz_Icon.png',
+                                           width: 35,
+                                           height: 35,color:  _qrColor,
+                                         ),
+                                       ),
+                                     ),Positioned(top: 17,left: 17,
+                                        child: Container(
+                                          width: 45,
+                                          height: 45,
+
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,border: Border.all(color: _qrColor,width: 2),
+
+                                          ),
+                                          child: Image.asset(
+                                            'assets/icons/Migozz_Icon.png',
+                                            width: 35,
+                                            height: 35,color:  _qrColor,
+                                          ),
+                                        )
+                                      ),Positioned(bottom: 17,left: 17,
+                                        child: Container(
+                                          width: 45,
+                                          height: 45,
+
+                                          decoration: BoxDecoration(
+                                          color: Colors.white,border: Border.all(color: _qrColor,width: 2),
+
+                                        ),
+                                          child: Image.asset(
+                                            'assets/icons/Migozz_Icon.png',
+                                            width: 35,
+                                            height: 35,color:  _qrColor,
+                                          ),
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -990,7 +1076,7 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
                       ),
                     ),
                     icon: const Icon(Icons.share),
-                    label: const Text('Share Profile'),
+                    label: Text('share.label'.tr()),
                   ),
                 ),
               );

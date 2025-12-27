@@ -39,6 +39,18 @@ class EditCubitState extends Equatable {
     this.interests,
   });
 
+  /// ✅ Factory para crear el estado inicial limpio
+  factory EditCubitState.initial() => const EditCubitState(
+    editItem: EditItem.empty,
+    isSaving: false,
+    success: false,
+    error: null,
+    hasChanges: false,
+    socialEcosystem: null,
+    category: null,
+    interests: null,
+  );
+
   EditCubitState copyWith({
     EditItem? editItem,
     bool? isSaving,
