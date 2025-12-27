@@ -44,7 +44,7 @@ class SocialIconCard extends StatelessWidget {
         .toDouble();
     final backgroundGradient = LinearGradient(
       colors: AppColors.primaryGradient.colors
-          .map((color) => color.withOpacity(0.25))
+          .map((color) => color.withValues(alpha: 0.25))
           .toList(),
       begin: AppColors.primaryGradient.begin,
       end: AppColors.primaryGradient.end,

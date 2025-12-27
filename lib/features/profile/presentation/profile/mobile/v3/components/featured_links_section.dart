@@ -320,6 +320,7 @@ class _AnimatedLinkItemState extends State<_AnimatedLinkItem>
   }
 }
 
+// ignore: unused_element
 class _LinkItem extends StatelessWidget {
   final Map<String, dynamic> link;
   final bool isOwnProfile;

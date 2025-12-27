@@ -3,15 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/features/chat/controllers/register_chat_controller.dart';
 
-/// Widget para mostrar fotos de perfil clickeables
+/// Widget to show clickable profile pictures
 class ProfilePictureSelector extends StatelessWidget {
   final List<Map<String, String>> pictures;
-  final RegisterChatController chatController; //  Agregar controller
+  final RegisterChatController chatController; // controller to send selected avatar
 
   const ProfilePictureSelector({
     super.key,
     required this.pictures,
-    required this.chatController, //  Requerido
+    required this.chatController,
   });
 
   @override
@@ -66,7 +66,7 @@ class ProfilePictureSelector extends StatelessWidget {
     showGeneralDialog(
       context: context,
       barrierDismissible: true,
-      barrierLabel: 'buttons.cancel'.tr(),
+      barrierLabel: 'Cancel',
       barrierColor: Colors.black87,
       transitionDuration: const Duration(milliseconds: 300),
       pageBuilder: (context, anim, secondaryAnim) {
@@ -93,18 +93,15 @@ class ProfilePictureSelector extends StatelessWidget {
   }
 
   void _selectPhoto(BuildContext context, Map<String, String> photo) {
-    // Enviar la foto usando el controller
+    // Send the selected photo to the controller
     chatController.sendAvatarPhoto(photo["imageUrl"]!);
 
-    // Mostrar confirmación
+    // Show confirmation snackbar
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'register.validations.picConfirmation'.tr(
-            namedArgs: {
-              'platform': photo['label'] ?? photo['platform'] ?? 'red social',
-            },
-          ),
+          // Confirmation.
+          'register.validations.picConfirmation'.tr(),
         ),
         duration: const Duration(seconds: 2),
         backgroundColor: Colors.green,
@@ -113,7 +110,7 @@ class ProfilePictureSelector extends StatelessWidget {
   }
 }
 
-/// Dialog personalizado para preview de foto
+/// Custom dialog for photo preview
 class _PhotoPreviewDialog extends StatelessWidget {
   final Map<String, String> photo;
   final VoidCallback onConfirm;
@@ -131,7 +128,7 @@ class _PhotoPreviewDialog extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Foto grande con marco gradiente
+              // Large photo with gradient frame
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -169,9 +166,46 @@ class _PhotoPreviewDialog extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
 
-              // Botón "Usar esta foto"
+              // Warning box: informs user about potential low resolution
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                margin: const EdgeInsets.symmetric(horizontal: 6),
+                decoration: BoxDecoration(
+                  color: Colors.grey[900]?.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Icon(
+                        Icons.notifications_none,
+                        color: Colors.orange[200],
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        // English warning message
+                        'register.warnings.profilePic'.tr(),
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // "Use this photo" button
               GestureDetector(
                 onTap: onConfirm,
                 child: Container(
@@ -204,7 +238,7 @@ class _PhotoPreviewDialog extends StatelessWidget {
                       const SizedBox(width: 12),
                       Text(
                         'register.presentation.profilePic'.tr(),
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -217,25 +251,19 @@ class _PhotoPreviewDialog extends StatelessWidget {
 
               const SizedBox(height: 16),
 
-              // Texto: nombre de la plataforma
-              // Texto: nombre de la plataforma
+              // Platform name text
               Text(
-                'register.presentation.socialName'.tr(
-                  namedArgs: {
-                    'platform':
-                        photo['label'] ?? photo['platform'] ?? 'red social',
-                  },
-                ),
+                '@${photo['label'] ?? photo['platform'] ?? 'social network'}',
                 style: const TextStyle(color: Colors.white70, fontSize: 14),
               ),
 
               const SizedBox(height: 16),
 
-              // Botón cerrar
+              // Close button
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
                 child: Text(
-                  "buttons.cancel".tr(),
+                  'buttons.cancel'.tr(),
                   style: TextStyle(color: Colors.white54, fontSize: 16),
                 ),
               ),

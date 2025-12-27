@@ -9,6 +9,7 @@ import 'package:migozz_app/core/components/compuestos/chat/chat_attachment_sheet
 import 'package:migozz_app/core/components/compuestos/custom_textfield.dart';
 import 'package:migozz_app/core/components/compuestos/custom_tooltip.dart';
 import 'package:audio_waveforms/audio_waveforms.dart';
+import 'package:migozz_app/core/utils/camera_permission_handler.dart';
 import 'audio_recorder_manager.dart';
 import 'recording_display.dart';
 import 'audio_player_display.dart';
@@ -49,6 +50,68 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
 
   GlobalKey get attachButtonKey => _attachButtonKey;
   GlobalKey get micButtonKey => _micButtonKey;
+
+  /// Called by external UI (eg. ia_chat_screen) when a suggestion requests camera.
+  Future<void> openCameraFromSuggestions({int imageQuality = 80}) async {
+    if (kIsWeb) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("chat.input.webRestriction".tr()),
+          backgroundColor: Colors.blue,
+        ),
+      );
+      return;
+    }
+
+    try {
+      // Option A: Toggle attachments UI first (si quieres mostrar el sheet)
+      // setState(() => _showAttachments = true);
+
+      final photoPath = await CameraPermissionHandler.openCamera(
+        imageQuality: imageQuality,
+        context: context,
+      );
+
+      if (photoPath != null) {
+        // reuse existing onSendImage callback so parent decides preview/upload
+        widget.onSendImage?.call(photoPath);
+      }
+    } catch (e, st) {
+      debugPrint('openCameraFromSuggestions error: $e\n$st');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('chat.input.photoError'.tr()), backgroundColor: Colors.orange),
+      );
+    }
+  }
+
+  /// Called by external UI when a suggestion requests gallery.
+  Future<void> openGalleryFromSuggestions({int imageQuality = 80}) async {
+    if (kIsWeb) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("chat.input.webRestriction".tr()),
+          backgroundColor: Colors.blue,
+        ),
+      );
+      return;
+    }
+
+    try {
+      final imagePath = await CameraPermissionHandler.openGallery(
+        imageQuality: imageQuality,
+        context: context,
+      );
+
+      if (imagePath != null) {
+        widget.onSendImage?.call(imagePath);
+      }
+    } catch (e, st) {
+      debugPrint('openGalleryFromSuggestions error: $e\n$st');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('chat.input.photoError'.tr()), backgroundColor: Colors.orange),
+      );
+    }
+  }
 
   @override
   void initState() {

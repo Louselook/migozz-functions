@@ -186,6 +186,7 @@ Future<Map<String, dynamic>?> processBotResponse(
               : "❌ Please enter a valid email address.",
         };
       }
+      // ignore: dead_code
       break;
 
     case RegisterStatusProgress.emailVerification:

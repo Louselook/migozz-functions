@@ -93,7 +93,11 @@ final Map<String, Map<String, dynamic>> questionsEs = {
   "avatarUrl": {
     "text":
         "Personalicemos tu perfil. Puedes subir una nueva desde tu galeria o tomar una desde la camara. ¿Cuál prefieres? 📸",
-    "options": ["Saltar paso"],
+    "options": [
+      {"label": "Saltar", "action": "skip"},
+      {"label": "Tomar foto", "action": "open_camera"},
+      {"label": "Elegir de galería", "action": "open_gallery"}
+    ],
     "step": "regProgress.avatarUrl",
     "keepTalk": false,
     "showProfilePictures": true,
@@ -213,7 +217,11 @@ final Map<String, Map<String, dynamic>> questionsEn = {
   "avatarUrl": {
     "text":
         "Let's personalize your profile. You can upload a photo from your gallery or take a new one with your camera. Which do you prefer? 📸",
-    "options": ["Skip step"],
+    "options": [
+      {"label": "Skip step", "action": "skip"},
+      {"label": "Take photo", "action": "open_camera"},
+      {"label": "Choose from gallery", "action": "open_gallery"}
+    ],
     "step": "regProgress.avatarUrl",
     "keepTalk": false,
     "showProfilePictures": true,

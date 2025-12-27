@@ -372,6 +372,7 @@ class GeminiService {
       // Manejar OTP reenviado
       if (processResult != null && processResult['otpResent'] == true) {
         debugPrint('📧 OTP reenviado exitosamente');
+        // ignore: unused_local_variable
         final isSpanish = registerCubit.state.language == 'Español';
         return {
           "text": processResult['message'],
@@ -518,15 +519,35 @@ class GeminiService {
         question['profilePictures'] = pictures;
       }
     }
+    final rawOpts = question['options'];
+
+    // Normalizar opciones a List<String> para el motor (usar label si viene como Map)
+    final optionsForEnrichment = <String>[];
+    if (rawOpts is List) {
+      for (final o in rawOpts) {
+        if (o == null) continue;
+        if (o is String) {
+          optionsForEnrichment.add(o);
+        } else if (o is Map) {
+          // Priorizar 'label' si existe, si no usar toString()
+          final label = (o['label'] ?? o['text'])?.toString();
+          if (label != null && label.isNotEmpty) {
+            optionsForEnrichment.add(label);
+          } else {
+            optionsForEnrichment.add(o.toString());
+          }
+        } else {
+          optionsForEnrichment.add(o.toString());
+        }
+      }
+    }
+
     final enriched = await _enrichTextIfPossible(
       baseText: question['text']?.toString(),
-      stepKey:
-          question['step']?.toString() ?? questionFlow[_currentQuestionIndex],
+      stepKey: question['step']?.toString() ?? questionFlow[_currentQuestionIndex],
       registerCubit: registerCubit,
       purpose: 'question',
-      options: (question['options'] is List)
-          ? List<String>.from(question['options'])
-          : const <String>[],
+      options: optionsForEnrichment,
     );
     if (enriched != null) {
       question['text'] = enriched;

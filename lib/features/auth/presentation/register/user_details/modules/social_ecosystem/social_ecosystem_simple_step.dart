@@ -275,6 +275,7 @@ class SocialEcosystemSimpleStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final mainNetworks = _getMainNetworks();
 
+    // ignore: deprecated_member_use
     return WillPopScope(
       onWillPop: () async {
         // Prevent back navigation if no network is added

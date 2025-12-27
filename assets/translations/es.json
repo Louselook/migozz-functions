@@ -51,7 +51,7 @@
       "registerEmail": "Este correo ya está registrado",
       "audioMinLimit": "El audio es muy corto (${durationInSeconds.toStringAsFixed(1)}s). Debe durar entre 1 y 10 segundos.",
       "audioMaxLimit": "El audio es muy largo (${durationInSeconds.toStringAsFixed(1)}s). Debe durar entre 1 y 10 segundos.",
-      "picConfirmation": "✅ Foto de {platform} seleccionada"
+      "picConfirmation": "La foto seleccionada de ${photo['label'] ?? photo['platform'] ?? 'social network'} se ha establecido como tu foto de perfil."
     },
     "presentation": {
       "title": "¡Regístrate ahora!",
@@ -65,7 +65,10 @@
         "login": "¿Ya tienes una cuenta?",
         "LoginReturn": "Inicia sesión"
       }
-    }
+    },
+     "warnings":{
+        "profilePic": "Tip: Las fotos de redes son prácticas, pero si prefieres máxima resolución, te recomendamos subir una original desde tu galería."
+      }
   },
   "complete_profile": {
     "title": "Completa tu Perfil",

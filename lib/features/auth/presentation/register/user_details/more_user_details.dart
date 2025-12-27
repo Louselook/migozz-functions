@@ -92,6 +92,7 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
     });
   }
 
+  // ignore: unused_element
   void _navigateBackToSimpleView() {
     // Navigate back to simple list view
     setState(() {

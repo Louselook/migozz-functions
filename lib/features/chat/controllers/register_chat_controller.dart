@@ -318,18 +318,35 @@ class RegisterChatController extends GenericChatController {
 
       // Protege campos que podrían ser null
       final botText = (botResponse["text"]?.toString() ?? '');
-      final botOptions = botResponse["options"] ?? [];
+      // final botOptions = botResponse["options"] ?? [];
       final botStep = botResponse["step"]?.toString() ?? '';
       final botValid = botResponse["valid"];
       final botAction = botResponse["action"];
       final botIsError = botResponse["isError"] == true;
       final botProfilePictures = botResponse["profilePictures"];
+      final rawBotOptions = botResponse["options"];
+      // Build safe list of labels for the bot/UI that expects String list
+      final safeBotOptions = <String>[];
+      if (rawBotOptions is List) {
+        for (final o in rawBotOptions) {
+          if (o == null) continue;
+          if (o is String) {
+            safeBotOptions.add(o);
+          } else if (o is Map) {
+            final label = (o['label'] ?? o['text'])?.toString() ?? o.toString();
+            safeBotOptions.add(label);
+          } else {
+            safeBotOptions.add(o.toString());
+          }
+        }
+      }
 
       final message = {
         "other": true,
         "type": MessageType.text,
         "text": botText,
-        "options": botOptions,
+        "options": safeBotOptions,      // <- siempre List<String>
+        "rawOptions": rawBotOptions,   // <- original (List<dynamic>) para UI si quiere actions
         "step": botStep,
         "valid": botValid,
         "action": botAction,

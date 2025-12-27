@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/loading_overlay.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
+import 'package:migozz_app/core/services/ai/assistant_functions.dart';
 import 'package:migozz_app/core/services/ai/gemini_service.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/interests/registration_handler.dart';
 import 'package:migozz_app/features/chat/data/domain/models/chat_model.dart';
@@ -30,6 +31,7 @@ class IaChatScreen extends StatefulWidget {
 
 class _IaChatScreenState extends State<IaChatScreen> {
   final TextEditingController _controller = TextEditingController();
+  final GlobalKey<ChatInputWidgetState> chatInputKey = GlobalKey<ChatInputWidgetState>();
   late final RegisterChatController _chatController;
   bool _isCompletingRegistration = false;
   late GlobalKey<GenericChatScreenState> _genericChatKey;
@@ -227,6 +229,38 @@ class _IaChatScreenState extends State<IaChatScreen> {
     );
   }
 
+  void onSuggestionTap(dynamic option) async {
+    final result = handleSuggestion(option);
+    // Usa la instancia _chatController que ya creaste en initState
+    switch (result.action) {
+      case AssistantAction.openCamera:
+        await chatInputKey.currentState?.openCameraFromSuggestions();
+        break;
+
+      case AssistantAction.openGallery:
+        await chatInputKey.currentState?.openGalleryFromSuggestions();
+        break;
+
+      case AssistantAction.sendText:
+        final text = result.payload ?? '';
+        // Reutiliza el flujo existente en RegisterChatController
+        // onSuggestionSelected ya existe y procesa el texto. Usalo.
+        _chatController.onSuggestionSelected(text);
+        break;
+
+      case AssistantAction.skip:
+        // Si tu controller tiene un método específico para skip, úsalo;
+        // de lo contrario, envía la opción al mismo onSuggestionSelected
+        // para que el flujo lo procese.
+        _chatController.onSuggestionSelected('skip');
+              break;
+
+      case AssistantAction.unknown:
+      debugPrint('Suggestion unknown or unhandled: ${result.payload}');
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return GenericChatScreen(
@@ -247,6 +281,7 @@ class _IaChatScreenState extends State<IaChatScreen> {
         listenable: _chatController,
         builder: (context, child) {
           return ChatInputWidget(
+            key: chatInputKey,
             controller: _controller,
             showPhoneInput: _chatController.showPhoneInput,
             onSend: () {
@@ -316,10 +351,26 @@ class _IaChatScreenState extends State<IaChatScreen> {
             if (message["other"] == true &&
                 message["options"] != null &&
                 (message["options"] as List).isNotEmpty) {
+              final rawOptions = message["rawOptions"] as List? ?? message["options"] as List? ?? [];
+              final labels = rawOptions.map((o) {
+                if (o is String) return o;
+                if (o is Map) return (o['label'] ?? o['text']).toString();
+                return o.toString();
+              }).toList(growable: false);
+
               return SuggestionChips(
-                suggestions: List<String>.from(message["options"]),
-                onSelected: (suggestion) {
-                  _chatController.onSuggestionSelected(suggestion);
+                suggestions: List<String>.from(labels),
+                onSelected: (selectedLabel) {
+                  // Buscar el objeto original en rawOptions que coincida con el label
+                  final matched = rawOptions.firstWhere(
+                    (o) {
+                      if (o is String) return o == selectedLabel;
+                      if (o is Map) return ((o['label'] ?? o['text'])?.toString() ?? '') == selectedLabel;
+                      return o.toString() == selectedLabel;
+                    },
+                    orElse: () => selectedLabel,
+                  );
+                  onSuggestionTap(matched); // ahora pasamos el mapa original o el string
                 },
               );
             }

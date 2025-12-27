@@ -9,6 +9,7 @@ class AssistantFunctions {
     // Por defecto es inglés (false) si no se ha seleccionado idioma
     return cubit.state.language == 'Español';
   }
+  
 
   /// Obtiene la pregunta actual del flujo
   /// Ahora devuelve Map<String,dynamic>? de forma defensiva (puede ser null)
@@ -448,5 +449,82 @@ class AssistantFunctions {
     }
 
     return pictureCards;
+  }
+}
+
+/// High-level actions emitted by assistant when a suggestion is chosen.
+enum AssistantAction {
+  openCamera,
+  openGallery,
+  sendText,
+  skip,
+  unknown,
+}
+
+/// Wrapper result for suggestion handling.
+class AssistantResult {
+  final AssistantAction action;
+  final String? payload;
+
+  AssistantResult(this.action, {this.payload});
+
+  factory AssistantResult.openCamera() => AssistantResult(AssistantAction.openCamera);
+  factory AssistantResult.openGallery() => AssistantResult(AssistantAction.openGallery);
+  factory AssistantResult.sendText(String text) => AssistantResult(AssistantAction.sendText, payload: text);
+  factory AssistantResult.skip() => AssistantResult(AssistantAction.skip);
+  factory AssistantResult.unknown() => AssistantResult(AssistantAction.unknown);
+}
+
+/// Process a single option (from list_questions). This returns an AssistantResult
+/// that the UI (ia_chat_screen) will interpret and execute.
+/// - `option` can be either a String or a Map with keys "label" and/or "action".
+AssistantResult handleSuggestion(dynamic option) {
+  try {
+    if (option == null) return AssistantResult.unknown();
+
+    String? action;
+    String? label;
+
+    if (option is String) {
+      label = option;
+    } else if (option is Map<String, dynamic>) {
+      label = (option['label'] as String?) ?? (option['text'] as String?);
+      action = option['action'] as String?;
+    } else if (option is Map<String, String>) {
+      label = option['label'];
+      action = option['action'];
+    }
+
+    // Use explicit action first (recommended)
+    switch (action) {
+      case 'open_camera':
+        return AssistantResult.openCamera();
+      case 'open_gallery':
+        return AssistantResult.openGallery();
+      case 'skip':
+        return AssistantResult.skip();
+    }
+
+    // Fallback: try to infer from label (only as last resort)
+    final normalized = (label ?? '').toLowerCase();
+    if (normalized.contains('camera') || normalized.contains('take photo') || normalized.contains('tomar foto')) {
+      return AssistantResult.openCamera();
+    }
+    if (normalized.contains('gallery') || normalized.contains('choose') || normalized.contains('galería')) {
+      return AssistantResult.openGallery();
+    }
+    if (normalized.contains('skip') || normalized.contains('saltar')) {
+      return AssistantResult.skip();
+    }
+
+    // Default: send label as text
+    if ((label ?? '').isNotEmpty) {
+      return AssistantResult.sendText(label!);
+    }
+
+    return AssistantResult.unknown();
+  } catch (e, st) {
+    debugPrint('assistant_functions.handleSuggestion error: $e\n$st');
+    return AssistantResult.unknown();
   }
 }
