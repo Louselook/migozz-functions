@@ -31,7 +31,8 @@ class IaChatScreen extends StatefulWidget {
 
 class _IaChatScreenState extends State<IaChatScreen> {
   final TextEditingController _controller = TextEditingController();
-  final GlobalKey<ChatInputWidgetState> chatInputKey = GlobalKey<ChatInputWidgetState>();
+  final GlobalKey<ChatInputWidgetState> chatInputKey =
+      GlobalKey<ChatInputWidgetState>();
   late final RegisterChatController _chatController;
   bool _isCompletingRegistration = false;
   late GlobalKey<GenericChatScreenState> _genericChatKey;
@@ -253,10 +254,10 @@ class _IaChatScreenState extends State<IaChatScreen> {
         // de lo contrario, envía la opción al mismo onSuggestionSelected
         // para que el flujo lo procese.
         _chatController.onSuggestionSelected('skip');
-              break;
+        break;
 
       case AssistantAction.unknown:
-      debugPrint('Suggestion unknown or unhandled: ${result.payload}');
+        debugPrint('Suggestion unknown or unhandled: ${result.payload}');
         break;
     }
   }
@@ -351,26 +352,38 @@ class _IaChatScreenState extends State<IaChatScreen> {
             if (message["other"] == true &&
                 message["options"] != null &&
                 (message["options"] as List).isNotEmpty) {
-              final rawOptions = message["rawOptions"] as List? ?? message["options"] as List? ?? [];
-              final labels = rawOptions.map((o) {
-                if (o is String) return o;
-                if (o is Map) return (o['label'] ?? o['text']).toString();
-                return o.toString();
-              }).toList(growable: false);
+              final rawOptions =
+                  message["rawOptions"] as List? ??
+                  message["options"] as List? ??
+                  [];
+              final labels = rawOptions
+                  .map((o) {
+                    if (o is String) return o;
+                    if (o is Map) return (o['label'] ?? o['text']).toString();
+                    return o.toString();
+                  })
+                  .toList(growable: false);
 
               return SuggestionChips(
                 suggestions: List<String>.from(labels),
                 onSelected: (selectedLabel) {
                   // Buscar el objeto original en rawOptions que coincida con el label
-                  final matched = rawOptions.firstWhere(
-                    (o) {
+                  dynamic matched;
+                  try {
+                    matched = rawOptions.firstWhere((o) {
                       if (o is String) return o == selectedLabel;
-                      if (o is Map) return ((o['label'] ?? o['text'])?.toString() ?? '') == selectedLabel;
+                      if (o is Map)
+                        return ((o['label'] ?? o['text'])?.toString() ?? '') ==
+                            selectedLabel;
                       return o.toString() == selectedLabel;
-                    },
-                    orElse: () => selectedLabel,
-                  );
-                  onSuggestionTap(matched); // ahora pasamos el mapa original o el string
+                    });
+                  } catch (e) {
+                    // Si no se encuentra, usar el label original
+                    matched = selectedLabel;
+                  }
+                  onSuggestionTap(
+                    matched,
+                  ); // ahora pasamos el mapa original o el string
                 },
               );
             }
