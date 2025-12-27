@@ -79,7 +79,10 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
     } catch (e, st) {
       debugPrint('openCameraFromSuggestions error: $e\n$st');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('chat.input.photoError'.tr()), backgroundColor: Colors.orange),
+        SnackBar(
+          content: Text('chat.input.photoError'.tr()),
+          backgroundColor: Colors.orange,
+        ),
       );
     }
   }
@@ -108,7 +111,48 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
     } catch (e, st) {
       debugPrint('openGalleryFromSuggestions error: $e\n$st');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('chat.input.photoError'.tr()), backgroundColor: Colors.orange),
+        SnackBar(
+          content: Text('chat.input.photoError'.tr()),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
+  }
+
+  /// Called by external UI when a suggestion requests audio recording.
+  Future<void> startRecordingFromSuggestions() async {
+    if (kIsWeb) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("chat.input.webRestriction".tr()),
+          backgroundColor: Colors.blue,
+        ),
+      );
+      return;
+    }
+
+    try {
+      // Inicia la grabación de audio
+      await _audioManager.startRecording();
+
+      if (mounted) {
+        setState(() {});
+        // Optionally show feedback to user
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('chat.input.recordingStarted'.tr()),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e, st) {
+      debugPrint('startRecordingFromSuggestions error: $e\n$st');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('chat.input.audioError'.tr()),
+          backgroundColor: Colors.orange,
+        ),
       );
     }
   }

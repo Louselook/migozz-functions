@@ -290,7 +290,11 @@ Future<Map<String, dynamic>?> processBotResponse(
 
     case RegisterStatusProgress.voiceNoteUrl:
       // El audio ya fue confirmado y guardado por el handler
-      if (userResponse != null && userResponse.isNotEmpty) {
+      // Si el usuario hizo Skip, no hay archivo de audio pero es válido
+      if (userResponse?.toLowerCase() == 'skip') {
+        debugPrint('⏭️ Usuario skipeo la nota de voz');
+        // Skip es válido, no requerir archivo de audio
+      } else if (userResponse != null && userResponse.isNotEmpty) {
         // Verificar que el archivo existe en el cubit
         final voiceFile = registerCubit.voiceNoteFile;
 

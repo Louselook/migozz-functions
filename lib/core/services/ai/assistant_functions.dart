@@ -9,7 +9,6 @@ class AssistantFunctions {
     // Por defecto es inglés (false) si no se ha seleccionado idioma
     return cubit.state.language == 'Español';
   }
-  
 
   /// Obtiene la pregunta actual del flujo
   /// Ahora devuelve Map<String,dynamic>? de forma defensiva (puede ser null)
@@ -456,6 +455,7 @@ class AssistantFunctions {
 enum AssistantAction {
   openCamera,
   openGallery,
+  openRecorder,
   sendText,
   skip,
   unknown,
@@ -468,9 +468,14 @@ class AssistantResult {
 
   AssistantResult(this.action, {this.payload});
 
-  factory AssistantResult.openCamera() => AssistantResult(AssistantAction.openCamera);
-  factory AssistantResult.openGallery() => AssistantResult(AssistantAction.openGallery);
-  factory AssistantResult.sendText(String text) => AssistantResult(AssistantAction.sendText, payload: text);
+  factory AssistantResult.openCamera() =>
+      AssistantResult(AssistantAction.openCamera);
+  factory AssistantResult.openGallery() =>
+      AssistantResult(AssistantAction.openGallery);
+  factory AssistantResult.openRecorder() =>
+      AssistantResult(AssistantAction.openRecorder);
+  factory AssistantResult.sendText(String text) =>
+      AssistantResult(AssistantAction.sendText, payload: text);
   factory AssistantResult.skip() => AssistantResult(AssistantAction.skip);
   factory AssistantResult.unknown() => AssistantResult(AssistantAction.unknown);
 }
@@ -501,17 +506,28 @@ AssistantResult handleSuggestion(dynamic option) {
         return AssistantResult.openCamera();
       case 'open_gallery':
         return AssistantResult.openGallery();
+      case 'open_recorder':
+        return AssistantResult.openRecorder();
       case 'skip':
         return AssistantResult.skip();
     }
 
     // Fallback: try to infer from label (only as last resort)
     final normalized = (label ?? '').toLowerCase();
-    if (normalized.contains('camera') || normalized.contains('take photo') || normalized.contains('tomar foto')) {
+    if (normalized.contains('camera') ||
+        normalized.contains('take photo') ||
+        normalized.contains('tomar foto')) {
       return AssistantResult.openCamera();
     }
-    if (normalized.contains('gallery') || normalized.contains('choose') || normalized.contains('galería')) {
+    if (normalized.contains('gallery') ||
+        normalized.contains('choose') ||
+        normalized.contains('galería')) {
       return AssistantResult.openGallery();
+    }
+    if (normalized.contains('recorder') ||
+        normalized.contains('audio') ||
+        normalized.contains('grabar')) {
+      return AssistantResult.openRecorder();
     }
     if (normalized.contains('skip') || normalized.contains('saltar')) {
       return AssistantResult.skip();

@@ -49,10 +49,11 @@
             "emptyEmail" : "Email cannot be empty",
             "validationEmail" :"Please enter a valid Email",
             "registerEmail" : "This email is already registered",
-            "audioLimit" : "This email is already registered",
             "audioMinLimit": "The audio is very short (${durationInSeconds.toStringAsFixed(1)}s). It must last between 1 and 10 seconds.",
             "audioMaxLimit": "The audio is very long (${durationInSeconds.toStringAsFixed(1)}s). It must last between 1 and 10 seconds.",
-            "picConfirmation": "Selected photo from ${photo['label'] ?? photo['platform'] ?? 'social network'} has been set as your profile picture."
+            "picConfirmation": "Selected photo from ${photo['label'] ?? photo['platform'] ?? 'social network'} has been set as your profile picture.",
+            "avatarSkipped": "Profile photo step skipped",
+            "audioSkipped": "Voice note step skipped"
         },
         "presentation":{
             "title" : "Register Now!",
@@ -62,6 +63,11 @@
             "social": "Here is the information extracted from their social networks.",
             "socialName": "Photo from {platform}",
             "profilePic": "Use this photo",
+            "skipAvatarButton": "Skip step",
+            "takeCameraButton": "Take photo",
+            "chooseGalleryButton": "Choose from gallery",
+            "skipAudioButton": "Skip step",
+            "recordAudioButton": "Record audio",
             "bottonText" : {
                 "login" : "Already a member?",
                 "LoginReturn" : "Login"
@@ -784,7 +790,10 @@
       "holdToRecord": "Hold to record",
       "typeMessage": "Type something...",
       "phoneHint": "Phone number",
-      "searchCountry": "Search country"
+      "searchCountry": "Search country",
+      "photoError": "Error selecting photo. Please try again.",
+      "audioError": "Error starting audio recording. Please try again.",
+      "recordingStarted": "Recording started..."
     },
     "attachments": {
       "gallery": "Gallery",

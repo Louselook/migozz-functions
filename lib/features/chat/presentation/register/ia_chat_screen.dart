@@ -242,18 +242,20 @@ class _IaChatScreenState extends State<IaChatScreen> {
         await chatInputKey.currentState?.openGalleryFromSuggestions();
         break;
 
+      case AssistantAction.openRecorder:
+        await chatInputKey.currentState?.startRecordingFromSuggestions();
+        break;
+
       case AssistantAction.sendText:
         final text = result.payload ?? '';
         // Reutiliza el flujo existente en RegisterChatController
-        // onSuggestionSelected ya existe y procesa el texto. Usalo.
         _chatController.onSuggestionSelected(text);
         break;
 
       case AssistantAction.skip:
-        // Si tu controller tiene un método específico para skip, úsalo;
-        // de lo contrario, envía la opción al mismo onSuggestionSelected
-        // para que el flujo lo procese.
-        _chatController.onSuggestionSelected('skip');
+        // Procesar skip como mensaje visible en el chat
+        // onSuggestionSelected maneja todo: mostrar mensaje, procesar respuesta y avanzar flujo
+        _chatController.onSuggestionSelected('Skip');
         break;
 
       case AssistantAction.unknown:

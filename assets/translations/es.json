@@ -51,7 +51,9 @@
       "registerEmail": "Este correo ya está registrado",
       "audioMinLimit": "El audio es muy corto (${durationInSeconds.toStringAsFixed(1)}s). Debe durar entre 1 y 10 segundos.",
       "audioMaxLimit": "El audio es muy largo (${durationInSeconds.toStringAsFixed(1)}s). Debe durar entre 1 y 10 segundos.",
-      "picConfirmation": "La foto seleccionada de ${photo['label'] ?? photo['platform'] ?? 'social network'} se ha establecido como tu foto de perfil."
+      "picConfirmation": "La foto seleccionada de ${photo['label'] ?? photo['platform'] ?? 'red social'} se ha establecido como tu foto de perfil.",
+      "avatarSkipped": "Paso de foto de perfil saltado",
+      "audioSkipped": "Paso de nota de voz saltado"
     },
     "presentation": {
       "title": "¡Regístrate ahora!",
@@ -61,6 +63,11 @@
       "social": "Aquí está la información extraída de sus redes sociales.",
       "socialName": "Foto de {platform}",
       "profilePic": "Usar esta foto",
+      "skipAvatarButton": "Saltar paso",
+      "takeCameraButton": "Tomar foto",
+      "chooseGalleryButton": "Elegir de galería",
+      "skipAudioButton": "Saltar paso",
+      "recordAudioButton": "Grabar audio",
       "bottonText": {
         "login": "¿Ya tienes una cuenta?",
         "LoginReturn": "Inicia sesión"
@@ -625,7 +632,10 @@
       "holdToRecord": "Mantén pulsado para grabar",
       "typeMessage": "Escribe algo...",
       "phoneHint": "Número de teléfono",
-      "searchCountry": "Buscar país"
+      "searchCountry": "Buscar país",
+      "photoError": "Error al seleccionar la foto. Por favor intenta de nuevo.",
+      "audioError": "Error al iniciar la grabación de audio. Por favor intenta de nuevo.",
+      "recordingStarted": "Grabación iniciada..."
     },
     "attachments": {
       "gallery": "Galería",
