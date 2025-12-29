@@ -499,7 +499,7 @@
 				DEVELOPMENT_TEAM = FDV4V9U5LF;
 				ENABLE_BITCODE = NO;
 				FLUTTER_BUILD_NAME = 1.1.8;
-				FLUTTER_BUILD_NUMBER = 119;
+				FLUTTER_BUILD_NUMBER = 121;
 				INFOPLIST_FILE = Runner/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Migozz;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";
@@ -692,7 +692,7 @@
 				DEVELOPMENT_TEAM = FDV4V9U5LF;
 				ENABLE_BITCODE = NO;
 				FLUTTER_BUILD_NAME = 1.1.8;
-				FLUTTER_BUILD_NUMBER = 119;
+				FLUTTER_BUILD_NUMBER = 121;
 				INFOPLIST_FILE = Runner/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Migozz;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";
@@ -725,7 +725,7 @@
 				DEVELOPMENT_TEAM = FDV4V9U5LF;
 				ENABLE_BITCODE = NO;
 				FLUTTER_BUILD_NAME = 1.1.8;
-				FLUTTER_BUILD_NUMBER = 119;
+				FLUTTER_BUILD_NUMBER = 121;
 				INFOPLIST_FILE = Runner/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Migozz;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";

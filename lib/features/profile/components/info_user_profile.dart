@@ -127,7 +127,7 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
           children: [
             Flexible(
               child: Text(
-                formatDisplayName(widget.name, format: FormatName.short),
+              widget.name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
