@@ -775,7 +775,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
           top: false,
           child: Scaffold(
             backgroundColor: Colors.black,
-            body: Stack(
+            body: Stack(clipBehavior: Clip.none,
               children: [
                 Positioned.fill(
                   child: Container(
@@ -793,21 +793,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                   ),
                 ),
 
-                Positioned(
-                  top: MediaQuery.of(context).padding.top + 8,
-                  left: 0,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: GestureDetector(
-                      onTap: _handleBackTap,
-                      child: const Icon(
-                        Icons.arrow_back_ios,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
-                  ),
-                ),
+
 
                 // Only show profile image in edit mode
                 if (widget.mode == MoreUserDetailsMode.edit)
@@ -956,6 +942,17 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                           ),
                         ),
                     ],
+                  ),
+                ), Positioned(
+                  top: MediaQuery.of(context).padding.top + 8,
+                  left: 16,
+                  child: GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: const Icon(
+                      Icons.arrow_back_ios,
+                      color: Colors.white,
+                      size: 24,
+                    ),
                   ),
                 ),
               ],
