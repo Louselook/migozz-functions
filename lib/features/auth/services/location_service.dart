@@ -47,26 +47,45 @@ class LocationService {
         lon = pos.longitude;
       } else {
         // MÓVIL: usar paquete location
+        debugPrint('📍 [LocationService] Iniciando obtención de ubicación móvil...');
+
         bool serviceEnabled = await _location.serviceEnabled();
+        debugPrint('📍 [LocationService] Servicio habilitado: $serviceEnabled');
+
         if (!serviceEnabled) {
           serviceEnabled = await _location.requestService();
-          if (!serviceEnabled) return null;
+          debugPrint('📍 [LocationService] Servicio después de solicitar: $serviceEnabled');
+          if (!serviceEnabled) {
+            debugPrint('❌ [LocationService] Servicio de ubicación no disponible');
+            return null;
+          }
         }
 
         var permissionGranted = await _location.hasPermission();
+        debugPrint('📍 [LocationService] Permiso actual: $permissionGranted');
+
         if (permissionGranted == loc.PermissionStatus.denied) {
           permissionGranted = await _location.requestPermission();
-          if (permissionGranted != loc.PermissionStatus.granted) return null;
+          debugPrint('📍 [LocationService] Permiso después de solicitar: $permissionGranted');
+          if (permissionGranted != loc.PermissionStatus.granted) {
+            debugPrint('❌ [LocationService] Permiso de ubicación denegado');
+            return null;
+          }
         }
 
         final locationData = await _location.getLocation();
         lat = locationData.latitude;
         lon = locationData.longitude;
+        debugPrint('📍 [LocationService] Coordenadas obtenidas: lat=$lat, lon=$lon');
       }
 
-      if (lat == null || lon == null) return null;
+      if (lat == null || lon == null) {
+        debugPrint('❌ [LocationService] Coordenadas nulas: lat=$lat, lon=$lon');
+        return null;
+      }
 
       // Llamar a tu API
+      debugPrint('📍 [LocationService] Llamando API con lat=$lat, lon=$lon, lang=$lang');
       final uri = Uri.parse(
         "${ApiConfig.apiBase}/users/location"
         "?lat=$lat"
@@ -75,9 +94,7 @@ class LocationService {
       );
 
       final response = await http.get(uri);
-      if (response.statusCode != 200) {
-        debugPrint("⚠️ Error al obtener datos de la API: ${response.body}");
-      }
+      debugPrint('📍 [LocationService] API response status: ${response.statusCode}');
 
       if (response.statusCode != 200) {
         debugPrint("⚠️ Error API (${response.statusCode}): ${response.body}");
@@ -90,14 +107,18 @@ class LocationService {
       }
 
       final data = jsonDecode(response.body);
+      debugPrint('📍 [LocationService] API data: city=${data['city']}, state=${data['state']}, country=${data['country']}');
 
-      return LocationDTO(
+      final locationDto = LocationDTO(
         country: data['country'] ?? '',
         state: data['state'] ?? '',
         city: data['city'] ?? '',
         lat: lat,
         lng: lon,
       );
+
+      debugPrint('📍 [LocationService] LocationDTO creado: ${locationDto.displayName}');
+      return locationDto;
     } catch (e) {
       debugPrint('❌ Error en LocationService: $e');
       return null;

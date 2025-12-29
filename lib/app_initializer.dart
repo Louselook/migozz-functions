@@ -6,6 +6,7 @@ import 'package:migozz_app/features/splash/splash_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:migozz_app/features/auth/services/location_service.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:location/location.dart' as loc;
 
 /// Resultado de inicialización global
 class AppInitResult {
@@ -71,8 +72,11 @@ class _AppInitializerState extends State<AppInitializer>
     }
 
     if (!kIsWeb) {
-      final status = await Permission.locationWhenInUse.status;
-      if (!status.isGranted && mounted) {
+      final location = loc.Location();
+      final status = await location.hasPermission();
+      if (status != loc.PermissionStatus.granted &&
+          status != loc.PermissionStatus.grantedLimited &&
+          mounted) {
         await _runInit();
       }
     }
@@ -95,70 +99,55 @@ class _AppInitializerState extends State<AppInitializer>
         final micStatus = await Permission.microphone.request();
         microphoneGranted = micStatus.isGranted;
 
-        // Check location permission status first
-        final locStatus = await Permission.locationWhenInUse.status;
-        debugPrint('📍 [LocationPermission] Current status: $locStatus');
+        // Use location package for permission handling (consistent with LocationService)
+        final location = loc.Location();
 
-        PermissionStatus finalLocStatus;
+        // Check if location service is enabled
+        bool serviceEnabled = await location.serviceEnabled();
+        debugPrint('📍 [LocationPermission] Service enabled: $serviceEnabled');
 
-        // If already granted, use location directly
-        if (locStatus.isGranted || locStatus.isLimited) {
-          finalLocStatus = locStatus;
+        if (!serviceEnabled) {
+          serviceEnabled = await location.requestService();
+          debugPrint('📍 [LocationPermission] Service after request: $serviceEnabled');
         }
-        // If permanently denied or restricted, show settings dialog
-        else if (locStatus.isPermanentlyDenied || locStatus.isRestricted) {
-          debugPrint(
-            '⛔ [LocationPermission] Permission permanently denied or restricted',
-          );
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!mounted) return;
-            _showLocationDeniedDialog(true);
-          });
-          finalLocStatus = locStatus;
-        }
-        // If denied (including notDetermined), request permission (shows native dialog)
-        else if (locStatus.isDenied) {
-          debugPrint(
-            '🔔 [LocationPermission] Requesting permission (status: denied/notDetermined)',
-          );
-          finalLocStatus = await Permission.locationWhenInUse.request();
-          debugPrint('📍 [LocationPermission] Request result: $finalLocStatus');
 
-          // If user denied the permission, show dialog
-          if (finalLocStatus.isDenied) {
+        if (serviceEnabled) {
+          // Check location permission using location package
+          var permissionStatus = await location.hasPermission();
+          debugPrint('📍 [LocationPermission] Current status: $permissionStatus');
+
+          // If denied, request permission (this will show the native dialog)
+          if (permissionStatus == loc.PermissionStatus.denied) {
+            debugPrint('🔔 [LocationPermission] Requesting permission...');
+            permissionStatus = await location.requestPermission();
+            debugPrint('📍 [LocationPermission] Request result: $permissionStatus');
+          }
+
+          // Handle the result
+          if (permissionStatus == loc.PermissionStatus.granted ||
+              permissionStatus == loc.PermissionStatus.grantedLimited) {
+            locationGranted = true;
+            try {
+              final svc = LocationService();
+              locationDto = await svc.initAndFetchAddress(lang: lang);
+            } catch (e) {
+              debugPrint('❌ Error al obtener ubicación: $e');
+            }
+          } else if (permissionStatus == loc.PermissionStatus.deniedForever) {
+            debugPrint('⛔ [LocationPermission] Permission permanently denied');
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+              _showLocationDeniedDialog(true);
+            });
+          } else {
             debugPrint('⚠️ [LocationPermission] Permission denied by user');
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!mounted) return;
               _showLocationDeniedDialog(false);
             });
-          } else if (finalLocStatus.isPermanentlyDenied) {
-            debugPrint(
-              '⛔ [LocationPermission] Permission permanently denied after request',
-            );
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (!mounted) return;
-              _showLocationDeniedDialog(true);
-            });
           }
-        }
-        // Fallback: request permission
-        else {
-          debugPrint(
-            '🔔 [LocationPermission] Fallback - requesting permission',
-          );
-          finalLocStatus = await Permission.locationWhenInUse.request();
-          debugPrint('📍 [LocationPermission] Request result: $finalLocStatus');
-        }
-
-        // If permission granted or limited, get location
-        if (finalLocStatus.isGranted || finalLocStatus.isLimited) {
-          locationGranted = true;
-          try {
-            final svc = LocationService();
-            locationDto = await svc.initAndFetchAddress(lang: lang);
-          } catch (e) {
-            debugPrint('❌ Error al obtener ubicación: $e');
-          }
+        } else {
+          debugPrint('❌ [LocationPermission] Location service not available');
         }
       } else {
         // En web — permisos simulados o usando otra API
