@@ -510,6 +510,19 @@ class GeminiService {
     Map<String, dynamic> question,
     RegisterCubit registerCubit,
   ) async {
+    // SI estamos en el paso de ubicación, obtener la ubicación PRIMERO
+    final currentStepKey = questionFlow[_currentQuestionIndex];
+    if (currentStepKey == 'location') {
+      final currentLocation = registerCubit.state.location;
+      // Obtener ubicación si está vacía o null
+      if (currentLocation == null || currentLocation.isEmpty) {
+        debugPrint('📍 [_prepareQuestion] Detectado paso de ubicación vacía o null - obteniendo ubicación...');
+        final language = registerCubit.state.language ?? _language;
+        await registerCubit.fetchLocation(language);
+        debugPrint('📍 [_prepareQuestion] Ubicación obtenida: ${registerCubit.state.location?.city}');
+      }
+    }
+
     if (question['showProfilePictures'] == true) {
       final pictures = AssistantFunctions.getProfilePictures(registerCubit);
       if (pictures.isNotEmpty) {
