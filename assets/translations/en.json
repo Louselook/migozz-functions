@@ -51,7 +51,7 @@
             "registerEmail" : "This email is already registered",
             "audioMinLimit": "The audio is very short (${durationInSeconds.toStringAsFixed(1)}s). It must last between 1 and 10 seconds.",
             "audioMaxLimit": "The audio is very long (${durationInSeconds.toStringAsFixed(1)}s). It must last between 1 and 10 seconds.",
-            "picConfirmation": "Selected photo from ${photo['label'] ?? photo['platform'] ?? 'social network'} has been set as your profile picture.",
+            "picConfirmation": "Selected photo has been set as your profile picture.",
             "avatarSkipped": "Profile photo step skipped",
             "audioSkipped": "Voice note step skipped"
         },

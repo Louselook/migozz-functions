@@ -51,7 +51,7 @@
       "registerEmail": "Este correo ya está registrado",
       "audioMinLimit": "El audio es muy corto (${durationInSeconds.toStringAsFixed(1)}s). Debe durar entre 1 y 10 segundos.",
       "audioMaxLimit": "El audio es muy largo (${durationInSeconds.toStringAsFixed(1)}s). Debe durar entre 1 y 10 segundos.",
-      "picConfirmation": "La foto seleccionada de ${photo['label'] ?? photo['platform'] ?? 'red social'} se ha establecido como tu foto de perfil.",
+      "picConfirmation": "La foto seleccionada se ha establecido como tu foto de perfil correctamente.",
       "avatarSkipped": "Paso de foto de perfil saltado",
       "audioSkipped": "Paso de nota de voz saltado"
     },
