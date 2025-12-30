@@ -83,8 +83,12 @@ class _AppInitializerState extends State<AppInitializer>
   }
 
   Future<void> _runInit() async {
-    if (_isInitializing) return;
+    if (_isInitializing) {
+      debugPrint('⚠️ [AppInit] Ya hay inicialización en curso, omitiendo');
+      return;
+    }
     _isInitializing = true;
+    debugPrint('🚀 [AppInit] Iniciando permisos y ubicación...');
 
     try {
       bool microphoneGranted = false;
@@ -93,13 +97,11 @@ class _AppInitializerState extends State<AppInitializer>
       final lang = context.locale.languageCode == 'es' ? 'es' : 'en';
 
       if (!kIsWeb) {
-        //  Solo en móvil o desktop
-
         // Request microphone permission
         final micStatus = await Permission.microphone.request();
         microphoneGranted = micStatus.isGranted;
 
-        // Use location package for permission handling (consistent with LocationService)
+        // Use location package for permission handling
         final location = loc.Location();
 
         // Check if location service is enabled
@@ -112,24 +114,28 @@ class _AppInitializerState extends State<AppInitializer>
         }
 
         if (serviceEnabled) {
-          // Check location permission using location package
+          // Check location permission
           var permissionStatus = await location.hasPermission();
           debugPrint('📍 [LocationPermission] Current status: $permissionStatus');
 
-          // If denied, request permission (this will show the native dialog)
+          // If denied, request permission
           if (permissionStatus == loc.PermissionStatus.denied) {
             debugPrint('🔔 [LocationPermission] Requesting permission...');
             permissionStatus = await location.requestPermission();
             debugPrint('📍 [LocationPermission] Request result: $permissionStatus');
           }
 
-          // Handle the result
+          // Handle the result with timeout
           if (permissionStatus == loc.PermissionStatus.granted ||
               permissionStatus == loc.PermissionStatus.grantedLimited) {
             locationGranted = true;
             try {
               final svc = LocationService();
-              locationDto = await svc.initAndFetchAddress(lang: lang);
+              locationDto = await svc.initAndFetchAddress(lang: lang)
+                  .timeout(const Duration(seconds: 10), onTimeout: () {
+                debugPrint('⏱️ [LocationService] Timeout obteniendo ubicación');
+                return null;
+              });
             } catch (e) {
               debugPrint('❌ Error al obtener ubicación: $e');
             }

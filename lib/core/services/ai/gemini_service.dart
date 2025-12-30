@@ -77,20 +77,17 @@ class GeminiService {
 
   // Flujo completo para usuarios NO autenticados
   final List<String> _questionFlowNotAuth = [
-    // 'language', // 0
-    'fullName', // 1
-    'username', // 2
-    // 'gender', // 3
-    'location', // 5
-    'sendOTP', // 6
-    'emailVerification', // 7
-    'otpInput', // 8
-    'emailSuccess', // 9
-    'socialEcosystem', // 4
-    'avatarUrl', // 10
-    'phone', // 11
-    'voiceNoteUrl', // 12
-    // 'category', // 13
+    'fullName',            // 1
+    'username',            // 2
+    'location',            // 3
+    'sendOTP',             // 4
+    'emailVerification',   // 5
+    'otpInput',            // 6
+    'emailSuccess',        // 7
+    'socialEcosystem',     // 8
+    'avatarUrl',           // 9
+    'phone',               // 10
+    'voiceNoteUrl',        // 11
   ];
 
   //  Flujo reducido para usuarios autenticados
