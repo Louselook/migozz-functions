@@ -11,6 +11,7 @@ import 'package:migozz_app/features/chat/presentation/register/components/chat_o
 import 'package:migozz_app/features/auth/services/media_service.dart';
 import 'package:migozz_app/features/tutorial/avatar_register_tutorial.dart';
 import 'package:migozz_app/features/tutorial/voice_register_tutorial.dart';
+import 'package:migozz_app/features/chat/services/step_input_validator.dart';
 
 /// Controlador específico para el chat de registro con IA
 /// Extiende GenericChatController y agrega funcionalidad de Gemini AI
@@ -31,6 +32,10 @@ class RegisterChatController extends GenericChatController {
       VoiceNoteTutorialService();
   final AudioChatHandler _audioHandler = AudioChatHandler();
 
+  // IA-01 & IA-02: Step input validation
+  late final StepInputValidator _stepInputValidator;
+  StepInputValidator get stepInputValidator => _stepInputValidator;
+
   // Estado específico del registro
   bool _showPhoneInput = false;
   bool get showPhoneInput => _showPhoneInput;
@@ -40,7 +45,9 @@ class RegisterChatController extends GenericChatController {
 
   List<String> get currentSuggestions => _audioHandler.currentSuggestions;
 
-  RegisterChatController({required this.registerCubit, this.firebaseUid});
+  RegisterChatController({required this.registerCubit, this.firebaseUid}) {
+    _stepInputValidator = StepInputValidator(registerCubit: registerCubit);
+  }
 
   /// Inicializar el chat de registro con IA
   void initializeChat({
@@ -177,6 +184,22 @@ class RegisterChatController extends GenericChatController {
   /// Enviar audio del usuario
   Future<void> sendUserAudio(String audioPath) async {
     if (!isActive) return;
+
+    // IA-02: Validate audio input for current step
+    final (isValid, errorMsg) = _stepInputValidator.validateAudioInput();
+    if (!isValid && errorMsg != null) {
+      debugPrint('⚠️ [RegisterChat] Audio rejected: $errorMsg');
+      addMessage({
+        "other": true,
+        "type": MessageType.text,
+        "text": errorMsg,
+        "name": "Migozz",
+        "time": getTimeNow(),
+      });
+      if (isActive) notifyListeners();
+      return;
+    }
+
     await _audioHandler.sendUserAudio(
       audioPath: audioPath,
       registerCubit: registerCubit,
@@ -196,6 +219,21 @@ class RegisterChatController extends GenericChatController {
   /// Enviar foto de avatar
   Future<void> sendAvatarPhoto(String photoPath) async {
     if (!isActive) return;
+
+    // IA-01: Validate image input for current step
+    final (isValid, errorMsg) = _stepInputValidator.validateImageInput();
+    if (!isValid && errorMsg != null) {
+      debugPrint('⚠️ [RegisterChat] Image rejected: $errorMsg');
+      addMessage({
+        "other": true,
+        "type": MessageType.text,
+        "text": errorMsg,
+        "name": "Migozz",
+        "time": getTimeNow(),
+      });
+      if (isActive) notifyListeners();
+      return;
+    }
 
     debugPrint('📸 Foto de avatar recibida: $photoPath');
 

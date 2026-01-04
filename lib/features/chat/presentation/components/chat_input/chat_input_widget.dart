@@ -10,6 +10,7 @@ import 'package:migozz_app/core/components/compuestos/custom_textfield.dart';
 import 'package:migozz_app/core/components/compuestos/custom_tooltip.dart';
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:migozz_app/core/utils/camera_permission_handler.dart';
+import 'package:migozz_app/features/chat/services/step_input_validator.dart';
 import 'audio_recorder_manager.dart';
 import 'recording_display.dart';
 import 'audio_player_display.dart';
@@ -22,6 +23,10 @@ class ChatInputWidget extends StatefulWidget {
   final TextInputType keyboardType;
   final bool showPhoneInput;
 
+  /// IA-01 & IA-02: Support for registration mode with step validation
+  final StepInputValidator? stepInputValidator;
+  final bool isRegistrationMode;
+
   const ChatInputWidget({
     super.key,
     this.keyboardType = TextInputType.text,
@@ -30,6 +35,8 @@ class ChatInputWidget extends StatefulWidget {
     this.onSendAudio,
     this.onSendImage,
     this.showPhoneInput = false,
+    this.stepInputValidator,
+    this.isRegistrationMode = false,
   });
 
   @override
@@ -53,6 +60,18 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
 
   /// Called by external UI (eg. ia_chat_screen) when a suggestion requests camera.
   Future<void> openCameraFromSuggestions({int imageQuality = 80}) async {
+    // IA-01: Validate input type for registration mode
+    if (widget.isRegistrationMode && widget.stepInputValidator != null) {
+      final validator = widget.stepInputValidator!;
+      final (isValid, errorMsg) = validator.validateImageInput();
+      if (!isValid && errorMsg != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMsg), backgroundColor: Colors.orange),
+        );
+        return;
+      }
+    }
+
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -89,6 +108,18 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
 
   /// Called by external UI when a suggestion requests gallery.
   Future<void> openGalleryFromSuggestions({int imageQuality = 80}) async {
+    // IA-01: Validate input type for registration mode
+    if (widget.isRegistrationMode && widget.stepInputValidator != null) {
+      final validator = widget.stepInputValidator!;
+      final (isValid, errorMsg) = validator.validateImageInput();
+      if (!isValid && errorMsg != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMsg), backgroundColor: Colors.orange),
+        );
+        return;
+      }
+    }
+
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -121,6 +152,18 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
 
   /// Called by external UI when a suggestion requests audio recording.
   Future<void> startRecordingFromSuggestions() async {
+    // IA-02: Validate audio input for registration mode
+    if (widget.isRegistrationMode && widget.stepInputValidator != null) {
+      final validator = widget.stepInputValidator!;
+      final (isValid, errorMsg) = validator.validateAudioInput();
+      if (!isValid && errorMsg != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMsg), backgroundColor: Colors.orange),
+        );
+        return;
+      }
+    }
+
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -323,6 +366,18 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
   }
 
   void _startRecordingPress() async {
+    // IA-02: Validate audio input for registration mode
+    if (widget.isRegistrationMode && widget.stepInputValidator != null) {
+      final validator = widget.stepInputValidator!;
+      final (isValid, errorMsg) = validator.validateAudioInput();
+      if (!isValid && errorMsg != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMsg), backgroundColor: Colors.orange),
+        );
+        return;
+      }
+    }
+
     // En web, no permitimos grabar (mostramos mensaje)
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -519,8 +574,8 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
             } catch (_) {}
           }
         },
-        // Solo mostrar botón de adjuntar en móvil
-        suffixIcon: !kIsWeb
+        // IA-08: Solo mostrar botón de adjuntar en móvil y si es válido para el step
+        suffixIcon: !kIsWeb && _shouldShowAttachButton()
             ? IconButton(
                 key: _attachButtonKey,
                 icon: Icon(
@@ -534,7 +589,32 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
     );
   }
 
+  /// IA-08: Determinar si el botón de adjuntar debe ser visible
+  bool _shouldShowAttachButton() {
+    // Si no estamos en modo registro, mostrar siempre (comportamiento normal)
+    if (!widget.isRegistrationMode) {
+      return true;
+    }
+
+    // En modo registro, solo mostrar si el step actual es de imagen
+    if (widget.stepInputValidator != null) {
+      return widget.stepInputValidator!.shouldShowAttachButton();
+    }
+
+    // Por defecto, no mostrar en modo registro si no hay validador
+    return false;
+  }
+
   void _showTooltip(BuildContext context, String message) {
+    // IA-02: En modo registro, mostrar tooltip solo si es apropiado para el step
+    if (widget.isRegistrationMode && widget.stepInputValidator != null) {
+      // No mostrar tooltip de grabación si no estamos en step de audio
+      if (message.contains("chat.input.holdToRecord") &&
+          !widget.stepInputValidator!.isOnAudioStep()) {
+        return;
+      }
+    }
+
     if (_tooltipEntry != null) {
       _tooltipEntry!.remove();
       _tooltipEntry = null;
@@ -642,6 +722,28 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
       );
     }
 
+    // IA-02: Check if microphone should be visible in registration mode
+    if (!_shouldShowMicrophone()) {
+      return SizedBox(
+        height: 48,
+        width: 50,
+        child: Tooltip(
+          message: widget.stepInputValidator?.getStepExpectationText() ?? '',
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.grey.shade700, Colors.grey.shade600],
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Center(
+              child: Icon(Icons.mic_off, color: Colors.grey.shade500, size: 24),
+            ),
+          ),
+        ),
+      );
+    }
+
     // Default: long-press recording (mobile) or tooltip (web)
     return Listener(
       onPointerDown: (_) {
@@ -656,7 +758,12 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
         if (_isLongPressValid) {
           _stopRecordingRelease();
         } else {
-          _showTooltip(context, "chat.input.holdToRecord".tr());
+          // IA-02: Show contextual tooltip message based on step
+          final tooltipMessage =
+              widget.isRegistrationMode && widget.stepInputValidator != null
+              ? widget.stepInputValidator!.getStepExpectationText()
+              : "chat.input.holdToRecord".tr();
+          _showTooltip(context, tooltipMessage);
         }
       },
       onPointerCancel: (_) {
@@ -676,5 +783,21 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
         child: Center(child: Icon(icon, color: Colors.white, size: 24)),
       ),
     );
+  }
+
+  /// IA-02: Determinar si el micrófono debe ser visible
+  bool _shouldShowMicrophone() {
+    // Si no estamos en modo registro, mostrar siempre (comportamiento normal)
+    if (!widget.isRegistrationMode) {
+      return true;
+    }
+
+    // En modo registro, solo mostrar si el step actual es de audio
+    if (widget.stepInputValidator != null) {
+      return widget.stepInputValidator!.shouldShowMicrophone();
+    }
+
+    // Por defecto, no mostrar en modo registro si no hay validador
+    return false;
   }
 }

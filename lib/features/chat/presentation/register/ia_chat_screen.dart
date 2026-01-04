@@ -287,6 +287,9 @@ class _IaChatScreenState extends State<IaChatScreen> {
             key: chatInputKey,
             controller: _controller,
             showPhoneInput: _chatController.showPhoneInput,
+            // IA-01 & IA-02: Enable step validation in registration mode
+            isRegistrationMode: true,
+            stepInputValidator: _chatController.stepInputValidator,
             onSend: () {
               sendChat(
                 other: false,
