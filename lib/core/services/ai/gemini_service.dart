@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:migozz_app/core/services/ai/assistant_functions.dart';
 import 'package:migozz_app/core/services/ai/chat_validation_min.dart';
+import 'package:migozz_app/core/services/ai/migozz_context.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 
 class GeminiService {
@@ -77,17 +78,17 @@ class GeminiService {
 
   // Flujo completo para usuarios NO autenticados
   final List<String> _questionFlowNotAuth = [
-    'fullName',            // 1
-    'username',            // 2
-    'location',            // 3
-    'sendOTP',             // 4
-    'emailVerification',   // 5
-    'otpInput',            // 6
-    'emailSuccess',        // 7
-    'socialEcosystem',     // 8
-    'avatarUrl',           // 9
-    'phone',               // 10
-    'voiceNoteUrl',        // 11
+    'fullName', // 1
+    'username', // 2
+    'location', // 3
+    'sendOTP', // 4
+    'emailVerification', // 5
+    'otpInput', // 6
+    'emailSuccess', // 7
+    'socialEcosystem', // 8
+    'avatarUrl', // 9
+    'phone', // 10
+    'voiceNoteUrl', // 11
   ];
 
   //  Flujo reducido para usuarios autenticados
@@ -236,6 +237,78 @@ class GeminiService {
     );
 
     debugPrint('🤖 Decisión: $decision');
+
+    // MANEJO ESPECIAL: Si el usuario pregunta "WHY/POR QUÉ" sobre un campo
+    if (decision['isWhy'] == true) {
+      final isSpanish = registerCubit.state.language == 'Español';
+      final fieldKey = decision['field'] as String? ?? currentStepKey;
+
+      // Obtener la explicación completa del contexto
+      final explanation = MigozzContext.getWhyExplanation(
+        fieldKey,
+        isSpanish ? 'es' : 'en',
+      );
+
+      debugPrint('💡 Usuario preguntó "WHY" - lanzando explicación contextual');
+
+      if (explanation.isNotEmpty) {
+        // Agregar sufijo a la explicación para re-pedir la respuesta
+        final reprompt = isSpanish
+            ? "\n\n¿Podrías responder la pregunta anterior, por favor?"
+            : "\n\nNow, could you answer the question please?";
+
+        // Devolver la explicación sin keepTalk para evitar loop
+        // El sistema procesará esto normalmente sin re-evaluar la entrada
+        return {
+          "text": explanation + reprompt,
+          "options": const <String>[],
+          "step": 'regProgress.$currentStepKey',
+          "keepTalk": false,
+          "repeatQuestion": true, // Flag para que IaChatScreen re-pregunte
+          "clearInput": true, // Limpiar input para evitar re-procesar
+          "suggestions": [], // Limpiar sugerencias
+        };
+      }
+    }
+
+    // MANEJO ESPECIAL: Si el usuario quiere cambiar una respuesta anterior
+    if (decision['changeRequest'] == true) {
+      final isSpanish = registerCubit.state.language == 'Español';
+      final targetField = decision['targetField'] as String?;
+
+      if (targetField != null) {
+        // El usuario indicó específicamente qué cambiar, volver a esa pregunta
+        final fieldIndex = questionFlow.indexOf(targetField);
+        if (fieldIndex >= 0) {
+          _currentQuestionIndex = fieldIndex;
+          debugPrint('🔄 Volviendo al paso: $targetField (índice $fieldIndex)');
+          return await _prepareQuestion(
+            AssistantFunctions.getCurrentQuestion(
+                  questionFlow,
+                  _currentQuestionIndex,
+                  registerCubit,
+                ) ??
+                {},
+            registerCubit,
+          );
+        }
+      } else {
+        // El usuario quiere cambiar algo pero no especificó qué
+        // Mostrar un mensaje amigable preguntando qué cambiar
+        final message =
+            decision['message'] as String? ??
+            (isSpanish
+                ? "¿Qué información necesitas actualizar? (nombre, usuario, correo, ubicación, teléfono)"
+                : "What would you like to update? (name, username, email, location, phone)");
+
+        return {
+          "text": message,
+          "options": <String>[],
+          "step": 'regProgress.changeRequest',
+          "keepTalk": false,
+        };
+      }
+    }
 
     // SI ES VÁLIDO → PROCESAR Y VERIFICAR
     if (decision['valid'] == true) {
@@ -480,6 +553,90 @@ class GeminiService {
       };
     }
 
+    // MANEJO ESPECIAL: Si el usuario pide más sugerencias de usuario
+    if (decision['requestMoreSuggestions'] == true &&
+        currentStepKey == 'username') {
+      final fullName = registerCubit.state.fullName ?? '';
+      if (fullName.isNotEmpty) {
+        final suggestions = AssistantFunctions.generateUsernameSuggestions(
+          fullName,
+        );
+        if (suggestions.isNotEmpty) {
+          debugPrint(
+            '💡 [sendMessage] Generadas más sugerencias de usuario: $suggestions',
+          );
+          final isSpanish = registerCubit.state.language == 'Español';
+          final message = isSpanish
+              ? '¡Aquí hay más opciones! ¿Te gusta alguna de estas?'
+              : 'Here are some more options! Do you like any of these?';
+          return {
+            "text": message,
+            "options": <String>[],
+            "suggestions": suggestions,
+            "step": 'regProgress.username',
+            "keepTalk": false,
+          };
+        }
+      }
+    }
+
+    // MANEJO: Si el usuario hizo una pregunta sobre el campo actual o pregunta general
+    // Detectar si la respuesta no es válida pero parece ser una pregunta
+    final userInputText = decision['userResponse']?.toString().trim() ?? '';
+    final isGeneralQuestion = _isGeneralQuestion(userInputText);
+
+    if (decision['valid'] == false && userInputText.isNotEmpty) {
+      final isSpanish = registerCubit.state.language == 'Español';
+
+      // Primero: Si es pregunta sobre el CAMPO actual, devolver guía específica
+      if (!isGeneralQuestion) {
+        // Es pregunta sobre cómo llenar el campo actual
+        debugPrint(
+          '💡 [FieldGuidance] Usuario preguntó sobre el campo: $userInputText',
+        );
+        final guidance = _getFieldSpecificGuidance(currentStepKey, isSpanish);
+        return {
+          "text": guidance,
+          "options": <String>[],
+          "step": 'regProgress.$currentStepKey',
+          "keepTalk": false,
+          "repeatQuestion": true, // Volver a pedir respuesta del formulario
+          "suggestions": [], // Limpiar sugerencias
+          "clearInput": true, // Limpiar input para no entrar en loop
+        };
+      }
+
+      // Segundo: Si es pregunta general, usar Gemini
+      if (isGeneralQuestion) {
+        debugPrint(
+          '🤔 [GeneralQ&A] Usuario hizo pregunta general: $userInputText',
+        );
+
+        try {
+          final response = await _model!.generateContent([
+            Content.text(
+              'Answer this question briefly in ${isSpanish ? 'Spanish' : 'English'} (max 2 sentences): $userInputText',
+            ),
+          ]);
+
+          if (response.text != null && response.text!.isNotEmpty) {
+            debugPrint('🤖 [GeneralQ&A] Respuesta Gemini: ${response.text}');
+            return {
+              "text": response.text,
+              "options": <String>[],
+              "step": 'regProgress.$currentStepKey',
+              "keepTalk": false,
+              "repeatQuestion": true,
+              "suggestions": [],
+              "clearInput": true, // Importante para evitar loop
+            };
+          }
+        } catch (e, st) {
+          debugPrint('❌ Error en GeneralQ&A: $e\n$st');
+        }
+      }
+    }
+
     final err =
         AssistantFunctions.getErrorMessageForStep(
           currentStepKey,
@@ -503,6 +660,11 @@ class GeminiService {
           : 'Please enter a valid value.';
       err['keepTalk'] = false;
     }
+
+    // Limpiar opciones y sugerencias de error
+    err['options'] = <String>[];
+    err['suggestions'] = <Map<String, dynamic>>[];
+
     return err;
   }
 
@@ -516,10 +678,31 @@ class GeminiService {
       final currentLocation = registerCubit.state.location;
       // Obtener ubicación si está vacía o null
       if (currentLocation == null || currentLocation.isEmpty) {
-        debugPrint('📍 [_prepareQuestion] Detectado paso de ubicación vacía o null - obteniendo ubicación...');
+        debugPrint(
+          '📍 [_prepareQuestion] Detectado paso de ubicación vacía o null - obteniendo ubicación...',
+        );
         final language = registerCubit.state.language ?? _language;
         await registerCubit.fetchLocation(language);
-        debugPrint('📍 [_prepareQuestion] Ubicación obtenida: ${registerCubit.state.location?.city}');
+        debugPrint(
+          '📍 [_prepareQuestion] Ubicación obtenida: ${registerCubit.state.location?.city}',
+        );
+      }
+    }
+
+    // SI estamos en el paso de username, generar sugerencias dinámicas
+    if (currentStepKey == 'username' &&
+        question['generateSuggestions'] == true) {
+      final fullName = registerCubit.state.fullName ?? '';
+      if (fullName.isNotEmpty) {
+        final suggestions = AssistantFunctions.generateUsernameSuggestions(
+          fullName,
+        );
+        if (suggestions.isNotEmpty) {
+          question['suggestions'] = suggestions;
+          debugPrint(
+            '💡 [_prepareQuestion] Generadas sugerencias de usuario: $suggestions',
+          );
+        }
       }
     }
 
@@ -554,7 +737,8 @@ class GeminiService {
 
     final enriched = await _enrichTextIfPossible(
       baseText: question['text']?.toString(),
-      stepKey: question['step']?.toString() ?? questionFlow[_currentQuestionIndex],
+      stepKey:
+          question['step']?.toString() ?? questionFlow[_currentQuestionIndex],
       registerCubit: registerCubit,
       purpose: 'question',
       options: optionsForEnrichment,
@@ -638,30 +822,108 @@ class GeminiService {
   }
 
   String? _whyExplanation(String stepKey, bool isSpanish) {
-    final es = <String, String>{
-      'phone':
-          'Tu número nos ayuda a proteger tu cuenta y permitir funciones como recuperación y verificación en dos pasos.',
-      'voiceNoteUrl':
-          'Una nota de voz breve (5–10s) ayuda a que otros te conozcan mejor y hace tu perfil más auténtico.',
-      'avatarUrl':
-          'Una foto hace tu perfil reconocible y confiable. Puedes elegir de tus redes o subir una nueva.',
-      'sendOTP':
-          'Verificamos tu correo para garantizar la seguridad y que podamos contactarte si es necesario.',
-      'location':
-          'La ubicación mejora tus recomendaciones y conexiones cercanas. No compartimos tu ubicación exacta.',
-    };
-    final en = <String, String>{
-      'phone':
-          "Your phone helps secure your account and enables features like recovery and two-step verification.",
-      'voiceNoteUrl':
-          "A short voice note (5–10s) helps others know you better and makes your profile feel authentic.",
-      'avatarUrl':
-          "A profile photo makes you recognizable and trustworthy. Pick from socials or upload a new one.",
-      'sendOTP':
-          "We verify your email to keep your account secure and ensure we can reach you if needed.",
-      'location':
-          "Location improves recommendations and nearby connections. We don't share your exact location.",
-    };
-    return (isSpanish ? es[stepKey] : en[stepKey]);
+    // Use the comprehensive MigozzContext system
+    final language = isSpanish ? 'es' : 'en';
+    return MigozzContext.getShortExplanation(stepKey, language);
+  }
+
+  /// Detecta si el input es una pregunta GENERAL (no relacionada con el campo actual)
+  /// Retorna false si parece pregunta sobre cómo llenar el campo
+  /// Retorna true si es pregunta general no relacionada
+  bool _isGeneralQuestion(String userInput) {
+    if (userInput.isEmpty) return false;
+
+    final lowered = userInput.toLowerCase().trim();
+
+    // Primero: si parece pregunta sobre el CAMPO actual, NO es pregunta general
+    // Patrones como "how should it be", "como deberia ser", "what format", etc.
+    final fieldQuestionPatterns = [
+      RegExp(
+        r'(should|deberia|debería|puede|puedo|puedes|can|formato|format|'
+        r'tipo|example|ejemplos|patron|pattern|rules|reglas|requirements|'
+        r'characters|caracteres|permitido|allowed|que.*permitido|can.*use)',
+      ),
+      RegExp(
+        r'(how|como|en que|que tipo)\s+(should|deberia|be|ser|es|escribo|write|format)',
+      ),
+    ];
+
+    for (final pattern in fieldQuestionPatterns) {
+      if (pattern.hasMatch(lowered)) {
+        return false; // Es pregunta sobre el campo, NO es pregunta general
+      }
+    }
+
+    // Segundo: patrones de NO preguntas (respuestas típicas)
+    final responsePatterns = [
+      RegExp(
+        r'^(s[íi]|no|okay|ok|sure|yes|claro|dale|bueno|bien|vale|de acuerdo|exacto|correcto)',
+        caseSensitive: false,
+      ),
+    ];
+
+    for (final pattern in responsePatterns) {
+      if (pattern.hasMatch(lowered)) {
+        return false;
+      }
+    }
+
+    // Tercero: patrones de PREGUNTAS generales
+    final generalQuestionPatterns = [
+      RegExp(
+        r'^(que|quién|cuál|cuándo|dónde|por qué|para qué|'
+        r'what|who|which|when|where|why|how)\s',
+        caseSensitive: false,
+      ),
+      RegExp(r'[?¿]$'),
+    ];
+
+    for (final pattern in generalQuestionPatterns) {
+      if (pattern.hasMatch(lowered)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /// Genera contexto específico para responder preguntas sobre un campo
+  String _getFieldSpecificGuidance(String fieldKey, bool isSpanish) {
+    switch (fieldKey) {
+      case 'username':
+        return isSpanish
+            ? '**Consejos para username:**\n'
+                  '• Solo minúsculas (a-z)\n'
+                  '• Sin espacios\n'
+                  '• Puede incluir números (0-9)\n'
+                  '• Caracteres permitidos: a-z, 0-9, _ (guion bajo), - (guion)\n'
+                  '• NO permitidos: @, \$, !, espacios\n'
+                  '• Mínimo 3 caracteres\n'
+                  'Ejemplos: juan_arenilla, juanes2024, juan-ar'
+            : '**Username Tips:**\n'
+                  '• Lowercase only (a-z)\n'
+                  '• No spaces\n'
+                  '• Can include numbers (0-9)\n'
+                  '• Allowed: a-z, 0-9, _ (underscore), - (dash)\n'
+                  '• NOT allowed: @, \$, !, spaces\n'
+                  '• Minimum 3 characters\n'
+                  'Examples: juan_arenilla, juanes2024, juan-ar';
+      case 'email':
+        return isSpanish
+            ? '**Email válido:**\n'
+                  '• Formato: nombre@dominio.com\n'
+                  '• Debe ser email real y activo\n'
+                  '• Lo usaremos para verificar tu cuenta\n'
+                  '• Asegúrate de que puedas acceder a él'
+            : '**Valid Email:**\n'
+                  '• Format: name@domain.com\n'
+                  '• Must be a real, active email\n'
+                  '• We\'ll use it to verify your account\n'
+                  '• Make sure you have access to it';
+      default:
+        return isSpanish
+            ? 'Ingresa un valor válido.'
+            : 'Please enter a valid value.';
+    }
   }
 }

@@ -231,7 +231,7 @@ class _IaChatScreenState extends State<IaChatScreen> {
   }
 
   void onSuggestionTap(dynamic option) async {
-    final result = handleSuggestion(option);
+    final result = AssistantFunctions.handleSuggestion(option);
     // Usa la instancia _chatController que ya creaste en initState
     switch (result.action) {
       case AssistantAction.openCamera:

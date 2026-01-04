@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:intl_phone_field/country_picker_dialog.dart';
 import 'package:migozz_app/core/color.dart';
@@ -508,6 +509,12 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
               color: Colors.white,
               fontSize: 15,
             ),
+            // Solo números
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(15),
+            ],
+            keyboardType: TextInputType.number,
             onChanged: (phone) {
               setState(() {
                 _completePhoneNumber = phone.completeNumber;
@@ -524,7 +531,6 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
             dropdownDecoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
             ),
-            keyboardType: TextInputType.phone,
             disableLengthCheck: true,
             pickerDialogStyle: PickerDialogStyle(
               width: 350,

@@ -25,6 +25,7 @@ final Map<String, Map<String, dynamic>> questionsEs = {
     "step": "regProgress.username",
     "keepTalk": false,
     "keyboardType": "text",
+    "generateSuggestions": true, // Flag para generar sugerencias dinámicas
   },
 
   // "gender": {
@@ -153,6 +154,7 @@ final Map<String, Map<String, dynamic>> questionsEn = {
     "step": "regProgress.username",
     "keepTalk": false,
     "keyboardType": "text",
+    "generateSuggestions": true, // Flag to generate dynamic suggestions
   },
 
   // "gender": {

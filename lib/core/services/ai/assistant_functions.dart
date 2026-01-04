@@ -76,6 +76,12 @@ class AssistantFunctions {
   ) {
     final normalized = userInput.trim().toLowerCase();
 
+    // 👇 DETECCIÓN DE CAMBIOS DE RESPUESTAS ANTERIORES
+    final wantToChange = _detectChangeRequest(normalized, cubit);
+    if (wantToChange != null) {
+      return wantToChange;
+    }
+
     // 👇 Detección de preguntas del tipo "why/para qué/por qué"
     final isWhy =
         normalized == 'why' ||
@@ -129,11 +135,93 @@ class AssistantFunctions {
     }
   }
 
+  /// Detecta si el usuario quiere cambiar una respuesta anterior
+  /// Retorna un mapa con `"changeField"` si encuentra una solicitud de cambio
+  static Map<String, dynamic>? _detectChangeRequest(
+    String normalized,
+    RegisterCubit cubit,
+  ) {
+    final isSpanish = _getIsSpanish(cubit);
+
+    // Patrones para detectar cambios
+    final changePatterns = [
+      'me equivoque',
+      'me equivoqué',
+      'cometí un error',
+      'i made a mistake',
+      'wrong',
+      'incorrect',
+      'podemos cambiar',
+      'can we change',
+      'quiero cambiar',
+      'want to change',
+      'change my',
+      'cambiar mi',
+      'cambiar el',
+      'change the',
+      'volver atrás',
+      'go back',
+      'back',
+      'atrás',
+      'redo',
+      'rehacer',
+      'reset',
+      'otra vez',
+      'again',
+      'de nuevo',
+    ];
+
+    final detectedChange = changePatterns.any((p) => normalized.contains(p));
+
+    if (!detectedChange) return null;
+
+    // Detectar a QUÉ campo se refiere
+    String? targetField;
+    if (normalized.contains('nombre') || normalized.contains('name')) {
+      targetField = 'fullName';
+    } else if (normalized.contains('usuario') ||
+        normalized.contains('username')) {
+      targetField = 'username';
+    } else if (normalized.contains('correo') || normalized.contains('email')) {
+      targetField = 'sendOTP';
+    } else if (normalized.contains('ubicación') ||
+        normalized.contains('location')) {
+      targetField = 'location';
+    } else if (normalized.contains('teléfono') ||
+        normalized.contains('phone')) {
+      targetField = 'phone';
+    }
+
+    return {
+      "step": "regProgress.changeRequest",
+      "valid": false, // No avanzamos hasta que se especifique qué cambiar
+      "changeRequest": true,
+      if (targetField != null) "targetField": targetField,
+      "message": isSpanish
+          ? "Entendido, podemos cambiar lo que necesites. ¿Qué información quieres actualizar?"
+          : "Understood! What would you like to update?",
+    };
+  }
+
   // Evaluación específica para sendOTP
   static Map<String, dynamic> _evaluateSendOTP(
     String normalized,
     String original,
   ) {
+    // Detectar preguntas "why"
+    final isWhy = _isWhyQuestion(
+      normalized,
+      false,
+    ); // Usar default false para detectar ambos idiomas
+    if (isWhy) {
+      return {
+        "step": "regProgress.sendOTP",
+        "valid": false,
+        "isWhy": true,
+        "field": "sendOTP",
+      };
+    }
+
     if (normalized.contains('si') ||
         normalized.contains('sí') ||
         normalized.contains('yes') ||
@@ -242,6 +330,17 @@ class AssistantFunctions {
     String normalized,
     String original,
   ) {
+    // Detectar preguntas "why"
+    final isWhy = _isWhyQuestion(normalized, false);
+    if (isWhy) {
+      return {
+        "step": "regProgress.fullName",
+        "valid": false,
+        "isWhy": true,
+        "field": "fullName",
+      };
+    }
+
     final words = original
         .trim()
         .split(' ')
@@ -266,6 +365,44 @@ class AssistantFunctions {
     String normalized,
     String original,
   ) {
+    // Detectar preguntas "why" PRIMERO
+    final isWhy = _isWhyQuestion(normalized, false);
+    if (isWhy) {
+      return {
+        "step": "regProgress.username",
+        "valid": false,
+        "isWhy": true,
+        "field": "username",
+      };
+    }
+
+    // Detectar si el usuario pide más sugerencias
+    final wantsMoreSuggestions =
+        normalized.contains('recomiendame mas') ||
+        normalized.contains('recomendame mas') ||
+        normalized.contains('recommend more') ||
+        normalized.contains('give me more') ||
+        normalized.contains('otra') ||
+        normalized.contains('otro') ||
+        normalized.contains('mas sugerencias') ||
+        normalized.contains('mas') &&
+            (normalized.contains('nombre') || normalized.contains('usuario')) ||
+        normalized == 'otro' ||
+        normalized == 'otra' ||
+        normalized == 'mas' ||
+        normalized.contains('no me gusta') ||
+        normalized.contains('not happy') ||
+        normalized.contains('i dont like');
+
+    if (wantsMoreSuggestions) {
+      return {
+        "step": "regProgress.username",
+        "valid": false,
+        "userResponse": original.trim(),
+        "requestMoreSuggestions": true,
+      };
+    }
+
     if (original.trim().length >= 3 && !original.contains(' ')) {
       return {
         "step": "regProgress.username",
@@ -307,6 +444,18 @@ class AssistantFunctions {
     RegisterCubit cubit,
   ) {
     final isSpanish = _getIsSpanish(cubit);
+
+    // IMPORTANTE: Detectar preguntas "why" ANTES de validar respuestas
+    final isWhy = _isWhyQuestion(normalized, isSpanish);
+    if (isWhy) {
+      return {
+        "step": "regProgress.location",
+        "valid": false,
+        "isWhy": true, // Flag para gemini_service que lance explicación
+        "userResponse": original.trim(),
+        "field": "location",
+      };
+    }
 
     // Opción 1: Usuario confirma ubicación (Sí)
     if (normalized == 'sí' ||
@@ -368,6 +517,17 @@ class AssistantFunctions {
     String original,
     RegisterCubit cubit,
   ) {
+    // Detectar preguntas "why" PRIMERO
+    final isWhy = _isWhyQuestion(normalized, _getIsSpanish(cubit));
+    if (isWhy) {
+      return {
+        "step": "regProgress.emailVerification",
+        "valid": false,
+        "isWhy": true,
+        "field": "sendOTP", // OTP es parte del proceso de sendOTP
+      };
+    }
+
     // Detectar si el usuario quiere reenviar código
     if (normalized.contains('reenviar') ||
         normalized.contains('resend') ||
@@ -449,6 +609,185 @@ class AssistantFunctions {
 
     return pictureCards;
   }
+
+  /// Process a single option (from list_questions). This returns an AssistantResult
+  /// that the UI (ia_chat_screen) will interpret and execute.
+  /// - `option` can be either a String or a Map with keys "label" and/or "action".
+  static AssistantResult handleSuggestion(dynamic option) {
+    try {
+      if (option == null) return AssistantResult.unknown();
+
+      String? action;
+      String? label;
+
+      if (option is String) {
+        label = option;
+      } else if (option is Map<String, dynamic>) {
+        label = (option['label'] as String?) ?? (option['text'] as String?);
+        action = option['action'] as String?;
+      } else if (option is Map<String, String>) {
+        label = option['label'];
+        action = option['action'];
+      }
+
+      // Use explicit action first (recommended)
+      switch (action) {
+        case 'open_camera':
+          return AssistantResult.openCamera();
+        case 'open_gallery':
+          return AssistantResult.openGallery();
+        case 'open_recorder':
+          return AssistantResult.openRecorder();
+        case 'skip':
+          return AssistantResult.skip();
+      }
+
+      // Fallback: try to infer from label (only as last resort)
+      final normalized = (label ?? '').toLowerCase();
+      if (normalized.contains('camera') ||
+          normalized.contains('take photo') ||
+          normalized.contains('tomar foto')) {
+        return AssistantResult.openCamera();
+      }
+      if (normalized.contains('gallery') ||
+          normalized.contains('choose') ||
+          normalized.contains('galería')) {
+        return AssistantResult.openGallery();
+      }
+      if (normalized.contains('recorder') ||
+          normalized.contains('audio') ||
+          normalized.contains('grabar')) {
+        return AssistantResult.openRecorder();
+      }
+      if (normalized.contains('skip') || normalized.contains('saltar')) {
+        return AssistantResult.skip();
+      }
+
+      // Default: send label as text
+      if ((label ?? '').isNotEmpty) {
+        return AssistantResult.sendText(label!);
+      }
+
+      return AssistantResult.unknown();
+    } catch (e, st) {
+      debugPrint('assistant_functions.handleSuggestion error: $e\n$st');
+      return AssistantResult.unknown();
+    }
+  }
+
+  /// Detecta si el usuario está haciendo una pregunta "Why/Por qué/Para qué"
+  /// Válido para cualquier idioma
+  /// Más robusto: normaliza espacios, signos y acentos
+  /// Maneja variaciones incompletas como "para qu" (sin la 'e' final)
+  static bool _isWhyQuestion(String normalized, bool isSpanish) {
+    // Normalizar: remover espacios extras, acentos y signos de puntuación
+    final clean = normalized
+        .replaceAll(RegExp(r'\s+'), ' ') // Múltiples espacios a uno
+        .replaceAll(RegExp(r'[¿?!¡]'), '') // Remover signos de puntuación
+        .replaceAll(RegExp(r'[áàä]'), 'a') // Normalizar acentos
+        .replaceAll(RegExp(r'[éè]'), 'e')
+        .replaceAll(RegExp(r'[í]'), 'i')
+        .replaceAll(RegExp(r'[ó]'), 'o')
+        .replaceAll(RegExp(r'[ú]'), 'u')
+        .trim()
+        .toLowerCase();
+
+    // Patrones en inglés
+    if (clean == 'why' ||
+        clean.startsWith('why ') ||
+        clean.endsWith(' why') ||
+        clean.contains(' why ') ||
+        clean.startsWith('why')) {
+      return true;
+    }
+
+    // Patrones en español - MÚLTIPLES VARIACIONES
+    // Detecta: "por qué", "por que", "porqué", "porque"
+    // También: "para qué", "para que", "paraque"
+    // Y variaciones incompletas: "por qu", "para qu", etc.
+    if (
+    // Variaciones completas
+    clean.contains('por que') ||
+        clean.contains('para que') ||
+        clean.contains('porque') ||
+        clean.contains('porqu') || // "porqué", "porque", "porqu?"
+        clean.contains('paraq') || // "paraqué", "paraque", "paraq?"
+        // Patrones de inicio
+        clean.startsWith('por q') ||
+        clean.startsWith('para q') ||
+        clean.startsWith('que') ||
+        // Exactos
+        clean == 'por que' ||
+        clean == 'para que' ||
+        clean == 'porque' ||
+        clean == 'porqu' ||
+        clean == 'paraq') {
+      return true;
+    }
+
+    return false;
+  }
+
+  /// Genera sugerencias dinámicas de nombre de usuario basadas en el nombre completo
+  /// Genera 3 variantes sin mayúsculas, pegadas, con números
+  /// Ejemplo: "Juan Esteban Arenilla Buendía" -> ["jeab12", "juanesteban", "juan031"]
+  static List<String> generateUsernameSuggestions(String fullName) {
+    if (fullName.trim().isEmpty) return [];
+
+    // Limpiar y normalizar el nombre (remover acentos)
+    final cleanName = fullName
+        .toLowerCase()
+        .replaceAll(RegExp(r'[áàäâ]'), 'a')
+        .replaceAll(RegExp(r'[éèëê]'), 'e')
+        .replaceAll(RegExp(r'[íìïî]'), 'i')
+        .replaceAll(RegExp(r'[óòöô]'), 'o')
+        .replaceAll(RegExp(r'[úùüû]'), 'u')
+        .replaceAll(RegExp(r'[ñ]'), 'n')
+        .trim();
+
+    // Extraer palabras
+    final words = cleanName.split(RegExp(r'\s+'));
+    final suggestions = <String>[];
+
+    // Sugerencia 1: Primeras letras + número aleatorio (ejemplo: jeab12)
+    if (words.isNotEmpty && words.length >= 2) {
+      final initials = words.map((w) => w[0]).join('');
+      final randomNum = (DateTime.now().millisecond % 100).toString().padLeft(
+        2,
+        '0',
+      );
+      suggestions.add('$initials$randomNum');
+    }
+
+    // Sugerencia 2: Primeras dos palabras pegadas (ejemplo: juanesteban)
+    if (words.isNotEmpty && words.length >= 2) {
+      final combined = words.sublist(0, 2).join('');
+      if (combined.length >= 3) {
+        suggestions.add(combined);
+      }
+    }
+
+    // Sugerencia 3: Primera palabra + número (ejemplo: juan031)
+    if (words.isNotEmpty) {
+      final firstName = words[0];
+      final randomNum = (DateTime.now().millisecond % 1000).toString().padLeft(
+        3,
+        '0',
+      );
+      suggestions.add('$firstName$randomNum');
+    }
+
+    // Si no hay suficientes sugerencias únicas, generar más
+    while (suggestions.length < 3 && words.isNotEmpty) {
+      final randomNum = (DateTime.now().millisecond % 10000).toString();
+      final suggestion = '${words.join('')}${randomNum.substring(0, 2)}';
+      if (!suggestions.contains(suggestion)) {
+        suggestions.add(suggestion);
+      }
+    }
+
+    return suggestions.take(3).toList();
+  }
 }
 
 /// High-level actions emitted by assistant when a suggestion is chosen.
@@ -478,69 +817,4 @@ class AssistantResult {
       AssistantResult(AssistantAction.sendText, payload: text);
   factory AssistantResult.skip() => AssistantResult(AssistantAction.skip);
   factory AssistantResult.unknown() => AssistantResult(AssistantAction.unknown);
-}
-
-/// Process a single option (from list_questions). This returns an AssistantResult
-/// that the UI (ia_chat_screen) will interpret and execute.
-/// - `option` can be either a String or a Map with keys "label" and/or "action".
-AssistantResult handleSuggestion(dynamic option) {
-  try {
-    if (option == null) return AssistantResult.unknown();
-
-    String? action;
-    String? label;
-
-    if (option is String) {
-      label = option;
-    } else if (option is Map<String, dynamic>) {
-      label = (option['label'] as String?) ?? (option['text'] as String?);
-      action = option['action'] as String?;
-    } else if (option is Map<String, String>) {
-      label = option['label'];
-      action = option['action'];
-    }
-
-    // Use explicit action first (recommended)
-    switch (action) {
-      case 'open_camera':
-        return AssistantResult.openCamera();
-      case 'open_gallery':
-        return AssistantResult.openGallery();
-      case 'open_recorder':
-        return AssistantResult.openRecorder();
-      case 'skip':
-        return AssistantResult.skip();
-    }
-
-    // Fallback: try to infer from label (only as last resort)
-    final normalized = (label ?? '').toLowerCase();
-    if (normalized.contains('camera') ||
-        normalized.contains('take photo') ||
-        normalized.contains('tomar foto')) {
-      return AssistantResult.openCamera();
-    }
-    if (normalized.contains('gallery') ||
-        normalized.contains('choose') ||
-        normalized.contains('galería')) {
-      return AssistantResult.openGallery();
-    }
-    if (normalized.contains('recorder') ||
-        normalized.contains('audio') ||
-        normalized.contains('grabar')) {
-      return AssistantResult.openRecorder();
-    }
-    if (normalized.contains('skip') || normalized.contains('saltar')) {
-      return AssistantResult.skip();
-    }
-
-    // Default: send label as text
-    if ((label ?? '').isNotEmpty) {
-      return AssistantResult.sendText(label!);
-    }
-
-    return AssistantResult.unknown();
-  } catch (e, st) {
-    debugPrint('assistant_functions.handleSuggestion error: $e\n$st');
-    return AssistantResult.unknown();
-  }
 }

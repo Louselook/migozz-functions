@@ -460,6 +460,23 @@ class RegisterChatController extends GenericChatController {
 
       if (!isActive) return;
 
+      // Repetir la pregunta si se mostró explicación (WHY explanation) o Q&A general
+      if (botResponse["repeatQuestion"] == true) {
+        debugPrint('🔄 [RegisterChat] Volviendo a preguntar el mismo campo...');
+        // Limpiar input anterior si se indica
+        if (botResponse["clearInput"] == true) {
+          _lastUserMessage = '';
+          debugPrint(
+            '🗑️ [RegisterChat] Input limpiado para evitar re-procesar',
+          );
+        }
+        await Future.delayed(const Duration(milliseconds: 700));
+        if (!isActive) return;
+        // No incrementar índice, volver a mostrar la misma pregunta
+        await showNextBotMessage();
+        return;
+      }
+
       // Auto-avanzar si el bot lo indica (explainAndRepeat)
       if (botResponse["explainAndRepeat"] == true) {
         await Future.delayed(const Duration(milliseconds: 900));
@@ -641,12 +658,14 @@ class RegisterChatController extends GenericChatController {
   /// Manejar selección de sugerencias (chips)
   void onSuggestionSelected(String suggestion) {
     if (!isActive) return;
+    debugPrint('🎯 [RegisterChat] Sugerencia seleccionada: $suggestion');
     sendTextMessage(suggestion);
 
     // Limpiar opciones del último mensaje del bot
     for (var msg in messages.reversed) {
       if (msg["other"] == true && msg["options"] != null) {
         msg["options"] = [];
+        msg["suggestions"] = []; // Limpiar sugerencias también
         break;
       }
     }
