@@ -1,427 +1,494 @@
-# 🎓 FAQ - Preguntas Frecuentes
+# 🎓 FAQ - Frequently Asked Questions
 
-> **Documento autobúsqueda:** Ctrl+F para encontrar tu pregunta
-
----
-
-## 📌 Preguntas Generales
-
-### P: ¿Cuál es el propósito de este sistema?
-**R:** Cuando un usuario pregunta "¿Por qué necesitas mi ubicación?" durante el registro, en lugar de un error, el sistema responde con una explicación inteligente sobre por qué Migozz necesita ese campo. Aumenta conversiones y transparencia.
-
-### P: ¿Esto es obligatorio instalar?
-**R:** No. El sistema ya está implementado y funcionando. Solo léelo si necesitas entenderlo o cambiarlo.
-
-### P: ¿Puedo desactivarlo?
-**R:** Sí. En `gemini_service.dart` línea ~253, comenta el bloque `if (decision['isWhy'] == true)`.
-
-### P: ¿Funciona en ambos idiomas?
-**R:** Sí. Detecta automáticamente español e inglés. Responde en el idioma que el usuario usa.
-
-### P: ¿Qué pasa si no dice "¿por qué?" sino algo parecido?
-**R:** El sistema detecta variaciones:
-- Español: "por qué", "para qué", "para que"
-- Inglés: "why", "why?", "why do"
-
-Agrega más patrones en `_isWhyQuestion()` si necesitas.
+> **Search Document:** Ctrl+F to find your question
 
 ---
 
-## 🔧 Preguntas Técnicas
+## 📌 General Questions
 
-### P: ¿Dónde está todo el código?
+### Q: What is the purpose of this system?
 
-**R:** En tres archivos dentro de `lib/core/services/ai/`:
+**A:** When a user asks "Why do you need my location?" during registration, instead of an error, the system responds with an intelligent explanation of why Migozz needs that field. This increases conversions and transparency.
+
+### Q: Is this mandatory to install?
+
+**A:** No. The system is already implemented and working. Only read it if you need to understand it or change it.
+
+### Q: Can I disable it?
+
+**A:** Yes. In `gemini_service.dart`, line ~253, comment out the `if (decision['isWhy'] == true)` block.
+
+### Q: Does it work in both languages?
+
+**A:** Yes. It automatically detects Spanish and English. It responds in the user's language.
+
+### Q: What happens if the user doesn't say "why?" but something similar?
+**A:** The system detects variations:
+- Spanish: "por qué", "para qué", "para que"
+- English: "why", "why?", "why do"
+
+Add more patterns to `_isWhyQuestion()` if needed.
+
+---
+
+## 🔧 Technical Questions
+
+### Q: Where is all the code?
+
+**A:** In three files within `lib/core/services/ai/`:
 
 ```
-migozz_context.dart        ← Contexto y explicaciones
-assistant_functions.dart   ← Detección de "¿por qué?"
-gemini_service.dart        ← Orquestación
+migozz_context.dart ← Context and explanations
+assistant_functions.dart ← "Why?" detection
+
+gemini_service.dart ← Orchestration
 ```
 
-### P: ¿Cuál es el archivo más importante?
-**R:** `migozz_context.dart`. Es donde viven las explicaciones. Si solo vas a leer uno, lee este.
+### Q: Which file is the most important?
 
-### P: ¿Puedo ver el código sin entender Dart?
-**R:** Parcialmente. Las explicaciones en `migozz_context.dart` son strings en español/inglés, legibles para cualquiera.
+**A:** `migozz_context.dart`. It contains the explanations. If you're only going to read one file, read this one.
 
-### P: ¿Cómo agrego un nuevo campo?
-**R:** 
-1. Ve a `migozz_context.dart`
-2. Copia el patrón de otro campo
-3. Agrega en AMBOS: `fieldContextES` y `fieldContextEN`
-4. Asegúrate el evaluador del campo en `assistant_functions.dart` deteccione isWhy
-5. Tiempo: 5 minutos
+### Q: Can I view the code without understanding Dart?
 
-Paso detallado en: [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)
+**A:** Partially. The explanations in `migozz_context.dart` are Spanish/English strings, readable by anyone.
 
-### P: ¿Por qué hay dos mapas (ES y EN)?
-**R:** Porque las explicaciones son diferentes en cada idioma. No es solo traducción, es adaptación cultural.
+### Q: How do I add a new field?
 
-### P: ¿Qué es `fieldContextES` vs `fieldContextEN`?
-**R:** Son mapas Dart:
-- `fieldContextES`: Explicaciones en español
-- `fieldContextEN`: Explicaciones en inglés
+` ....
 
-Cada campo (location, username, etc) aparece en ambas.
+### Q: How do I add a new field?
 
-### P: ¿Puedo tener más de 2 idiomas?
-**R:** Sí. Agrega `fieldContextFR`, `fieldContextDE`, etc. en `migozz_context.dart` y actualiza la lógica en `gemini_service.dart` línea ~253.
+```````````````````````````````````````````````` **A:**
 
----
+1. Go to `migozz_context.dart`
+2. Copy the pattern from another field
+3. Add `fieldContextES` and `fieldContextEN` to BOTH
+4. Ensure the field evaluator in `assistant_functions.dart` detects `isWhy`
+5. Time: 5 minutes
 
-## 📚 Preguntas sobre Documentación
+Detailed steps in: [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)
 
-### P: ¿Cuántos documentos hay?
-**R:** 14 documentos + este FAQ:
+### Q: Why are there two maps (ES and EN)?
+**A:** Because the explanations are different in each language. It's not just translation, it's cultural adaptation.
 
-1. LEEME.md (entrada en español)
-2. README_PRIMERO.md (guía rápida)
-3. FINAL_SUMMARY.md (resumen ejecutivo)
-4. QUICK_REFERENCE.md (referencia 1 página)
-5. MIGOZZ_CONTEXT_SYSTEM.md (técnica completa)
-6. MIGOZZ_CONTEXT_CHANGES.md (qué cambió)
-7. EXPLANATION_EXAMPLES.md (ejemplos usuario)
-8. DEVELOPER_GUIDE.md (cómo extender)
-9. FILE_STRUCTURE.md (qué archivo dónde)
-10. VALIDATION.md (checklist)
-11. VISUAL_DEMO.md (antes/después)
-12. INDEX.md (navegación)
-13. MINDMAP.md (mapa mental)
-14. CHEATSHEET.md (copiar/pegar)
+### Q: What are `fieldContextES` and `fieldContextEN`?
 
-### P: ¿Por qué tantos documentos?
-**R:** Diferentes públicos:
-- **Testers:** LEEME.md, VISUAL_DEMO.md
-- **Devs:** DEVELOPER_GUIDE.md, CHEATSHEET.md
-- **Managers:** FINAL_SUMMARY.md, EXPLANATION_EXAMPLES.md
-- **Tech leads:** MIGOZZ_CONTEXT_SYSTEM.md
-- **Cualquiera:** INDEX.md, QUICK_REFERENCE.md
+**A:** They are Dart maps:
+- `fieldContextES`: Explanations in Spanish
+- `fieldContextEN`: Explanations in English
 
-### P: ¿Cuál debería leer primero?
-**R:** Depende:
-- **5 minutos:** LEEME.md
-- **30 minutos:** FINAL_SUMMARY.md
-- **Cambios rápidos:** CHEATSHEET.md
-- **Entender todo:** INDEX.md → elige ruta
+Each field (location, username, etc.) appears in both.
 
-### P: ¿Se pueden borrar algunos documentos?
-**R:** Sí, pero no se recomienda. Son para diferentes personas. Mejor mantenerlos todos.
+### Q: Can I have more than two languages?
 
-### P: ¿Está esto en el README principal?
-**R:** No. Este es sistema adicional para la app. Podría agregarse al README.md principal si lo deseas.
+**A:** Yes. Add `fieldContextFR`, `fieldContextDE`, etc. in `migozz_context.dart` and update the logic in `gemini_service.dart` around line 253.
 
 ---
 
-## 🎯 Preguntas sobre Funcionamiento
+## 📚 Documentation Questions
 
-### P: ¿Cómo sabe el sistema que el usuario pregunta "¿por qué?"?
-**R:** 
-1. Usuario escribe "¿Por qué?"
-2. `GeminiService` envía a evaluador (ej: `_evaluateLocation()`)
-3. Evaluador llama a `_isWhyQuestion()` con el texto
-4. `_isWhyQuestion()` busca patrones ("por qué", "para qué", etc)
-5. Si encuentra, devuelve `true`
-6. Evaluador retorna `{ isWhy: true }`
-7. `GeminiService` detecta el flag y actúa
+### Q: How many documents are there?
 
-### P: ¿La IA entiende realmente "por qué"?
-**R:** No completamente. El sistema usa **pattern matching** (búsqueda de palabras clave), no procesamiento de lenguaje natural profundo. Es más eficiente y predecible.
+**A:** 14 documents + this FAQ:
 
-### P: ¿Qué pasa si el usuario escribe "por que" (sin acento)?
-**R:** El sistema normaliza: convierte a minúsculas y quita acentos internamente. Entonces "Por Que", "POR QUE", "por que" se detectan igual.
+1. README.md (Spanish entry)
+2. README_FIRST.md (Quick Guide)
+3. FINAL_SUMMARY.md (Executive Summary)
+4. QUICK_REFERENCE.md (1-page reference)
+5. MIGOZZ_CONTEXT_SYSTEM.md (Complete Technical Guide)
+6. MIGOZZ_CONTEXT_CHANGES.md (What Changed)
+7. EXPLANATION_EXAMPLES.md (User Examples)
+8. DEVELOPER_GUIDE.md (How to Extend)
+9. ​​FILE_STRUCTURE.md (Which File Where)
+10. VALIDATION.md (Checklist)
+11. VISUAL_DEMO.md (Before/After)
+12. INDEX.md (Navigation)
+13. MINDMAP.md (Map) (mental)
+14. CHEATSHEET.md (copy/paste)
 
-Busca `_normalizeInput()` en `assistant_functions.dart` para ver cómo.
+### Q: Why so many documents?
 
-### P: ¿Qué pasa si alguien pregunta "¿Y por qué?" o "Pero ¿por qué?"
-**R:** Funciona. El patrón busca `contains('por qué')` así que "Y por qué" también lo tiene.
+A: Different audiences:
+- Testers: README.md, VISUAL_DEMO.md
+- Developers: DEVELOPER_GUIDE.md, CHEATSHEET.md
+- Managers: FINAL_SUMMARY.md, EXPLANATION_EXAMPLES.md
+- Tech leads: MIGOZZ_CONTEXT_SYSTEM.md
+- Anyone: INDEX.md, QUICK_REFERENCE.md
 
-### P: ¿Detecta typos? Ej: "poq ue" o "pr qué"
-**R:** No. Necesita la palabra exacta. Si quieres soportar typos, actualiza los patrones.
+### Q: Which one should I read first?
 
-### P: ¿Hay límite de campos que pueden tener explicaciones?
-**R:** No. Puedes agregar 100 campos si quieres. El sistema escala.
+**A:** It depends:
+- **5 minutes:** README.md
+- **30 minutes:** FINAL_SUMMARY.md
+- **Quick changes:** CHEATSHEET.md
+- **Understand everything:** INDEX.md → choose path
+
+### Q: Can some documents be deleted?
+
+**A:** Yes, but it's not recommended. They're for different people. It's best to keep them all.
+
+### Q: Is this in the main README?
+
+**A:** No. This is an additional system for the app. It could be added to the main README.md if you wish.
 
 ---
 
-## 💾 Preguntas sobre Cambios
+## 🎯 Functionality Questions
 
-### P: ¿Cambié una explicación, ¿cómo veo los cambios?
-**R:**
-1. Abre `migozz_context.dart`
-2. Busca tu campo: Ctrl+F + nombre
-3. Edita el texto
-4. Guarda: Ctrl+S
-5. En emulador/terminal, presiona 'r' (hot reload)
-6. Listo
+### Q: How does the system know when the user asks "Why?"?
 
-### P: ¿Cambié algo pero no veo cambios, ¿qué hago?
-**R:** 
-1. Guarda bien: Ctrl+S
-2. Hot reload: 'r' en terminal
-3. Si no funciona, hot restart: 'R' (mayúscula)
-4. Si aún no funciona: `flutter clean` y `flutter run`
+**A:** 1. User types "Why?"
 
-### P: ¿Puedo editar las explicaciones sin saber Dart?
-**R:** Sí, parcialmente. Las explicaciones son strings de texto dentro de comillas. Busca con Ctrl+F y edita el texto.
+2. `GeminiService` sends the text to the evaluator (e.g., `_evaluateLocation()`)
+3. The evaluator calls `_isWhyQuestion()` with the text
+4. `_isWhyQuestion()` searches for patterns ("why", "what for", etc.)
+5. If it finds a pattern, it returns `true`
+6. The evaluator returns `{ isWhy: true }`
+7. `GeminiService` detects the flag and acts accordingly
 
-Ejemplo:
+### Q: Does AI really understand "why"?
+**A:** Not completely. The system uses **pattern matching** (keyword search), not deep natural language processing. It's more efficient and predictable.
+
+### Q: What happens if the user types "por que" (without an accent)?
+**A:** The system normalizes: it converts to lowercase and removes accents internally. So "Por Que", "POR QUE", "por que" are all detected the same way.
+
+Look up `_normalizeInput()` in `assistant_functions.dart` to see how.
+
+### Q: What if someone asks "Why?" or "But why?"
+**A:** It works. The pattern looks for `contains('poSo "Why?" also has it.
+
+### Q: Does it detect typos? E.g., "poq ue" or "pr qué"
+**A:** No. It needs the exact word. If you want to support typos, update the patterns.
+
+### Q: Is there a limit to the number of fields that can have explanations?
+**A:** No. You can add 100 fields if you want. The system scales.
+
+---
+
+## 💾 Questions about Changes
+
+### Q: I changed an explanation, how do I see the changes?
+
+**A:**
+1. Open `migozz_context.dart`
+2. Find your field: Ctrl+F + name
+3. Edit the text
+4. Save: Ctrl+S
+5. In the emulator/terminal, press 'r' (hot reload)
+6. Done
+
+### Q: I changed something but I don't see any changes, what do I do?
+**A:**
+1. Save properly: Ctrl+S
+2. Hot reload: 'r' in terminal
+3. If that doesn't work, hot restart: 'R' (uppercase)
+4. If it still doesn't work: `flutter clean` and `flutter run`
+
+### Q: Can I edit the explanations without knowing Dart?
+**A:** Yes, partially. The explanations are text strings within quotation marks. Search with Ctrl+F and edit the text.
+
+Example:
 ```dart
-'why': 'Las marcas buscan...'  ← Edita entre comillas
+'why': 'Brands look for...' ← Edit between quotation marks
 ```
 
-### P: ¿Puedo agregar HTML o emojis a las explicaciones?
-**R:** Sí emojis (están en el código actualmente). HTML depende de cómo se renderice en UI.
+### Q: Can I add HTML or emojis to the explanations?
 
-### P: ¿Si cambio el código y falla, qué rollback hago?
-**R:** 
-1. Ctrl+Z en el editor
-2. O usando git: `git checkout lib/core/services/ai/filename.dart`
+**A:** Yes, emojis (they are currently in the code). HTML depends on how it's rendered in the UI.
 
-### P: ¿Puedo cambiar las explicaciones en producción?
-**R:** No con hot reload (requiere re-compilar). Sí con backend API (más complejo).
+### Q: If I change the code and it fails, what rollback do I do?
 
----
+**A:**
+1. Ctrl+Z in the editor
+2. Or using Git: `git checkout lib/core/services/ai/filename.dart`
 
-## 🌐 Preguntas Multiidioma
-
-### P: ¿Cómo agrego un nuevo idioma?
-**R:**
-1. En `migozz_context.dart` agrega `fieldContextFR` (por ejemplo)
-2. Copia toda la estructura de `fieldContextES`
-3. Traduce los textos
-4. En `gemini_service.dart` línea ~260, actualiza la lógica para detectar francés
-5. Listo
-
-### P: ¿El sistema detecta idioma automáticamente?
-**R:** Sí, via `registerCubit.state.language`. Verifica qué lenguaje está seteado en ese state.
-
-### P: ¿Puedo tener una explicación distinta para el mismo campo en cada idioma?
-**R:** Sí. Ese es el propósito. Español y inglés tienen explicaciones completamente distintas.
-
-### P: ¿Qué pasa si la IA responde en un idioma y la explicación en otro?
-**R:** No debería pasar si el lenguaje está bien seteado. Pero si pasa, revisa `registerCubit.state.language`.
+### Q: Can I change the explanations in production?
+**A:** No, with a hot reload (requires recompiling). Yes, with a backend API (more complex).
 
 ---
 
-## 🐛 Preguntas sobre Debugging
+## 🌐 Multilingual Questions
 
-### P: El usuario pregunta "¿por qué?" pero sale error
-**R:**
-1. Verifica `_isWhyQuestion()` en `assistant_functions.dart` - ¿tiene el patrón?
-2. Verifica `_evaluateX()` llama a `_isWhyQuestion()` - ¿está el call?
-3. Verifica el evaluador retorna `{ isWhy: true }` - ¿está la key?
-4. Verifica `gemini_service.dart` línea ~253 chequea `decision['isWhy']` - ¿está?
+### Q: How do I add a new language?
 
-### P: Sale explicación pero vacía
-**R:**
-1. ¿El campo existe en `fieldContextES`? Busca con Ctrl+F
-2. ¿Existe también en `fieldContextEN`?
-3. ¿Las claves ('location', 'username', etc) coinciden exactamente?
-4. ¿Hay coma después de cada campo en el mapa?
+**A:**
+1. In `migozz_context.dart`, add `fieldContextFR` (for example).
+2. Copy the entire structure of `fieldContextES`.
+3. Translate the text.
+4. In `gemini_service.dart`, around line ~260, update the logic to detect French.
+5. Done.
 
-### P: La app se freezea cuando pregunta "¿por qué?"
-**R:**
-1. Verifica timeout de GeminiService (~8 segundos)
-2. Verifica prompt no es muy largo
-3. Verifica API key está válida
-4. Revisa logs: `flutter run -v`
+### Q: Does the system automatically detect the language?
 
-### P: Puedo ver logs de debugging?
-**R:** Sí:
+**A:** Yes, via `registerCubit.state.language`. Check which language is set in that state.
+
+### Q: Can I have a different explanation for the same field in each language?
+
+A: Yes. That's the purpose. Spanish and English have completely different explanations.
+
+### Q: What happens if the AI ​​responds in one language and the explanation is in another?
+
+A: It shouldn't happen if the language is set correctly. But if it does, check `registerCubit.state.language`.
+
+---
+
+## 🐛 Debugging Questions
+
+### Q: The user asks "why?" but an error occurs.
+A:
+1. Check `_isWhyQuestion()` in `assistant_functions.dart` - does it have the pattern?
+
+2. Check `_evaluateX()` calls `_isWhyQuestion()` - is the call present?
+
+3. Check the evaluator returns `{ isWhy: true }` - is the key present?
+
+4. Check `gemini_service.dart` line ~253 and check `decision['isWhy']` - is it there?
+
+### Q: Explanation appears but is empty
+**A:**
+1. Does the field exist in `fieldContextES`? Search with Ctrl+F
+2. Does it also exist in `fieldContextEN`?
+
+3. Do the keys ('location', 'username', etc.) match exactly?
+
+4. Is there a comma after each field on the map?
+
+### Q: The app freezes when it asks "Why?"
+**A:**
+1. Check the GeminiService timeout (~8 seconds)
+2. Check that the prompt isn't too long
+3. Check that the API key is valid
+4. Check the logs: `flutter run -v`
+
+### Q: Can I see debugging logs?
+
+**A:** Yes:
 ```bash
 flutter run -v
 ```
 
-Busca líneas con tu campo o "isWhy".
+Searches for lines with your field or "isWhy".
 
-### P: ¿Cómo veo el objeto `decision` que retorna el evaluador?
-**R:** Agrega print en `gemini_service.dart`:
+### Q: How do I see the `decision` object returned by the evaluator?
+
+**A:** Add `print` to `gemini_service.dart`:
 ```dart
-print('Decision: $decision');  // Agrega esta línea
-if (decision['isWhy'] == true) {
+print('Decision: $decision'); // Add this line:
+`if (decision['isWhy'] == true) {
 ```
 
-Verás el objeto en la consola.
+You will see the object in the console.
 
 ---
 
-## 📊 Preguntas sobre Performance
+## 📊 Performance Questions
 
-### P: ¿Agregar muchos campos ralentiza la app?
-**R:** No significativamente. El peso es principalmente en las strings de explicación (pequeñas).
+### Q: Does adding many fields slow down the app?
 
-### P: ¿El pattern matching es muy lento?
-**R:** No. `contains()` es operación rápida. Millisegundos.
+**A:** Not significantly. The load is mainly in the (small) explanatory strings.
 
-### P: ¿Llamar `MigozzContext.getWhyExplanation()` multiple veces es lento?
-**R:** No. Son accesos a mapa en memoria. Muy rápido.
+### Q: Is pattern matching very slow?
 
-### P: ¿Cuál es el impacto de este sistema en velocidad?
-**R:** Mínimo (~5ms por llamada). No notables para usuario.
+**A:** No. `contains()` is a fast operation. Milliseconds.
 
----
+### Q: Is calling `MigozzContext.getWhyExplanation()` multiple times slow?
 
-## 🔐 Preguntas sobre Seguridad
+A: No. These are accesses to the map in memory. Very fast.
 
-### P: ¿Las explicaciones se envían a Gemini?
-**R:** No. Las explicaciones viven localmente en `migozz_context.dart`. Solo la pregunta del usuario se envía a Gemini.
+### Q: What is the impact of this system on speed?
 
-### P: ¿Alguien puede ver el contexto?
-**R:** Cualquiera que tenga el código fuente. Es archivo Dart público.
-
-### P: ¿Se loguean las preguntas "¿por qué?"?
-**R:** Depende de tu logging backend. El sistema local no. Pero GeminiService puede loguear.
-
-### P: ¿Es diferente de privacidad comparado a otros?
-**R:** No. Usa mismo sistema que otras preguntas de registro.
+A: Minimal (~5ms per call). Not noticeable to the user.
 
 ---
 
-## 💰 Preguntas sobre Negocio
+## 🔐 Security Questions
 
-### P: ¿Por qué es importante esto para Migozz?
-**R:** 
-- Transparencia aumenta confianza
-- Usuarios entienden por qué datos se piden
-- Conversión aumenta (~25% estimado)
-- Menos abandonos en registro
+### Q: Are the explanations sent to Gemini?
 
-### P: ¿Hay datos que esto mejora conversión?
-**R:** No hay datos específicos de Migozz aún. Pero industria reporta ~20-30% mejora cuando apps explican campos.
+A: No. The explanations reside locally in `migozz_context.dart`. Only the user's question is sent to Gemini.
 
-### P: ¿Esto complica el onboarding?
-**R:** No. Solo si usuario pregunta "¿por qué?". Flujo normal no cambia.
+### Q: Can anyone see the context?
 
-### P: ¿Podemos monetizar esto?
-**R:** Posiblemente. Ej: marcas pagan por explicaciones customizadas. Pero requiere cambios.
+A: Anyone with the source code. It's a public Dart file.
+
+### Q: Are the "why?" questions logged?
+
+A: It depends on your backend logging. The local system doesn't. But GeminiService can log them.
+
+### Q: Is it different in terms of privacy compared to others?
+
+A: No. It uses the same system as other registration questions.
+
+--
+
+## 💰 Business Questions
+
+### Q: Why is this important for Migozz?
+
+A:
+- Transparency increases trust
+- Users understand why data is being requested
+- Conversion increases (approximately 25%)
+- Fewer registration abandonments
+
+### Q: Is there data showing this improves conversion?
+
+A: There is no specific data for Migozz yet. But the industry reports approximately 20-30% improvement when apps explain fields.
+
+### Q: Does this complicate onboarding?
+
+A: No. Only if the user asks "why?". The normal flow doesn't change.
+
+### Q: Can we monetize this?
+
+A: Possibly. For example, brands pay for customized explanations. But it requires changes.
 
 ---
 
-## 🎓 Preguntas sobre Aprendizaje
+## 🎓 Learning Questions
 
-### P: ¿Necesito aprender Dart para usar esto?
-**R:** No para leer/cambiar explicaciones. Sí para agregar campos o cambiar lógica.
+### Q: Do I need to learn Dart to use this?
 
-### P: ¿Dónde aprendo Dart rápido?
-**R:** 
-- Oficial: dart.dev
+A: Not to read/change explanations. Yes to add fields or change logic.
+
+### Q: Where can I learn Dart quickly?
+
+A: - Official: dart.dev
 - YouTube: "Dart in 100 seconds"
-- Práctica: mira código en `lib/core/services/ai/`
+- Practice: look at code in `lib/core/services/ai/`
 
-### P: ¿Hay patrón que debo seguir?
-**R:** Sí. Mira `migozz_context.dart` - cada campo tiene estructura idéntica. Cópialo.
+### Q: Is there a pattern I should follow?
 
-### P: ¿Puedo equivocarme editando?
-**R:** Sí, pero es recuperable con Ctrl+Z o git. No es permanente.
+**A:** Yes. Look at `migozz_context.dart` - each field has an identical structure. Copy it.
 
----
-
-## 🤝 Preguntas sobre Colaboración
-
-### P: ¿Múltiples personas pueden editar el código?
-**R:** Sí, pero con cuidado. Usa branches en git para no conflictear.
-
-### P: ¿El sistema soporta API remoto para explicaciones?
-**R:** Actualmente no. Sería mejora futura: `getContextFromAPI()`.
-
-### P: ¿Puedo usar esto en otra app?
-**R:** Sí. Es open/privado según tu setup. Estructura es genérica.
+### Q: Can I make a mistake while editing?
+**A:** Yes, but it's recoverable with Ctrl+Z or Git. It's not permanent.
 
 ---
 
-## 📞 Preguntas sobre Soporte
+## 🤝 Collaboration Questions
 
-### P: ¿Dónde reporte bugs?
-**R:** 
-1. Revisa FAQ (este documento)
-2. Revisa VALIDATION.md (checklist)
-3. Copia error exacto
-4. Reporta con: archivo, línea, código, error
+### Q: Can multiple people edit the code?
 
-### P: ¿Dónde hago sugerencias?
-**R:** Crea issue con:
-- Título claro
-- Descripción del cambio
-- Por qué es importante
-- Código ejemplo (opcional)
+**A:** Yes, but with caution. Use branches in Git to avoid conflicts.
 
-### P: ¿Qué pasa si encuentro un typo en documentación?
-**R:** Corrígelo y commit. Es documentation, no es crítico.
+### Q: Does the system support remote APIs for explanations?
 
-### P: ¿Hay roadmap de features?
-**R:** Ver [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) sección "Futuro".
+**A:** Not currently. A future improvement would be `getContextFromAPI()`.
+
+### Q: Can I use this in another app?
+
+**A:** Yes. It's open/private depending on your setup. The structure is generic.
 
 ---
 
-## ✅ Preguntas de Validación
+## 📞 Support Questions
 
-### P: ¿Cómo sé que está funcionando bien?
-**R:**
-1. Abre app en emulador
-2. Vete a un campo (ej: ubicación)
-3. Escribe "¿por qué?" 
-4. Deberías recibir explicación
-5. Si ves explicación → ✅ Funciona
+### Q: Where do I report bugs?
 
-### P: ¿Debo testear todos los campos?
-**R:** Recomendable. Checklist en [VALIDATION.md](VALIDATION.md).
+**A:**
 
-### P: ¿Cómo hago testing automatizado?
-**R:** Requiere widget testing. No incluido. Ver [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md#testing).
+1. Review FAQ (this document)
+2. Review VALIDATION.md (checklist)
+3. Copy the exact error
+4. Report with: file, line, code, error
 
----
+### Q: Where do I make suggestions?
 
-## 🎬 Preguntas sobre Siguiente Paso
+**A:** Create an issue with:
+- Clear title
+- Description of the change
+- Why it's important
+- Example code (optional)
 
-### P: ¿Qué hago ahora?
-**R:** 
-1. Lee [LEEME.md](LEEME.md) (5 min)
-2. Prueba "¿por qué?" en app (2 min)
-3. Si quieres cambiar, usa [CHEATSHEET.md](CHEATSHEET.md)
-4. Si necesitas entender, lee [FINAL_SUMMARY.md](FINAL_SUMMARY.md)
+### Q: What if I find a typo in the documentation?
 
-### P: ¿Está listo para producción?
-**R:** Sí. Ya está implementado y funcionando.
+**A:** Correct it and commit. It's documentation, not critical.
 
-### P: ¿Hay pendientes?
-**R:** No. Sistema completado y documentado.
+### Q: Is there a feature roadmap?
 
-### P: ¿Puedo hacer deploy hoy?
-**R:** Sí. El código está en main. Sube normalmente.
+**A:** See [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) section "Future".
 
 ---
 
-## 🔗 Índice de Documentos Referenciados
+## ✅ Validation Questions
 
-| Doc | Para | Tiempo |
-|---|---|---|
-| [LEEME.md](LEEME.md) | Empezar rápido | 5 min |
-| [FINAL_SUMMARY.md](FINAL_SUMMARY.md) | Resumen completo | 15 min |
-| [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) | Agregar campos | 30 min |
-| [CHEATSHEET.md](CHEATSHEET.md) | Cambios rápidos | 1 min |
-| [MIGOZZ_CONTEXT_SYSTEM.md](MIGOZZ_CONTEXT_SYSTEM.md) | Técnica completa | 45 min |
-| [EXPLANATION_EXAMPLES.md](EXPLANATION_EXAMPLES.md) | Ver ejemplos | 20 min |
+### Q: How do I know it's working correctly?
+
+**A:**
+1. Open the app in an emulator.
+2. Go to a field (e.g., location).
+3. Type "Why?"
+
+4. You should receive an explanation.
+5. If you see an explanation → ✅ It works.
+
+### Q: Should I test all fields?
+**A:** Recommended. Checklist in [VALIDATION.md].
+
+### Q: How do I do automated testing?
+
+**A:** Requires the testing widget. Not included. See [DEVELOPER_GUIDE.md].
+
+---
+
+## 🎬 Next Step Questions
+
+### Q: What do I do now?
+
+**A:**
+1. Read [README.md] (5 min).
+2. Test "Why?" In app (2 min)
+3. If you want to change, use [CHEATSHEET.md](CHEATSHEET.md)
+4. If you need to understand, read [FINAL_SUMMARY.md](FINAL_SUMMARY.md)
+
+### Q: Is it ready for production?
+**A:** Yes. It's already deployed and working.
+
+### Q: Are there any pending tasks?
+**A:** No. System complete and documented.
+
+### Q: Can I deploy today?
+
+**A:** Yes. The code is in main. Deploy normally.
+
+---
+
+## 🔗 Index of Referenced Documents
+
+| Doc | For | Time |
+
+---|---|---|
+
+[README.md](README.md) | Get started quickly | 5 min |
+
+[FINAL_SUMMARY.md](FINAL_SUMMARY.md) | Full summary | 15 min |
+| [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) | Add fields | 30 min |
+| [CHEATSHEET.md](CHEATSHEET.md) | Quick changes | 1 min |
+| [MIGOZZ_CONTEXT_SYSTEM.md](MIGOZZ_CONTEXT_SYSTEM.md) | Complete technique | 45 min |
+| [EXPLANATION_EXAMPLES.md](EXPLANATION_EXAMPLES.md) | See examples | 20 min |
 | [VALIDATION.md](VALIDATION.md) | Checklist | 10 min |
 | [MINDMAP.md](MINDMAP.md) | Visual overview | 5 min |
 
 ---
 
-## 🎯 No Encuentro Mi Pregunta
+## 🎯 I Can't Find My Question
 
-**Opción 1:** Busca en este doc con Ctrl+F
+**Option 1:** Search this document with Ctrl+F
 
-**Opción 2:** Ve a [INDEX.md](INDEX.md) - tiene navegación completa
+**Option 2:** Go to [INDEX.md](INDEX.md) - it has full navigation
 
-**Opción 3:** Lee [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md#faq) - FAQ técnico
+**Option 3:** Read [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md#faq) - technical FAQ
 
-**Opción 4:** Abre issue con tu pregunta
+**Option 4:** Open an issue with your question
 
 ---
 
-**Última actualización:** 2025  
-**Puedes:** Ctrl+F para buscar  
-**Debes:** Leer LEEME.md primero  
-**Problemas:** Usa CHEATSHEET.md
+**Last updated:** 2025
+**You can:** Ctrl+F to search
 
-🎓 **¡Espero hayas encontrado tu respuesta!**
+**You must:** Read README.md first
+
+**Problems:** Use CHEATSHEET.md
+
+🎓 **I hope you found your answer!**

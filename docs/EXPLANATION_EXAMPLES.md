@@ -1,224 +1,255 @@
-# 📚 Ejemplos de Explicaciones por Campo
+# 📚 Examples of Field Explanations
 
-Este documento muestra exactamente qué ve el usuario cuando pregunta "¿Por qué?" para cada campo.
-
----
-
-## 1️⃣ NOMBRE COMPLETO (fullName)
-
-### Pregunta del Usuario
-```
-Usuario: "¿Por qué necesitan mi nombre completo?"
-```
-
-### Respuesta del Sistema
-```
-💡 Contexto sobre "Identificación Personal":
-
-¿Por qué?: Tu nombre completo es la base de tu identidad profesional en 
-Migozz. Es lo que otros creadores y potenciales clientes verán primero.
-
-✅ Beneficio: Permite que la gente te conozca por tu nombre real y construya 
-confianza contigo.
-```
+This document shows exactly what the user sees when they ask "Why?" for each field.
 
 ---
 
-## 2️⃣ NOMBRE DE USUARIO (username)
+## 1️⃣ FULL NAME (fullName)
 
-### Pregunta del Usuario
+### User Question
 ```
-Usuario: "Para qué es mi usuario?"
+User: "Why do you need my full name?"
 ```
 
-### Respuesta del Sistema
+### System Response
 ```
-💡 Contexto sobre "Usuario Único":
+💡 Context about "Personal Identification":
 
-¿Por qué?: Tu nombre de usuario es tu identidad digital en Migozz. 
-Es cómo otros te encontrarán y cómo aparecerás en perfiles, búsquedas 
-y recomendaciones.
+Why?: Your full name is the foundation of your professional identity on Migozz. It's what other creators and potential clients will see first.
 
-✅ Beneficio: Hace que seas identificable y buscable. Un buen username 
-aumenta tus posibilidades de ser encontrado.
+✅ Benefit: It allows people to know you by your real name and build trust with you.
 ```
 
 ---
 
-## 3️⃣ UBICACIÓN (location) ⭐ MÁS IMPORTANTE
+## 2️⃣ USERNAME (username)
 
-### Pregunta del Usuario
+### User Question
 ```
-Usuario: "¿Por qué necesitan saber mi ubicación?"
+User: "What is my username for?"
+
+``` ```
+
+### System Response
 ```
+💡 Context about "Unique Username":
 
-### Respuesta del Sistema
-```
-💡 Contexto sobre "Ubicación Geográfica":
+Why?: Your username is your digital identity on Migozz.
 
-¿Por qué?: Las marcas y empresas buscan creadores en su región. Tu ubicación 
-permite que te descubran personas interesadas en tus servicios que estén 
-cerca de ti.
+It's how others will find you and how you'll appear in profiles, searches, and recommendations.
 
-✅ Beneficio: Aumenta oportunidades locales. Muchos negocios prefieren 
-trabajar con creadores de su zona porque facilita colaboraciones presenciales 
-y entienden mejor el mercado local.
-
-📍 Ejemplos: 
-- Una agencia en Ciudad de México buscará influencers CDMX
-- Un e-commerce en Barcelona buscará creadores de Cataluña
+✅ Benefit: It makes you identifiable and searchable. A good username increases your chances of being found.
 ```
 
 ---
 
-## 4️⃣ TELÉFONO (phone)
+## 3️⃣ LOCATION ⭐ MOST IMPORTANT
 
-### Pregunta del Usuario
+### User Question
 ```
-Usuario: "¿Para qué necesitan mi teléfono?"
-```
-
-### Respuesta del Sistema
-```
-💡 Contexto sobre "Contacto Directo":
-
-¿Por qué?: Las empresas e interesados en tus servicios necesitan una forma 
-segura de contactarte. Tu teléfono es el método más directo y rápido.
-
-✅ Beneficio: No pierdes oportunidades laborales. Muchos negocios no quieren 
-esperar emails y prefieren contacto inmediato.
-
-🔒 Seguridad: No compartimos tu número públicamente. Solo se usa para 
-verificación de cuenta y contacto directo desde nuestro sistema.
+User: "Why do you need to know my location?"
 ```
 
----
-
-## 5️⃣ NOTA DE VOZ (voiceNoteUrl)
-
-### Pregunta del Usuario
+### System Response
 ```
-Usuario: "¿Por qué me piden una nota de voz?"
-```
+💡 Context about "Geographic Location":
 
-### Respuesta del Sistema
-```
-💡 Contexto sobre "Presentación Personal":
+Why?: Brands and companies are looking for creators in their region. Your location allows people interested in your services who are near you to discover you.
 
-¿Por qué?: Una nota de voz (5-10s) de presentación hace tu perfil más 
-auténtico y personal. Las personas escuchan tu voz, tono y personalidad.
 
-✅ Beneficio: Diferencia tu perfil. Potenciales clientes prefieren creadores 
-que se tomen tiempo para una presentación personal. Transmite profesionalismo 
-y seriedad.
+✅ Benefit: Increases local opportunities. Many businesses prefer to work with creators in their area because it facilitates in-person collaborations and they better understand the local market.
 
-🧠 Psicología: La voz humaniza el perfil. La gente conecta mejor contigo 
-cuando te escucha.
+📍 Examples:
+- An agency in Mexico City will look for influencers in Mexico City.
+- An e-commerce business in Barcelona will look for creators in Catalonia.
 ```
 
 ---
 
-## 6️⃣ FOTO DE PERFIL (avatarUrl)
+## 4️⃣ PHONE
 
-### Pregunta del Usuario
+### User Question
 ```
-Usuario: "¿Para qué una foto?"
+User: "Why do you need my phone number?"
 ```
 
-### Respuesta del Sistema
+### System Response
 ```
-💡 Contexto sobre "Identidad Visual":
+💡 Context about "Direct Contact":
 
-¿Por qué?: Tu foto hace tu perfil reconocible y confiable. Los creadores 
-con fotos reciben 3x más contactos que sin foto.
+Why?: Businesses and those interested in your services need a secure way to contact you. Your phone number is the most direct and fastest method.
 
-✅ Beneficio: Aumenta contactos y oportunidades. Una buena foto profesional 
-comunica que eres serio con tu trabajo.
+✅ Benefit: You don't miss out on job opportunities. Many businesses don't want to wait for emails and prefer immediate contact.
 
-📊 Investigación: Estudios muestran que perfiles con foto son vistos como 
-más confiables y profesionales.
+🔒 Security: We do not share your number publicly. It is only used for account verification and direct contact from our system.
+
+``
+
+---
+
+## 5️⃣ VOICE NOTE (voiceNoteUrl)
+
+### User Question
+```
+User: "Why are you asking me for a voice note?"
+
+``
+
+### System Response
+```
+💡 Context about "Personal Introduction":
+
+Why?: A voice note (5-10 seconds) introduction makes your profile more authentic and personal. People hear your voice, tone, and personality.
+
+✅ Benefit: It differentiates your profile. Potential clients prefer creators who take the time for a personal introduction. It conveys professionalism and seriousness.
+
+🧠 Psychology: The voice humanizes the profile. People connect better with you when they hear you.
+
+```
+
+
+
+---
+
+## 6️⃣ PROFILE PICTURE (avatarUrl)
+
+### User Question
+```
+User: "Why a photo?"
+```
+
+### System Response
+```
+💡 Context about "Visual Identity":
+
+Why?: Your photo makes your profile recognizable and trustworthy. Creators with photos receive 3x more leads than those without.
+
+✅ Benefit: Increases leads and opportunities. A good, professional photo communicates that you are serious about your work.
+
+📊 Research: Studies show that profiles with photos are seen as more trustworthy and professional.
+
 ```
 
 ---
 
-## 7️⃣ REDES SOCIALES (socialEcosystem) ⭐⭐ MÁS IMPORTANTE
+## 7️⃣ SOCIAL MEDIA (Social Ecosystem) ⭐⭐ MOST IMPORTANT
 
-### Pregunta del Usuario
+### User Question
 ```
-Usuario: "¿Por qué necesitan mis redes sociales?"
+User: "Why do you need my social media?"
 ```
 
-### Respuesta del Sistema
+### System Response
 ```
-💡 Contexto sobre "Portafolio de Trabajo":
+💡 Context about "Work Portfolio":
 
-¿Por qué?: Tus redes sociales son el CORAZÓN de tu perfil. Ahí demuestras 
-tu verdadero alcance, tipo de contenido, calidad, y capacidad de generar 
-audiencia.
+Why?: Your social media is the HEART of your profile. It's where you demonstrate your true reach, content type, quality, and ability to generate an audience.
 
-✅ Beneficio: Sin redes verificadas, tu perfil no tiene valor. Las redes 
-sociales son la prueba de que REALMENTE tienes audiencia y que sabes crear 
-contenido que conecta.
+✅ Benefit: Without verified accounts, your profile is worthless. Social media is proof that you REALLY have an audience and that you know how to create content that connects.
 
-🏢 Para Marcas: Las marcas SIEMPRE verifican tus redes antes de ofrecerte 
-trabajo. Es donde ven tus números reales: seguidores, engagement, calidad 
-de contenido.
+🏢 For Brands: Brands ALWAYS verify your accounts before offering you a job. It's where they see your real numbers: followers, engagement, and content quality.
 
-🔑 IMPORTANTE: Este es el dato MÁS importante. Define tu valor como creador.
+🔑 IMPORTANT: This is the MOST important piece of information. It defines your value as a creator.
+
 ```
 
 ---
 
-## 📊 Estructura de Cada Explicación
+## 📊 Structure of Each Explanation
 
-Todas las explicaciones siguen este patrón:
+### Español
+- "¿Por qué necesitan...?"
+- "¿Para qué es...?"
+- "¿para que piden...?" (sin tilde)
+- "Por que me lo piden"
+- "para que quieren"
+
+### English
+- "Why do you need...?"
+- "Why is this important?"
+- "What's the purpose of...?"
+- "Why do you ask...?"
+
+---
+
+## 🌍 Versiones Multi-idioma
+
+### SAME CONTENT IN SPANISH
+```
+💡 Context on "Geographic Location":
+
+Why?: Brands and companies are looking for creators in their region...
+
+All explanations follow this pattern:
 
 ```
-💡 Contexto sobre "[Nombre del campo]":
+💡 Context about "[Field Name]":
 
-¿Por qué?: [Explicación de por qué es importante]
+Why?: [Explanation of why it's important]
 
-✅ Beneficio: [Cómo beneficia al creador]
+✅ Benefit: [How it benefits the creator]
 
-[SECCIONES OPCIONALES según el campo]:
+[OPTIONAL SECTIONS depending on the field]:
 
-📍 Ejemplos: [Casos de uso reales]
-🔒 Seguridad: [Información de privacidad]
-🧠 Psicología: [Aspectos psicológicos]
-📊 Investigación: [Datos basados en investigación]
-🏢 Para Marcas: [Perspectiva del lado empresarial]
-🔑 IMPORTANTE: [Dato crítico si aplica]
+📍 Examples: [Real-world use cases]
+🔒 Security: [Privacy information]
+🧠 Psychology: [Psychological aspects]
+📊 Research: [Research-based data]
+🏢 For Brands: [Business perspective]
+🔑 IMPORTANT: [Critical data if applicable]
 ```
 
 ---
 
-## 🎭 Comparación: Antes vs Después
+## 🎭 Comparison: Before vs. After
 
-### ANTES (Sin Sistema de Contexto)
+### BEFORE (Without Context System)
 ```
-Usuario: "¿Por qué necesitan mi ubicación?"
+User: "Why do they need my location?"
 
-Bot: "Por favor, selecciona una opción válida: Sí, No, o Ubicación incorrecta."
+Bot: "Please select a valid option: Yes, No, or Incorrect Location
+ta."
 
-Usuario: 😞 Frustrado, no entiende por qué
+User: 😞 Frustrated, doesn't understand why
 ```
 
-### DESPUÉS (Con Sistema de Contexto)
+### AFTER (With Context System)
 ```
-Usuario: "¿Por qué necesitan mi ubicación?"
+User: "Why do they need my location?"
 
-Bot: [Explicación contextual completa sobre por qué Migozz necesita ubicación]
+Bot: [Full contextual explanation of why Migozz needs location]
 
-Bot: "¿Es correcta tu ubicación?"
+Bot: "Is your location correct?"
 
-Usuario: ✅ Satisfecho, entiende el valor de Migozz
+User: ✅ Satisfied, understands the value of Migozz
 ```
 
 ---
 
-## 💬 Variaciones de la Pregunta
+## 💬 Question Variations
 
-El sistema detecta estas variaciones para CUALQUIER campo:
+The system detects these variations for ANY field:
+
+### SAME CONTENT IN ENGLISH
+```
+💡 Context about "Geographic Location":
+
+Why?: Brands and companies search for creators in their region...
+```
+
+---
+
+## 🔄 Flow After the Explanation
+
+1. **User asks "Why"** → Bot explains
+2. **Bot provides context** → User understands value
+3. **Bot asks follow-up question** → User responds normally
+4. **Flow continues** → Registration is completed naturally
+
+**Key difference:** There is no frustration, only understanding. The user understands why each piece of information matters.
+
+---
+
 
 ### Español
 - "¿Por qué necesitan...?"
@@ -242,63 +273,48 @@ El sistema detecta estas variaciones para CUALQUIER campo:
 💡 Contexto sobre "Ubicación Geográfica":
 
 ¿Por qué?: Las marcas y empresas buscan creadores en su región...
-```
 
-### MISMO CONTENIDO EN ENGLISH
-```
-💡 Context about "Geographic Location":
+## 📈 Expected Impact
 
-Why?: Brands and companies search for creators in their region...
-```
+| Metric | Without Context | With Context | Improvement |
 
----
-
-## 🔄 Flujo Después de la Explicación
-
-1. **Usuario pregunta "Por qué"** → Bot explica
-2. **Bot ofrece el contexto** → Usuario entiende valor
-3. **Bot re-pregunta** → Usuario responde normalmente
-4. **Flujo continúa** → Registro se completa naturalmente
-
-**Diferencia clave:** No hay frustración, hay comprensión. El usuario entiende por qué cada dato importa.
-
----
-
-## 📈 Impacto Esperado
-
-| Métrica | Sin Contexto | Con Contexto | Mejora |
 |---------|-------------|--------------|--------|
-| Abandono en preguntas "why" | Alto | Bajo | ↓ |
-| Comprensión del usuario | Baja | Alta | ↑ |
-| Confianza en la app | Baja | Alta | ↑ |
-| Tasa de finalización registro | ~60% | ~85% | +25% |
-| Satisfacción con IA | Baja | Alta | ↑ |
+
+Abandonment at "why" questions | High | Low | ↓ |
+
+| User understanding | Low | High | ↑ |
+
+| App trust | Low | High | ↑ |
+
+| Registration completion rate | ~60% | ~85% | +25% |
+
+AI satisfaction | Low | High | ↑ |
 
 ---
 
-## 🎯 Objetivo Cumplido
+## 🎯 Goal Achieved
 
-**Usuario pregunta:** "¿Por qué necesitan mi ubicación?"
+**User Question: **"Why do they need my location?"**
 
-**Antes:** Error → Frustración → Abandono
+**Before:** Error → Frustration → Abandonment
 
-**Ahora:** Explicación contextual → Comprensión → Continuación del registro
+**Now:** Contextual explanation → Understanding → Continued registration
 
-El usuario entiende que:
-- Migozz es una plataforma seria
-- Cada dato tiene un propósito real
-- Las marcas buscan creadores en su región
-- Su ubicación es valiosa para encontrar oportunidades
+The user understands that:
+- Migozz is a serious platform
+- Every piece of data has a real purpose
+- Brands are looking for creators in their region
+- Their location is valuable for finding opportunities
 
 ---
 
-## 📞 Soporte
+## 📞 Support
 
-Para agregar más explicaciones o modificar las existentes, edita:
+To add more explanations or modify existing ones, edit:
 `lib/core/services/ai/migozz_context.dart`
 
 ---
 
-**Versión:** 1.0  
-**Estado:** ✅ ACTIVO Y FUNCIONANDO  
-**Última actualización:** 2025
+**Version:** 1.0
+**Status:** ✅ ACTIVE AND WORKING
+**Last update:** 2025

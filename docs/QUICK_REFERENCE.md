@@ -1,188 +1,210 @@
-# 🎯 Guía Rápida: Sistema de Contexto Inteligente
+# 🎯 Quick Guide: Intelligent Context System
 
-## ¿Qué cambió?
+## What's Changed?
 
-Antes, cuando el usuario preguntaba "¿Por qué necesitan mi ubicación?", la IA respondía con un error.
+Before, when a user asked, "Why do you need my location?", the AI ​​would respond with an error.
 
-**Ahora**, la IA responde con contexto profundo sobre:
-- 💡 Por qué Migozz necesita esa información
-- 🎯 Cómo beneficia al creador
-- 📍 Ejemplos reales de uso
-- 🏢 Perspectiva de las marcas/empresas
-
----
-
-## Cómo Funciona
-
-```
-Usuario pregunta: "¿Por qué necesitan mi ubicación?"
-    ↓
-Sistema detecta la pregunta "WHY" 
-    ↓
-Obtiene contexto de MigozzContext
-    ↓
-Responde con explicación + re-pregunta
-    ↓
-Flujo continúa naturalmente
-```
+**Now**, the AI ​​responds with in-depth context about:
+- 💡 Why Migozz needs that information
+- 🎯 How it benefits the creator
+- 📍 Real-world use cases
+- 🏢 Brand/business perspective
 
 ---
 
-## Ejemplo Real en Conversación
+## How It Works
 
-### Paso 1: Bot Pregunta
 ```
-Bot: "¿Es correcta tu ubicación?"
-     Mountain View, California, United States
-     [Sí] [No] [Ubicación incorrecta]
-```
+User asks: "Why do you need my location?"
 
-### Paso 2: Usuario Pregunta "Why"
-```
-Usuario: "¿Por qué necesitan mi ubicación?"
-```
+↓
+System detects the "WHY" question
 
-### Paso 3: Bot Explica (NUEVO)
-```
-Bot: 💡 Contexto sobre "Ubicación Geográfica":
+↓
+Gets context from MigozzContext
 
-¿Por qué?: Las marcas y empresas buscan creadores en su región. 
-Tu ubicación permite que te descubran personas interesadas en tus servicios 
-que estén cerca de ti.
+↓
+Responds with explanation + follow-up question
 
-✅ Beneficio: Aumenta oportunidades locales. Muchos negocios prefieren 
-trabajar con creadores de su zona porque facilita colaboraciones presenciales 
-y entienden mejor el mercado local.
-
-📍 Ejemplos: Una agencia en Ciudad de México buscará influencers CDMX. 
-Un e-commerce en Barcelona buscará creadores de Cataluña.
-
-🏢 Para Marcas: Las marcas SIEMPRE buscan creadores en su región porque:
-- Facilita colaboraciones presenciales
-- Entienden mejor el mercado local
-- Pueden encontrar tu portafolio
-
-🔑 IMPORTANTE: Este es un dato crítico para encontrarte.
-```
-
-### Paso 4: Bot Re-pregunta
-```
-Bot: "Ahora sí, ¿es correcta tu ubicación?"
-     [Sí] [No] [Ubicación incorrecta]
+↓
+Flow continues naturally
 ```
 
 ---
 
-## Campos con Contexto
+## Real Example in Conversation
 
-✅ **fullName** - Tu identidad  
-✅ **username** - Tu usuario único  
-✅ **location** - Tu región  
-✅ **phone** - Contacto directo  
-✅ **voiceNoteUrl** - Presentación  
-✅ **avatarUrl** - Foto perfil  
-✅ **socialEcosystem** - Tus redes  
+### Step 1: Bot Asks
+```
+Bot: "Is your location correct?"
+Mountain View, California, United States
+[Yes] [No] [Incorrect location]
+```
+
+### Step 2: User Asks "Why"
+```
+User: "Why do you need my location?"
+```
+
+### Step 3: Bot Explains (NEW)
+```
+Bot: 💡 Context about "Geographic Location":
+
+Why?: Brands and companies are looking for creators in your region.
+
+Your location allows people interested in your services to discover you
+
+who are near you.
+
+✅ Benefit: Increases local opportunities. Many businesses prefer to work with creators in their area because it facilitates in-person collaborations and they better understand the local market.
+
+📍 Examples: An agency in Mexico City will look for influencers in Mexico City.
+
+An e-commerce business in Barcelona will look for creators in Catalonia.
+
+🏢 For Brands: Brands ALWAYS look for creators in their region because:
+- It facilitates in-person collaborations
+- They better understand the local market
+- ​​They can find your portfolio
+
+🔑 IMPORTANT: This is critical information for finding you.
+
+``
+
+### Step 4: Bot Follow-up Question
+```
+Bot: "Now, is your location correct?"
+
+``` [Yes] [No] [Incorrect Location]
+```
 
 ---
 
-## Para Desarrolladores
+## Fields with Context
 
-### Detectar una Pregunta "Why"
+✅ **fullName** - Your identity
+✅ **username** - Your unique username
+✅ **location** - Your region
+✅ **phone** - Direct contact
+✅ **voiceNoteUrl** - Introduction
+✅ **avatarUrl** - Profile picture
+✅ **socialEcosystem** - Your networks
+
+---
+
+## For Developers
+
+### Detecting a "Why" Question
 ```dart
 final isWhy = _isWhyQuestion(normalized, isSpanish);
+
 if (isWhy) {
-  return { "isWhy": true, "field": "location" };
+
+return { "isWhy": true, "field": "location" };
+
 }
 ```
 
-### Obtener la Explicación
+### Getting the Explanation
 ```dart
 final explanation = MigozzContext.getWhyExplanation('location', 'es');
-// Devuelve la explicación completa
+// Returns the full explanation
 ```
 
-### Agregar Explicación para un Campo
-1. Edita `migozz_context.dart`
-2. Agrega al mapa `fieldContextES` o `fieldContextEN`
-3. Listo, funciona automáticamente
+### Add Explanation for a Field
+1. Edit `migozz_context.dart`
+2. Add `fieldContextES` or `fieldContextEN` to the map
+3. Done, it works automatically
 
 ---
 
-## Idiomas Soportados
+## Supported Languages
 
-- 🇪🇸 Español
+- 🇪🇸 Spanish
 - 🇺🇸 English
 
-La detección es automática basada en `registerCubit.state.language`
+Detection is automatic based on `registerCubit.state.language`
 
 ---
 
-## Archivos Nuevos/Modificados
+## New/Modified Files
 
-- ✨ `migozz_context.dart` - NUEVO (contexto centralizado)
-- 📝 `assistant_functions.dart` - Mejorado (detección "why")
-- 🔧 `gemini_service.dart` - Mejorado (manejo "why")
-
----
-
-## Casos de Uso
-
-### ✅ Detecta
-- "¿Por qué?"
-- "¿para qué?"
-- "¿por que?" (sin tilde)
-- "why do you need..."
-- "why is this important"
-
-### ❌ No detecta (correcto)
-- "mi nombre es..." (respuesta normal)
-- "sí, es correcto" (confirmación)
-- "otra sugerencia" (request específico)
+- ✨ `migozz_context.dart` - NEW (centralized context)
+- 📝 `assistant_functions.dart` - Improved (why detection)
+- 🔧 `gemini_service.dart` - Improved (why handling)
 
 ---
 
-## Pruebas Recomendadas
+## Use Cases
 
-1. **Pregunta en Español:**
-   - "¿Por qué necesitan mi ubicación?"
-   - "para que quieren mi teléfono"
-   - "por que piden mi nombre"
+### ✅ Detects
+- "Why?"
 
-2. **Pregunta en Inglés:**
-   - "Why do you need my phone?"
-   - "Why is location important?"
+- "What for?"
 
-3. **Conversación Completa:**
-   - Usuario pregunta → Bot explica → Usuario continúa registro
+- "Why?" (without accent)
+- "Why do you need..."
+- "Why is this important?"
+
+### ❌ Doesn't detect (correct)
+- "My name is..." (normal response)
+- "Yes, that's correct" (confirmation)
+- "Another suggestion" (specific request)
 
 ---
 
-## Beneficios Directos
+## Recommended Tests
 
-| Para Usuario | Para Negocio | Para Desarrollo |
+1. **Question in Spanish:**
+
+- "Why do you need my location?"
+
+- "What do you want my phone for?"
+
+- "Why are you asking for my name?"
+
+2. **Question in English:**
+
+- "Why do you need my phone?"
+
+- "Why is location important?"
+
+3. **Complete Conversation:**
+
+- User asks → Bot explains → User continues registration
+
+---
+
+## Direct Benefits
+
+| For User | For Business | For Development |
+
 |---|---|---|
-| Entiende transparencia | Genera confianza | Código escalable |
-| Aprende sobre Migozz | Aumenta conversiones | Fácil mantener |
-| Se siente escuchado | Menos rechazos | Reutilizable |
+
+Understand transparency | Build trust | Scalable code |
+
+Learn about Migozz | Increase conversions | Easy to maintain |
+
+Feel heard | Fewer rejections | Reusable |
 
 ---
 
 ## FAQ
 
-**P: ¿Funciona sin internet?**  
-R: No, necesita conectar con Gemini API
+**Q: Does it work offline?**
+A: No, it needs to connect to the Gemini API.
 
-**P: ¿Se puede personalizar el contexto?**  
-R: Sí, edita `MigozzContext` en `migozz_context.dart`
+**Q: Can the context be customized?**
+A: Yes, edit `MigozzContext` in `migozz_context.dart`.
 
-**P: ¿Cuánto impacta en performance?**  
-R: Mínimo, es solo lectura de strings precargados
+**Q: How much does it impact performance?**
+A: Minimal, it only reads pre-loaded strings.
 
-**P: ¿Funciona en otros idiomas?**  
-R: Solo ES/EN por ahora. Agregar nuevos es fácil
+**Q: Does it work in other languages?**
+A: Only ES/EN for now. Adding new ones is easy.
 
 ---
 
-**Estado: ✅ ACTIVO**  
-**Versión: 1.0**  
-**Última actualización: 2025**
+**Status: ✅ ACTIVE**
+**Version: 1.0**
+**Last updated: 2025**
