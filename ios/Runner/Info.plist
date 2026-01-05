@@ -65,7 +65,7 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>GIDClientID</key>
-	<string>895592952324-nh7fpbq5j9533r44s5908ds1qm8kq13d.apps.googleusercontent.com</string>
+	<string>895592952324-9com24km36qtr9pcpv6752qkgmf4otn3.apps.googleusercontent.com</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -73,7 +73,7 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.895592952324-nh7fpbq5j9533r44s5908ds1qm8kq13d</string>
+				<string>com.googleusercontent.apps.895592952324-9com24km36qtr9pcpv6752qkgmf4otn3</string>
 			</array>
 		</dict>
 	</array>
