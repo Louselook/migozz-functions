@@ -1,4 +1,4 @@
-// lib/features/auth/presentation/login/web/login_form.dart
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/color.dart';
@@ -41,7 +41,7 @@ class _LoginFormState extends State<LoginForm> {
     if (email.isEmpty) {
       CustomSnackbar.show(
         context: context,
-        message: "Email cannot be empty",
+        message: "login.validations.emptyEmail".tr(),
         type: SnackbarType.error,
       );
       return;
@@ -54,7 +54,7 @@ class _LoginFormState extends State<LoginForm> {
     if (!isValidEmail) {
       CustomSnackbar.show(
         context: context,
-        message: "Please enter a valid email",
+        message: "login.validations.invalidEmail".tr(),
         type: SnackbarType.error,
       );
       return;
@@ -73,7 +73,7 @@ class _LoginFormState extends State<LoginForm> {
         CustomSnackbar.show(
           context: context,
           message:
-              "This email is not registered. Please create an account first.",
+              "login.validations.notExistEmail".tr(),
           type: SnackbarType.error,
           duration: const Duration(seconds: 4),
         );
@@ -96,7 +96,7 @@ class _LoginFormState extends State<LoginForm> {
     } catch (e) {
       CustomSnackbar.show(
         context: context,
-        message: "Error verifying email: $e",
+        message: "${"login.validations.validationEmail".tr()}: $e",
         type: SnackbarType.error,
       );
     } finally {
@@ -115,7 +115,7 @@ class _LoginFormState extends State<LoginForm> {
       CustomSnackbar.show(
         // ignore: use_build_context_synchronously
         context: context,
-        message: 'Error al iniciar sesión con Google: $e',
+        message: '${"login.validations.errorGoogle".tr()} $e',
         type: SnackbarType.error,
       );
     } finally {
@@ -135,7 +135,7 @@ class _LoginFormState extends State<LoginForm> {
         CustomSnackbar.show(
           // ignore: use_build_context_synchronously
           context: context,
-          message: 'Error al iniciar sesión con Apple: $e',
+          message: '${"login.validations.errorApple".tr()} $e',
           type: SnackbarType.error,
         );
       }
@@ -155,7 +155,7 @@ class _LoginFormState extends State<LoginForm> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CustomTextField(
-              hintText: "Enter Email",
+              hintText: "login.presentation.inputText".tr(),
               prefixIcon: const Icon(
                 Icons.email,
                 color: AppColors.secondaryText,
@@ -174,11 +174,11 @@ class _LoginFormState extends State<LoginForm> {
               width: double.infinity,
               radius: 19,
               onPressed: _isCheckingEmail ? null : _handleEmailLoginCheck,
-              child: const SecondaryText('Login', fontSize: 20),
+              child: SecondaryText("login.presentation.buttonText".tr(), fontSize: 20),
             ),
 
             const SizedBox(height: 40),
-            const SecondaryText('Or login with', fontSize: 16),
+            SecondaryText("login.presentation.subtitle2".tr(), fontSize: 16),
             const SizedBox(height: 5),
 
             Row(

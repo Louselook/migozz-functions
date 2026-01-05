@@ -125,8 +125,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         title: Text('buttons.confirm'.tr()),
         content: Text(
           "${"edit.editLocation.text1".tr()}"
-          "${newLocation.city}, ${newLocation.state}\n"
-          "${newLocation.country}\n\n"
+          "${"edit.editLocation.text2".tr(namedArgs: {
+                'city': newLocation.city,
+                'state': newLocation.state
+              })}"
+          "${"edit.editLocation.text3".tr(namedArgs: {
+                'country': newLocation.country
+              })}"
           "${"edit.editLocation.text4".tr()}",
         ),
         actions: [
@@ -177,7 +182,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           context,
           1,
           message:
-              '✅ ${"edit.validations.updateLocation".tr().replaceAll("\${newLocation.city}", newLocation.city).replaceAll("\${newLocation.country}", newLocation.country)}',
+              'edit.validations.updateLocation'.tr(namedArgs: {
+            'city': newLocation.city,
+            'country': newLocation.country,
+          }),
         );
       } catch (e) {
         if (!mounted) return;
@@ -187,10 +195,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         AlertGeneral.show(
           context,
           4,
-          message: "edit.validations.errorUpdateLocation".tr().replaceAll(
-            "\$e",
-            e.toString(),
-          ),
+          message: "edit.validations.errorUpdateLocation".tr(namedArgs: {
+            'error': e.toString(),
+          }),
         );
       }
     } else {

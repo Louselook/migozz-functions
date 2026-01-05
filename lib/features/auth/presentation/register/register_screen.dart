@@ -95,7 +95,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
         CustomSnackbar.show(
           context: context,
-          message: "Error verifying email: $e",
+          message: '${"register.validations.errorVerify".tr()}$e',
           type: SnackbarType.error,
           duration: const Duration(seconds: 4),
         );

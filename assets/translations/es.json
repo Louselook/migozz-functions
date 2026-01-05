@@ -5,8 +5,8 @@
       "onboardingTitle2": "Más conexiones. Mayor impacto",
       "onboardingTitle3": "Crea tu enlace inteligente y activa tu comunidad en segundos"
     },
-    "subtitles":{
-      "onboardingSubtitle1" : "Tu contenido. Tus reglas. Tu universo."
+    "subtitles": {
+      "onboardingSubtitle1": "Tu contenido. Tus reglas. Tu universo."
     },
     "descriptions": {
       "onboardingDescription1": "Centraliza todo lo que eres. Comparte al instante. Crece sin esfuerzo.",
@@ -42,6 +42,14 @@
         "agreement": "Al registrarte aceptas nuestros ",
         "terms": "Términos y condiciones"
       }
+    },
+    "otp": {
+      "title": "Ingresa el código OTP",
+      "subtitle": "El código OTP se ha enviado a {email}",
+      "resend": "Reenviar",
+      "errorSend": "Error al enviar OTP",
+      "errorInvalid": "OTP incorrecto ❌",
+      "errorPassword": "Error al cambiar contraseña"
     }
   },
   "register": {
@@ -49,9 +57,10 @@
       "emptyEmail": "El correo no puede estar vacío",
       "validationEmail": "Por favor ingrese un correo válido",
       "registerEmail": "Este correo ya está registrado",
-      "audioMinLimit": "El audio es muy corto (${durationInSeconds.toStringAsFixed(1)}s). Debe durar entre 1 y 10 segundos.",
-      "audioMaxLimit": "El audio es muy largo (${durationInSeconds.toStringAsFixed(1)}s). Debe durar entre 1 y 10 segundos.",
-      "picConfirmation": "La foto seleccionada se ha establecido como tu foto de perfil correctamente.",
+      "errorVerify": "Error al verificar el correo: ",
+      "audioMinLimit": "El audio es muy corto ({duration}s). Debe durar entre 1 y 10 segundos.",
+      "audioMaxLimit": "El audio es muy largo ({duration}s). Debe durar entre 1 y 10 segundos.",
+      "picConfirmation": "La foto seleccionada de {platform} se ha establecido como tu foto de perfil.",
       "avatarSkipped": "Paso de foto de perfil saltado",
       "audioSkipped": "Paso de nota de voz saltado"
     },
@@ -73,9 +82,9 @@
         "LoginReturn": "Inicia sesión"
       }
     },
-     "warnings":{
-        "profilePic": "Tip: Las fotos de redes son prácticas, pero si prefieres máxima resolución, te recomendamos subir una original desde tu galería."
-      }
+    "warnings": {
+      "profilePic": "Tip: Las fotos de redes son prácticas, pero si prefieres máxima resolución, te recomendamos subir una original desde tu galería."
+    }
   },
   "complete_profile": {
     "title": "Completa tu Perfil",
@@ -505,8 +514,8 @@
       "detectLocation": "🔍 Detectando ubicación...",
       "errorDetecLocation": "❌ No se pudo obtener la ubicación actual",
       "errorUserLogin": "Error: usuario no ha iniciado sesión",
-      "updateLocation": "✅ Ubicación actualizada a ${newLocation.city}, ${newLocation.country}",
-      "errorUpdateLocation": "❌ Error al actualizar la ubicación: $e"
+      "updateLocation": "✅ Ubicación actualizada a {city}, {country}",
+      "errorUpdateLocation": "❌ Error al actualizar la ubicación: {error}"
     },
     "presentation": {
       "title": "Editar perfil",
@@ -554,8 +563,8 @@
     },
     "editLocation": {
       "text1": "Detectamos que estás en:\n\n",
-      "text2": "${newLocation.city}, ${newLocation.state}\n",
-      "text3": "${newLocation.country}\n\n",
+      "text2": "{city}, {state}\n",
+      "text3": "{country}\n\n",
       "text4": "¿Es correcto?",
       "title": "Confirmar ubicacion"
     },

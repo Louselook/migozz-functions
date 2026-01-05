@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -57,7 +58,7 @@ class LoginCubit extends Cubit<LoginState> {
         emit(
           state.copyWith(
             isLoading: false,
-            errorMessageLogin: "Error al enviar OTP",
+            errorMessageLogin: "login.otp.errorSend".tr(),
             currentOTP: null,
           ),
         );
@@ -102,7 +103,7 @@ class LoginCubit extends Cubit<LoginState> {
       emit(
         state.copyWith(
           isLoading: false,
-          errorMessageOTP: "OTP incorrecto ❌",
+          errorMessageOTP: "login.otp.errorInvalid".tr(),
           otpErrorCount: state.otpErrorCount + 1,
         ),
       );
@@ -120,7 +121,7 @@ class LoginCubit extends Cubit<LoginState> {
         emit(
           state.copyWith(
             isLoading: false,
-            errorMessageOTP: result.message ?? "Error al cambiar contraseña",
+            errorMessageOTP: result.message ?? "login.otp.errorPassword".tr(),
             otpErrorCount: state.otpErrorCount + 1,
           ),
         );
