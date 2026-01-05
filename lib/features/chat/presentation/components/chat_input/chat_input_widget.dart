@@ -292,8 +292,16 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
             SnackBar(
               content: Text(
                 durationInSeconds < 1.0
-                    ? "register.validations.audioMinLimit".tr()
-                    : "register.validations.audioMaxLimit".tr(),
+                    ? "register.validations.audioMinLimit".tr(
+                        namedArgs: {
+                          'duration': durationInSeconds.toStringAsFixed(1),
+                        },
+                      )
+                    : "register.validations.audioMaxLimit".tr(
+                        namedArgs: {
+                          'duration': durationInSeconds.toStringAsFixed(1),
+                        },
+                      ),
               ),
               backgroundColor: Colors.orange,
             ),

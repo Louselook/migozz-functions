@@ -42,6 +42,14 @@
           "agreement": "By registering you agree to our ",
           "terms": "Terms and conditions"
         }
+      },
+      "otp": {
+        "title": "Enter OTP Code",
+        "subtitle": "OTP code has been sent to {email}",
+        "resend": "Resend",
+        "errorSend": "Error sending OTP",
+        "errorInvalid": "Incorrect OTP ❌",
+        "errorPassword": "Error changing password"
       }
     },
     "register":{
@@ -49,9 +57,11 @@
             "emptyEmail" : "Email cannot be empty",
             "validationEmail" :"Please enter a valid Email",
             "registerEmail" : "This email is already registered",
-            "audioMinLimit": "The audio is very short (${durationInSeconds.toStringAsFixed(1)}s). It must last between 1 and 10 seconds.",
-            "audioMaxLimit": "The audio is very long (${durationInSeconds.toStringAsFixed(1)}s). It must last between 1 and 10 seconds.",
-            "picConfirmation": "Selected photo has been set as your profile picture.",
+            "errorVerify": "Error verifying email: ",
+
+            "audioMinLimit": "The audio is very short ({duration}s). It must last between 1 and 10 seconds.",
+            "audioMaxLimit": "The audio is very long ({duration}s). It must last between 1 and 10 seconds.",
+            "picConfirmation": "Selected photo from {platform} has been set as your profile picture.",
             "avatarSkipped": "Profile photo step skipped",
             "audioSkipped": "Voice note step skipped"
         },
@@ -516,8 +526,8 @@
             "detectLocation" : "🔍 Detecting location...",
             "errorDetecLocation" : "❌ Could not fetch current location",
             "errorUserLogin" : "Error: User not logged in",
-            "updateLocation" : "✅ Location updated to ${newLocation.city}, ${newLocation.country}",
-            "errorUpdateLocation" : "❌ Error updating location: $e"
+            "updateLocation" : "✅ Location updated to {city}, {country}",
+            "errorUpdateLocation" : "❌ Error updating location: {error}"
         },
         "presentation" : {
             "title" : "Edit Profile",
@@ -566,8 +576,8 @@
         "editLocation" : {
             "title": "Confirm location",
             "text1" : "We detected you're in:\n\n",
-            "text2" : "${newLocation.city}, ${newLocation.state}\n",
-            "text3" : "${newLocation.country}\n\n",
+            "text2" : "{city}, {state}\n",
+            "text3" : "{country}\n\n",
             "text4" : "Is that correct?"
         },
         "editInterest" : {

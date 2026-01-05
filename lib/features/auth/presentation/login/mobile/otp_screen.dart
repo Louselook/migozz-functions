@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -177,9 +178,9 @@ Widget _titleSection({required String email}) {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      const PrimaryText("Enter OTP Code", color: AppColors.backgroundDark),
+      PrimaryText("login.otp.title".tr(), color: AppColors.backgroundDark),
       SecondaryText(
-        "OTP code has been sent to $email",
+        "login.otp.subtitle".tr(namedArgs: {"email": email}),
         color: AppColors.greyBackground,
         fontSize: 13,
       ),
@@ -291,8 +292,8 @@ class _ResendButton extends StatelessWidget {
         // Reenvío de OTP
         context.read<LoginCubit>().sendOTPLoginCubit(email);
       },
-      child: const SecondaryText(
-        "Resend",
+      child: SecondaryText(
+        "login.otp.resend".tr(),
         color: AppColors.greyBackground,
         fontSize: 13,
       ),
