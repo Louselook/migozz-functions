@@ -43,6 +43,13 @@ class RegisterChatController extends GenericChatController {
   String? _lastUserMessage;
   String? get lastUserMessage => _lastUserMessage;
 
+  /// Sets the next input that will be sent to the AI on `showNextBotMessage()`.
+  /// Useful for navigation-based steps (eg. social ecosystem) where the user
+  /// doesn't type anything in chat but we still need to advance the flow.
+  void setLastUserMessageForBot(String message) {
+    _lastUserMessage = message;
+  }
+
   List<String> get currentSuggestions => _audioHandler.currentSuggestions;
 
   RegisterChatController({required this.registerCubit, this.firebaseUid}) {
@@ -96,7 +103,7 @@ class RegisterChatController extends GenericChatController {
   }
 
   /// Maneja la respuesta del usuario para el paso de ubicación
-  /// Opciones: "Sí", "No", "Ubicación incorrecta"
+  /// Opciones: "Sí", "No"
   Future<void> handleLocationResponse(String userResponse) async {
     if (!isActive) return;
 
@@ -124,39 +131,35 @@ class RegisterChatController extends GenericChatController {
       _lastUserMessage = 'location_confirmed';
       await showNextBotMessage();
     } else if (normalizedResponse == 'no') {
-      // Usuario rechaza usar ubicación
-      debugPrint('📍 [RegisterChat] Usuario rechazó ubicación');
-      registerCubit.rejectLocation();
+      // En lugar de saltar ubicación, pedir ingreso manual.
+      debugPrint('📍 [RegisterChat] Usuario indicó que no es correcta');
 
       addOtherMessage(
         text: isSpanish
-            ? "Entendido, continuaremos sin una ubicación específica."
-            : "Understood, we'll continue without a specific location.",
+            ? "De acuerdo. Escribe tu ubicación manualmente como: País, Ciudad, Estado/Departamento.\nEj: Colombia, Medellín, Antioquia"
+            : "Okay. Type your location manually as: Country, City, State/Region.\nExample: Colombia, Medellin, Antioquia",
         name: "Migozz",
       );
 
       await Future.delayed(const Duration(milliseconds: 800));
       if (!isActive) return;
-      _lastUserMessage = 'location_rejected';
+      _lastUserMessage = 'no';
       await showNextBotMessage();
     } else if (normalizedResponse.contains('incorrecta') ||
         normalizedResponse.contains('incorrect') ||
-        normalizedResponse == 'ubicación incorrecta' ||
         normalizedResponse == 'incorrect location') {
-      // Usuario dice que la ubicación es incorrecta
-      debugPrint('📍 [RegisterChat] Usuario reportó ubicación incorrecta');
-      registerCubit.requestCorrectLocation();
+      // Aunque ya no mostramos esta opción, si el usuario lo escribe, dirigir a ingreso manual.
+      debugPrint('📍 [RegisterChat] Usuario escribió ubicación incorrecta');
 
       addOtherMessage(
         text: isSpanish
-            ? "Entendido. Por favor, ingresa tu ubicación manualmente o intenta detectarla nuevamente."
-            : "Understood. Please enter your location manually or try detecting it again.",
+            ? "Entendido. Escribe tu ubicación manualmente como: País, Ciudad, Estado/Departamento.\nEj: Colombia, Medellín, Antioquia"
+            : "Got it. Type your location manually as: Country, City, State/Region.\nExample: Colombia, Medellin, Antioquia",
         name: "Migozz",
       );
 
       await Future.delayed(const Duration(milliseconds: 800));
       if (!isActive) return;
-      _lastUserMessage = 'location_incorrect';
       await showNextBotMessage();
     } else {
       // Respuesta no válida
@@ -168,11 +171,9 @@ class RegisterChatController extends GenericChatController {
         "other": true,
         "type": MessageType.text,
         "text": isSpanish
-            ? "Por favor, selecciona una opción válida: Sí, No, o Ubicación incorrecta."
-            : "Please select a valid option: Yes, No, or Incorrect location.",
-        "options": isSpanish
-            ? ["Sí", "No", "Ubicación incorrecta"]
-            : ["Yes", "No", "Incorrect location"],
+          ? "Por favor, selecciona una opción válida: Sí o No."
+          : "Please select a valid option: Yes or No.",
+        "options": isSpanish ? ["Sí", "No"] : ["Yes", "No"],
         "name": "Migozz",
         "time": getTimeNow(),
       });
@@ -642,6 +643,16 @@ class RegisterChatController extends GenericChatController {
 
     // Mensaje normal de texto
     _lastUserMessage = text;
+
+    // Limpiar chips (options/suggestions) del último mensaje del bot
+    // para evitar que se solapen con el nuevo mensaje del usuario.
+    for (final msg in messages.reversed) {
+      if (msg["other"] == true) {
+        if (msg["options"] != null) msg["options"] = [];
+        if (msg["suggestions"] != null) msg["suggestions"] = [];
+        break;
+      }
+    }
 
     addMessage({
       "other": false,

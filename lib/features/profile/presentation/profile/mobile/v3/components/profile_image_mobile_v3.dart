@@ -78,22 +78,33 @@ class ProfileImageMobileV3 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: size.width,
-      height: height ?? size.height,
-      child: FutureBuilder<bool>(
-        future: _isHighQuality(context),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return Container(color: Colors.grey.shade900);
-          }
-          return _buildFullImage();
-        },
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final effectiveWidth =
+            constraints.maxWidth.isFinite ? constraints.maxWidth : size.width;
+        final effectiveHeight = constraints.maxHeight.isFinite
+            ? constraints.maxHeight
+            : (height ?? size.height);
+        final effectiveSize = Size(effectiveWidth, effectiveHeight);
+
+        return SizedBox(
+          width: effectiveSize.width,
+          height: effectiveSize.height,
+          child: FutureBuilder<bool>(
+            future: _isHighQuality(context),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return Container(color: Colors.grey.shade900);
+              }
+              return _buildFullImage(effectiveSize);
+            },
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildFullImage() {
+  Widget _buildFullImage(Size effectiveSize) {
     final bool hasAvatar = avatarUrl != null && avatarUrl!.isNotEmpty;
 
     return Stack(
@@ -119,19 +130,19 @@ class ProfileImageMobileV3 extends StatelessWidget {
           CachedNetworkImage(
             imageUrl: avatarUrl!,
             fit: BoxFit.cover,
-            errorWidget: (_, __, ___) => _buildPlaceholderOverlay(),
+            errorWidget: (_, __, ___) => _buildPlaceholderOverlay(effectiveSize),
           ),
 
         // Placeholder SOLO cuando NO hay avatar
         if (!hasAvatar)
-          _buildPlaceholderOverlay(),
+          _buildPlaceholderOverlay(effectiveSize),
 
         // 4️⃣ Gradiente inferior (siempre)
         Positioned(
           left: 0,
           right: 0,
           bottom: 0,
-          height: size.height * 0.6,
+          height: effectiveSize.height * 0.45,
           child: DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -150,14 +161,15 @@ class ProfileImageMobileV3 extends StatelessWidget {
     );
   }
 
-  Widget _buildPlaceholderOverlay() {
+  Widget _buildPlaceholderOverlay([Size? effectiveSize]) {
+    final s = effectiveSize ?? size;
     return Stack(
       children: [
         Align(
-          alignment: const Alignment(0, 0),
+          alignment: const Alignment(0, -0.2),
           child: SizedBox(
-            width: size.width,
-            height: size.width,
+            width: s.width,
+            height: s.width,
             child: SvgPicture.asset(
               AssetsConstants.placeholderIcon,
               fit: BoxFit.contain,

@@ -87,6 +87,10 @@ class SocialEcosystemHandler {
       }
 
       Future.delayed(const Duration(milliseconds: 1500), () {
+        // Navigation-based step: advance the assistant with a neutral input.
+        // This avoids re-processing the user's previous message (which could be
+        // a change request) when returning during repeat mode.
+        chatController.setLastUserMessageForBot('socials_updated');
         chatController.showNextBotMessage();
       });
     });

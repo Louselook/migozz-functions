@@ -695,7 +695,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     // Use the safe username variable (NO user! here)
     final socialLinks = _buildSocialLinks(socialEcosystem, rawUsername);
 
-    void _handleBackTap() {
+    void handleBackTap() {
       // Si estamos en modo registro, intentamos navegar dentro del PageView.
       if (widget.mode == MoreUserDetailsMode.register) {
         // ✅ Validate at least one network is added before going back

@@ -377,9 +377,10 @@ class _IaChatScreenState extends State<IaChatScreen> {
                   try {
                     matched = rawOptions.firstWhere((o) {
                       if (o is String) return o == selectedLabel;
-                      if (o is Map)
+                      if (o is Map) {
                         return ((o['label'] ?? o['text'])?.toString() ?? '') ==
                             selectedLabel;
+                      }
                       return o.toString() == selectedLabel;
                     });
                   } catch (e) {

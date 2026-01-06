@@ -46,6 +46,8 @@ class _MobileProfileContentV3EditState
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final socialsImageBottom = size.height * 0.53;
+    final socialsTopSpacer = size.height * 0.46;
 
     // Watch AuthCubit to get real-time updates when avatar changes
     final authState = context.watch<AuthCubit>().state;
@@ -99,7 +101,7 @@ class _MobileProfileContentV3EditState
             top: 0,
             left: 0,
             right: 0,
-            bottom: size.height * 0.40,
+            bottom: socialsImageBottom,
             child: ProfileImageMobileV3(
               avatarUrl: avatarUrl,
               size: size,
@@ -128,12 +130,12 @@ class _MobileProfileContentV3EditState
             child: Column(
               children: [
                 // espacio para la imagen
-                SizedBox(height: size.height * 0.50),
+                SizedBox(height: socialsTopSpacer),
 
                 // CONTENEDOR FIJO (sheet)
                 Expanded(
                   child: Transform.translate(
-                    offset: const Offset(0, -32), // sube el sheet
+                    offset: const Offset(0, -52), // sube el sheet
                     child: Container(
                       width: double.infinity,
                       decoration: const BoxDecoration(

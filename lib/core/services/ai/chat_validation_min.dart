@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_state.dart';
+import 'package:migozz_app/features/auth/data/domain/models/user/location_dto.dart';
 import 'package:migozz_app/features/auth/services/send_otp.dart';
 
 Future<Map<String, dynamic>?> processBotResponse(
@@ -65,6 +66,44 @@ Future<Map<String, dynamic>?> processBotResponse(
         '📍 [processBotResponse] emptyLocation: ${resp['emptyLocation']}',
       );
 
+      // Si es un prompt del bot para ingresar ubicación manual, no procesar como respuesta.
+      if (resp['manualLocationPrompt'] == true) {
+        debugPrint('📍 [processBotResponse] Manual location prompt (skip)');
+        return null;
+      }
+
+      // Si no hay validación ni flags, probablemente es una pregunta/prompt.
+      final hasAnyFlag =
+          resp['manualLocation'] == true ||
+          resp['confirmLocation'] == true ||
+          resp['emptyLocation'] == true;
+      if (isValid == null && !hasAnyFlag) {
+        debugPrint('📍 [processBotResponse] Location prompt without flags (skip)');
+        return null;
+      }
+
+      // Ubicación manual
+      if (resp['manualLocation'] == true && isValid == true) {
+        final country = (resp['country'] ?? '').toString().trim();
+        final state = (resp['state'] ?? '').toString().trim();
+        final city = (resp['city'] ?? '').toString().trim();
+        if (country.isNotEmpty && state.isNotEmpty && city.isNotEmpty) {
+          registerCubit.setLocation(
+            LocationDTO(
+              country: country,
+              state: state,
+              city: city,
+              lat: 0.0,
+              lng: 0.0,
+            ),
+          );
+          debugPrint('✅ Ubicación manual guardada: $city, $state, $country');
+          // Avanzar el progreso igual que cuando se confirma ubicación.
+          registerCubit.confirmLocation();
+          return null;
+        }
+      }
+
       // Opción 1: Usuario confirmó ubicación (Sí)
       if (resp['confirmLocation'] == true && isValid == true) {
         if (registerCubit.state.location != null) {
@@ -91,13 +130,6 @@ Future<Map<String, dynamic>?> processBotResponse(
           '✅ Usuario rechazó ubicación - guardando LocationDTO.empty()',
         );
         return null; // Sin errores, avanza al siguiente paso
-      }
-      // Opción 3: Ubicación incorrecta o respuesta inválida
-      else if (isValid == false) {
-        debugPrint('⚠️ Ubicación incorrecta o respuesta inválida');
-        // El mensaje de error ya viene en resp['text'] desde _evaluateLocation
-        // GeminiService se encargará de mostrarlo
-        return null;
       }
       // Caso inesperado
       else {

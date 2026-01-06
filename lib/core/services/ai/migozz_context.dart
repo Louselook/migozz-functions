@@ -1,5 +1,6 @@
 /// Context information about Migozz platform
 /// This file contains comprehensive information about the app's purpose and why each data point is needed
+library;
 
 class MigozzContext {
   /// Platform description

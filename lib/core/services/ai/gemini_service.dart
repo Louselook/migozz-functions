@@ -70,11 +70,17 @@ class GeminiService {
     }
   }
 
-  int _currentQuestionIndex = 0;
+    int _currentQuestionIndex = 0;
+    // Índice donde el usuario estaba cuando pidió repetir/cambiar un campo anterior.
+    // Al terminar el cambio, continuamos con el flujo normal desde el siguiente step.
+    int _previousQuestionIndex = 0;
+    bool _isInRepeatMode = false; // Flag para indicar que estamos en modo repetición
   bool _awaitingEmailChange =
       false; // Flag para rastrear si estamos esperando cambio de email
   bool _comingFromOTPEmailChange =
       false; // Flag para saber si viene de cambio de email desde OTP
+    bool _awaitingManualLocation =
+      false; // Flag para rastrear si estamos esperando ubicación manual
 
   // Flujo completo para usuarios NO autenticados
   final List<String> _questionFlowNotAuth = [
@@ -156,6 +162,8 @@ class GeminiService {
 
   void reset() {
     _currentQuestionIndex = 0;
+    _previousQuestionIndex = 0;
+    _isInRepeatMode = false;
   }
 
   void setModel(String modelName, {double? temperature, int? maxTokens}) {
@@ -226,9 +234,11 @@ class GeminiService {
     }
 
     // Evaluar respuesta
-    final currentStepKey = _awaitingEmailChange
+    final currentStepKey = _awaitingManualLocation
+      ? 'locationManual'
+      : (_awaitingEmailChange
         ? 'emailChange'
-        : questionFlow[_currentQuestionIndex];
+        : questionFlow[_currentQuestionIndex]);
 
     final decision = AssistantFunctions.evaluateUserResponse(
       userInput,
@@ -252,6 +262,25 @@ class GeminiService {
       debugPrint('💡 Usuario preguntó "WHY" - lanzando explicación contextual');
 
       if (explanation.isNotEmpty) {
+        // Si estamos esperando ubicación manual, re-pedir el formato manual
+        // (no repetir la pregunta de confirmación de ubicación).
+        if (_awaitingManualLocation && currentStepKey == 'locationManual') {
+          final manualReprompt = isSpanish
+              ? "\n\nAhora escribe tu ubicación como:\nPaís, Ciudad, Estado/Departamento\nEj: Colombia, Medellín, Antioquia"
+              : "\n\nNow type your location as:\nCountry, City, State/Region\nExample: Colombia, Medellin, Antioquia";
+
+          return {
+            "text": explanation + manualReprompt,
+            "options": const <String>[],
+            "step": 'regProgress.location',
+            "keepTalk": false,
+            "clearInput": true,
+            "suggestions": const <Map<String, dynamic>>[],
+            "keyboardType": "text",
+            "manualLocationPrompt": true,
+          };
+        }
+
         // Agregar sufijo a la explicación para re-pedir la respuesta
         final reprompt = isSpanish
             ? "\n\n¿Podrías responder la pregunta anterior, por favor?"
@@ -271,17 +300,57 @@ class GeminiService {
       }
     }
 
+    // MANEJO ESPECIAL: Solicitud de ubicación manual
+    if (decision['manualLocationRequest'] == true) {
+      final isSpanish = registerCubit.state.language == 'Español';
+      _awaitingManualLocation = true;
+      return {
+        "text": isSpanish
+            ? "Entendido. Escribe tu ubicación manualmente (solo país, ciudad y estado/departamento) como:\nPaís, Ciudad, Estado/Departamento\nEj: Colombia, Medellín, Antioquia"
+            : "Got it. Type your location manually (only country, city and state/region) as:\nCountry, City, State/Region\nExample: Colombia, Medellin, Antioquia",
+        "options": const <String>[],
+        "step": 'regProgress.location',
+        "keepTalk": false,
+        "keyboardType": "text",
+        "manualLocationPrompt": true,
+      };
+    }
+
     // MANEJO ESPECIAL: Si el usuario quiere cambiar una respuesta anterior
     if (decision['changeRequest'] == true) {
       final isSpanish = registerCubit.state.language == 'Español';
       final targetField = decision['targetField'] as String?;
+      final isBlocked = decision['blocked'] == true;
+
+      // Si el cambio está bloqueado, mostrar mensaje sin permitir cambio
+      if (isBlocked) {
+        final blockMessage = decision['message'] as String? ??
+            (isSpanish
+                ? '⚠️ Tu correo ya ha sido verificado. No puedes cambiar de nuevo.'
+                : '⚠️ Your email has already been verified. You cannot change it again.');
+
+        return {
+          "text": blockMessage,
+          "options": <String>[],
+          "step": 'regProgress.emailVerification',
+          "keepTalk": false,
+        };
+      }
 
       if (targetField != null) {
-        // El usuario indicó específicamente qué cambiar, volver a esa pregunta
+        // El usuario indicó específicamente qué cambiar
         final fieldIndex = questionFlow.indexOf(targetField);
         if (fieldIndex >= 0) {
+          // IMPORTANTE: Guardar el índice actual ANTES de cambiar
+          // (para continuar desde el siguiente step al finalizar)
+          _previousQuestionIndex = _currentQuestionIndex;
+          _isInRepeatMode = true;
+
           _currentQuestionIndex = fieldIndex;
-          debugPrint('🔄 Volviendo al paso: $targetField (índice $fieldIndex)');
+          debugPrint(
+            '🔄 Entrando en modo repetición: $targetField (índice $fieldIndex) | Volverá al índice $_previousQuestionIndex',
+          );
+
           return await _prepareQuestion(
             AssistantFunctions.getCurrentQuestion(
                   questionFlow,
@@ -310,8 +379,28 @@ class GeminiService {
       }
     }
 
+    // MANEJO ESPECIAL: Si la respuesta está bloqueada (ej: cambiar email después de verificar)
+    if (decision['blocked'] == true) {
+      final isSpanish = registerCubit.state.language == 'Español';
+      final blockMessage = decision['message'] as String? ??
+          (isSpanish
+              ? '⚠️ Tu correo ya ha sido verificado. No puedes cambiar de nuevo.'
+              : '⚠️ Your email has already been verified. You cannot change it again.');
+
+      return {
+        "text": blockMessage,
+        "options": <String>[],
+        "step": 'regProgress.$currentStepKey',
+        "keepTalk": false,
+      };
+    }
+
     // SI ES VÁLIDO → PROCESAR Y VERIFICAR
     if (decision['valid'] == true) {
+      // Si veníamos de ubicación manual, limpiar flag al validar
+      if (_awaitingManualLocation && currentStepKey == 'locationManual') {
+        _awaitingManualLocation = false;
+      }
       if (kIsWeb &&
           (currentStepKey == 'voiceNoteUrl' || currentStepKey == 'avatarUrl')) {
         final isSpanish = registerCubit.state.language == 'Español';
@@ -471,7 +560,20 @@ class GeminiService {
       }
 
       // Si no hubo errores, AHORA SÍ avanzar
-      _currentQuestionIndex++;
+      // IMPORTANTE: Si estamos en modo repetición, continuar con el flujo normal
+      // desde el mismo step en el que el usuario estaba cuando pidió el cambio.
+      // Nota: normalmente el usuario pide el cambio mientras ese step está pendiente,
+      // por lo que NO debemos saltarlo (caso típico: último step de audio).
+      if (_isInRepeatMode) {
+        final resumeFrom = _previousQuestionIndex;
+        debugPrint(
+          '🔙 Saliendo de modo repetición - volviendo a índice $resumeFrom',
+        );
+        _currentQuestionIndex = resumeFrom;
+        _isInRepeatMode = false;
+      } else {
+        _currentQuestionIndex++;
+      }
 
       // Si el índice quedó fuera de rango, terminamos el flujo
       if (_currentQuestionIndex >= questionFlow.length) {
@@ -539,17 +641,32 @@ class GeminiService {
     // SI NO ES VÁLIDO → MENSAJE DE ERROR
     if (decision['explainWhy'] == true) {
       final isSpanish = registerCubit.state.language == 'Español';
-      final explain =
-          _whyExplanation(currentStepKey, isSpanish) ??
-          (isSpanish
-              ? 'Con gusto. Te explico brevemente y continuamos.'
-              : 'Sure. Let me explain briefly and continue.');
+      final fallback = isSpanish
+          ? 'Con gusto. Te explico brevemente y continuamos.'
+          : 'Sure. Let me explain briefly and continue.';
+
+      var explain = _whyExplanation(currentStepKey, isSpanish);
+      if (explain == null || explain.trim().isEmpty) {
+        explain = fallback;
+      }
+
+      // Re-prompt específico para el paso de audio para que el usuario sepa qué hacer.
+      final reprompt = currentStepKey == 'voiceNoteUrl'
+          ? (isSpanish
+              ? '\n\nPara continuar, graba tu nota de voz (1-10s) manteniendo presionado el micrófono, o escribe "Skip" para omitir.'
+              : '\n\nTo continue, record your voice note (1-10s) by holding the microphone, or type "Skip" to skip.')
+          : (isSpanish
+              ? '\n\n¿Podrías responder la pregunta anterior, por favor?'
+              : '\n\nNow, could you answer the previous question please?');
+
       return {
-        "text": explain,
+        "text": explain + reprompt,
         "options": const <String>[],
         "step": 'regProgress.$currentStepKey',
-        "keepTalk": true,
-        "explainAndRepeat": true,
+        "keepTalk": false,
+        "repeatQuestion": true,
+        "clearInput": true,
+        "suggestions": const <Map<String, dynamic>>[],
       };
     }
 
@@ -585,8 +702,70 @@ class GeminiService {
     final userInputText = decision['userResponse']?.toString().trim() ?? '';
     final isGeneralQuestion = _isGeneralQuestion(userInputText);
 
-    if (decision['valid'] == false && userInputText.isNotEmpty) {
+    // Solo tratamos como "pregunta" si realmente parece una pregunta.
+    // Evita que respuestas típicas inválidas (p.ej. "No" en locationManual)
+    // activen FieldGuidance y disparen repeatQuestion (lo que re-muestra Sí/No).
+    final loweredInput = userInputText.toLowerCase().trim();
+    final looksLikeQuestion =
+        loweredInput.contains('?') ||
+        loweredInput.contains('¿') ||
+        RegExp(
+          r'^(por\s*que|porqué|porque|para\s*que|paraqué|why|what|who|which|when|where|how|como|cómo|que|qué|quien|quién|cual|cuál|cuando|cuándo|donde|dónde)\b',
+          caseSensitive: false,
+        ).hasMatch(loweredInput);
+
+    if (decision['valid'] == false && userInputText.isNotEmpty && looksLikeQuestion) {
       final isSpanish = registerCubit.state.language == 'Español';
+
+      // Si estamos esperando ubicación manual, NO usar FieldGuidance/GeneralQ&A
+      // porque eso devuelve repeatQuestion y re-muestra la pregunta de ubicación
+      // (Sí/No), rompiendo el modo manual.
+      if (_awaitingManualLocation && currentStepKey == 'locationManual') {
+        final looksLikeWhy = RegExp(
+          r'(\bwhy\b|por\s*que|porqué|porque|para\s*que|paraqué)',
+          caseSensitive: false,
+        ).hasMatch(loweredInput);
+
+        if (looksLikeWhy) {
+          final explanation = MigozzContext.getWhyExplanation(
+            'location',
+            isSpanish ? 'es' : 'en',
+          );
+          final manualReprompt = isSpanish
+              ? "\n\nAhora escribe tu ubicación como:\nPaís, Ciudad, Estado/Departamento\nEj: Colombia, Medellín, Antioquia"
+              : "\n\nNow type your location as:\nCountry, City, State/Region\nExample: Colombia, Medellin, Antioquia";
+
+          return {
+            "text": (explanation.isNotEmpty
+                    ? explanation
+                    : (isSpanish
+                        ? 'Con gusto. Te explico y continuamos.'
+                        : 'Sure. Let me explain and we continue.')) +
+                manualReprompt,
+            "options": const <String>[],
+            "step": 'regProgress.location',
+            "keepTalk": false,
+            "clearInput": true,
+            "suggestions": const <Map<String, dynamic>>[],
+            "keyboardType": "text",
+            "manualLocationPrompt": true,
+          };
+        }
+
+        // Otra pregunta mientras estamos en modo manual: re-pedir formato manual
+        return {
+          "text": isSpanish
+              ? "Entendido. Escribe tu ubicación como:\nPaís, Ciudad, Estado/Departamento\nEj: Colombia, Medellín, Antioquia"
+              : "Got it. Type your location as:\nCountry, City, State/Region\nExample: Colombia, Medellin, Antioquia",
+          "options": const <String>[],
+          "step": 'regProgress.location',
+          "keepTalk": false,
+          "clearInput": true,
+          "suggestions": const <Map<String, dynamic>>[],
+          "keyboardType": "text",
+          "manualLocationPrompt": true,
+        };
+      }
 
       // Primero: Si es pregunta sobre el CAMPO actual, devolver guía específica
       if (!isGeneralQuestion) {

@@ -1,5 +1,6 @@
 /// Definición de tipos de entrada esperados por cada paso del registro
 /// IA-01: Input Gate por step
+library;
 
 enum InputStepType {
   text, // Texto plano (nombre, usuario, correo, etc.)
@@ -45,6 +46,12 @@ bool isValidInputTypeForStep(String step, InputStepType inputType) {
 
   // Si el step acepta cualquier tipo
   if (expectedType == InputStepType.any) {
+    return true;
+  }
+
+  // Permitir texto en el step de ubicación para ingreso manual (país/estado/ciudad)
+  if (expectedType == InputStepType.location &&
+      inputType == InputStepType.text) {
     return true;
   }
 

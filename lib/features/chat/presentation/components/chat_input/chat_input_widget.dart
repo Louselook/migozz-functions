@@ -54,6 +54,7 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
   final GlobalKey _attachButtonKey = GlobalKey();
 
   String _completePhoneNumber = '';
+  String _phoneNationalNumber = '';
   bool _isPhoneValid = false;
 
   GlobalKey get attachButtonKey => _attachButtonKey;
@@ -232,6 +233,7 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
     if (widget.showPhoneInput) {
       setState(() {
         _completePhoneNumber = '';
+        _phoneNationalNumber = '';
         _isPhoneValid = false;
       });
     } else {
@@ -525,8 +527,16 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
             keyboardType: TextInputType.number,
             onChanged: (phone) {
               setState(() {
+                _phoneNationalNumber = phone.number;
                 _completePhoneNumber = phone.completeNumber;
                 _isPhoneValid = phone.number.length >= 4;
+              });
+            },
+            onCountryChanged: (country) {
+              setState(() {
+                if (_phoneNationalNumber.isNotEmpty) {
+                  _completePhoneNumber = '+${country.dialCode}$_phoneNationalNumber';
+                }
               });
             },
             onSubmitted: (value) {

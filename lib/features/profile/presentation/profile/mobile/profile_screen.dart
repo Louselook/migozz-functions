@@ -76,6 +76,8 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
     final totalFollowers = _calculateTotalFollowers(user.socialEcosystem);
     final socialLinks = _buildSocialLinks(user.socialEcosystem, user.username);
     final bool hasSocials = socialLinks.isNotEmpty;
+    final double socialsImageBottom = size.height * 0.43;
+    final double socialsTopSpacer = size.height * 0.33;
 
     return PopScope(
       canPop: false,
@@ -114,8 +116,11 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                 top: 0,
                 left: 0,
                 right: 0,
-                bottom: size.height * 0.09,
-                child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
+                bottom: socialsImageBottom,
+                child: ProfileImageMobileV3(
+                  avatarUrl: avatarUrl,
+                  size: Size(size.width, size.height - socialsImageBottom),
+                ),
               ),
 
             // 3A) SIN REDES -> profilhero: card flotante abajo (no scroll)
@@ -175,17 +180,17 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                 ),
               ),
 
-            // 3B) CON REDES -> miti-miti: empujamos contenido con un spacer igual a mitad de pantalla
+            // 3B) CON REDES -> Estructura como SocialEcosystemStepV3:
+            // foto fija + info fija + scroll solo en la sección de redes
             if (hasSocials)
-              SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
+              SafeArea(
                 child: Column(
                   children: [
-                    // Espacio para la imagen (60% de altura - 80px para superposición)
-                    SizedBox(height: size.height * 0.38),
-                    // Info del usuario
+                    SizedBox(height: socialsTopSpacer),
                     InfoUserProfile(
-                      name: name.isNotEmpty ? name : 'profile.presentation.emptyName'.tr(),
+                      name: name.isNotEmpty
+                          ? name
+                          : 'profile.presentation.emptyName'.tr(),
                       displayName: username,
                       comunityCount: totalFollowers.toString(),
                       nameComunity: 'profile.presentation.community'.tr(),
@@ -223,15 +228,23 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                         }
                       },
                     ),
-                    // Iconos circulares de redes sociales
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8, bottom: 0),
-                      child: SocialCirclesMobileV3(links: socialLinks),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        child: Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8, bottom: 0),
+                              child: SocialCirclesMobileV3(links: socialLinks),
+                            ),
+                            SocialProfilePhotosGrid(
+                              socialEcosystem: user.socialEcosystem,
+                            ),
+                            const SizedBox(height: 100),
+                          ],
+                        ),
+                      ),
                     ),
-                    // Grid de fotos de perfil de redes sociales
-                    SocialProfilePhotosGrid(
-                      socialEcosystem: user.socialEcosystem,
-                    ),SizedBox(height: 100),
                   ],
                 ),
               ),

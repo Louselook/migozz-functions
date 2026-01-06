@@ -1,5 +1,6 @@
 /// Servicio de validación de inputs por step
 /// IA-01 & IA-02: Input Gate por step y validación de audio
+library;
 
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/services/ai/gemini_service.dart';
