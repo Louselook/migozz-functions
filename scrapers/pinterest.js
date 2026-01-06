@@ -1,4 +1,5 @@
 const { createBrowser } = require('../utils/helpers');
+const { saveProfileImageForProfile } = require('../utils/imageSaver');
 
 /**
  * Scraper para perfiles de Pinterest - MEJORADO
@@ -270,6 +271,24 @@ async function scrapePinterest(username) {
       url: `https://www.pinterest.com/${username}/`,
       platform: 'pinterest'
     };
+
+    try {
+      const saved = await saveProfileImageForProfile({
+        platform: 'pinterest',
+        username: result.username,
+        imageUrl: result.profile_image_url
+      });
+      if (saved) {
+        result.profile_image_saved = true;
+        result.profile_image_path = saved.path;
+        if (saved.publicUrl) result.profile_image_public_url = saved.publicUrl;
+      } else {
+        result.profile_image_saved = false;
+      }
+    } catch (e) {
+      console.warn('[Pinterest] Failed to save profile image:', e.message);
+      result.profile_image_saved = false;
+    }
     
     console.log(`✅ [Pinterest] Scraped: ${result.full_name}`);
     console.log(`   Followers: ${result.followers}`);

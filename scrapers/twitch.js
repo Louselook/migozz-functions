@@ -1,4 +1,5 @@
 const { createBrowser } = require('../utils/helpers');
+const { saveProfileImageForProfile } = require('../utils/imageSaver');
 
 /**
  * Scraper para perfiles de Twitch - Optimizado para Cloud Run (Puppeteer)
@@ -299,17 +300,36 @@ async function scrapeTwitch(username) {
       username: domData.username || username,
       followers: finalFollowers,
       profile_image_url: finalProfileImage,
-      url
+      url,
+      platform: 'twitch'
     };
 
     console.log(`✅ [Twitch] Scraped: @${profileData.username}`);
     console.log(`   Followers: ${profileData.followers}`);
 
     if (profileData.followers === 0) {
-      console.warn('⚠️ [Twitch] No se pudieron obtener seguidores. Posibles causas:');
-      console.warn('   - Twitch está bloqueando el scraper');
-      console.warn('   - El perfil no existe o está suspendido');
-      console.warn('   - Los selectores de Twitch han cambiado');
+      console.warn('[Twitch] Followers could not be retrieved. Possible causes:');
+      console.warn('  - Twitch is blocking automated access');
+      console.warn('  - The profile does not exist or is suspended');
+      console.warn('  - Twitch selectors or API responses changed');
+    }
+
+    try {
+      const saved = await saveProfileImageForProfile({
+        platform: 'twitch',
+        username: profileData.username,
+        imageUrl: profileData.profile_image_url
+      });
+      if (saved) {
+        profileData.profile_image_saved = true;
+        profileData.profile_image_path = saved.path;
+        if (saved.publicUrl) profileData.profile_image_public_url = saved.publicUrl;
+      } else {
+        profileData.profile_image_saved = false;
+      }
+    } catch (e) {
+      console.warn('[Twitch] Failed to save profile image:', e.message);
+      profileData.profile_image_saved = false;
     }
 
     return profileData;

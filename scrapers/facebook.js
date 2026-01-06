@@ -1,4 +1,5 @@
 const { createBrowser } = require('../utils/helpers');
+const { saveProfileImageForProfile } = require('../utils/imageSaver');
 
 /**
  * Scraper para perfiles de Facebook
@@ -223,6 +224,24 @@ async function scrapeFacebook(username) {
     profileData.id = profileData.id || username;
     profileData.url = `https://www.facebook.com/${profileData.username}`;
     profileData.platform = 'facebook';
+
+    try {
+      const saved = await saveProfileImageForProfile({
+        platform: 'facebook',
+        username: profileData.username,
+        imageUrl: profileData.profile_image_url
+      });
+      if (saved) {
+        profileData.profile_image_saved = true;
+        profileData.profile_image_path = saved.path;
+        if (saved.publicUrl) profileData.profile_image_public_url = saved.publicUrl;
+      } else {
+        profileData.profile_image_saved = false;
+      }
+    } catch (e) {
+      console.warn('[Facebook] Failed to save profile image:', e.message);
+      profileData.profile_image_saved = false;
+    }
     
     console.log(`✅ [Facebook] Scraped: ${profileData.full_name || profileData.username}`);
     console.log(`   Followers: ${profileData.followers}`);

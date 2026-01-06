@@ -1,4 +1,5 @@
 const { createBrowser } = require('../utils/helpers');
+const { saveProfileImageForProfile } = require('../utils/imageSaver');
 
 /**
  * Scraper para perfiles de artistas en Spotify
@@ -217,6 +218,24 @@ async function scrapeSpotify(artistInput) {
         : `https://open.spotify.com/search/${encodeURIComponent(artistInput)}`,
       platform: 'spotify'
     };
+
+    try {
+      const saved = await saveProfileImageForProfile({
+        platform: 'spotify',
+        username: result.id,
+        imageUrl: result.profile_image_url
+      });
+      if (saved) {
+        result.profile_image_saved = true;
+        result.profile_image_path = saved.path;
+        if (saved.publicUrl) result.profile_image_public_url = saved.publicUrl;
+      } else {
+        result.profile_image_saved = false;
+      }
+    } catch (e) {
+      console.warn('[Spotify] Failed to save profile image:', e.message);
+      result.profile_image_saved = false;
+    }
     
     console.log(`✅ [Spotify] Scraped: ${result.full_name}`);
     console.log(`   Monthly Listeners: ${result.monthly_listeners}`);

@@ -1,4 +1,5 @@
 const { createBrowser } = require('../utils/helpers');
+const { saveProfileImageForProfile } = require('../utils/imageSaver');
 
 /**
  * Scraper para perfiles de Kick
@@ -190,6 +191,25 @@ async function scrapeKick(username) {
     }
 
     profileData.url = `https://kick.com/${profileData.username}`;
+    profileData.platform = profileData.platform || 'kick';
+
+    try {
+      const saved = await saveProfileImageForProfile({
+        platform: 'kick',
+        username: profileData.username,
+        imageUrl: profileData.profile_image_url
+      });
+      if (saved) {
+        profileData.profile_image_saved = true;
+        profileData.profile_image_path = saved.path;
+        if (saved.publicUrl) profileData.profile_image_public_url = saved.publicUrl;
+      } else {
+        profileData.profile_image_saved = false;
+      }
+    } catch (e) {
+      console.warn('[Kick] Failed to save profile image:', e.message);
+      profileData.profile_image_saved = false;
+    }
     console.log(`✅ [Kick] Scraped: @${profileData.username}`);
     console.log(`   Followers: ${profileData.followers}`);
     

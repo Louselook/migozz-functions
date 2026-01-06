@@ -1,4 +1,5 @@
 const { createBrowser } = require('../utils/helpers');
+const { saveProfileImageForProfile } = require('../utils/imageSaver');
 
 /**
  * Scraper para perfiles públicos de Snapchat - MEJORADO
@@ -254,6 +255,24 @@ async function scrapeSnapchat(username) {
       url: `https://www.snapchat.com/add/${username}`,
       platform: 'snapchat'
     };
+
+    try {
+      const saved = await saveProfileImageForProfile({
+        platform: 'snapchat',
+        username: result.username,
+        imageUrl: result.profile_image_url
+      });
+      if (saved) {
+        result.profile_image_saved = true;
+        result.profile_image_path = saved.path;
+        if (saved.publicUrl) result.profile_image_public_url = saved.publicUrl;
+      } else {
+        result.profile_image_saved = false;
+      }
+    } catch (e) {
+      console.warn('[Snapchat] Failed to save profile image:', e.message);
+      result.profile_image_saved = false;
+    }
     
     console.log(`✅ [Snapchat] Scraped: ${result.full_name}`);
     console.log(`   Followers: ${result.followers}`);

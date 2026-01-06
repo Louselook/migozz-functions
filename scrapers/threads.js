@@ -1,4 +1,5 @@
 const { createBrowser } = require('../utils/helpers');
+const { saveProfileImageForProfile } = require('../utils/imageSaver');
 
 /**
  * Scraper para perfiles de Threads (Meta)
@@ -169,6 +170,24 @@ async function scrapeThreads(username) {
       url: `https://www.threads.net/@${username}`,
       platform: 'threads'
     };
+
+    try {
+      const saved = await saveProfileImageForProfile({
+        platform: 'threads',
+        username: result.username,
+        imageUrl: result.profile_image_url
+      });
+      if (saved) {
+        result.profile_image_saved = true;
+        result.profile_image_path = saved.path;
+        if (saved.publicUrl) result.profile_image_public_url = saved.publicUrl;
+      } else {
+        result.profile_image_saved = false;
+      }
+    } catch (e) {
+      console.warn('[Threads] Failed to save profile image:', e.message);
+      result.profile_image_saved = false;
+    }
     
     console.log(`✅ [Threads] Scraped: ${result.full_name || username}`);
     console.log(`   Followers: ${result.followers}`);

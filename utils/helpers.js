@@ -1,13 +1,23 @@
-const puppeteerExtra = require('puppeteer-extra');
+const puppeteerExtraBase = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 
-puppeteerExtra.use(StealthPlugin());
+// Prefer puppeteer-core (system Chrome) when available; fall back to puppeteer.
+let puppeteer;
+try {
+  // puppeteer-extra can wrap puppeteer-core via addExtra
+  const puppeteerCore = require('puppeteer-core');
+  puppeteer = puppeteerExtraBase.addExtra(puppeteerCore);
+} catch (_) {
+  puppeteer = puppeteerExtraBase;
+}
+
+puppeteer.use(StealthPlugin());
 
 /**
- * Extrae el username de una URL o lo devuelve limpio si ya es un username
- * @param {string} input - URL o username
- * @param {string} platform - Plataforma (tiktok, facebook, etc.)
- * @returns {string} Username limpio
+ * Extracts the username from a URL, or returns a cleaned username.
+ * @param {string} input - URL or username
+ * @param {string} platform - Platform (tiktok, facebook, etc.)
+ * @returns {string} Clean username
  */
 function extractUsername(input, platform) {
   if (!input) return '';
@@ -115,8 +125,11 @@ function extractUsername(input, platform) {
 }
 
 /**
- * Crea una instancia de navegador Puppeteer con configuración optimizada para Cloud Run
- * @returns {Promise<Browser>} Instancia del navegador
+ * Creates a Puppeteer browser instance with Cloud Run friendly defaults.
+ * Notes:
+ * - If you install `puppeteer-core`, you must provide Chrome via `PUPPETEER_EXECUTABLE_PATH`.
+ * - If you install `puppeteer`, Chromium is downloaded automatically during `npm install`.
+ * @returns {Promise<Browser>} Browser instance
  */
 async function createBrowser() {
   const isProduction = process.env.NODE_ENV === 'production';
@@ -142,24 +155,24 @@ async function createBrowser() {
     ]
   };
 
-  // En producción, usar el ejecutable configurado
-  if (isProduction && process.env.PUPPETEER_EXECUTABLE_PATH) {
+  // Use system Chrome when provided (recommended with puppeteer-core)
+  if (process.env.PUPPETEER_EXECUTABLE_PATH) {
     config.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
   }
 
   try {
-    const browser = await puppeteerExtra.launch(config);
-    console.log('✅ Browser launched successfully');
+    const browser = await puppeteer.launch(config);
+    console.log('Browser launched successfully');
     return browser;
   } catch (error) {
-    console.error('❌ Error launching browser:', error.message);
+    console.error('Error launching browser:', error.message);
     throw error;
   }
 }
 
 /**
- * ✅ NUEVA: Función helper para esperar (reemplazo de waitForTimeout)
- * @param {number} ms - Milisegundos a esperar
+ * Wait helper (replacement for page.waitForTimeout).
+ * @param {number} ms - Milliseconds
  * @returns {Promise<void>}
  */
 async function wait(ms) {
@@ -169,5 +182,5 @@ async function wait(ms) {
 module.exports = {
   extractUsername,
   createBrowser,
-  wait  // ✅ Exportar la nueva función
+  wait
 };

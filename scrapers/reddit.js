@@ -1,4 +1,5 @@
 const { createBrowser } = require('../utils/helpers');
+const { saveProfileImageForProfile } = require('../utils/imageSaver');
 
 /**
  * Scraper para perfiles de Reddit (usuarios y subreddits)
@@ -261,7 +262,7 @@ async function scrapeRedditWithPuppeteer(type, name) {
     const fullName = (profileData.title && profileData.title.length) ? profileData.title : name;
     const bio = profileData.description || '';
 
-    return {
+    const result = {
       id: name,
       username: name,
       full_name: fullName,
@@ -274,6 +275,26 @@ async function scrapeRedditWithPuppeteer(type, name) {
       platform: 'reddit',
       type: type
     };
+
+    try {
+      const saved = await saveProfileImageForProfile({
+        platform: 'reddit',
+        username: `${type}_${name}`,
+        imageUrl: result.profile_image_url
+      });
+      if (saved) {
+        result.profile_image_saved = true;
+        result.profile_image_path = saved.path;
+        if (saved.publicUrl) result.profile_image_public_url = saved.publicUrl;
+      } else {
+        result.profile_image_saved = false;
+      }
+    } catch (e) {
+      console.warn('[Reddit] Failed to save profile image:', e.message);
+      result.profile_image_saved = false;
+    }
+
+    return result;
 
   } catch (error) {
     if (browser) {

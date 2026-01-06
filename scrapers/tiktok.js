@@ -1,4 +1,5 @@
 const { createBrowser } = require('../utils/helpers');
+const { saveProfileImageForProfile } = require('../utils/imageSaver');
 
 /**
  * Scraper para perfiles de TikTok
@@ -250,6 +251,24 @@ async function scrapeTikTok(username) {
     
     // Limpiar el campo source antes de retornar
     delete profileData.source;
+
+    try {
+      const saved = await saveProfileImageForProfile({
+        platform: 'tiktok',
+        username: profileData.username || username,
+        imageUrl: profileData.profile_image_url
+      });
+      if (saved) {
+        profileData.profile_image_saved = true;
+        profileData.profile_image_path = saved.path;
+        if (saved.publicUrl) profileData.profile_image_public_url = saved.publicUrl;
+      } else {
+        profileData.profile_image_saved = false;
+      }
+    } catch (e) {
+      console.warn('[TikTok] Failed to save profile image:', e.message);
+      profileData.profile_image_saved = false;
+    }
     
     return profileData;
 

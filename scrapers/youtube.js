@@ -1,4 +1,5 @@
 const { createBrowser } = require('../utils/helpers');
+const { saveProfileImageForProfile } = require('../utils/imageSaver');
 
 /**
  * Scraper para canales de YouTube - VERSIÓN MEJORADA
@@ -399,8 +400,8 @@ async function scrapeYouTube(channelInput) {
       videos: data.videos
     });
 
-    // Preparar resultado
-    return {
+    // Prepare result
+    const result = {
       id: data.channelId || channelInput,
       username: data.handle || data.channelName || channelInput,
       full_name: data.channelName || '',
@@ -414,6 +415,26 @@ async function scrapeYouTube(channelInput) {
         : `https://www.youtube.com/channel/${data.channelId}`,
       platform: 'youtube'
     };
+
+    try {
+      const saved = await saveProfileImageForProfile({
+        platform: 'youtube',
+        username: result.username,
+        imageUrl: result.profile_image_url
+      });
+      if (saved) {
+        result.profile_image_saved = true;
+        result.profile_image_path = saved.path;
+        if (saved.publicUrl) result.profile_image_public_url = saved.publicUrl;
+      } else {
+        result.profile_image_saved = false;
+      }
+    } catch (e) {
+      console.warn('[YouTube] Failed to save profile image:', e.message);
+      result.profile_image_saved = false;
+    }
+
+    return result;
 
   } catch (err) {
     if (browser) {

@@ -1,4 +1,5 @@
 const { createBrowser } = require('../utils/helpers');
+const { saveProfileImageForProfile } = require('../utils/imageSaver');
 
 /**
  * Scraper para servidores de Discord (usando discord.me, top.gg, o invites)
@@ -232,6 +233,24 @@ async function scrapeDiscordWithPuppeteer(serverIdOrInvite) {
       url: `https://discord.gg/${serverIdOrInvite}`,
       platform: 'discord'
     };
+
+    try {
+      const saved = await saveProfileImageForProfile({
+        platform: 'discord',
+        username: result.id,
+        imageUrl: result.profile_image_url
+      });
+      if (saved) {
+        result.profile_image_saved = true;
+        result.profile_image_path = saved.path;
+        if (saved.publicUrl) result.profile_image_public_url = saved.publicUrl;
+      } else {
+        result.profile_image_saved = false;
+      }
+    } catch (e) {
+      console.warn('[Discord] Failed to save profile image:', e.message);
+      result.profile_image_saved = false;
+    }
     
     console.log(`✅ [Discord] Scraped: ${result.full_name}`);
     console.log(`   Members: ${result.followers}`);

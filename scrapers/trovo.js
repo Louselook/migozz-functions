@@ -1,4 +1,5 @@
 const { createBrowser } = require('../utils/helpers');
+const { saveProfileImageForProfile } = require('../utils/imageSaver');
 
 /**
  * Scraper para perfiles de Trovo - CORREGIDO
@@ -264,6 +265,24 @@ async function scrapeTrovo(username) {
       url: `https://trovo.live/s/${cleanUsername}`,
       platform: 'trovo'
     };
+
+    try {
+      const saved = await saveProfileImageForProfile({
+        platform: 'trovo',
+        username: result.username,
+        imageUrl: result.profile_image_url
+      });
+      if (saved) {
+        result.profile_image_saved = true;
+        result.profile_image_path = saved.path;
+        if (saved.publicUrl) result.profile_image_public_url = saved.publicUrl;
+      } else {
+        result.profile_image_saved = false;
+      }
+    } catch (e) {
+      console.warn('[Trovo] Failed to save profile image:', e.message);
+      result.profile_image_saved = false;
+    }
     
     console.log(`✅ [Trovo] Via DOM: ${result.full_name}`);
     console.log(`   Followers: ${result.followers}`);

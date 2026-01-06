@@ -1,4 +1,5 @@
 const { createBrowser } = require('../utils/helpers');
+const { saveProfileImageForProfile } = require('../utils/imageSaver');
 
 /**
  * Scraper para perfiles de Twitter/X
@@ -63,7 +64,10 @@ async function scrapeTwitter(username) {
         following: legacy.friends_count || 0,
         tweets: legacy.statuses_count || 0,
         likes: legacy.favourites_count || 0,
-        profile_image_url: legacy.profile_image_url_https?.replace('_normal', '_400x400') || '',
+        // Prefer original/full-size profile image when possible
+        profile_image_url: legacy.profile_image_url_https
+          ? legacy.profile_image_url_https.replace('_normal', '')
+          : '',
         verified: legacy.verified || apiData.is_blue_verified || false,
         location: legacy.location || '',
         created_at: legacy.created_at,
@@ -148,7 +152,8 @@ async function scrapeTwitter(username) {
         // Buscar imagen de perfil
         const avatarImg = document.querySelector('[data-testid="UserAvatar-Container-unknown"] img, img[alt*="Opens profile photo"]');
         if (avatarImg) {
-          profileImageUrl = avatarImg.src?.replace('_normal', '_400x400') || profileImageUrl;
+          // Prefer original/full-size profile image when possible
+          profileImageUrl = avatarImg.src?.replace('_normal', '') || profileImageUrl;
         }
         
         // Método 3: Buscar en scripts
@@ -208,6 +213,24 @@ async function scrapeTwitter(username) {
       url: `https://twitter.com/${username}`,
       platform: 'twitter'
     };
+
+    try {
+      const saved = await saveProfileImageForProfile({
+        platform: 'twitter',
+        username,
+        imageUrl: result.profile_image_url
+      });
+      if (saved) {
+        result.profile_image_saved = true;
+        result.profile_image_path = saved.path;
+        if (saved.publicUrl) result.profile_image_public_url = saved.publicUrl;
+      } else {
+        result.profile_image_saved = false;
+      }
+    } catch (e) {
+      console.warn('[Twitter] Failed to save profile image:', e.message);
+      result.profile_image_saved = false;
+    }
     
     console.log(`✅ [Twitter/X] Scraped: ${result.full_name || username}`);
     console.log(`   Followers: ${result.followers}`);

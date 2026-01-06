@@ -1,12 +1,13 @@
 const { createBrowser } = require('../utils/helpers');
+const { saveProfileImageForProfile } = require('../utils/imageSaver');
 
 /**
- * Scraper para perfiles de Apple Music (artistas)
- * @param {string} artistIdOrUrl - ID del artista o URL de Apple Music
- * @returns {Promise<Object>} Datos del perfil
+ * Apple Music artist scraper.
+ * @param {string} artistIdOrUrl - Artist ID or Apple Music URL
+ * @returns {Promise<Object>} Profile data
  */
 async function scrapeAppleMusic(artistIdOrUrl) {
-  console.log(`📥 [Apple Music] Iniciando scraping para: ${artistIdOrUrl}`);
+  console.log(`[Apple Music] Starting scrape for: ${artistIdOrUrl}`);
   
   let browser;
   
@@ -19,26 +20,26 @@ async function scrapeAppleMusic(artistIdOrUrl) {
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     );
 
-    // Construir URL
+    // Build URL
     let url;
     if (artistIdOrUrl.includes('music.apple.com')) {
       url = artistIdOrUrl;
     } else if (/^\d+$/.test(artistIdOrUrl)) {
-      // Es un ID numérico
+      // Numeric ID
       url = `https://music.apple.com/artist/${artistIdOrUrl}`;
     } else {
-      // Buscar el artista
+      // Search artist
       url = `https://music.apple.com/us/search?term=${encodeURIComponent(artistIdOrUrl)}`;
     }
 
-    console.log(`🌐 [Apple Music] Navegando a: ${url}`);
+    console.log(`[Apple Music] Navigating to: ${url}`);
     
     await page.goto(url, { 
       waitUntil: 'networkidle2', 
       timeout: 60000 
     });
     
-    // Si es búsqueda, hacer clic en el primer artista
+    // If this is a search page, click the first artist result
     if (url.includes('/search')) {
       await new Promise(resolve => setTimeout(resolve, 3000));
       
@@ -176,6 +177,24 @@ async function scrapeAppleMusic(artistIdOrUrl) {
       url: profileData.currentUrl || `https://music.apple.com/artist/${profileData.artistId}`,
       platform: 'applemusic'
     };
+
+    try {
+      const saved = await saveProfileImageForProfile({
+        platform: 'applemusic',
+        username: result.id,
+        imageUrl: result.profile_image_url
+      });
+      if (saved) {
+        result.profile_image_saved = true;
+        result.profile_image_path = saved.path;
+        if (saved.publicUrl) result.profile_image_public_url = saved.publicUrl;
+      } else {
+        result.profile_image_saved = false;
+      }
+    } catch (e) {
+      console.warn('[Apple Music] Failed to save profile image:', e.message);
+      result.profile_image_saved = false;
+    }
     
     console.log(`✅ [Apple Music] Scraped: ${result.full_name}`);
     

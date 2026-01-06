@@ -1,4 +1,5 @@
 const { createBrowser } = require('../utils/helpers');
+const { saveProfileImageForProfile } = require('../utils/imageSaver');
 
 /**
  * Scraper para perfiles de SoundCloud - MEJORADO
@@ -270,6 +271,24 @@ async function scrapeSoundCloud(username) {
       url: `https://soundcloud.com/${username}`,
       platform: 'soundcloud'
     };
+
+    try {
+      const saved = await saveProfileImageForProfile({
+        platform: 'soundcloud',
+        username: result.username,
+        imageUrl: result.profile_image_url
+      });
+      if (saved) {
+        result.profile_image_saved = true;
+        result.profile_image_path = saved.path;
+        if (saved.publicUrl) result.profile_image_public_url = saved.publicUrl;
+      } else {
+        result.profile_image_saved = false;
+      }
+    } catch (e) {
+      console.warn('[SoundCloud] Failed to save profile image:', e.message);
+      result.profile_image_saved = false;
+    }
     
     console.log(`✅ [SoundCloud] Via DOM: ${result.full_name}`);
     console.log(`   Followers: ${result.followers}`);
