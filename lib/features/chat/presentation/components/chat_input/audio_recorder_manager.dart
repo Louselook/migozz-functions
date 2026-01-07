@@ -72,6 +72,14 @@ class AudioRecorderManager {
   Future<void> startRecording() async {
     debugPrint('🎙️ [AudioManager] Iniciando grabación...');
 
+    // Pedir/validar permiso de micrófono justo al grabar.
+    // Esto evita solicitar permisos al inicio de la app.
+    final hasPerm = await _recorder.hasPermission();
+    if (!hasPerm) {
+      debugPrint('⛔ [AudioManager] Permiso de micrófono denegado');
+      throw Exception('microphone_permission_denied');
+    }
+
     if (audioPath != null) {
       await reset();
     }

@@ -59,27 +59,7 @@ class _AppInitializerState extends State<AppInitializer>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _checkLocationStatus();
-    }
-  }
-
-  Future<void> _checkLocationStatus() async {
-    //  Evitar llamadas concurrentes
-    if (_isInitializing) {
-      debugPrint('⚠️ Ya hay una inicialización en progreso, ignorando...');
-      return;
-    }
-
-    if (!kIsWeb) {
-      final location = loc.Location();
-      final status = await location.hasPermission();
-      if (status != loc.PermissionStatus.granted &&
-          status != loc.PermissionStatus.grantedLimited &&
-          mounted) {
-        await _runInit();
-      }
-    }
+    // Ya no solicitamos permisos globales al reanudar.
   }
 
   Future<void> _runInit() async {
@@ -88,7 +68,7 @@ class _AppInitializerState extends State<AppInitializer>
       return;
     }
     _isInitializing = true;
-    debugPrint('🚀 [AppInit] Iniciando permisos y ubicación...');
+    debugPrint('🚀 [AppInit] Inicializando (sin solicitar permisos globales)...');
 
     try {
       bool microphoneGranted = false;
@@ -96,78 +76,44 @@ class _AppInitializerState extends State<AppInitializer>
       LocationDTO? locationDto;
       final lang = context.locale.languageCode == 'es' ? 'es' : 'en';
 
+      // Nota:
+      // - Ya NO pedimos permisos aquí.
+      // - Los permisos se solicitan en el flujo de registro cuando corresponda.
+      // - Aun así, si el usuario YA dio permisos previamente, podemos detectar estado y (opcionalmente)
+      //   precargar ubicación sin mostrar diálogos.
+
       if (!kIsWeb) {
-        // Request microphone permission
-        final micStatus = await Permission.microphone.request();
-        microphoneGranted = micStatus.isGranted;
-
-        // Use location package for permission handling
-        final location = loc.Location();
-
-        // Check if location service is enabled
-        bool serviceEnabled = await location.serviceEnabled();
-        debugPrint('📍 [LocationPermission] Service enabled: $serviceEnabled');
-
-        if (!serviceEnabled) {
-          serviceEnabled = await location.requestService();
-          debugPrint('📍 [LocationPermission] Service after request: $serviceEnabled');
+        try {
+          final micStatus = await Permission.microphone.status;
+          microphoneGranted = micStatus.isGranted;
+        } catch (e) {
+          debugPrint('⚠️ [AppInit] No se pudo leer permiso de micrófono: $e');
         }
-
-        if (serviceEnabled) {
-          // Check location permission
-          var permissionStatus = await location.hasPermission();
-          debugPrint('📍 [LocationPermission] Current status: $permissionStatus');
-
-          // If denied, request permission
-          if (permissionStatus == loc.PermissionStatus.denied) {
-            debugPrint('🔔 [LocationPermission] Requesting permission...');
-            permissionStatus = await location.requestPermission();
-            debugPrint('📍 [LocationPermission] Request result: $permissionStatus');
-          }
-
-          // Handle the result with timeout
-          if (permissionStatus == loc.PermissionStatus.granted ||
-              permissionStatus == loc.PermissionStatus.grantedLimited) {
-            locationGranted = true;
-            try {
-              final svc = LocationService();
-              locationDto = await svc.initAndFetchAddress(lang: lang)
-                  .timeout(const Duration(seconds: 10), onTimeout: () {
-                debugPrint('⏱️ [LocationService] Timeout obteniendo ubicación');
-                return null;
-              });
-            } catch (e) {
-              debugPrint('❌ Error al obtener ubicación: $e');
-            }
-          } else if (permissionStatus == loc.PermissionStatus.deniedForever) {
-            debugPrint('⛔ [LocationPermission] Permission permanently denied');
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (!mounted) return;
-              _showLocationDeniedDialog(true);
-            });
-          } else {
-            debugPrint('⚠️ [LocationPermission] Permission denied by user');
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (!mounted) return;
-              _showLocationDeniedDialog(false);
-            });
-          }
-        } else {
-          debugPrint('❌ [LocationPermission] Location service not available');
-        }
-      } else {
-        // En web — permisos simulados o usando otra API
-        debugPrint('🌐 Web detectada — simulando permisos');
-
-        microphoneGranted = true; // si no los necesitas realmente
-        locationGranted = true;
 
         try {
-          final svc = LocationService();
-          locationDto = await svc.initAndFetchAddress(lang: lang);
+          final location = loc.Location();
+          final serviceEnabled = await location.serviceEnabled();
+          final permissionStatus = await location.hasPermission();
+          locationGranted = serviceEnabled &&
+              (permissionStatus == loc.PermissionStatus.granted ||
+                  permissionStatus == loc.PermissionStatus.grantedLimited);
+
+          if (locationGranted) {
+            final svc = LocationService();
+            locationDto = await svc
+                .initAndFetchAddress(lang: lang)
+                .timeout(const Duration(seconds: 10), onTimeout: () {
+              debugPrint('⏱️ [LocationService] Timeout obteniendo ubicación');
+              return null;
+            });
+          }
         } catch (e) {
-          debugPrint('❌ Error obteniendo ubicación en web: $e');
+          debugPrint('⚠️ [AppInit] No se pudo precargar ubicación: $e');
         }
+      } else {
+        // Web: no bloqueamos el arranque con permisos.
+        microphoneGranted = true;
+        locationGranted = false;
       }
 
       if (!mounted) return;
@@ -185,53 +131,6 @@ class _AppInitializerState extends State<AppInitializer>
       debugPrint('❌ Error durante inicialización: $e');
     } finally {
       _isInitializing = false;
-    }
-  }
-
-  /// Mostrar el modal DESPUÉS del primer frame para evitar error
-  Future<void> _showLocationDeniedDialog(bool permanentlyDenied) async {
-    try {
-      await showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.white,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        builder: (_) => Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.location_off, size: 60, color: Colors.redAccent),
-              const SizedBox(height: 16),
-              Text(
-                permanentlyDenied
-                    ? "Has bloqueado el permiso de ubicación permanentemente. Actívalo desde Ajustes si quieres usar funciones basadas en ubicación."
-                    : "No concediste la ubicación. Algunas funciones podrían no estar disponibles.",
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              if (permanentlyDenied)
-                ElevatedButton(
-                  onPressed: () async {
-                    Navigator.pop(context);
-                    await openAppSettings();
-                  },
-                  child: const Text("Abrir ajustes"),
-                )
-              else
-                ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text("Cerrar"),
-                ),
-              const SizedBox(height: 8),
-            ],
-          ),
-        ),
-      );
-    } catch (e) {
-      debugPrint('❌ Error mostrando modal: $e');
     }
   }
 

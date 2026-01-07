@@ -7,6 +7,7 @@ import 'package:migozz_app/core/services/ai/assistant_functions.dart';
 import 'package:migozz_app/core/services/ai/chat_validation_min.dart';
 import 'package:migozz_app/core/services/ai/migozz_context.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class GeminiService {
   GeminiService._privateConstructor();
@@ -81,6 +82,8 @@ class GeminiService {
       false; // Flag para saber si viene de cambio de email desde OTP
     bool _awaitingManualLocation =
       false; // Flag para rastrear si estamos esperando ubicación manual
+
+  bool _requestedMicPermissionForVoiceStep = false;
 
   // Flujo completo para usuarios NO autenticados
   final List<String> _questionFlowNotAuth = [
@@ -854,6 +857,21 @@ class GeminiService {
     // SI estamos en el paso de ubicación, obtener la ubicación PRIMERO
     final currentStepKey = questionFlow[_currentQuestionIndex];
     if (currentStepKey == 'location') {
+      // Si ya estamos en modo ubicación manual, NO intentamos permisos ni geolocalización.
+      if (_awaitingManualLocation) {
+        final isSpanish = registerCubit.state.language == 'Español';
+        return {
+          "text": isSpanish
+              ? "Entendido. Escribe tu ubicación manualmente (solo país, ciudad y estado/departamento) como:\nPaís, Ciudad, Estado/Departamento\nEj: Colombia, Medellín, Antioquia"
+              : "Got it. Type your location manually (only country, city and state/region) as:\nCountry, City, State/Region\nExample: Colombia, Medellin, Antioquia",
+          "options": const <String>[],
+          "step": 'regProgress.location',
+          "keepTalk": false,
+          "keyboardType": "text",
+          "manualLocationPrompt": true,
+        };
+      }
+
       final currentLocation = registerCubit.state.location;
       // Obtener ubicación si está vacía o null
       if (currentLocation == null || currentLocation.isEmpty) {
@@ -865,6 +883,37 @@ class GeminiService {
         debugPrint(
           '📍 [_prepareQuestion] Ubicación obtenida: ${registerCubit.state.location?.city}',
         );
+
+        // Si después de intentar sigue vacía/nula (típico: usuario denegó permiso),
+        // pasamos automáticamente a ingreso manual.
+        final after = registerCubit.state.location;
+        if (after == null || after.isEmpty) {
+          _awaitingManualLocation = true;
+          final isSpanish = registerCubit.state.language == 'Español';
+          return {
+            "text": isSpanish
+                ? "Para continuar necesito tu ubicación. Como no pude obtenerla automáticamente, escríbela manualmente (solo país, ciudad y estado/departamento) así:\nPaís, Ciudad, Estado/Departamento\nEj: Colombia, Medellín, Antioquia"
+                : "To continue I need your location. Since I couldn't get it automatically, type it manually (only country, city and state/region) like this:\nCountry, City, State/Region\nExample: Colombia, Medellin, Antioquia",
+            "options": const <String>[],
+            "step": 'regProgress.location',
+            "keepTalk": false,
+            "keyboardType": "text",
+            "manualLocationPrompt": true,
+          };
+        }
+      }
+    }
+
+    // Paso de nota de voz: pedir permiso de micrófono aquí (mobile) para que el prompt
+    // ocurra en el paso correspondiente y no al inicio de la app.
+    if (currentStepKey == 'voiceNoteUrl' && !kIsWeb) {
+      if (!_requestedMicPermissionForVoiceStep) {
+        _requestedMicPermissionForVoiceStep = true;
+        try {
+          await Permission.microphone.request();
+        } catch (e) {
+          debugPrint('⚠️ [GeminiService] Error solicitando permiso micrófono: $e');
+        }
       }
     }
 

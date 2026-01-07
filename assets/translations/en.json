@@ -803,6 +803,7 @@
       "searchCountry": "Search country",
       "photoError": "Error selecting photo. Please try again.",
       "audioError": "Error starting audio recording. Please try again.",
+      "microphonePermissionDenied": "Microphone permission denied. You can enable it in Settings and try again.",
       "recordingStarted": "Recording started..."
     },
     "attachments": {

@@ -108,23 +108,21 @@ class MyApp extends StatelessWidget {
               debugPrint('🌐 Configurando Gemini con idioma: $langLabel');
               GeminiService.instance.setLanguage(langLabel);
 
-              // Manejar deep links iniciales
-              if (initResult?.location != null) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  try {
-                    final initialLocation = Uri.base.path;
+              // Manejar deep links iniciales (no depende de ubicación)
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                try {
+                  final initialLocation = Uri.base.path;
 
-                    if (initialLocation.isNotEmpty && initialLocation != "/") {
-                      debugPrint("➡️ Deep link detectado: $initialLocation");
-                      router.go(initialLocation);
-                    }
-                  } catch (e, st) {
-                    debugPrint(
-                      "⚠️ Error al navegar al deep link inicial: $e\n$st",
-                    );
+                  if (initialLocation.isNotEmpty && initialLocation != "/") {
+                    debugPrint("➡️ Deep link detectado: $initialLocation");
+                    router.go(initialLocation);
                   }
-                });
-              }
+                } catch (e, st) {
+                  debugPrint(
+                    "⚠️ Error al navegar al deep link inicial: $e\n$st",
+                  );
+                }
+              });
 
               return NotificationInitializer(
                 child: MaterialApp.router(

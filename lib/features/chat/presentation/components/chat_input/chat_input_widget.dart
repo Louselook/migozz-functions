@@ -99,6 +99,7 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
       }
     } catch (e, st) {
       debugPrint('openCameraFromSuggestions error: $e\n$st');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('chat.input.photoError'.tr()),
@@ -143,6 +144,7 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
       }
     } catch (e, st) {
       debugPrint('openGalleryFromSuggestions error: $e\n$st');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('chat.input.photoError'.tr()),
@@ -193,6 +195,7 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
       }
     } catch (e, st) {
       debugPrint('startRecordingFromSuggestions error: $e\n$st');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('chat.input.audioError'.tr()),
@@ -400,8 +403,25 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
       return;
     }
 
-    await _audioManager.startRecording();
-    setState(() {});
+    try {
+      await _audioManager.startRecording();
+      setState(() {});
+    } catch (e) {
+      debugPrint('❌ Error iniciando grabación: $e');
+      if (!mounted) return;
+
+      final isDenied = e.toString().contains('microphone_permission_denied');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isDenied
+                ? ("chat.input.microphonePermissionDenied".tr())
+                : ("chat.input.audioError".tr()),
+          ),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
   }
 
   void _stopRecordingRelease() async {

@@ -438,8 +438,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                   iconEnabledColor: Colors.white.withValues(
                                     alpha: 0.8,
                                   ),
-                                  dropdownColor: Colors.white.withValues(
-                                    alpha: 0.12,
+                                  iconDisabledColor: Colors.white.withValues(
+                                    alpha: 0.6,
+                                  ),
+                                  dropdownColor: Colors.black.withValues(
+                                    alpha: 0.92,
                                   ),
                                   style: const TextStyle(
                                     color: Colors.white,
@@ -481,14 +484,37 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                         color: Colors.white,
                                       ),
                                     ),
-                                    hintText: 'edit.presentation.fields.gender'
-                                        .tr(),
                                     hintStyle: TextStyle(
                                       color: Colors.white.withValues(
                                         alpha: 0.6,
                                       ),
                                     ),
+                                    hintText: 'edit.presentation.fields.gender'.tr(),
                                   ),
+                                  hint: Text(
+                                    'edit.presentation.fields.gender'.tr(),
+                                    style: TextStyle(
+                                      color: Colors.white.withValues(alpha: 0.6),
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  selectedItemBuilder: (context) {
+                                    return genderOptions.entries
+                                        .map(
+                                          (entry) => Text(
+                                            entry.value,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        )
+                                        .toList();
+                                  },
                                   items: genderOptions.entries
                                       .map(
                                         (entry) => DropdownMenuItem<String>(

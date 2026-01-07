@@ -644,6 +644,7 @@
       "searchCountry": "Buscar país",
       "photoError": "Error al seleccionar la foto. Por favor intenta de nuevo.",
       "audioError": "Error al iniciar la grabación de audio. Por favor intenta de nuevo.",
+      "microphonePermissionDenied": "Permiso de micrófono denegado. Puedes activarlo en Ajustes y volver a intentar.",
       "recordingStarted": "Grabación iniciada..."
     },
     "attachments": {
