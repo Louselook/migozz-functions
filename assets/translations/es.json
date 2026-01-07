@@ -722,6 +722,13 @@
     "removing": "Eliminando...",
     "loader": "Cargador",
     "unknown": "Desconocido",
-    "noData": "Sin datos"
+    "noData": "Sin datos",
+    "loader_sequence": {
+      "connecting": "Conectando con {platform}...",
+      "validating": "Validando cuenta...",
+      "syncing": "Sincronizando perfil...",
+      "ready": "¡Listo!",
+      "delay": "Esto está tardando un poco más, espera un momento..."
+    }
   }
 }

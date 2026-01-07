@@ -604,7 +604,14 @@
         "removing": "Removing...",
         "loader": "Loader",
         "unknown": "Unknown",
-        "noData": "No data"
+        "noData": "No data",
+        "loader_sequence": {
+          "connecting": "Connecting with {platform}...",
+          "validating": "Validating account...",
+          "syncing": "Synchronizing profile...",
+          "ready": "Ready!",
+          "delay": "This is taking a bit longer, wait a moment..."
+        }
     },
     "buttons" : {
         "confirm" : "confirm",
