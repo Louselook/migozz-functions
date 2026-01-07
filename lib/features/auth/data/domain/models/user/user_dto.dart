@@ -31,6 +31,11 @@ class UserDTO {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  // 🆕 Timestamp de la última sincronización de redes sociales (cada 15 días)
+  final DateTime? lastSocialEcosystemSync;
+  // 🆕 Mapa para rastrear la fecha en que cada red social fue agregada
+  final Map<String, DateTime>? socialEcosystemAddedDates;
+
   UserDTO({
     required this.email,
     required this.lang,
@@ -54,6 +59,8 @@ class UserDTO {
     this.complete = true,
     DateTime? createdAt,
     DateTime? updatedAt,
+    this.lastSocialEcosystemSync,
+    this.socialEcosystemAddedDates,
   }) : username = username.trim().toLowerCase(),
        interests = interests ?? <String, List<String>>{},
        createdAt = createdAt ?? DateTime.now(),
@@ -82,6 +89,8 @@ class UserDTO {
     bool? complete,
     DateTime? createdAt,
     DateTime? updatedAt,
+    DateTime? lastSocialEcosystemSync,
+    Map<String, DateTime>? socialEcosystemAddedDates,
   }) {
     return UserDTO(
       email: email ?? this.email,
@@ -106,6 +115,10 @@ class UserDTO {
       complete: complete ?? this.complete,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      lastSocialEcosystemSync:
+          lastSocialEcosystemSync ?? this.lastSocialEcosystemSync,
+      socialEcosystemAddedDates:
+          socialEcosystemAddedDates ?? this.socialEcosystemAddedDates,
     );
   }
 
@@ -133,6 +146,12 @@ class UserDTO {
       'complete': complete,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
+      'lastSocialEcosystemSync': lastSocialEcosystemSync != null
+          ? Timestamp.fromDate(lastSocialEcosystemSync!)
+          : null,
+      'socialEcosystemAddedDates': socialEcosystemAddedDates?.map(
+        (k, v) => MapEntry(k, Timestamp.fromDate(v)),
+      ),
     };
   }
 
@@ -309,6 +328,45 @@ class UserDTO {
       profileVersion = 1;
     }
 
+    // 🆕 lastSocialEcosystemSync defensivo
+    DateTime? lastSocialEcosystemSync;
+    final lses = map['lastSocialEcosystemSync'];
+    if (lses != null) {
+      if (lses is Timestamp) {
+        lastSocialEcosystemSync = lses.toDate();
+      } else if (lses is DateTime) {
+        lastSocialEcosystemSync = lses;
+      } else if (lses is String) {
+        lastSocialEcosystemSync = DateTime.tryParse(lses);
+      } else if (lses is int) {
+        lastSocialEcosystemSync = DateTime.fromMillisecondsSinceEpoch(lses);
+      }
+    }
+
+    // 🆕 socialEcosystemAddedDates defensivo
+    Map<String, DateTime>? socialEcosystemAddedDates;
+    final sead = map['socialEcosystemAddedDates'];
+    if (sead is Map) {
+      socialEcosystemAddedDates = {};
+      final rawDates = Map<String, dynamic>.from(sead);
+      rawDates.forEach((k, v) {
+        if (v is Timestamp) {
+          socialEcosystemAddedDates![k] = v.toDate();
+        } else if (v is DateTime) {
+          socialEcosystemAddedDates![k] = v;
+        } else if (v is String) {
+          final parsed = DateTime.tryParse(v);
+          if (parsed != null) {
+            socialEcosystemAddedDates![k] = parsed;
+          }
+        } else if (v is int) {
+          socialEcosystemAddedDates![k] = DateTime.fromMillisecondsSinceEpoch(
+            v,
+          );
+        }
+      });
+    }
+
     return UserDTO(
       email: email,
       lang: lang,
@@ -332,6 +390,8 @@ class UserDTO {
       complete: complete,
       createdAt: createdAt,
       updatedAt: updatedAt,
+      lastSocialEcosystemSync: lastSocialEcosystemSync,
+      socialEcosystemAddedDates: socialEcosystemAddedDates,
     );
   }
 }
