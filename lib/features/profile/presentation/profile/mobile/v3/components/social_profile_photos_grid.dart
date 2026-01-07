@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:migozz_app/core/components/atomics/network_list.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SocialProfilePhotosGrid extends StatelessWidget {
   final List<Map<String, dynamic>>? socialEcosystem;
@@ -29,115 +30,121 @@ class SocialProfilePhotosGrid extends StatelessWidget {
                   width: 1,
                 ),
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(0),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    CachedNetworkImage(
-                      imageUrl: photos.first.imageUrl,
-                      fit: BoxFit.cover,
-                      errorWidget: (context, error, stackTrace) {
-                        return Container(
-                          color: Colors.grey[900],
-                          child: const Icon(
-                            Icons.person,
-                            color: Colors.white54,
-                            size: 40,
+              child: GestureDetector(
+                onTap: () => _launchSocialUrl(photos.first.url),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(0),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      CachedNetworkImage(
+                        imageUrl: photos.first.imageUrl,
+                        fit: BoxFit.cover,
+                        errorWidget: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.grey[900],
+                            child: const Icon(
+                              Icons.person,
+                              color: Colors.white54,
+                              size: 40,
+                            ),
+                          );
+                        },
+                        placeholder: (context, url) => const Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
                           ),
-                        );
-                      },
-                      placeholder: (context, url) => const Center(
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
                         ),
                       ),
-                    ),
-                    Positioned(
-                      bottom: 6,
-                      right: 6,
-                      child: Container(
-                        padding: const EdgeInsets.all(3),
-                        child: SvgPicture.asset(
-                          photos.first.iconAsset,
-                          fit: BoxFit.contain,
-                          width: 16,
-                          height: 16,
+                      Positioned(
+                        bottom: 6,
+                        right: 6,
+                        child: Container(
+                          padding: const EdgeInsets.all(3),
+                          child: SvgPicture.asset(
+                            photos.first.iconAsset,
+                            fit: BoxFit.contain,
+                            width: 16,
+                            height: 16,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             )
           : photos.length == 2
-              ? ListView.builder(
-                  scrollDirection: Axis.vertical,
-                  padding: const EdgeInsets.symmetric(horizontal: 00, vertical: 0),
-                  itemCount: photos.length,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemBuilder: (context, index) {
-                    return index == 0
-                        ? Container(
-                            width: MediaQuery.of(context).size.width * 0.8,
-                            height: MediaQuery.of(context).size.height * 0.22,
-                            margin: const EdgeInsets.only(bottom: 5),
-                            decoration: BoxDecoration(
-                              color: Colors.transparent,
-                              borderRadius: BorderRadius.circular(5),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.25),
-                                width: 1,
-                              ),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(0),
-                              child: Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  CachedNetworkImage(
-                                    imageUrl: photos[index].imageUrl,
-                                    fit: BoxFit.cover,
-                                    errorWidget: (context, error, stackTrace) {
-                                      return Container(
-                                        color: Colors.grey[900],
-                                        child: const Icon(
-                                          Icons.person,
-                                          color: Colors.white54,
-                                          size: 40,
-                                        ),
-                                      );
-                                    },
-                                    placeholder: (context, url) => const Center(
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
+          ? ListView.builder(
+              scrollDirection: Axis.vertical,
+              padding: const EdgeInsets.symmetric(horizontal: 00, vertical: 0),
+              itemCount: photos.length,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemBuilder: (context, index) {
+                return index == 0
+                    ? Container(
+                        width: MediaQuery.of(context).size.width * 0.8,
+                        height: MediaQuery.of(context).size.height * 0.22,
+                        margin: const EdgeInsets.only(bottom: 5),
+                        decoration: BoxDecoration(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(5),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.25),
+                            width: 1,
+                          ),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(0),
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              CachedNetworkImage(
+                                imageUrl: photos[index].imageUrl,
+                                fit: BoxFit.cover,
+                                errorWidget: (context, error, stackTrace) {
+                                  return Container(
+                                    color: Colors.grey[900],
+                                    child: const Icon(
+                                      Icons.person,
+                                      color: Colors.white54,
+                                      size: 40,
                                     ),
+                                  );
+                                },
+                                placeholder: (context, url) => const Center(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
                                   ),
-                                  Positioned(
-                                    bottom: 6,
-                                    right: 6,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(3),
-                                      child: SvgPicture.asset(
-                                        photos[index].iconAsset,
-                                        fit: BoxFit.contain,
-                                        width: 16,
-                                        height: 16,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                                ),
                               ),
-                            ),
-                          )
-                        : _PhotoCardWithAspectRatio(photo: photos[index], aspectRatio: 3);
-                  },
-                )
-              : _buildFilledGrid(context, photos),
+                              Positioned(
+                                bottom: 6,
+                                right: 6,
+                                child: Container(
+                                  padding: const EdgeInsets.all(3),
+                                  child: SvgPicture.asset(
+                                    photos[index].iconAsset,
+                                    fit: BoxFit.contain,
+                                    width: 16,
+                                    height: 16,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    : _PhotoCardWithAspectRatio(
+                        photo: photos[index],
+                        aspectRatio: 3,
+                      );
+              },
+            )
+          : _buildFilledGrid(context, photos),
     );
   }
 
@@ -194,7 +201,11 @@ class SocialProfilePhotosGrid extends StatelessWidget {
           itemCount: photos.length,
           itemBuilder: (context, index) {
             // Staggered heights: alternate between tall and short
-            final heightMultiplier = (index % 3 == 0) ? 1.4 : (index % 3 == 1) ? 0.8 : 1.0;
+            final heightMultiplier = (index % 3 == 0)
+                ? 1.4
+                : (index % 3 == 1)
+                ? 0.8
+                : 1.0;
             return SizedBox(
               height: cellSize * heightMultiplier,
               child: _PhotoCard(photo: photos[index]),
@@ -217,6 +228,7 @@ class SocialProfilePhotosGrid extends StatelessWidget {
 
         if (data is Map<String, dynamic>) {
           final profileImageUrl = data['profile_image_url']?.toString();
+          final url = data['url']?.toString();
 
           if (profileImageUrl != null && profileImageUrl.isNotEmpty) {
             final iconAsset = _getIconAsset(platform);
@@ -226,6 +238,7 @@ class SocialProfilePhotosGrid extends StatelessWidget {
                   imageUrl: profileImageUrl,
                   platform: platform,
                   iconAsset: iconAsset,
+                  url: url,
                 ),
               );
             }
@@ -248,12 +261,26 @@ class SocialPhoto {
   final String imageUrl;
   final String platform;
   final String iconAsset;
+  final String? url;
 
   SocialPhoto({
     required this.imageUrl,
     required this.platform,
     required this.iconAsset,
+    this.url,
   });
+}
+
+Future<void> _launchSocialUrl(String? url) async {
+  if (url == null || url.isEmpty) return;
+  try {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  } catch (e) {
+    debugPrint('Error al abrir URL: $e');
+  }
 }
 
 class _PhotoCard extends StatelessWidget {
@@ -267,80 +294,9 @@ class _PhotoCard extends StatelessWidget {
       builder: (context, constraints) {
         final minSide = constraints.biggest.shortestSide;
         final radius = minSide * 0.05;
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(radius),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.25),
-              width: 1,
-            ),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(radius),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                CachedNetworkImage(
-                  imageUrl: photo.imageUrl,
-                  fit: BoxFit.cover,
-                  errorWidget: (context, error, stackTrace) {
-                    return Container(
-                      color: Colors.grey[900],
-                      child: const Icon(
-                        Icons.person,
-                        color: Colors.white54,
-                        size: 40,
-                      ),
-                    );
-                  },
-                  placeholder: (context, url) => const Center(
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                Positioned(
-                  bottom: 6,
-                  right: 6,
-                  child: Container(
-                    padding: const EdgeInsets.all(3),
-                    child: SvgPicture.asset(
-                      photo.iconAsset,
-                      fit: BoxFit.contain,
-                      width: 16,
-                      height: 16,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _PhotoCardWithAspectRatio extends StatelessWidget {
-  final SocialPhoto photo;
-  final double aspectRatio;
-
-  const _PhotoCardWithAspectRatio({
-    required this.photo,
-    this.aspectRatio = 1.0,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: aspectRatio,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final minSide = constraints.biggest.shortestSide;
-          final radius = minSide * 0.05;
-          return Container(
+        return GestureDetector(
+          onTap: () => _launchSocialUrl(photo.url),
+          child: Container(
             decoration: BoxDecoration(
               color: Colors.transparent,
               borderRadius: BorderRadius.circular(radius),
@@ -350,7 +306,7 @@ class _PhotoCardWithAspectRatio extends StatelessWidget {
               ),
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(0),
+              borderRadius: BorderRadius.circular(radius),
               child: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -388,6 +344,83 @@ class _PhotoCardWithAspectRatio extends StatelessWidget {
                     ),
                   ),
                 ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _PhotoCardWithAspectRatio extends StatelessWidget {
+  final SocialPhoto photo;
+  final double aspectRatio;
+
+  const _PhotoCardWithAspectRatio({
+    required this.photo,
+    this.aspectRatio = 1.0,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AspectRatio(
+      aspectRatio: aspectRatio,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final minSide = constraints.biggest.shortestSide;
+          final radius = minSide * 0.05;
+          return GestureDetector(
+            onTap: () => _launchSocialUrl(photo.url),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(radius),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.25),
+                  width: 1,
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(0),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    CachedNetworkImage(
+                      imageUrl: photo.imageUrl,
+                      fit: BoxFit.cover,
+                      errorWidget: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.grey[900],
+                          child: const Icon(
+                            Icons.person,
+                            color: Colors.white54,
+                            size: 40,
+                          ),
+                        );
+                      },
+                      placeholder: (context, url) => const Center(
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 6,
+                      right: 6,
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        child: SvgPicture.asset(
+                          photo.iconAsset,
+                          fit: BoxFit.contain,
+                          width: 16,
+                          height: 16,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           );
