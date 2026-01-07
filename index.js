@@ -1,6 +1,10 @@
 const express = require('express');
 const cors = require('cors');
 const { extractUsername } = require('./utils/helpers');
+const { syncUserNetworks, syncAllUsersThatNeedUpdate, getSyncStatus } = require('./services/socialEcosystemSyncService');
+
+// Inicializar Firebase Admin (obligatorio antes de cualquier operación)
+require('./config/firebaseAdmin');
 
 // Importar todos los scrapers
 const scrapeTikTok = require('./scrapers/tiktok');
@@ -351,6 +355,99 @@ app.get('/snapchat/profile', async (req, res) => {
   } catch (error) {
     console.error(`❌ [Snapchat] Error:`, error.message);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// ==================== RUTAS DE SINCRONIZACIÓN ====================
+
+/**
+ * Endpoint: POST /sync/user/{userId}
+ * Sincroniza todas las redes sociales de un usuario específico
+ * Usado por:
+ * - Botón "Actualizar ahora" en la app Flutter
+ * - Testing manual
+ * - Sincronización bajo demanda
+ */
+app.post('/sync/user/:userId', async (req, res) => {
+  const { userId } = req.params;
+
+  if (!userId) {
+    return res.status(400).json({ error: 'userId requerido' });
+  }
+
+  try {
+    console.log(`\n📥 [API] POST /sync/user/${userId}`);
+    const result = await syncUserNetworks(userId);
+    
+    return res.json({
+      status: 'success',
+      message: 'Usuario sincronizado correctamente',
+      data: result,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error(`❌ [Sync] Error:`, error.message);
+    return res.status(500).json({
+      status: 'error',
+      error: error.message,
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
+
+/**
+ * Endpoint: POST /sync/all-users
+ * Sincroniza TODOS los usuarios que necesitan actualización (cada 15 días)
+ * Llamado automáticamente por Cloud Scheduler
+ * 
+ * Cloud Scheduler Config:
+ * - Frequency: 0 0 * * * (Diariamente a las 12:00 AM UTC)
+ * - URL: https://migozz-functions-[PROJECT_ID].[REGION].run.app/sync/all-users
+ * - Auth: Add OIDC token (requiere autenticación de Cloud Run)
+ */
+app.post('/sync/all-users', async (req, res) => {
+  try {
+    console.log(`\n📥 [API] POST /sync/all-users - Cloud Scheduler triggered`);
+    const result = await syncAllUsersThatNeedUpdate();
+    
+    return res.json({
+      status: 'success',
+      message: 'Sincronización global completada',
+      data: result,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error(`❌ [Sync Global] Error:`, error.message);
+    return res.status(500).json({
+      status: 'error',
+      error: error.message,
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
+
+/**
+ * Endpoint: GET /sync/status
+ * Obtiene el estado del servicio de sincronización
+ * Retorna estadísticas sobre usuarios sincronizados
+ */
+app.get('/sync/status', async (req, res) => {
+  try {
+    console.log(`\n📥 [API] GET /sync/status`);
+    const status = await getSyncStatus();
+    
+    return res.json({
+      status: 'success',
+      data: status,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error(`❌ [Status] Error:`, error.message);
+    return res.status(500).json({
+      status: 'error',
+      error: error.message,
+      timestamp: new Date().toISOString(),
+    });
   }
 });
 
