@@ -215,7 +215,7 @@ class RegisterCubit extends Cubit<RegisterState> {
             // Show custom loading dialog with cancel button
             showProfileLoader(
               context,
-              message: 'Connecting ${config.displayName}...',
+              platform: config.displayName,
               onCancel: () {
                 debugPrint('❌ User cancelled connection');
                 userCancelled = true;
