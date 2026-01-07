@@ -428,6 +428,26 @@
           "likes": "likes",
           "shares": "shares",
           "followers": "followers"
+        },
+        "fieldLabels": {
+          "followers": "Followers",
+          "likes": "Likes",
+          "media": "Media",
+          "views": "Views",
+          "viewCount": "Views",
+          "shares": "Shares",
+          "following": "Following",
+          "subscribersCount": "Subscribers",
+          "subscribers": "Subscribers",
+          "hearts": "Likes",
+          "favorites": "Favorites",
+          "videos": "Videos",
+          "videoCount": "Videos",
+          "likes_count": "Likes",
+          "mediaCount": "Media",
+          "friends": "Friends",
+          "fans": "Fans",
+          "subscriber": "Subscriber"
         }
     },
     "addSocials": {

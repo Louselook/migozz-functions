@@ -416,6 +416,26 @@
       "likes": "me gusta",
       "shares": "compartidos",
       "followers": "seguidores"
+    },
+    "fieldLabels": {
+      "followers": "Seguidores",
+      "likes": "Me gusta",
+      "media": "Media",
+      "views": "Vistas",
+      "viewCount": "Vistas",
+      "shares": "Compartidos",
+      "following": "Siguiendo",
+      "subscribersCount": "Suscriptores",
+      "subscribers": "Suscriptores",
+      "hearts": "Me gusta",
+      "favorites": "Favoritos",
+      "videos": "Videos",
+      "videoCount": "Videos",
+      "likes_count": "Me gusta",
+      "mediaCount": "Media",
+      "friends": "Amigos",
+      "fans": "Fans",
+      "subscriber": "Suscriptor"
     }
   },
   "addSocials": {

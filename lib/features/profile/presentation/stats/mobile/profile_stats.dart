@@ -391,7 +391,7 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
                                               displayKey,
                                             );
                                             return _RowData(
-                                              label: "$formatted:",
+                                              label: formatted,
                                               value: e.value.toString(),
                                             );
                                           }).toList(),
@@ -431,6 +431,14 @@ final Map<String, String> _fieldRules = {
 
 // Formateadores
 String _formatKey(String key) {
+  final translationKey = 'stats.fieldLabels.$key';
+  final translated = translationKey.tr();
+
+  // Si existe traducción, usarla; si no, formatear el texto original
+  if (translated != translationKey) {
+    return translated;
+  }
+
   final formatted = key
       .replaceAll('_', ' ')
       .replaceAllMapped(RegExp(r'([a-z])([A-Z])'), (m) => '${m[1]} ${m[2]}')
