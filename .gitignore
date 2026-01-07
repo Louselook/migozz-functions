@@ -49,3 +49,8 @@ temp/
 
 # Puppeteer
 .local-chromium/
+
+# Secrets
+serviceAccountKey.json
+.env
+*.env
