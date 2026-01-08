@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/router/app_router_notifier.dart';
+import 'package:migozz_app/features/splash/splash_screen.dart';
 import 'package:migozz_app/core/utils/pages/deleted_policy.dart';
 import 'package:migozz_app/core/utils/pages/support/support_screen.dart';
 import 'package:migozz_app/core/utils/pages/terms_and_policy_screen.dart';
@@ -29,7 +30,6 @@ import 'package:migozz_app/features/search/web/presentation/search_screen.dart'
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/notifications/presentation/notifications_list_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:migozz_app/features/profile/components/utils/Loader.dart';
 
 Widget localizedBuilder(BuildContext context, Widget Function() screenBuilder) {
   final easy = EasyLocalization.of(context);
@@ -37,10 +37,10 @@ Widget localizedBuilder(BuildContext context, Widget Function() screenBuilder) {
   if (easy == null) return screenBuilder();
 
   final controller = easy.delegate.localizationController;
-  
+
 
   if (controller == null) {
-    return const Scaffold(body: Center(child: LoaderDialog(message: 'Loading...')));
+    return const SplashScreen();
   }
 
   return screenBuilder();
@@ -72,11 +72,7 @@ class _AppGateState extends State<AppGate> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: LoaderDialog(message: 'Loading...'),
-      ),
-    );
+    return const SplashScreen();
   }
 }
 
@@ -144,9 +140,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
             future: _loadUserByUsername(username),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Scaffold(
-                  body: Center(child: LoaderDialog(message: 'Loading...')),
-                );
+                return const SplashScreen();
               }
 
               if (!snapshot.hasData || snapshot.data == null) {
@@ -261,9 +255,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
             future: _loadUserDataByEmail(otherUserId),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Scaffold(
-                  body: Center(child: LoaderDialog(message: 'Loading...')),
-                );
+                return const SplashScreen();
               }
 
               final userData = snapshot.data;

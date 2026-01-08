@@ -153,8 +153,7 @@ class _AppInitializerState extends State<AppInitializer>
 
   @override
   Widget build(BuildContext context) {
-    // Solo espera a que se obtengan los permisos
-    // El AuthCubit ya se está inicializando en paralelo y el router maneja la navegación
+    // Siempre mostrar splash mientras se inicializa
     if (_result == null) {
       return const MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -162,7 +161,7 @@ class _AppInitializerState extends State<AppInitializer>
       );
     }
 
-    // Avanza solo cuando se obtuvieron los permisos
+    // Pasar el splash screen al builder para que lo use como fallback
     return widget.builder(context, _result);
   }
 }
