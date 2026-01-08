@@ -99,23 +99,36 @@ class NotificationService {
 
   /// Request notification permissions
   Future<void> _requestPermissions() async {
-    // Request FCM permissions
-    final settings = await _messaging.requestPermission(
-      alert: true,
-      announcement: false,
-      badge: true,
-      carPlay: false,
-      criticalAlert: false,
-      provisional: false,
-      sound: true,
-    );
+    try {
+      // Request FCM permissions
+      final settings = await _messaging.requestPermission(
+        alert: true,
+        announcement: false,
+        badge: true,
+        carPlay: false,
+        criticalAlert: false,
+        provisional: false,
+        sound: true,
+      );
 
-    debugPrint('🔔 [NotificationService] FCM permission status: ${settings.authorizationStatus}');
+      debugPrint('🔔 [NotificationService] FCM permission status: ${settings.authorizationStatus}');
 
-    // Request awesome_notifications permissions
-    final isAllowed = await AwesomeNotifications().isNotificationAllowed();
-    if (!isAllowed) {
-      await AwesomeNotifications().requestPermissionToSendNotifications();
+      if (settings.authorizationStatus == AuthorizationStatus.denied) {
+        debugPrint('⚠️ [NotificationService] Notification permission denied by user');
+      } else if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+        debugPrint('✅ [NotificationService] Notification permission granted');
+      }
+
+      // Request awesome_notifications permissions
+      final isAllowed = await AwesomeNotifications().isNotificationAllowed();
+      if (!isAllowed) {
+        debugPrint('🔔 [NotificationService] Requesting awesome_notifications permission');
+        await AwesomeNotifications().requestPermissionToSendNotifications();
+      } else {
+        debugPrint('✅ [NotificationService] awesome_notifications already allowed');
+      }
+    } catch (e) {
+      debugPrint('❌ [NotificationService] Error requesting permissions: $e');
     }
   }
 

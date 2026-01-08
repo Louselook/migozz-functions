@@ -30,8 +30,17 @@ class _NotificationInitializerState extends State<NotificationInitializer> {
   void initState() {
     super.initState();
     debugPrint('🔔🔔🔔 [NotificationInitializer] initState called - Widget created!');
-    // Set up background message handler
-    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    // Set up background message handler - MUST be called early
+    _setupBackgroundHandler();
+  }
+
+  void _setupBackgroundHandler() {
+    try {
+      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+      debugPrint('✅ [NotificationInitializer] Background message handler registered');
+    } catch (e) {
+      debugPrint('❌ [NotificationInitializer] Error registering background handler: $e');
+    }
   }
 
   @override
