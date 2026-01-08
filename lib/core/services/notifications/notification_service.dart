@@ -14,6 +14,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   debugPrint('🔔 [FCM] Background message received: ${message.messageId}');
+
+  // Always show custom notification in background
+  // This ensures consistent notification display across all scenarios
+  debugPrint('🔔 [FCM] Showing background notification');
   await NotificationService.instance.showNotificationFromFCM(message);
 }
 
@@ -209,6 +213,10 @@ class NotificationService {
 
   /// Set up FCM message handlers
   void _setupMessageHandlers() {
+    // Cancel existing subscriptions to prevent duplicates
+    _foregroundSubscription?.cancel();
+    _messageOpenedSubscription?.cancel();
+
     // Handle foreground messages
     _foregroundSubscription = FirebaseMessaging.onMessage.listen((message) {
       debugPrint('🔔 [FCM] Foreground message received: ${message.messageId}');
@@ -246,7 +254,9 @@ class NotificationService {
       return;
     }
 
-    // Show the notification
+    // Always show custom notification in foreground
+    // Firebase doesn't auto-display in foreground on Android
+    debugPrint('🔔 [NotificationService] Showing foreground notification');
     showNotificationFromFCM(message);
   }
 
