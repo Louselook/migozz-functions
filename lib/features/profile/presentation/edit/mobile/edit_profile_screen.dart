@@ -125,13 +125,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         title: Text('buttons.confirm'.tr()),
         content: Text(
           "${"edit.editLocation.text1".tr()}"
-          "${"edit.editLocation.text2".tr(namedArgs: {
-                'city': newLocation.city,
-                'state': newLocation.state
-              })}"
-          "${"edit.editLocation.text3".tr(namedArgs: {
-                'country': newLocation.country
-              })}"
+          "${"edit.editLocation.text2".tr(namedArgs: {'city': newLocation.city, 'state': newLocation.state})}"
+          "${"edit.editLocation.text3".tr(namedArgs: {'country': newLocation.country})}"
           "${"edit.editLocation.text4".tr()}",
         ),
         actions: [
@@ -181,11 +176,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         AlertGeneral.show(
           context,
           1,
-          message:
-              'edit.validations.updateLocation'.tr(namedArgs: {
-            'city': newLocation.city,
-            'country': newLocation.country,
-          }),
+          message: 'edit.validations.updateLocation'.tr(
+            namedArgs: {
+              'city': newLocation.city,
+              'country': newLocation.country,
+            },
+          ),
         );
       } catch (e) {
         if (!mounted) return;
@@ -195,9 +191,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         AlertGeneral.show(
           context,
           4,
-          message: "edit.validations.errorUpdateLocation".tr(namedArgs: {
-            'error': e.toString(),
-          }),
+          message: "edit.validations.errorUpdateLocation".tr(
+            namedArgs: {'error': e.toString()},
+          ),
         );
       }
     } else {
@@ -454,34 +450,48 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                       vertical: 16,
                                     ),
                                     border: InputBorder.none,
-                                    prefixIcon: Container(
-                                      margin: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 8,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                          colors: [
-                                            Colors.white.withValues(
-                                              alpha: 0.14,
+                                    prefixIcon: Padding(
+                                      padding: const EdgeInsets.all(6.0),
+                                      child: Container(
+                                        height: 45,
+                                        width: 45,
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: [
+                                              Colors.white.withValues(
+                                                alpha: 0.15,
+                                              ),
+                                              Colors.white.withValues(
+                                                alpha: 0.05,
+                                              ),
+                                            ],
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            14,
+                                          ),
+                                          border: Border.all(
+                                            color: Colors.white.withValues(
+                                              alpha: 0.25,
                                             ),
-                                            Colors.white.withValues(
-                                              alpha: 0.04,
+                                            width: 1,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(
+                                                alpha: 0.1,
+                                              ),
+                                              blurRadius: 4,
+                                              offset: const Offset(0, 2),
                                             ),
                                           ],
                                         ),
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(
-                                          color: Colors.white.withValues(
-                                            alpha: 0.16,
-                                          ),
+                                        child: const Icon(
+                                          Icons.transgender,
+                                          color: Colors.white,
+                                          size: 20,
                                         ),
-                                      ),
-                                      child: const Icon(
-                                        Icons.transgender,
-                                        color: Colors.white,
                                       ),
                                     ),
                                     hintStyle: TextStyle(
@@ -489,12 +499,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                         alpha: 0.6,
                                       ),
                                     ),
-                                    hintText: 'edit.presentation.fields.gender'.tr(),
+                                    hintText: 'edit.presentation.fields.gender'
+                                        .tr(),
                                   ),
                                   hint: Text(
                                     'edit.presentation.fields.gender'.tr(),
                                     style: TextStyle(
-                                      color: Colors.white.withValues(alpha: 0.6),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.8,
+                                      ),
                                       fontSize: 15,
                                       fontWeight: FontWeight.w500,
                                     ),
@@ -600,6 +613,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ProfileOptionButton(
                           icon: Icons.logout,
                           text: 'edit.presentation.logOut'.tr(),
+                          color: Colors.white.withValues(alpha: 0.15),
                           onTap: () async {
                             await context.read<AuthCubit>().logout();
                           },
