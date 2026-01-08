@@ -475,7 +475,10 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
 
   Widget _buildInputArea() {
     if (_audioManager.isRecording) {
-      return RecordingDisplay(duration: _audioManager.duration);
+      return RecordingDisplay(
+        duration: _audioManager.duration,
+        amplitude: _audioManager.currentAmplitude,
+      );
     }
 
     if (_audioManager.audioPath != null) {
@@ -555,7 +558,8 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
             onCountryChanged: (country) {
               setState(() {
                 if (_phoneNationalNumber.isNotEmpty) {
-                  _completePhoneNumber = '+${country.dialCode}$_phoneNationalNumber';
+                  _completePhoneNumber =
+                      '+${country.dialCode}$_phoneNationalNumber';
                 }
               });
             },

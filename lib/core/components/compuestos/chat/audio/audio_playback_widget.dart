@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
-import 'package:migozz_app/core/color.dart';
 
 class AudioPlaybackWidget extends StatefulWidget {
   const AudioPlaybackWidget({
@@ -40,8 +39,12 @@ class _AudioPlaybackWidgetState extends State<AudioPlaybackWidget> {
   void initState() {
     super.initState();
     _player = PlayerController();
+    
+    // 🎵 Escuchar cambios de posición para sincronizar el waveform
     _player.onCurrentDurationChanged.listen((ms) {
       if (!mounted) return;
+      // Actualizar UI para que el waveform se repinte en la nueva posición
+      setState(() {});
     });
 
     _player.onCompletion.listen((_) {
@@ -243,13 +246,10 @@ class _AudioPlaybackWidgetState extends State<AudioPlaybackWidget> {
                                   size: const Size(double.infinity, 36),
                                   playerWaveStyle: PlayerWaveStyle(
                                     fixedWaveColor: const Color(0xFF555555),
-                                    liveWaveGradient:
-                                        LinearGradient(
-                                          colors:
-                                              AppColors.primaryGradient.colors,
-                                        ).createShader(
-                                          const Rect.fromLTWH(0, 0, 200, 24),
-                                        ),
+                                    liveWaveColor: const Color(0xFFDF48A5),
+                                    seekLineColor: const Color(0xFFDF48A5),
+                                    seekLineThickness: 2.0,
+                                    showSeekLine: true,
                                     waveThickness: 1.2,
                                     spacing: 1.8,
                                     showBottom: true,

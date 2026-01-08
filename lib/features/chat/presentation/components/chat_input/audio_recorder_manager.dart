@@ -2,7 +2,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:audio_waveforms/audio_waveforms.dart';
@@ -15,14 +14,28 @@ class AudioRecorderManager {
   Duration maxDuration = Duration.zero;
   String? audioPath;
 
+  // 🎙️ Amplitud de audio en tiempo real (0.0 a 1.0)
+  double currentAmplitude = 0.0;
+
+  double _smoothedAmplitude = 0.0;
+
+  // Hysteresis gate to keep silence stable across devices.
+  static const double _openGateDb = -40.0;
+  static const double _closeGateDb = -48.0;
+  static const double _attack = 0.55;
+  static const double _release = 0.20;
+
+  bool _gateOpen = false;
+
   // Controllers - IGUAL que EditRecordScreen
   final AudioRecorder _recorder = AudioRecorder();
-  final AudioPlayer _audioPlayer = AudioPlayer();
   late PlayerController playerController;
 
-  // SOLO 2 subscripciones necesarias (como EditRecordScreen)
-  StreamSubscription? _positionSubscription;
-  StreamSubscription? _playerStateSubscription;
+  // Subscripciones para preview (playerController-driven, same as chat)
+  StreamSubscription<int>? _playerPositionSubscription;
+  StreamSubscription<PlayerState>? _playerStateSubscription;
+  StreamSubscription<void>? _playerCompletionSubscription;
+  StreamSubscription? _amplitudeSubscription;
 
   VoidCallback? onStateChanged;
 
@@ -34,39 +47,108 @@ class AudioRecorderManager {
 
   void _initializeControllers() {
     playerController = PlayerController();
+    // Smoother progress updates.
+    playerController.updateFrequency = UpdateFrequency.high;
     _cancelSubscriptions();
     _setupSubscriptions();
   }
 
   void _setupSubscriptions() {
-    // Sincronización simple (como EditRecordScreen)
-    _positionSubscription = _audioPlayer.positionStream.listen((position) {
-      if (!isRecording) {
-        duration = position;
-        // SOLO sincronizar visual, SIN interferir con reproducción
-        try {
-          playerController.seekTo(position.inMilliseconds);
-        } catch (_) {}
-        onStateChanged?.call();
-      }
-    });
+    _playerPositionSubscription = playerController.onCurrentDurationChanged
+        .listen((ms) {
+          if (isRecording || audioPath == null) return;
+          duration = Duration(milliseconds: ms);
+          onStateChanged?.call();
+        });
 
-    // Detectar fin de reproducción
-    _playerStateSubscription = _audioPlayer.playerStateStream.listen((state) {
+    _playerStateSubscription = playerController.onPlayerStateChanged.listen((
+      state,
+    ) {
       final wasPlaying = isPlaying;
-      isPlaying = state.playing;
-
-      if (state.processingState == ProcessingState.completed) {
-        isPlaying = false;
-        duration = Duration.zero;
-        try {
-          playerController.seekTo(0);
-        } catch (_) {}
-        onStateChanged?.call();
-      } else if (wasPlaying != isPlaying) {
+      isPlaying = state == PlayerState.playing;
+      if (wasPlaying != isPlaying) {
         onStateChanged?.call();
       }
     });
+
+    _playerCompletionSubscription = playerController.onCompletion.listen((_) {
+      isPlaying = false;
+      duration = Duration.zero;
+      try {
+        playerController.seekTo(0);
+      } catch (_) {}
+      onStateChanged?.call();
+    });
+  }
+
+  double _normalizeDbToUnit(double db) {
+    if (db.isNaN || db.isInfinite) return 0.0;
+
+    // Hysteresis: require a higher db to open than to stay open.
+    if (_gateOpen) {
+      if (db <= _closeGateDb) {
+        _gateOpen = false;
+        return 0.0;
+      }
+    } else {
+      if (db >= _openGateDb) {
+        _gateOpen = true;
+      } else {
+        return 0.0;
+      }
+    }
+
+    // Map [_closeGateDb .. 0] -> [0 .. 1]
+    final v = (db - _closeGateDb) / (0.0 - _closeGateDb);
+    return v.clamp(0.0, 1.0);
+  }
+
+  double _applyEnvelope(double target) {
+    final coeff = target > _smoothedAmplitude ? _attack : _release;
+    _smoothedAmplitude =
+        _smoothedAmplitude + (target - _smoothedAmplitude) * coeff;
+    return _smoothedAmplitude.clamp(0.0, 1.0);
+  }
+
+  Future<void> _resetPreviewPlayback() async {
+    // Ensure the player returns to start (without clearing waveform).
+    try {
+      await playerController.pausePlayer();
+    } catch (_) {}
+    try {
+      playerController.seekTo(0);
+    } catch (_) {}
+  }
+
+  Future<void> _waitForFileStable(
+    String path, {
+    Duration timeout = const Duration(seconds: 2),
+    Duration poll = const Duration(milliseconds: 120),
+    int stableTicks = 2,
+  }) async {
+    final file = File(path);
+    final deadline = DateTime.now().add(timeout);
+    int sameCount = 0;
+    int lastSize = -1;
+
+    while (DateTime.now().isBefore(deadline)) {
+      int size;
+      try {
+        size = await file.length();
+      } catch (_) {
+        size = -1;
+      }
+
+      if (size > 0 && size == lastSize) {
+        sameCount++;
+        if (sameCount >= stableTicks) return;
+      } else {
+        sameCount = 0;
+        lastSize = size;
+      }
+
+      await Future<void>.delayed(poll);
+    }
   }
 
   Future<void> startRecording() async {
@@ -93,11 +175,17 @@ class AudioRecorderManager {
 
     isRecording = true;
     duration = Duration.zero;
+    currentAmplitude = 0.0;
+    _smoothedAmplitude = 0.0;
+    _gateOpen = false;
     audioPath = path;
     onStateChanged?.call();
 
     // Timer manual para duración (más confiable)
     _startDurationTimer();
+
+    // 🎙️ Escuchar amplitud del micrófono
+    _setupAmplitudeListener();
   }
 
   Timer? _durationTimer;
@@ -114,34 +202,68 @@ class AudioRecorderManager {
     });
   }
 
+  void _setupAmplitudeListener() {
+    _amplitudeSubscription?.cancel();
+
+    // record:^6 => onAmplitudeChanged(Duration) returns Stream<Amplitude>
+    // This makes the visualizer reactive: it stays low on silence.
+    _amplitudeSubscription = _recorder
+        .onAmplitudeChanged(const Duration(milliseconds: 100))
+        .listen(
+          (amp) {
+            if (!isRecording) return;
+
+            final db = (amp.current as num?)?.toDouble() ?? -160.0;
+            final target = _normalizeDbToUnit(db);
+            final next = _applyEnvelope(target);
+
+            // Extra deadband: treat tiny values as silence to stop "palpitar".
+            final snapped = next < 0.06 ? 0.0 : next;
+
+            // Avoid spamming rebuilds if change is tiny.
+            if ((snapped - currentAmplitude).abs() < 0.02) return;
+            currentAmplitude = snapped;
+            onStateChanged?.call();
+          },
+          onError: (e) {
+            debugPrint('⚠️ Error reading mic amplitude: $e');
+          },
+        );
+  }
+
   Future<void> stopRecording() async {
     debugPrint('⏹️ [AudioManager] Deteniendo grabación...');
 
     _durationTimer?.cancel();
+    _amplitudeSubscription?.cancel();
     final path = await _recorder.stop();
     isRecording = false;
+    currentAmplitude = 0.0;
+    _smoothedAmplitude = 0.0;
+    _gateOpen = false;
     audioPath = path;
 
     if (path != null && File(path).existsSync()) {
       try {
-        // Preparar waveform SOLO para visualización
+        // Some devices/codecs finalize the m4a asynchronously. Wait briefly
+        // so the extracted waveform matches what will be sent/played later.
+        await _waitForFileStable(path);
+
+        // IMPORTANT: Use the same approach as the sent message widget:
+        // PlayerController.preparePlayer(shouldExtractWaveform: true).
         await playerController.preparePlayer(
           path: path,
           shouldExtractWaveform: true,
-          noOfSamples: 120,
         );
 
-        // Configurar just_audio para reproducción
-        await _audioPlayer.setFilePath(path);
-        final d = await _audioPlayer.load();
-        if (d != null) {
-          maxDuration = d;
-        }
+        maxDuration = Duration(milliseconds: playerController.maxDuration);
+        duration = Duration.zero;
+        isPlaying = false;
+        await _resetPreviewPlayback();
       } catch (e) {
         debugPrint('⚠️ Error preparando audio: $e');
       }
 
-      duration = Duration.zero;
       debugPrint('✅ Grabación finalizada: $path (${maxDuration.inSeconds}s)');
       onStateChanged?.call();
     }
@@ -151,27 +273,29 @@ class AudioRecorderManager {
     if (audioPath == null) return;
 
     try {
-      // Configurar estado igual que EditRecordScreen
-      if (_audioPlayer.playerState.processingState == ProcessingState.idle ||
-          _audioPlayer.playerState.processingState ==
-              ProcessingState.completed) {
-        await _audioPlayer.setFilePath(audioPath!);
+      // Ensure prepared (in case the user left/returned quickly).
+      if (playerController.maxDuration <= 0) {
+        await _waitForFileStable(audioPath!);
+        await playerController.preparePlayer(
+          path: audioPath!,
+          shouldExtractWaveform: true,
+        );
+        maxDuration = Duration(milliseconds: playerController.maxDuration);
       }
 
-      // Resetear si llegó al final
-      if (_audioPlayer.position >= (_audioPlayer.duration ?? Duration.zero)) {
-        await _audioPlayer.seek(Duration.zero);
-        try {
-          playerController.seekTo(0);
-        } catch (_) {}
+      // Restart if we are at the end.
+      if (maxDuration > Duration.zero && duration >= maxDuration) {
+        await _resetPreviewPlayback();
+        duration = Duration.zero;
       }
 
-      await _audioPlayer.play();
+      // Give the UI a short moment to paint before audio starts.
+      onStateChanged?.call();
+      await Future<void>.delayed(const Duration(milliseconds: 80));
 
-      // EXPERIMENTAL: Probar si startPlayer ayuda (como EditRecordScreen)
-      try {
-        await playerController.startPlayer();
-      } catch (_) {}
+      await playerController.startPlayer();
+      isPlaying = true;
+      onStateChanged?.call();
 
       debugPrint('🎵 Reproduciendo audio');
     } catch (e) {
@@ -181,12 +305,12 @@ class AudioRecorderManager {
 
   Future<void> stopPlaying() async {
     try {
-      await _audioPlayer.pause();
-
-      // También pausar PlayerController (como EditRecordScreen)
       try {
         await playerController.pausePlayer();
       } catch (_) {}
+
+      isPlaying = false;
+      onStateChanged?.call();
 
       debugPrint('⏸️ Audio pausado');
     } catch (e) {
@@ -200,14 +324,17 @@ class AudioRecorderManager {
     try {
       final wasPlaying = isPlaying;
 
-      await _audioPlayer.seek(position);
       try {
-        playerController.seekTo(position.inMilliseconds);
+        await playerController.seekTo(position.inMilliseconds);
       } catch (_) {}
 
-      // Continuar reproduciendo si estaba sonando
+      duration = position;
+      onStateChanged?.call();
+
       if (wasPlaying) {
-        await _audioPlayer.play();
+        try {
+          await playerController.startPlayer();
+        } catch (_) {}
       }
 
       debugPrint('🔍 Seek a ${position.inSeconds}s');
@@ -217,13 +344,17 @@ class AudioRecorderManager {
   }
 
   Future<void> clearReferences() async {
-    debugPrint('🧹 [AudioManager] Limpiando referencias (sin borrar archivo)...');
+    debugPrint(
+      '🧹 [AudioManager] Limpiando referencias (sin borrar archivo)...',
+    );
 
     try {
       _durationTimer?.cancel();
 
       if (isPlaying) {
-        await _audioPlayer.stop();
+        try {
+          await playerController.stopPlayer();
+        } catch (_) {}
         isPlaying = false;
       }
 
@@ -250,7 +381,7 @@ class AudioRecorderManager {
 
       _initializeControllers();
       onStateChanged?.call();
-      
+
       debugPrint('✅ [AudioManager] Referencias limpiadas (archivo preservado)');
     } catch (e) {
       debugPrint('❌ Error en clearReferences: $e');
@@ -266,7 +397,9 @@ class AudioRecorderManager {
       _durationTimer?.cancel();
 
       if (isPlaying) {
-        await _audioPlayer.stop();
+        try {
+          await playerController.stopPlayer();
+        } catch (_) {}
         isPlaying = false;
       }
 
@@ -311,10 +444,14 @@ class AudioRecorderManager {
   }
 
   void _cancelSubscriptions() {
-    _positionSubscription?.cancel();
-    _positionSubscription = null;
+    _playerPositionSubscription?.cancel();
+    _playerPositionSubscription = null;
     _playerStateSubscription?.cancel();
     _playerStateSubscription = null;
+    _playerCompletionSubscription?.cancel();
+    _playerCompletionSubscription = null;
+    _amplitudeSubscription?.cancel();
+    _amplitudeSubscription = null;
     _durationTimer?.cancel();
   }
 
@@ -324,7 +461,6 @@ class AudioRecorderManager {
     try {
       _recorder.dispose();
       playerController.dispose();
-      _audioPlayer.dispose();
     } catch (_) {}
   }
 }
