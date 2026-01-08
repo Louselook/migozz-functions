@@ -558,6 +558,8 @@
       "interest": "Editar mis intereses",
       "socials": "Editar redes sociales",
       "logOut": "Cerrar sesión",
+      "logOutConfirmation": "¿Estás seguro de que quieres cerrar sesión?",
+      "logOutLoading": "Cerrando sesión...",
       "loadingProfile": "Cargando perfil...",
       "locationNotSet": "Ubicacion no establecida",
       "deleteAccount": {

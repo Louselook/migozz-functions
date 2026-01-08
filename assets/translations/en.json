@@ -572,6 +572,8 @@
             "interest" : "Edit My Interests",
             "socials" : "Edit Socials",
             "logOut" : "Logout",
+                "logOutConfirmation" : "Are you sure you want to log out?",
+                "logOutLoading": "Logging out...",
             "deleteAccount": {
                 "title": "Delete account",
                 "description": "Are you sure you want to delete your account?\n\nThis action will start a deletion process that may take up to 30 business days to be fully completed. During this time, all your data will be permanently removed and cannot be recovered.",
