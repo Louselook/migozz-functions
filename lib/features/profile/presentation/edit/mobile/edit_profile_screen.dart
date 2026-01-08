@@ -615,7 +615,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           text: 'edit.presentation.logOut'.tr(),
                           color: Colors.white.withValues(alpha: 0.15),
                           onTap: () async {
-                            await context.read<AuthCubit>().logout();
+                            final confirm = await AlertGeneral.showConfirm(
+                              context,
+                              title: 'edit.presentation.logOut'.tr(),
+                              message: 'edit.presentation.logOutConfirmation'
+                                  .tr(),
+                            );
+                            if (confirm && context.mounted) {
+                              showProfileLoader(
+                                context,
+                                message: 'edit.presentation.logOutLoading'.tr(),
+                              );
+                              try {
+                                await context.read<AuthCubit>().logout();
+                              } finally {
+                                if (context.mounted) {
+                                  Navigator.of(
+                                    context,
+                                    rootNavigator: true,
+                                  ).pop();
+                                }
+                              }
+                            }
                           },
                         ),
 
