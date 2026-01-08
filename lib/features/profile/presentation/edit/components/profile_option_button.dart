@@ -4,12 +4,14 @@ class ProfileOptionButton extends StatelessWidget {
   final IconData icon;
   final String text;
   final VoidCallback? onTap;
+  final Color? color;
 
   const ProfileOptionButton({
     super.key,
     required this.icon,
     required this.text,
     this.onTap,
+    this.color,
   });
 
   @override
@@ -25,7 +27,7 @@ class ProfileOptionButton extends StatelessWidget {
           vertical: width * 0.03,
         ),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.04),
+          color: color ?? Colors.white.withValues(alpha: 0.04),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
           boxShadow: [

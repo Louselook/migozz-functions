@@ -68,7 +68,9 @@ class _AppInitializerState extends State<AppInitializer>
       return;
     }
     _isInitializing = true;
-    debugPrint('🚀 [AppInit] Inicializando (sin solicitar permisos globales)...');
+    debugPrint(
+      '🚀 [AppInit] Inicializando (sin solicitar permisos globales)...',
+    );
 
     try {
       bool microphoneGranted = false;
@@ -94,7 +96,8 @@ class _AppInitializerState extends State<AppInitializer>
           final location = loc.Location();
           final serviceEnabled = await location.serviceEnabled();
           final permissionStatus = await location.hasPermission();
-          locationGranted = serviceEnabled &&
+          locationGranted =
+              serviceEnabled &&
               (permissionStatus == loc.PermissionStatus.granted ||
                   permissionStatus == loc.PermissionStatus.grantedLimited);
 
@@ -102,10 +105,15 @@ class _AppInitializerState extends State<AppInitializer>
             final svc = LocationService();
             locationDto = await svc
                 .initAndFetchAddress(lang: lang)
-                .timeout(const Duration(seconds: 10), onTimeout: () {
-              debugPrint('⏱️ [LocationService] Timeout obteniendo ubicación');
-              return null;
-            });
+                .timeout(
+                  const Duration(seconds: 10),
+                  onTimeout: () {
+                    debugPrint(
+                      '⏱️ [LocationService] Timeout obteniendo ubicación',
+                    );
+                    return null;
+                  },
+                );
           }
         } catch (e) {
           debugPrint('⚠️ [AppInit] No se pudo precargar ubicación: $e');
@@ -129,6 +137,15 @@ class _AppInitializerState extends State<AppInitializer>
       debugPrint(' Inicialización completada');
     } catch (e) {
       debugPrint('❌ Error durante inicialización: $e');
+      if (mounted) {
+        setState(() {
+          _result = AppInitResult(
+            location: null,
+            microphoneGranted: false,
+            locationGranted: false,
+          );
+        });
+      }
     } finally {
       _isInitializing = false;
     }

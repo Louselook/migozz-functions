@@ -630,7 +630,7 @@
           "validating": "Validating account...",
           "syncing": "Synchronizing profile...",
           "ready": "Ready!",
-          "delay": "This is taking a bit longer, wait a moment..."
+          "delay": "Thank you for your patience. We’re working on it."
         }
     },
     "buttons" : {
