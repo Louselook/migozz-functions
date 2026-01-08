@@ -47,6 +47,10 @@ if (!admin.apps.length) {
 // Exportar Firestore
 const db = admin.firestore();
 
+// Evita errores al escribir campos undefined (muy común en scrapers)
+// Aun así, el servicio también sanitiza los objetos antes de guardar.
+db.settings({ ignoreUndefinedProperties: true });
+
 module.exports = {
   admin,
   db,

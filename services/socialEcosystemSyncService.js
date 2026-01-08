@@ -9,6 +9,7 @@
  */
 
 const { db } = require('../config/firebaseAdmin');
+const { extractUsername } = require('../utils/helpers');
 
 // Importar todos los scrapers
 const scrapeTikTok = require('../scrapers/tiktok');
@@ -52,6 +53,111 @@ const SCRAPERS = {
   snapchat: scrapeSnapchat,
 };
 
+function isPlainObject(value) {
+  return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+function removeUndefinedDeep(value) {
+  if (Array.isArray(value)) {
+    return value
+      .map(removeUndefinedDeep)
+      .filter(v => v !== undefined);
+  }
+
+  if (isPlainObject(value)) {
+    const out = {};
+    for (const [k, v] of Object.entries(value)) {
+      if (v === undefined) continue;
+      const cleaned = removeUndefinedDeep(v);
+      if (cleaned === undefined) continue;
+      out[k] = cleaned;
+    }
+    return out;
+  }
+
+  return value;
+}
+
+/**
+ * Normaliza un item de socialEcosystem del usuario a una lista de entradas.
+ * Soporta 2 formatos:
+ *  A) { platform: 'instagram', username: 'x' }
+ *  B) { instagram: { username: 'x', ... } } (formato actual en tu app)
+ */
+function normalizeSocialEcosystemEntry(entry) {
+  const items = [];
+
+  if (!entry) return items;
+
+  // Formato A
+  if (isPlainObject(entry) && entry.platform && entry.username) {
+    const platform = String(entry.platform).toLowerCase();
+    const usernameRaw = String(entry.username);
+    if (platform && usernameRaw) {
+      items.push({
+        platform,
+        username: extractUsername(usernameRaw, platform),
+      });
+    }
+    return items;
+  }
+
+  // Formato B
+  if (isPlainObject(entry)) {
+    for (const [platformKey, platformData] of Object.entries(entry)) {
+      const platform = String(platformKey).toLowerCase();
+      if (!platform || !SCRAPERS[platform]) continue;
+
+      let usernameCandidate = null;
+      if (typeof platformData === 'string') {
+        usernameCandidate = platformData;
+      } else if (isPlainObject(platformData)) {
+        usernameCandidate =
+          platformData.username ||
+          platformData.id ||
+          platformData.url;
+      }
+
+      if (!usernameCandidate) continue;
+
+      items.push({
+        platform,
+        username: extractUsername(String(usernameCandidate), platform),
+      });
+    }
+  }
+
+  return items;
+}
+
+function upsertPlatformInSocialEcosystem(socialEcosystem, platform, platformPayload) {
+  const next = Array.isArray(socialEcosystem) ? [...socialEcosystem] : [];
+  const payloadClean = removeUndefinedDeep(platformPayload);
+
+  // Buscar item existente del tipo { platform: {...} }
+  const idx = next.findIndex(
+    (item) => isPlainObject(item) && Object.prototype.hasOwnProperty.call(item, platform),
+  );
+
+  if (idx >= 0) {
+    const existing = next[idx];
+    const existingData = isPlainObject(existing[platform]) ? existing[platform] : {};
+    next[idx] = {
+      ...existing,
+      [platform]: {
+        ...existingData,
+        ...payloadClean,
+      },
+    };
+  } else {
+    next.push({
+      [platform]: payloadClean,
+    });
+  }
+
+  return next;
+}
+
 /**
  * Sincroniza todas las redes sociales de un usuario
  * @param {string} userId - ID del usuario en Firestore
@@ -89,33 +195,53 @@ async function syncUserNetworks(userId) {
       return results;
     }
 
-    // 2. Iterar sobre cada red social
-    for (const networkData of socialEcosystem) {
-      const { platform, username } = networkData;
-      
+    // 2. Normalizar lista de redes a sincronizar (soporta estructura actual del front)
+    const networksToSync = [];
+    for (const entry of socialEcosystem) {
+      networksToSync.push(...normalizeSocialEcosystemEntry(entry));
+    }
+
+    if (networksToSync.length === 0) {
+      console.log('⚠️ No se pudieron interpretar redes sociales (estructura inesperada)');
+      results.skipped = ['Estructura socialEcosystem inválida'];
+      return results;
+    }
+
+    // Copia que vamos a ir actualizando con los datos scrapeados
+    let updatedSocialEcosystem = socialEcosystem;
+
+    // 3. Iterar sobre cada red social
+    for (const { platform, username } of networksToSync) {
       console.log(`\n   🌐 Scrapeando ${platform}: ${username}...`);
-      
+
       try {
-        // Obtener scraper para esta plataforma
-        const scraper = SCRAPERS[platform.toLowerCase()];
+        const scraper = SCRAPERS[platform];
         if (!scraper) {
           throw new Error(`Scraper no disponible para ${platform}`);
         }
 
-        // Ejecutar scraper
-        const profileData = await scraper(username);
+        const profileDataRaw = await scraper(username);
+        const profileData = removeUndefinedDeep(profileDataRaw || {});
 
-        // Guardar en historial
+        // Guardar en historial (sanitizado)
         await saveToHistory(userId, platform, profileData);
+
+        // Actualizar el socialEcosystem del usuario con la data fresca
+        updatedSocialEcosystem = upsertPlatformInSocialEcosystem(
+          updatedSocialEcosystem,
+          platform,
+          profileData,
+        );
 
         results.successful.push({
           platform,
           username,
-          followers: profileData.followers,
+          followers: profileData.followers ?? null,
           timestamp: new Date(),
         });
 
-        console.log(`   ✅ ${platform}: ${profileData.followers} followers`);
+        const followersText = profileData.followers ?? 'N/A';
+        console.log(`   ✅ ${platform}: ${followersText} followers`);
       } catch (error) {
         console.error(`   ❌ ${platform} Error:`, error.message);
         results.failed.push({
@@ -127,16 +253,26 @@ async function syncUserNetworks(userId) {
       }
     }
 
-    // 3. Actualizar lastSocialEcosystemSync en el documento del usuario
+    // 4. Actualizar usuario en Firestore
     const syncEndTime = new Date();
-    await db.collection('users').doc(userId).update({
-      lastSocialEcosystemSync: syncEndTime,
-      socialEcosystemSyncStatus: {
-        successful: results.successful.length,
-        failed: results.failed.length,
-        lastSyncTime: syncEndTime,
-      },
-    });
+
+    const existingStatus = isPlainObject(userData.socialEcosystemSyncStatus)
+      ? userData.socialEcosystemSyncStatus
+      : {};
+
+    await db.collection('users').doc(userId).update(
+      removeUndefinedDeep({
+        socialEcosystem: updatedSocialEcosystem,
+        lastSocialEcosystemSync: syncEndTime,
+        socialEcosystemSyncStatus: {
+          ...existingStatus,
+          successful: results.successful.length,
+          failed: results.failed.length,
+          lastSyncTime: syncEndTime,
+          updatedAt: syncEndTime,
+        },
+      }),
+    );
 
     results.totalTime = syncEndTime - syncStartTime;
 
@@ -234,21 +370,27 @@ async function syncAllUsersThatNeedUpdate() {
  * @param {Object} profileData - Datos del perfil scrapeado
  */
 async function saveToHistory(userId, platform, profileData) {
-  const historyEntry = {
-    platform: platform.toLowerCase(),
+  const safePlatform = String(platform || '').toLowerCase();
+  const safeData = removeUndefinedDeep(profileData || {});
+
+  const historyEntry = removeUndefinedDeep({
+    platform: safePlatform,
     data: {
-      id: profileData.id,
-      username: profileData.username,
-      full_name: profileData.full_name,
-      bio: profileData.bio,
-      followers: profileData.followers,
-      profile_image_url: profileData.profile_image_url,
-      profile_image_saved: profileData.profile_image_saved || false,
-      profile_image_path: profileData.profile_image_path || null,
-      url: profileData.url,
+      // Campos comunes (si existen)
+      id: safeData.id,
+      username: safeData.username,
+      full_name: safeData.full_name,
+      bio: safeData.bio,
+      followers: safeData.followers,
+      following: safeData.following,
+      verified: safeData.verified,
+      profile_image_url: safeData.profile_image_url,
+      url: safeData.url,
+      // Extra: guarda todo el payload también para debug/histórico
+      raw: safeData,
     },
     syncedAt: new Date(),
-  };
+  });
 
   try {
     // Guardar en subcollection: users/{userId}/socialEcosystemHistory/syncs/{timestamp}
