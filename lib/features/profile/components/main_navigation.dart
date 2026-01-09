@@ -34,6 +34,8 @@ class _MainNavigationState extends State<MainNavigation> {
   bool _tutorialScheduled = false;
 
   late final TutorialKeys _tutorialKeys = widget.tutorialKeys ?? TutorialKeys();
+  final GlobalKey<EditProfileScreenState> editProfileKey =
+      GlobalKey<EditProfileScreenState>();
 
   @override
   void initState() {
@@ -87,6 +89,26 @@ class _MainNavigationState extends State<MainNavigation> {
       debugPrint('⚠️ [MainNavigation] Ya estás en el index $index, ignorando');
       return;
     }
+
+    if (_currentIndex == 3 && index != 3) {
+      // Si estamos saliendo de "Editar Perfil", verificar cambios
+      _checkAndNavigate(index);
+      return;
+    }
+
+    _performNavigation(index);
+  }
+
+  Future<void> _checkAndNavigate(int index) async {
+    final state = editProfileKey.currentState;
+    if (state != null) {
+      final canLeave = await state.confirmDiscardOrSave();
+      if (!canLeave) return;
+    }
+    _performNavigation(index);
+  }
+
+  void _performNavigation(int index) {
     if (index == 1) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         searchKey.currentState?.checkAndMaybeOpenEditInterests();
@@ -107,7 +129,11 @@ class _MainNavigationState extends State<MainNavigation> {
     final currentUser = authState.userProfile;
 
     if (currentUser == null) {
-      AlertGeneral.show(context, 4, message: 'No se ha encontrado usuario activo');
+      AlertGeneral.show(
+        context,
+        4,
+        message: 'No se ha encontrado usuario activo',
+      );
       return;
     }
 
@@ -147,7 +173,7 @@ class _MainNavigationState extends State<MainNavigation> {
       SearchScreen(key: searchKey, tutorialKeys: _tutorialKeys),
 
       ProfileStatsScreen(tutorialKeys: _tutorialKeys),
-      EditProfileScreen(tutorialKeys: _tutorialKeys),
+      EditProfileScreen(key: editProfileKey, tutorialKeys: _tutorialKeys),
     ];
 
     return Scaffold(
