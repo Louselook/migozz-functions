@@ -178,6 +178,30 @@ class _IaChatScreenState extends State<IaChatScreen> {
   }
 
   void _handleNavigation(Map<String, dynamic> botResponse) {
+    final action = botResponse['action'];
+
+    // ✅ Allow bot-driven media actions (eg. user typed: "quiero tomar una foto")
+    // without requiring suggestion chip taps.
+    if (!kIsWeb && action is String) {
+      switch (action) {
+        case 'open_camera':
+          chatInputKey.currentState?.openCameraFromSuggestions();
+          return;
+        case 'open_gallery':
+          chatInputKey.currentState?.openGalleryFromSuggestions();
+          return;
+        case 'open_recorder':
+          chatInputKey.currentState?.startRecordingFromSuggestions();
+          return;
+        case 'use_profile_picture':
+          final imageUrl = botResponse['imageUrl']?.toString() ?? '';
+          if (imageUrl.isNotEmpty) {
+            _chatController.sendAvatarPhoto(imageUrl);
+          }
+          return;
+      }
+    }
+
     ChatNavigationHandler.handleBotAction(
       context: context,
       botResponse: botResponse,

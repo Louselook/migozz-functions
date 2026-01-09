@@ -147,6 +147,85 @@ class AssistantFunctions {
       case 'voiceNoteUrl':
         return _evaluateVoiceNoteUrl(normalized, userInput, cubit, isWhy);
 
+      case 'confirmCreateAccount':
+        final isSpanish = _getIsSpanish(cubit);
+        if (isWhy) {
+          return {
+            "step": "regProgress.confirmCreateAccount",
+            "valid": false,
+            "explainWhy": true,
+            "userResponse": userInput.trim(),
+          };
+        }
+
+        final n = normalizedPlain;
+
+        // If user explicitly wants to change something, route to change flow.
+        final wantsChange =
+            n.contains('cambiar') ||
+            n.contains('change') ||
+            n.contains('editar') ||
+            n.contains('edit') ||
+            n.contains('modificar') ||
+            n.contains('update');
+        if (wantsChange) {
+          return {
+            "step": "regProgress.changeRequest",
+            "valid": false,
+            "changeRequest": true,
+            "message": isSpanish
+                ? "Perfecto. ¿Qué quieres cambiar? (por ejemplo: \"quiero cambiar mi username\")"
+                : "Got it. What would you like to change? (for example: \"I want to change my username\")",
+          };
+        }
+
+        final wantsCreate =
+            n == 'si' ||
+            n == 'sí' ||
+            n == 'yes' ||
+            n == 'ok' ||
+            n == 'okay' ||
+            n == 'vale' ||
+            n == 'listo' ||
+            n == 'todo listo' ||
+            n.contains('todo listo') ||
+            n.contains('ya') ||
+            n.contains('perfecto') ||
+            n.contains('dale') ||
+            n.contains('de una') ||
+            n.contains('continuar') ||
+            n.contains('continuemos') ||
+            n.contains('vamos') ||
+            n.contains('crear') ||
+            n.contains('crea') ||
+            n.contains('crear mi cuenta') ||
+            n.contains('create my account') ||
+            n.contains('crear cuenta') ||
+            n.contains('create account') ||
+            n.contains('all set') ||
+            n.contains('ready') ||
+            n.contains('go ahead') ||
+            n.contains('let\'s do it') ||
+            n.contains('lets do it');
+
+        if (wantsCreate) {
+          return {
+            "step": "regProgress.confirmCreateAccount",
+            "valid": true,
+            "userResponse": userInput.trim(),
+          };
+        }
+
+        // Otherwise, keep the user on the confirmation question.
+        return {
+          "step": "regProgress.confirmCreateAccount",
+          "valid": false,
+          "userResponse": userInput.trim(),
+          "text": isSpanish
+              ? "¿Deseas crear tu cuenta ahora? Responde: \"Sí\" o \"Quiero cambiar algo\"."
+              : "Do you want to create your account now? Reply: \"Yes\" or \"I want to change something\".",
+        };
+
       case 'avatarUrl':
       case 'phone':
         return {

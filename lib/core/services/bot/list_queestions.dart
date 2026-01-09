@@ -122,6 +122,17 @@ final Map<String, Map<String, dynamic>> questionsEs = {
     "keepTalk": false,
   },
 
+  "confirmCreateAccount": {
+    "text":
+        "Todo listo ✅ ¿Deseas cambiar algo antes de crear tu cuenta?",
+    "options": [
+      "Sí, crear mi cuenta",
+      "Quiero cambiar algo",
+    ],
+    "step": "regProgress.confirmCreateAccount",
+    "keepTalk": false,
+  },
+
   "category": {
     "text": "Elige tus categorías para personalizar tu contenido.",
     "step": "regProgress.category",
@@ -246,6 +257,17 @@ final Map<String, Map<String, dynamic>> questionsEn = {
       {"label": "Skip step", "action": "skip"},
     ],
     "step": "regProgress.voiceNoteUrl",
+    "keepTalk": false,
+  },
+
+  "confirmCreateAccount": {
+    "text":
+        "All set ✅ Do you want to change anything before creating your account?",
+    "options": [
+      "Yes, create my account",
+      "I want to change something",
+    ],
+    "step": "regProgress.confirmCreateAccount",
     "keepTalk": false,
   },
 

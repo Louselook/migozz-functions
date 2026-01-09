@@ -17,13 +17,143 @@ class GeminiService {
   GenerativeModel? _model;
   ChatSession? _session;
   static const Duration _enrichTimeout = Duration(seconds: 8);
-  String _modelName = 'gemini-2.0-flash';
+  String _modelName = 'gemini-2.5-flash';
   double _temperature = 0.4;
   int _maxOutputTokens = 180;
   bool _allowRuntimeSwitch = false;
 
+  static const int _minOutputTokens = 120;
+  static const int _maxOutputTokensCap = 1024;
+
+  // Prompt enrichment is optional; disabling avoids any chance of truncated prompts.
+  bool _enrichEnabled = false;
+
+  // Track the config used for the currently created model/session.
+  String? _configuredModelName;
+  double? _configuredTemperature;
+  int? _configuredMaxOutputTokens;
+
+  bool _looksLikeAvatarHelpQuestion(String userInput) {
+    final normalized = userInput
+        .toLowerCase()
+        .replaceAll(RegExp(r'[¿?¡!.,;:]'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+
+    if (normalized.isEmpty) return false;
+
+    // Very common user prompts at avatar step.
+    if (normalized == 'como' || normalized == 'cómo' || normalized == 'como?') {
+      return true;
+    }
+    if (normalized.startsWith('como subo') ||
+        normalized.startsWith('cómo subo') ||
+        normalized.contains('como subo una foto') ||
+        normalized.contains('cómo subo una foto') ||
+        normalized.contains('como subir una foto') ||
+        normalized.contains('cómo subir una foto')) {
+      return true;
+    }
+    return false;
+  }
+
+  String? _inferAvatarPlatformChoice(String userInput) {
+    final normalized = userInput
+        .toLowerCase()
+        .replaceAll(RegExp(r'[¿?¡!.,;:]'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+
+    if (normalized.isEmpty) return null;
+
+    // Examples: "la de instagram", "la de tiktok", "la de facebook", "la de x"
+    if (!normalized.startsWith('la de ')) return null;
+
+    var raw = normalized.substring('la de '.length).trim();
+    if (raw.isEmpty) return null;
+
+    // Allow common possessives like: "la de mi instagram"
+    final rawParts = raw.split(' ').where((p) => p.trim().isNotEmpty).toList();
+    if (rawParts.isEmpty) return null;
+    if (rawParts.first == 'mi' || rawParts.first == 'mis' || rawParts.first == 'tu') {
+      raw = rawParts.skip(1).join(' ').trim();
+      if (raw.isEmpty) return null;
+    }
+
+    // Take first token; allow cases like "tik tok".
+    final token = raw.split(' ').take(2).join(' ').trim();
+
+    String canonical(String v) {
+      final vv = v.replaceAll(' ', '');
+      if (vv == 'x') return 'twitter';
+      if (vv == 'tiktok' || vv == 'tikt0k') return 'tiktok';
+      if (vv == 'instagram' || vv == 'insta' || vv == 'ig') return 'instagram';
+      if (vv == 'facebook' || vv == 'fb' || vv == 'face') return 'facebook';
+      if (vv == 'youtube' || vv == 'yt' || vv == 'youtub') return 'youtube';
+      if (vv == 'twitter') return 'twitter';
+      if (vv == 'threads') return 'threads';
+      if (vv == 'spotify' || vv == 'spoty') return 'spotify';
+      if (vv == 'snapchat' || vv == 'snap') return 'snapchat';
+      if (vv == 'linkedin' || vv == 'linkedIn') return 'linkedin';
+      return vv;
+    }
+
+    return canonical(token);
+  }
+
+  String? _inferAvatarAction(String userInput) {
+    final normalized = userInput
+        .toLowerCase()
+        .replaceAll(RegExp(r'[¿?¡!.,;:]'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+
+    if (normalized.isEmpty) return null;
+
+    // Camera intents
+    final wantsCamera =
+        normalized.contains('camara') ||
+        normalized.contains('cámara') ||
+      normalized.contains('con camara') ||
+      normalized.contains('con cámara') ||
+        normalized.contains('tomar foto') ||
+        normalized.contains('tomar una foto') ||
+        normalized.contains('sacar foto') ||
+        normalized.contains('hacer una foto') ||
+        normalized.contains('take a photo') ||
+        normalized.contains('take photo') ||
+        normalized.contains('open camera') ||
+        normalized.contains('use camera');
+
+    // Gallery intents
+    final wantsGallery =
+        normalized.contains('galeria') ||
+        normalized.contains('galería') ||
+      normalized.contains('foto de galeria') ||
+      normalized.contains('foto de galería') ||
+      normalized.contains('tomar foto desde galeria') ||
+      normalized.contains('tomar foto desde galería') ||
+      normalized.contains('subir una foto') ||
+      normalized.contains('quiero subir una foto') ||
+        normalized.contains('de la galeria') ||
+        normalized.contains('de la galería') ||
+        normalized.contains('elegir de la galeria') ||
+        normalized.contains('elegir de la galería') ||
+        normalized.contains('seleccionar de la galeria') ||
+        normalized.contains('seleccionar de la galería') ||
+        normalized.contains('choose from gallery') ||
+        normalized.contains('from the gallery') ||
+        normalized.contains('pick from gallery') ||
+        normalized.contains('open gallery');
+
+    if (wantsCamera && !wantsGallery) return 'open_camera';
+    if (wantsGallery && !wantsCamera) return 'open_gallery';
+
+    // If ambiguous, prefer not triggering an action.
+    return null;
+  }
+
   void ensureConfigured() {
-    if (_model != null) return;
     final apiKey = dotenv.env['GEMINI_API_KEY'];
     if (apiKey == null || apiKey.isEmpty) {
       if (kDebugMode) {
@@ -32,10 +162,20 @@ class GeminiService {
       return;
     }
     try {
+      // Always re-read env, and rebuild model/session if config changed.
       final envModel = dotenv.env['GEMINI_MODEL'];
       if (envModel != null && envModel.trim().isNotEmpty) {
         _modelName = envModel.trim();
       }
+
+      final envEnrich = dotenv.env['GEMINI_ENRICH'];
+      if (envEnrich != null) {
+        final v = envEnrich.toLowerCase();
+        _enrichEnabled = v == '1' || v == 'true' || v == 'yes';
+      } else {
+        _enrichEnabled = false;
+      }
+
       final envAllowSwitch = dotenv.env['GEMINI_ALLOW_RUNTIME_SWITCH'];
       if (envAllowSwitch != null) {
         final v = envAllowSwitch.toLowerCase();
@@ -49,8 +189,23 @@ class GeminiService {
       final envMax = dotenv.env['GEMINI_MAX_TOKENS'];
       if (envMax != null) {
         final m = int.tryParse(envMax);
-        if (m != null) _maxOutputTokens = m;
+        if (m != null) {
+          // Very low token limits can truncate prompts mid-word (eg. "Ingresa tu nom").
+          _maxOutputTokens = m.clamp(_minOutputTokens, _maxOutputTokensCap);
+        }
       }
+
+      // Enforce clamps even when env isn't set.
+      _maxOutputTokens = _maxOutputTokens.clamp(_minOutputTokens, _maxOutputTokensCap);
+
+      final needsRebuild =
+          _model == null ||
+          _session == null ||
+          _configuredModelName != _modelName ||
+          _configuredTemperature != _temperature ||
+          _configuredMaxOutputTokens != _maxOutputTokens;
+
+      if (!needsRebuild) return;
 
       _model = GenerativeModel(
         model: _modelName,
@@ -61,6 +216,9 @@ class GeminiService {
         ),
       );
       _session = _model!.startChat();
+      _configuredModelName = _modelName;
+      _configuredTemperature = _temperature;
+      _configuredMaxOutputTokens = _maxOutputTokens;
       if (kDebugMode) {
         debugPrint(
           'GeminiService configured. model=$_modelName temp=$_temperature maxTokens=$_maxOutputTokens',
@@ -98,6 +256,7 @@ class GeminiService {
     'avatarUrl', // 9
     'phone', // 10
     'voiceNoteUrl', // 11
+    'confirmCreateAccount', // 12
   ];
 
   //  Flujo reducido para usuarios autenticados
@@ -188,7 +347,9 @@ class GeminiService {
 
     _modelName = newName;
     if (temperature != null) _temperature = temperature;
-    if (maxTokens != null) _maxOutputTokens = maxTokens;
+    if (maxTokens != null) {
+      _maxOutputTokens = maxTokens.clamp(_minOutputTokens, _maxOutputTokensCap);
+    }
 
     _model = null;
     _session = null;
@@ -242,6 +403,101 @@ class GeminiService {
       : (_awaitingEmailChange
         ? 'emailChange'
         : questionFlow[_currentQuestionIndex]);
+
+    // ✅ Extra context for avatar step: convert free-text intents to explicit actions.
+    // This keeps the user on the same step (no index advance) and lets the UI
+    // open camera/gallery even if the user typed instead of tapping buttons.
+    if (currentStepKey == 'avatarUrl' && !kIsWeb) {
+      // 1) Help / how-to questions
+      if (_looksLikeAvatarHelpQuestion(userInput)) {
+        final isSpanish = registerCubit.state.language == 'Español';
+        final helpText = isSpanish
+            ? 'Para subir tu foto puedes:\n\n1) Escribir "Tomar foto" (o "Quiero tomar una foto") para abrir la cámara\n2) Escribir "Galería" (o "Quiero subir una foto") para elegir desde tu galería\n3) Si ya sincronizaste redes, puedes escribir "la de instagram" / "la de tiktok" para usar esa foto.'
+            : 'To add your photo you can:\n\n1) Type "Take photo" (or "I want to take a photo") to open the camera\n2) Type "Gallery" (or "I want to upload a photo") to pick from your gallery\n3) If you synced socials, you can type "the Instagram one" / "the TikTok one" to use that profile photo.';
+
+        return {
+          'text': helpText,
+          'options': const <String>[],
+          'step': 'regProgress.avatarUrl',
+          'keepTalk': false,
+          'repeatQuestion': true,
+          'clearInput': true,
+        };
+      }
+
+      // 2) "la de {red social}" → choose from synced profile pictures
+      final platform = _inferAvatarPlatformChoice(userInput);
+      if (platform != null) {
+        final pictures = AssistantFunctions.getProfilePictures(registerCubit);
+        final match = pictures.firstWhere(
+          (p) => (p['platform'] ?? '').toLowerCase() == platform,
+          orElse: () => const <String, String>{},
+        );
+
+        final imageUrl = match['imageUrl'];
+        if (imageUrl != null && imageUrl.isNotEmpty) {
+          final isSpanish = registerCubit.state.language == 'Español';
+          final msg = isSpanish
+              ? 'Perfecto — usaré tu foto de $platform.'
+              : 'Perfect — I’ll use your $platform photo.';
+          return {
+            'text': msg,
+            'options': const <String>[],
+            'step': 'regProgress.avatarUrl',
+            'keepTalk': false,
+            'action': 'use_profile_picture',
+            'imageUrl': imageUrl,
+            'clearInput': true,
+          };
+        }
+
+        final isSpanish = registerCubit.state.language == 'Español';
+        final available = pictures
+            .map((p) => (p['platform'] ?? '').toLowerCase())
+            .where((p) => p.isNotEmpty)
+            .toSet()
+            .toList();
+        final availText = available.isEmpty
+            ? ''
+            : (isSpanish
+                ? '\n\nTengo fotos disponibles de: ${available.join(', ')}'
+                : '\n\nI have photos available from: ${available.join(', ')}');
+
+        return {
+          'text': (isSpanish
+                  ? 'No encontré una foto para "$platform". Puedes elegir cámara/galería o usar otra red.'
+                  : 'I couldn’t find a photo for "$platform". You can pick camera/gallery or choose another social.') +
+              availText,
+          'options': const <String>[],
+          'step': 'regProgress.avatarUrl',
+          'keepTalk': false,
+          'repeatQuestion': true,
+          'clearInput': true,
+        };
+      }
+
+      // 3) camera/gallery actions
+      final action = _inferAvatarAction(userInput);
+      if (action != null) {
+        final isSpanish = registerCubit.state.language == 'Español';
+        final text = action == 'open_camera'
+            ? (isSpanish
+                ? 'Perfecto — abriendo la cámara.'
+                : 'Perfect — opening the camera.')
+            : (isSpanish
+                ? 'Perfecto — abriendo tu galería.'
+                : 'Perfect — opening your gallery.');
+
+        return {
+          "text": text,
+          "options": const <String>[],
+          "step": 'regProgress.avatarUrl',
+          "keepTalk": false,
+          "action": action,
+          "clearInput": true,
+        };
+      }
+    }
 
     final decision = AssistantFunctions.evaluateUserResponse(
       userInput,
@@ -826,13 +1082,15 @@ class GeminiService {
         ) ??
         Map<String, dynamic>.from(decision);
 
-    final enriched = await _enrichTextIfPossible(
-      baseText: err['text']?.toString(),
-      stepKey: currentStepKey,
-      registerCubit: registerCubit,
-      purpose: 'error',
-    );
-    if (enriched != null) err['text'] = enriched;
+    if (_enrichEnabled) {
+      final enriched = await _enrichTextIfPossible(
+        baseText: err['text']?.toString(),
+        stepKey: currentStepKey,
+        registerCubit: registerCubit,
+        purpose: 'error',
+      );
+      if (enriched != null) err['text'] = enriched;
+    }
 
     if (err['text'] == null ||
         (err['text'] is String && (err['text'] as String).trim().isEmpty)) {
@@ -963,16 +1221,20 @@ class GeminiService {
       }
     }
 
-    final enriched = await _enrichTextIfPossible(
-      baseText: question['text']?.toString(),
-      stepKey:
-          question['step']?.toString() ?? questionFlow[_currentQuestionIndex],
-      registerCubit: registerCubit,
-      purpose: 'question',
-      options: optionsForEnrichment,
-    );
-    if (enriched != null) {
-      question['text'] = enriched;
+    // Optional: enrich prompts via Gemini. Disabled by default to avoid any chance
+    // of truncated bot messages and to keep the scripted copy consistent.
+    if (_enrichEnabled) {
+      final enriched = await _enrichTextIfPossible(
+        baseText: question['text']?.toString(),
+        stepKey:
+            question['step']?.toString() ?? questionFlow[_currentQuestionIndex],
+        registerCubit: registerCubit,
+        purpose: 'question',
+        options: optionsForEnrichment,
+      );
+      if (enriched != null) {
+        question['text'] = enriched;
+      }
     }
     return question;
   }
@@ -1016,6 +1278,18 @@ class GeminiService {
           .timeout(_enrichTimeout);
       final text = resp.text?.trim();
       if (text == null || text.isEmpty) return null;
+
+      // Defensive: if the model returns an unnaturally short snippet (often due
+      // to a misconfigured max token limit), prefer the original seed text.
+      if (seed.length >= 40 && text.length <= 20) {
+        if (kDebugMode) {
+          debugPrint(
+            'Gemini enrich produced very short text (len=${text.length}) for seed len=${seed.length}; falling back to seed.',
+          );
+        }
+        return null;
+      }
+
       return text.length > 180 ? text.substring(0, 180) : text;
     } on TimeoutException {
       if (kDebugMode) debugPrint('Gemini enrich timeout ($_enrichTimeout)');
