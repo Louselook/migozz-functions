@@ -21,7 +21,7 @@ class RegisterCubit extends Cubit<RegisterState> {
   final AddNetworkServiceDirect _directService = AddNetworkServiceDirect();
 
   // ✅ Callback para sincronización con EditCubit
-  Function(List<Map<String, Map<String, dynamic>>>)? onSocialEcosystemUpdated;
+  Function(List<Map<String, dynamic>>)? onSocialEcosystemUpdated;
 
   File? avatarFile;
   File? voiceNoteFile;
@@ -145,7 +145,7 @@ class RegisterCubit extends Cubit<RegisterState> {
   // ==================== SOCIAL ECOSYSTEM ====================
 
   /// Para registro - CAMBIA el regProgress
-  void setSocialEcosystem(List<Map<String, Map<String, dynamic>>> platforms) =>
+  void setSocialEcosystem(List<Map<String, dynamic>> platforms) =>
       emit(
         state.copyWith(
           socialEcosystem: platforms,
@@ -155,7 +155,7 @@ class RegisterCubit extends Cubit<RegisterState> {
 
   /// Para edición - NO cambia el regProgress
   void updateSocialEcosystemOnly(
-    List<Map<String, Map<String, dynamic>>> platforms,
+    List<Map<String, dynamic>> platforms,
   ) {
     debugPrint(
       '🔧 [RegisterCubit] Actualizando socialEcosystem SIN cambiar regProgress',
@@ -321,7 +321,7 @@ class RegisterCubit extends Cubit<RegisterState> {
       debugPrint('   Data: $profileData');
 
       // Actualizar el ecosistema social
-      final current = List<Map<String, Map<String, dynamic>>>.from(
+      final current = List<Map<String, dynamic>>.from(
         state.socialEcosystem ?? [],
       );
 

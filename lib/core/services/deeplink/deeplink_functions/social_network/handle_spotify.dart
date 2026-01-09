@@ -18,7 +18,7 @@ void handleSpotify(String rawData, BuildContext context) {
     final normalized = normalizeSpotify(params);
 
     final cubit = context.read<RegisterCubit>();
-    final current = List<Map<String, Map<String, dynamic>>>.from(
+    final current = List<Map<String, dynamic>>.from(
       cubit.state.socialEcosystem ?? [],
     );
 

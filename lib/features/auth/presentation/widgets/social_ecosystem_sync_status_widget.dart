@@ -15,8 +15,8 @@ class SocialEcosystemSyncStatusWidget extends StatefulWidget {
     required this.userId,
     this.onSyncComplete,
     this.onSyncError,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<SocialEcosystemSyncStatusWidget> createState() =>
@@ -253,8 +253,8 @@ class SocialEcosystemSyncStatusBadge extends StatelessWidget {
   const SocialEcosystemSyncStatusBadge({
     required this.lastSync,
     this.intervalDays = 15,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

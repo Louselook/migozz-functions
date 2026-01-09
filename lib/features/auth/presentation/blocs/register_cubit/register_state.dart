@@ -38,8 +38,10 @@ class RegisterState extends Equatable {
   final String? gender;
   final LocationDTO? location;
 
-  // Ahora socialEcosystem maneja datos dinámicos de cada red
-  final List<Map<String, Map<String, dynamic>>>? socialEcosystem;
+  // socialEcosystem unificado con el schema del perfil (edit):
+  // - Redes conectadas: {"instagram": {...}}, {"tiktok": {...}} ...
+  // - Custom links: {"type":"custom","domain":...,"url":...,"applyIconFromLink":...}
+  final List<Map<String, dynamic>>? socialEcosystem;
 
   // Archivos y multimedia
   final String? avatarUrl;
@@ -83,7 +85,7 @@ class RegisterState extends Equatable {
     String? username,
     String? gender,
     LocationDTO? location,
-    List<Map<String, Map<String, dynamic>>>? socialEcosystem,
+    List<Map<String, dynamic>>? socialEcosystem,
     String? avatarUrl,
     String? phone,
     String? voiceNoteUrl,

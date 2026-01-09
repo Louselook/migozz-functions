@@ -817,8 +817,27 @@ class AssistantFunctions {
     final pictureCards = <Map<String, String>>[];
 
     for (final platform in platforms) {
-      final key = platform.keys.first;
-      final data = platform[key] as Map<String, dynamic>;
+      if (platform.isEmpty) continue;
+
+      // Custom links use flat schema and don't provide profile pictures.
+      final type = platform['type']?.toString().toLowerCase();
+      if (type == 'custom') continue;
+
+      // Expected schema for social networks: {'instagram': {...}}, {'twitter': {...}}, etc.
+      // Be defensive in case maps contain unexpected extra keys.
+      MapEntry<dynamic, dynamic>? firstMapEntry;
+      for (final entry in platform.entries) {
+        if (entry.value is Map) {
+          firstMapEntry = entry;
+          break;
+        }
+      }
+      if (firstMapEntry == null) continue;
+
+      final key = firstMapEntry.key.toString();
+      final raw = firstMapEntry.value;
+      if (raw is! Map) continue;
+      final data = Map<String, dynamic>.from(raw);
 
       final possibleKeys = [
         "profile_image_url",

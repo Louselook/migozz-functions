@@ -16,8 +16,8 @@ class UserProfileScreenExample extends StatefulWidget {
   const UserProfileScreenExample({
     required this.user,
     required this.userId,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<UserProfileScreenExample> createState() =>
@@ -128,8 +128,7 @@ class _UserProfileScreenExampleState extends State<UserProfileScreenExample> {
 class SyncServiceExampleScreen extends StatefulWidget {
   final String userId;
 
-  const SyncServiceExampleScreen({required this.userId, Key? key})
-    : super(key: key);
+  const SyncServiceExampleScreen({required this.userId, super.key});
 
   @override
   State<SyncServiceExampleScreen> createState() =>
@@ -182,8 +181,8 @@ class _SyncServiceExampleScreenState extends State<SyncServiceExampleScreen> {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: _statusMessage.contains('✅')
-                      ? Colors.green.withOpacity(0.1)
-                      : Colors.orange.withOpacity(0.1),
+                      ? Colors.green.withValues(alpha: 0.1)
+                      : Colors.orange.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: _statusMessage.contains('✅')
@@ -277,8 +276,7 @@ class _SyncServiceExampleScreenState extends State<SyncServiceExampleScreen> {
 class SyncStatusCheckExample extends StatelessWidget {
   final UserDTO user;
 
-  const SyncStatusCheckExample({required this.user, Key? key})
-    : super(key: key);
+  const SyncStatusCheckExample({required this.user, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -314,8 +312,8 @@ class SyncStatusCheckExample extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: needsSync
-                    ? Colors.orange.withOpacity(0.2)
-                    : Colors.green.withOpacity(0.2),
+                    ? Colors.orange.withValues(alpha: 0.2)
+                    : Colors.green.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: needsSync ? Colors.orange : Colors.green,
@@ -387,7 +385,7 @@ class SyncStatusCheckExample extends StatelessWidget {
                           child: Row(
                             children: [
                               CircleAvatar(
-                                backgroundColor: Colors.grey.withOpacity(0.2),
+                                backgroundColor: Colors.grey.withValues(alpha: 0.2),
                                 child: Text(
                                   platform.substring(0, 1).toUpperCase(),
                                 ),
@@ -437,8 +435,7 @@ class SyncStatusCheckExample extends StatelessWidget {
 class UserListTileWithSyncBadge extends StatelessWidget {
   final UserDTO user;
 
-  const UserListTileWithSyncBadge({required this.user, Key? key})
-    : super(key: key);
+  const UserListTileWithSyncBadge({required this.user, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -469,7 +466,7 @@ class UserListTileWithSyncBadge extends StatelessWidget {
 class SyncDashboardExample extends StatefulWidget {
   final List<UserDTO> users;
 
-  const SyncDashboardExample({required this.users, Key? key}) : super(key: key);
+  const SyncDashboardExample({required this.users, super.key});
 
   @override
   State<SyncDashboardExample> createState() => _SyncDashboardExampleState();
@@ -566,7 +563,7 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: color.withOpacity(0.1),
+      color: color.withValues(alpha: 0.1),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

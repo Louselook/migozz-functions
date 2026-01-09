@@ -283,7 +283,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
 
     if (widget.mode == MoreUserDetailsMode.register) {
       final cubit = context.read<RegisterCubit>();
-      final current = List<Map<String, Map<String, dynamic>>>.from(
+      final current = List<Map<String, dynamic>>.from(
         cubit.state.socialEcosystem ?? [],
       );
 
@@ -583,6 +583,121 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     return 'https://www.google.com/s2/favicons?domain=$domain&sz=128';
   }
 
+  String _normalizeDomain(String domain) {
+    final d = domain.trim().toLowerCase();
+    if (d.startsWith('www.')) return d.substring(4);
+    return d;
+  }
+
+  String _extractUsernameFromUrl(String url) {
+    final trimmed = url.trim();
+    if (trimmed.isEmpty) return '';
+    final normalized = trimmed.contains('://') ? trimmed : 'https://$trimmed';
+    final uri = Uri.tryParse(normalized);
+    if (uri == null) return '';
+    final segments = uri.pathSegments.where((s) => s.trim().isNotEmpty).toList();
+    if (segments.isEmpty) return '';
+    var candidate = segments.last.trim();
+    if (candidate.startsWith('@')) candidate = candidate.substring(1);
+    return candidate;
+  }
+
+  List<Map<String, dynamic>> _getRegisterCustomLinks() {
+    if (widget.mode != MoreUserDetailsMode.register) return const [];
+    final ecosystem = context.watch<RegisterCubit>().state.socialEcosystem ?? [];
+    final customItems = <Map<String, dynamic>>[];
+
+    for (final entry in ecosystem) {
+      // Nuevo schema (plano): {type: 'custom', domain, url, ...}
+      final type = entry['type']?.toString().toLowerCase();
+      if (type == 'custom') {
+        customItems.add(Map<String, dynamic>.from(entry));
+        continue;
+      }
+
+      // Compatibilidad hacia atrás (schema antiguo): {'custom': {...}}
+      if (!entry.containsKey('custom')) continue;
+      final data = entry['custom'];
+      if (data is Map) {
+        customItems.add(Map<String, dynamic>.from(data));
+      }
+    }
+    return customItems;
+  }
+
+  Widget _buildCustomLinkRow(Map<String, dynamic> data) {
+    final domain = _normalizeDomain(data['domain']?.toString() ?? '');
+    final url = data['url']?.toString() ?? '';
+    final username = _extractUsernameFromUrl(url);
+    final applyIconFromLink = data['applyIconFromLink'] == true;
+
+    // Icono solo si el usuario habilitó la opción.
+    final iconUrl = applyIconFromLink
+        ? (data['iconUrl']?.toString() ?? _faviconFromDomain(domain))
+        : '';
+
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.08),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          if (iconUrl.isNotEmpty) ...[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: Image.network(
+                iconUrl,
+                width: 20,
+                height: 20,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const SizedBox(width: 20, height: 20),
+              ),
+            ),
+            const SizedBox(width: 10),
+          ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  domain.isEmpty ? 'Link' : domain,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                if (username.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    '@$username',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Colors.grey[400],
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // Ahora acepta username nullable y lo maneja defensivamente
   List<SocialLink> _buildSocialLinks(
     List<Map<String, dynamic>>? socialEcosystem,
@@ -679,14 +794,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     // Get social ecosystem from the appropriate cubit based on mode
     final List<Map<String, dynamic>> socialEcosystem;
     if (widget.mode == MoreUserDetailsMode.register) {
-      // RegisterCubit has List<Map<String, Map<String, dynamic>>>
-      // Convert each item defensively to Map<String, dynamic>
-      final registerEcosystem =
-          context.watch<RegisterCubit>().state.socialEcosystem ?? [];
-
-      socialEcosystem = registerEcosystem
-          .map((e) => Map<String, dynamic>.from(e))
-          .toList();
+        // RegisterCubit ya usa List<Map<String, dynamic>> (schema unificado)
+        socialEcosystem = context.watch<RegisterCubit>().state.socialEcosystem ?? [];
     } else {
       // EditCubit already has List<Map<String, dynamic>>
       socialEcosystem = context.watch<EditCubit>().state.socialEcosystem ?? [];
@@ -1019,6 +1128,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
   }
 
   Widget _buildCategorizedGrid() {
+    final customLinks = _getRegisterCustomLinks();
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       children: [
@@ -1095,6 +1205,12 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                 itemCount: 1,
                 itemBuilder: (context, index) => _buildCustomLinkGridItem(),
               ),
+
+              // Lista de custom links (solo 3 campos: icono opcional, nombre y username)
+              if (customLinks.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                ...customLinks.map(_buildCustomLinkRow),
+              ],
             ],
           ),
         ),
@@ -1178,11 +1294,42 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
   Widget _buildCustomLinkGridItem() {
     return GestureDetector(
       onTap: () async {
+        final isRegister = widget.mode == MoreUserDetailsMode.register;
+
         final result = await Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const AddAnotherNetworkScreen()),
+          MaterialPageRoute(
+            builder: (_) => AddAnotherNetworkScreen(
+              allowUnauthenticated: isRegister,
+            ),
+          ),
         );
-        if (result == 'done' && mounted) {
+
+        if (!mounted) return;
+
+        if (isRegister && result is Map) {
+          final data = Map<String, dynamic>.from(result);
+
+          final cubit = context.read<RegisterCubit>();
+          final current = List<Map<String, dynamic>>.from(
+            cubit.state.socialEcosystem ?? [],
+          );
+
+          // ✅ Unificar con EDIT: guardar custom como mapa plano
+          current.add(data);
+          cubit.setSocialEcosystem(current);
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('addSocials.customLink.updated'.tr()),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+          return;
+        }
+
+        if (result == 'done') {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('addSocials.customLink.updated'.tr()),

@@ -13,7 +13,12 @@ import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
 import 'components/image_upload_area.dart';
 
 class AddAnotherNetworkScreen extends StatefulWidget {
-  const AddAnotherNetworkScreen({super.key});
+  final bool allowUnauthenticated;
+
+  const AddAnotherNetworkScreen({
+    super.key,
+    this.allowUnauthenticated = false,
+  });
 
   @override
   State<AddAnotherNetworkScreen> createState() =>
@@ -30,6 +35,8 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
   String? _error;
   DateTime? _loaderStart;
 
+  int _faviconRequestId = 0;
+
   @override
   void initState() {
     super.initState();
@@ -38,6 +45,7 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
 
   @override
   void dispose() {
+    _faviconRequestId++; // invalidar callbacks async pendientes
     _linkCtrl.removeListener(_onLinkChanged);
     _linkCtrl.dispose();
     super.dispose();
@@ -51,6 +59,7 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
         _setFaviconFromDomain(domain);
       } else {
         if (_pickedImageUrl != null) {
+          if (!mounted) return;
           setState(() {
             _pickedImageUrl = null;
           });
@@ -106,6 +115,7 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
 
       await _validateAndSetImage(imagePath);
     } catch (e) {
+      if (!mounted) return;
       setState(
         () =>
             _error = '${'profile.customization.plataform.imageError'.tr()} $e',
@@ -124,6 +134,7 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
 
       await _validateAndSetImage(imagePath);
     } catch (e) {
+      if (!mounted) return;
       setState(
         () =>
             _error = '${'profile.customization.plataform.imageError'.tr()} $e',
@@ -143,6 +154,7 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
         lower.endsWith('.webp');
 
     if (!allowed) {
+      if (!mounted) return;
       setState(
         () =>
             _error = 'profile.customization.customLink.imageTypeNotAllowed'
@@ -151,12 +163,14 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
       return;
     }
     if (sizeBytes > 5 * 1024 * 1024) {
+      if (!mounted) return;
       setState(
         () => _error = 'profile.customization.customLink.imageTooLarge'.tr(),
       );
       return;
     }
 
+    if (!mounted) return;
     setState(() {
       _pickedImage = file;
       _pickedImageUrl = null;
@@ -253,7 +267,10 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
   }
 
   Future<void> _setFaviconFromDomain(String domain) async {
+    final requestId = ++_faviconRequestId;
     final url = await _resolveFavicon(domain);
+    if (!mounted) return;
+    if (requestId != _faviconRequestId) return;
     setState(() {
       _pickedImageUrl = url;
       _pickedImage = null;
@@ -272,7 +289,9 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
     if (linkError != null) {
       _error = linkError;
       await _ensureMinLoaderThenPop();
+      if (!mounted) return;
       setState(() => _isSaving = false);
+      if (!context.mounted) return;
       await AlertGeneral.show(context, 4, message: linkError);
       return;
     }
@@ -281,8 +300,35 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
     final editCubit = context.read<EditCubit>();
     final userId = authCubit.state.firebaseUser?.uid;
     if (userId == null) {
+      if (widget.allowUnauthenticated) {
+        final link = _linkCtrl.text.trim();
+        final domain = _domainFromUrl(link);
+
+        String? iconUrl;
+        if (_applyIconFromLink) {
+          iconUrl = await _resolveFavicon(domain);
+        }
+
+        final data = <String, dynamic>{
+          'type': 'custom',
+          'domain': domain,
+          'url': link,
+          if (iconUrl != null) 'iconUrl': iconUrl,
+          'applyIconFromLink': _applyIconFromLink,
+        };
+
+        await _ensureMinLoaderThenPop();
+        if (!mounted) return;
+        setState(() => _isSaving = false);
+        if (!context.mounted) return;
+        Navigator.pop(context, data);
+        return;
+      }
+
       await _ensureMinLoaderThenPop();
+      if (!mounted) return;
       setState(() => _isSaving = false);
+      if (!context.mounted) return;
       await AlertGeneral.show(
         context,
         4,
@@ -298,6 +344,7 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
 
       if (_applyIconFromLink) {
         iconUrl = await _resolveFavicon(domain);
+        if (!mounted) return;
         setState(() => _pickedImageUrl = iconUrl);
       } else if (_pickedImage != null) {
         final service = UserMediaService();
@@ -331,19 +378,23 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
 
       if (!mounted) return;
       await _ensureMinLoaderThenPop();
+      if (!mounted) return;
       setState(() => _isSaving = false);
 
+      if (!context.mounted) return;
       await AlertGeneral.show(
         context,
         1,
         message: 'profile.customization.customLink.saved'.tr(),
       );
-      if (mounted) {
+      if (context.mounted) {
         Navigator.pop(context, 'done');
       }
     } catch (e) {
       await _ensureMinLoaderThenPop();
+      if (!mounted) return;
       setState(() => _isSaving = false);
+      if (!context.mounted) return;
       await AlertGeneral.show(
         context,
         4,
@@ -353,10 +404,20 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
   }
 
   Future<void> _deleteIfExists() async {
+    if (!mounted) return;
     final authCubit = context.read<AuthCubit>();
     final editCubit = context.read<EditCubit>();
     final userId = authCubit.state.firebaseUser?.uid;
-    if (userId == null) return;
+    if (userId == null) {
+      setState(() {
+        _pickedImage = null;
+        _pickedImageUrl = null;
+        _linkCtrl.clear();
+        _applyIconFromLink = false;
+        _error = null;
+      });
+      return;
+    }
 
     final linkError = _validateLink(_linkCtrl.text);
     if (linkError != null) {

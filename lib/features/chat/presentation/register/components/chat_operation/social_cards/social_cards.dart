@@ -8,11 +8,46 @@ class SocialCardMini extends StatelessWidget {
 
   const SocialCardMini({super.key, required this.platformData});
 
+  Widget _fallbackIcon({double size = 40}) {
+    return SizedBox(width: size, height: size);
+  }
+
+  Widget _buildIcon(String iconPath, {double size = 40}) {
+    if (iconPath.trim().isEmpty) return const SizedBox.shrink();
+
+    final isRemote = iconPath.startsWith('http://') ||
+        iconPath.startsWith('https://');
+    final isSvg = iconPath.toLowerCase().endsWith('.svg');
+
+    if (isRemote) {
+      if (isSvg) {
+        return SvgPicture.network(
+          iconPath,
+          width: size,
+          height: size,
+          placeholderBuilder: (_) => _fallbackIcon(size: size),
+        );
+      }
+      return Image.network(
+        iconPath,
+        width: size,
+        height: size,
+        errorBuilder: (_, __, ___) => _fallbackIcon(size: size),
+      );
+    }
+
+    if (isSvg) {
+      return SvgPicture.asset(iconPath, width: size, height: size);
+    }
+    return Image.asset(iconPath, width: size, height: size);
+  }
+
   @override
   Widget build(BuildContext context) {
     final label = platformData["label"] ?? "";
     final iconPath = platformData["iconPath"] ?? "";
     final followers = platformData["followersFormatted"] as String?;
+    final username = platformData["username"]?.toString();
 
     return GestureDetector(
       onTap: () {
@@ -43,6 +78,10 @@ class SocialCardMini extends StatelessWidget {
                         platformData["profile_image_url"]!,
                         width: 80,
                         height: 80,
+                        errorBuilder: (_, __, ___) => const SizedBox(
+                          width: 80,
+                          height: 80,
+                        ),
                       ),
 
                     const SizedBox(height: 10),
@@ -78,32 +117,45 @@ class SocialCardMini extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                if (iconPath.isNotEmpty)
-                  iconPath.endsWith('.svg')
-                      ? SvgPicture.asset(iconPath, width: 40, height: 40)
-                      : Image.asset(iconPath, width: 40, height: 40),
+                if (iconPath.isNotEmpty) ...[
+                  _buildIcon(iconPath, size: 40),
+                  const SizedBox(width: 10),
+                ],
 
-                const SizedBox(width: 10),
-
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
                       ),
-                    ),
-                    if (followers != null) ...[
-                      const SizedBox(height: 4),
-                      dataCard(),
+                      if (username != null && username.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          username,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.grey[400],
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                      if (followers != null) ...[
+                        const SizedBox(height: 4),
+                        dataCard(),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ],
             ),
@@ -206,6 +258,8 @@ class SocialCardMini extends StatelessWidget {
   Widget customCardText(String text) {
     return Text(
       text,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
       style: TextStyle(color: AppColors.backgroundLight, fontSize: 10),
     );
   }

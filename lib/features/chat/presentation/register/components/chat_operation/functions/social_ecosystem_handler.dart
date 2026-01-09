@@ -52,13 +52,22 @@ class SocialEcosystemHandler {
   static void _showSocialNetworksConfirmation(
     RegisterCubit cubit,
     RegisterChatController chatController,
-    List<Map<String, Map<String, dynamic>>> socialEcosystem,
+    List<Map<String, dynamic>> socialEcosystem,
   ) {
     final isSpanish = (cubit.state.language ?? '').toLowerCase().contains('es');
 
     // Extraer nombres de las redes vinculadas
     final networkNames = socialEcosystem
-        .map((p) => _capitalize(p.keys.first))
+        .map((p) {
+          final type = p['type']?.toString().toLowerCase();
+          if (type == 'custom') {
+            final d = p['domain']?.toString() ?? '';
+            return _capitalize(d.isEmpty ? 'Link' : d);
+          }
+          if (p.isEmpty) return '';
+          return _capitalize(p.keys.first);
+        })
+        .where((e) => e.trim().isNotEmpty)
         .toList();
     final namesText = _formatNetworkNames(networkNames, isSpanish);
 
