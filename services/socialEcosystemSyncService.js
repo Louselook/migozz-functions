@@ -256,9 +256,12 @@ function isPlatformDueForSync(userData, platform, intervalDays) {
   const retryHours = getFailureRetryHours();
   if (retryHours > 0 && lastAttemptAt) {
     const hoursSinceAttempt = (now.getTime() - lastAttemptAt.getTime()) / (1000 * 60 * 60);
-    if (hoursSinceAttempt < retryHours && !lastSuccessAt) {
-      // If we never succeeded yet (or lastSuccess missing) and we tried recently, don't retry yet.
-      return { due: false, reason: `retry_backoff_hours:${hoursSinceAttempt.toFixed(2)}/${retryHours}` };
+    const lastAttemptWasFailure = !lastSuccessAt || lastAttemptAt.getTime() > lastSuccessAt.getTime();
+    if (lastAttemptWasFailure && hoursSinceAttempt < retryHours) {
+      return {
+        due: false,
+        reason: `retry_backoff_hours:${hoursSinceAttempt.toFixed(2)}/${retryHours}`,
+      };
     }
   }
 
