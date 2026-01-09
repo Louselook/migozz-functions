@@ -56,6 +56,7 @@ const SCRAPERS = {
 };
 
 const DEFAULT_SYNC_INTERVAL_DAYS = 15;
+const DEFAULT_FAILURE_RETRY_HOURS = 24;
 
 function toDateOrNull(value) {
   if (!value) return null;
@@ -85,6 +86,13 @@ function getSyncIntervalDays() {
   const n = raw ? Number(raw) : NaN;
   if (Number.isFinite(n) && n > 0) return Math.floor(n);
   return DEFAULT_SYNC_INTERVAL_DAYS;
+}
+
+function getFailureRetryHours() {
+  const raw = process.env.SYNC_FAILURE_RETRY_HOURS;
+  const n = raw ? Number(raw) : NaN;
+  if (Number.isFinite(n) && n >= 0) return n;
+  return DEFAULT_FAILURE_RETRY_HOURS;
 }
 
 function getMigosMsBaseUrl() {
@@ -232,10 +240,28 @@ function getLastSuccessAtForPlatform(userData, platform) {
   return toDateOrNull(v);
 }
 
+function getLastAttemptAtForPlatform(userData, platform) {
+  const meta = userData?.socialEcosystemSyncMeta;
+  const v = isPlainObject(meta) && isPlainObject(meta[platform]) ? meta[platform].lastAttemptAt : null;
+  return toDateOrNull(v);
+}
+
 function isPlatformDueForSync(userData, platform, intervalDays) {
   const now = new Date();
   const addedAt = getAddedAtForPlatform(userData, platform);
   const lastSuccessAt = getLastSuccessAtForPlatform(userData, platform);
+  const lastAttemptAt = getLastAttemptAtForPlatform(userData, platform);
+
+  // Backoff after failures/attempts to avoid hammering scrapers.
+  const retryHours = getFailureRetryHours();
+  if (retryHours > 0 && lastAttemptAt) {
+    const hoursSinceAttempt = (now.getTime() - lastAttemptAt.getTime()) / (1000 * 60 * 60);
+    if (hoursSinceAttempt < retryHours && !lastSuccessAt) {
+      // If we never succeeded yet (or lastSuccess missing) and we tried recently, don't retry yet.
+      return { due: false, reason: `retry_backoff_hours:${hoursSinceAttempt.toFixed(2)}/${retryHours}` };
+    }
+  }
+
   const anchor = lastSuccessAt || addedAt;
   if (!anchor) {
     // If we don't know when it was added, we avoid syncing immediately to prevent mass overwrites.
@@ -436,10 +462,16 @@ async function syncUserNetworks(userId, options = {}) {
       try {
         const previousPlatformData = getPlatformDataFromSocialEcosystem(updatedSocialEcosystem, platform);
 
-        // Resolver scraper: Instagram/LinkedIn via migos-ms si está configurado.
+        // Resolver scraper: Instagram/LinkedIn SIEMPRE via migos-ms.
+        // (Evita que Cloud Run intente Puppeteer para IG/LI.)
         const migosMsBase = getMigosMsBaseUrl();
         let profileDataRaw;
-        if ((platform === 'instagram' || platform === 'linkedin') && migosMsBase) {
+        if (platform === 'instagram' || platform === 'linkedin') {
+          if (!migosMsBase) {
+            throw new Error(
+              `Falta configurar MIGOS_MS_BASE_URL/API_MIGOZZ para ${platform} (no se usa scraper local)`,
+            );
+          }
           profileDataRaw = await fetchProfileViaHttp({
             baseUrl: migosMsBase,
             platform,
