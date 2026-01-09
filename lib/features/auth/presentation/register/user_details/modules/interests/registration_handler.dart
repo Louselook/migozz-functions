@@ -12,11 +12,15 @@ class RegistrationHandler {
     required AuthCubit authCubit,
   }) async {
     debugPrint('▶️ [RegistrationHandler] Iniciando completeRegistration...');
-    debugPrint('   - auth isAuthenticated=${authCubit.state.isAuthenticated} '
-        'firebaseUser=${authCubit.state.firebaseUser?.uid}');
-    debugPrint('   - register snapshot: isComplete=${registerCubit.state.isComplete} '
-        'email=${registerCubit.state.email} fullName=${registerCubit.state.fullName} '
-        'voiceNoteUrl=${registerCubit.state.voiceNoteUrl} avatarUrl=${registerCubit.state.avatarUrl}');
+    debugPrint(
+      '   - auth isAuthenticated=${authCubit.state.isAuthenticated} '
+      'firebaseUser=${authCubit.state.firebaseUser?.uid}',
+    );
+    debugPrint(
+      '   - register snapshot: isComplete=${registerCubit.state.isComplete} '
+      'email=${registerCubit.state.email} fullName=${registerCubit.state.fullName} '
+      'voiceNoteUrl=${registerCubit.state.voiceNoteUrl} avatarUrl=${registerCubit.state.avatarUrl}',
+    );
 
     // Verificar si está autenticado con Google
     final firebaseUser = authCubit.state.firebaseUser;
@@ -34,14 +38,21 @@ class RegistrationHandler {
 
     // Si no está completo, mostrar error y listar campos faltantes
     if (!registerCubit.state.isComplete) {
-      debugPrint('⚠️ [RegistrationHandler] Registro incompleto tras checkCompletion. Estado completo? ${registerCubit.state.isComplete}');
+      debugPrint(
+        '⚠️ [RegistrationHandler] Registro incompleto tras checkCompletion. Estado completo? ${registerCubit.state.isComplete}',
+      );
       final missing = <String>[];
       final s = registerCubit.state;
-      if (s.email == null || (s.email as String).trim().isEmpty) missing.add('email');
-      if (s.fullName == null || (s.fullName as String).trim().isEmpty) missing.add('fullName');
-      if (s.username == null || (s.username as String).trim().isEmpty) missing.add('username');
-      if (s.voiceNoteUrl == null || (s.voiceNoteUrl as String).trim().isEmpty) missing.add('voiceNoteUrl');
-      if (s.avatarUrl == null || (s.avatarUrl as String).trim().isEmpty) missing.add('avatarUrl');
+      if (s.email == null || (s.email as String).trim().isEmpty)
+        missing.add('email');
+      if (s.fullName == null || (s.fullName as String).trim().isEmpty)
+        missing.add('fullName');
+      if (s.username == null || (s.username as String).trim().isEmpty)
+        missing.add('username');
+      if (s.voiceNoteUrl == null || (s.voiceNoteUrl as String).trim().isEmpty)
+        missing.add('voiceNoteUrl');
+      if (s.avatarUrl == null || (s.avatarUrl as String).trim().isEmpty)
+        missing.add('avatarUrl');
       if (s.location == null) missing.add('location');
       debugPrint('   -> Campos faltantes: ${missing.join(", ")}');
 
@@ -102,6 +113,24 @@ class RegistrationHandler {
 
     final Map<String, dynamic> updateData = {};
 
+    Set<String> _extractPlatformsFromSocialEcosystem(
+      List<Map<String, dynamic>> socials,
+    ) {
+      final out = <String>{};
+      for (final entry in socials) {
+        final p = entry['platform'];
+        if (p is String && p.trim().isNotEmpty) {
+          out.add(p.trim().toLowerCase());
+          continue;
+        }
+
+        for (final k in entry.keys) {
+          if (k.trim().isNotEmpty) out.add(k.trim().toLowerCase());
+        }
+      }
+      return out;
+    }
+
     if (registerCubit.state.language != null) {
       updateData['lang'] = registerCubit.state.language;
     }
@@ -129,6 +158,28 @@ class RegistrationHandler {
     if (registerCubit.state.socialEcosystem != null &&
         registerCubit.state.socialEcosystem!.isNotEmpty) {
       updateData['socialEcosystem'] = registerCubit.state.socialEcosystem;
+
+      // ✅ Guardar fechas de agregado por plataforma (para job por-red)
+      // - Mantiene valores existentes si ya están
+      // - Agrega serverTimestamp() solo a plataformas nuevas
+      final currentProfile = authCubit.state.userProfile;
+      final existingAdded =
+          currentProfile?.socialEcosystemAddedDates ?? <String, DateTime>{};
+
+      final existingMap = <String, dynamic>{
+        for (final e in existingAdded.entries) e.key.toLowerCase(): e.value,
+      };
+
+      final platforms = _extractPlatformsFromSocialEcosystem(
+        registerCubit.state.socialEcosystem!,
+      );
+
+      for (final platform in platforms) {
+        if (existingMap.containsKey(platform)) continue;
+        existingMap[platform] = FieldValue.serverTimestamp();
+      }
+
+      updateData['socialEcosystemAddedDates'] = existingMap;
     }
 
     if (registerCubit.state.avatarUrl != null) {
@@ -193,18 +244,18 @@ class RegistrationHandler {
     if (email == null || email.trim().isEmpty) {
       if (context.mounted) {
         LoadingOverlay.hide(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Email faltante.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Email faltante.')));
       }
       throw StateError('Email faltante en registerCubit.state.email');
     }
     if (otp == null || otp.trim().isEmpty) {
       if (context.mounted) {
         LoadingOverlay.hide(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('OTP faltante.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('OTP faltante.')));
       }
       throw StateError('OTP faltante en registerCubit.state.currentOTP');
     }

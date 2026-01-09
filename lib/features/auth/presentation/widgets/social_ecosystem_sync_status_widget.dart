@@ -6,11 +6,13 @@ import 'package:migozz_app/features/auth/services/add_networks/social_ecosystem_
 /// y permite sincronizar manualmente
 class SocialEcosystemSyncStatusWidget extends StatefulWidget {
   final UserDTO user;
+  final String userId;
   final VoidCallback? onSyncComplete;
   final VoidCallback? onSyncError;
 
   const SocialEcosystemSyncStatusWidget({
     required this.user,
+    required this.userId,
     this.onSyncComplete,
     this.onSyncError,
     Key? key,
@@ -158,8 +160,24 @@ class _SocialEcosystemSyncStatusWidgetState
               Wrap(
                 spacing: 8,
                 children: widget.user.socialEcosystem!.map((network) {
-                  final platform = network['platform']?.toString() ?? 'Unknown';
-                  final followers = network['followers'] ?? 0;
+                  String platform = network['platform']?.toString() ?? '';
+                  dynamic payload = network;
+
+                  // Soporta formato B: { instagram: { ... } }
+                  if (platform.isEmpty && network.isNotEmpty) {
+                    platform = network.keys.first.toString();
+                    payload = network[platform];
+                  }
+
+                  platform = platform.isEmpty ? 'Unknown' : platform;
+
+                  final followers = (payload is Map)
+                      ? (payload['followers'] ?? payload['followersCount'] ?? 0)
+                      : (network['followers'] ?? 0);
+
+                  final platformLetter = platform.isNotEmpty
+                      ? platform.substring(0, 1).toUpperCase()
+                      : '?';
 
                   return Chip(
                     label: Text(
@@ -169,7 +187,7 @@ class _SocialEcosystemSyncStatusWidgetState
                     avatar: CircleAvatar(
                       backgroundColor: Colors.grey.withOpacity(0.2),
                       child: Text(
-                        platform.substring(0, 1).toUpperCase(),
+                        platformLetter,
                         style: const TextStyle(fontSize: 10),
                       ),
                     ),
@@ -190,7 +208,7 @@ class _SocialEcosystemSyncStatusWidgetState
     });
 
     try {
-      await _syncService.syncUserNetworks(widget.user.email);
+      await _syncService.syncUserNetworks(widget.userId);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

@@ -11,9 +11,13 @@ import 'package:migozz_app/features/auth/presentation/widgets/social_ecosystem_s
 
 class UserProfileScreenExample extends StatefulWidget {
   final UserDTO user;
+  final String userId;
 
-  const UserProfileScreenExample({required this.user, Key? key})
-    : super(key: key);
+  const UserProfileScreenExample({
+    required this.user,
+    required this.userId,
+    Key? key,
+  }) : super(key: key);
 
   @override
   State<UserProfileScreenExample> createState() =>
@@ -72,6 +76,7 @@ class _UserProfileScreenExampleState extends State<UserProfileScreenExample> {
             // Muestra estado y permite sincronizar manualmente
             SocialEcosystemSyncStatusWidget(
               user: currentUser,
+              userId: widget.userId,
               onSyncComplete: () {
                 // Recargar datos del usuario
                 _reloadUserData();
@@ -374,7 +379,6 @@ class SyncStatusCheckExample extends StatelessWidget {
                       final network = user.socialEcosystem![index];
                       final platform = network['platform'] ?? 'Unknown';
                       final followers = network['followers'] ?? 0;
-                      final syncedAt = network['syncedAt'] ?? 'No sincronizado';
 
                       return Card(
                         margin: const EdgeInsets.only(bottom: 8),

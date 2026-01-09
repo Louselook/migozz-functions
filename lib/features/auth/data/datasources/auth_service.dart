@@ -22,39 +22,7 @@ class AuthService {
   Future<UserDTO?> _getUserFromFirestore(String uid) async {
     final doc = await _firestore.collection('users').doc(uid).get();
     if (!doc.exists || doc.data() == null) return null;
-    final data = doc.data()!;
-    return UserDTO(
-      email: data['email'] ?? '',
-      lang: data['lang'] ?? 'es',
-      displayName: data['displayName'] ?? '',
-      username: data['username'] ?? '',
-      gender: data['gender'] ?? '',
-      socialEcosystem: data['socialEcosystem'] != null
-          ? List<Map<String, dynamic>>.from((data['socialEcosystem'] as List))
-          : null,
-      location: data['location'] != null
-          ? LocationDTO.fromMap(Map<String, dynamic>.from(data['location']))
-          : LocationDTO(country: '', state: '', city: '', lat: 0, lng: 0),
-      avatarUrl: data['avatarUrl'],
-      phone: data['phone'],
-      voiceNoteUrl: data['voiceNoteUrl'],
-      category: data['category'] != null
-          ? List<String>.from(data['category'])
-          : null,
-      interests: data['interests'] != null
-          ? Map<String, List<String>>.from(
-              (data['interests'] as Map).map(
-                (k, v) => MapEntry(k.toString(), List<String>.from(v ?? [])),
-              ),
-            )
-          : <String, List<String>>{},
-      createdAt: data['createdAt'] != null
-          ? (data['createdAt'] as Timestamp).toDate()
-          : DateTime.now(),
-      updatedAt: data['updatedAt'] != null
-          ? (data['updatedAt'] as Timestamp).toDate()
-          : DateTime.now(),
-    );
+    return UserDTO.fromMap(Map<String, dynamic>.from(doc.data()!));
   }
 
   Future<UserDTO?> getCurrentUser() async {
