@@ -306,14 +306,14 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.grey[800],
-                                        foregroundColor: Colors.white,
-                                      ),
-                                      onPressed: _pickDateRange,
-                                      child: Text("stats.date".tr()),
-                                    ),
+                                    // ElevatedButton(
+                                    //   style: ElevatedButton.styleFrom(
+                                    //     backgroundColor: Colors.grey[800],
+                                    //     foregroundColor: Colors.white,
+                                    //   ),
+                                    //   onPressed: _pickDateRange,
+                                    //   child: Text("stats.date".tr()),
+                                    // ),
                                     Text(
                                       rangeText,
                                       style: const TextStyle(

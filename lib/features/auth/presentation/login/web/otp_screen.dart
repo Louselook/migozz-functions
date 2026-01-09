@@ -9,6 +9,7 @@ import 'package:migozz_app/core/components/compuestos/custom_snackbar.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/login_cubit/login_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
 
 /// Pantalla de OTP web que replica la lógica de OTP móvil.
 ///
@@ -130,6 +131,17 @@ class _OtpScreenState extends State<OtpScreen> {
             }
           },
         ),
+
+        // ✅ LISTENER FIX: Redirigir al perfil cuando la autenticación es exitosa
+        BlocListener<AuthCubit, AuthState>(
+          listenWhen: (prev, cur) => prev.status != cur.status,
+          listener: (context, state) {
+            if (state.status == AuthStatus.authenticated) {
+              _hasProcessedAuth = true; // prevent any further attempts
+              context.go('/profile');
+            }
+          },
+        ),
       ],
       child: Scaffold(
         backgroundColor: const Color(0xFFEAE7F0),
@@ -208,6 +220,9 @@ class _OtpScreenState extends State<OtpScreen> {
                                         isFirst: i == 0,
                                         index: i,
                                         onChanged: (v) {
+                                          setState(
+                                            () {},
+                                          ); // Actualizar botón "Verify"
                                           if (v.length > 1) {
                                             // Handle paste
                                             final digits = v
@@ -224,6 +239,8 @@ class _OtpScreenState extends State<OtpScreen> {
                                               _controllers[j].text = digits[j];
                                             }
                                             if (digits.length >= 6) {
+                                              // Focus reset or dismiss logic could go here
+                                              FocusScope.of(context).unfocus();
                                               _handleOtpCompletion(
                                                 _controllers
                                                     .map((c) => c.text)
@@ -231,19 +248,22 @@ class _OtpScreenState extends State<OtpScreen> {
                                               );
                                             }
                                           } else {
-                                            if (v.isNotEmpty && i < 5) {
-                                              // move to next field
-                                              _controllers[i + 1].selection =
-                                                  TextSelection.fromPosition(
-                                                    TextPosition(offset: 1),
-                                                  );
-                                            }
+                                            // Normal single digit entry
                                             final code = _controllers
                                                 .map((c) => c.text)
                                                 .join();
                                             if (code.length == 6) {
+                                              FocusScope.of(context).unfocus();
                                               _handleOtpCompletion(code);
                                             }
+                                          }
+                                        },
+                                        onSubmitted: (_) {
+                                          final code = _controllers
+                                              .map((c) => c.text)
+                                              .join();
+                                          if (code.length == 6) {
+                                            _handleOtpCompletion(code);
                                           }
                                         },
                                       ),
@@ -334,6 +354,14 @@ class _OtpScreenState extends State<OtpScreen> {
 }
 
 class _OtpBoxField extends StatelessWidget {
+  final double size;
+  final TextEditingController controller;
+  final int index;
+  final bool isFirst;
+  final FocusNode? focusNode;
+  final ValueChanged<String> onChanged;
+  final ValueChanged<String>? onSubmitted; // New parameter
+
   const _OtpBoxField({
     required this.size,
     required this.controller,
@@ -341,14 +369,8 @@ class _OtpBoxField extends StatelessWidget {
     required this.isFirst,
     this.focusNode,
     required this.onChanged,
+    this.onSubmitted,
   });
-
-  final double size;
-  final TextEditingController controller;
-  final int index; // posición del campo (0..5)
-  final bool isFirst;
-  final FocusNode? focusNode;
-  final ValueChanged<String> onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -397,6 +419,7 @@ class _OtpBoxField extends StatelessWidget {
           // Notificamos al padre para que arme el OTP, valide, etc.
           onChanged(value);
         },
+        onSubmitted: onSubmitted,
       ),
     );
   }

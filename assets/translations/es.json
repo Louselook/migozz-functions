@@ -292,15 +292,15 @@
         "hint": "Cuéntale a la gente sobre ti...",
         "save": "Guardar biografía",
         "label": "Bio",
-        "success": "Biografia actualizada correctamente",
-        "errorUpdate": "Error al actualizar la biografia:"
+        "success": "Biografía actualizada correctamente",
+        "errorUpdate": "Error al actualizar la biografía:"
       },
       "links": {
         "title": "Enlaces destacados",
         "add": "+ Añadir enlace.",
         "successAdd": "Enlace añadido correctamente",
         "errorAdd": "Error al añadir el enlace:",
-        "emptyTitle": "Tu enlace esta vacio",
+        "emptyTitle": "Tu enlace está vacío",
         "emptySubtitle": "Añade al menos un enlace para comenzar",
         "maximumLinks": "Se permiten un máximo de 2 enlaces.",
         "sheetTitle": "Agregar enlace de sitio web",
@@ -329,8 +329,8 @@
         },
         "sheetType": {
           "website": "Sitio web",
-          "phone": "Numero de telefono",
-          "email": "Correo electronico"
+          "phone": "Número de teléfono",
+          "email": "Correo electrónico"
         },
         "hints": {
           "website": "https://ejemplo.com",
@@ -340,8 +340,8 @@
         "validation": {
           "required": "Por favor ingresa un valor",
           "websiteFormat": "El sitio web debe comenzar con http:// o https://",
-          "emailFormat": "Ingresa un correo valido",
-          "phoneFormat": "Ingresa un numero de telefono valido"
+          "emailFormat": "Ingresa un correo válido",
+          "phoneFormat": "Ingresa un número de teléfono válido"
         }
       },
       "profileStrength": {
@@ -361,7 +361,7 @@
         "imageTooLarge": "La imagen supera 5MB",
         "validation": {
           "required": "El enlace es obligatorio",
-          "invalidFormat": "Formato de enlace invalido",
+          "invalidFormat": "Formato de enlace inválido",
           "invalidScheme": "El enlace debe iniciar con http/https"
         }
       }
@@ -373,11 +373,11 @@
       "redirectCompleteProfile": "Redirigiendo a completar perfil..."
     },
     "qrScanner": {
-      "title": "Escanear codigo QR",
-      "instruction": "Apunta tu camara a un codigo QR de Migozz",
-      "invalidFormat": "Formato de QR invalido",
+      "title": "Escanear código QR",
+      "instruction": "Apunta tu cámara a un código QR de Migozz",
+      "invalidFormat": "Formato de QR inválido",
       "userNotFound": "Usuario no encontrado",
-      "errorProcessing": "Error al procesar el codigo QR"
+      "errorProcessing": "Error al procesar el código QR"
     }
   },
   "search": {
@@ -413,9 +413,9 @@
       "followers": "Seguidores:"
     },
     "metrics": {
-      "likes": "me gusta",
-      "shares": "compartidos",
-      "followers": "seguidores"
+      "likes": "Me gusta",
+      "shares": "Compartidos",
+      "followers": "Seguidores"
     },
     "fieldLabels": {
       "followers": "Seguidores",
@@ -454,7 +454,7 @@
     "popUp": {
       "title": "Desvincular ",
       "subtitle": "¿Estás seguro que quieres desvincular ",
-      "yes": "Si",
+      "yes": "Sí",
       "no": "No"
     },
     "categories": {
@@ -547,7 +547,7 @@
         "cellPhone": "Teléfono celular",
         "dateOfBirth": "Fecha de nacimiento",
         "gender": "Género",
-        "location": "Ubicacion"
+        "location": "Ubicación"
       },
       "genderOptions": {
         "male": "Masculino",
@@ -561,12 +561,12 @@
       "logOutConfirmation": "¿Estás seguro de que quieres cerrar sesión?",
       "logOutLoading": "Cerrando sesión...",
       "loadingProfile": "Cargando perfil...",
-      "locationNotSet": "Ubicacion no establecida",
+      "locationNotSet": "Ubicación no establecida",
       "deleteAccount": {
         "title": "Eliminar cuenta",
-        "description": "?Seguro que quieres eliminar tu cuenta?\n\nEsta accion iniciara un proceso de eliminacion que puede tardar hasta 30 dias habiles en completarse. Durante este tiempo, todos tus datos se eliminaran de forma permanente y no se podran recuperar.",
+        "description": "¿Seguro que quieres eliminar tu cuenta?\n\nEsta acción iniciará un proceso de eliminación que puede tardar hasta 30 días hábiles en completarse. Durante este tiempo, todos tus datos se eliminarán de forma permanente y no se podrán recuperar.",
         "confirm": "Eliminar cuenta",
-        "submitted": "Solicitud de eliminacion enviada. Tus datos se eliminaran permanentemente en un maximo de 30 dias habiles."
+        "submitted": "Solicitud de eliminación enviada. Tus datos se eliminarán permanentemente en un máximo de 30 días hábiles."
       },
       "webRestriction": {
         "audio": "Usa la app para cambiar tu audio"
@@ -589,6 +589,12 @@
       "text3": "{country}\n\n",
       "text4": "¿Es correcto?",
       "title": "Confirmar ubicacion"
+    },
+    "unsavedChanges": {
+      "title": "Cambios sin guardar",
+      "message": "Tienes cambios sin guardar. ¿Deseas guardarlos?",
+      "discard": "Descartar",
+      "save": "Guardar"
     },
     "editInterest": {
       "title": "Editar mis intereses",
@@ -747,11 +753,11 @@
     "unknown": "Desconocido",
     "noData": "Sin datos",
     "loader_sequence": {
-      "connecting": "Conectando con {platform}...",
-      "validating": "Validando cuenta...",
-      "syncing": "Sincronizando perfil...",
-      "ready": "¡Listo!",
-      "delay": "Cargando contenido... Agradecemos tu paciencia."
+      "connecting": "Estableciendo conexión segura con {platform}...",
+      "validating": "Verificando tus credenciales de acceso...",
+      "syncing": "Sincronizando la información de tu perfil...",
+      "ready": "¡Proceso completado con éxito!",
+      "delay": "Estamos finalizando los últimos detalles. Gracias por tu paciencia."
     }
   }
 }

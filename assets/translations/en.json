@@ -9,7 +9,7 @@
             "onboardingSubtitle1" : "Your content. Your Rules. Your Universe."
         },
         "descriptions":{
-            "onboardingDescription1" : "Centralize everything your are. Share instatly. Grow effortlessly.",
+            "onboardingDescription1" : "Centralize everything you are. Share instantly. Grow effortlessly.",
             "onboardingDescription2" : "Migozz merges your networks and introduces you to new communities in one tap.",
             "onboardingDescription3" : "Share posts, links, photos, stories, music, services, and more. Your Migozz Profile becomes your command center to go viral and join creator, fan, or business circles."
         },
@@ -385,7 +385,7 @@
             "hints": {
               "website": "https://example.com",
               "phone": "+1 234 567 8900",
-              "email": "email@example.com"
+              "email": "Email@example.com"
             },
             "validation": {
               "required": "Please enter a value",
@@ -417,17 +417,17 @@
             "notSocials" : "You don't have any social networks connected yet, connect them!",
             "addButton" : "Add Socials"
         },
-        "date": "Selec date",
+        "date": "Select Date",
         "dataCardLabel": {
-          "title" : "Overwied",
+          "title" : "Overview",
           "likes" : "Likes:",
           "shares" : "Shares:",
           "followers" : "Followers:"
         },
         "metrics": {
-          "likes": "likes",
-          "shares": "shares",
-          "followers": "followers"
+          "likes": "Likes",
+          "shares": "Shares",
+          "followers": "Followers"
         },
         "fieldLabels": {
           "followers": "Followers",
@@ -577,7 +577,7 @@
             "deleteAccount": {
                 "title": "Delete account",
                 "description": "Are you sure you want to delete your account?\n\nThis action will start a deletion process that may take up to 30 business days to be fully completed. During this time, all your data will be permanently removed and cannot be recovered.",
-                "confirm": "Delete account",
+                "confirm": "Delete Account",
                 "submitted": "Account deletion request submitted. Your data will be permanently deleted within 30 business days."
             },
             "webRestriction": {
@@ -601,6 +601,12 @@
             "text2" : "{city}, {state}\n",
             "text3" : "{country}\n\n",
             "text4" : "Is that correct?"
+        },
+        "unsavedChanges": {
+            "title": "Unsaved changes",
+            "message": "You have unsaved changes. Do you want to save them?",
+            "discard": "Discard",
+            "save": "Save"
         },
         "editInterest" : {
             "title" : "Edit my Interest",
@@ -628,23 +634,23 @@
         "unknown": "Unknown",
         "noData": "No data",
         "loader_sequence": {
-          "connecting": "Connecting with {platform}...",
-          "validating": "Validating account...",
-          "syncing": "Synchronizing profile...",
-          "ready": "Ready!",
-          "delay": "Thank you for your patience. We’re working on it."
+          "connecting": "Establishing secure connection with {platform}...",
+          "validating": "Verifying your access credentials...",
+          "syncing": "Synchronizing your profile information...",
+          "ready": "Process completed successfully!",
+          "delay": "We are finalizing the last details. Thank you for waiting."
         }
     },
     "buttons" : {
-        "confirm" : "confirm",
-        "cancel" : "cancel",
-        "save" : "save",
-        "delete": "delete",
-        "continue" : "continue"
+        "confirm" : "Confirm",
+        "cancel" : "Cancel",
+        "save" : "Save",
+        "delete": "Delete",
+        "continue" : "Continue"
     },
     "category" : {
         "title" : "Choose Your Category",
-        "model" : "model",
+        "model" : "Model",
         "artist" : "Artist",
         "publicFigure" : "Public Figure",
         "streamer" : "Streamer",

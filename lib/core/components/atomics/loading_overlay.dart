@@ -3,11 +3,7 @@ import 'package:migozz_app/features/profile/components/utils/Loader.dart';
 
 class LoadingOverlay {
   static void show(BuildContext context, {String? message}) {
-    showProfileLoader(
-      context,
-      message: message ?? 'Loading...',
-      barrierDismissible: false,
-    );
+    showProfileLoader(context, message: message, barrierDismissible: false);
   }
 
   static void hide(BuildContext context) {
