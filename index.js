@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const { extractUsername } = require('./utils/helpers');
@@ -375,9 +377,34 @@ app.post('/sync/user/:userId', async (req, res) => {
     return res.status(400).json({ error: 'userId requerido' });
   }
 
+  // Optional: sync only some platforms
+  // - Query: ?platform=instagram  OR  ?platforms=instagram,tiktok
+  // - Body: { platforms: ['instagram','tiktok'] }
+  const queryPlatform = req.query?.platform;
+  const queryPlatforms = req.query?.platforms;
+  const bodyPlatforms = req.body?.platforms;
+
+  let platforms = null;
+  if (typeof queryPlatform === 'string' && queryPlatform.trim()) {
+    platforms = [queryPlatform.trim()];
+  } else if (typeof queryPlatforms === 'string' && queryPlatforms.trim()) {
+    platforms = queryPlatforms
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+  } else if (Array.isArray(bodyPlatforms) && bodyPlatforms.length > 0) {
+    platforms = bodyPlatforms.map((s) => String(s || '').trim()).filter(Boolean);
+  }
+
+  if (platforms && platforms.length === 0) platforms = null;
+
   try {
     console.log(`\n📥 [API] POST /sync/user/${userId}`);
-    const result = await syncUserNetworks(userId);
+    if (platforms) {
+      console.log(`   ↳ Platforms filter: ${platforms.join(', ')}`);
+    }
+
+    const result = await syncUserNetworks(userId, platforms ? { platforms } : undefined);
     
     return res.json({
       status: 'success',

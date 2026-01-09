@@ -10,6 +10,8 @@
 
 const { db } = require('../config/firebaseAdmin');
 const { extractUsername } = require('../utils/helpers');
+const axios = require('axios');
+const { saveProfileImageForProfile } = require('../utils/imageSaver');
 
 // Importar todos los scrapers
 const scrapeTikTok = require('../scrapers/tiktok');
@@ -53,11 +55,91 @@ const SCRAPERS = {
   snapchat: scrapeSnapchat,
 };
 
+const DEFAULT_SYNC_INTERVAL_DAYS = 15;
+
+function toDateOrNull(value) {
+  if (!value) return null;
+  if (value instanceof Date) return value;
+  if (typeof value?.toDate === 'function') {
+    try {
+      return value.toDate();
+    } catch (_) {
+      return null;
+    }
+  }
+  if (typeof value === 'number') return new Date(value);
+  if (typeof value === 'string') {
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  return null;
+}
+
+function daysBetween(now, past) {
+  if (!past) return Infinity;
+  return (now.getTime() - past.getTime()) / (1000 * 60 * 60 * 24);
+}
+
+function getSyncIntervalDays() {
+  const raw = process.env.SYNC_INTERVAL_DAYS;
+  const n = raw ? Number(raw) : NaN;
+  if (Number.isFinite(n) && n > 0) return Math.floor(n);
+  return DEFAULT_SYNC_INTERVAL_DAYS;
+}
+
+function getMigosMsBaseUrl() {
+  return (
+    process.env.MIGOS_MS_BASE_URL ||
+    process.env.MIGOZZ_MS_BASE_URL ||
+    process.env.API_MIGOZZ ||
+    process.env.MIGOS_MS_URL ||
+    null
+  );
+}
+
+async function fetchProfileViaHttp({ baseUrl, platform, usernameOrLink }) {
+  const safeBase = String(baseUrl || '').replace(/\/+$/, '');
+  if (!safeBase) throw new Error('Base URL no configurada para HTTP scraper');
+
+  const endpoint = `/${platform}/profile`;
+  const url = `${safeBase}${endpoint}`;
+
+  const response = await axios.get(url, {
+    params: {
+      username_or_link: usernameOrLink,
+    },
+    timeout: 60_000,
+    validateStatus: (s) => s >= 200 && s < 500,
+  });
+
+  if (response.status >= 200 && response.status < 300) {
+    return response.data;
+  }
+  const msg =
+    typeof response.data === 'string'
+      ? response.data
+      : response.data?.error || JSON.stringify(response.data);
+  throw new Error(`HTTP ${platform} error (${response.status}): ${msg}`);
+}
+
 function isPlainObject(value) {
   return !!value && typeof value === 'object' && !Array.isArray(value);
 }
 
 function removeUndefinedDeep(value) {
+  // Preserve timestamps / dates.
+  if (value instanceof Date) {
+    return value;
+  }
+  // Firestore Timestamp (admin SDK) often has toDate()/toMillis().
+  if (value && typeof value.toDate === 'function' && typeof value.toMillis === 'function') {
+    try {
+      return value.toDate();
+    } catch (_) {
+      return value;
+    }
+  }
+
   if (Array.isArray(value)) {
     return value
       .map(removeUndefinedDeep)
@@ -76,6 +158,105 @@ function removeUndefinedDeep(value) {
   }
 
   return value;
+}
+
+function isNonEmptyString(v) {
+  return typeof v === 'string' && v.trim().length > 0;
+}
+
+function isPlainNumber(v) {
+  return typeof v === 'number' && Number.isFinite(v);
+}
+
+function mergePreferNonEmpty(existing, incoming) {
+  // Prefer incoming when it looks valid; keep existing when incoming is empty-ish.
+  if (incoming === undefined || incoming === null) return existing;
+
+  if (typeof incoming === 'string') {
+    if (incoming.trim() === '' && isNonEmptyString(existing)) return existing;
+    return incoming;
+  }
+
+  if (isPlainNumber(incoming)) {
+    // Avoid overwriting a good value with 0 when scrapers fail.
+    if (incoming === 0 && isPlainNumber(existing) && existing > 0) return existing;
+    return incoming;
+  }
+
+  if (typeof incoming === 'boolean') return incoming;
+
+  if (Array.isArray(incoming)) {
+    return incoming.length === 0 && Array.isArray(existing) && existing.length > 0
+      ? existing
+      : incoming;
+  }
+
+  if (isPlainObject(incoming)) {
+    const out = isPlainObject(existing) ? { ...existing } : {};
+    for (const [k, v] of Object.entries(incoming)) {
+      out[k] = mergePreferNonEmpty(out[k], v);
+    }
+    return out;
+  }
+
+  return incoming;
+}
+
+function getPlatformDataFromSocialEcosystem(socialEcosystem, platform) {
+  if (!Array.isArray(socialEcosystem)) return null;
+  const item = socialEcosystem.find(
+    (e) => isPlainObject(e) && Object.prototype.hasOwnProperty.call(e, platform),
+  );
+  if (!item) return null;
+  return isPlainObject(item[platform]) ? item[platform] : item[platform];
+}
+
+function ensureUserSyncMeta(userData) {
+  const meta = isPlainObject(userData?.socialEcosystemSyncMeta)
+    ? userData.socialEcosystemSyncMeta
+    : {};
+  return { ...meta };
+}
+
+function getAddedAtForPlatform(userData, platform) {
+  const meta = userData?.socialEcosystemSyncMeta;
+  const fromMeta = isPlainObject(meta) && isPlainObject(meta[platform]) ? meta[platform].addedAt : null;
+  const fromAddedDates =
+    isPlainObject(userData?.socialEcosystemAddedDates) ? userData.socialEcosystemAddedDates[platform] : null;
+  return toDateOrNull(fromMeta) || toDateOrNull(fromAddedDates);
+}
+
+function getLastSuccessAtForPlatform(userData, platform) {
+  const meta = userData?.socialEcosystemSyncMeta;
+  const v = isPlainObject(meta) && isPlainObject(meta[platform]) ? meta[platform].lastSuccessAt : null;
+  return toDateOrNull(v);
+}
+
+function isPlatformDueForSync(userData, platform, intervalDays) {
+  const now = new Date();
+  const addedAt = getAddedAtForPlatform(userData, platform);
+  const lastSuccessAt = getLastSuccessAtForPlatform(userData, platform);
+  const anchor = lastSuccessAt || addedAt;
+  if (!anchor) {
+    // If we don't know when it was added, we avoid syncing immediately to prevent mass overwrites.
+    return { due: false, reason: 'missing_added_at' };
+  }
+  const days = daysBetween(now, anchor);
+  return { due: days >= intervalDays, reason: `days_since_${lastSuccessAt ? 'last_success' : 'added'}:${days.toFixed(2)}` };
+}
+
+function isProfileDataMeaningful(profileData) {
+  if (!isPlainObject(profileData)) return false;
+
+  // A minimal sanity check to avoid overwriting good data with scraper failures.
+  const hasText = isNonEmptyString(profileData.full_name) || isNonEmptyString(profileData.bio);
+  const hasCounts =
+    (isPlainNumber(profileData.followers) && profileData.followers > 0) ||
+    (isPlainNumber(profileData.following) && profileData.following > 0) ||
+    (isPlainNumber(profileData.mediaCount) && profileData.mediaCount > 0) ||
+    (isPlainNumber(profileData.posts) && profileData.posts > 0);
+  const hasImage = isNonEmptyString(profileData.profile_image_url);
+  return hasText || hasCounts || hasImage;
 }
 
 /**
@@ -163,7 +344,7 @@ function upsertPlatformInSocialEcosystem(socialEcosystem, platform, platformPayl
  * @param {string} userId - ID del usuario en Firestore
  * @returns {Promise<Object>} Resultado de la sincronización
  */
-async function syncUserNetworks(userId) {
+async function syncUserNetworks(userId, options = {}) {
   console.log(`\n🔄 [SyncService] Iniciando sincronización para usuario: ${userId}`);
   
   const syncStartTime = new Date();
@@ -186,6 +367,12 @@ async function syncUserNetworks(userId) {
     const userData = userDoc.data();
     const socialEcosystem = userData.socialEcosystem || [];
 
+    const intervalDays = Number.isFinite(options.intervalDays) && options.intervalDays > 0
+      ? Math.floor(options.intervalDays)
+      : getSyncIntervalDays();
+    const syncMeta = ensureUserSyncMeta(userData);
+    const now = new Date();
+
     console.log(`✅ Usuario encontrado: ${userData.displayName}`);
     console.log(`📊 Redes a sincronizar: ${socialEcosystem.length}`);
 
@@ -196,10 +383,29 @@ async function syncUserNetworks(userId) {
     }
 
     // 2. Normalizar lista de redes a sincronizar (soporta estructura actual del front)
-    const networksToSync = [];
+    const networksToSyncAllRaw = [];
     for (const entry of socialEcosystem) {
-      networksToSync.push(...normalizeSocialEcosystemEntry(entry));
+      networksToSyncAllRaw.push(...normalizeSocialEcosystemEntry(entry));
     }
+
+    // Deduplicar por plataforma (una sola sync por red por usuario)
+    const uniqueByPlatform = new Map();
+    for (const item of networksToSyncAllRaw) {
+      if (!item?.platform) continue;
+      if (!uniqueByPlatform.has(item.platform)) {
+        uniqueByPlatform.set(item.platform, item);
+      }
+    }
+    const networksToSyncAll = Array.from(uniqueByPlatform.values());
+
+    // Filtrado opcional (para job programado)
+    const filterPlatforms = Array.isArray(options.platforms)
+      ? options.platforms.map((p) => String(p || '').toLowerCase()).filter(Boolean)
+      : null;
+
+    const networksToSync = filterPlatforms
+      ? networksToSyncAll.filter(({ platform }) => filterPlatforms.includes(platform))
+      : networksToSyncAll;
 
     if (networksToSync.length === 0) {
       console.log('⚠️ No se pudieron interpretar redes sociales (estructura inesperada)');
@@ -210,40 +416,134 @@ async function syncUserNetworks(userId) {
     // Copia que vamos a ir actualizando con los datos scrapeados
     let updatedSocialEcosystem = socialEcosystem;
 
+    // 2.1 Asegurar addedAt por plataforma si no existe (no fuerza sync)
+    let metaNeedsWrite = false;
+    for (const { platform } of networksToSyncAll) {
+      if (!isPlainObject(syncMeta[platform])) syncMeta[platform] = {};
+      const existingAddedAt = getAddedAtForPlatform(userData, platform);
+      if (!existingAddedAt) {
+        syncMeta[platform].addedAt = now;
+        metaNeedsWrite = true;
+      }
+    }
+
     // 3. Iterar sobre cada red social
+    // Por defecto (endpoint manual): sincroniza todas.
+    // Para job programado: se pasa options.platforms con las plataformas vencidas.
     for (const { platform, username } of networksToSync) {
       console.log(`\n   🌐 Scrapeando ${platform}: ${username}...`);
 
       try {
-        const scraper = SCRAPERS[platform];
-        if (!scraper) {
-          throw new Error(`Scraper no disponible para ${platform}`);
+        const previousPlatformData = getPlatformDataFromSocialEcosystem(updatedSocialEcosystem, platform);
+
+        // Resolver scraper: Instagram/LinkedIn via migos-ms si está configurado.
+        const migosMsBase = getMigosMsBaseUrl();
+        let profileDataRaw;
+        if ((platform === 'instagram' || platform === 'linkedin') && migosMsBase) {
+          profileDataRaw = await fetchProfileViaHttp({
+            baseUrl: migosMsBase,
+            platform,
+            usernameOrLink: username,
+          });
+        } else {
+          const scraper = SCRAPERS[platform];
+          if (!scraper) {
+            throw new Error(`Scraper no disponible para ${platform}`);
+          }
+          profileDataRaw = await scraper(username);
         }
 
-        const profileDataRaw = await scraper(username);
-        const profileData = removeUndefinedDeep(profileDataRaw || {});
+        const profileDataClean = removeUndefinedDeep(profileDataRaw || {});
 
-        // Guardar en historial (sanitizado)
-        await saveToHistory(userId, platform, profileData);
+        // Intentar persistir imagen (opcional)
+        let profileData = profileDataClean;
+        try {
+          if (isNonEmptyString(profileDataClean.profile_image_url)) {
+            const saved = await saveProfileImageForProfile({
+              platform,
+              username,
+              imageUrl: profileDataClean.profile_image_url,
+            });
+            if (saved) {
+              profileData = {
+                ...profileDataClean,
+                profile_image_saved: true,
+                profile_image_storage_path: saved.path,
+                profile_image_saved_at: new Date(),
+                // prefer stable URL if available
+                profile_image_url: saved.publicUrl || profileDataClean.profile_image_url,
+              };
+            }
+          }
+        } catch (e) {
+          console.warn(`   ⚠️  Error guardando imagen (${platform}):`, e.message);
+        }
+
+        // Validar data para evitar sobrescrituras con vacíos
+        const meaningful = isProfileDataMeaningful(profileData);
+
+        // Guardar historial (antes/después)
+        await saveToHistory(userId, platform, {
+          status: meaningful ? 'success' : 'empty_payload',
+          before: previousPlatformData || null,
+          after: profileData,
+          username,
+          intervalDays,
+        });
+
+        if (!meaningful) {
+          throw new Error('Scraper devolvió payload vacío/inválido; no se actualiza Firestore');
+        }
+
+        // Merge seguro: no reemplazar valores buenos por vacíos
+        const merged = mergePreferNonEmpty(previousPlatformData || {}, profileData);
 
         // Actualizar el socialEcosystem del usuario con la data fresca
         updatedSocialEcosystem = upsertPlatformInSocialEcosystem(
           updatedSocialEcosystem,
           platform,
-          profileData,
+          merged,
         );
+
+        // Actualizar meta por plataforma
+        if (!isPlainObject(syncMeta[platform])) syncMeta[platform] = {};
+        syncMeta[platform].lastAttemptAt = now;
+        syncMeta[platform].lastSuccessAt = now;
+        syncMeta[platform].lastError = null;
+        syncMeta[platform].lastErrorAt = null;
+        metaNeedsWrite = true;
 
         results.successful.push({
           platform,
           username,
-          followers: profileData.followers ?? null,
+          followers: merged.followers ?? null,
           timestamp: new Date(),
         });
 
-        const followersText = profileData.followers ?? 'N/A';
+        const followersText = merged.followers ?? 'N/A';
         console.log(`   ✅ ${platform}: ${followersText} followers`);
       } catch (error) {
         console.error(`   ❌ ${platform} Error:`, error.message);
+
+        // Historial de error
+        try {
+          const previousPlatformData = getPlatformDataFromSocialEcosystem(updatedSocialEcosystem, platform);
+          await saveToHistory(userId, platform, {
+            status: 'failed',
+            error: error.message,
+            before: previousPlatformData || null,
+            after: null,
+            username,
+            intervalDays,
+          });
+        } catch (_) {}
+
+        if (!isPlainObject(syncMeta[platform])) syncMeta[platform] = {};
+        syncMeta[platform].lastAttemptAt = now;
+        syncMeta[platform].lastError = error.message;
+        syncMeta[platform].lastErrorAt = now;
+        metaNeedsWrite = true;
+
         results.failed.push({
           platform,
           username,
@@ -260,19 +560,21 @@ async function syncUserNetworks(userId) {
       ? userData.socialEcosystemSyncStatus
       : {};
 
-    await db.collection('users').doc(userId).update(
-      removeUndefinedDeep({
-        socialEcosystem: updatedSocialEcosystem,
-        lastSocialEcosystemSync: syncEndTime,
-        socialEcosystemSyncStatus: {
-          ...existingStatus,
-          successful: results.successful.length,
-          failed: results.failed.length,
-          lastSyncTime: syncEndTime,
-          updatedAt: syncEndTime,
-        },
-      }),
-    );
+    const userUpdatePayload = removeUndefinedDeep({
+      socialEcosystem: updatedSocialEcosystem,
+      // Mantener este campo como "última sync exitosa" (al menos una plataforma)
+      lastSocialEcosystemSync: results.successful.length > 0 ? syncEndTime : undefined,
+      socialEcosystemSyncStatus: {
+        ...existingStatus,
+        successful: results.successful.length,
+        failed: results.failed.length,
+        lastSyncTime: syncEndTime,
+        updatedAt: syncEndTime,
+      },
+      socialEcosystemSyncMeta: metaNeedsWrite ? syncMeta : undefined,
+    });
+
+    await db.collection('users').doc(userId).update(userUpdatePayload);
 
     results.totalTime = syncEndTime - syncStartTime;
 
@@ -300,6 +602,7 @@ async function syncAllUsersThatNeedUpdate() {
     totalUsers: 0,
     usersSync: 0,
     usersFailed: 0,
+    usersSkipped: 0,
     startTime: globalStartTime,
     endTime: null,
     totalTime: 0,
@@ -309,30 +612,74 @@ async function syncAllUsersThatNeedUpdate() {
   try {
     // Obtener todos los usuarios
     const usersSnapshot = await db.collection('users').get();
+    summary.totalUsers = usersSnapshot.size;
     console.log(`📊 Total de usuarios: ${usersSnapshot.size}`);
+
+    const intervalDays = getSyncIntervalDays();
 
     for (const userDoc of usersSnapshot.docs) {
       const userId = userDoc.id;
       const userData = userDoc.data();
-      const lastSync = userData.lastSocialEcosystemSync?.toDate?.() || null;
+      const socialEcosystem = userData.socialEcosystem || [];
 
-      // Verificar si necesita sincronización (más de 15 días)
-      const needsSync = needsSyncByDays(lastSync, 15);
+      // Determinar plataformas vencidas POR RED
+      const normalized = [];
+      for (const entry of Array.isArray(socialEcosystem) ? socialEcosystem : []) {
+        normalized.push(...normalizeSocialEcosystemEntry(entry));
+      }
 
-      if (!needsSync) {
-        console.log(`⏭️  ${userId} - Aún no necesita sincronización`);
+      if (normalized.length === 0) {
+        summary.usersSkipped++;
         continue;
       }
 
-      console.log(`\n▶️  Sincronizando usuario: ${userId}`);
-      summary.totalUsers++;
+      // Seed meta.addedAt si falta, para que el conteo empiece (sin sincronizar hoy)
+      const existingMeta = ensureUserSyncMeta(userData);
+      let metaNeedsWrite = false;
+      const now = new Date();
+      for (const { platform } of normalized) {
+        const hasAdded = !!getAddedAtForPlatform(userData, platform);
+        if (!hasAdded) {
+          if (!isPlainObject(existingMeta[platform])) existingMeta[platform] = {};
+          existingMeta[platform].addedAt = now;
+          metaNeedsWrite = true;
+        }
+      }
+      if (metaNeedsWrite) {
+        try {
+          await db.collection('users').doc(userId).update({
+            socialEcosystemSyncMeta: removeUndefinedDeep(existingMeta),
+          });
+        } catch (e) {
+          console.warn(`⚠️  No se pudo guardar socialEcosystemSyncMeta para ${userId}:`, e.message);
+        }
+      }
+
+      const dueSet = new Set();
+      for (const { platform } of normalized) {
+        const { due } = isPlatformDueForSync(userData, platform, intervalDays);
+        if (due) dueSet.add(platform);
+      }
+
+      const duePlatforms = Array.from(dueSet.values());
+
+      if (duePlatforms.length === 0) {
+        summary.usersSkipped++;
+        continue;
+      }
+
+      console.log(`\n▶️  Sincronizando usuario: ${userId} (plataformas: ${duePlatforms.join(', ')})`);
 
       try {
-        const result = await syncUserNetworks(userId);
+        const result = await syncUserNetworks(userId, {
+          platforms: duePlatforms,
+          intervalDays,
+        });
         summary.usersSync++;
         summary.details.push({
           userId,
           status: 'success',
+          duePlatforms,
           result,
         });
       } catch (error) {
@@ -340,6 +687,7 @@ async function syncAllUsersThatNeedUpdate() {
         summary.details.push({
           userId,
           status: 'failed',
+          duePlatforms,
           error: error.message,
         });
       }
@@ -375,30 +723,33 @@ async function saveToHistory(userId, platform, profileData) {
 
   const historyEntry = removeUndefinedDeep({
     platform: safePlatform,
-    data: {
-      // Campos comunes (si existen)
-      id: safeData.id,
-      username: safeData.username,
-      full_name: safeData.full_name,
-      bio: safeData.bio,
-      followers: safeData.followers,
-      following: safeData.following,
-      verified: safeData.verified,
-      profile_image_url: safeData.profile_image_url,
-      url: safeData.url,
-      // Extra: guarda todo el payload también para debug/histórico
-      raw: safeData,
-    },
     syncedAt: new Date(),
+    ...safeData,
   });
 
   try {
-    // Guardar en subcollection: users/{userId}/socialEcosystemHistory/syncs/{timestamp}
-    await db
+    // Guardar en subcollection: users/{userId}/socialEcosystemHistory/{platform}/syncs/{timestamp}
+    // Nota: Firestore NO crea el documento padre automáticamente.
+    // Creamos un doc "índice" por plataforma para que el historial sea visible/listable.
+    const platformDocRef = db
       .collection('users')
       .doc(userId)
       .collection('socialEcosystemHistory')
-      .doc(`${platform}_${Date.now()}`)
+      .doc(safePlatform);
+
+    await platformDocRef.set(
+      removeUndefinedDeep({
+        platform: safePlatform,
+        updatedAt: new Date(),
+        lastSyncedAt: historyEntry.syncedAt,
+        lastStatus: historyEntry.status || 'unknown',
+      }),
+      { merge: true },
+    );
+
+    await platformDocRef
+      .collection('syncs')
+      .doc(String(Date.now()))
       .set(historyEntry);
 
     console.log(`   📝 Historial guardado para ${platform}`);
@@ -437,6 +788,7 @@ async function getSyncStatus() {
       usersSynced: 0,
       usersNeedSync: 0,
       averageLastSyncDays: 0,
+      intervalDays: getSyncIntervalDays(),
     };
 
     let totalDaysSince = 0;
@@ -449,11 +801,17 @@ async function getSyncStatus() {
         stats.usersSynced++;
         const daysSince = (new Date() - lastSync) / (1000 * 60 * 60 * 24);
         totalDaysSince += daysSince;
-
-        if (daysSince >= 15) {
-          stats.usersNeedSync++;
-        }
       }
+
+      // usersNeedSync: al menos una plataforma vencida
+      const socialEcosystem = userData.socialEcosystem || [];
+      const normalized = [];
+      for (const entry of Array.isArray(socialEcosystem) ? socialEcosystem : []) {
+        normalized.push(...normalizeSocialEcosystemEntry(entry));
+      }
+      const intervalDays = stats.intervalDays;
+      const hasDue = normalized.some(({ platform }) => isPlatformDueForSync(userData, platform, intervalDays).due);
+      if (hasDue) stats.usersNeedSync++;
     }
 
     if (stats.usersSynced > 0) {

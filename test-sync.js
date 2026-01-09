@@ -7,7 +7,7 @@
  * 
  * Qué hace:
  * 1. Conecta a Firestore
- * 2. Actualiza lastSocialEcosystemSync a hace 20 días (fuerza sincronización)
+ * 2. Fuerza sincronización por plataforma (addedAt/lastSuccessAt)
  * 3. Ejecuta la sincronización manualmente
  * 4. Muestra resultados
  */
@@ -65,19 +65,39 @@ async function runTest() {
     console.log(`   Nombre: ${userData.displayName}`);
     console.log(`   Redes: ${userData.socialEcosystem?.length || 0}\n`);
 
-    // ======================== PASO 2: ACTUALIZAR TIMESTAMP ========================
-    console.log('📋 PASO 2: Crear/Actualizar lastSocialEcosystemSync a hace 20 días...');
+    // ======================== PASO 2: FORZAR VENCIMIENTO POR PLATAFORMA ========================
+    console.log('📋 PASO 2: Forzando vencimiento por plataforma (hace 20 días)...');
 
     const twentyDaysAgo = new Date();
     twentyDaysAgo.setDate(twentyDaysAgo.getDate() - 20);
 
-    // Si el campo no existe, lo crea; si existe, lo actualiza
+    // Extraer plataformas desde socialEcosystem (soporta formato A y B)
+    const platforms = new Set();
+    const social = Array.isArray(userData.socialEcosystem) ? userData.socialEcosystem : [];
+    for (const entry of social) {
+      if (!entry || typeof entry !== 'object') continue;
+      if (entry.platform) {
+        platforms.add(String(entry.platform).toLowerCase());
+        continue;
+      }
+      for (const k of Object.keys(entry)) {
+        platforms.add(String(k).toLowerCase());
+      }
+    }
+
+    const syncMeta = {};
+    for (const p of platforms) {
+      syncMeta[p] = {
+        addedAt: twentyDaysAgo,
+        lastSuccessAt: twentyDaysAgo,
+      };
+    }
+
     await db.collection('users').doc(userId).set({
-      lastSocialEcosystemSync: twentyDaysAgo,
-      socialEcosystemAddedDates: userData.socialEcosystemAddedDates || {},
+      socialEcosystemSyncMeta: syncMeta,
     }, { merge: true }); // merge: true = no borra otros campos
 
-    console.log(`✅ Campo creado/actualizado a: ${twentyDaysAgo.toISOString()}\n`);
+    console.log(`✅ socialEcosystemSyncMeta actualizado a: ${twentyDaysAgo.toISOString()}\n`);
 
     // ======================== PASO 3: EJECUTAR SINCRONIZACIÓN ========================
     console.log('📋 PASO 3: Ejecutando sincronización...');
@@ -97,39 +117,67 @@ async function runTest() {
     const updatedUserDoc = await db.collection('users').doc(userId).get();
     const updatedData = updatedUserDoc.data();
 
+    const lastSyncVal = updatedData.lastSocialEcosystemSync;
+    const lastSyncDate =
+      lastSyncVal?.toDate?.() || (lastSyncVal instanceof Date ? lastSyncVal : null);
+
     console.log('✅ Usuario actualizado:');
-    console.log(`   lastSocialEcosystemSync: ${updatedData.lastSocialEcosystemSync?.toDate().toISOString() || 'null'}`);
+    console.log(`   lastSocialEcosystemSync: ${lastSyncDate?.toISOString?.() || 'null'}`);
     console.log(`   Redes sociales: ${updatedData.socialEcosystem?.length || 0}`);
 
     if (updatedData.socialEcosystem && updatedData.socialEcosystem.length > 0) {
       updatedData.socialEcosystem.forEach((net, idx) => {
-        console.log(`     [${idx}] ${net.platform}: ${net.followers || '?'} seguidores`);
+        if (net.platform) {
+          console.log(`     [${idx}] ${net.platform}: ${net.followers || '?'} seguidores`);
+        } else {
+          const key = Object.keys(net || {})[0] || 'unknown';
+          const payload = (net || {})[key] || {};
+          console.log(`     [${idx}] ${key}: ${payload.followers || '?'} seguidores`);
+        }
       });
     }
 
     // Obtener historial
     console.log('\n✅ Historial de sincronización:');
-    
-    const historySnapshot = await db
-      .collection('socialEcosystemHistory')
+
+    // Nuevo historial: users/{userId}/socialEcosystemHistory/{platform}/syncs/{timestamp}
+    const platformsSnapshot = await db
+      .collection('users')
       .doc(userId)
-      .collection('syncs')
-      .orderBy('syncedAt', 'desc')
-      .limit(5)
+      .collection('socialEcosystemHistory')
       .get();
 
-    if (!historySnapshot.empty) {
+    if (platformsSnapshot.empty) {
+      console.log('   (Sin historial aún)');
+    } else {
+      const firstPlatform = platformsSnapshot.docs[0].id;
+      const historySnapshot = await db
+        .collection('users')
+        .doc(userId)
+        .collection('socialEcosystemHistory')
+        .doc(firstPlatform)
+        .collection('syncs')
+        .orderBy('syncedAt', 'desc')
+        .limit(5)
+        .get();
+
       historySnapshot.forEach((doc) => {
         const data = doc.data();
-        console.log(`   • ${data.platform.toUpperCase()}: ${data.data.followers || '?'} followers @ ${data.syncedAt.toDate().toISOString()}`);
+        const ts = data.syncedAt?.toDate?.() || (data.syncedAt instanceof Date ? data.syncedAt : data.syncedAt);
+        const followerGuess =
+          data.after?.followers ??
+          data.after?.followersCount ??
+          data.after?.raw?.followers ??
+          data.after?.data?.followers;
+        console.log(
+          `   • ${String(data.platform || firstPlatform).toUpperCase()}: ${followerGuess || '?'} followers @ ${ts?.toISOString?.() || ts}`,
+        );
       });
-    } else {
-      console.log('   (Sin historial aún)');
     }
 
     console.log('\n✅ TEST COMPLETADO EXITOSAMENTE!\n');
     console.log('📊 Próximos pasos:');
-    console.log('   1. Revisa Firestore Console → socialEcosystemHistory');
+    console.log('   1. Revisa Firestore Console → users/{uid}/socialEcosystemHistory/{platform}/syncs');
     console.log('   2. Verifica que se crearon nuevos documentos');
     console.log('   3. Compara con los datos anteriores de Instagram');
     console.log('   4. ¡Listo! El sistema funciona correctamente\n');
