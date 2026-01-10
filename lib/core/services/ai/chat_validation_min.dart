@@ -78,7 +78,9 @@ Future<Map<String, dynamic>?> processBotResponse(
           resp['confirmLocation'] == true ||
           resp['emptyLocation'] == true;
       if (isValid == null && !hasAnyFlag) {
-        debugPrint('📍 [processBotResponse] Location prompt without flags (skip)');
+        debugPrint(
+          '📍 [processBotResponse] Location prompt without flags (skip)',
+        );
         return null;
       }
 
@@ -303,11 +305,31 @@ Future<Map<String, dynamic>?> processBotResponse(
       }
       break;
 
+    case RegisterStatusProgress.socialEcosystem:
+      // Las redes sociales se manejan en el navigation handler
+      // Aquí solo validamos que el flujo avance correctamente
+      debugPrint('📱 [processBotResponse] Paso de redes sociales procesado');
+      if (userResponse != null && userResponse.isNotEmpty) {
+        debugPrint(
+          '📱 Respuesta del usuario en socialEcosystem: $userResponse',
+        );
+        // El ecosistema social se actualiza desde SocialNetworkCubit directamente
+        // No necesitamos hacer nada aquí excepto permitir que el flujo continúe
+      }
+      break;
+
     case RegisterStatusProgress.avatarUrl:
       // Las fotos se manejan en el controller/navigation handler
+      // Detectar si el usuario quiere usar una foto de red social específica
       if (userResponse != null && userResponse.isNotEmpty) {
-        registerCubit.setAvatarUrl(userResponse);
-        debugPrint('✅ Avatar guardado: $userResponse');
+        // Si es una URL, guardarla directamente
+        if (userResponse.startsWith('http')) {
+          registerCubit.setAvatarUrl(userResponse);
+          debugPrint('✅ Avatar URL guardada: $userResponse');
+        } else {
+          // Si no es URL, podría ser una selección de plataforma o archivo local
+          debugPrint('📸 Procesando respuesta de avatar: $userResponse');
+        }
       } else {
         debugPrint('⚠️ No se proporcionó avatar, continuando sin foto');
       }
@@ -366,9 +388,11 @@ RegisterStatusProgress _parseStep(String raw) {
   }
   if (raw.contains('username')) return RegisterStatusProgress.username;
   // if (raw.contains('gender')) return RegisterStatusProgress.gender;
-  // if (raw.contains('social') || raw.contains('ecosystem')) {
-  //   return RegisterStatusProgress.socialEcosystem;
-  // }
+
+  // Habilitar socialEcosystem y avatarUrl para que el flujo los maneje correctamente
+  if (raw.contains('socialecosystem') || raw.contains('social')) {
+    return RegisterStatusProgress.socialEcosystem;
+  }
   if (raw.contains('location')) return RegisterStatusProgress.location;
   if (raw.contains('sendotp')) return RegisterStatusProgress.sendOTP;
   if (raw.contains('emailchange')) return RegisterStatusProgress.emailChange;
@@ -381,7 +405,10 @@ RegisterStatusProgress _parseStep(String raw) {
     return RegisterStatusProgress.emailVerification;
   }
 
-  // if (raw.contains('avatar')) return RegisterStatusProgress.avatarUrl;
+  // Habilitar avatarUrl para manejar selección de fotos
+  if (raw.contains('avatarurl') || raw.contains('avatar')) {
+    return RegisterStatusProgress.avatarUrl;
+  }
   if (raw.contains('phone')) return RegisterStatusProgress.phone;
   if (raw.contains('voice')) return RegisterStatusProgress.voiceNoteUrl;
   if (raw.contains('done')) return RegisterStatusProgress.doneChat;

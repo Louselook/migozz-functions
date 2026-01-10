@@ -11,6 +11,148 @@ class AssistantFunctions {
     return cubit.state.language == 'Español';
   }
 
+  /// Detecta si el usuario menciona un campo específico que quiere cambiar
+  /// Retorna el nombre del campo si se detecta, null si no
+  static String? _detectFieldMention(String normalized) {
+    // Detectar menciones de campos específicos
+    // Orden importa: más específicos primero
+
+    // Username
+    if (normalized.contains('nombre de usuario') ||
+        normalized.contains('username') ||
+        normalized == 'my username' ||
+        normalized == 'mi usuario' ||
+        normalized.contains('apodo') ||
+        normalized.contains('nick')) {
+      return 'username';
+    }
+
+    // Full name
+    if (normalized.contains('nombre completo') ||
+        normalized.contains('mi nombre') ||
+        normalized.contains('full name') ||
+        normalized == 'my name' ||
+        normalized == 'name' ||
+        normalized == 'nombre') {
+      return 'fullName';
+    }
+
+    // Social ecosystem
+    if (normalized.contains('redes sociales') ||
+        normalized.contains('redes') ||
+        normalized.contains('social') ||
+        normalized == 'my socials' ||
+        normalized == 'mis redes') {
+      return 'socialEcosystem';
+    }
+
+    // Avatar/Photo
+    if (normalized.contains('foto') ||
+        normalized.contains('imagen') ||
+        normalized.contains('avatar') ||
+        normalized.contains('profile picture') ||
+        normalized.contains('picture') ||
+        normalized.contains('photo') ||
+        normalized == 'my photo' ||
+        normalized == 'mi foto') {
+      return 'avatarUrl';
+    }
+
+    // Email
+    if (normalized.contains('correo') ||
+        normalized.contains('email') ||
+        normalized == 'my email' ||
+        normalized == 'mi correo') {
+      return 'sendOTP';
+    }
+
+    // Location
+    if (normalized.contains('ubicación') ||
+        normalized.contains('ubicacion') ||
+        normalized.contains('dirección') ||
+        normalized.contains('direccion') ||
+        normalized.contains('location') ||
+        normalized.contains('address') ||
+        normalized == 'my location' ||
+        normalized == 'mi ubicación' ||
+        normalized == 'mi ubicacion') {
+      return 'location';
+    }
+
+    // Phone
+    if (normalized.contains('teléfono') ||
+        normalized.contains('telefono') ||
+        normalized.contains('phone') ||
+        normalized.contains('número') ||
+        normalized.contains('numero') ||
+        normalized == 'my phone' ||
+        normalized == 'mi teléfono' ||
+        normalized == 'mi telefono') {
+      return 'phone';
+    }
+
+    // Voice note
+    if (normalized.contains('nota de voz') ||
+        normalized.contains('voice note') ||
+        normalized.contains('audio') ||
+        normalized.contains('grabación') ||
+        normalized.contains('grabacion') ||
+        normalized == 'my voice' ||
+        normalized == 'mi voz') {
+      return 'voiceNoteUrl';
+    }
+
+    return null;
+  }
+
+  /// Obtiene el nombre del campo en español para mensajes al usuario
+  static String _getFieldNameInSpanish(String fieldKey) {
+    switch (fieldKey) {
+      case 'fullName':
+        return 'nombre completo';
+      case 'username':
+        return 'nombre de usuario';
+      case 'location':
+        return 'ubicación';
+      case 'phone':
+        return 'teléfono';
+      case 'avatarUrl':
+        return 'foto de perfil';
+      case 'socialEcosystem':
+        return 'redes sociales';
+      case 'voiceNoteUrl':
+        return 'nota de voz';
+      case 'sendOTP':
+        return 'correo electrónico';
+      default:
+        return fieldKey;
+    }
+  }
+
+  /// Obtiene el nombre del campo en inglés para mensajes al usuario
+  static String _getFieldNameInEnglish(String fieldKey) {
+    switch (fieldKey) {
+      case 'fullName':
+        return 'full name';
+      case 'username':
+        return 'username';
+      case 'location':
+        return 'location';
+      case 'phone':
+        return 'phone number';
+      case 'avatarUrl':
+        return 'profile photo';
+      case 'socialEcosystem':
+        return 'social networks';
+      case 'voiceNoteUrl':
+        return 'voice note';
+      case 'sendOTP':
+        return 'email address';
+      default:
+        return fieldKey;
+    }
+  }
+
   /// Obtiene la pregunta actual del flujo
   /// Ahora devuelve `Map<String, dynamic>?` de forma defensiva (puede ser null)
   static Map<String, dynamic>? getCurrentQuestion(
@@ -93,20 +235,20 @@ class AssistantFunctions {
     // 👇 Detección de preguntas del tipo "why/para qué/por qué".
     // Importante: muchos usuarios escriben "porque" (1 palabra) sin signos.
     final isWhy =
-      normalizedPlain == 'why' ||
-      normalizedPlain.startsWith('why ') ||
-      normalizedPlain.endsWith(' why') ||
-      normalizedPlain.contains(' why ') ||
-      normalizedPlain.contains('por qué') ||
-      normalizedPlain.contains('por que') ||
-      normalizedPlain.contains('porqué') ||
-      normalizedPlain == 'porque' ||
-      normalizedPlain.startsWith('porque ') ||
-      normalizedPlain.contains(' para qué') ||
-      normalizedPlain.contains(' para que') ||
-      normalizedPlain.contains(' paraqué') ||
-      normalizedPlain == 'para que' ||
-      normalizedPlain == 'para qué';
+        normalizedPlain == 'why' ||
+        normalizedPlain.startsWith('why ') ||
+        normalizedPlain.endsWith(' why') ||
+        normalizedPlain.contains(' why ') ||
+        normalizedPlain.contains('por qué') ||
+        normalizedPlain.contains('por que') ||
+        normalizedPlain.contains('porqué') ||
+        normalizedPlain == 'porque' ||
+        normalizedPlain.startsWith('porque ') ||
+        normalizedPlain.contains(' para qué') ||
+        normalizedPlain.contains(' para que') ||
+        normalizedPlain.contains(' paraqué') ||
+        normalizedPlain == 'para que' ||
+        normalizedPlain == 'para qué';
 
     switch (stepKey) {
       case 'fullName':
@@ -159,6 +301,21 @@ class AssistantFunctions {
         }
 
         final n = normalizedPlain;
+
+        // PRIMERO: Detectar si el usuario menciona un campo específico para cambiar
+        // Esto permite respuestas como "my location", "mi foto", "username", etc.
+        final fieldMentions = _detectFieldMention(normalized);
+        if (fieldMentions != null) {
+          return {
+            "step": "regProgress.changeRequest",
+            "valid": false,
+            "changeRequest": true,
+            "targetField": fieldMentions,
+            "message": isSpanish
+                ? "Entendido. Vamos a actualizar tu ${_getFieldNameInSpanish(fieldMentions)}."
+                : "Got it. Let's update your ${_getFieldNameInEnglish(fieldMentions)}.",
+          };
+        }
 
         // If user explicitly wants to change something, route to change flow.
         final wantsChange =
@@ -335,7 +492,9 @@ class AssistantFunctions {
         final value = p.substring(idx + 1).trim();
         if (value.isEmpty) continue;
 
-        if (key.contains('país') || key.contains('pais') || key.contains('country')) {
+        if (key.contains('país') ||
+            key.contains('pais') ||
+            key.contains('country')) {
           country = value;
         } else if (key.contains('estado') ||
             key.contains('departamento') ||
@@ -347,7 +506,11 @@ class AssistantFunctions {
       }
     } else {
       // Parse simple por comas (según el prompt): Country, City, State
-      final parts = text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+      final parts = text
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
       if (parts.length >= 3) {
         country = parts[0];
         city = parts[1];
@@ -355,7 +518,8 @@ class AssistantFunctions {
       }
     }
 
-    final hasMinimum = country.isNotEmpty && state.isNotEmpty && city.isNotEmpty;
+    final hasMinimum =
+        country.isNotEmpty && state.isNotEmpty && city.isNotEmpty;
     if (!hasMinimum) {
       return {
         "step": "regProgress.location",
@@ -385,9 +549,26 @@ class AssistantFunctions {
     String normalized,
     RegisterCubit cubit,
   ) {
+    // IMPORTANTE: Ignorar mensajes internos del sistema
+    // Estos son comandos internos, no entradas del usuario
+    const systemMessages = [
+      'socials_updated',
+      'avatar_selected',
+      'photo_uploaded',
+      'voice_recorded',
+      'skip',
+      'done',
+      'continue',
+      'next',
+    ];
+
+    if (systemMessages.contains(normalized)) {
+      return null;
+    }
+
     final isSpanish = _getIsSpanish(cubit);
 
-    // Patrones para detectar cambios
+    // Patrones para detectar cambios explícitos
     final changePatterns = [
       'me equivoque',
       'me equivoqué',
@@ -413,11 +594,17 @@ class AssistantFunctions {
       'otra vez',
       'again',
       'de nuevo',
+      'update my',
+      'actualizar mi',
+      'modificar mi',
+      'modify my',
+      'edit my',
+      'editar mi',
     ];
 
-    final detectedChange = changePatterns.any((p) => normalized.contains(p));
-
-    if (!detectedChange) return null;
+    final detectedExplicitChange = changePatterns.any(
+      (p) => normalized.contains(p),
+    );
 
     // Detectar a QUÉ campo se refiere
     // IMPORTANTE: Orden importa para evitar confusiones.
@@ -430,32 +617,115 @@ class AssistantFunctions {
         normalized.contains('usuario') ||
         normalized.contains('apodo') ||
         normalized.contains('nick') ||
-        normalized.contains('nickname');
+        normalized.contains('nickname') ||
+        normalized == 'my username' ||
+        normalized == 'mi usuario';
 
     final wantsFullName =
         normalized.contains('nombre completo') ||
         normalized.contains('mi nombre') ||
         normalized.contains('full name') ||
+        normalized == 'my name' ||
+        normalized == 'name' ||
+        normalized == 'nombre' ||
         (normalized.contains('nombre') && !wantsUsername);
+
+    final wantsSocials =
+        normalized.contains('redes sociales') ||
+        normalized.contains('redes') ||
+        normalized.contains('social ecosystem') ||
+        normalized.contains('social networks') ||
+        normalized.contains('networks') ||
+        normalized.contains('social') ||
+        normalized.contains('instagram') ||
+        normalized.contains('tiktok') ||
+        normalized.contains('youtube') ||
+        normalized.contains('facebook') ||
+        normalized.contains('twitter') ||
+        normalized == 'my socials' ||
+        normalized == 'mis redes';
+
+    final wantsAvatar =
+        normalized.contains('foto') ||
+        normalized.contains('imagen') ||
+        normalized.contains('avatar') ||
+        normalized.contains('profile picture') ||
+        normalized.contains('picture') ||
+        normalized.contains('photo') ||
+        normalized == 'my photo' ||
+        normalized == 'mi foto';
+
+    final wantsEmail =
+        normalized.contains('correo') ||
+        normalized.contains('email') ||
+        normalized == 'my email' ||
+        normalized == 'mi correo';
+
+    final wantsLocation =
+        normalized.contains('ubicación') ||
+        normalized.contains('ubicacion') ||
+        normalized.contains('dirección') ||
+        normalized.contains('direccion') ||
+        normalized.contains('location') ||
+        normalized.contains('address') ||
+        normalized == 'my location' ||
+        normalized == 'mi ubicación' ||
+        normalized == 'mi ubicacion';
+
+    final wantsPhone =
+        normalized.contains('teléfono') ||
+        normalized.contains('telefono') ||
+        normalized.contains('phone') ||
+        normalized.contains('número') ||
+        normalized.contains('numero') ||
+        normalized == 'my phone' ||
+        normalized == 'mi teléfono' ||
+        normalized == 'mi telefono';
+
+    final wantsVoiceNote =
+        normalized.contains('nota de voz') ||
+        normalized.contains('voice note') ||
+        normalized.contains('audio') ||
+        normalized.contains('grabación') ||
+        normalized.contains('grabacion') ||
+        normalized == 'my voice' ||
+        normalized == 'mi voz';
+
+    // Detectar si hay un campo específico mencionado
+    final hasFieldMention =
+        wantsUsername ||
+        wantsFullName ||
+        wantsSocials ||
+        wantsAvatar ||
+        wantsEmail ||
+        wantsLocation ||
+        wantsPhone ||
+        wantsVoiceNote;
+
+    // IMPORTANTE: Solo detectar cambio implícito (solo mencionar el campo)
+    // si el input es corto (< 25 chars) o empieza con "my"/"mi"
+    // Esto evita falsos positivos cuando el usuario está respondiendo normalmente
+    final isShortFieldMention =
+        hasFieldMention &&
+        (normalized.length < 25 ||
+            normalized.startsWith('my ') ||
+            normalized.startsWith('mi '));
+
+    // Si hay patrón de cambio explícito, siempre detectar
+    // Si es mención corta de campo, también detectar
+    final detectedChange = detectedExplicitChange || isShortFieldMention;
+
+    if (!detectedChange) return null;
 
     if (wantsUsername) {
       targetField = 'username';
     } else if (wantsFullName) {
       targetField = 'fullName';
-    } else if (normalized.contains('redes sociales') ||
-        normalized.contains('redes') ||
-        normalized.contains('social ecosystem') ||
-        normalized.contains('social networks') ||
-        normalized.contains('networks') ||
-        normalized.contains('social')) {
+    } else if (wantsSocials) {
       targetField = 'socialEcosystem';
-    } else if (normalized.contains('foto') ||
-        normalized.contains('imagen') ||
-        normalized.contains('avatar') ||
-        normalized.contains('profile picture') ||
-        normalized.contains('picture')) {
+    } else if (wantsAvatar) {
       targetField = 'avatarUrl';
-    } else if (normalized.contains('correo') || normalized.contains('email')) {
+    } else if (wantsEmail) {
       targetField = 'sendOTP';
 
       // BLOQUEAR: Si el correo ya fue verificado, no permitir cambio
@@ -471,17 +741,12 @@ class AssistantFunctions {
               : "⚠️ Your email has already been verified. You cannot change it again.",
         };
       }
-    } else if (normalized.contains('ubicación') ||
-        normalized.contains('ubicacion') ||
-        normalized.contains('dirección') ||
-        normalized.contains('direccion') ||
-        normalized.contains('location') ||
-        normalized.contains('address')) {
+    } else if (wantsLocation) {
       targetField = 'location';
-    } else if (normalized.contains('teléfono') ||
-        normalized.contains('telefono') ||
-        normalized.contains('phone')) {
+    } else if (wantsPhone) {
       targetField = 'phone';
+    } else if (wantsVoiceNote) {
+      targetField = 'voiceNoteUrl';
     }
 
     return {

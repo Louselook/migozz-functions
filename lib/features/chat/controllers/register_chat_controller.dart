@@ -171,8 +171,8 @@ class RegisterChatController extends GenericChatController {
         "other": true,
         "type": MessageType.text,
         "text": isSpanish
-          ? "Por favor, selecciona una opción válida: Sí o No."
-          : "Please select a valid option: Yes or No.",
+            ? "Por favor, selecciona una opción válida: Sí o No."
+            : "Please select a valid option: Yes or No.",
         "options": isSpanish ? ["Sí", "No"] : ["Yes", "No"],
         "name": "Migozz",
         "time": getTimeNow(),
@@ -410,7 +410,6 @@ class RegisterChatController extends GenericChatController {
       final bool isOnAvatarStep = GeminiService.instance.isOnAvatarStep;
       final bool isOnVoiceNoteStep = GeminiService.instance.isOnVoiceNoteStep;
       final localOnShowAvatarTutorial = onShowAvatarTutorial;
-      final localOnShowVoiceNoteTutorial = onShowVoiceNoteTutorial;
       final localOnBotAction = onBotAction;
       final isWeb = kIsWeb;
       final isSpanish = registerCubit.state.language == 'Español';

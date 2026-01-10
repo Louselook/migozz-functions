@@ -66,25 +66,8 @@ class GeminiService {
 
     if (normalized.isEmpty) return null;
 
-    // Examples: "la de instagram", "la de tiktok", "la de facebook", "la de x"
-    if (!normalized.startsWith('la de ')) return null;
-
-    var raw = normalized.substring('la de '.length).trim();
-    if (raw.isEmpty) return null;
-
-    // Allow common possessives like: "la de mi instagram"
-    final rawParts = raw.split(' ').where((p) => p.trim().isNotEmpty).toList();
-    if (rawParts.isEmpty) return null;
-    if (rawParts.first == 'mi' || rawParts.first == 'mis' || rawParts.first == 'tu') {
-      raw = rawParts.skip(1).join(' ').trim();
-      if (raw.isEmpty) return null;
-    }
-
-    // Take first token; allow cases like "tik tok".
-    final token = raw.split(' ').take(2).join(' ').trim();
-
     String canonical(String v) {
-      final vv = v.replaceAll(' ', '');
+      final vv = v.replaceAll(' ', '').toLowerCase();
       if (vv == 'x') return 'twitter';
       if (vv == 'tiktok' || vv == 'tikt0k') return 'tiktok';
       if (vv == 'instagram' || vv == 'insta' || vv == 'ig') return 'instagram';
@@ -98,7 +81,89 @@ class GeminiService {
       return vv;
     }
 
-    return canonical(token);
+    // Lista de plataformas soportadas
+    final platforms = [
+      'instagram',
+      'insta',
+      'ig',
+      'facebook',
+      'fb',
+      'face',
+      'youtube',
+      'yt',
+      'tiktok',
+      'tik tok',
+      'twitter',
+      'x',
+      'threads',
+      'spotify',
+      'spoty',
+      'snapchat',
+      'snap',
+      'linkedin',
+    ];
+
+    // Patrones en español: "la de instagram", "usa la de instagram", "quiero la de instagram"
+    if (normalized.startsWith('la de ') || normalized.contains(' la de ')) {
+      final match = RegExp(
+        r'la de (?:mi |mis |tu )?(\w+)',
+      ).firstMatch(normalized);
+      if (match != null) {
+        return canonical(match.group(1)!);
+      }
+    }
+
+    // Patrones en inglés: "pick instagram", "use instagram", "the instagram one"
+    // "pick the instagram one", "use the instagram photo", "instagram please"
+    final pickPatterns = [
+      RegExp(r'^pick\s+(?:the\s+)?(\w+)'),
+      RegExp(r'^use\s+(?:the\s+)?(\w+)'),
+      RegExp(r'^select\s+(?:the\s+)?(\w+)'),
+      RegExp(r'^choose\s+(?:the\s+)?(\w+)'),
+      RegExp(r'^the\s+(\w+)\s+(?:one|photo|picture|image)'),
+      RegExp(r'^(\w+)\s+(?:one|photo|picture|image|please|por favor)$'),
+      RegExp(r'^(?:i want |quiero |dame )(?:the\s+)?(\w+)'),
+      RegExp(r'^(?:usar|usa|utilizar)\s+(?:la\s+de\s+)?(\w+)'),
+      RegExp(r'^elegir\s+(?:la\s+de\s+)?(\w+)'),
+      RegExp(r'^escoger\s+(?:la\s+de\s+)?(\w+)'),
+    ];
+
+    for (final pattern in pickPatterns) {
+      final match = pattern.firstMatch(normalized);
+      if (match != null) {
+        final captured = match.group(1)?.toLowerCase() ?? '';
+        // Verificar que es una plataforma válida
+        for (final platform in platforms) {
+          if (captured == platform ||
+              captured.startsWith(
+                platform.substring(
+                  0,
+                  platform.length > 3 ? 3 : platform.length,
+                ),
+              )) {
+            return canonical(captured);
+          }
+        }
+      }
+    }
+
+    // Detección directa: si el input es solo el nombre de la plataforma
+    for (final platform in platforms) {
+      if (normalized == platform) {
+        return canonical(platform);
+      }
+    }
+
+    // Búsqueda de plataforma en cualquier parte del texto corto (menos de 30 chars)
+    if (normalized.length < 30) {
+      for (final platform in platforms) {
+        if (normalized.contains(platform)) {
+          return canonical(platform);
+        }
+      }
+    }
+
+    return null;
   }
 
   String? _inferAvatarAction(String userInput) {
@@ -114,8 +179,8 @@ class GeminiService {
     final wantsCamera =
         normalized.contains('camara') ||
         normalized.contains('cámara') ||
-      normalized.contains('con camara') ||
-      normalized.contains('con cámara') ||
+        normalized.contains('con camara') ||
+        normalized.contains('con cámara') ||
         normalized.contains('tomar foto') ||
         normalized.contains('tomar una foto') ||
         normalized.contains('sacar foto') ||
@@ -129,12 +194,12 @@ class GeminiService {
     final wantsGallery =
         normalized.contains('galeria') ||
         normalized.contains('galería') ||
-      normalized.contains('foto de galeria') ||
-      normalized.contains('foto de galería') ||
-      normalized.contains('tomar foto desde galeria') ||
-      normalized.contains('tomar foto desde galería') ||
-      normalized.contains('subir una foto') ||
-      normalized.contains('quiero subir una foto') ||
+        normalized.contains('foto de galeria') ||
+        normalized.contains('foto de galería') ||
+        normalized.contains('tomar foto desde galeria') ||
+        normalized.contains('tomar foto desde galería') ||
+        normalized.contains('subir una foto') ||
+        normalized.contains('quiero subir una foto') ||
         normalized.contains('de la galeria') ||
         normalized.contains('de la galería') ||
         normalized.contains('elegir de la galeria') ||
@@ -196,7 +261,10 @@ class GeminiService {
       }
 
       // Enforce clamps even when env isn't set.
-      _maxOutputTokens = _maxOutputTokens.clamp(_minOutputTokens, _maxOutputTokensCap);
+      _maxOutputTokens = _maxOutputTokens.clamp(
+        _minOutputTokens,
+        _maxOutputTokensCap,
+      );
 
       final needsRebuild =
           _model == null ||
@@ -229,16 +297,17 @@ class GeminiService {
     }
   }
 
-    int _currentQuestionIndex = 0;
-    // Índice donde el usuario estaba cuando pidió repetir/cambiar un campo anterior.
-    // Al terminar el cambio, continuamos con el flujo normal desde el siguiente step.
-    int _previousQuestionIndex = 0;
-    bool _isInRepeatMode = false; // Flag para indicar que estamos en modo repetición
+  int _currentQuestionIndex = 0;
+  // Índice donde el usuario estaba cuando pidió repetir/cambiar un campo anterior.
+  // Al terminar el cambio, continuamos con el flujo normal desde el siguiente step.
+  int _previousQuestionIndex = 0;
+  bool _isInRepeatMode =
+      false; // Flag para indicar que estamos en modo repetición
   bool _awaitingEmailChange =
       false; // Flag para rastrear si estamos esperando cambio de email
   bool _comingFromOTPEmailChange =
       false; // Flag para saber si viene de cambio de email desde OTP
-    bool _awaitingManualLocation =
+  bool _awaitingManualLocation =
       false; // Flag para rastrear si estamos esperando ubicación manual
 
   bool _requestedMicPermissionForVoiceStep = false;
@@ -399,10 +468,122 @@ class GeminiService {
 
     // Evaluar respuesta
     final currentStepKey = _awaitingManualLocation
-      ? 'locationManual'
-      : (_awaitingEmailChange
-        ? 'emailChange'
-        : questionFlow[_currentQuestionIndex]);
+        ? 'locationManual'
+        : (_awaitingEmailChange
+              ? 'emailChange'
+              : questionFlow[_currentQuestionIndex]);
+
+    // ✅ Manejo especial para socialEcosystem: detectar retorno con redes vinculadas
+    // Cuando el usuario regresa de vincular redes, el mensaje interno es 'socials_updated'
+    if (currentStepKey == 'socialEcosystem') {
+      final normalized = userInput.trim().toLowerCase();
+
+      // Detectar mensaje interno de sistema (indica que las redes fueron actualizadas)
+      if (normalized == 'socials_updated' ||
+          normalized == 'done' ||
+          normalized == 'continue') {
+        final hasNetworks =
+            (registerCubit.state.socialEcosystem?.isNotEmpty ?? false);
+        final isSpanish = registerCubit.state.language == 'Español';
+
+        if (hasNetworks) {
+          // Redes vinculadas exitosamente - avanzar al siguiente paso
+          debugPrint(
+            '✅ [socialEcosystem] Redes vinculadas, avanzando al siguiente paso',
+          );
+
+          // Salir del modo repetición si estábamos en él
+          if (_isInRepeatMode) {
+            _currentQuestionIndex = _previousQuestionIndex;
+            _isInRepeatMode = false;
+            debugPrint('🔙 Saliendo de modo repetición desde socialEcosystem');
+          } else {
+            _currentQuestionIndex++;
+          }
+
+          // Obtener siguiente pregunta
+          if (_currentQuestionIndex >= questionFlow.length) {
+            return {
+              "text": isSpanish
+                  ? "¡Listo! Ya terminamos tu registro 🎉"
+                  : "All set! Your registration is complete 🎉",
+              "options": [],
+              "step": "finished",
+              "keepTalk": false,
+            };
+          }
+
+          final nextQuestion = AssistantFunctions.getCurrentQuestion(
+            questionFlow,
+            _currentQuestionIndex,
+            registerCubit,
+          );
+
+          if (nextQuestion == null) {
+            return {
+              "text": isSpanish
+                  ? "¡Listo! Ya terminamos tu registro 🎉"
+                  : "All set! Your registration is complete 🎉",
+              "options": [],
+              "step": "finished",
+              "keepTalk": false,
+            };
+          }
+
+          return await _prepareQuestion(nextQuestion, registerCubit);
+        } else {
+          // No hay redes vinculadas - preguntar si quiere continuar sin redes
+          return {
+            "text": isSpanish
+                ? "No vinculaste ninguna red social. ¿Deseas continuar sin vincular redes?"
+                : "You didn't link any social networks. Do you want to continue without linking networks?",
+            "options": isSpanish
+                ? ["Sí, continuar", "Vincular redes"]
+                : ["Yes, continue", "Link networks"],
+            "step": "regProgress.socialEcosystem",
+            "keepTalk": false,
+          };
+        }
+      }
+
+      // Si el usuario dice que sí quiere continuar sin redes
+      if (normalized.contains('continuar') ||
+          normalized.contains('continue') ||
+          normalized == 'si' ||
+          normalized == 'sí' ||
+          normalized == 'yes') {
+        debugPrint('✅ [socialEcosystem] Usuario continúa sin redes');
+
+        if (_isInRepeatMode) {
+          _currentQuestionIndex = _previousQuestionIndex;
+          _isInRepeatMode = false;
+        } else {
+          _currentQuestionIndex++;
+        }
+
+        if (_currentQuestionIndex >= questionFlow.length) {
+          final isSpanish = registerCubit.state.language == 'Español';
+          return {
+            "text": isSpanish
+                ? "¡Listo! Ya terminamos tu registro 🎉"
+                : "All set! Your registration is complete 🎉",
+            "options": [],
+            "step": "finished",
+            "keepTalk": false,
+          };
+        }
+
+        final nextQuestion = AssistantFunctions.getCurrentQuestion(
+          questionFlow,
+          _currentQuestionIndex,
+          registerCubit,
+        );
+
+        if (nextQuestion != null) {
+          return await _prepareQuestion(nextQuestion, registerCubit);
+        }
+      }
+    }
 
     // ✅ Extra context for avatar step: convert free-text intents to explicit actions.
     // This keeps the user on the same step (no index advance) and lets the UI
@@ -444,9 +625,11 @@ class GeminiService {
             'text': msg,
             'options': const <String>[],
             'step': 'regProgress.avatarUrl',
+            'valid': true,
             'keepTalk': false,
             'action': 'use_profile_picture',
             'imageUrl': imageUrl,
+            'userResponse': imageUrl,
             'clearInput': true,
           };
         }
@@ -460,11 +643,12 @@ class GeminiService {
         final availText = available.isEmpty
             ? ''
             : (isSpanish
-                ? '\n\nTengo fotos disponibles de: ${available.join(', ')}'
-                : '\n\nI have photos available from: ${available.join(', ')}');
+                  ? '\n\nTengo fotos disponibles de: ${available.join(', ')}'
+                  : '\n\nI have photos available from: ${available.join(', ')}');
 
         return {
-          'text': (isSpanish
+          'text':
+              (isSpanish
                   ? 'No encontré una foto para "$platform". Puedes elegir cámara/galería o usar otra red.'
                   : 'I couldn’t find a photo for "$platform". You can pick camera/gallery or choose another social.') +
               availText,
@@ -482,11 +666,11 @@ class GeminiService {
         final isSpanish = registerCubit.state.language == 'Español';
         final text = action == 'open_camera'
             ? (isSpanish
-                ? 'Perfecto — abriendo la cámara.'
-                : 'Perfect — opening the camera.')
+                  ? 'Perfecto — abriendo la cámara.'
+                  : 'Perfect — opening the camera.')
             : (isSpanish
-                ? 'Perfecto — abriendo tu galería.'
-                : 'Perfect — opening your gallery.');
+                  ? 'Perfecto — abriendo tu galería.'
+                  : 'Perfect — opening your gallery.');
 
         return {
           "text": text,
@@ -583,7 +767,8 @@ class GeminiService {
 
       // Si el cambio está bloqueado, mostrar mensaje sin permitir cambio
       if (isBlocked) {
-        final blockMessage = decision['message'] as String? ??
+        final blockMessage =
+            decision['message'] as String? ??
             (isSpanish
                 ? '⚠️ Tu correo ya ha sido verificado. No puedes cambiar de nuevo.'
                 : '⚠️ Your email has already been verified. You cannot change it again.');
@@ -641,7 +826,8 @@ class GeminiService {
     // MANEJO ESPECIAL: Si la respuesta está bloqueada (ej: cambiar email después de verificar)
     if (decision['blocked'] == true) {
       final isSpanish = registerCubit.state.language == 'Español';
-      final blockMessage = decision['message'] as String? ??
+      final blockMessage =
+          decision['message'] as String? ??
           (isSpanish
               ? '⚠️ Tu correo ya ha sido verificado. No puedes cambiar de nuevo.'
               : '⚠️ Your email has already been verified. You cannot change it again.');
@@ -912,11 +1098,11 @@ class GeminiService {
       // Re-prompt específico para el paso de audio para que el usuario sepa qué hacer.
       final reprompt = currentStepKey == 'voiceNoteUrl'
           ? (isSpanish
-              ? '\n\nPara continuar, graba tu nota de voz (1-10s) manteniendo presionado el micrófono, o escribe "Skip" para omitir.'
-              : '\n\nTo continue, record your voice note (1-10s) by holding the microphone, or type "Skip" to skip.')
+                ? '\n\nPara continuar, graba tu nota de voz (1-10s) manteniendo presionado el micrófono, o escribe "Skip" para omitir.'
+                : '\n\nTo continue, record your voice note (1-10s) by holding the microphone, or type "Skip" to skip.')
           : (isSpanish
-              ? '\n\n¿Podrías responder la pregunta anterior, por favor?'
-              : '\n\nNow, could you answer the previous question please?');
+                ? '\n\n¿Podrías responder la pregunta anterior, por favor?'
+                : '\n\nNow, could you answer the previous question please?');
 
       return {
         "text": explain + reprompt,
@@ -973,7 +1159,9 @@ class GeminiService {
           caseSensitive: false,
         ).hasMatch(loweredInput);
 
-    if (decision['valid'] == false && userInputText.isNotEmpty && looksLikeQuestion) {
+    if (decision['valid'] == false &&
+        userInputText.isNotEmpty &&
+        looksLikeQuestion) {
       final isSpanish = registerCubit.state.language == 'Español';
 
       // Si estamos esperando ubicación manual, NO usar FieldGuidance/GeneralQ&A
@@ -995,11 +1183,12 @@ class GeminiService {
               : "\n\nNow type your location as:\nCountry, City, State/Region\nExample: Colombia, Medellin, Antioquia";
 
           return {
-            "text": (explanation.isNotEmpty
+            "text":
+                (explanation.isNotEmpty
                     ? explanation
                     : (isSpanish
-                        ? 'Con gusto. Te explico y continuamos.'
-                        : 'Sure. Let me explain and we continue.')) +
+                          ? 'Con gusto. Te explico y continuamos.'
+                          : 'Sure. Let me explain and we continue.')) +
                 manualReprompt,
             "options": const <String>[],
             "step": 'regProgress.location',
@@ -1170,7 +1359,9 @@ class GeminiService {
         try {
           await Permission.microphone.request();
         } catch (e) {
-          debugPrint('⚠️ [GeminiService] Error solicitando permiso micrófono: $e');
+          debugPrint(
+            '⚠️ [GeminiService] Error solicitando permiso micrófono: $e',
+          );
         }
       }
     }
