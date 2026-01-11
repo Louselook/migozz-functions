@@ -46,12 +46,19 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
   Future<void> _onNotificationTap(ChatNotificationModel notification) async {
     // Mark as read
     await NotificationService.instance.markNotificationAsRead(notification.id);
-    
-    // Navigate to chat
+
+    // Navigate to chats list first, then to the specific chat
     if (mounted) {
-      context.push('/chat/${notification.senderId}');
+      context.push('/chats');
+
+      // Then navigate to the specific chat after a short delay
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          context.push('/chat/${notification.senderId}');
+        }
+      });
     }
-    
+
     // Reload to update UI
     await _loadNotifications();
   }

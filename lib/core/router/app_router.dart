@@ -18,6 +18,7 @@ import 'package:migozz_app/features/profile/presentation/edit/web/edit_profile_p
 import 'package:migozz_app/features/profile/presentation/profile/modules/complete_profile.dart';
 import 'package:migozz_app/features/chat/presentation/register/ia_chat_screen.dart';
 import 'package:migozz_app/features/chat/presentation/user/user_chat_screen.dart';
+import 'package:migozz_app/features/chat/presentation/user/list/chats_list_screen.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/profile/presentation/profile_entry.dart';
@@ -241,6 +242,26 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         path: '/notifications',
         name: 'notifications',
         builder: (context, state) => const NotificationsListScreen(),
+      ),
+      GoRoute(
+        path: '/chats',
+        name: 'chats',
+        builder: (context, state) {
+          final authState = context.read<AuthCubit>().state;
+          final currentUser = authState.userProfile;
+
+          if (currentUser == null) {
+            return const SplashScreen();
+          }
+
+          final currentUserEmail = currentUser.email;
+          final currentUsername = (currentUser.username).replaceFirst('@', '');
+
+          return ChatsListScreen(
+            username: currentUsername,
+            currentUserId: currentUserEmail,
+          );
+        },
       ),
       GoRoute(
         path: '/chat/:userId',

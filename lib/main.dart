@@ -125,6 +125,7 @@ class MyApp extends StatelessWidget {
               });
 
               return NotificationInitializer(
+                router: router,
                 child: MaterialApp.router(
                   debugShowCheckedModeBanner: false,
                   title: 'Migozz App',

@@ -482,6 +482,7 @@ Future<void> _onActionReceivedMethod(ReceivedAction receivedAction) async {
         // Store the navigation data for when the app is ready
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('pending_notification_navigation', payloadData);
+        debugPrint('🔔 [Notification] Stored pending navigation: senderId=$senderId, chatRoomId=$chatRoomId');
       }
     } catch (e) {
       debugPrint('❌ [Notification] Error parsing payload: $e');
