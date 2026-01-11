@@ -1317,16 +1317,24 @@ class GeminiService {
           "keyboardType": "text",
           "manualLocationPrompt": true,
         };
-      }
+      } 
 
       final currentLocation = registerCubit.state.location;
       // Obtener ubicación si está vacía o null
-      if (currentLocation == null || currentLocation.isEmpty) {
+      if (currentLocation == null ||
+          currentLocation.isEmpty ||
+          !currentLocation.hasCityAndCountry) {
         debugPrint(
           '📍 [_prepareQuestion] Detectado paso de ubicación vacía o null - obteniendo ubicación...',
         );
         final language = registerCubit.state.language ?? _language;
+        // Reintentar una vez más: justo después de conceder permisos a veces
+        // llega sin ciudad/país en el primer intento.
         await registerCubit.fetchLocation(language);
+        if (!(registerCubit.state.location?.hasCityAndCountry ?? false)) {
+          await Future<void>.delayed(const Duration(milliseconds: 500));
+          await registerCubit.fetchLocation(language);
+        }
         debugPrint(
           '📍 [_prepareQuestion] Ubicación obtenida: ${registerCubit.state.location?.city}',
         );
@@ -1334,7 +1342,7 @@ class GeminiService {
         // Si después de intentar sigue vacía/nula (típico: usuario denegó permiso),
         // pasamos automáticamente a ingreso manual.
         final after = registerCubit.state.location;
-        if (after == null || after.isEmpty) {
+        if (after == null || after.isEmpty || !after.hasCityAndCountry) {
           _awaitingManualLocation = true;
           final isSpanish = registerCubit.state.language == 'Español';
           return {
@@ -1347,6 +1355,18 @@ class GeminiService {
             "keyboardType": "text",
             "manualLocationPrompt": true,
           };
+        }
+
+        // IMPORTANT: La pregunta ya venía con {location} reemplazado ANTES de
+        // hacer fetchLocation() (en getCurrentQuestion). Si no la regeneramos,
+        // el texto se queda con el placeholder fallback aunque ya exista ciudad/país.
+        final refreshed = AssistantFunctions.getCurrentQuestion(
+          questionFlow,
+          _currentQuestionIndex,
+          registerCubit,
+        );
+        if (refreshed != null) {
+          question = refreshed;
         }
       }
     }

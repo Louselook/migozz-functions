@@ -36,7 +36,7 @@ class RegisterCubit extends Cubit<RegisterState> {
   // ==================== UBICACIÓN ====================
   Future<void> fetchLocation(String lang) async {
     final location = await _locationService.initAndFetchAddress(lang: lang);
-    if (location != null) {
+    if (location != null && location.hasCityAndCountry) {
       debugPrint(
         '📍 [Cubit] Ubicación detectada: ${location.city}, ${location.state}, ${location.country}',
       );

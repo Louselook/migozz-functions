@@ -35,6 +35,9 @@ class LocationDTO {
   // 👇 Método para verificar si tiene datos válidos
   bool get hasData => !isEmpty;
 
+  // 👇 Ubicación usable para confirmación (mínimo: ciudad + país)
+  bool get hasCityAndCountry => city.trim().isNotEmpty && country.trim().isNotEmpty;
+
   // 👇 Getter para mostrar la ubicación de forma legible
   String get displayName {
     if (isEmpty) return 'Sin ubicación';

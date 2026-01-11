@@ -6,7 +6,6 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/auth_result.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
-import 'package:migozz_app/features/auth/data/domain/models/user/location_dto.dart';
 import 'package:migozz_app/features/auth/services/media_service.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 

@@ -853,9 +853,16 @@ class AssistantFunctions {
         String locStr;
 
         // Manejo mejorado de ubicación
-        if (loc != null && !loc.isEmpty) {
-          // Si tiene ubicación válida, mostrarla
-          locStr = '${loc.city}, ${loc.country}';
+        if (loc != null && loc.hasCityAndCountry) {
+          // Si tiene ubicación válida, mostrarla (ciudad, estado, país)
+          final parts = <String>[];
+          final city = loc.city.trim();
+          final state = loc.state.trim();
+          final country = loc.country.trim();
+          if (city.isNotEmpty) parts.add(city);
+          if (state.isNotEmpty) parts.add(state);
+          if (country.isNotEmpty) parts.add(country);
+          locStr = parts.join(', ');
         } else {
           final isSpanish = _getIsSpanish(cubit);
           locStr = isSpanish ? 'tu ubicación' : 'your location';

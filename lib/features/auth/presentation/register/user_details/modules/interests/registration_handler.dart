@@ -43,16 +43,21 @@ class RegistrationHandler {
       );
       final missing = <String>[];
       final s = registerCubit.state;
-      if (s.email == null || (s.email as String).trim().isEmpty)
+      if (s.email == null || (s.email as String).trim().isEmpty) {
         missing.add('email');
-      if (s.fullName == null || (s.fullName as String).trim().isEmpty)
+      }
+      if (s.fullName == null || (s.fullName as String).trim().isEmpty) {
         missing.add('fullName');
-      if (s.username == null || (s.username as String).trim().isEmpty)
+      }
+      if (s.username == null || (s.username as String).trim().isEmpty) {
         missing.add('username');
-      if (s.voiceNoteUrl == null || (s.voiceNoteUrl as String).trim().isEmpty)
+      }
+      if (s.voiceNoteUrl == null || (s.voiceNoteUrl as String).trim().isEmpty) {
         missing.add('voiceNoteUrl');
-      if (s.avatarUrl == null || (s.avatarUrl as String).trim().isEmpty)
+      }
+      if (s.avatarUrl == null || (s.avatarUrl as String).trim().isEmpty) {
         missing.add('avatarUrl');
+      }
       if (s.location == null) missing.add('location');
       debugPrint('   -> Campos faltantes: ${missing.join(", ")}');
 
@@ -113,7 +118,7 @@ class RegistrationHandler {
 
     final Map<String, dynamic> updateData = {};
 
-    Set<String> _extractPlatformsFromSocialEcosystem(
+    Set<String> extractPlatformsFromSocialEcosystem(
       List<Map<String, dynamic>> socials,
     ) {
       final out = <String>{};
@@ -170,7 +175,7 @@ class RegistrationHandler {
         for (final e in existingAdded.entries) e.key.toLowerCase(): e.value,
       };
 
-      final platforms = _extractPlatformsFromSocialEcosystem(
+      final platforms = extractPlatformsFromSocialEcosystem(
         registerCubit.state.socialEcosystem!,
       );
 
