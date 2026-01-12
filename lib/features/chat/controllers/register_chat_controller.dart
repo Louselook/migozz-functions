@@ -630,6 +630,16 @@ class RegisterChatController extends GenericChatController {
         if (!isActive) return;
         await showNextBotMessage();
       } else if (audioResponse == 'record') {
+        // El usuario descartó el audio: removemos el último bubble de audio del usuario
+        // para evitar que quede un mensaje que luego no pueda cargarse.
+        for (int i = messages.length - 1; i >= 0; i--) {
+          final m = messages[i];
+          if (m["other"] == false && m["type"] == MessageType.audio) {
+            messages.removeAt(i);
+            break;
+          }
+        }
+
         final recordMessage = _audioHandler.getRecordAgainMessage(
           registerCubit,
         );

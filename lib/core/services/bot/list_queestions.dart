@@ -11,7 +11,8 @@ final Map<String, Map<String, dynamic>> questionsEs = {
   //   "keyboardType": "text",
   // },
   "fullName": {
-    "text": "¡Genial! Continuemos en Español. ¿Cuál es tu nombre completo?",
+    "text":
+        "¡Hola, bienvenido a Migozz! Tu nuevo ecosistema social. Para poder empezar, por favor escribe tu nombre completo.",
     "options": [],
     "step": "regProgress.fullName",
     "keepTalk": false,
@@ -151,7 +152,8 @@ final Map<String, Map<String, dynamic>> questionsEn = {
   //   "keyboardType": "text",
   // },
   "fullName": {
-    "text": "Great! Let's continue in English. What is your full name?",
+    "text":
+        "Hello, welcome to Migozz! Your new social ecosystem. To get started, please type your full name.",
     "options": [],
     "step": "regProgress.fullName",
     "keepTalk": false,

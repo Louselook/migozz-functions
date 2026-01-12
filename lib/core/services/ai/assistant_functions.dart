@@ -1245,6 +1245,11 @@ class AssistantFunctions {
 
       // Use explicit action first (recommended)
       switch (action) {
+        case 'send_text':
+          // Force treating this option as plain text (even if label contains
+          // words like "grabar/record" that would otherwise infer open_recorder).
+          if ((label ?? '').isNotEmpty) return AssistantResult.sendText(label!);
+          return AssistantResult.unknown();
         case 'open_camera':
           return AssistantResult.openCamera();
         case 'open_gallery':

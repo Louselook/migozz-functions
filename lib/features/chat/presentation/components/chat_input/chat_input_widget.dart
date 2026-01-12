@@ -427,6 +427,16 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
   void _stopRecordingRelease() async {
     if (kIsWeb) return;
     await _audioManager.stopRecording();
+
+    // En modo registro: al finalizar la grabación, enviar inmediatamente.
+    // Esto evita el flujo de "previsualizar (escuchar) -> enviar/borrar".
+    if (widget.isRegistrationMode && _audioManager.audioPath != null) {
+      await Future<void>.delayed(Duration.zero);
+      if (!mounted) return;
+      _handleSendAudio();
+      return;
+    }
+
     setState(() {});
   }
 
