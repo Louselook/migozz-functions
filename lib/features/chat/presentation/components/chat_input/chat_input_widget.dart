@@ -487,6 +487,7 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
         duration: _audioManager.duration,
         maxDuration: _audioManager.maxDuration,
         isPlaying: _audioManager.isPlaying,
+        waveformKey: _audioManager.waveformKey, // Key para forzar rebuild
         onPlayPause: () async {
           if (_audioManager.isPlaying) {
             await _audioManager.stopPlaying();

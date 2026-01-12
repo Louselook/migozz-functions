@@ -11,6 +11,7 @@ class AudioPlayerDisplay extends StatelessWidget {
   final VoidCallback onPlayPause;
   final VoidCallback? onDelete;
   final void Function(Duration) onSeek;
+  final Key? waveformKey; // Key para forzar rebuild del waveform
 
   const AudioPlayerDisplay({
     super.key,
@@ -21,6 +22,7 @@ class AudioPlayerDisplay extends StatelessWidget {
     required this.onPlayPause,
     required this.onSeek,
     this.onDelete,
+    this.waveformKey,
   });
 
   @override
@@ -111,6 +113,7 @@ class AudioPlayerDisplay extends StatelessWidget {
                         );
 
                         return AudioFileWaveforms(
+                          key: waveformKey, // Key para forzar rebuild
                           playerController: playerController,
                           waveformType: WaveformType.fitWidth,
                           size: waveSize,

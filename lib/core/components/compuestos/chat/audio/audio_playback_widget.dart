@@ -26,36 +26,99 @@ class AudioPlaybackWidget extends StatefulWidget {
 }
 
 class _AudioPlaybackWidgetState extends State<AudioPlaybackWidget> {
-  late final PlayerController _player;
+  PlayerController? _player;
   Duration _max = Duration.zero;
+  Duration _current = Duration.zero;
   bool _isPlaying = false;
   bool _isPrepared = false;
   bool _isDownloading = false;
   bool _hasError = false;
+  bool _isSeeking = false; // Para saber si el usuario está arrastrando
+  String? _localPath; // Path local del audio (para reinicializar)
+  Key _waveformKey = UniqueKey(); // Key para forzar rebuild del waveform
   // Keep track of download cancelation
   http.Client? _httpClient;
 
   @override
   void initState() {
     super.initState();
+    _initPlayer();
+    _prepare();
+  }
+
+  void _initPlayer() {
+    _player?.dispose();
     _player = PlayerController();
-    
-    // 🎵 Escuchar cambios de posición para sincronizar el waveform
-    _player.onCurrentDurationChanged.listen((ms) {
-      if (!mounted) return;
-      // Actualizar UI para que el waveform se repinte en la nueva posición
-      setState(() {});
+
+    // 🎵 Escuchar cambios de posición para sincronizar el waveform y tiempo actual
+    _player!.onCurrentDurationChanged.listen((ms) {
+      if (!mounted || _isSeeking) return;
+      setState(() {
+        _current = Duration(milliseconds: ms);
+      });
     });
 
-    _player.onCompletion.listen((_) {
+    _player!.onCompletion.listen((_) async {
       if (!mounted) return;
-      setState(() {
-        _isPlaying = false;
-      });
+      debugPrint('🔄 [AudioPlayback] Audio completado - reiniciando player');
+
+      // 🔄 Reiniciar completamente el player para resetear el waveform visual
+      await _resetPlayer();
+
       widget.chatController?.onAudioFinished?.call();
     });
+  }
 
-    _prepare();
+  /// 🔄 Reinicia el player completamente para resetear el waveform visual
+  Future<void> _resetPlayer() async {
+    if (_localPath == null) return;
+
+    try {
+      // Pausar si está reproduciendo
+      if (_isPlaying) {
+        await _player?.pausePlayer();
+      }
+
+      // Disponer el player actual
+      _player?.dispose();
+
+      // Crear nuevo player
+      _player = PlayerController();
+
+      // Re-escuchar eventos
+      _player!.onCurrentDurationChanged.listen((ms) {
+        if (!mounted || _isSeeking) return;
+        setState(() {
+          _current = Duration(milliseconds: ms);
+        });
+      });
+
+      _player!.onCompletion.listen((_) async {
+        if (!mounted) return;
+        debugPrint('🔄 [AudioPlayback] Audio completado - reiniciando player');
+        await _resetPlayer();
+        widget.chatController?.onAudioFinished?.call();
+      });
+
+      // Re-preparar el player con el mismo archivo
+      await _player!.preparePlayer(
+        path: _localPath!,
+        shouldExtractWaveform: true,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _isPlaying = false;
+        _current = Duration.zero;
+        _isPrepared = true;
+        _waveformKey = UniqueKey(); // Forzar rebuild del widget waveform
+      });
+
+      debugPrint('✅ [AudioPlayback] Player reiniciado correctamente');
+    } catch (e) {
+      debugPrint('❌ [AudioPlayback] Error reiniciando player: $e');
+    }
   }
 
   Future<void> _prepare() async {
@@ -82,17 +145,21 @@ class _AudioPlaybackWidgetState extends State<AudioPlaybackWidget> {
         pathToPlay = file.path;
       }
 
+      // Guardar el path local para poder reinicializar después
+      _localPath = pathToPlay;
+
       // prepare player with local path
-      await _player.preparePlayer(
+      await _player!.preparePlayer(
         path: pathToPlay,
         shouldExtractWaveform: true,
       );
-      _max = Duration(milliseconds: _player.maxDuration);
+      _max = Duration(milliseconds: _player!.maxDuration);
       if (!mounted) return;
       setState(() {
         _isPrepared = true;
         _isDownloading = false;
         _hasError = false;
+        _current = Duration.zero;
       });
     } catch (e, st) {
       debugPrint('❌ Audio prepare error: $e\n$st');
@@ -105,39 +172,102 @@ class _AudioPlaybackWidgetState extends State<AudioPlaybackWidget> {
   }
 
   Future<void> _togglePlayPause() async {
-    if (_hasError || !_isPrepared) return;
+    if (_hasError || !_isPrepared || _player == null) return;
     if (_isPlaying) {
-      await _player.pausePlayer();
+      await _player!.pausePlayer();
       if (!mounted) return;
       setState(() => _isPlaying = false);
     } else {
-      await _player.startPlayer();
+      await _player!.startPlayer();
       if (!mounted) return;
       setState(() => _isPlaying = true);
     }
   }
 
+  /// 🎯 Seek a una posición específica del audio
+  Future<void> _seekTo(Duration position) async {
+    if (!_isPrepared || _hasError || _player == null) return;
+
+    final clampedMs = position.inMilliseconds.clamp(0, _max.inMilliseconds);
+
+    try {
+      await _player!.seekTo(clampedMs);
+      if (!mounted) return;
+      setState(() {
+        _current = Duration(milliseconds: clampedMs);
+      });
+    } catch (e) {
+      debugPrint('❌ Seek error: $e');
+    }
+  }
+
+  /// 📍 Calcular posición del seek basado en la posición del toque
+  Duration _calculateSeekPosition(Offset localPosition, double width) {
+    if (_max == Duration.zero || width <= 0) return Duration.zero;
+
+    final ratio = (localPosition.dx / width).clamp(0.0, 1.0);
+    return Duration(milliseconds: (_max.inMilliseconds * ratio).round());
+  }
+
+  /// 🖐️ Inicio del arrastre (seek)
+  void _onSeekStart(Offset localPosition, double width) async {
+    if (!_isPrepared || _hasError || _player == null) return;
+
+    _isSeeking = true;
+
+    // Siempre pausar al iniciar seek y mostrar icono de play
+    if (_isPlaying) {
+      await _player!.pausePlayer();
+    }
+    setState(() => _isPlaying = false);
+
+    final newPosition = _calculateSeekPosition(localPosition, width);
+    debugPrint('🔍 Seek a ${newPosition.inSeconds}s');
+    await _seekTo(newPosition);
+  }
+
+  /// 🖐️ Durante el arrastre (seek)
+  void _onSeekUpdate(Offset localPosition, double width) async {
+    if (!_isSeeking || !_isPrepared || _hasError || _player == null) return;
+
+    final newPosition = _calculateSeekPosition(localPosition, width);
+    debugPrint('🔍 Seek a ${newPosition.inSeconds}s');
+
+    // Actualizar la posición visual inmediatamente
+    setState(() {
+      _current = newPosition;
+    });
+
+    await _seekTo(newPosition);
+  }
+
+  /// 🖐️ Fin del arrastre (seek) - NO reanuda automáticamente, el usuario debe presionar play
+  void _onSeekEnd() {
+    _isSeeking = false;
+    // El usuario debe presionar play manualmente si quiere continuar
+  }
+
   @override
   void dispose() {
     try {
-      _player.dispose();
+      _player?.dispose();
     } catch (_) {}
     // cancel any pending http client
     try {
       _httpClient?.close();
     } catch (_) {}
-    // optional: delete temp file
-    // if (_localPath != null) File(_localPath!).delete().ignore();
     super.dispose();
   }
 
-  String get _formattedTime {
-    final total = _max;
-    final sec = total.inSeconds;
+  String _formatDuration(Duration d) {
+    final sec = d.inSeconds;
     final m = (sec ~/ 60).toString();
     final s = (sec % 60).toString().padLeft(2, '0');
     return '$m:$s';
   }
+
+  String get _formattedCurrentTime => _formatDuration(_current);
+  String get _formattedMaxTime => _formatDuration(_max);
 
   @override
   Widget build(BuildContext context) {
@@ -237,37 +367,75 @@ class _AudioPlaybackWidgetState extends State<AudioPlaybackWidget> {
                           "No se pudo cargar audio",
                           style: TextStyle(color: Colors.redAccent),
                         )
-                      : SizedBox(
-                          height: 36,
-                          child: _isPrepared
-                              ? AudioFileWaveforms(
-                                  playerController: _player,
-                                  waveformType: WaveformType.fitWidth,
-                                  size: const Size(double.infinity, 36),
-                                  playerWaveStyle: PlayerWaveStyle(
-                                    fixedWaveColor: const Color(0xFF555555),
-                                    liveWaveColor: const Color(0xFFDF48A5),
-                                    seekLineColor: const Color(0xFFDF48A5),
-                                    seekLineThickness: 2.0,
-                                    showSeekLine: true,
-                                    waveThickness: 1.2,
-                                    spacing: 1.8,
-                                    showBottom: true,
-                                    showTop: true,
-                                    scaleFactor: 150.0,
-                                    waveCap: StrokeCap.round,
-                                  ),
-                                )
-                              : const SizedBox.shrink(),
+                      : LayoutBuilder(
+                          builder: (context, constraints) {
+                            final waveWidth = constraints.maxWidth;
+                            return GestureDetector(
+                              onTapDown: (details) {
+                                _onSeekStart(details.localPosition, waveWidth);
+                              },
+                              onTapUp: (_) {
+                                _onSeekEnd();
+                              },
+                              onHorizontalDragStart: (details) {
+                                _onSeekStart(details.localPosition, waveWidth);
+                              },
+                              onHorizontalDragUpdate: (details) {
+                                _onSeekUpdate(details.localPosition, waveWidth);
+                              },
+                              onHorizontalDragEnd: (_) {
+                                _onSeekEnd();
+                              },
+                              onHorizontalDragCancel: () {
+                                _onSeekEnd();
+                              },
+                              child: Container(
+                                color: Colors.transparent,
+                                height: 36,
+                                child: (_isPrepared && _player != null)
+                                    ? AudioFileWaveforms(
+                                        key:
+                                            _waveformKey, // Key para forzar rebuild
+                                        playerController: _player!,
+                                        waveformType: WaveformType.fitWidth,
+                                        size: Size(waveWidth, 36),
+                                        enableSeekGesture:
+                                            false, // Manejamos seek manualmente
+                                        playerWaveStyle: PlayerWaveStyle(
+                                          fixedWaveColor: const Color(
+                                            0xFF555555,
+                                          ),
+                                          liveWaveColor: const Color(
+                                            0xFFDF48A5,
+                                          ),
+                                          seekLineColor: const Color(
+                                            0xFFDF48A5,
+                                          ),
+                                          seekLineThickness: 2.0,
+                                          showSeekLine: true,
+                                          waveThickness: 1.2,
+                                          spacing: 1.8,
+                                          showBottom: true,
+                                          showTop: true,
+                                          scaleFactor: 150.0,
+                                          waveCap: StrokeCap.round,
+                                        ),
+                                      )
+                                    : const SizedBox.shrink(),
+                              ),
+                            );
+                          },
                         ),
                 ),
                 const SizedBox(width: 12),
                 Padding(
                   padding: const EdgeInsets.only(right: 10),
                   child: Text(
-                    _isPrepared ? _formattedTime : '--:--',
+                    _isPrepared
+                        ? '$_formattedCurrentTime / $_formattedMaxTime'
+                        : '--:--',
                     style: const TextStyle(
-                      fontSize: 12,
+                      fontSize: 11,
                       color: Color(0xFFAAAAAA),
                     ),
                   ),

@@ -14,6 +14,9 @@ class AudioRecorderManager {
   Duration maxDuration = Duration.zero;
   String? audioPath;
 
+  // Key para forzar rebuild del waveform widget
+  Key waveformKey = UniqueKey();
+
   // 🎙️ Amplitud de audio en tiempo real (0.0 a 1.0)
   double currentAmplitude = 0.0;
 
@@ -71,12 +74,15 @@ class AudioRecorderManager {
       }
     });
 
-    _playerCompletionSubscription = playerController.onCompletion.listen((_) {
+    _playerCompletionSubscription = playerController.onCompletion.listen((
+      _,
+    ) async {
       isPlaying = false;
       duration = Duration.zero;
-      try {
-        playerController.seekTo(0);
-      } catch (_) {}
+
+      // Reiniciar el player completamente para resetear el waveform visual
+      await _resetPlayerForVisualReset();
+
       onStateChanged?.call();
     });
   }
@@ -108,6 +114,45 @@ class AudioRecorderManager {
     _smoothedAmplitude =
         _smoothedAmplitude + (target - _smoothedAmplitude) * coeff;
     return _smoothedAmplitude.clamp(0.0, 1.0);
+  }
+
+  /// 🔄 Reinicia el player completamente para resetear el waveform visual
+  Future<void> _resetPlayerForVisualReset() async {
+    if (audioPath == null) return;
+
+    try {
+      debugPrint('🔄 [AudioManager] Reiniciando player para reset visual...');
+
+      // Cancelar subscripciones actuales
+      _cancelSubscriptions();
+
+      // Disponer el player actual
+      try {
+        playerController.dispose();
+      } catch (_) {}
+
+      // Crear nuevo player
+      playerController = PlayerController();
+      playerController.updateFrequency = UpdateFrequency.high;
+
+      // Re-preparar el player con el mismo archivo
+      await playerController.preparePlayer(
+        path: audioPath!,
+        shouldExtractWaveform: true,
+      );
+
+      // Re-configurar subscripciones
+      _setupSubscriptions();
+
+      maxDuration = Duration(milliseconds: playerController.maxDuration);
+      duration = Duration.zero;
+      isPlaying = false;
+      waveformKey = UniqueKey(); // Forzar rebuild del widget waveform
+
+      debugPrint('✅ [AudioManager] Player reiniciado correctamente');
+    } catch (e) {
+      debugPrint('❌ [AudioManager] Error reiniciando player: $e');
+    }
   }
 
   Future<void> _resetPreviewPlayback() async {
@@ -322,7 +367,13 @@ class AudioRecorderManager {
     if (audioPath == null) return;
 
     try {
-      final wasPlaying = isPlaying;
+      // Siempre pausar al hacer seek (igual que AudioPlaybackWidget)
+      if (isPlaying) {
+        try {
+          await playerController.pausePlayer();
+        } catch (_) {}
+        isPlaying = false;
+      }
 
       try {
         await playerController.seekTo(position.inMilliseconds);
@@ -330,12 +381,6 @@ class AudioRecorderManager {
 
       duration = position;
       onStateChanged?.call();
-
-      if (wasPlaying) {
-        try {
-          await playerController.startPlayer();
-        } catch (_) {}
-      }
 
       debugPrint('🔍 Seek a ${position.inSeconds}s');
     } catch (e) {
