@@ -174,6 +174,17 @@ class EditProfileScreenState extends State<EditProfileScreen> {
 
       await editCubit.saveUserProfileField(userId: userId, updatedFields: data);
 
+      // Update _initialUser with the new saved values to prevent false "unsaved changes" detection
+      if (_initialUser != null) {
+        _initialUser = _initialUser!.copyWith(
+          displayName: nameCtrl.text.trim(),
+          username: usernameCtrl.text.trim(),
+          phone: phoneCtrl.text.trim(),
+          gender: genderCtrl.text.trim(),
+          birthDate: _dob,
+        );
+      }
+
       if (mounted) {
         await AlertGeneral.show(
           context,
