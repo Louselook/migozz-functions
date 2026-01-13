@@ -50,49 +50,28 @@ class CameraPermissionHandler {
       return await _captureImage(imageQuality);
     }
 
-    // If permission is denied but we haven't asked yet (notDetermined state is also isDenied)
-    // We need to check if this is the first time or if user actually denied it
-    if (status.isDenied) {
-      // On iOS, isDenied means notDetermined (first time)
-      // On Android, isDenied could mean user denied it once
-      // We'll request permission and let the system handle it
-      debugPrint('🔔 [CameraPermission] Requesting permission (status: denied/notDetermined)');
-      final requestResult = await Permission.camera.request();
-
-      debugPrint('📷 [CameraPermission] Request result: $requestResult');
-
-      if (requestResult.isGranted) {
-        return await _captureImage(imageQuality);
-      } else if (requestResult.isPermanentlyDenied) {
-        debugPrint('⛔ [CameraPermission] Permission permanently denied after request');
-        if (context != null && context.mounted) {
-          await _showSettingsDialog(context);
-        }
-        return null;
-      } else if (requestResult.isDenied) {
-        // User denied the permission
-        debugPrint('⚠️ [CameraPermission] Permission denied by user');
-        // Show settings dialog for next time
-        if (context != null && context.mounted) {
-          await _showSettingsDialog(context);
-        }
-        return null;
-      } else {
-        debugPrint('⚠️ [CameraPermission] Permission request returned: $requestResult');
-        return null;
-      }
-    }
-
-    // Fallback: request permission
-    debugPrint('🔔 [CameraPermission] Fallback - requesting permission');
+    // If permission is denied or notDetermined, request it
+    // This will show the native iOS/Android permission dialog
+    debugPrint('🔔 [CameraPermission] Requesting permission (status: $status)');
     final requestResult = await Permission.camera.request();
 
     debugPrint('📷 [CameraPermission] Request result: $requestResult');
 
     if (requestResult.isGranted) {
       return await _captureImage(imageQuality);
+    } else if (requestResult.isPermanentlyDenied) {
+      debugPrint('⛔ [CameraPermission] Permission permanently denied after request');
+      if (context != null && context.mounted) {
+        await _showSettingsDialog(context);
+      }
+      return null;
+    } else if (requestResult.isDenied) {
+      // User denied the permission - just return without showing dialog
+      // This allows them to try again later or proceed with other options
+      debugPrint('⚠️ [CameraPermission] Permission denied by user');
+      return null;
     } else {
-      debugPrint('⚠️ [CameraPermission] Permission not granted');
+      debugPrint('⚠️ [CameraPermission] Permission request returned: $requestResult');
       return null;
     }
   }
@@ -208,56 +187,37 @@ class CameraPermissionHandler {
       return await _selectImage(imageQuality);
     }
 
-    // If permission is denied, request it (this will show native dialog on first time)
-    if (status.isDenied || storageStatus.isDenied) {
-      debugPrint('🔔 [GalleryPermission] Requesting permission (status: denied/notDetermined)');
+    // If permission is denied or notDetermined, request it
+    // This will show the native iOS/Android permission dialog
+    debugPrint('🔔 [GalleryPermission] Requesting permission (status: $status)');
 
-      // Try photos permission first (Android 13+, iOS)
-      PermissionStatus requestResult = await Permission.photos.request();
-
-      debugPrint('📸 [GalleryPermission] Photos request result: $requestResult');
-
-      // If photos permission not granted, try storage permission (Android < 13)
-      if (!requestResult.isGranted && !requestResult.isLimited) {
-        debugPrint('🔔 [GalleryPermission] Trying storage permission (Android < 13)');
-        requestResult = await Permission.storage.request();
-        debugPrint('📸 [GalleryPermission] Storage request result: $requestResult');
-      }
-
-      if (requestResult.isGranted || requestResult.isLimited) {
-        return await _selectImage(imageQuality);
-      } else if (requestResult.isPermanentlyDenied) {
-        debugPrint('⛔ [GalleryPermission] Permission permanently denied after request');
-        if (context != null && context.mounted) {
-          await _showGallerySettingsDialog(context);
-        }
-        return null;
-      } else if (requestResult.isDenied) {
-        // User denied the permission
-        debugPrint('⚠️ [GalleryPermission] Permission denied by user');
-        // Show settings dialog for next time
-        if (context != null && context.mounted) {
-          await _showGallerySettingsDialog(context);
-        }
-        return null;
-      } else {
-        debugPrint('⚠️ [GalleryPermission] Permission request returned: $requestResult');
-        return null;
-      }
-    }
-
-    // Fallback: request permission
-    debugPrint('🔔 [GalleryPermission] Fallback - requesting permission');
+    // Try photos permission first (Android 13+, iOS)
     PermissionStatus requestResult = await Permission.photos.request();
 
+    debugPrint('📸 [GalleryPermission] Photos request result: $requestResult');
+
+    // If photos permission not granted, try storage permission (Android < 13)
     if (!requestResult.isGranted && !requestResult.isLimited) {
+      debugPrint('🔔 [GalleryPermission] Trying storage permission (Android < 13)');
       requestResult = await Permission.storage.request();
+      debugPrint('📸 [GalleryPermission] Storage request result: $requestResult');
     }
 
     if (requestResult.isGranted || requestResult.isLimited) {
       return await _selectImage(imageQuality);
+    } else if (requestResult.isPermanentlyDenied) {
+      debugPrint('⛔ [GalleryPermission] Permission permanently denied after request');
+      if (context != null && context.mounted) {
+        await _showGallerySettingsDialog(context);
+      }
+      return null;
+    } else if (requestResult.isDenied) {
+      // User denied the permission - just return without showing dialog
+      // This allows them to try again later or proceed with other options
+      debugPrint('⚠️ [GalleryPermission] Permission denied by user');
+      return null;
     } else {
-      debugPrint('⚠️ [GalleryPermission] Permission not granted');
+      debugPrint('⚠️ [GalleryPermission] Permission request returned: $requestResult');
       return null;
     }
   }
