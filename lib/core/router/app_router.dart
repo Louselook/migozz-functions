@@ -39,7 +39,6 @@ Widget localizedBuilder(BuildContext context, Widget Function() screenBuilder) {
 
   final controller = easy.delegate.localizationController;
 
-
   if (controller == null) {
     return const SplashScreen();
   }
@@ -82,10 +81,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
     initialLocation: '/',
     refreshListenable: goRouterNotifier,
     routes: [
-      GoRoute(
-        path: '/',
-        builder: (context, state) => const AppGate(),
-      ),
+      GoRoute(path: '/', builder: (context, state) => const AppGate()),
 
       GoRoute(
         path: '/onboarding',
@@ -280,7 +276,8 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
               }
 
               final userData = snapshot.data;
-              final otherUserName = userData?['displayName'] ?? userData?['username'] ?? 'User';
+              final otherUserName =
+                  userData?['displayName'] ?? userData?['username'] ?? 'User';
               final otherUserAvatar = userData?['avatarUrl'] as String?;
 
               return UserChatScreen(
@@ -381,6 +378,11 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
             return '/complete-profile';
           }
           return null;
+        }
+
+        // ✅ Redirect to profile if authenticated user tries to access onboarding or login
+        if (goingTo == '/onboarding' || goingTo == '/login') {
+          return '/profile';
         }
 
         const allowedWhenComplete = {
