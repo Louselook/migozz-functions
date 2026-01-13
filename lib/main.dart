@@ -3,7 +3,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart'; 
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:migozz_app/app_initializer.dart';
 import 'package:migozz_app/bloc_providers.dart';
 import 'package:migozz_app/core/config/firebase_config.dart';
@@ -29,6 +30,17 @@ Future<void> main() async {
 
   // ✅ Inicializar providers ANTES de runApp
   initializeBlocProviders();
+
+  // ✅ Initialize permission_handler for iOS
+  // This ensures native permission dialogs work properly
+  if (!kIsWeb) {
+    try {
+      // Just check status to initialize the handler
+      await Permission.camera.status;
+    } catch (e) {
+      debugPrint('⚠️ [Main] Error initializing permission_handler: $e');
+    }
+  }
 
   setPathUrlStrategy();
   runApp(
