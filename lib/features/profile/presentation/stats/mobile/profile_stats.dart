@@ -390,9 +390,14 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
                                             final formatted = _formatKey(
                                               displayKey,
                                             );
+                                            final numValue =
+                                                int.tryParse(
+                                                  e.value.toString(),
+                                                ) ??
+                                                0;
                                             return _RowData(
                                               label: formatted,
-                                              value: e.value.toString(),
+                                              value: _formatNum(numValue),
                                             );
                                           }).toList(),
                                         ),
