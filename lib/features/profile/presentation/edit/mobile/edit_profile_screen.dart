@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 // import 'package:firebase_auth/firebase_auth.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
@@ -344,7 +345,14 @@ class EditProfileScreenState extends State<EditProfileScreen> {
 
         final canLeave = await confirmDiscardOrSave();
         if (canLeave && context.mounted) {
-          Navigator.of(context).pop();
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            // Si no hay más páginas atrás, vuelve a home
+            if (context.mounted) {
+              context.go('/profile');
+            }
+          }
         }
       },
       child: Scaffold(
