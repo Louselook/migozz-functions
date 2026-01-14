@@ -533,7 +533,7 @@
                 "facebook": "https://www.facebook.com/username",
                 "whatsapp": "Enter your phone number with country code",
                 "telegram": "Enter your phone number with country code",
-                "default": "https://www.{{platform}}.com/username"
+                "default": "https://www.{platform}.com/username"
             }
         }
     },

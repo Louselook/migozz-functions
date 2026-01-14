@@ -521,7 +521,7 @@
         "facebook": "https://www.facebook.com/usuario",
         "whatsapp": "Ingresa tu número con código de país",
         "telegram": "Ingresa tu número con código de país",
-        "default": "https://www.{{platform}}.com/usuario"
+        "default": "https://www.{platform}.com/usuario"
       }
     }
   },
