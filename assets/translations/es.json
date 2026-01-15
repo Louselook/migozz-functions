@@ -511,6 +511,7 @@
         "facebook": "Ingresa usuario o enlace de Facebook",
         "whatsapp": "1234567890",
         "telegram": "1234567890",
+        "pinterest": "Ingresa usuario o enlace de Pinterest",
         "default": "Ingresa usuario o enlace"
       },
       "examples": {
@@ -521,7 +522,8 @@
         "facebook": "https://www.facebook.com/usuario",
         "whatsapp": "Ingresa tu número con código de país",
         "telegram": "Ingresa tu número con código de país",
-        "default": "https://www.{platform}.com/usuario"
+        "pinterest": "https://www.pinterest.com/usuario",
+        "default": "https://www.ejemplo.com/usuario"
       }
     }
   },
