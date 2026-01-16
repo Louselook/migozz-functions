@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -10,7 +11,6 @@ import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubi
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/social_ecosystem_step_v3.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
-// import 'package:migozz_app/features/profile/components/bottom_nav.dart';
 import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
@@ -174,6 +174,19 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
       initialDateRange:
           selectedRange ??
           DateTimeRange(start: now.subtract(const Duration(days: 7)), end: now),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: Color(0xFFB86BFF), // Main color
+              onPrimary: Colors.white,
+              surface: Color(0xFF1E1E1E),
+              onSurface: Colors.white,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null) setState(() => selectedRange = picked);
   }
@@ -183,7 +196,8 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
       return "stats.rangeText".tr();
     }
     final s = selectedRange!;
-    return "${s.start.day}/${s.start.month}/${s.start.year} → ${s.end.day}/${s.end.month}/${s.end.year}";
+    final f = DateFormat('MMM dd');
+    return "${f.format(s.start)} - ${f.format(s.end)}";
   }
 
   /// Navegar a edición de redes sociales
@@ -238,127 +252,204 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
       body: Stack(
         children: [
           TintesGradients(
-            child: Container(height: MediaQuery.of(context).size.height * 0.15),
+            child: Container(height: MediaQuery.of(context).size.height * 0.35),
           ),
           SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Center(
-                child: Column(
-                  children: [
-                    Text(
-                      "stats.title".tr(),
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Expanded(
-                      child: _loading
-                          ? const Center(
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                              ),
-                            )
-                          : _socials.isEmpty
-                          ? Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  "stats.noStats.notSocials".tr(),
-                                  style: const TextStyle(color: Colors.grey),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 12),
-                                ElevatedButton(
-                                  onPressed: _navigateToEditSocials,
-                                  child: Text("stats.noStats.addButton".tr()),
-                                ),
-                              ],
-                            )
-                          : Column(
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceAround,
+            child: Column(
+              children: [
+                const SizedBox(height: 10),
+                Text(
+                  "stats.title".tr(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Expanded(
+                  child: _loading
+                      ? const Center(
+                          child: CircularProgressIndicator(color: Colors.white),
+                        )
+                      : SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (_socials.isEmpty)
+                                Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const SizedBox(height: 40),
+                                      Icon(
+                                        Icons.analytics_outlined,
+                                        size: 60,
+                                        color: Colors.white.withValues(
+                                          alpha: 0.3,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        "stats.noStats.notSocials".tr(),
+                                        style: TextStyle(
+                                          color: Colors.white.withValues(
+                                            alpha: 0.7,
+                                          ),
+                                          fontSize: 16,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      const SizedBox(height: 24),
+                                      _EditButton(
+                                        onTap: _navigateToEditSocials,
+                                        label: "stats.noStats.addButton".tr(),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              else
+                                Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
                                   children: [
-                                    _Metric(
-                                      icon: Icons.favorite,
-                                      label:
-                                          '${_formatNum(_totalsGlobal['likes'] ?? 0)} ${'stats.metrics.likes'.tr()}',
+                                    // Top Metrics Row
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: _InfoCard(
+                                            icon: Icons.favorite,
+                                            value: _formatNum(
+                                              _totalsGlobal['likes'] ?? 0,
+                                            ),
+                                            label: "stats.metrics.likes".tr(),
+                                            color: const Color(
+                                              0xFFFF5F9A,
+                                            ), // Pinkish
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: _InfoCard(
+                                            icon: Icons.share,
+                                            value: _formatNum(
+                                              _totalsGlobal['shares'] ?? 0,
+                                            ),
+                                            label: "stats.metrics.shares".tr(),
+                                            color: const Color(
+                                              0xFFB86BFF,
+                                            ), // Purpleish
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: _InfoCard(
+                                            icon: Icons.people,
+                                            value: _formatNum(
+                                              _totalsGlobal['followers'] ?? 0,
+                                            ),
+                                            label: "stats.metrics.followers"
+                                                .tr(),
+                                            color: const Color(
+                                              0xFF6BFFB8,
+                                            ), // Greenish
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    _Metric(
-                                      icon: Icons.reply,
-                                      label:
-                                          '${_formatNum(_totalsGlobal['shares'] ?? 0)} ${'stats.metrics.shares'.tr()}',
-                                    ),
-                                    _Metric(
-                                      icon: Icons.people,
-                                      label:
-                                          '${_formatNum(_totalsGlobal['followers'] ?? 0)} ${'stats.metrics.followers'.tr()}',
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 20),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    // ElevatedButton(
-                                    //   style: ElevatedButton.styleFrom(
-                                    //     backgroundColor: Colors.grey[800],
-                                    //     foregroundColor: Colors.white,
-                                    //   ),
-                                    //   onPressed: _pickDateRange,
-                                    //   child: Text("stats.date".tr()),
-                                    // ),
-                                    Text(
-                                      rangeText,
-                                      style: const TextStyle(
-                                        color: Colors.grey,
-                                        fontSize: 15,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 20),
-                                _DataCard(
-                                  iconKey: 'global',
-                                  title: "stats.dataCardLabel.title".tr(),
-                                  rows: [
-                                    _RowData(
-                                      label: "stats.dataCardLabel.likes".tr(),
-                                      value: _formatNum(
-                                        _totalsGlobal['likes'] ?? 0,
-                                      ),
-                                    ),
-                                    _RowData(
-                                      label: "stats.dataCardLabel.shares".tr(),
-                                      value: _formatNum(
-                                        _totalsGlobal['shares'] ?? 0,
-                                      ),
-                                    ),
-                                    _RowData(
-                                      label: "stats.dataCardLabel.followers"
-                                          .tr(),
-                                      value: _formatNum(
-                                        _totalsGlobal['followers'] ?? 0,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 16),
-                                Expanded(
-                                  child: ListView.builder(
-                                    physics: const BouncingScrollPhysics(),
-                                    itemCount: _socials.length,
-                                    itemBuilder: (context, i) {
-                                      final s = _socials[i];
-                                      final data = s.toJson();
-                                      final name = s.name;
 
+                                    const SizedBox(height: 12),
+
+                                    // Date Range (Simple Text)
+                                    GestureDetector(
+                                      onTap: _pickDateRange,
+                                      child: Container(
+                                        width: double.infinity,
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 8,
+                                        ),
+                                        child: Text(
+                                          rangeText,
+                                          style: TextStyle(
+                                            color: Colors.white.withOpacity(
+                                              0.5,
+                                            ),
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w400,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 4),
+
+                                    // Global Totals Card
+                                    _GlassCard(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          _CardHeader(
+                                            icon: Icons.public,
+                                            title: "stats.dataCardLabel.title"
+                                                .tr(),
+                                            color: Colors.blueAccent,
+                                          ),
+                                          const SizedBox(height: 16),
+                                          _RowData(
+                                            label: "stats.dataCardLabel.likes"
+                                                .tr(),
+                                            value: _formatNum(
+                                              _totalsGlobal['likes'] ?? 0,
+                                            ),
+                                          ),
+                                          const Divider(
+                                            height: 16,
+                                            color: Colors.white10,
+                                          ),
+                                          _RowData(
+                                            label: "stats.dataCardLabel.shares"
+                                                .tr(),
+                                            value: _formatNum(
+                                              _totalsGlobal['shares'] ?? 0,
+                                            ),
+                                          ),
+                                          const Divider(
+                                            height: 16,
+                                            color: Colors.white10,
+                                          ),
+                                          _RowData(
+                                            label:
+                                                "stats.dataCardLabel.followers"
+                                                    .tr(),
+                                            value: _formatNum(
+                                              _totalsGlobal['followers'] ?? 0,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 24),
+                                    Text(
+                                      "Networks",
+                                      style: TextStyle(
+                                        color: Colors.white.withValues(
+                                          alpha: 0.7,
+                                        ),
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 1,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+
+                                    // Individual Networks
+                                    ..._socials.map((s) {
+                                      final data = s.toJson();
                                       final filteredEntries = data.entries
                                           .where((e) {
                                             final key = e.key.toLowerCase();
@@ -376,46 +467,284 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
                                           })
                                           .toList();
 
+                                      if (filteredEntries.isEmpty) {
+                                        return const SizedBox.shrink();
+                                      }
+
                                       return Padding(
                                         padding: const EdgeInsets.only(
                                           bottom: 12,
                                         ),
-                                        child: _DataCard(
-                                          iconKey: name,
-                                          title: name,
-                                          rows: filteredEntries.map((e) {
-                                            final displayKey = _applyFieldRules(
-                                              e.key,
-                                            );
-                                            final formatted = _formatKey(
-                                              displayKey,
-                                            );
-                                            final numValue =
-                                                int.tryParse(
-                                                  e.value.toString(),
-                                                ) ??
-                                                0;
-                                            return _RowData(
-                                              label: formatted,
-                                              value: _formatNum(numValue),
-                                            );
-                                          }).toList(),
+                                        child: _GlassCard(
+                                          child: Column(
+                                            children: [
+                                              _SocialHeader(name: s.name),
+                                              const SizedBox(height: 16),
+                                              ListView.separated(
+                                                shrinkWrap: true,
+                                                physics:
+                                                    const NeverScrollableScrollPhysics(),
+                                                itemCount:
+                                                    filteredEntries.length,
+                                                separatorBuilder: (ctx, i) =>
+                                                    const Divider(
+                                                      height: 16,
+                                                      color: Colors.white10,
+                                                    ),
+                                                itemBuilder: (ctx, i) {
+                                                  final e = filteredEntries[i];
+                                                  final displayKey =
+                                                      _applyFieldRules(e.key);
+                                                  final formatted = _formatKey(
+                                                    displayKey,
+                                                  );
+                                                  final numValue =
+                                                      int.tryParse(
+                                                        e.value.toString(),
+                                                      ) ??
+                                                      0;
+                                                  return _RowData(
+                                                    label: formatted,
+                                                    value: _formatNum(numValue),
+                                                  );
+                                                },
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       );
-                                    },
-                                  ),
+                                    }),
+
+                                    const SizedBox(
+                                      height: 100,
+                                    ), // Bottom padding for nav bar
+                                  ],
                                 ),
-                              ],
-                            ),
-                    ),
-                  ],
+                            ],
+                          ),
+                        ),
                 ),
-              ),
+              ],
             ),
           ),
         ],
       ),
     );
+  }
+}
+
+// --- Helper Widgets ---
+
+class _InfoCard extends StatelessWidget {
+  final IconData icon;
+  final String value;
+  final String label;
+  final Color color;
+
+  const _InfoCard({
+    required this.icon,
+    required this.value,
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.5),
+              fontSize: 11,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GlassCard extends StatelessWidget {
+  final Widget child;
+  const _GlassCard({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF161616),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+}
+
+class _CardHeader extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final Color color;
+
+  const _CardHeader({
+    required this.icon,
+    required this.title,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: color, size: 18),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SocialHeader extends StatelessWidget {
+  final String name;
+  const _SocialHeader({required this.name});
+
+  @override
+  Widget build(BuildContext context) {
+    final String? iconPath = SocialIconResolver.resolve(name);
+
+    return Row(
+      children: [
+        if (iconPath != null) ...[
+          SvgPicture.asset(iconPath, width: 24, height: 24),
+          const SizedBox(width: 10),
+        ],
+        Text(
+          name.capitalize(),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _RowData extends StatelessWidget {
+  final String label, value;
+  const _RowData({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.5),
+            fontSize: 14,
+          ),
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _EditButton extends StatelessWidget {
+  final VoidCallback onTap;
+  final String label;
+  const _EditButton({required this.onTap, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(30),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFB86BFF), Color(0xFFFF5F9A)],
+          ),
+          borderRadius: BorderRadius.circular(30),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+extension StringExtension on String {
+  String capitalize() {
+    if (isEmpty) return "";
+    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }
 
@@ -467,12 +796,10 @@ List<MapEntry<String, Map<String, dynamic>>> _parseEcosystem(
   if (ecosystem is List) {
     for (final item in ecosystem) {
       if (item is Map<String, dynamic>) {
-        // Nueva estructura: objeto directo con campo 'domain'
         if (item.containsKey('domain')) {
           final domain = item['domain'] as String;
           out.add(MapEntry(domain, item));
         } else {
-          // Estructura antigua: objeto anidado {domain: {data}}
           item.forEach((k, v) {
             if (v is Map<String, dynamic>) out.add(MapEntry(k, v));
           });
@@ -510,90 +837,6 @@ String _formatNum(int n) {
     return '${(n / 1000).toStringAsFixed(1).replaceAll(RegExp(r'\.?0+$'), '')}K';
   }
   return n.toString();
-}
-
-// Widgets auxiliares
-class _Metric extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  const _Metric({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) => Column(
-    children: [
-      Icon(icon, color: Colors.white, size: 28),
-      const SizedBox(height: 4),
-      Text(label, style: const TextStyle(color: Colors.white)),
-    ],
-  );
-}
-
-class _DataCard extends StatelessWidget {
-  final String title;
-  final String? iconKey; // clave lógica (instagram, twitter, etc)
-  final List<_RowData> rows;
-
-  const _DataCard({required this.title, required this.rows, this.iconKey});
-
-  @override
-  Widget build(BuildContext context) {
-    final String? iconPath = iconKey != null
-        ? SocialIconResolver.resolve(iconKey!)
-        : null;
-
-    return Card(
-      color: Colors.grey[900],
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                if (iconPath != null)
-                  SvgPicture.asset(iconPath, width: 22, height: 22),
-                if (iconPath != null) const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            ...rows,
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _RowData extends StatelessWidget {
-  final String label, value;
-  const _RowData({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 4),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: const TextStyle(color: Colors.grey)),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
-    ),
-  );
 }
 
 // Modelo SocialStats
