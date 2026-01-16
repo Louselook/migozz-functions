@@ -1,7 +1,9 @@
+import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 // import 'package:firebase_auth/firebase_auth.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
@@ -174,6 +176,17 @@ class EditProfileScreenState extends State<EditProfileScreen> {
 
       await editCubit.saveUserProfileField(userId: userId, updatedFields: data);
 
+      // Update _initialUser with the new saved values to prevent false "unsaved changes" detection
+      if (_initialUser != null) {
+        _initialUser = _initialUser!.copyWith(
+          displayName: nameCtrl.text.trim(),
+          username: usernameCtrl.text.trim(),
+          phone: phoneCtrl.text.trim(),
+          gender: genderCtrl.text.trim(),
+          birthDate: _dob,
+        );
+      }
+
       if (mounted) {
         await AlertGeneral.show(
           context,
@@ -333,7 +346,14 @@ class EditProfileScreenState extends State<EditProfileScreen> {
 
         final canLeave = await confirmDiscardOrSave();
         if (canLeave && context.mounted) {
-          Navigator.of(context).pop();
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            // Si no hay más páginas atrás, vuelve a home
+            if (context.mounted) {
+              context.go('/profile');
+            }
+          }
         }
       },
       child: Scaffold(
@@ -343,6 +363,12 @@ class EditProfileScreenState extends State<EditProfileScreen> {
           backgroundColor: Colors.transparent,
           surfaceTintColor: Colors.transparent,
           elevation: 0,
+          flexibleSpace: ClipRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+              child: Container(color: Colors.black.withValues(alpha: 0.5)),
+            ),
+          ),
           title: Text(
             'edit.presentation.title'.tr(),
             style: const TextStyle(

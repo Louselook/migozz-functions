@@ -16,12 +16,11 @@ class ChatNavigationHandler {
     if (action == null) return;
 
     final cubit = context.read<RegisterCubit>();
-    
 
     switch (action) {
       case 0:
         // Navegar a SocialEcosystemStep y esperar resultado
-        final result = await Navigator.push<String>(
+        await Navigator.push<String>(
           context,
           MaterialPageRoute(
             builder: (_) => BlocProvider.value(
@@ -32,12 +31,17 @@ class ChatNavigationHandler {
         );
 
         // Manejar retorno de redes sociales (delegado a handler específico)
-        if (result == 'done' && context.mounted) {
-          SocialEcosystemHandler.handleReturn(
-            context: context,
-            cubit: cubit,
-            chatController: chatController,
-          );
+        // Procesar siempre que el usuario regrese (ya sea con botón continuar o retrocediendo)
+        // siempre que haya al menos una red social agregada
+        if (context.mounted) {
+          final socialEcosystem = cubit.state.socialEcosystem ?? [];
+          if (socialEcosystem.isNotEmpty) {
+            SocialEcosystemHandler.handleReturn(
+              context: context,
+              cubit: cubit,
+              chatController: chatController,
+            );
+          }
         }
         break;
 

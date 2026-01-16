@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -73,7 +71,6 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     if (widget.mode == MoreUserDetailsMode.edit) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _setupSyncCallback();
-        _setupAutoSave(); // Config auto-save from deeplink
       });
     }
   }
@@ -158,16 +155,6 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
           if (Navigator.of(context).canPop()) {
             Navigator.of(context).pop();
           }
-
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('addSocials.messages.saved'.tr()),
-                backgroundColor: Colors.green,
-                duration: const Duration(seconds: 2),
-              ),
-            );
-          }
         } catch (e) {
           debugPrint('❌ [V3] Auto-save failed: $e');
 
@@ -194,45 +181,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     };
   }
 
-  StreamSubscription? _editCubitSubscription;
-
-  // ✅ NUEVO: Configurar listener para auto-save
-  void _setupAutoSave() {
-    final editCubit = context.read<EditCubit>();
-    final authCubit = context.read<AuthCubit>();
-
-    debugPrint('🔄 [V3] Setting up auto-save listener');
-
-    _editCubitSubscription?.cancel(); // seguridad
-
-    _editCubitSubscription = editCubit.stream.listen((editState) async {
-      final currentCount = editState.socialEcosystem?.length ?? 0;
-
-      if (currentCount != _previousSocialCount && editState.hasChanges) {
-        _previousSocialCount = currentCount;
-
-        final userId = authCubit.state.firebaseUser?.uid;
-        if (userId == null || !mounted) return;
-
-        showProfileLoader(
-          context,
-          message: 'common.saving'.tr(),
-          onCancel: () {},
-        );
-
-        try {
-          await editCubit.saveAllPendingChanges(userId);
-          if (mounted) Navigator.of(context).pop();
-        } catch (e) {
-          if (mounted) Navigator.of(context).pop();
-        }
-      }
-    });
-  }
-
   @override
   void dispose() {
-    _editCubitSubscription?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -595,7 +545,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     final normalized = trimmed.contains('://') ? trimmed : 'https://$trimmed';
     final uri = Uri.tryParse(normalized);
     if (uri == null) return '';
-    final segments = uri.pathSegments.where((s) => s.trim().isNotEmpty).toList();
+    final segments = uri.pathSegments
+        .where((s) => s.trim().isNotEmpty)
+        .toList();
     if (segments.isEmpty) return '';
     var candidate = segments.last.trim();
     if (candidate.startsWith('@')) candidate = candidate.substring(1);
@@ -604,7 +556,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
 
   List<Map<String, dynamic>> _getRegisterCustomLinks() {
     if (widget.mode != MoreUserDetailsMode.register) return const [];
-    final ecosystem = context.watch<RegisterCubit>().state.socialEcosystem ?? [];
+    final ecosystem =
+        context.watch<RegisterCubit>().state.socialEcosystem ?? [];
     final customItems = <Map<String, dynamic>>[];
 
     for (final entry in ecosystem) {
@@ -657,7 +610,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                 width: 20,
                 height: 20,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const SizedBox(width: 20, height: 20),
+                errorBuilder: (_, __, ___) =>
+                    const SizedBox(width: 20, height: 20),
               ),
             ),
             const SizedBox(width: 10),
@@ -794,8 +748,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     // Get social ecosystem from the appropriate cubit based on mode
     final List<Map<String, dynamic>> socialEcosystem;
     if (widget.mode == MoreUserDetailsMode.register) {
-        // RegisterCubit ya usa List<Map<String, dynamic>> (schema unificado)
-        socialEcosystem = context.watch<RegisterCubit>().state.socialEcosystem ?? [];
+      // RegisterCubit ya usa List<Map<String, dynamic>> (schema unificado)
+      socialEcosystem =
+          context.watch<RegisterCubit>().state.socialEcosystem ?? [];
     } else {
       // EditCubit already has List<Map<String, dynamic>>
       socialEcosystem = context.watch<EditCubit>().state.socialEcosystem ?? [];
@@ -884,7 +839,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
           top: false,
           child: Scaffold(
             backgroundColor: Colors.black,
-            body: Stack(clipBehavior: Clip.none,
+            body: Stack(
+              clipBehavior: Clip.none,
               children: [
                 Positioned.fill(
                   child: Container(
@@ -901,8 +857,6 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                     ),
                   ),
                 ),
-
-
 
                 // Only show profile image in edit mode
                 if (widget.mode == MoreUserDetailsMode.edit)
@@ -1052,7 +1006,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                         ),
                     ],
                   ),
-                ), Positioned(
+                ),
+                Positioned(
                   top: MediaQuery.of(context).padding.top + 8,
                   left: 16,
                   child: GestureDetector(
@@ -1299,9 +1254,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
         final result = await Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => AddAnotherNetworkScreen(
-              allowUnauthenticated: isRegister,
-            ),
+            builder: (_) =>
+                AddAnotherNetworkScreen(allowUnauthenticated: isRegister),
           ),
         );
 

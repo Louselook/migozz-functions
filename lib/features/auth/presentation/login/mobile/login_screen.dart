@@ -253,19 +253,19 @@ class _LoginScreenState extends State<LoginScreen> {
                     fontSize: 16,
                   ),
 
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 10),
                   // Social login buttons
                   PlatformUtils.isIOS
                       ? Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            googleButton(onPressed: _handleGoogleSignIn),
+                            Expanded(child: googleButton(onPressed: _handleGoogleSignIn,width: MediaQuery.of(context).size.width)),
                             const SizedBox(width: 10),
-                            appleButton(onPressed: _handleAppleSignIn),
+                            Expanded(child: appleButton(onPressed: _handleAppleSignIn)),
                           ],
                         )
                       : Center(
-                          child: googleButton(onPressed: _handleGoogleSignIn),
+                          child: googleButton(onPressed: _handleGoogleSignIn,width: MediaQuery.of(context).size.width),
                         ),
 
                   const SizedBox(height: 30),

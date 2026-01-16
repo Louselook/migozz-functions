@@ -1,105 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 /// Centralized camera permission handler
-/// Handles camera permissions properly:
-/// - Shows native permission prompt if status is notDetermined
-/// - Redirects to Settings only if permission is already denied/permanentlyDenied
+/// Uses image_picker directly which handles native permission dialogs automatically
 class CameraPermissionHandler {
   static final ImagePicker _picker = ImagePicker();
 
-  /// Request camera permission and open camera if granted
+  /// Open camera - image_picker handles permission dialogs automatically
   /// Returns the captured image file path, or null if cancelled/denied
   static Future<String?> openCamera({
     int imageQuality = 80,
     BuildContext? context,
   }) async {
-    // Check current permission status
-    final status = await Permission.camera.status;
+    debugPrint('📷 [CameraPermission] Opening camera directly via image_picker...');
 
-    debugPrint('📷 [CameraPermission] Current status: $status');
-
-    // If permission is already granted, open camera directly
-    if (status.isGranted) {
-      return await _captureImage(imageQuality);
-    }
-
-    // If permission is permanently denied, show dialog and redirect to settings
-    if (status.isPermanentlyDenied) {
-      debugPrint('⛔ [CameraPermission] Permission permanently denied');
-      if (context != null && context.mounted) {
-        await _showSettingsDialog(context);
-      } else {
-        await openAppSettings();
-      }
-      return null;
-    }
-
-    // If permission is restricted (iOS parental controls, etc.)
-    if (status.isRestricted) {
-      debugPrint('⛔ [CameraPermission] Permission restricted');
-      if (context != null && context.mounted) {
-        await _showSettingsDialog(context);
-      }
-      return null;
-    }
-
-    // If permission is limited (iOS limited access)
-    if (status.isLimited) {
-      return await _captureImage(imageQuality);
-    }
-
-    // If permission is denied but we haven't asked yet (notDetermined state is also isDenied)
-    // We need to check if this is the first time or if user actually denied it
-    if (status.isDenied) {
-      // On iOS, isDenied means notDetermined (first time)
-      // On Android, isDenied could mean user denied it once
-      // We'll request permission and let the system handle it
-      debugPrint('🔔 [CameraPermission] Requesting permission (status: denied/notDetermined)');
-      final requestResult = await Permission.camera.request();
-
-      debugPrint('📷 [CameraPermission] Request result: $requestResult');
-
-      if (requestResult.isGranted) {
-        return await _captureImage(imageQuality);
-      } else if (requestResult.isPermanentlyDenied) {
-        debugPrint('⛔ [CameraPermission] Permission permanently denied after request');
-        if (context != null && context.mounted) {
-          await _showSettingsDialog(context);
-        }
-        return null;
-      } else if (requestResult.isDenied) {
-        // User denied the permission
-        debugPrint('⚠️ [CameraPermission] Permission denied by user');
-        // Show settings dialog for next time
-        if (context != null && context.mounted) {
-          await _showSettingsDialog(context);
-        }
-        return null;
-      } else {
-        debugPrint('⚠️ [CameraPermission] Permission request returned: $requestResult');
-        return null;
-      }
-    }
-
-    // Fallback: request permission
-    debugPrint('🔔 [CameraPermission] Fallback - requesting permission');
-    final requestResult = await Permission.camera.request();
-
-    debugPrint('📷 [CameraPermission] Request result: $requestResult');
-
-    if (requestResult.isGranted) {
-      return await _captureImage(imageQuality);
-    } else {
-      debugPrint('⚠️ [CameraPermission] Permission not granted');
-      return null;
-    }
-  }
-
-  /// Capture image using camera
-  static Future<String?> _captureImage(int imageQuality) async {
     try {
+      // image_picker automatically shows native permission dialog on iOS/Android
       final XFile? photo = await _picker.pickImage(
         source: ImageSource.camera,
         imageQuality: imageQuality,
@@ -109,17 +27,29 @@ class CameraPermissionHandler {
         debugPrint('✅ [CameraPermission] Photo captured: ${photo.path}');
         return photo.path;
       } else {
-        debugPrint('⚠️ [CameraPermission] No photo captured (user cancelled)');
+        debugPrint('⚠️ [CameraPermission] No photo captured (user cancelled or denied)');
         return null;
       }
+    } on PlatformException catch (e) {
+      debugPrint('❌ [CameraPermission] Platform exception: ${e.code} - ${e.message}');
+
+      // If permission denied, show settings dialog
+      if (e.code == 'camera_access_denied' ||
+          e.code == 'photo_access_denied' ||
+          e.message?.toLowerCase().contains('denied') == true) {
+        if (context != null && context.mounted) {
+          await _showCameraSettingsDialog(context);
+        }
+      }
+      return null;
     } catch (e) {
-      debugPrint('❌ [CameraPermission] Error capturing photo: $e');
+      debugPrint('❌ [CameraPermission] Error: $e');
       return null;
     }
   }
 
-  /// Show dialog to redirect user to settings
-  static Future<void> _showSettingsDialog(BuildContext context) async {
+  /// Show dialog to redirect user to settings for camera permission
+  static Future<void> _showCameraSettingsDialog(BuildContext context) async {
     return showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -130,7 +60,7 @@ class CameraPermissionHandler {
             style: TextStyle(color: Colors.white),
           ),
           content: const Text(
-            'Camera access is needed to take profile photos and share images in chats. Please enable camera permission in Settings.',
+            'Camera access is needed to take photos. Please enable camera permission in Settings.',
             style: TextStyle(color: Colors.white70),
           ),
           actions: [
@@ -157,114 +87,16 @@ class CameraPermissionHandler {
     );
   }
 
-  /// Request gallery/photos permission and open gallery if granted
-  /// For Android 13+ uses READ_MEDIA_IMAGES (Permission.photos)
-  /// For older versions uses READ_EXTERNAL_STORAGE (Permission.storage)
+  /// Open gallery - image_picker handles permission dialogs automatically
   /// Returns the selected image file path, or null if cancelled/denied
   static Future<String?> openGallery({
     int imageQuality = 80,
     BuildContext? context,
   }) async {
-    // Check current permission status (try photos first for Android 13+)
-    PermissionStatus status = await Permission.photos.status;
+    debugPrint('📸 [GalleryPermission] Opening gallery directly via image_picker...');
 
-    debugPrint('📸 [GalleryPermission] Photos status: $status');
-
-    // If permission is already granted, open gallery directly
-    if (status.isGranted) {
-      return await _selectImage(imageQuality);
-    }
-
-    // Check storage permission for Android < 13
-    final storageStatus = await Permission.storage.status;
-    debugPrint('📸 [GalleryPermission] Storage status: $storageStatus');
-
-    if (storageStatus.isGranted) {
-      return await _selectImage(imageQuality);
-    }
-
-    // If permission is permanently denied, show dialog and redirect to settings
-    if (status.isPermanentlyDenied || storageStatus.isPermanentlyDenied) {
-      debugPrint('⛔ [GalleryPermission] Permission permanently denied');
-      if (context != null && context.mounted) {
-        await _showGallerySettingsDialog(context);
-      } else {
-        await openAppSettings();
-      }
-      return null;
-    }
-
-    // If permission is restricted (iOS parental controls, etc.)
-    if (status.isRestricted || storageStatus.isRestricted) {
-      debugPrint('⛔ [GalleryPermission] Permission restricted');
-      if (context != null && context.mounted) {
-        await _showGallerySettingsDialog(context);
-      }
-      return null;
-    }
-
-    // If permission is limited (iOS limited photo access)
-    if (status.isLimited) {
-      return await _selectImage(imageQuality);
-    }
-
-    // If permission is denied, request it (this will show native dialog on first time)
-    if (status.isDenied || storageStatus.isDenied) {
-      debugPrint('🔔 [GalleryPermission] Requesting permission (status: denied/notDetermined)');
-
-      // Try photos permission first (Android 13+, iOS)
-      PermissionStatus requestResult = await Permission.photos.request();
-
-      debugPrint('📸 [GalleryPermission] Photos request result: $requestResult');
-
-      // If photos permission not granted, try storage permission (Android < 13)
-      if (!requestResult.isGranted && !requestResult.isLimited) {
-        debugPrint('🔔 [GalleryPermission] Trying storage permission (Android < 13)');
-        requestResult = await Permission.storage.request();
-        debugPrint('📸 [GalleryPermission] Storage request result: $requestResult');
-      }
-
-      if (requestResult.isGranted || requestResult.isLimited) {
-        return await _selectImage(imageQuality);
-      } else if (requestResult.isPermanentlyDenied) {
-        debugPrint('⛔ [GalleryPermission] Permission permanently denied after request');
-        if (context != null && context.mounted) {
-          await _showGallerySettingsDialog(context);
-        }
-        return null;
-      } else if (requestResult.isDenied) {
-        // User denied the permission
-        debugPrint('⚠️ [GalleryPermission] Permission denied by user');
-        // Show settings dialog for next time
-        if (context != null && context.mounted) {
-          await _showGallerySettingsDialog(context);
-        }
-        return null;
-      } else {
-        debugPrint('⚠️ [GalleryPermission] Permission request returned: $requestResult');
-        return null;
-      }
-    }
-
-    // Fallback: request permission
-    debugPrint('🔔 [GalleryPermission] Fallback - requesting permission');
-    PermissionStatus requestResult = await Permission.photos.request();
-
-    if (!requestResult.isGranted && !requestResult.isLimited) {
-      requestResult = await Permission.storage.request();
-    }
-
-    if (requestResult.isGranted || requestResult.isLimited) {
-      return await _selectImage(imageQuality);
-    } else {
-      debugPrint('⚠️ [GalleryPermission] Permission not granted');
-      return null;
-    }
-  }
-
-  /// Select image from gallery
-  static Future<String?> _selectImage(int imageQuality) async {
     try {
+      // image_picker automatically shows native permission dialog on iOS/Android
       final XFile? image = await _picker.pickImage(
         source: ImageSource.gallery,
         imageQuality: imageQuality,
@@ -274,11 +106,22 @@ class CameraPermissionHandler {
         debugPrint('✅ [GalleryPermission] Image selected: ${image.path}');
         return image.path;
       } else {
-        debugPrint('⚠️ [GalleryPermission] No image selected (user cancelled)');
+        debugPrint('⚠️ [GalleryPermission] No image selected (user cancelled or denied)');
         return null;
       }
+    } on PlatformException catch (e) {
+      debugPrint('❌ [GalleryPermission] Platform exception: ${e.code} - ${e.message}');
+
+      // If permission denied, show settings dialog
+      if (e.code == 'photo_access_denied' ||
+          e.message?.toLowerCase().contains('denied') == true) {
+        if (context != null && context.mounted) {
+          await _showGallerySettingsDialog(context);
+        }
+      }
+      return null;
     } catch (e) {
-      debugPrint('❌ [GalleryPermission] Error selecting image: $e');
+      debugPrint('❌ [GalleryPermission] Error: $e');
       return null;
     }
   }
@@ -295,7 +138,7 @@ class CameraPermissionHandler {
             style: TextStyle(color: Colors.white),
           ),
           content: const Text(
-            'Gallery access is needed to select photos. Please enable gallery permission in Settings.',
+            'Gallery access is needed to select photos. Please enable photo library permission in Settings.',
             style: TextStyle(color: Colors.white70),
           ),
           actions: [

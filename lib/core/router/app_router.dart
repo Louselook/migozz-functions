@@ -39,7 +39,6 @@ Widget localizedBuilder(BuildContext context, Widget Function() screenBuilder) {
 
   final controller = easy.delegate.localizationController;
 
-
   if (controller == null) {
     return const SplashScreen();
   }
@@ -60,20 +59,40 @@ class _AppGateState extends State<AppGate> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // 🔒 Esperar UN frame garantiza que Easy ya cargó
-      final authStatus = context.read<AuthCubit>().state.status;
+      // 🔒 Esperar a que la autenticación esté completamente resuelta
+      final authCubit = context.read<AuthCubit>();
+      final authStatus = authCubit.state.status;
 
+      // Solo redirigir si ya se resolvió el estado (no está checking)
       if (authStatus == AuthStatus.authenticated) {
-        context.go('/profile');
-      } else {
-        context.go('/onboarding');
+        if (mounted) context.go('/profile');
+      } else if (authStatus == AuthStatus.notAuthenticated) {
+        if (mounted) context.go('/onboarding');
       }
+      // Si está checking, se mantiene el splash hasta que cambie
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return const SplashScreen();
+    // 🆕 Escuchar cambios de autenticación para redirigir cuando esté listo
+    return BlocListener<AuthCubit, AuthState>(
+      listener: (context, state) {
+        // Una vez que deja de estar checking, redirigir según corresponda
+        if (state.status == AuthStatus.authenticated && mounted) {
+          debugPrint(
+            '🔐 [AppGate] Auth resolved: authenticated → going to /profile',
+          );
+          context.go('/profile');
+        } else if (state.status == AuthStatus.notAuthenticated && mounted) {
+          debugPrint(
+            '🔐 [AppGate] Auth resolved: notAuthenticated → going to /onboarding',
+          );
+          context.go('/onboarding');
+        }
+      },
+      child: const SplashScreen(),
+    );
   }
 }
 
@@ -82,10 +101,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
     initialLocation: '/',
     refreshListenable: goRouterNotifier,
     routes: [
-      GoRoute(
-        path: '/',
-        builder: (context, state) => const AppGate(),
-      ),
+      GoRoute(path: '/', builder: (context, state) => const AppGate()),
 
       GoRoute(
         path: '/onboarding',
@@ -280,7 +296,8 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
               }
 
               final userData = snapshot.data;
-              final otherUserName = userData?['displayName'] ?? userData?['username'] ?? 'User';
+              final otherUserName =
+                  userData?['displayName'] ?? userData?['username'] ?? 'User';
               final otherUserAvatar = userData?['avatarUrl'] as String?;
 
               return UserChatScreen(
@@ -346,7 +363,13 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       // ✅ Permitir la ruta raíz para que se maneje su propio redirect
       if (goingTo == '/') return null;
 
-      if (status == AuthStatus.checking) return null;
+      // 🆕 Mientras se está verificando la autenticación, mantener en splash
+      if (status == AuthStatus.checking) {
+        // Si intenta ir a splash, permitir
+        if (goingTo == '/splash' || goingTo == '/') return null;
+        // Si intenta ir a cualquier otro lado, quedarse en splash (no redirigir aún)
+        return null;
+      }
 
       // 1) NO autenticado
       if (status == AuthStatus.notAuthenticated) {
@@ -381,6 +404,11 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
             return '/complete-profile';
           }
           return null;
+        }
+
+        // ✅ Redirect to profile if authenticated user tries to access onboarding or login
+        if (goingTo == '/onboarding' || goingTo == '/login') {
+          return '/profile';
         }
 
         const allowedWhenComplete = {

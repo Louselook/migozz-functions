@@ -454,12 +454,19 @@ class _AddNetworkBottomSheetState extends State<AddNetworkBottomSheet> {
           'example': 'addSocials.networkAuth.examples.telegram'.tr(),
         };
 
+      case 'pinterest':
+        return {
+          'hint': 'addSocials.networkAuth.hints.pinterest'.tr(),
+          'example': 'addSocials.networkAuth.examples.pinterest'.tr(),
+        };
+
       default:
+        // Construcción manual para evitar problemas de interpolación con {platform}
+        final isEs = context.locale.languageCode == 'es';
+        final suffix = isEs ? 'usuario' : 'username';
         return {
           'hint': 'addSocials.networkAuth.hints.default'.tr(),
-          'example': 'addSocials.networkAuth.examples.default'.tr(
-            namedArgs: {'platform': name},
-          ),
+          'example': 'https://www.$name.com/$suffix',
         };
     }
   }

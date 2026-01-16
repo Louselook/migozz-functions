@@ -3,7 +3,9 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart'; 
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:migozz_app/app_initializer.dart';
 import 'package:migozz_app/bloc_providers.dart';
 import 'package:migozz_app/core/config/firebase_config.dart';
@@ -29,6 +31,17 @@ Future<void> main() async {
 
   // ✅ Inicializar providers ANTES de runApp
   initializeBlocProviders();
+
+  // ✅ Initialize permission_handler for iOS
+  // This ensures native permission dialogs work properly
+  if (!kIsWeb) {
+    try {
+      // Just check status to initialize the handler
+      await Permission.camera.status;
+    } catch (e) {
+      debugPrint('⚠️ [Main] Error initializing permission_handler: $e');
+    }
+  }
 
   setPathUrlStrategy();
   runApp(
@@ -124,21 +137,28 @@ class MyApp extends StatelessWidget {
                 }
               });
 
-              return NotificationInitializer(
-                router: router,
-                child: MaterialApp.router(
-                  debugShowCheckedModeBanner: false,
-                  title: 'Migozz App',
-                  routerConfig: router,
-                  theme: ThemeData(
-                    colorScheme: ColorScheme.fromSeed(
-                      seedColor: Colors.deepPurple,
+              // 🆕 Escuchar cambios de autenticación para saber cuándo está listo
+              return BlocListener<AuthCubit, AuthState>(
+                listener: (context, state) {
+                  // Solo para debugging
+                  debugPrint('🔐 [MyApp] Auth status changed: ${state.status}');
+                },
+                child: NotificationInitializer(
+                  router: router,
+                  child: MaterialApp.router(
+                    debugShowCheckedModeBanner: false,
+                    title: 'Migozz App',
+                    routerConfig: router,
+                    theme: ThemeData(
+                      colorScheme: ColorScheme.fromSeed(
+                        seedColor: Colors.deepPurple,
+                      ),
+                      useMaterial3: true,
                     ),
-                    useMaterial3: true,
+                    localizationsDelegates: context.localizationDelegates,
+                    supportedLocales: context.supportedLocales,
+                    locale: context.locale,
                   ),
-                  localizationsDelegates: context.localizationDelegates,
-                  supportedLocales: context.supportedLocales,
-                  locale: context.locale,
                 ),
               );
             },

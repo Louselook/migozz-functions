@@ -23,7 +23,8 @@ Widget appleButton({required VoidCallback onPressed, String text = 'Apple'}) {
         color: AppColors.textLight,
         size: 24,
       ),
-      label: SecondaryText(text, color: AppColors.grey),
+      label: SecondaryText(text, color: AppColors.grey, fontSize: 15),
+
     ),
   );
 }
