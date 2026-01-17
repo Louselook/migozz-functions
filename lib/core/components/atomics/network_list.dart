@@ -110,7 +110,7 @@ final Map<String, String> iconBlackByLabel = {
   // Messaging
   "Whatsapp": AssetsConstants.whatsappIcon,
   "Telegram": AssetsConstants.telegramIcon,
-  "Discord": "$AssetsConstants.socialBlackWhiteIcons/DiscordBlanco.svg",
+  "Discord": AssetsConstants.discordIcon,
 
   // Websites & Stores
   "Shopify": AssetsConstants.shopifyIcon,

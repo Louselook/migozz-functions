@@ -37,6 +37,7 @@ class AssetsConstants {
   static const String trovoIcon = '$socialBlackWhiteIcons/TrovoNegro.svg';
   static const String twitchIcon = '$socialBlackWhiteIcons/TwitchNegro.svg';
   static const String wooIcon = '$socialBlackWhiteIcons/WooNegro.svg';
+  static const String discordIcon = '$socialBlackWhiteIcons/DiscordNegro.svg';
   static const String wrnsitePerIcon =
       '$socialBlackWhiteIcons/WrnsitePerNegro.svg';
 }
@@ -64,6 +65,7 @@ class SocialIconResolver {
     'threads': AssetsConstants.threadsIcon,
     'trovo': AssetsConstants.trovoIcon,
     'twitch': AssetsConstants.twitchIcon,
+    'discord': AssetsConstants.discordIcon,
     'woocommerce': AssetsConstants.wooIcon,
     'enlace': AssetsConstants.wrnsitePerIcon,
     'global': AssetsConstants.migozIcon,
