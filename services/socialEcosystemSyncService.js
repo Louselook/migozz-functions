@@ -740,7 +740,10 @@ async function syncAllUsersThatNeedUpdate() {
 
       const dueSet = new Set();
       for (const { platform } of normalized) {
-        const { due } = isPlatformDueForSync(userData, platform, intervalDays);
+        // 🔑 Usar intervalo específico de cada plataforma (no el global)
+        const platformInterval = getSyncIntervalDays(platform);
+        const { due, reason } = isPlatformDueForSync(userData, platform, platformInterval);
+        console.log(`   [${platform}] due=${due}, reason=${reason}`);
         if (due) dueSet.add(platform);
       }
 
