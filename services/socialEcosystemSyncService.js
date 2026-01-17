@@ -63,7 +63,7 @@ const DEFAULT_FAILURE_RETRY_HOURS = 24;
 // Resto: cada 15 días
 const SYNC_INTERVALS_BY_PLATFORM = {
   tiktok: 1,
-  instagram: 5,
+  instagram: 3,
   threads: 1,
   youtube: 15,
   twitch: 15,
