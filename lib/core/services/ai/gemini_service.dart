@@ -330,13 +330,11 @@ class GeminiService {
 
   //  Flujo reducido para usuarios autenticados
   final List<String> _questionFlowAuth = [
-    // 'language', // 0
-    // 'gender', // 1
-    'location', // 3
-    'phone', // 4
-    'voiceNoteUrl', // 5
-    'socialEcosystem', // 2
-    // 'category', // 6
+    'location',
+    'phone',
+    'socialEcosystem',
+    'avatarUrl',
+    'voiceNoteUrl',
   ];
 
   // Getter dinámico que devuelve el flujo correcto según auth
@@ -1317,7 +1315,7 @@ class GeminiService {
           "keyboardType": "text",
           "manualLocationPrompt": true,
         };
-      } 
+      }
 
       final currentLocation = registerCubit.state.location;
       // Obtener ubicación si está vacía o null
