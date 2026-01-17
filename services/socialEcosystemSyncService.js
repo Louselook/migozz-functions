@@ -58,6 +58,30 @@ const SCRAPERS = {
 const DEFAULT_SYNC_INTERVAL_DAYS = 15;
 const DEFAULT_FAILURE_RETRY_HOURS = 24;
 
+// 🎯 Configuración de intervalos por plataforma (en días)
+// Plataformas con tokens/imágenes que vencen rápido: diario
+// Resto: cada 15 días
+const SYNC_INTERVALS_BY_PLATFORM = {
+  tiktok: 1,
+  instagram: 5,
+  youtube: 15,
+  twitch: 15,
+  facebook: 15,
+  twitter: 15,
+  spotify: 15,
+  reddit: 15,
+  threads: 15,
+  linkedin: 15,
+  pinterest: 15,
+  soundcloud: 15,
+  applemusic: 15,
+  deezer: 15,
+  discord: 15,
+  snapchat: 15,
+  kick: 15,
+  trovo: 15,
+};
+
 function toDateOrNull(value) {
   if (!value) return null;
   if (value instanceof Date) return value;
@@ -81,7 +105,26 @@ function daysBetween(now, past) {
   return (now.getTime() - past.getTime()) / (1000 * 60 * 60 * 24);
 }
 
-function getSyncIntervalDays() {
+function getSyncIntervalDays(platform = null) {
+  // Si se especifica plataforma, intentar obtener intervalo específico
+  if (platform) {
+    const platformLower = String(platform).toLowerCase();
+    
+    // Primero verificar variable de entorno específica: SYNC_INTERVAL_DAYS_<PLATFORM>
+    const envKey = `SYNC_INTERVAL_DAYS_${platformLower.toUpperCase()}`;
+    const envVal = process.env[envKey];
+    if (envVal) {
+      const n = Number(envVal);
+      if (Number.isFinite(n) && n > 0) return Math.floor(n);
+    }
+    
+    // Luego usar la configuración predefinida por plataforma
+    if (SYNC_INTERVALS_BY_PLATFORM[platformLower]) {
+      return SYNC_INTERVALS_BY_PLATFORM[platformLower];
+    }
+  }
+  
+  // Fallback: variable global o default
   const raw = process.env.SYNC_INTERVAL_DAYS;
   const n = raw ? Number(raw) : NaN;
   if (Number.isFinite(n) && n > 0) return Math.floor(n);
@@ -246,11 +289,16 @@ function getLastAttemptAtForPlatform(userData, platform) {
   return toDateOrNull(v);
 }
 
-function isPlatformDueForSync(userData, platform, intervalDays) {
+function isPlatformDueForSync(userData, platform, intervalDays = null) {
   const now = new Date();
   const addedAt = getAddedAtForPlatform(userData, platform);
   const lastSuccessAt = getLastSuccessAtForPlatform(userData, platform);
   const lastAttemptAt = getLastAttemptAtForPlatform(userData, platform);
+
+  // Si no se proporciona intervalDays, obtenerlo de la configuración de plataforma
+  if (intervalDays === null || intervalDays === undefined) {
+    intervalDays = getSyncIntervalDays(platform);
+  }
 
   // Backoff after failures/attempts to avoid hammering scrapers.
   const retryHours = getFailureRetryHours();
@@ -271,7 +319,7 @@ function isPlatformDueForSync(userData, platform, intervalDays) {
     return { due: false, reason: 'missing_added_at' };
   }
   const days = daysBetween(now, anchor);
-  return { due: days >= intervalDays, reason: `days_since_${lastSuccessAt ? 'last_success' : 'added'}:${days.toFixed(2)}` };
+  return { due: days >= intervalDays, reason: `days_since_${lastSuccessAt ? 'last_success' : 'added'}:${days.toFixed(2)} (interval:${intervalDays}d)` };
 }
 
 function isProfileDataMeaningful(profileData) {
