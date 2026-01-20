@@ -4,7 +4,7 @@ import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/interests/interests_step.dart';
-import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/social_ecosystem_simple_step.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/social_network_selection_step.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/social_ecosystem_step_v3.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 
@@ -118,9 +118,9 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
           InterestsStep(controller: pageController, mode: widget.mode),
         ];
       } else {
-        // Simple view with main networks only
+        // Simple view with main networks only - Two-step flow
         steps = [
-          SocialEcosystemSimpleStep(
+          SocialNetworkSelectionStep(
             controller: pageController,
             onAddOtherNetworks: _navigateToFullSocialView,
           ),

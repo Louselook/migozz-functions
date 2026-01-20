@@ -145,18 +145,15 @@ class RegisterCubit extends Cubit<RegisterState> {
   // ==================== SOCIAL ECOSYSTEM ====================
 
   /// Para registro - CAMBIA el regProgress
-  void setSocialEcosystem(List<Map<String, dynamic>> platforms) =>
-      emit(
-        state.copyWith(
-          socialEcosystem: platforms,
-          regProgress: RegisterStatusProgress.location,
-        ),
-      );
+  void setSocialEcosystem(List<Map<String, dynamic>> platforms) => emit(
+    state.copyWith(
+      socialEcosystem: platforms,
+      regProgress: RegisterStatusProgress.location,
+    ),
+  );
 
   /// Para edición - NO cambia el regProgress
-  void updateSocialEcosystemOnly(
-    List<Map<String, dynamic>> platforms,
-  ) {
+  void updateSocialEcosystemOnly(List<Map<String, dynamic>> platforms) {
     debugPrint(
       '🔧 [RegisterCubit] Actualizando socialEcosystem SIN cambiar regProgress',
     );
@@ -401,6 +398,43 @@ class RegisterCubit extends Cubit<RegisterState> {
           'url': rawData['url'] ?? rawData['profile_url'] ?? '',
           'profile_image_url': rawData['profile_image_url'] ?? '',
         };
+    }
+  }
+
+  /// Public method to add a network profile by username/link.
+  /// Returns the normalized profile data, or null if validation fails.
+  Future<Map<String, dynamic>?> addNetworkByUsername({
+    required String network,
+    required String usernameOrLink,
+    required String iconPath,
+  }) async {
+    try {
+      Map<String, dynamic> rawData;
+
+      final isDirectNetwork = _isDirectNetwork(network);
+
+      if (isDirectNetwork) {
+        rawData = await _directService.createDirectProfile(
+          network: network,
+          input: usernameOrLink,
+        );
+      } else {
+        rawData = await _userService.getProfileByUsernameOrLink(
+          network: network,
+          usernameOrLink: usernameOrLink,
+        );
+      }
+
+      final profileData = _normalizeProfile(network, rawData);
+
+      // Add iconPath to the profile
+      profileData['iconPath'] = iconPath;
+
+      debugPrint('📊 [$network] Profile validated and normalized');
+      return profileData;
+    } catch (e) {
+      debugPrint('❌ Error validating $network profile: $e');
+      return null;
     }
   }
 

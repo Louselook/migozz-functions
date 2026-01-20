@@ -453,7 +453,27 @@
     "addSocials": {
         "addOtherNetworks": "Add Other Networks",
         "validation":{
-          "atLeastOne": "At least one social network is required"
+          "atLeastOne": "At least one social network is required",
+          "selectAtLeastOne": "Select at least one network",
+          "enterAtLeastOne": "Enter username for at least one network",
+          "invalidProfile": "Could not verify {platform} profile",
+          "noValidProfiles": "No profiles could be validated"
+        },
+        "selection": {
+          "selectAtLeastOne": "Select at least one network to continue"
+        },
+        "selectNetworks": {
+          "title": "Select Your Networks",
+          "subtitle": "Choose which platforms to add"
+        },
+        "inputStep": {
+          "title": "Connect Your Profiles",
+          "subtitle": "Enter your username for each network",
+          "connectYour": "Your",
+          "placeholder": "Enter username"
+        },
+        "success": {
+          "networksAdded": "Networks added successfully!"
         },
         "register": {
             "title": "Your Social Ecosystem",
