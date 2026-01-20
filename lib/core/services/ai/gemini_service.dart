@@ -303,6 +303,8 @@ class GeminiService {
   int _previousQuestionIndex = 0;
   bool _isInRepeatMode =
       false; // Flag para indicar que estamos en modo repetición
+  bool _returnedFromRepeatMode =
+      false; // Flag para indicar que volvimos del modo repetición (no incrementar índice)
   bool _awaitingEmailChange =
       false; // Flag para rastrear si estamos esperando cambio de email
   bool _comingFromOTPEmailChange =
@@ -311,8 +313,8 @@ class GeminiService {
       false; // Flag para rastrear si estamos esperando ubicación manual
   bool _awaitingConfirmation =
       false; // Flag para esperar confirmación después de cada campo
-  String?
-  _lastSavedField; // El último campo que se guardó para mostrar en confirmación
+  bool _awaitingFieldSelection =
+      false; // Flag para esperar selección de campo a cambiar
 
   bool _requestedMicPermissionForVoiceStep = false;
 
@@ -321,7 +323,7 @@ class GeminiService {
     'fullName', // 1
     'username', // 2
     'location', // 3
-    'sendOTP', // 4
+    'sendOTP', // 4 - Confirmar email (ya disponible) y enviar código
     'emailVerification', // 5
     'otpInput', // 6
     'emailSuccess', // 7
@@ -397,35 +399,9 @@ class GeminiService {
     _currentQuestionIndex = 0;
     _previousQuestionIndex = 0;
     _isInRepeatMode = false;
+    _returnedFromRepeatMode = false;
     _awaitingConfirmation = false;
-    _lastSavedField = null;
-  }
-
-  /// Obtiene el nombre del campo en español para confirmación
-  String _getFieldDisplayName(String fieldKey, bool isSpanish) {
-    final namesEs = {
-      'fullName': 'Nombre',
-      'username': 'Usuario',
-      'location': 'Ubicación',
-      'phone': 'Teléfono',
-      'avatarUrl': 'Foto',
-      'voiceNoteUrl': 'Nota de voz',
-      'socialEcosystem': 'Redes sociales',
-      'sendOTP': 'Email',
-    };
-    final namesEn = {
-      'fullName': 'Name',
-      'username': 'Username',
-      'location': 'Location',
-      'phone': 'Phone',
-      'avatarUrl': 'Photo',
-      'voiceNoteUrl': 'Voice note',
-      'socialEcosystem': 'Social networks',
-      'sendOTP': 'Email',
-    };
-    return isSpanish
-        ? (namesEs[fieldKey] ?? fieldKey)
-        : (namesEn[fieldKey] ?? fieldKey);
+    _awaitingFieldSelection = false;
   }
 
   /// Obtiene el valor guardado para mostrar en confirmación
@@ -457,23 +433,24 @@ class GeminiService {
     RegisterCubit cubit,
   ) {
     final isSpanish = cubit.state.language == 'Español';
-    final fieldName = _getFieldDisplayName(fieldKey, isSpanish);
     final savedValue = _getSavedValue(fieldKey, cubit);
 
     String text;
     if (savedValue != null && savedValue.isNotEmpty) {
       text = isSpanish
-          ? '✓ $fieldName: $savedValue\n¿Continuamos o quieres cambiar algo?'
-          : '✓ $fieldName: $savedValue\nContinue or change something?';
+          ? '✓ Listo: $savedValue\n¿Seguimos con el siguiente paso?'
+          : '✓ Got it: $savedValue\nShall we continue?';
     } else {
       text = isSpanish
-          ? '✓ $fieldName guardado.\n¿Continuamos o quieres cambiar algo?'
-          : '✓ $fieldName saved.\nContinue or change something?';
+          ? '✓ Guardado.\n¿Seguimos con el siguiente paso?'
+          : '✓ Saved.\nShall we continue?';
     }
 
     return {
       "text": text,
-      "options": isSpanish ? ["Continuar", "Cambiar"] : ["Continue", "Change"],
+      "options": isSpanish
+          ? ["Sí, continuar", "Quiero cambiar algo"]
+          : ["Yes, continue", "I want to change something"],
       "step": "regProgress.confirmation",
       "keepTalk": false,
       "awaitingConfirmation": true,
@@ -535,6 +512,112 @@ class GeminiService {
       setLanguage(rcLang);
     }
 
+    // ✅ MANEJO DE SELECCIÓN DE CAMPO: Si estamos esperando que el usuario elija qué cambiar
+    if (_awaitingFieldSelection && userInput.trim().isNotEmpty) {
+      final normalized = userInput.trim().toLowerCase();
+      final isSpanish = registerCubit.state.language == 'Español';
+
+      final wantsChangeName =
+          normalized == 'nombre' ||
+          normalized == 'name' ||
+          normalized == 'mi nombre' ||
+          normalized == 'my name';
+
+      final wantsChangeUsername =
+          normalized == 'usuario' ||
+          normalized == 'username' ||
+          normalized == 'mi usuario' ||
+          normalized == 'my username';
+
+      final wantsChangePhone =
+          normalized == 'teléfono' ||
+          normalized == 'telefono' ||
+          normalized == 'phone' ||
+          normalized == 'mi teléfono' ||
+          normalized == 'my phone';
+
+      final wantsNothingContinue =
+          normalized.contains('nada') ||
+          normalized.contains('nothing') ||
+          normalized.contains('nada, continuar') ||
+          normalized.contains('nothing, continue');
+
+      if (wantsNothingContinue) {
+        _awaitingFieldSelection = false;
+        // Usuario decidió no cambiar nada, continuar
+        _currentQuestionIndex++;
+        if (_currentQuestionIndex >= questionFlow.length) {
+          return {
+            "text": isSpanish
+                ? "✅ Registro completado."
+                : "✅ Registration complete.",
+            "options": [],
+            "step": "finished",
+            "keepTalk": false,
+          };
+        }
+        final nextQuestion = AssistantFunctions.getCurrentQuestion(
+          questionFlow,
+          _currentQuestionIndex,
+          registerCubit,
+        );
+        if (nextQuestion != null) {
+          return await _prepareQuestion(nextQuestion, registerCubit);
+        }
+      }
+
+      if (wantsChangeName || wantsChangeUsername || wantsChangePhone) {
+        _awaitingFieldSelection = false;
+        String targetField;
+        String promptText;
+
+        if (wantsChangeName) {
+          targetField = 'fullName';
+          promptText = isSpanish
+              ? "Escribe tu nombre completo:"
+              : "Enter your full name:";
+        } else if (wantsChangeUsername) {
+          targetField = 'username';
+          promptText = isSpanish
+              ? "Escribe el nombre de usuario que quieres usar:"
+              : "Enter the username you want to use:";
+        } else {
+          targetField = 'phone';
+          promptText = isSpanish
+              ? "Escribe tu número de teléfono:"
+              : "Enter your phone number:";
+        }
+
+        // Entrar en modo repetición para ese campo
+        final fieldIndex = questionFlow.indexOf(targetField);
+        if (fieldIndex >= 0) {
+          _previousQuestionIndex = _currentQuestionIndex;
+          _isInRepeatMode = true;
+          _currentQuestionIndex = fieldIndex;
+
+          return {
+            "text": promptText,
+            "options": [],
+            "step": "regProgress.$targetField",
+            "keepTalk": false,
+            "keyboardType": targetField == 'phone' ? "number" : "text",
+          };
+        }
+      }
+
+      // Si no reconocemos la respuesta, repetir las opciones
+      return {
+        "text": isSpanish
+            ? "¿Qué quieres cambiar?"
+            : "What would you like to change?",
+        "options": isSpanish
+            ? ["Nombre", "Usuario", "Teléfono", "Nada, continuar"]
+            : ["Name", "Username", "Phone", "Nothing, continue"],
+        "step": "regProgress.changeRequest",
+        "keepTalk": false,
+      };
+    }
+
     // ✅ MANEJO DE CONFIRMACIÓN: Si estamos esperando respuesta de confirmación
     if (_awaitingConfirmation && userInput.trim().isNotEmpty) {
       final normalized = userInput.trim().toLowerCase();
@@ -551,15 +634,25 @@ class GeminiService {
           normalized == 'okay' ||
           normalized == 'dale' ||
           normalized == 'siguiente' ||
-          normalized == 'next';
+          normalized == 'next' ||
+          normalized.contains('sí, continuar') ||
+          normalized.contains('si, continuar') ||
+          normalized.contains('yes, continue');
 
       if (wantsContinue) {
         debugPrint('✅ Usuario confirmó continuar');
         _awaitingConfirmation = false;
-        _lastSavedField = null;
 
-        // Avanzar al siguiente paso
-        _currentQuestionIndex++;
+        // Si volvimos del modo repetición, NO incrementar (ya estamos en el índice correcto)
+        if (_returnedFromRepeatMode) {
+          debugPrint(
+            '🔙 Volvimos del modo repetición - mostrando paso actual: ${questionFlow[_currentQuestionIndex]}',
+          );
+          _returnedFromRepeatMode = false; // Limpiar flag
+        } else {
+          // Avanzar al siguiente paso solo si no venimos del modo repetición
+          _currentQuestionIndex++;
+        }
 
         if (_currentQuestionIndex >= questionFlow.length) {
           return {
@@ -601,48 +694,36 @@ class GeminiService {
           normalized.contains('editar') ||
           normalized.contains('edit') ||
           normalized.contains('modificar') ||
-          normalized.contains('corregir');
+          normalized.contains('corregir') ||
+          normalized.contains('quiero cambiar');
 
       if (wantsChange) {
-        debugPrint('🔄 Usuario quiere cambiar - volviendo al campo anterior');
+        debugPrint('🔄 Usuario quiere cambiar algo de su registro');
         _awaitingConfirmation = false;
+        _awaitingFieldSelection = true; // Esperando selección de campo
 
-        // Volver al campo que acabamos de guardar para que lo corrija
-        // El índice ya está en el campo que guardamos
-        final currentField =
-            _lastSavedField ?? questionFlow[_currentQuestionIndex];
-        _lastSavedField = null;
-
-        // Obtener la pregunta del campo actual para que lo ingrese de nuevo
-        final repeatQuestion = AssistantFunctions.getCurrentQuestion(
-          questionFlow,
-          _currentQuestionIndex,
-          registerCubit,
-        );
-
-        if (repeatQuestion != null) {
-          // Añadir mensaje indicando que puede cambiarlo
-          final fieldName = _getFieldDisplayName(currentField, isSpanish);
-          return {
-            "text": isSpanish
-                ? "Ingresa el nuevo valor para $fieldName:"
-                : "Enter the new value for $fieldName:",
-            "options": repeatQuestion['options'] ?? [],
-            "step": repeatQuestion['step'] ?? 'regProgress.$currentField',
-            "keepTalk": false,
-            "keyboardType": repeatQuestion['keyboardType'] ?? "text",
-          };
-        }
+        // Mostrar opciones de qué campo quiere cambiar
+        return {
+          "text": isSpanish
+              ? "¿Qué quieres cambiar?"
+              : "What would you like to change?",
+          "options": isSpanish
+              ? ["Nombre", "Usuario", "Teléfono", "Nada, continuar"]
+              : ["Name", "Username", "Phone", "Nothing, continue"],
+          "step": "regProgress.changeRequest",
+          "keepTalk": false,
+          "changeRequest": true,
+        };
       }
 
       // Si no reconocemos la respuesta, repetir las opciones
       return {
         "text": isSpanish
-            ? "Por favor elige: Continuar o Cambiar"
-            : "Please choose: Continue or Change",
+            ? "¿Continuamos o quieres cambiar algo?"
+            : "Shall we continue or change something?",
         "options": isSpanish
-            ? ["Continuar", "Cambiar"]
-            : ["Continue", "Change"],
+            ? ["Sí, continuar", "Quiero cambiar algo"]
+            : ["Yes, continue", "I want to change something"],
         "step": "regProgress.confirmation",
         "keepTalk": false,
         "awaitingConfirmation": true,
@@ -1217,10 +1298,21 @@ class GeminiService {
 
       // ✅ CONFIRMACIÓN: Si el campo requiere confirmación, mostrarla antes de avanzar
       final savedFieldKey = currentStepKey;
-      if (_shouldConfirmField(savedFieldKey) && !_isInRepeatMode) {
+      if (_shouldConfirmField(savedFieldKey)) {
         debugPrint('📋 Mostrando confirmación para campo: $savedFieldKey');
         _awaitingConfirmation = true;
-        _lastSavedField = savedFieldKey;
+
+        // Si estamos en modo repetición, salir de él antes de mostrar confirmación
+        if (_isInRepeatMode) {
+          _currentQuestionIndex = _previousQuestionIndex;
+          _isInRepeatMode = false;
+          _returnedFromRepeatMode =
+              true; // Marcar que volvimos del modo repetición
+          debugPrint(
+            '🔙 Volvimos del modo repetición - índice: $_currentQuestionIndex (NO incrementar después)',
+          );
+        }
+
         return _buildConfirmationMessage(savedFieldKey, registerCubit);
       }
 

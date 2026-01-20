@@ -12,6 +12,7 @@ enum RegisterStatusProgress {
   gender,
   socialEcosystem,
   location,
+  email, // Nuevo paso para capturar email antes de sendOTP
   sendOTP,
   emailChange,
   emailVerification,

@@ -277,12 +277,16 @@ class AssistantFunctions {
         }
         return _evaluateManualLocation(userInput, cubit);
 
+      case 'email': // Capturar email del usuario
+        return _evaluateEmail(normalized, userInput);
+
       case 'sendOTP': //  SEPARADO de emailVerification
         return _evaluateSendOTP(normalized, userInput);
 
       case 'emailChange': // NUEVO: Cambiar email
         return _evaluateEmailChange(normalized, userInput);
 
+      case 'emailVerification': // Validar código OTP (paso 5)
       case 'otpInput': // AGREGADO: Validar código OTP
         return _evaluateOTP(normalized, userInput, cubit);
 
@@ -822,6 +826,30 @@ class AssistantFunctions {
     }
     return {
       "step": "regProgress.emailChange",
+      "valid": false,
+      "userResponse": original.trim(),
+    };
+  }
+
+  /// Evalúa el email ingresado por el usuario (paso inicial de email)
+  static Map<String, dynamic> _evaluateEmail(
+    String normalized,
+    String original,
+  ) {
+    // Validar formato básico de email
+    final emailRegex = RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+    );
+
+    if (emailRegex.hasMatch(original.trim())) {
+      return {
+        "step": "regProgress.email",
+        "valid": true,
+        "userResponse": original.trim(),
+      };
+    }
+    return {
+      "step": "regProgress.email",
       "valid": false,
       "userResponse": original.trim(),
     };

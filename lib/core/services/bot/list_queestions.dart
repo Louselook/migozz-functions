@@ -49,6 +49,14 @@ final Map<String, Map<String, dynamic>> questionsEs = {
     "keepTalk": false,
   },
 
+  "email": {
+    "text": "Ingresa tu correo electrónico:",
+    "options": [],
+    "step": "regProgress.email",
+    "keepTalk": false,
+    "keyboardType": "email",
+  },
+
   "sendOTP": {
     "text": "Tu correo: {email}. ¿Es correcto?",
     "options": ["Sí", "No"],
@@ -180,6 +188,14 @@ final Map<String, Map<String, dynamic>> questionsEn = {
     "keepTalk": false,
   },
 
+  "email": {
+    "text": "Enter your email address:",
+    "options": [],
+    "step": "regProgress.email",
+    "keepTalk": false,
+    "keyboardType": "email",
+  },
+
   "sendOTP": {
     "text": "Your email: {email}. Is this correct?",
     "options": ["Yes", "No"],
@@ -298,6 +314,14 @@ final Map<String, Map<String, dynamic>> errorMessagesEs = {
     "keepTalk": false,
   },
 
+  "email": {
+    "text": "Ingresa un correo electrónico válido (ejemplo: tu@correo.com).",
+    "options": [],
+    "step": "regProgress.email",
+    "keepTalk": false,
+    "keyboardType": "email",
+  },
+
   "sendOTP": {
     "text": "Responde Sí o No.",
     "options": ["Sí", "No"],
@@ -360,6 +384,14 @@ final Map<String, Map<String, dynamic>> errorMessagesEn = {
     "options": ["Yes", "No"],
     "step": "regProgress.location",
     "keepTalk": false,
+  },
+
+  "email": {
+    "text": "Please enter a valid email address (e.g. you@email.com).",
+    "options": [],
+    "step": "regProgress.email",
+    "keepTalk": false,
+    "keyboardType": "email",
   },
 
   "sendOTP": {
