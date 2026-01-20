@@ -73,8 +73,8 @@ class SocialEcosystemHandler {
 
     // Mensaje de texto de confirmación
     final confirmationText = isSpanish
-        ? '¡Genial! Veo que conectaste $namesText 🎉'
-        : 'Great! I see you connected $namesText 🎉';
+        ? '✓ Conectado: $namesText'
+        : '✓ Connected: $namesText';
 
     chatController.addMessage({
       "other": true,

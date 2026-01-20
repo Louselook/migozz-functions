@@ -207,8 +207,8 @@ Future<Map<String, dynamic>?> processBotResponse(
         return {
           "emailChanged": true,
           "message": registerCubit.state.language == 'Español'
-              ? "¡Perfecto! Verificaremos tu nuevo correo."
-              : "Perfect! We'll verify your new email.",
+              ? "Email actualizado. Verificando..."
+              : "Email updated. Verifying...",
         };
       } else {
         // Email inválido

@@ -312,8 +312,8 @@ class AssistantFunctions {
             "changeRequest": true,
             "targetField": fieldMentions,
             "message": isSpanish
-                ? "Entendido. Vamos a actualizar tu ${_getFieldNameInSpanish(fieldMentions)}."
-                : "Got it. Let's update your ${_getFieldNameInEnglish(fieldMentions)}.",
+                ? "Actualizando ${_getFieldNameInSpanish(fieldMentions)}:"
+                : "Updating ${_getFieldNameInEnglish(fieldMentions)}:",
           };
         }
 
@@ -331,8 +331,8 @@ class AssistantFunctions {
             "valid": false,
             "changeRequest": true,
             "message": isSpanish
-                ? "Perfecto. ¿Qué quieres cambiar? (por ejemplo: \"quiero cambiar mi username\")"
-                : "Got it. What would you like to change? (for example: \"I want to change my username\")",
+                ? "¿Qué campo quieres cambiar?"
+                : "Which field do you want to change?",
           };
         }
 
