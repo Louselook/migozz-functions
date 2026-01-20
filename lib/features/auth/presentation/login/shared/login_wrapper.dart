@@ -111,14 +111,17 @@ class _LoginWrapperState extends State<LoginWrapper> {
         ),
 
         // Cuando AuthCubit autentica, navegar al profile
+        // El router se encargará de redirigir a /complete-profile si el perfil está incompleto
         BlocListener<AuthCubit, AuthState>(
           listenWhen: (previous, current) =>
               current.isAuthenticated && !previous.isAuthenticated,
           listener: (context, state) {
-            if (state.userProfile != null) {
-              // usamos go_router si lo tienes
-              context.go('/profile', extra: state.userProfile!.email);
-            }
+            // Navegar siempre que el usuario esté autenticado
+            // El router redirect manejará si debe ir a /complete-profile o /profile
+            debugPrint('🔐 [LoginWrapper] Usuario autenticado, navegando a /profile');
+            debugPrint('🔐 [LoginWrapper] userProfile: ${state.userProfile}');
+            debugPrint('🔐 [LoginWrapper] userProfile.complete: ${state.userProfile?.complete}');
+            context.go('/profile');
           },
         ),
       ],
