@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
@@ -138,21 +137,19 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
 
     return WillPopScope(
       onWillPop: () async {
-        // Prevent back navigation in register mode if no social network is added
+        // En modo registro, permitir volver pero con código especial si no hay redes
         if (widget.mode == MoreUserDetailsMode.register) {
           final registerState = context.read<RegisterCubit>().state;
           final socialEcosystem = registerState.socialEcosystem ?? [];
 
           if (socialEcosystem.isEmpty) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('addSocials.validation.atLeastOne'.tr()),
-                backgroundColor: Colors.orange,
-                duration: const Duration(seconds: 2),
-              ),
-            );
-            return false;
+            // Volver al chat con código especial para preguntar si quiere cambiar datos
+            Navigator.of(context).pop('back_no_socials');
+            return false; // Ya manejamos el pop manualmente
           }
+          // Tiene redes - volver normalmente con 'done'
+          Navigator.of(context).pop('done');
+          return false;
         }
         return true;
       },

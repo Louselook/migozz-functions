@@ -521,7 +521,9 @@ class GeminiService {
           normalized == 'nombre' ||
           normalized == 'name' ||
           normalized == 'mi nombre' ||
-          normalized == 'my name';
+          normalized == 'my name' ||
+          normalized == 'nombre completo' ||
+          normalized == 'full name';
 
       final wantsChangeUsername =
           normalized == 'usuario' ||
@@ -536,6 +538,12 @@ class GeminiService {
           normalized == 'mi teléfono' ||
           normalized == 'my phone';
 
+      final wantsChangeEmail =
+          normalized == 'correo' ||
+          normalized == 'email' ||
+          normalized == 'mi correo' ||
+          normalized == 'my email';
+
       final wantsNothingContinue =
           normalized.contains('nada') ||
           normalized.contains('nothing') ||
@@ -544,6 +552,27 @@ class GeminiService {
 
       if (wantsNothingContinue) {
         _awaitingFieldSelection = false;
+
+        // Si estamos en socialEcosystem y no hay redes, NO AVANZAR - son obligatorias
+        final currentStep = questionFlow[_currentQuestionIndex];
+        final hasNetworks =
+            (registerCubit.state.socialEcosystem?.isNotEmpty ?? false);
+
+        if (currentStep == 'socialEcosystem' && !hasNetworks) {
+          debugPrint(
+            '⚠️ [wantsNothingContinue] En socialEcosystem sin redes - OBLIGATORIO vincular',
+          );
+          return {
+            "text": isSpanish
+                ? "Para continuar debes vincular al menos una red social. Es un requisito obligatorio para tu perfil. 📱"
+                : "To continue you must link at least one social network. It's a mandatory requirement for your profile. 📱",
+            "options": isSpanish ? ["Vincular redes"] : ["Link networks"],
+            "step": "regProgress.socialEcosystem",
+            "keepTalk": false,
+            "action": 0, // Abrir pantalla de redes sociales
+          };
+        }
+
         // Usuario decidió no cambiar nada, continuar
         _currentQuestionIndex++;
         if (_currentQuestionIndex >= questionFlow.length) {
@@ -566,8 +595,13 @@ class GeminiService {
         }
       }
 
-      if (wantsChangeName || wantsChangeUsername || wantsChangePhone) {
+      if (wantsChangeName ||
+          wantsChangeUsername ||
+          wantsChangePhone ||
+          wantsChangeEmail) {
         _awaitingFieldSelection = false;
+        _returnedFromRepeatMode =
+            false; // Limpiar flag - vamos a entrar en un nuevo repeat mode
         String targetField;
         String promptText;
 
@@ -581,6 +615,14 @@ class GeminiService {
           promptText = isSpanish
               ? "Escribe el nombre de usuario que quieres usar:"
               : "Enter the username you want to use:";
+        } else if (wantsChangeEmail) {
+          // Para cambiar email, reiniciamos el OTP
+          targetField = 'sendOTP';
+          promptText = isSpanish
+              ? "Escribe tu nuevo correo electrónico:"
+              : "Enter your new email:";
+          // Limpiar el OTP anterior
+          registerCubit.setCurrentOTP('');
         } else {
           targetField = 'phone';
           promptText = isSpanish
@@ -605,14 +647,20 @@ class GeminiService {
         }
       }
 
-      // Si no reconocemos la respuesta, repetir las opciones
+      // Si no reconocemos la respuesta, repetir las opciones con resumen
+      final fullName = registerCubit.state.fullName ?? '';
+      final username = registerCubit.state.username ?? '';
+      final email = registerCubit.state.email ?? '';
+
+      final summary = isSpanish
+          ? "📋 Tus datos actuales:\n• Nombre: $fullName\n• Usuario: @$username\n• Correo: $email\n\n¿Cuál quieres cambiar?"
+          : "📋 Your current data:\n• Name: $fullName\n• Username: @$username\n• Email: $email\n\nWhich one do you want to change?";
+
       return {
-        "text": isSpanish
-            ? "¿Qué quieres cambiar?"
-            : "What would you like to change?",
+        "text": summary,
         "options": isSpanish
-            ? ["Nombre", "Usuario", "Teléfono", "Nada, continuar"]
-            : ["Name", "Username", "Phone", "Nothing, continue"],
+            ? ["Nombre", "Username", "Correo", "Nada, continuar"]
+            : ["Name", "Username", "Email", "Nothing, continue"],
         "step": "regProgress.changeRequest",
         "keepTalk": false,
       };
@@ -701,15 +749,24 @@ class GeminiService {
         debugPrint('🔄 Usuario quiere cambiar algo de su registro');
         _awaitingConfirmation = false;
         _awaitingFieldSelection = true; // Esperando selección de campo
+        _returnedFromRepeatMode =
+            false; // Limpiar flag - ya no estamos volviendo de repeat mode
+
+        // Obtener datos actuales para mostrar resumen
+        final fullName = registerCubit.state.fullName ?? '';
+        final username = registerCubit.state.username ?? '';
+        final email = registerCubit.state.email ?? '';
+
+        final summary = isSpanish
+            ? "📋 Tus datos actuales:\n• Nombre: $fullName\n• Usuario: @$username\n• Correo: $email\n\n¿Cuál quieres cambiar?"
+            : "📋 Your current data:\n• Name: $fullName\n• Username: @$username\n• Email: $email\n\nWhich one do you want to change?";
 
         // Mostrar opciones de qué campo quiere cambiar
         return {
-          "text": isSpanish
-              ? "¿Qué quieres cambiar?"
-              : "What would you like to change?",
+          "text": summary,
           "options": isSpanish
-              ? ["Nombre", "Usuario", "Teléfono", "Nada, continuar"]
-              : ["Name", "Username", "Phone", "Nothing, continue"],
+              ? ["Nombre", "Username", "Correo", "Nada, continuar"]
+              : ["Name", "Username", "Email", "Nothing, continue"],
           "step": "regProgress.changeRequest",
           "keepTalk": false,
           "changeRequest": true,
@@ -832,41 +889,143 @@ class GeminiService {
         }
       }
 
-      // Si el usuario dice que sí quiere continuar sin redes
+      // Manejar cuando el usuario vuelve sin redes y se le preguntó si quiere cambiar datos
+      if (normalized == 'awaiting_change_decision') {
+        final isSpanish = registerCubit.state.language == 'Español';
+        return {
+          "text": isSpanish
+              ? "¿Quieres cambiar algún dato antes de continuar?"
+              : "Do you want to change any information before continuing?",
+          "options": isSpanish
+              ? ["No, continuar", "Sí, cambiar datos"]
+              : ["No, continue", "Yes, change data"],
+          "step": "regProgress.socialEcosystem",
+          "keepTalk": false,
+          "awaitingChangeDecision": true,
+        };
+      }
+
+      // Si el usuario dice "Sí, cambiar datos" - mostrar opciones de campos
+      if (normalized.contains('cambiar datos') ||
+          normalized.contains('change data') ||
+          normalized.contains('sí, cambiar') ||
+          normalized.contains('yes, change')) {
+        final isSpanish = registerCubit.state.language == 'Español';
+        debugPrint('🔄 [socialEcosystem] Usuario quiere cambiar datos');
+        _awaitingFieldSelection = true;
+
+        // Obtener datos actuales para mostrar resumen
+        final fullName = registerCubit.state.fullName ?? '';
+        final username = registerCubit.state.username ?? '';
+        final email = registerCubit.state.email ?? '';
+
+        final summary = isSpanish
+            ? "📋 Tus datos actuales:\n• Nombre: $fullName\n• Usuario: @$username\n• Correo: $email\n\n¿Cuál quieres cambiar?"
+            : "📋 Your current data:\n• Name: $fullName\n• Username: @$username\n• Email: $email\n\nWhich one do you want to change?";
+
+        return {
+          "text": summary,
+          "options": isSpanish
+              ? ["Nombre", "Username", "Correo", "Nada, continuar"]
+              : ["Name", "Username", "Email", "Nothing, continue"],
+          "step": "regProgress.socialEcosystem",
+          "keepTalk": false,
+        };
+      }
+
+      // Si el usuario dice "No, continuar" (sin redes) - las redes son OBLIGATORIAS
+      if ((normalized.contains('no, continuar') ||
+              normalized.contains('no, continue') ||
+              (normalized == 'no' &&
+                  !(registerCubit.state.socialEcosystem?.isNotEmpty ??
+                      false))) &&
+          !(registerCubit.state.socialEcosystem?.isNotEmpty ?? false)) {
+        final isSpanish = registerCubit.state.language == 'Español';
+        debugPrint(
+          '⚠️ [socialEcosystem] Usuario quiere continuar sin redes - OBLIGATORIO vincular',
+        );
+        return {
+          "text": isSpanish
+              ? "Para continuar debes vincular al menos una red social. Es un requisito obligatorio para tu perfil. 📱"
+              : "To continue you must link at least one social network. It's a mandatory requirement for your profile. 📱",
+          "options": isSpanish ? ["Vincular redes"] : ["Link networks"],
+          "step": "regProgress.socialEcosystem",
+          "keepTalk": false,
+          "action": 0, // Abrir pantalla de redes sociales
+        };
+      }
+
+      // Si el usuario quiere vincular redes - abrir la pantalla
+      if (normalized.contains('vincular') ||
+          normalized.contains('link') ||
+          normalized.contains('agregar') ||
+          normalized.contains('add')) {
+        final isSpanish = registerCubit.state.language == 'Español';
+        debugPrint('🔗 [socialEcosystem] Usuario quiere vincular redes');
+        return {
+          "text": isSpanish
+              ? "Vamos a vincular tus redes sociales. 📱"
+              : "Let's link your social networks. 📱",
+          "options": [],
+          "step": "regProgress.socialEcosystem",
+          "keepTalk": false,
+          "action": 0, // Abrir pantalla de redes sociales
+        };
+      }
+
+      // Si el usuario dice que sí quiere continuar sin redes (legacy - pero ahora obligatorio)
       if (normalized.contains('continuar') ||
           normalized.contains('continue') ||
           normalized == 'si' ||
           normalized == 'sí' ||
           normalized == 'yes') {
-        debugPrint('✅ [socialEcosystem] Usuario continúa sin redes');
+        // Verificar si tiene redes
+        if (registerCubit.state.socialEcosystem?.isNotEmpty ?? false) {
+          debugPrint('✅ [socialEcosystem] Usuario continúa con redes');
 
-        if (_isInRepeatMode) {
-          _currentQuestionIndex = _previousQuestionIndex;
-          _isInRepeatMode = false;
+          if (_isInRepeatMode) {
+            _currentQuestionIndex = _previousQuestionIndex;
+            _isInRepeatMode = false;
+          } else {
+            _currentQuestionIndex++;
+          }
+
+          if (_currentQuestionIndex >= questionFlow.length) {
+            final isSpanish = registerCubit.state.language == 'Español';
+            return {
+              "text": isSpanish
+                  ? "¡ Registro completado.🎉"
+                  : " Registration complete.🎉",
+              "options": [],
+              "step": "finished",
+              "keepTalk": false,
+            };
+          }
+
+          final nextQuestion = AssistantFunctions.getCurrentQuestion(
+            questionFlow,
+            _currentQuestionIndex,
+            registerCubit,
+          );
+
+          if (nextQuestion != null) {
+            return await _prepareQuestion(nextQuestion, registerCubit);
+          }
         } else {
-          _currentQuestionIndex++;
-        }
-
-        if (_currentQuestionIndex >= questionFlow.length) {
+          // No tiene redes - obligatorio vincular
           final isSpanish = registerCubit.state.language == 'Español';
+          debugPrint(
+            '⚠️ [socialEcosystem] Intento de continuar sin redes - OBLIGATORIO',
+          );
           return {
             "text": isSpanish
-                ? "¡ Registro completado.🎉"
-                : " Registration complete.🎉",
-            "options": [],
-            "step": "finished",
+                ? "Para continuar debes vincular al menos una red social. Es un requisito obligatorio para tu perfil. 📱"
+                : "To continue you must link at least one social network. It's a mandatory requirement for your profile. 📱",
+            "options": isSpanish ? ["Vincular redes"] : ["Link networks"],
+            "step": "regProgress.socialEcosystem",
             "keepTalk": false,
+            "action": 0,
           };
-        }
-
-        final nextQuestion = AssistantFunctions.getCurrentQuestion(
-          questionFlow,
-          _currentQuestionIndex,
-          registerCubit,
-        );
-
-        if (nextQuestion != null) {
-          return await _prepareQuestion(nextQuestion, registerCubit);
         }
       }
     }
