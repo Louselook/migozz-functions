@@ -54,7 +54,7 @@ class _AlertCard extends StatelessWidget {
         color: Colors.transparent,
         child: Container(
           width: cardWidth,
-          height: 180,
+          height: 220,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               colors: [Color(0xFFB930B9), Color(0xFFE26087)],
