@@ -656,11 +656,11 @@
         "unknown": "Unknown",
         "noData": "No data",
         "loader_sequence": {
-          "connecting": "Establishing secure connection with {platform}...",
-          "validating": "Verifying your access credentials...",
-          "syncing": "Synchronizing your profile information...",
-          "ready": "Process completed successfully!",
-          "delay": "We are wrapping up the final details. Almost there!"
+          "connecting": "Reaching out to {platform}...",
+          "validating": "Making sure it's you...",
+          "syncing": "Getting things ready...",
+          "ready": "You're in!",
+          "delay": "Taking a little longer than usual. Thanks for waiting!"
         }
     },
     "buttons" : {

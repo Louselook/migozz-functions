@@ -775,11 +775,11 @@
     "unknown": "Desconocido",
     "noData": "Sin datos",
     "loader_sequence": {
-      "connecting": "Estableciendo conexión segura con {platform}...",
-      "validating": "Verificando tus credenciales de acceso...",
-      "syncing": "Sincronizando la información de tu perfil...",
-      "ready": "¡Proceso completado con éxito!",
-      "delay": "Estamos ultimando detalles para ti. ¡Ya casi estamos listos!"
+      "connecting": "Asociando con {platform}...",
+      "validating": "Revisando que seas tú...",
+      "syncing": "Poniendo todo en orden...",
+      "ready": "¡Ya estás dentro!",
+      "delay": "Esto toma un poco más de lo normal, gracias por esperar."
     }
   }
 }
