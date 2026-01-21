@@ -2,6 +2,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/features/auth/presentation/onboarding/shared/onboarding_model.dart';
 import 'onboarding_progress_indicators.dart';
+import 'package:migozz_app/core/components/atomics/text.dart';
+import 'package:migozz_app/core/color.dart';
 import 'onboarding_actions.dart';
 
 class OnboardingContent extends StatelessWidget {
@@ -26,7 +28,13 @@ class OnboardingContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    // Escala del texto basada en el ancho de pantalla
+    final double titleSize = isDesktop
+        ? (MediaQuery.of(context).size.width < 900 ? 32 : 40)
+        : 28;
+    final double textSize = isDesktop
+        ? (MediaQuery.of(context).size.width < 900 ? 20 : 24)
+        : 14;
 
     return Column(
       mainAxisAlignment: isDesktop
@@ -34,53 +42,57 @@ class OnboardingContent extends StatelessWidget {
           : MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (!isDesktop) SizedBox(height: 5), // Spacer similar to mobile
         // Progress indicators
-        OnboardingProgressIndicators(
-          currentIndex: currentPage,
-          isDesktop: isDesktop,
-        ),
+        if (isDesktop) ...[
+          OnboardingProgressIndicators(
+            currentIndex: currentPage,
+            isDesktop: isDesktop,
+          ),
+          SizedBox(height: 20),
+        ],
 
         // Título
-        Padding(
-          padding: isDesktop
-              ? const EdgeInsets.symmetric(horizontal: 0)
-              : EdgeInsets.zero,
-          child: Text(
-            data.titleKey.tr(),
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: screenWidth < 600 ? 24 : (screenWidth < 900 ? 32 : 40),
-            ),
-          ),
+        PrimaryText(
+          data.titleKey.tr(),
+          fontSize: titleSize,
+          fontfamily: 'Inter',
+          textAlign: TextAlign.start,
         ),
 
-        SizedBox(height: screenWidth < 600 ? 8 : 12),
+        SizedBox(height: 8),
+
+        // Subtítulo (si existe)
+        if (data.subTitleKey != null && data.subTitleKey!.isNotEmpty) ...[
+          SecondaryText(
+            data.subTitleKey!.tr(),
+            textAlign: TextAlign.start,
+            fontfamily: 'Inter',
+            fontSize: textSize,
+            color: AppColors.secondaryText,
+          ),
+          SizedBox(height: 4), // Pequeño espacio entre subtítulo y descripción
+        ],
 
         // Descripción
-        Padding(
-          padding: isDesktop
-              ? const EdgeInsets.symmetric(horizontal: 0)
-              : EdgeInsets.zero,
-          child: Text(
-            data.descriptionKey.tr(),
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.7),
-              fontSize: screenWidth < 600 ? 16 : (screenWidth < 900 ? 20 : 24),
-            ),
-          ),
+        SecondaryText(
+          data.descriptionKey.tr(),
+          textAlign: TextAlign.start,
+          fontfamily: 'Inter',
+          fontSize: textSize,
+          color: AppColors.secondaryText.withValues(alpha: 0.53),
         ),
 
-        if (!isDesktop) const Spacer(),
+        if (!isDesktop) Spacer(),
 
-        SizedBox(height: isDesktop ? (screenWidth < 600 ? 40 : 107) : 20),
+        SizedBox(height: isDesktop ? 60 : 20),
 
         // Actions (Next / Skip / Get Started)
         OnboardingActions(
           controller: controller,
           lastPage: lastPage,
           isDesktop: isDesktop,
-          screenWidth: screenWidth,
+          screenWidth: MediaQuery.of(context).size.width,
         ),
       ],
     );
