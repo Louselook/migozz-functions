@@ -77,7 +77,8 @@ class _IaChatScreenState extends State<IaChatScreen> {
 
       final registerCubit = context.read<RegisterCubit>();
       final authCubit = context.read<AuthCubit>();
-      final isGoogleUser =
+      // Check if user is authenticated with a social provider (Google or Apple)
+      final isSocialAuthUser =
           authCubit.state.isAuthenticated &&
           authCubit.state.firebaseUser != null;
 
@@ -93,8 +94,8 @@ class _IaChatScreenState extends State<IaChatScreen> {
 
       try {
         await registerCubit.checkCompletion(
-          forGoogle: isGoogleUser,
-          uid: isGoogleUser ? authCubit.state.firebaseUser!.uid : null,
+          forGoogle: isSocialAuthUser,
+          uid: isSocialAuthUser ? authCubit.state.firebaseUser!.uid : null,
         );
 
         debugPrint(
@@ -115,8 +116,8 @@ class _IaChatScreenState extends State<IaChatScreen> {
           return;
         }
 
-        // ✅ NUEVA VALIDACIÓN: Solo validar email/OTP para usuarios NO autenticados
-        if (!isGoogleUser) {
+        // ✅ Solo validar email/OTP para usuarios NO autenticados con social provider
+        if (!isSocialAuthUser) {
           final email = registerCubit.state.email;
           final otp = registerCubit.state.currentOTP;
           if (email == null ||
