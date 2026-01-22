@@ -61,7 +61,7 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
   GlobalKey get micButtonKey => _micButtonKey;
 
   /// Called by external UI (eg. ia_chat_screen) when a suggestion requests camera.
-  Future<void> openCameraFromSuggestions({int imageQuality = 80}) async {
+  Future<void> openCameraFromSuggestions({int imageQuality = 85}) async {
     // IA-01: Validate input type for registration mode
     if (widget.isRegistrationMode && widget.stepInputValidator != null) {
       final validator = widget.stepInputValidator!;
@@ -110,7 +110,7 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
   }
 
   /// Called by external UI when a suggestion requests gallery.
-  Future<void> openGalleryFromSuggestions({int imageQuality = 80}) async {
+  Future<void> openGalleryFromSuggestions({int imageQuality = 85}) async {
     // IA-01: Validate input type for registration mode
     if (widget.isRegistrationMode && widget.stepInputValidator != null) {
       final validator = widget.stepInputValidator!;
