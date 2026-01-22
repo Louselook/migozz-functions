@@ -201,6 +201,26 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  /// Create Firebase Auth user ONLY (no Firestore document)
+  /// Used for pre-registered users whose document will be migrated
+  Future<String> createAuthUserOnly({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      debugPrint('🚀 [AuthCubit] Creando usuario Auth (solo Auth)...');
+      final uid = await _authUseCases.createAuthUser.run(
+        email: email,
+        password: password,
+      );
+      debugPrint('✅ [AuthCubit] Usuario Auth creado con UID: $uid');
+      return uid;
+    } catch (e) {
+      debugPrint('❌ [AuthCubit] Error creando usuario Auth: $e');
+      throw Exception('Error al crear usuario Auth: $e');
+    }
+  }
+
   /// ✅ Ahora es opcional - el listener se encarga automáticamente
   Future<void> refreshUserProfile() async {
     if (!state.isAuthenticated || state.firebaseUser == null) return;

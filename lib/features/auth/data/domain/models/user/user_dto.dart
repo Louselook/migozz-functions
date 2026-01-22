@@ -155,6 +155,39 @@ class UserDTO {
     };
   }
 
+  /// Converts to a JSON-serializable map (no Timestamps, uses ISO strings)
+  /// Use this for HTTP API calls instead of toMap()
+  Map<String, dynamic> toJsonMap() {
+    return {
+      'email': email,
+      'lang': lang,
+      'displayName': displayName,
+      'username': username,
+      'gender': gender,
+      'bio': bio,
+      'birthDate': birthDate?.toIso8601String(),
+      'socialEcosystem': socialEcosystem,
+      'featuredLinks': featuredLinks,
+      'location': location.toMap(),
+      'avatarUrl': avatarUrl,
+      'phone': phone,
+      'voiceNoteUrl': voiceNoteUrl,
+      'category': category,
+      'profileVersion': profileVersion,
+      'contactWebsite': contactWebsite,
+      'contactPhone': contactPhone,
+      'contactEmail': contactEmail,
+      'interests': interests,
+      'complete': complete,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+      'lastSocialEcosystemSync': lastSocialEcosystemSync?.toIso8601String(),
+      'socialEcosystemAddedDates': socialEcosystemAddedDates?.map(
+        (k, v) => MapEntry(k, v.toIso8601String()),
+      ),
+    };
+  }
+
   factory UserDTO.fromMap(Map<String, dynamic> map) {
     final email = (map['email'] ?? '').toString();
     final lang = (map['lang'] ?? 'es').toString();

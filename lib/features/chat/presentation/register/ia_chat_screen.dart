@@ -65,7 +65,14 @@ class _IaChatScreenState extends State<IaChatScreen> {
     }
 
     _chatController.onRegistrationComplete = () async {
-      if (_isCompletingRegistration) return;
+      debugPrint('🎯 [IaChatScreen] onRegistrationComplete TRIGGERED');
+
+      if (_isCompletingRegistration) {
+        debugPrint(
+          '⚠️ [IaChatScreen] Already completing registration, skipping',
+        );
+        return;
+      }
       _isCompletingRegistration = true;
 
       final registerCubit = context.read<RegisterCubit>();
@@ -74,10 +81,24 @@ class _IaChatScreenState extends State<IaChatScreen> {
           authCubit.state.isAuthenticated &&
           authCubit.state.firebaseUser != null;
 
+      debugPrint('🎯 [IaChatScreen] isGoogleUser: $isGoogleUser');
+      debugPrint('🎯 [IaChatScreen] email: ${registerCubit.state.email}');
+      debugPrint('🎯 [IaChatScreen] OTP: ${registerCubit.state.currentOTP}');
+      debugPrint(
+        '🎯 [IaChatScreen] isPreRegistered: ${registerCubit.state.isPreRegistered}',
+      );
+      debugPrint(
+        '🎯 [IaChatScreen] preOrderId: ${registerCubit.state.preOrderId}',
+      );
+
       try {
         await registerCubit.checkCompletion(
           forGoogle: isGoogleUser,
           uid: isGoogleUser ? authCubit.state.firebaseUser!.uid : null,
+        );
+
+        debugPrint(
+          '🎯 [IaChatScreen] isComplete after check: ${registerCubit.state.isComplete}',
         );
 
         if (!registerCubit.state.isComplete) {

@@ -7,12 +7,14 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/auth_result.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/features/auth/services/media_service.dart';
+import 'package:migozz_app/features/auth/services/pre_register_service.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final UserMediaService _mediaService = UserMediaService();
+  final PreRegisterService _preRegisterService = PreRegisterService();
 
   // Stream de auth
   Stream<User?> authStateChanges() => _auth.authStateChanges();
@@ -86,20 +88,55 @@ class AuthService {
       final user = userCredential.user;
       if (user == null) throw Exception('firebase_sign_in_failed');
 
-      // 5) lógica Firestore (tuya, igual que antes)
+      // 5) Verificar si este email tiene un pre-order
+      String? reservedUsername;
+      if (user.email != null) {
+        debugPrint(
+          '🔍 [AuthService] Verificando pre-order para: ${user.email}',
+        );
+        final preOrderData = await _preRegisterService.getPreRegisterByEmail(
+          user.email!,
+        );
+
+        if (preOrderData.isPreRegistered && preOrderData.preOrderId != null) {
+          debugPrint(
+            '📋 [AuthService] Pre-order encontrado: ${preOrderData.preOrderId}',
+          );
+          reservedUsername = preOrderData.username;
+
+          // Eliminar el pre-order para evitar conflictos
+          debugPrint('🗑️ [AuthService] Eliminando pre-order...');
+          final deleted = await _preRegisterService.deletePreOrder(
+            preOrderData.preOrderId!,
+          );
+          if (deleted) {
+            debugPrint('✅ [AuthService] Pre-order eliminado exitosamente');
+          } else {
+            debugPrint('⚠️ [AuthService] No se pudo eliminar pre-order');
+          }
+        }
+      }
+
+      // 6) lógica Firestore
       final docRef = _firestore.collection('users').doc(user.uid);
       final doc = await docRef.get();
       bool profileExists = doc.exists;
 
       if (!profileExists) {
+        // Usar el username reservado del pre-order si existe, sino generar uno
+        final username =
+            reservedUsername ??
+            (user.displayName ?? 'user').replaceAll(' ', '').toLowerCase();
+
+        debugPrint(
+          '📝 [AuthService] Creando documento con username: $username',
+        );
+
         final baseData = {
           'displayName': user.displayName ?? '',
           'email': user.email ?? '',
-          // 'avatarUrl': user.photoURL ?? '',
           'phone': user.phoneNumber ?? '',
-          'username': (user.displayName ?? 'user')
-              .replaceAll(' ', '')
-              .toLowerCase(),
+          'username': username,
           'createdAt': FieldValue.serverTimestamp(),
           'updatedAt': FieldValue.serverTimestamp(),
           'complete': false,
@@ -146,6 +183,34 @@ class AuthService {
       final user = userCredential.user;
       if (user == null) throw Exception('firebase_sign_in_failed');
 
+      // Verificar si este email tiene un pre-order
+      String? reservedUsername;
+      final userEmail = user.email ?? appleCredential.email;
+      if (userEmail != null) {
+        debugPrint('🔍 [AuthService] Verificando pre-order para: $userEmail');
+        final preOrderData = await _preRegisterService.getPreRegisterByEmail(
+          userEmail,
+        );
+
+        if (preOrderData.isPreRegistered && preOrderData.preOrderId != null) {
+          debugPrint(
+            '📋 [AuthService] Pre-order encontrado: ${preOrderData.preOrderId}',
+          );
+          reservedUsername = preOrderData.username;
+
+          // Eliminar el pre-order para evitar conflictos
+          debugPrint('🗑️ [AuthService] Eliminando pre-order...');
+          final deleted = await _preRegisterService.deletePreOrder(
+            preOrderData.preOrderId!,
+          );
+          if (deleted) {
+            debugPrint('✅ [AuthService] Pre-order eliminado exitosamente');
+          } else {
+            debugPrint('⚠️ [AuthService] No se pudo eliminar pre-order');
+          }
+        }
+      }
+
       // Check if profile exists
       final docRef = _firestore.collection('users').doc(user.uid);
       final doc = await docRef.get();
@@ -161,14 +226,23 @@ class AuthService {
                   .trim();
         }
 
+        // Usar el username reservado del pre-order si existe, sino generar uno
+        final username =
+            reservedUsername ??
+            (displayName.isNotEmpty ? displayName : 'user')
+                .replaceAll(' ', '')
+                .toLowerCase();
+
+        debugPrint(
+          '📝 [AuthService] Creando documento con username: $username',
+        );
+
         final baseData = {
           'displayName': displayName,
-          'email': user.email ?? appleCredential.email ?? '',
+          'email': userEmail ?? '',
           'avatarUrl': user.photoURL ?? '',
           'phone': user.phoneNumber ?? '',
-          'username': (displayName.isNotEmpty ? displayName : 'user')
-              .replaceAll(' ', '')
-              .toLowerCase(),
+          'username': username,
           'createdAt': FieldValue.serverTimestamp(),
           'updatedAt': FieldValue.serverTimestamp(),
           'complete': false,
@@ -292,6 +366,34 @@ class AuthService {
     } on FirebaseAuthException catch (e) {
       debugPrint('❌ [AuthService] FirebaseAuthException: ${e.code}');
       throw Exception('Error en registro: ${e.code}');
+    } catch (e) {
+      debugPrint('❌ [AuthService] Error inesperado: $e');
+      throw Exception('Error inesperado: $e');
+    }
+  }
+
+  /// Create Firebase Auth user ONLY (no Firestore document)
+  /// Used for pre-registered users whose document will be migrated
+  Future<String> createAuthUserOnly({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      debugPrint('🚀 [AuthService] Creando usuario en Auth (solo Auth)...');
+      debugPrint('🚀 [AuthService] Email: $email');
+
+      final userCredential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      final uid = userCredential.user!.uid;
+      debugPrint('✅ [AuthService] Usuario Auth creado con UID: $uid');
+
+      return uid;
+    } on FirebaseAuthException catch (e) {
+      debugPrint('❌ [AuthService] FirebaseAuthException: ${e.code}');
+      throw Exception('Error creando usuario Auth: ${e.code}');
     } catch (e) {
       debugPrint('❌ [AuthService] Error inesperado: $e');
       throw Exception('Error inesperado: $e');

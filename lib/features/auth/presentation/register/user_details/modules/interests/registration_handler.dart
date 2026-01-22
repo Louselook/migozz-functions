@@ -245,6 +245,13 @@ class RegistrationHandler {
 
     final email = registerCubit.state.email;
     final otp = registerCubit.state.currentOTP;
+    final isPreRegistered = registerCubit.state.isPreRegistered;
+    final preOrderId = registerCubit.state.preOrderId;
+
+    debugPrint('🟢 [RegistrationHandler] Email: $email');
+    debugPrint('🟢 [RegistrationHandler] OTP: $otp');
+    debugPrint('🟢 [RegistrationHandler] isPreRegistered: $isPreRegistered');
+    debugPrint('🟢 [RegistrationHandler] preOrderId: $preOrderId');
 
     if (email == null || email.trim().isEmpty) {
       if (context.mounted) {
@@ -266,12 +273,35 @@ class RegistrationHandler {
     }
 
     try {
-      // Completar registro en backend
-      await authCubit.completeRegistration(
+      String uid;
+
+      // ✅ Si es pre-registrado, primero eliminar el documento pre-order
+      // para evitar conflictos de email/UID, luego registrar normalmente
+      if (isPreRegistered && preOrderId != null) {
+        debugPrint(
+          '🗑️ [RegistrationHandler] Eliminando pre-order $preOrderId antes de registrar...',
+        );
+
+        final deleteSuccess = await registerCubit.deletePreOrder();
+        if (!deleteSuccess) {
+          debugPrint('❌ [RegistrationHandler] No se pudo eliminar pre-order');
+          throw Exception('Error eliminando documento pre-order');
+        }
+        debugPrint(
+          '✅ [RegistrationHandler] Pre-order eliminado, procediendo con registro normal...',
+        );
+      }
+
+      // 🆕 FLUJO NORMAL para todos los usuarios:
+      // Crear usuario Auth + documento Firestore
+      debugPrint('🆕 [RegistrationHandler] Registrando usuario...');
+
+      uid = await authCubit.completeRegistration(
         email: email,
         otp: otp,
         userData: registerCubit.state.buildUserDTO(),
       );
+      debugPrint('✅ [RegistrationHandler] Usuario creado con UID: $uid');
 
       // Resetear el cubit
       registerCubit.reset();
