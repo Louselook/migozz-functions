@@ -29,11 +29,27 @@ class _SocialNetworkInputStepState extends State<SocialNetworkInputStep> {
   final Map<String, TextEditingController> _controllers = {};
   final Map<String, FocusNode> _focusNodes = {};
 
+  // Track which OAuth networks have been connected
+  final Set<String> _connectedOAuthNetworks = {};
+
+  // Separate networks by authentication type
+  late final List<NetworkConfig> _manualNetworks;
+  late final List<NetworkConfig> _oauthNetworks;
+
   @override
   void initState() {
     super.initState();
-    // Create a controller and focus node for each selected network
-    for (final network in widget.selectedNetworks) {
+
+    // Separate networks by capability
+    _manualNetworks = widget.selectedNetworks
+        .where((n) => n.capability != NetworkAuthCapability.oauth)
+        .toList();
+    _oauthNetworks = widget.selectedNetworks
+        .where((n) => n.capability == NetworkAuthCapability.oauth)
+        .toList();
+
+    // Create a controller and focus node for each manual network only
+    for (final network in _manualNetworks) {
       final key = network.name.toLowerCase();
       _controllers[key] = TextEditingController();
       _focusNodes[key] = FocusNode();
@@ -85,16 +101,53 @@ class _SocialNetworkInputStepState extends State<SocialNetworkInputStep> {
   }
 
   bool _validateInputs() {
-    // At least one input must have content
-    bool hasAtLeastOne = false;
+    // Check if at least one manual input has content OR one OAuth is connected
+    bool hasManualInput = false;
     for (final entry in _controllers.entries) {
       final value = entry.value.text.trim();
       if (value.isNotEmpty) {
-        hasAtLeastOne = true;
+        hasManualInput = true;
         break;
       }
     }
-    return hasAtLeastOne;
+    return hasManualInput || _connectedOAuthNetworks.isNotEmpty;
+  }
+
+  /// Handle OAuth network connection
+  Future<void> _handleOAuthConnect(NetworkConfig network) async {
+    final cubit = context.read<RegisterCubit>();
+    final platformName = network.name.toLowerCase() == 'x'
+        ? 'twitter'
+        : network.name.toLowerCase();
+
+    debugPrint('🔗 Starting OAuth for $platformName');
+
+    await cubit.startSocialAuth(
+      context,
+      platformName,
+      network.iconPath,
+      inEditMode: false,
+    );
+
+    // Check if it was added successfully
+    final ecosystem = cubit.state.socialEcosystem ?? [];
+    final wasAdded = ecosystem.any((e) {
+      if (e.isEmpty) return false;
+      return e.keys.first.toLowerCase() == platformName;
+    });
+
+    if (wasAdded && mounted) {
+      setState(() {
+        _connectedOAuthNetworks.add(platformName);
+      });
+      CustomSnackbar.show(
+        context: context,
+        message: 'addSocials.messages.socialConnected'.tr(
+          namedArgs: {'platform': network.displayName},
+        ),
+        type: SnackbarType.success,
+      );
+    }
   }
 
   Future<void> _handleSave() async {
@@ -104,6 +157,12 @@ class _SocialNetworkInputStepState extends State<SocialNetworkInputStep> {
         message: 'addSocials.validation.enterAtLeastOne'.tr(),
         type: SnackbarType.warning,
       );
+      return;
+    }
+
+    // If only OAuth networks were selected and connected, just complete
+    if (_manualNetworks.isEmpty && _connectedOAuthNetworks.isNotEmpty) {
+      widget.onComplete();
       return;
     }
 
@@ -118,8 +177,8 @@ class _SocialNetworkInputStepState extends State<SocialNetworkInputStep> {
 
       int successCount = 0;
 
-      // Process each network with input
-      for (final network in widget.selectedNetworks) {
+      // Process each MANUAL network with input (OAuth already handled)
+      for (final network in _manualNetworks) {
         final key = network.name.toLowerCase();
         final username = _controllers[key]?.text.trim() ?? '';
 
@@ -281,15 +340,50 @@ class _SocialNetworkInputStepState extends State<SocialNetworkInputStep> {
 
                 const SizedBox(height: 32),
 
-                // Network input fields
+                // Network input fields and OAuth buttons
                 Expanded(
-                  child: ListView.builder(
+                  child: ListView(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
-                    itemCount: widget.selectedNetworks.length,
-                    itemBuilder: (context, index) {
-                      final network = widget.selectedNetworks[index];
-                      return _buildNetworkInput(network);
-                    },
+                    children: [
+                      // OAuth networks section (buttons to connect)
+                      if (_oauthNetworks.isNotEmpty) ...[
+                        Text(
+                          'addSocials.inputStep.oauthSection'.tr(),
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.7),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        ...List.generate(_oauthNetworks.length, (index) {
+                          final network = _oauthNetworks[index];
+                          return _buildOAuthButton(network);
+                        }),
+                        if (_manualNetworks.isNotEmpty) ...[
+                          const SizedBox(height: 24),
+                          Divider(color: Colors.white.withValues(alpha: 0.1)),
+                          const SizedBox(height: 16),
+                        ],
+                      ],
+
+                      // Manual networks section (text inputs)
+                      if (_manualNetworks.isNotEmpty) ...[
+                        Text(
+                          'addSocials.inputStep.manualSection'.tr(),
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.7),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        ...List.generate(_manualNetworks.length, (index) {
+                          final network = _manualNetworks[index];
+                          return _buildNetworkInput(network);
+                        }),
+                      ],
+                    ],
                   ),
                 ),
 
@@ -434,6 +528,85 @@ class _SocialNetworkInputStepState extends State<SocialNetworkInputStep> {
               fontSize: 18,
               fontWeight: FontWeight.w600,
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Build OAuth connect button for a network
+  Widget _buildOAuthButton(NetworkConfig network) {
+    final platformName = network.name.toLowerCase() == 'x'
+        ? 'twitter'
+        : network.name.toLowerCase();
+    final isConnected = _connectedOAuthNetworks.contains(platformName);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: GestureDetector(
+        onTap: isConnected ? null : () => _handleOAuthConnect(network),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: isConnected
+                ? Colors.green.withValues(alpha: 0.15)
+                : Colors.white.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isConnected
+                  ? Colors.green.withValues(alpha: 0.5)
+                  : Colors.white.withValues(alpha: 0.15),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              // Network icon
+              SizedBox(
+                width: 32,
+                height: 32,
+                child: SvgPicture.asset(network.iconPath, fit: BoxFit.contain),
+              ),
+              const SizedBox(width: 12),
+
+              // Text
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isConnected
+                          ? 'addSocials.inputStep.connected'.tr(
+                              namedArgs: {'platform': network.displayName},
+                            )
+                          : 'addSocials.inputStep.connectWith'.tr(
+                              namedArgs: {'platform': network.displayName},
+                            ),
+                      style: TextStyle(
+                        color: isConnected ? Colors.green : Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (!isConnected)
+                      Text(
+                        'addSocials.inputStep.oauthHint'.tr(),
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.5),
+                          fontSize: 12,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+
+              // Status icon
+              Icon(
+                isConnected ? Icons.check_circle : Icons.login,
+                color: isConnected ? Colors.green : AppColors.primaryPink,
+                size: 24,
+              ),
+            ],
           ),
         ),
       ),

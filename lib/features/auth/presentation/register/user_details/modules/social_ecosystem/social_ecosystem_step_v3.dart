@@ -19,6 +19,7 @@ import '../../../../../../profile/components/social_rail.dart';
 import '../../../../../../profile/presentation/profile/mobile/v3/components/profile_image_mobile_v3.dart';
 import '../../../../../../profile/presentation/profile/mobile/v3/components/social_circles_mobile_v3.dart';
 import '../../../../../data/domain/models/user/user_dto.dart';
+import 'social_network_input_step.dart';
 
 class SocialEcosystemStepV3 extends StatefulWidget {
   final PageController controller;
@@ -40,7 +41,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
-  // Track previous state to detect changes
+  // Track networks selected for batch adding (not yet connected)
+  final Set<String> _pendingSelections = {};
 
   // Categories for grouping platforms (based on available networks)
   final Map<String, List<String>> _categories = {
@@ -185,6 +187,67 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     super.dispose();
   }
 
+  /// Check if a network is pending selection (selected but not connected yet)
+  bool _isNetworkPending(NetworkConfig config) {
+    final platformName = config.name.toLowerCase() == 'x'
+        ? 'twitter'
+        : config.name.toLowerCase();
+    return _pendingSelections.contains(platformName);
+  }
+
+  /// Toggle pending selection for batch adding
+  void _togglePendingSelection(NetworkConfig config) {
+    final platformName = config.name.toLowerCase() == 'x'
+        ? 'twitter'
+        : config.name.toLowerCase();
+    setState(() {
+      if (_pendingSelections.contains(platformName)) {
+        _pendingSelections.remove(platformName);
+      } else {
+        _pendingSelections.add(platformName);
+      }
+    });
+  }
+
+  /// Navigate to input step for all pending selections
+  void _handleAddPendingNetworks() {
+    if (_pendingSelections.isEmpty) return;
+
+    // Get the NetworkConfig for each selected network
+    final selectedConfigs = SocialNetworks.enabledNetworks.where((n) {
+      final name = n.name.toLowerCase() == 'x'
+          ? 'twitter'
+          : n.name.toLowerCase();
+      return _pendingSelections.contains(name);
+    }).toList();
+
+    if (selectedConfigs.isEmpty) return;
+
+    final registerCubit = context.read<RegisterCubit>();
+
+    // Navigate to input step
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => BlocProvider.value(
+          value: registerCubit,
+          child: SocialNetworkInputStep(
+            selectedNetworks: selectedConfigs,
+            onComplete: () {
+              // Pop back and clear pending selections
+              Navigator.of(context).pop();
+              setState(() {
+                _pendingSelections.clear();
+              });
+            },
+            onBack: () {
+              Navigator.of(context).pop();
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
   List<NetworkConfig> _getFilteredNetworks() {
     final allNetworks = SocialNetworks.enabledNetworks;
     if (_searchQuery.isEmpty) {
@@ -245,15 +308,11 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
       debugPrint('🔵 [Register Mode] Index found: $index');
 
       if (index == -1) {
+        // Network not connected - toggle pending selection for batch adding
         debugPrint(
-          '🔵 [Register Mode] Network not connected, opening bottom sheet',
+          '🔵 [Register Mode] Network not connected, toggling pending selection',
         );
-        await cubit.startSocialAuth(
-          context,
-          platformName,
-          config.iconPath,
-          inEditMode: false,
-        );
+        _togglePendingSelection(config);
       } else {
         debugPrint(
           '🔵 [Register Mode] Network already connected, showing edit dialog',
@@ -940,13 +999,15 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                             horizontal: 24,
                             vertical: 16,
                           ),
-                          child: userDetailsButton(
-                            cubit: context.read<RegisterCubit>(),
-                            controller: widget.controller,
-                            context: context,
-                            action: UserDetailsAction.back,
-                            mode: MoreUserDetailsMode.register,
-                          ),
+                          child: _pendingSelections.isNotEmpty
+                              ? _buildAddPendingButton()
+                              : userDetailsButton(
+                                  cubit: context.read<RegisterCubit>(),
+                                  controller: widget.controller,
+                                  context: context,
+                                  action: UserDetailsAction.back,
+                                  mode: MoreUserDetailsMode.register,
+                                ),
                         ),
                     ],
                   ),
@@ -982,6 +1043,39 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Button to add pending network selections
+  Widget _buildAddPendingButton() {
+    return GestureDetector(
+      onTap: _handleAddPendingNetworks,
+      child: Container(
+        height: 56,
+        decoration: BoxDecoration(
+          gradient: AppColors.primaryGradient,
+          borderRadius: BorderRadius.circular(28),
+        ),
+        child: Center(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.add, color: Colors.white, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                'addSocials.addSelected'.tr(
+                  namedArgs: {'count': _pendingSelections.length.toString()},
+                ),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -1137,19 +1231,30 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
   }
 
   Widget _buildPlatformGridItem(NetworkConfig network, bool isSelected) {
+    // Check if this network is pending selection (only in register mode)
+    final isPending =
+        widget.mode == MoreUserDetailsMode.register &&
+        !isSelected &&
+        _isNetworkPending(network);
+
+    // Visual state: connected (isSelected) > pending (isPending) > default
+    final isHighlighted = isSelected || isPending;
+
     return GestureDetector(
       onTap: () => _handleSocialTap(network),
       child: Container(
         decoration: BoxDecoration(
-          color: isSelected
+          color: isHighlighted
               ? Colors.white.withValues(alpha: 0.1)
               : Colors.white.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isSelected
+            color: isPending
+                ? AppColors.primaryPink.withValues(alpha: 0.6)
+                : isSelected
                 ? Colors.white.withValues(alpha: 0.2)
                 : Colors.white.withValues(alpha: 0.08),
-            width: isSelected ? 1.5 : 1,
+            width: isHighlighted ? 1.5 : 1,
           ),
           boxShadow: [
             BoxShadow(
@@ -1176,6 +1281,23 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
             return Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
+                // Show checkmark for pending selections
+                if (isPending) ...[
+                  Container(
+                    width: iconSize * 0.6,
+                    height: iconSize * 0.6,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.primaryPink,
+                    ),
+                    child: Icon(
+                      Icons.check,
+                      color: Colors.white,
+                      size: iconSize * 0.4,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                ],
                 SvgPicture.asset(
                   network.iconPath,
                   width: iconSize,
@@ -1187,9 +1309,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                   child: Text(
                     network.displayName,
                     style: TextStyle(
-                      color: isSelected ? Colors.white : Colors.white70,
+                      color: isHighlighted ? Colors.white : Colors.white70,
                       fontSize: fontSize,
-                      fontWeight: isSelected
+                      fontWeight: isHighlighted
                           ? FontWeight.w600
                           : FontWeight.w500,
                     ),
@@ -1199,6 +1321,14 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                     softWrap: false,
                   ),
                 ),
+                // Show connected indicator
+                if (isSelected) ...[
+                  Icon(
+                    Icons.check_circle,
+                    color: Colors.green,
+                    size: iconSize * 0.7,
+                  ),
+                ],
               ],
             );
           },
