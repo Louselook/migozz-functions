@@ -135,7 +135,9 @@ class CompleteProfile extends StatelessWidget {
                 height: 56,
                 child: TextButton(
                   onPressed: () {
-                    debugPrint('⏭️ Completar más tarde - Ir al perfil');
+                    debugPrint('⏭️ Completar más tarde - Permitir usar la app');
+                    // ✅ Marcar que el usuario ya vio este diálogo en esta sesión
+                    // El diálogo no se mostrará nuevamente hasta que cierre y abra la app
                     context.read<AuthCubit>().markProfileTemporarilyComplete(
                       true,
                     );

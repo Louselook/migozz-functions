@@ -452,6 +452,7 @@
     },
     "addSocials": {
         "addOtherNetworks": "Add Other Networks",
+        "addSelected": "Add {count} networks",
         "validation":{
           "atLeastOne": "At least one social network is required",
           "selectAtLeastOne": "Select at least one network",
@@ -470,7 +471,12 @@
           "title": "Connect Your Profiles",
           "subtitle": "Enter your username for each network",
           "connectYour": "Your",
-          "placeholder": "Enter username"
+          "placeholder": "Enter username",
+          "oauthSection": "Connect with one click",
+          "manualSection": "Enter manually",
+          "connectWith": "Connect with {platform}",
+          "connected": "{platform} connected ✓",
+          "oauthHint": "Tap to sign in"
         },
         "success": {
           "networksAdded": "Networks added successfully!"

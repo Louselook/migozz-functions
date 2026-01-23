@@ -6,8 +6,7 @@ final List<String> socials = [
   "Youtube",
   "Tiktok",
   "Facebook",
-  "X",
-  "Twitter",
+  "X", // Antes Twitter
   "Linkedin",
   "Threads",
   "Reddit",

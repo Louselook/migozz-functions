@@ -399,8 +399,20 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
           return null;
         }
 
+        // ✅ Si el perfil está incompleto, pero ya vió el diálogo en esta sesión, permitir navegación
         if (userProfile == null || !userProfile.complete) {
+          if (authState.hasSeenCompleteProfileDialog) {
+            // El usuario ya vio el diálogo, permitir que use la app normalmente
+            debugPrint(
+              '✅ [Router] Usuario ya vio diálogo de completar perfil - permitiendo navegación normal',
+            );
+            return null;
+          }
+          
           if (goingTo != '/complete-profile' && goingTo != '/ia-chat') {
+            debugPrint(
+              '🔄 [Router] Perfil incompleto - redirigiendo a /complete-profile',
+            );
             return '/complete-profile';
           }
           return null;

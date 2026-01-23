@@ -1,7 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
 // import 'package:migozz_app/features/tutorial/profile_tutorial_helper.dart';
@@ -29,7 +28,6 @@ class ProfileWrapper extends StatefulWidget {
 
 class _ProfileWrapperState extends State<ProfileWrapper> {
   final tutorialKeys = TutorialKeys();
-  bool _hasNavigated = false;
   // bool _tutorialShown = false;
 
   @override
@@ -69,23 +67,8 @@ class _ProfileWrapperState extends State<ProfileWrapper> {
           );
         }
 
-        // Si el perfil NO está completo -> redirigir a /complete-profile (solo una vez)
-        if ((authState.userProfile?.complete == false) && !_hasNavigated) {
-          _hasNavigated = true;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            context.push('/complete-profile');
-          });
-
-          return Scaffold(
-            backgroundColor: Colors.black,
-            body: Center(
-              child: Text(
-                'profile.presentation.redirectCompleteProfile'.tr(),
-                style: const TextStyle(color: Colors.white),
-              ),
-            ),
-          );
-        }
+        // ✅ El router redirect manejará la lógica de /complete-profile
+        // No duplicamos aquí la redirección
 
         // Si perfil completo -> trigger tutorial si aplica (solo una vez)
         // if ((authState.userProfile?.complete ?? false) && !_tutorialShown) {

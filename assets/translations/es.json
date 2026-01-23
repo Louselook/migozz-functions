@@ -440,6 +440,7 @@
   },
   "addSocials": {
     "addOtherNetworks": "Agregar otras redes",
+    "addSelected": "Agregar {count} redes",
     "validation": {
       "atLeastOne": "Se requiere al menos una red social",
       "selectAtLeastOne": "Selecciona al menos una red",
@@ -458,7 +459,12 @@
       "title": "Conecta tus Perfiles",
       "subtitle": "Ingresa tu usuario para cada red",
       "connectYour": "Tu",
-      "placeholder": "Ingresa usuario"
+      "placeholder": "Ingresa usuario",
+      "oauthSection": "Conectar con un clic",
+      "manualSection": "Ingresar manualmente",
+      "connectWith": "Conectar con {platform}",
+      "connected": "{platform} conectado ✓",
+      "oauthHint": "Toca para iniciar sesión"
     },
     "success": {
       "networksAdded": "¡Redes agregadas exitosamente!"
