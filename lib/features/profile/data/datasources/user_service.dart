@@ -93,7 +93,7 @@ class UserService {
                   ),
                   onTap: () async {
                     final path = await CameraPermissionHandler.openCamera(
-                      imageQuality: 40,
+                      imageQuality: 85,
                       context: context,
                     );
                     if (context.mounted) {
@@ -109,7 +109,7 @@ class UserService {
                   ),
                   onTap: () async {
                     final path = await CameraPermissionHandler.openGallery(
-                      imageQuality: 40,
+                      imageQuality: 85,
                       context: context,
                     );
                     if (context.mounted) {

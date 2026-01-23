@@ -485,14 +485,17 @@ class RegisterChatController extends GenericChatController {
         return;
       }
 
-      // AutoAdvance (por ejemplo: "registro completado")
+      // AutoAdvance (por ejemplo: "registro completado" o "pre-registro detectado")
       if (botResponse["autoAdvance"] == true) {
         debugPrint(
           '🎉 Mensaje de éxito detectado, avanzando automáticamente...',
         );
         await Future.delayed(const Duration(milliseconds: 1500));
         if (!isActive) return;
-        _lastUserMessage = 'continue';
+
+        // Limpiar lastUserMessage para que se prepare la siguiente pregunta correctamente
+        // (especialmente importante para el paso de location que necesita pedir permisos)
+        _lastUserMessage = '';
         await showNextBotMessage();
         return;
       }
@@ -630,6 +633,16 @@ class RegisterChatController extends GenericChatController {
         if (!isActive) return;
         await showNextBotMessage();
       } else if (audioResponse == 'record') {
+        // El usuario descartó el audio: removemos el último bubble de audio del usuario
+        // para evitar que quede un mensaje que luego no pueda cargarse.
+        for (int i = messages.length - 1; i >= 0; i--) {
+          final m = messages[i];
+          if (m["other"] == false && m["type"] == MessageType.audio) {
+            messages.removeAt(i);
+            break;
+          }
+        }
+
         final recordMessage = _audioHandler.getRecordAgainMessage(
           registerCubit,
         );

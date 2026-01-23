@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/color.dart';
@@ -204,10 +205,19 @@ class _OtpFields extends StatefulWidget {
 class _OtpFieldsState extends State<_OtpFields> {
   late List<FocusNode> _focusNodes;
 
+  // Para detectar backspace en campo vacío
+  late List<String> _previousValues;
+
   @override
   void initState() {
     super.initState();
     _focusNodes = List.generate(6, (_) => FocusNode());
+    _previousValues = List.generate(6, (_) => '');
+
+    // Agregar listeners para detectar cambios
+    for (int i = 0; i < 6; i++) {
+      widget.controllers[i].addListener(() => _trackValue(i));
+    }
   }
 
   @override
@@ -218,41 +228,122 @@ class _OtpFieldsState extends State<_OtpFields> {
     super.dispose();
   }
 
+  void _trackValue(int index) {
+    // Actualizar valor previo para tracking
+    _previousValues[index] = widget.controllers[index].text;
+  }
+
   // Método público que puede invocar el padre vía GlobalKey
   void clearAll() {
     for (var c in widget.controllers) {
       c.clear();
     }
+    _previousValues = List.generate(6, (_) => '');
     // forzamos que el primer campo tenga foco
     if (_focusNodes.isNotEmpty) {
       _focusNodes[0].requestFocus();
     } else {
       FocusScope.of(context).unfocus();
     }
-    setState(() {}); // actualizar UI por si acaso
+    setState(() {});
+  }
+
+  /// Pegar código OTP completo
+  void _handlePaste(String pastedText) {
+    // Limpiar y filtrar solo dígitos
+    final digits = pastedText.replaceAll(RegExp(r'[^0-9]'), '');
+
+    if (digits.isEmpty) return;
+
+    // Limpiar todos los campos primero
+    for (var c in widget.controllers) {
+      c.clear();
+    }
+
+    // Distribuir cada dígito en su campo correspondiente
+    for (int i = 0; i < digits.length && i < 6; i++) {
+      widget.controllers[i].text = digits[i];
+      _previousValues[i] = digits[i];
+    }
+
+    // Mover foco al siguiente campo vacío o al último si está completo
+    final filledCount = digits.length.clamp(0, 6);
+    if (filledCount >= 6) {
+      _focusNodes[5].requestFocus();
+      // Verificar si está completo
+      _checkCompletion();
+    } else {
+      _focusNodes[filledCount.clamp(0, 5)].requestFocus();
+    }
+
+    setState(() {});
+  }
+
+  /// Verificar si el OTP está completo y llamar callback
+  void _checkCompletion() {
+    final otp = widget.controllers.map((c) => c.text).join();
+    if (otp.length == 6 && RegExp(r'^[0-9]{6}$').hasMatch(otp)) {
+      widget.onCompleted(otp);
+    }
   }
 
   void _onChanged(String value, int index) {
+    // Detectar si es un paste (múltiples caracteres)
     if (value.length > 1) {
-      for (var c in widget.controllers) {
-        c.clear();
-      }
-      final chars = value.split('');
-      for (int i = 0; i < chars.length && i < 6; i++) {
-        widget.controllers[i].text = chars[i];
-      }
-      final nextIndex = (chars.length - 1).clamp(0, 5);
-      _focusNodes[nextIndex].requestFocus();
-    } else {
-      if (value.isNotEmpty && index < 5) {
-        _focusNodes[index + 1].requestFocus();
-      } else if (value.isEmpty && index > 0) {
-        _focusNodes[index - 1].requestFocus();
-      }
+      _handlePaste(value);
+      return;
     }
 
-    final otp = widget.controllers.map((c) => c.text).join();
-    if (otp.length == 6) widget.onCompleted(otp);
+    // Filtrar solo números
+    if (value.isNotEmpty && !RegExp(r'^[0-9]$').hasMatch(value)) {
+      widget.controllers[index].text = _previousValues[index];
+      widget.controllers[index].selection = TextSelection.collapsed(
+        offset: widget.controllers[index].text.length,
+      );
+      return;
+    }
+
+    // Si escribió un dígito
+    if (value.isNotEmpty) {
+      _previousValues[index] = value;
+
+      // Mover al siguiente campo si no es el último
+      if (index < 5) {
+        _focusNodes[index + 1].requestFocus();
+      }
+
+      // Verificar si está completo
+      _checkCompletion();
+    }
+
+    setState(() {});
+  }
+
+  /// Manejar tecla de retroceso (backspace)
+  void _handleBackspace(int index) {
+    final currentText = widget.controllers[index].text;
+
+    if (currentText.isNotEmpty) {
+      // Si hay texto, limpiarlo
+      widget.controllers[index].clear();
+      _previousValues[index] = '';
+    } else if (index > 0) {
+      // Si está vacío y no es el primero, ir al anterior y limpiarlo
+      widget.controllers[index - 1].clear();
+      _previousValues[index - 1] = '';
+      _focusNodes[index - 1].requestFocus();
+    }
+
+    setState(() {});
+  }
+
+  /// Manejar navegación con flechas
+  void _handleArrowKey(int index, bool isLeft) {
+    if (isLeft && index > 0) {
+      _focusNodes[index - 1].requestFocus();
+    } else if (!isLeft && index < 5) {
+      _focusNodes[index + 1].requestFocus();
+    }
   }
 
   @override
@@ -260,19 +351,69 @@ class _OtpFieldsState extends State<_OtpFields> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(6, (index) {
+        final hasValue = widget.controllers[index].text.isNotEmpty;
         return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 3),
-          width: 44,
-          height: 44,
-          child: TextField(
-            controller: widget.controllers[index],
-            focusNode: _focusNodes[index],
-            autofocus: index == 0,
-            maxLength: 1,
-            textAlign: TextAlign.center,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(counterText: ""),
-            onChanged: (value) => _onChanged(value, index),
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          width: 48,
+          height: 56,
+          child: KeyboardListener(
+            focusNode: FocusNode(), // Dummy focus node para KeyboardListener
+            onKeyEvent: (event) {
+              if (event is KeyDownEvent) {
+                if (event.logicalKey == LogicalKeyboardKey.backspace) {
+                  _handleBackspace(index);
+                } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+                  _handleArrowKey(index, true);
+                } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+                  _handleArrowKey(index, false);
+                }
+              }
+            },
+            child: TextField(
+              controller: widget.controllers[index],
+              focusNode: _focusNodes[index],
+              autofocus: index == 0,
+              textAlign: TextAlign.center,
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(
+                  6,
+                ), // Permitir paste de 6 dígitos
+              ],
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              decoration: InputDecoration(
+                counterText: "",
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: hasValue
+                        ? AppColors.primaryPurple
+                        : Colors.grey.shade300,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: AppColors.primaryPurple,
+                    width: 2,
+                  ),
+                ),
+                filled: true,
+                fillColor: hasValue
+                    ? AppColors.primaryPurple.withValues(alpha: 0.05)
+                    : Colors.grey.shade50,
+              ),
+              onChanged: (value) => _onChanged(value, index),
+              onTap: () {
+                // Seleccionar todo el texto al tocar para fácil reemplazo
+                widget.controllers[index].selection = TextSelection(
+                  baseOffset: 0,
+                  extentOffset: widget.controllers[index].text.length,
+                );
+              },
+            ),
           ),
         );
       }),

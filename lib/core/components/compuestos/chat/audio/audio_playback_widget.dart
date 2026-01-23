@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -27,6 +28,8 @@ class AudioPlaybackWidget extends StatefulWidget {
 
 class _AudioPlaybackWidgetState extends State<AudioPlaybackWidget> {
   PlayerController? _player;
+  StreamSubscription<int>? _positionSub;
+  StreamSubscription<void>? _completionSub;
   Duration _max = Duration.zero;
   Duration _current = Duration.zero;
   bool _isPlaying = false;
@@ -39,6 +42,10 @@ class _AudioPlaybackWidgetState extends State<AudioPlaybackWidget> {
   // Keep track of download cancelation
   http.Client? _httpClient;
 
+  bool _isDisposed = false;
+  bool _isResetting = false;
+  int _playerSeq = 0;
+
   @override
   void initState() {
     super.initState();
@@ -46,67 +53,100 @@ class _AudioPlaybackWidgetState extends State<AudioPlaybackWidget> {
     _prepare();
   }
 
-  void _initPlayer() {
-    _player?.dispose();
-    _player = PlayerController();
+  void _disposePlayer() {
+    try {
+      _positionSub?.cancel();
+    } catch (_) {}
+    _positionSub = null;
+
+    try {
+      _completionSub?.cancel();
+    } catch (_) {}
+    _completionSub = null;
+
+    try {
+      _player?.dispose();
+    } catch (_) {}
+    _player = null;
+  }
+
+  void _wirePlayerListeners(int seq) {
+    final p = _player;
+    if (p == null) return;
 
     // 🎵 Escuchar cambios de posición para sincronizar el waveform y tiempo actual
-    _player!.onCurrentDurationChanged.listen((ms) {
-      if (!mounted || _isSeeking) return;
+    _positionSub = p.onCurrentDurationChanged.listen((ms) {
+      if (_isDisposed || !mounted || _isSeeking) return;
+      if (seq != _playerSeq) return;
       setState(() {
         _current = Duration(milliseconds: ms);
       });
     });
 
-    _player!.onCompletion.listen((_) async {
-      if (!mounted) return;
-      debugPrint('🔄 [AudioPlayback] Audio completado - reiniciando player');
-
-      // 🔄 Reiniciar completamente el player para resetear el waveform visual
-      await _resetPlayer();
-
-      widget.chatController?.onAudioFinished?.call();
+    _completionSub = p.onCompletion.listen((_) async {
+      if (_isDisposed || !mounted) return;
+      if (seq != _playerSeq) return;
+      if (_isResetting) return;
+      _isResetting = true;
+      try {
+        debugPrint('🔄 [AudioPlayback] Audio completado - reiniciando player');
+        await _resetPlayer();
+        if (!_isDisposed) {
+          widget.chatController?.onAudioFinished?.call();
+        }
+      } finally {
+        _isResetting = false;
+      }
     });
+  }
+
+  void _initPlayer() {
+    _playerSeq++;
+    _disposePlayer();
+    _player = PlayerController();
+    _wirePlayerListeners(_playerSeq);
   }
 
   /// 🔄 Reinicia el player completamente para resetear el waveform visual
   Future<void> _resetPlayer() async {
     if (_localPath == null) return;
+    if (_isDisposed) return;
 
     try {
+      final seqAtStart = _playerSeq;
+
       // Pausar si está reproduciendo
       if (_isPlaying) {
-        await _player?.pausePlayer();
+        try {
+          await _player?.pausePlayer();
+        } catch (_) {}
       }
 
+      if (_isDisposed || !mounted) return;
+      if (seqAtStart != _playerSeq) return;
+
       // Disponer el player actual
-      _player?.dispose();
+      _disposePlayer();
 
       // Crear nuevo player
+      _playerSeq++;
+      final newSeq = _playerSeq;
       _player = PlayerController();
+      _wirePlayerListeners(newSeq);
 
-      // Re-escuchar eventos
-      _player!.onCurrentDurationChanged.listen((ms) {
-        if (!mounted || _isSeeking) return;
-        setState(() {
-          _current = Duration(milliseconds: ms);
-        });
-      });
-
-      _player!.onCompletion.listen((_) async {
-        if (!mounted) return;
-        debugPrint('🔄 [AudioPlayback] Audio completado - reiniciando player');
-        await _resetPlayer();
-        widget.chatController?.onAudioFinished?.call();
-      });
+      if (_isDisposed || !mounted) return;
 
       // Re-preparar el player con el mismo archivo
-      await _player!.preparePlayer(
+      final p = _player;
+      if (p == null) return;
+
+      await p.preparePlayer(
         path: _localPath!,
         shouldExtractWaveform: true,
       );
 
-      if (!mounted) return;
+      if (_isDisposed || !mounted) return;
+      if (newSeq != _playerSeq) return;
 
       setState(() {
         _isPlaying = false;
@@ -123,6 +163,7 @@ class _AudioPlaybackWidgetState extends State<AudioPlaybackWidget> {
 
   Future<void> _prepare() async {
     try {
+      final seqAtStart = _playerSeq;
       final src = widget.audioPath;
       String pathToPlay = src;
 
@@ -145,16 +186,24 @@ class _AudioPlaybackWidgetState extends State<AudioPlaybackWidget> {
         pathToPlay = file.path;
       }
 
+      if (_isDisposed || !mounted) return;
+      if (seqAtStart != _playerSeq) return;
+
       // Guardar el path local para poder reinicializar después
       _localPath = pathToPlay;
 
       // prepare player with local path
-      await _player!.preparePlayer(
+      final p = _player;
+      if (p == null) return;
+      await p.preparePlayer(
         path: pathToPlay,
         shouldExtractWaveform: true,
       );
-      _max = Duration(milliseconds: _player!.maxDuration);
-      if (!mounted) return;
+
+      if (_isDisposed || !mounted) return;
+      if (seqAtStart != _playerSeq) return;
+
+      _max = Duration(milliseconds: p.maxDuration);
       setState(() {
         _isPrepared = true;
         _isDownloading = false;
@@ -172,13 +221,21 @@ class _AudioPlaybackWidgetState extends State<AudioPlaybackWidget> {
   }
 
   Future<void> _togglePlayPause() async {
-    if (_hasError || !_isPrepared || _player == null) return;
+    if (_hasError || !_isPrepared || _player == null || _isDisposed) return;
     if (_isPlaying) {
-      await _player!.pausePlayer();
+      try {
+        await _player!.pausePlayer();
+      } catch (_) {
+        return;
+      }
       if (!mounted) return;
       setState(() => _isPlaying = false);
     } else {
-      await _player!.startPlayer();
+      try {
+        await _player!.startPlayer();
+      } catch (_) {
+        return;
+      }
       if (!mounted) return;
       setState(() => _isPlaying = true);
     }
@@ -186,7 +243,7 @@ class _AudioPlaybackWidgetState extends State<AudioPlaybackWidget> {
 
   /// 🎯 Seek a una posición específica del audio
   Future<void> _seekTo(Duration position) async {
-    if (!_isPrepared || _hasError || _player == null) return;
+    if (!_isPrepared || _hasError || _player == null || _isDisposed) return;
 
     final clampedMs = position.inMilliseconds.clamp(0, _max.inMilliseconds);
 
@@ -211,13 +268,15 @@ class _AudioPlaybackWidgetState extends State<AudioPlaybackWidget> {
 
   /// 🖐️ Inicio del arrastre (seek)
   void _onSeekStart(Offset localPosition, double width) async {
-    if (!_isPrepared || _hasError || _player == null) return;
+    if (!_isPrepared || _hasError || _player == null || _isDisposed) return;
 
     _isSeeking = true;
 
     // Siempre pausar al iniciar seek y mostrar icono de play
     if (_isPlaying) {
-      await _player!.pausePlayer();
+      try {
+        await _player!.pausePlayer();
+      } catch (_) {}
     }
     setState(() => _isPlaying = false);
 
@@ -228,6 +287,7 @@ class _AudioPlaybackWidgetState extends State<AudioPlaybackWidget> {
 
   /// 🖐️ Durante el arrastre (seek)
   void _onSeekUpdate(Offset localPosition, double width) async {
+    if (_isDisposed) return;
     if (!_isSeeking || !_isPrepared || _hasError || _player == null) return;
 
     final newPosition = _calculateSeekPosition(localPosition, width);
@@ -249,9 +309,8 @@ class _AudioPlaybackWidgetState extends State<AudioPlaybackWidget> {
 
   @override
   void dispose() {
-    try {
-      _player?.dispose();
-    } catch (_) {}
+    _isDisposed = true;
+    _disposePlayer();
     // cancel any pending http client
     try {
       _httpClient?.close();

@@ -26,7 +26,34 @@ class SocialEcosystemHandler {
     _showSocialNetworksConfirmation(cubit, chatController, socialEcosystem);
   }
 
-  /// Muestra mensaje cuando NO se vincularon redes
+  /// Muestra mensaje cuando el usuario vuelve atrás sin redes sociales
+  /// Pregunta si quiere cambiar algún dato antes de volver a solicitar las redes
+  static void handleBackWithoutSocials({
+    required BuildContext context,
+    required RegisterCubit cubit,
+    required RegisterChatController chatController,
+  }) {
+    final isSpanish = (cubit.state.language ?? '').toLowerCase().contains('es');
+
+    final askChangeText = isSpanish
+        ? '¿Quieres cambiar algún dato antes de continuar?'
+        : 'Do you want to change any information before continuing?';
+
+    chatController.addMessage({
+      "other": true,
+      "text": askChangeText,
+      "type": MessageType.text,
+      "time": getTimeNow(),
+      "options": isSpanish
+          ? ["No, continuar", "Sí, cambiar datos"]
+          : ["No, continue", "Yes, change data"],
+    });
+
+    // Marcar que estamos esperando respuesta sobre cambios
+    chatController.setLastUserMessageForBot('awaiting_change_decision');
+  }
+
+  /// Muestra mensaje cuando NO se vincularon redes (legacy - para compatibilidad)
   static void _showNoSocialNetworksMessage(
     RegisterCubit cubit,
     RegisterChatController chatController,
@@ -73,8 +100,8 @@ class SocialEcosystemHandler {
 
     // Mensaje de texto de confirmación
     final confirmationText = isSpanish
-        ? '¡Genial! Veo que conectaste $namesText 🎉'
-        : 'Great! I see you connected $namesText 🎉';
+        ? '✓ Conectado: $namesText'
+        : '✓ Connected: $namesText';
 
     chatController.addMessage({
       "other": true,

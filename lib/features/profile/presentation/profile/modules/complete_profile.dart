@@ -3,9 +3,57 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 
 class CompleteProfile extends StatelessWidget {
   const CompleteProfile({super.key});
+
+  /// Sincroniza datos del perfil de Firestore con el RegisterCubit
+  /// Esto es importante para usuarios de Google/Apple que tienen pre-registro
+  Future<void> _syncProfileDataToRegisterCubit(BuildContext context) async {
+    final authState = context.read<AuthCubit>().state;
+    final registerCubit = context.read<RegisterCubit>();
+
+    if (!authState.isAuthenticated || authState.userProfile == null) {
+      debugPrint(
+        '⚠️ [CompleteProfile] No hay perfil autenticado para sincronizar',
+      );
+      return;
+    }
+
+    final profile = authState.userProfile!;
+    debugPrint(
+      '🔄 [CompleteProfile] Sincronizando datos del perfil con RegisterCubit',
+    );
+    debugPrint('   - Email: ${profile.email}');
+    debugPrint('   - Username: ${profile.username}');
+    debugPrint('   - DisplayName: ${profile.displayName}');
+    debugPrint('   - isPreRegistered: ${profile.isPreRegistered}');
+
+    // Sincronizar datos básicos
+    if (profile.email.isNotEmpty) {
+      registerCubit.updateEmail(profile.email);
+    }
+
+    if (profile.username.isNotEmpty) {
+      registerCubit.setUsername(profile.username);
+    }
+
+    if (profile.displayName.isNotEmpty) {
+      registerCubit.setFullName(profile.displayName);
+    }
+
+    // Sincronizar estado de pre-registro si viene de Google/Apple con pre-order
+    if (profile.isPreRegistered) {
+      debugPrint(
+        '✅ [CompleteProfile] Usuario viene de pre-registro con Google/Apple',
+      );
+      registerCubit.markAsPreRegistered(
+        username: profile.username,
+        email: profile.email,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,9 +98,14 @@ class CompleteProfile extends StatelessWidget {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     debugPrint('🔄 Navegar a completar perfil en IA Chat');
+
+                    // Sincronizar datos del perfil (incluyendo pre-registro) antes de ir al chat
+                    await _syncProfileDataToRegisterCubit(context);
+
                     final authState = context.read<AuthCubit>().state;
+                    if (!context.mounted) return;
                     context.go(
                       '/ia-chat',
                       extra: authState.firebaseUser?.email ?? '',

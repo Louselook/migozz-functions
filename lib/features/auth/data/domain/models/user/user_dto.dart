@@ -28,6 +28,9 @@ class UserDTO {
   final Map<String, List<String>> interests;
   final bool complete;
 
+  // Pre-registro: usuarios que reservaron username antes de registrarse
+  final bool isPreRegistered;
+
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -57,6 +60,7 @@ class UserDTO {
     this.contactEmail,
     Map<String, List<String>>? interests,
     this.complete = true,
+    this.isPreRegistered = false,
     DateTime? createdAt,
     DateTime? updatedAt,
     this.lastSocialEcosystemSync,
@@ -87,6 +91,7 @@ class UserDTO {
     String? contactEmail,
     Map<String, List<String>>? interests,
     bool? complete,
+    bool? isPreRegistered,
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? lastSocialEcosystemSync,
@@ -113,6 +118,7 @@ class UserDTO {
       contactEmail: contactEmail ?? this.contactEmail,
       interests: interests ?? this.interests,
       complete: complete ?? this.complete,
+      isPreRegistered: isPreRegistered ?? this.isPreRegistered,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       lastSocialEcosystemSync:
@@ -144,6 +150,7 @@ class UserDTO {
       'contactEmail': contactEmail,
       'interests': interests,
       'complete': complete,
+      'isPreRegistered': isPreRegistered,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
       'lastSocialEcosystemSync': lastSocialEcosystemSync != null
@@ -151,6 +158,40 @@ class UserDTO {
           : null,
       'socialEcosystemAddedDates': socialEcosystemAddedDates?.map(
         (k, v) => MapEntry(k, Timestamp.fromDate(v)),
+      ),
+    };
+  }
+
+  /// Converts to a JSON-serializable map (no Timestamps, uses ISO strings)
+  /// Use this for HTTP API calls instead of toMap()
+  Map<String, dynamic> toJsonMap() {
+    return {
+      'email': email,
+      'lang': lang,
+      'displayName': displayName,
+      'username': username,
+      'gender': gender,
+      'bio': bio,
+      'birthDate': birthDate?.toIso8601String(),
+      'socialEcosystem': socialEcosystem,
+      'featuredLinks': featuredLinks,
+      'location': location.toMap(),
+      'avatarUrl': avatarUrl,
+      'phone': phone,
+      'voiceNoteUrl': voiceNoteUrl,
+      'category': category,
+      'profileVersion': profileVersion,
+      'contactWebsite': contactWebsite,
+      'contactPhone': contactPhone,
+      'contactEmail': contactEmail,
+      'interests': interests,
+      'complete': complete,
+      'isPreRegistered': isPreRegistered,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+      'lastSocialEcosystemSync': lastSocialEcosystemSync?.toIso8601String(),
+      'socialEcosystemAddedDates': socialEcosystemAddedDates?.map(
+        (k, v) => MapEntry(k, v.toIso8601String()),
       ),
     };
   }
@@ -313,6 +354,17 @@ class UserDTO {
       complete = c != 0;
     }
 
+    // isPreRegistered defensivo
+    bool isPreRegistered = false;
+    final ipr = map['isPreRegistered'];
+    if (ipr is bool) {
+      isPreRegistered = ipr;
+    } else if (ipr is String) {
+      isPreRegistered = ipr.toLowerCase() == 'true';
+    } else if (ipr is num) {
+      isPreRegistered = ipr != 0;
+    }
+
     // profileVersion defensivo
     int profileVersion = 1; // Por defecto versión 1
     final pv = map['profileVersion'];
@@ -388,6 +440,7 @@ class UserDTO {
       contactEmail: contactEmail,
       interests: interests,
       complete: complete,
+      isPreRegistered: isPreRegistered,
       createdAt: createdAt,
       updatedAt: updatedAt,
       lastSocialEcosystemSync: lastSocialEcosystemSync,

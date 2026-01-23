@@ -34,6 +34,9 @@ class AudioRecorderManager {
   final AudioRecorder _recorder = AudioRecorder();
   late PlayerController playerController;
 
+  bool _isDisposed = false;
+  int _controllerSeq = 0;
+
   // Subscripciones para preview (playerController-driven, same as chat)
   StreamSubscription<int>? _playerPositionSubscription;
   StreamSubscription<PlayerState>? _playerStateSubscription;
@@ -49,24 +52,26 @@ class AudioRecorderManager {
   PlayerController get waveformPlayerController => playerController;
 
   void _initializeControllers() {
+    _controllerSeq++;
     playerController = PlayerController();
     // Smoother progress updates.
     playerController.updateFrequency = UpdateFrequency.high;
     _cancelSubscriptions();
-    _setupSubscriptions();
+    _setupSubscriptions(_controllerSeq);
   }
 
-  void _setupSubscriptions() {
-    _playerPositionSubscription = playerController.onCurrentDurationChanged
-        .listen((ms) {
-          if (isRecording || audioPath == null) return;
-          duration = Duration(milliseconds: ms);
-          onStateChanged?.call();
-        });
+  void _setupSubscriptions(int seq) {
+    final p = playerController;
 
-    _playerStateSubscription = playerController.onPlayerStateChanged.listen((
-      state,
-    ) {
+    _playerPositionSubscription = p.onCurrentDurationChanged.listen((ms) {
+      if (_isDisposed || seq != _controllerSeq) return;
+      if (isRecording || audioPath == null) return;
+      duration = Duration(milliseconds: ms);
+      onStateChanged?.call();
+    });
+
+    _playerStateSubscription = p.onPlayerStateChanged.listen((state) {
+      if (_isDisposed || seq != _controllerSeq) return;
       final wasPlaying = isPlaying;
       isPlaying = state == PlayerState.playing;
       if (wasPlaying != isPlaying) {
@@ -74,17 +79,48 @@ class AudioRecorderManager {
       }
     });
 
-    _playerCompletionSubscription = playerController.onCompletion.listen((
-      _,
-    ) async {
+    _playerCompletionSubscription = p.onCompletion.listen((_) async {
+      if (_isDisposed || seq != _controllerSeq) return;
+
       isPlaying = false;
       duration = Duration.zero;
 
       // Reiniciar el player completamente para resetear el waveform visual
-      await _resetPlayerForVisualReset();
+      await _resetPlayerForVisualReset(seq);
 
+      if (_isDisposed || seq != _controllerSeq) return;
       onStateChanged?.call();
     });
+  }
+
+  void _disposeControllerSafely(PlayerController controller) {
+    void doDispose() {
+      try {
+        controller.dispose();
+      } catch (_) {}
+    }
+
+    try {
+      WidgetsBinding.instance.addPostFrameCallback((_) => doDispose());
+    } catch (_) {
+      scheduleMicrotask(doDispose);
+    }
+  }
+
+  void _replaceController() {
+    final old = playerController;
+
+    _cancelSubscriptions();
+    _controllerSeq++;
+    playerController = PlayerController();
+    playerController.updateFrequency = UpdateFrequency.high;
+    _setupSubscriptions(_controllerSeq);
+
+    // Force waveform widget to rebuild and bind to the new controller.
+    waveformKey = UniqueKey();
+
+    // Dispose old controller after the UI has had a chance to rebuild.
+    _disposeControllerSafely(old);
   }
 
   double _normalizeDbToUnit(double db) {
@@ -117,32 +153,27 @@ class AudioRecorderManager {
   }
 
   /// 🔄 Reinicia el player completamente para resetear el waveform visual
-  Future<void> _resetPlayerForVisualReset() async {
+  Future<void> _resetPlayerForVisualReset(int seq) async {
     if (audioPath == null) return;
+    if (_isDisposed || seq != _controllerSeq) return;
 
     try {
       debugPrint('🔄 [AudioManager] Reiniciando player para reset visual...');
 
-      // Cancelar subscripciones actuales
-      _cancelSubscriptions();
+      final keepPath = audioPath;
+      if (keepPath == null) return;
 
-      // Disponer el player actual
-      try {
-        playerController.dispose();
-      } catch (_) {}
+      _replaceController();
 
-      // Crear nuevo player
-      playerController = PlayerController();
-      playerController.updateFrequency = UpdateFrequency.high;
+      if (_isDisposed || seq != _controllerSeq) return;
 
       // Re-preparar el player con el mismo archivo
       await playerController.preparePlayer(
-        path: audioPath!,
+        path: keepPath,
         shouldExtractWaveform: true,
       );
 
-      // Re-configurar subscripciones
-      _setupSubscriptions();
+      if (_isDisposed || seq != _controllerSeq) return;
 
       maxDuration = Duration(milliseconds: playerController.maxDuration);
       duration = Duration.zero;
@@ -290,9 +321,12 @@ class AudioRecorderManager {
 
     if (path != null && File(path).existsSync()) {
       try {
+        final seq = _controllerSeq;
         // Some devices/codecs finalize the m4a asynchronously. Wait briefly
         // so the extracted waveform matches what will be sent/played later.
         await _waitForFileStable(path);
+
+        if (_isDisposed || seq != _controllerSeq) return;
 
         // IMPORTANT: Use the same approach as the sent message widget:
         // PlayerController.preparePlayer(shouldExtractWaveform: true).
@@ -300,6 +334,8 @@ class AudioRecorderManager {
           path: path,
           shouldExtractWaveform: true,
         );
+
+        if (_isDisposed || seq != _controllerSeq) return;
 
         maxDuration = Duration(milliseconds: playerController.maxDuration);
         duration = Duration.zero;
@@ -316,15 +352,21 @@ class AudioRecorderManager {
 
   Future<void> playRecording() async {
     if (audioPath == null) return;
+    if (_isDisposed) return;
 
     try {
+      final seq = _controllerSeq;
       // Ensure prepared (in case the user left/returned quickly).
       if (playerController.maxDuration <= 0) {
         await _waitForFileStable(audioPath!);
+
+        if (_isDisposed || seq != _controllerSeq) return;
         await playerController.preparePlayer(
           path: audioPath!,
           shouldExtractWaveform: true,
         );
+
+        if (_isDisposed || seq != _controllerSeq) return;
         maxDuration = Duration(milliseconds: playerController.maxDuration);
       }
 
@@ -338,6 +380,8 @@ class AudioRecorderManager {
       onStateChanged?.call();
       await Future<void>.delayed(const Duration(milliseconds: 80));
 
+      if (_isDisposed || seq != _controllerSeq) return;
+
       await playerController.startPlayer();
       isPlaying = true;
       onStateChanged?.call();
@@ -350,6 +394,7 @@ class AudioRecorderManager {
 
   Future<void> stopPlaying() async {
     try {
+      if (_isDisposed) return;
       try {
         await playerController.pausePlayer();
       } catch (_) {}
@@ -365,6 +410,7 @@ class AudioRecorderManager {
 
   Future<void> seekToPosition(Duration position) async {
     if (audioPath == null) return;
+    if (_isDisposed) return;
 
     try {
       // Siempre pausar al hacer seek (igual que AudioPlaybackWidget)
@@ -411,20 +457,16 @@ class AudioRecorderManager {
       // NO eliminar el archivo físico, solo limpiar la referencia
       // El archivo será manejado por AudioChatHandler
 
-      try {
-        playerController.dispose();
-      } catch (_) {}
-
-      _cancelSubscriptions();
-
-      // Reset estado visual
+      // Reset estado visual FIRST so the UI can drop the waveform
       audioPath = null;
       duration = Duration.zero;
       maxDuration = Duration.zero;
       isRecording = false;
       isPlaying = false;
+      waveformKey = UniqueKey();
+      onStateChanged?.call();
 
-      _initializeControllers();
+      _replaceController();
       onStateChanged?.call();
 
       debugPrint('✅ [AudioManager] Referencias limpiadas (archivo preservado)');
@@ -466,20 +508,16 @@ class AudioRecorderManager {
         }
       }
 
-      try {
-        playerController.dispose();
-      } catch (_) {}
-
-      _cancelSubscriptions();
-
-      // Reset estado
+      // Reset state FIRST so the UI can drop the waveform
       audioPath = null;
       duration = Duration.zero;
       maxDuration = Duration.zero;
       isRecording = false;
       isPlaying = false;
+      waveformKey = UniqueKey();
+      onStateChanged?.call();
 
-      _initializeControllers();
+      _replaceController();
       onStateChanged?.call();
     } catch (e) {
       debugPrint('❌ Error en reset: $e');
@@ -502,10 +540,12 @@ class AudioRecorderManager {
 
   void dispose() {
     debugPrint('🔄 Disposing AudioManager...');
+    _isDisposed = true;
     _cancelSubscriptions();
     try {
       _recorder.dispose();
-      playerController.dispose();
+      final controller = playerController;
+      _disposeControllerSafely(controller);
     } catch (_) {}
   }
 }

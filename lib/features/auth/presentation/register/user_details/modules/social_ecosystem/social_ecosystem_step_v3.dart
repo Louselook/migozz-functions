@@ -41,7 +41,6 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
   String _searchQuery = '';
 
   // Track previous state to detect changes
-  int _previousSocialCount = 0;
 
   // Categories for grouping platforms (based on available networks)
   final Map<String, List<String>> _categories = {
@@ -89,7 +88,6 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
           }
         }
         // Initialize previous count
-        _previousSocialCount = editState.socialEcosystem?.length ?? 0;
       });
     }
   }
@@ -759,61 +757,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     // Use the safe username variable (NO user! here)
     final socialLinks = _buildSocialLinks(socialEcosystem, rawUsername);
 
-    void handleBackTap() {
-      // Si estamos en modo registro, intentamos navegar dentro del PageView.
-      if (widget.mode == MoreUserDetailsMode.register) {
-        // ✅ Validate at least one network is added before going back
-        final socialEcosystem =
-            context.read<RegisterCubit>().state.socialEcosystem ?? [];
-
-        if (socialEcosystem.isEmpty) {
-          CustomSnackbar.show(
-            context: context,
-            message: 'addSocials.validation.atLeastOne'.tr(),
-            type: SnackbarType.warning,
-          );
-          return;
-        }
-
-        try {
-          if (widget.controller.hasClients) {
-            // obtener página actual (puede ser decimal)
-            final currentPage =
-                (widget.controller.page ?? widget.controller.initialPage)
-                    .round();
-            if (currentPage > 0) {
-              widget.controller.previousPage(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOut,
-              );
-              return;
-            } else {
-              // Estamos en la primera página del PageView -> cerrar la ruta
-              if (Navigator.of(context).canPop()) {
-                Navigator.of(context).pop();
-                return;
-              }
-            }
-          } else {
-            // controller aún no está attached -> fallback a Navigator
-            if (Navigator.of(context).canPop()) {
-              Navigator.of(context).pop();
-              return;
-            }
-          }
-        } catch (e, st) {
-          debugPrint('[_handleBackTap] error: $e\n$st');
-          // fallback seguro
-          if (Navigator.of(context).canPop()) Navigator.of(context).pop();
-        }
-      } else {
-        // Modo edición: cerrar la ruta y volver al perfil
-        if (Navigator.of(context).canPop()) {
-          Navigator.of(context).pop();
-        }
-      }
-    }
-
+    // ignore: deprecated_member_use
     return WillPopScope(
       onWillPop: () async {
         // Si estamos en modo registro, validar que haya al menos una red social
@@ -1011,7 +955,24 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                   top: MediaQuery.of(context).padding.top + 8,
                   left: 16,
                   child: GestureDetector(
-                    onTap: () => Navigator.pop(context),
+                    onTap: () {
+                      // En modo registro, enviar código especial si no hay redes
+                      if (widget.mode == MoreUserDetailsMode.register) {
+                        final socialEcosystem =
+                            context
+                                .read<RegisterCubit>()
+                                .state
+                                .socialEcosystem ??
+                            [];
+                        if (socialEcosystem.isEmpty) {
+                          Navigator.pop(context, 'back_no_socials');
+                        } else {
+                          Navigator.pop(context, 'done');
+                        }
+                      } else {
+                        Navigator.pop(context);
+                      }
+                    },
                     child: const Icon(
                       Icons.arrow_back_ios,
                       color: Colors.white,

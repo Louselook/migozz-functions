@@ -145,6 +145,21 @@ Future<Map<String, dynamic>?> processBotResponse(
         };
       }
 
+    case RegisterStatusProgress.email:
+      if (isValid == true && userResponse != null) {
+        registerCubit.setEmail(userResponse.trim());
+        debugPrint('✅ Email guardado: $userResponse');
+        return null; // Sin errores, avanza al siguiente paso (sendOTP)
+      } else {
+        final isSpanish = registerCubit.state.language == 'Español';
+        return {
+          "error": true,
+          "message": isSpanish
+              ? "Por favor ingresa un correo electrónico válido."
+              : "Please enter a valid email address.",
+        };
+      }
+
     case RegisterStatusProgress.sendOTP:
       // Caso 1: Usuario quiere cambiar email (dijo "No")
       if (resp['changeEmail'] == true) {
@@ -207,8 +222,8 @@ Future<Map<String, dynamic>?> processBotResponse(
         return {
           "emailChanged": true,
           "message": registerCubit.state.language == 'Español'
-              ? "¡Perfecto! Verificaremos tu nuevo correo."
-              : "Perfect! We'll verify your new email.",
+              ? "Email actualizado. Verificando..."
+              : "Email updated. Verifying...",
         };
       } else {
         // Email inválido

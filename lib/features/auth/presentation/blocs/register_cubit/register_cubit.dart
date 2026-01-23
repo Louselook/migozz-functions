@@ -11,6 +11,7 @@ import 'package:migozz_app/features/auth/services/add_networks/add_network_servi
 import 'package:migozz_app/features/auth/services/add_networks/network_config.dart';
 import 'package:migozz_app/features/auth/services/location_service.dart';
 import 'package:migozz_app/features/auth/services/media_service.dart';
+import 'package:migozz_app/features/auth/services/pre_register_service.dart';
 import 'package:migozz_app/features/profile/components/utils/Loader.dart';
 import 'register_state.dart';
 
@@ -19,6 +20,7 @@ class RegisterCubit extends Cubit<RegisterState> {
   final AddNetworkServiceClick _clickService = AddNetworkServiceClick();
   final AddNetworkServiceUser _userService = AddNetworkServiceUser();
   final AddNetworkServiceDirect _directService = AddNetworkServiceDirect();
+  final PreRegisterService _preRegisterService = PreRegisterService();
 
   // ✅ Callback para sincronización con EditCubit
   Function(List<Map<String, dynamic>>)? onSocialEcosystemUpdated;
@@ -27,6 +29,111 @@ class RegisterCubit extends Cubit<RegisterState> {
   File? voiceNoteFile;
 
   RegisterCubit(this._locationService) : super(const RegisterState());
+
+  // ==================== PRE-REGISTRO ====================
+  /// Check if email is pre-registered and set the username if found
+  Future<bool> checkPreRegister(String email) async {
+    debugPrint('🔍 [RegisterCubit] Checking pre-register for: $email');
+
+    final preRegisterData = await _preRegisterService.getPreRegisterByEmail(
+      email,
+    );
+
+    if (preRegisterData.isPreRegistered) {
+      debugPrint('✅ [RegisterCubit] User is pre-registered!');
+      debugPrint('   - Username: ${preRegisterData.username}');
+      debugPrint('   - PreOrderId: ${preRegisterData.preOrderId}');
+
+      emit(
+        state.copyWith(
+          isPreRegistered: true,
+          preOrderId: preRegisterData.preOrderId,
+          username: preRegisterData.username,
+          email: email,
+        ),
+      );
+
+      return true;
+    }
+
+    debugPrint('ℹ️ [RegisterCubit] User is NOT pre-registered');
+    emit(
+      state.copyWith(isPreRegistered: false, preOrderId: null, email: email),
+    );
+
+    return false;
+  }
+
+  /// Marca al usuario como pre-registrado (usado cuando viene de Google/Apple con pre-order)
+  /// Esto sincroniza el estado del RegisterCubit con el documento de Firestore
+  void markAsPreRegistered({String? username, String? email}) {
+    debugPrint('✅ [RegisterCubit] Marcando como pre-registrado');
+    debugPrint('   - Username reservado: $username');
+    debugPrint('   - Email: $email');
+
+    emit(
+      state.copyWith(isPreRegistered: true, username: username, email: email),
+    );
+  }
+
+  /// Delete pre-order document after successful registration
+  Future<bool> deletePreOrder() async {
+    final preOrderId = state.preOrderId;
+    if (preOrderId == null || !state.isPreRegistered) {
+      debugPrint('ℹ️ [RegisterCubit] No pre-order to delete');
+      return true; // Nothing to delete
+    }
+
+    debugPrint('🗑️ [RegisterCubit] Deleting pre-order: $preOrderId');
+    final success = await _preRegisterService.deletePreOrder(preOrderId);
+
+    if (success) {
+      debugPrint('✅ [RegisterCubit] Pre-order deleted successfully');
+      emit(state.copyWith(isPreRegistered: false, preOrderId: null));
+    } else {
+      debugPrint('⚠️ [RegisterCubit] Failed to delete pre-order');
+    }
+
+    return success;
+  }
+
+  /// Migrate pre-order document to new Firebase Auth UID
+  /// This should be called instead of deletePreOrder for pre-registered users
+  Future<bool> migratePreOrder({
+    required String newUid,
+    Map<String, dynamic>? userData,
+  }) async {
+    final preOrderId = state.preOrderId;
+    final isPreReg = state.isPreRegistered;
+
+    debugPrint('🔍 [RegisterCubit] migratePreOrder called');
+    debugPrint('   - preOrderId: $preOrderId');
+    debugPrint('   - isPreRegistered: $isPreReg');
+    debugPrint('   - newUid: $newUid');
+
+    if (preOrderId == null || !isPreReg) {
+      debugPrint(
+        '⚠️ [RegisterCubit] No pre-order to migrate (preOrderId=$preOrderId, isPreReg=$isPreReg)',
+      );
+      return false; // Return false to indicate no migration happened
+    }
+
+    debugPrint('🔄 [RegisterCubit] Migrating pre-order: $preOrderId → $newUid');
+    final success = await _preRegisterService.migratePreOrder(
+      preOrderId: preOrderId,
+      newUid: newUid,
+      userData: userData,
+    );
+
+    if (success) {
+      debugPrint('✅ [RegisterCubit] Pre-order migrated successfully');
+      emit(state.copyWith(isPreRegistered: false, preOrderId: null));
+    } else {
+      debugPrint('⚠️ [RegisterCubit] Failed to migrate pre-order');
+    }
+
+    return success;
+  }
 
   // ==================== RESPUESTA IA ====================
   void setAiResponse(bool value) {
@@ -145,18 +252,15 @@ class RegisterCubit extends Cubit<RegisterState> {
   // ==================== SOCIAL ECOSYSTEM ====================
 
   /// Para registro - CAMBIA el regProgress
-  void setSocialEcosystem(List<Map<String, dynamic>> platforms) =>
-      emit(
-        state.copyWith(
-          socialEcosystem: platforms,
-          regProgress: RegisterStatusProgress.location,
-        ),
-      );
+  void setSocialEcosystem(List<Map<String, dynamic>> platforms) => emit(
+    state.copyWith(
+      socialEcosystem: platforms,
+      regProgress: RegisterStatusProgress.location,
+    ),
+  );
 
   /// Para edición - NO cambia el regProgress
-  void updateSocialEcosystemOnly(
-    List<Map<String, dynamic>> platforms,
-  ) {
+  void updateSocialEcosystemOnly(List<Map<String, dynamic>> platforms) {
     debugPrint(
       '🔧 [RegisterCubit] Actualizando socialEcosystem SIN cambiar regProgress',
     );
@@ -401,6 +505,43 @@ class RegisterCubit extends Cubit<RegisterState> {
           'url': rawData['url'] ?? rawData['profile_url'] ?? '',
           'profile_image_url': rawData['profile_image_url'] ?? '',
         };
+    }
+  }
+
+  /// Public method to add a network profile by username/link.
+  /// Returns the normalized profile data, or null if validation fails.
+  Future<Map<String, dynamic>?> addNetworkByUsername({
+    required String network,
+    required String usernameOrLink,
+    required String iconPath,
+  }) async {
+    try {
+      Map<String, dynamic> rawData;
+
+      final isDirectNetwork = _isDirectNetwork(network);
+
+      if (isDirectNetwork) {
+        rawData = await _directService.createDirectProfile(
+          network: network,
+          input: usernameOrLink,
+        );
+      } else {
+        rawData = await _userService.getProfileByUsernameOrLink(
+          network: network,
+          usernameOrLink: usernameOrLink,
+        );
+      }
+
+      final profileData = _normalizeProfile(network, rawData);
+
+      // Add iconPath to the profile
+      profileData['iconPath'] = iconPath;
+
+      debugPrint('📊 [$network] Profile validated and normalized');
+      return profileData;
+    } catch (e) {
+      debugPrint('❌ Error validating $network profile: $e');
+      return null;
     }
   }
 

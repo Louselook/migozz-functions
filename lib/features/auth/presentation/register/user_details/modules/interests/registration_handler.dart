@@ -22,18 +22,18 @@ class RegistrationHandler {
       'voiceNoteUrl=${registerCubit.state.voiceNoteUrl} avatarUrl=${registerCubit.state.avatarUrl}',
     );
 
-    // Verificar si está autenticado con Google
+    // Verificar si está autenticado con un proveedor social (Google o Apple)
     final firebaseUser = authCubit.state.firebaseUser;
-    final isAuthWithGoogle =
+    final isSocialAuthUser =
         authCubit.state.isAuthenticated && firebaseUser != null;
 
-    debugPrint('🔍 [RegistrationHandler] isAuthWithGoogle: $isAuthWithGoogle');
+    debugPrint('🔍 [RegistrationHandler] isSocialAuthUser: $isSocialAuthUser');
     debugPrint('🔍 [RegistrationHandler] UID: ${firebaseUser?.uid}');
 
     // Verificar completitud pasando el UID si está disponible
     await registerCubit.checkCompletion(
-      forGoogle: isAuthWithGoogle,
-      uid: isAuthWithGoogle ? firebaseUser.uid : null,
+      forGoogle: isSocialAuthUser,
+      uid: isSocialAuthUser ? firebaseUser.uid : null,
     );
 
     // Si no está completo, mostrar error y listar campos faltantes
@@ -77,9 +77,9 @@ class RegistrationHandler {
       if (!context.mounted) return;
       LoadingOverlay.show(context);
 
-      if (isAuthWithGoogle) {
-        // firebaseUser ya no es null porque isAuthWithGoogle es true
-        await _completeGoogleRegistration(
+      if (isSocialAuthUser) {
+        // firebaseUser ya no es null porque isSocialAuthUser es true
+        await _completeSocialAuthRegistration(
           context: context,
           registerCubit: registerCubit,
           authCubit: authCubit,
@@ -107,14 +107,14 @@ class RegistrationHandler {
     }
   }
 
-  /// Completa el registro para usuarios autenticados con Google
-  static Future<void> _completeGoogleRegistration({
+  /// Completa el registro para usuarios autenticados con proveedor social (Google o Apple)
+  static Future<void> _completeSocialAuthRegistration({
     required BuildContext context,
     required RegisterCubit registerCubit,
     required AuthCubit authCubit,
     required String uid,
   }) async {
-    debugPrint('🔵 [RegistrationHandler] Flujo Google iniciado');
+    debugPrint('🔵 [RegistrationHandler] Flujo Social Auth (Google/Apple) iniciado');
 
     final Map<String, dynamic> updateData = {};
 
@@ -225,12 +225,12 @@ class RegistrationHandler {
       await authCubit.refreshUserProfile();
       registerCubit.reset();
 
-      debugPrint('🎉 [RegistrationHandler] Flujo Google completado');
+      debugPrint('🎉 [RegistrationHandler] Flujo Social Auth completado');
     } catch (e, st) {
       if (context.mounted) {
         LoadingOverlay.hide(context);
       }
-      debugPrint('❌ [RegistrationHandler] Error en flujo Google: $e\n$st');
+      debugPrint('❌ [RegistrationHandler] Error en flujo Social Auth: $e\n$st');
       rethrow;
     }
   }
@@ -245,6 +245,13 @@ class RegistrationHandler {
 
     final email = registerCubit.state.email;
     final otp = registerCubit.state.currentOTP;
+    final isPreRegistered = registerCubit.state.isPreRegistered;
+    final preOrderId = registerCubit.state.preOrderId;
+
+    debugPrint('🟢 [RegistrationHandler] Email: $email');
+    debugPrint('🟢 [RegistrationHandler] OTP: $otp');
+    debugPrint('🟢 [RegistrationHandler] isPreRegistered: $isPreRegistered');
+    debugPrint('🟢 [RegistrationHandler] preOrderId: $preOrderId');
 
     if (email == null || email.trim().isEmpty) {
       if (context.mounted) {
@@ -266,12 +273,35 @@ class RegistrationHandler {
     }
 
     try {
-      // Completar registro en backend
-      await authCubit.completeRegistration(
+      String uid;
+
+      // ✅ Si es pre-registrado, primero eliminar el documento pre-order
+      // para evitar conflictos de email/UID, luego registrar normalmente
+      if (isPreRegistered && preOrderId != null) {
+        debugPrint(
+          '🗑️ [RegistrationHandler] Eliminando pre-order $preOrderId antes de registrar...',
+        );
+
+        final deleteSuccess = await registerCubit.deletePreOrder();
+        if (!deleteSuccess) {
+          debugPrint('❌ [RegistrationHandler] No se pudo eliminar pre-order');
+          throw Exception('Error eliminando documento pre-order');
+        }
+        debugPrint(
+          '✅ [RegistrationHandler] Pre-order eliminado, procediendo con registro normal...',
+        );
+      }
+
+      // 🆕 FLUJO NORMAL para todos los usuarios:
+      // Crear usuario Auth + documento Firestore
+      debugPrint('🆕 [RegistrationHandler] Registrando usuario...');
+
+      uid = await authCubit.completeRegistration(
         email: email,
         otp: otp,
         userData: registerCubit.state.buildUserDTO(),
       );
+      debugPrint('✅ [RegistrationHandler] Usuario creado con UID: $uid');
 
       // Resetear el cubit
       registerCubit.reset();

@@ -12,6 +12,7 @@ enum RegisterStatusProgress {
   gender,
   socialEcosystem,
   location,
+  email, // Nuevo paso para capturar email antes de sendOTP
   sendOTP,
   emailChange,
   emailVerification,
@@ -30,6 +31,10 @@ class RegisterState extends Equatable {
   final RegisterStatusProgress regProgress;
   final RegisterIsLogin status;
   final bool isComplete;
+
+  // Pre-register fields
+  final bool isPreRegistered;
+  final String? preOrderId;
 
   final String? email;
   final String? language;
@@ -58,6 +63,8 @@ class RegisterState extends Equatable {
     this.regProgress = RegisterStatusProgress.emty,
     this.status = RegisterIsLogin.initial,
     this.isComplete = false,
+    this.isPreRegistered = false,
+    this.preOrderId,
     this.email,
     this.language,
     this.fullName,
@@ -79,6 +86,8 @@ class RegisterState extends Equatable {
     RegisterStatusProgress? regProgress,
     RegisterIsLogin? status,
     bool? isComplete,
+    bool? isPreRegistered,
+    String? preOrderId,
     String? email,
     String? language,
     String? fullName,
@@ -99,6 +108,8 @@ class RegisterState extends Equatable {
       regProgress: regProgress ?? this.regProgress,
       status: status ?? this.status,
       isComplete: isComplete ?? this.isComplete,
+      isPreRegistered: isPreRegistered ?? this.isPreRegistered,
+      preOrderId: preOrderId ?? this.preOrderId,
       email: email ?? this.email,
       language: language ?? this.language,
       fullName: fullName ?? this.fullName,
@@ -152,6 +163,8 @@ class RegisterState extends Equatable {
       regProgress: RegisterStatusProgress.emty,
       status: RegisterIsLogin.initial,
       isComplete: false,
+      isPreRegistered: false,
+      preOrderId: null,
       email: null,
       language: null,
       fullName: null,
@@ -175,6 +188,8 @@ class RegisterState extends Equatable {
     regProgress,
     status,
     isComplete,
+    isPreRegistered,
+    preOrderId,
     email,
     language,
     fullName,

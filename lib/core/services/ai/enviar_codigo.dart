@@ -15,12 +15,12 @@ class GeminiService {
   }) async {
     await Future.delayed(const Duration(milliseconds: 400));
 
-    //  Etapa 1: mensaje inicial 
+    //  Etapa 1: mensaje inicial
     if (userInput.trim().isEmpty) {
       final jsonString =
           '''
       {
-        "text": "¡Genial! Tu correo electrónico es ${registerCubit.state.email}. ¿Es correcto?",
+        "text": "Tu correo: ${registerCubit.state.email}. ¿Es correcto?",
         "options": ["Sí", "No"],
         "step": "regProgress.sendOTP",
         "valid": true
@@ -32,7 +32,7 @@ class GeminiService {
       return initial;
     }
 
-    //  Etapa 2: Decisión del usuario 
+    //  Etapa 2: Decisión del usuario
     final normalized = userInput.trim().toLowerCase();
     Map<String, dynamic> decision;
 

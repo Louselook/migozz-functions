@@ -9,7 +9,7 @@ class ChatAttachmentGrid extends StatelessWidget {
 
   Future<void> openGallery(BuildContext context) async {
     final imagePath = await CameraPermissionHandler.openGallery(
-      imageQuality: 80,
+      imageQuality: 85,
       context: context,
     );
 
@@ -20,7 +20,7 @@ class ChatAttachmentGrid extends StatelessWidget {
 
   Future<void> openCamera(BuildContext context) async {
     final photoPath = await CameraPermissionHandler.openCamera(
-      imageQuality: 80,
+      imageQuality: 85,
       context: context,
     );
 

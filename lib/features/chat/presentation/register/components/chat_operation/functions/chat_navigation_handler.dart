@@ -16,7 +16,6 @@ class ChatNavigationHandler {
     if (action == null) return;
 
     final cubit = context.read<RegisterCubit>();
-    
 
     switch (action) {
       case 0:
@@ -31,13 +30,25 @@ class ChatNavigationHandler {
           ),
         );
 
-        // Manejar retorno de redes sociales (delegado a handler específico)
-        if (result == 'done' && context.mounted) {
-          SocialEcosystemHandler.handleReturn(
-            context: context,
-            cubit: cubit,
-            chatController: chatController,
-          );
+        // Manejar retorno de redes sociales
+        if (context.mounted) {
+          final socialEcosystem = cubit.state.socialEcosystem ?? [];
+
+          if (socialEcosystem.isNotEmpty) {
+            // Tiene redes sociales - procesar normalmente
+            SocialEcosystemHandler.handleReturn(
+              context: context,
+              cubit: cubit,
+              chatController: chatController,
+            );
+          } else if (result == 'back_no_socials') {
+            // Usuario volvió sin redes sociales - preguntar si quiere cambiar algo
+            SocialEcosystemHandler.handleBackWithoutSocials(
+              context: context,
+              cubit: cubit,
+              chatController: chatController,
+            );
+          }
         }
         break;
 

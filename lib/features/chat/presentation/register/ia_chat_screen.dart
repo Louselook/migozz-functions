@@ -65,19 +65,40 @@ class _IaChatScreenState extends State<IaChatScreen> {
     }
 
     _chatController.onRegistrationComplete = () async {
-      if (_isCompletingRegistration) return;
+      debugPrint('🎯 [IaChatScreen] onRegistrationComplete TRIGGERED');
+
+      if (_isCompletingRegistration) {
+        debugPrint(
+          '⚠️ [IaChatScreen] Already completing registration, skipping',
+        );
+        return;
+      }
       _isCompletingRegistration = true;
 
       final registerCubit = context.read<RegisterCubit>();
       final authCubit = context.read<AuthCubit>();
-      final isGoogleUser =
+      // Check if user is authenticated with a social provider (Google or Apple)
+      final isSocialAuthUser =
           authCubit.state.isAuthenticated &&
           authCubit.state.firebaseUser != null;
 
+      debugPrint('🎯 [IaChatScreen] email: ${registerCubit.state.email}');
+      debugPrint('🎯 [IaChatScreen] OTP: ${registerCubit.state.currentOTP}');
+      debugPrint(
+        '🎯 [IaChatScreen] isPreRegistered: ${registerCubit.state.isPreRegistered}',
+      );
+      debugPrint(
+        '🎯 [IaChatScreen] preOrderId: ${registerCubit.state.preOrderId}',
+      );
+
       try {
         await registerCubit.checkCompletion(
-          forGoogle: isGoogleUser,
-          uid: isGoogleUser ? authCubit.state.firebaseUser!.uid : null,
+          forGoogle: isSocialAuthUser,
+          uid: isSocialAuthUser ? authCubit.state.firebaseUser!.uid : null,
+        );
+
+        debugPrint(
+          '🎯 [IaChatScreen] isComplete after check: ${registerCubit.state.isComplete}',
         );
 
         if (!registerCubit.state.isComplete) {
@@ -94,8 +115,8 @@ class _IaChatScreenState extends State<IaChatScreen> {
           return;
         }
 
-        // ✅ NUEVA VALIDACIÓN: Solo validar email/OTP para usuarios NO autenticados
-        if (!isGoogleUser) {
+        // ✅ Solo validar email/OTP para usuarios NO autenticados con social provider
+        if (!isSocialAuthUser) {
           final email = registerCubit.state.email;
           final otp = registerCubit.state.currentOTP;
           if (email == null ||
