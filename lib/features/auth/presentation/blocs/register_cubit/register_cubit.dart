@@ -64,6 +64,18 @@ class RegisterCubit extends Cubit<RegisterState> {
     return false;
   }
 
+  /// Marca al usuario como pre-registrado (usado cuando viene de Google/Apple con pre-order)
+  /// Esto sincroniza el estado del RegisterCubit con el documento de Firestore
+  void markAsPreRegistered({String? username, String? email}) {
+    debugPrint('✅ [RegisterCubit] Marcando como pre-registrado');
+    debugPrint('   - Username reservado: $username');
+    debugPrint('   - Email: $email');
+
+    emit(
+      state.copyWith(isPreRegistered: true, username: username, email: email),
+    );
+  }
+
   /// Delete pre-order document after successful registration
   Future<bool> deletePreOrder() async {
     final preOrderId = state.preOrderId;

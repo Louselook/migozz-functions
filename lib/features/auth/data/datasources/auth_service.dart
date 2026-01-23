@@ -131,6 +131,9 @@ class AuthService {
         debugPrint(
           '📝 [AuthService] Creando documento con username: $username',
         );
+        debugPrint(
+          '📝 [AuthService] isPreRegistered: ${reservedUsername != null}',
+        );
 
         final baseData = {
           'displayName': user.displayName ?? '',
@@ -140,6 +143,8 @@ class AuthService {
           'createdAt': FieldValue.serverTimestamp(),
           'updatedAt': FieldValue.serverTimestamp(),
           'complete': false,
+          'isPreRegistered':
+              reservedUsername != null, // Marcar si viene de pre-order
         };
         await docRef.set(baseData);
         profileExists = true;
@@ -236,6 +241,9 @@ class AuthService {
         debugPrint(
           '📝 [AuthService] Creando documento con username: $username',
         );
+        debugPrint(
+          '📝 [AuthService] isPreRegistered: ${reservedUsername != null}',
+        );
 
         final baseData = {
           'displayName': displayName,
@@ -246,6 +254,8 @@ class AuthService {
           'createdAt': FieldValue.serverTimestamp(),
           'updatedAt': FieldValue.serverTimestamp(),
           'complete': false,
+          'isPreRegistered':
+              reservedUsername != null, // Marcar si viene de pre-order
         };
         await docRef.set(baseData);
         profileExists = true;
