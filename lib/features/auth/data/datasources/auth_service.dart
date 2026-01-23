@@ -304,12 +304,38 @@ class AuthService {
       debugPrint('🚀 [AuthService] Email: $email');
 
       // 1️⃣ Crear usuario
+      debugPrint('🔐 [AuthService] Llamando createUserWithEmailAndPassword...');
+      debugPrint('🔐 [AuthService] Password (OTP): $otp');
+
       final userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: otp,
       );
-      final uid = userCredential.user!.uid;
+
+      final user = userCredential.user;
+      if (user == null) {
+        debugPrint('❌ [AuthService] ERROR: userCredential.user es NULL');
+        throw Exception('Firebase no devolvió un usuario válido');
+      }
+
+      final uid = user.uid;
       debugPrint('✅ [AuthService] Usuario creado con UID: $uid');
+      debugPrint('✅ [AuthService] Email verificado: ${user.email}');
+      debugPrint('✅ [AuthService] Email del user: ${user.email}');
+      debugPrint('✅ [AuthService] isAnonymous: ${user.isAnonymous}');
+      debugPrint(
+        '✅ [AuthService] Provider: ${user.providerData.map((p) => p.providerId).toList()}',
+      );
+
+      // Verificar que el usuario sigue autenticado (sin reload para evitar sign-out)
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        debugPrint(
+          '❌ [AuthService] ERROR: currentUser es NULL después de crear',
+        );
+        throw Exception('Usuario desapareció después de crearlo');
+      }
+      debugPrint('✅ [AuthService] currentUser confirmado: ${currentUser.uid}');
 
       // 2️⃣ Guardar documento base
       final userToSave = userData.copyWith(

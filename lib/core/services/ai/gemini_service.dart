@@ -315,6 +315,8 @@ class GeminiService {
       false; // Flag para esperar confirmación después de cada campo
   bool _awaitingFieldSelection =
       false; // Flag para esperar selección de campo a cambiar
+  bool _awaitingReservedUsernameConfirmation =
+      false; // Flag para confirmación de username reservado (pre-registro)
 
   bool _requestedMicPermissionForVoiceStep = false;
 
@@ -402,6 +404,7 @@ class GeminiService {
     _returnedFromRepeatMode = false;
     _awaitingConfirmation = false;
     _awaitingFieldSelection = false;
+    _awaitingReservedUsernameConfirmation = false;
   }
 
   /// Obtiene el valor guardado para mostrar en confirmación
@@ -510,6 +513,84 @@ class GeminiService {
     final rcLang = registerCubit.state.language;
     if (rcLang != null && rcLang.isNotEmpty) {
       setLanguage(rcLang);
+    }
+
+    // ✅ MANEJO DE CONFIRMACIÓN DE USERNAME RESERVADO (pre-registro)
+    if (_awaitingReservedUsernameConfirmation && userInput.trim().isNotEmpty) {
+      final normalized = userInput.trim().toLowerCase();
+      final isSpanish = registerCubit.state.language == 'Español';
+
+      // Usuario confirma el username reservado
+      final confirmsUsername =
+          normalized == 'sí' ||
+          normalized == 'si' ||
+          normalized == 'yes' ||
+          normalized == 'ok' ||
+          normalized == 'correcto' ||
+          normalized == 'correct';
+
+      // Usuario quiere cambiar el username
+      final wantsChange =
+          normalized == 'no' ||
+          normalized == 'cambiar' ||
+          normalized == 'change' ||
+          normalized.contains('quiero otro') ||
+          normalized.contains('want another');
+
+      if (confirmsUsername) {
+        debugPrint('✅ Usuario confirmó username reservado');
+        _awaitingReservedUsernameConfirmation = false;
+
+        // Avanzar al siguiente paso (location)
+        _currentQuestionIndex++;
+
+        if (_currentQuestionIndex >= questionFlow.length) {
+          return {
+            "text": isSpanish
+                ? "✅ Registro completado."
+                : "✅ Registration complete.",
+            "options": [],
+            "step": "finished",
+            "keepTalk": false,
+          };
+        }
+
+        final nextQuestion = AssistantFunctions.getCurrentQuestion(
+          questionFlow,
+          _currentQuestionIndex,
+          registerCubit,
+        );
+
+        if (nextQuestion != null) {
+          return await _prepareQuestion(nextQuestion, registerCubit);
+        }
+      }
+
+      if (wantsChange) {
+        debugPrint('🔄 Usuario quiere cambiar username reservado');
+        _awaitingReservedUsernameConfirmation = false;
+
+        // Permitir que ingrese un nuevo username
+        return {
+          "text": isSpanish
+              ? "Entendido. Escribe el nombre de usuario que prefieras:"
+              : "Got it. Enter the username you prefer:",
+          "options": const <String>[],
+          "step": "regProgress.username",
+          "keepTalk": false,
+        };
+      }
+
+      // Si no reconocemos la respuesta, repetir la pregunta
+      final reservedUsername = registerCubit.state.username ?? '';
+      return {
+        "text": isSpanish
+            ? "Tu nombre de usuario reservado es @$reservedUsername. ¿Es correcto?"
+            : "Your reserved username is @$reservedUsername. Is this correct?",
+        "options": [isSpanish ? "Sí" : "Yes", isSpanish ? "No" : "No"],
+        "step": "username",
+        "keepTalk": false,
+      };
     }
 
     // ✅ MANEJO DE SELECCIÓN DE CAMPO: Si estamos esperando que el usuario elija qué cambiar
@@ -1767,8 +1848,76 @@ class GeminiService {
     Map<String, dynamic> question,
     RegisterCubit registerCubit,
   ) async {
-    // SI estamos en el paso de ubicación, obtener la ubicación PRIMERO
     final currentStepKey = questionFlow[_currentQuestionIndex];
+
+    // � Si el paso actual es un paso de autoAdvance (como emailSuccess), avanzar automáticamente
+    // Estos pasos solo muestran un mensaje y avanzan sin esperar input del usuario
+    if (currentStepKey == 'emailSuccess' ||
+        currentStepKey == 'emailVerification') {
+      // Verificar si la pregunta tiene autoAdvance o keepTalk
+      final questionData = question;
+      final hasAutoAdvance = questionData['autoAdvance'] == true;
+      final hasKeepTalk = questionData['keepTalk'] == true;
+
+      if (hasAutoAdvance || hasKeepTalk) {
+        debugPrint(
+          '🔄 [_prepareQuestion] Paso $currentStepKey tiene autoAdvance/keepTalk - avanzando automáticamente',
+        );
+
+        // Avanzar al siguiente paso
+        _currentQuestionIndex++;
+
+        if (_currentQuestionIndex >= questionFlow.length) {
+          final isSpanish = registerCubit.state.language == 'Español';
+          return {
+            "text": isSpanish
+                ? "✅ Registro completado."
+                : "✅ Registration complete.",
+            "options": [],
+            "step": "finished",
+            "keepTalk": false,
+          };
+        }
+
+        // Obtener la siguiente pregunta
+        final nextQuestion = AssistantFunctions.getCurrentQuestion(
+          questionFlow,
+          _currentQuestionIndex,
+          registerCubit,
+        );
+
+        if (nextQuestion != null) {
+          return await _prepareQuestion(nextQuestion, registerCubit);
+        }
+      }
+    }
+
+    // �🔒 Si el usuario está pre-registrado y ya tiene username reservado, mostrar confirmación
+    if (currentStepKey == 'username' && registerCubit.state.isPreRegistered) {
+      final reservedUsername = registerCubit.state.username;
+      if (reservedUsername != null && reservedUsername.isNotEmpty) {
+        final isSpanish = registerCubit.state.language == 'Español';
+        debugPrint(
+          '🔒 [GeminiService] Usuario pre-registrado con username: $reservedUsername - mostrando confirmación',
+        );
+
+        // Establecer flag para manejar la respuesta de confirmación
+        _awaitingReservedUsernameConfirmation = true;
+
+        // Mostrar mensaje de confirmación del username reservado
+        // El usuario debe confirmar antes de continuar al siguiente paso
+        return {
+          "text": isSpanish
+              ? "🎉 ¡Genial ${registerCubit.state.fullName ?? ''}! Tu nombre de usuario reservado es @$reservedUsername. ¿Es correcto?"
+              : "🎉 Great ${registerCubit.state.fullName ?? ''}! Your reserved username is @$reservedUsername. Is this correct?",
+          "options": [isSpanish ? "Sí" : "Yes", isSpanish ? "No" : "No"],
+          "step": "username",
+          "keepTalk": false,
+        };
+      }
+    }
+
+    // SI estamos en el paso de ubicación, obtener la ubicación PRIMERO
     if (currentStepKey == 'location') {
       // Si ya estamos en modo ubicación manual, NO intentamos permisos ni geolocalización.
       if (_awaitingManualLocation) {

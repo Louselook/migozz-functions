@@ -82,7 +82,6 @@ class _IaChatScreenState extends State<IaChatScreen> {
           authCubit.state.isAuthenticated &&
           authCubit.state.firebaseUser != null;
 
-      debugPrint('🎯 [IaChatScreen] isGoogleUser: $isGoogleUser');
       debugPrint('🎯 [IaChatScreen] email: ${registerCubit.state.email}');
       debugPrint('🎯 [IaChatScreen] OTP: ${registerCubit.state.currentOTP}');
       debugPrint(
