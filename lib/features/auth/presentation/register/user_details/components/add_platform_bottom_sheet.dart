@@ -65,7 +65,7 @@ class _AddPlatformBottomSheetState extends State<AddPlatformBottomSheet> {
   Future<void> _pickImageFromCamera() async {
     try {
       final imagePath = await CameraPermissionHandler.openCamera(
-        imageQuality: 40,
+        imageQuality: 85,
         context: context,
       );
 
@@ -89,7 +89,7 @@ class _AddPlatformBottomSheetState extends State<AddPlatformBottomSheet> {
   Future<void> _pickImageFromGallery() async {
     try {
       final imagePath = await CameraPermissionHandler.openGallery(
-        imageQuality: 40,
+        imageQuality: 85,
         context: context,
       );
 

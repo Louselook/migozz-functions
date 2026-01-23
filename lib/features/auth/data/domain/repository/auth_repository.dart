@@ -13,6 +13,13 @@ abstract class AuthRepository {
     required UserDTO userData,
   });
 
+  /// Create Firebase Auth user ONLY (no Firestore document)
+  /// Used for pre-registered users whose document will be migrated
+  Future<String> createAuthUserOnly({
+    required String email,
+    required String password,
+  });
+
   Future<AuthResult> loginWithGoogle();
 
   Future<AuthResult> loginWithApple();

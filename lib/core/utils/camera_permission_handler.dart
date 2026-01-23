@@ -11,7 +11,7 @@ class CameraPermissionHandler {
   /// Open camera - image_picker handles permission dialogs automatically
   /// Returns the captured image file path, or null if cancelled/denied
   static Future<String?> openCamera({
-    int imageQuality = 80,
+    int imageQuality = 85,
     BuildContext? context,
   }) async {
     debugPrint('📷 [CameraPermission] Opening camera directly via image_picker...');
@@ -90,7 +90,7 @@ class CameraPermissionHandler {
   /// Open gallery - image_picker handles permission dialogs automatically
   /// Returns the selected image file path, or null if cancelled/denied
   static Future<String?> openGallery({
-    int imageQuality = 80,
+    int imageQuality = 85,
     BuildContext? context,
   }) async {
     debugPrint('📸 [GalleryPermission] Opening gallery directly via image_picker...');

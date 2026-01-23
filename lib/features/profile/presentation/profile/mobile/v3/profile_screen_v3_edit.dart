@@ -141,7 +141,7 @@ class _MobileProfileContentV3EditState
                       decoration: const BoxDecoration(
                         color: Colors.black,
                         borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(32),
+
                         ),
                       ),
 

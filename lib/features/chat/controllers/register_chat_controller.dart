@@ -485,14 +485,17 @@ class RegisterChatController extends GenericChatController {
         return;
       }
 
-      // AutoAdvance (por ejemplo: "registro completado")
+      // AutoAdvance (por ejemplo: "registro completado" o "pre-registro detectado")
       if (botResponse["autoAdvance"] == true) {
         debugPrint(
           '🎉 Mensaje de éxito detectado, avanzando automáticamente...',
         );
         await Future.delayed(const Duration(milliseconds: 1500));
         if (!isActive) return;
-        _lastUserMessage = 'continue';
+
+        // Limpiar lastUserMessage para que se prepare la siguiente pregunta correctamente
+        // (especialmente importante para el paso de location que necesita pedir permisos)
+        _lastUserMessage = '';
         await showNextBotMessage();
         return;
       }
