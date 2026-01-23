@@ -246,7 +246,16 @@ class AuthCubit extends Cubit<AuthState> {
     if (currentProfile == null) return;
 
     final updatedProfile = currentProfile.copyWith(complete: value);
-    emit(state.copyWith(userProfile: updatedProfile, isLoadingProfile: false));
+    emit(
+      state.copyWith(
+        userProfile: updatedProfile,
+        isLoadingProfile: false,
+        hasSeenCompleteProfileDialog: true,
+      ),
+    );
+    debugPrint(
+      '✅ [AuthCubit] Perfil marcado como temporalmente completo - dialogo no se mostrará en esta sesión',
+    );
   }
 
   Future<void> updateProfileVersion(int version) async {

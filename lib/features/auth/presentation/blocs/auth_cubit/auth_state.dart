@@ -9,12 +9,14 @@ class AuthState extends Equatable {
   final User? firebaseUser;
   final UserDTO? userProfile;
   final bool isLoadingProfile;
+  final bool hasSeenCompleteProfileDialog;
 
   const AuthState({
     required this.status,
     this.firebaseUser,
     this.userProfile,
     this.isLoadingProfile = false,
+    this.hasSeenCompleteProfileDialog = false,
   });
 
   // ===== Factories base =====
@@ -22,17 +24,20 @@ class AuthState extends Equatable {
     : status = AuthStatus.checking,
       firebaseUser = null,
       userProfile = null,
-      isLoadingProfile = true;
+      isLoadingProfile = true,
+      hasSeenCompleteProfileDialog = false;
 
   const AuthState.authenticated({required this.firebaseUser, this.userProfile})
     : status = AuthStatus.authenticated,
-      isLoadingProfile = false;
+      isLoadingProfile = false,
+      hasSeenCompleteProfileDialog = false;
 
   const AuthState.notAuthenticated()
     : status = AuthStatus.notAuthenticated,
       firebaseUser = null,
       userProfile = null,
-      isLoadingProfile = false;
+      isLoadingProfile = false,
+      hasSeenCompleteProfileDialog = false;
 
   // ===== copyWith =====
   AuthState copyWith({
@@ -40,12 +45,15 @@ class AuthState extends Equatable {
     User? firebaseUser,
     UserDTO? userProfile,
     bool? isLoadingProfile,
+    bool? hasSeenCompleteProfileDialog,
   }) {
     return AuthState(
       status: status ?? this.status,
       firebaseUser: firebaseUser ?? this.firebaseUser,
       userProfile: userProfile ?? this.userProfile,
       isLoadingProfile: isLoadingProfile ?? this.isLoadingProfile,
+      hasSeenCompleteProfileDialog:
+          hasSeenCompleteProfileDialog ?? this.hasSeenCompleteProfileDialog,
     );
   }
 
@@ -58,6 +66,7 @@ class AuthState extends Equatable {
   List<Object?> get props => [
     status,
     firebaseUser?.uid,
+    hasSeenCompleteProfileDialog,
     userProfile,
     isLoadingProfile,
   ];
