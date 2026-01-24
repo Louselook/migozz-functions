@@ -189,17 +189,13 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
 
   /// Check if a network is pending selection (selected but not connected yet)
   bool _isNetworkPending(NetworkConfig config) {
-    final platformName = config.name.toLowerCase() == 'x'
-        ? 'twitter'
-        : config.name.toLowerCase();
+    final platformName = config.name.toLowerCase();
     return _pendingSelections.contains(platformName);
   }
 
   /// Toggle pending selection for batch adding
   void _togglePendingSelection(NetworkConfig config) {
-    final platformName = config.name.toLowerCase() == 'x'
-        ? 'twitter'
-        : config.name.toLowerCase();
+    final platformName = config.name.toLowerCase();
     setState(() {
       if (_pendingSelections.contains(platformName)) {
         _pendingSelections.remove(platformName);
@@ -215,9 +211,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
 
     // Get the NetworkConfig for each selected network
     final selectedConfigs = SocialNetworks.enabledNetworks.where((n) {
-      final name = n.name.toLowerCase() == 'x'
-          ? 'twitter'
-          : n.name.toLowerCase();
+      final name = n.name.toLowerCase();
       return _pendingSelections.contains(name);
     }).toList();
 
@@ -286,9 +280,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
   }
 
   Future<void> _handleSocialTap(NetworkConfig config) async {
-    final platformName = config.name.toLowerCase() == 'x'
-        ? 'twitter'
-        : config.name.toLowerCase();
+    final platformName = config.name.toLowerCase();
 
     debugPrint('🔵 [_handleSocialTap] Tapped on: $platformName');
 

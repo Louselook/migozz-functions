@@ -17,7 +17,7 @@ void handleTwitter(String queryString, BuildContext context) {
       registerCubit.state.socialEcosystem ?? [],
     );
 
-    current.add({'twitter': normalized});
+    current.add({'x': normalized});
     registerCubit.setSocialEcosystem(current);
 
     debugPrint("✅ Twitter conectado: $normalized");

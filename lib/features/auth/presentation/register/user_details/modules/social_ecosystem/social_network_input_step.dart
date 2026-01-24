@@ -116,9 +116,7 @@ class _SocialNetworkInputStepState extends State<SocialNetworkInputStep> {
   /// Handle OAuth network connection
   Future<void> _handleOAuthConnect(NetworkConfig network) async {
     final cubit = context.read<RegisterCubit>();
-    final platformName = network.name.toLowerCase() == 'x'
-        ? 'twitter'
-        : network.name.toLowerCase();
+    final platformName = network.name.toLowerCase();
 
     debugPrint('🔗 Starting OAuth for $platformName');
 
@@ -185,7 +183,7 @@ class _SocialNetworkInputStepState extends State<SocialNetworkInputStep> {
         if (username.isEmpty) continue;
 
         // Normalize platform name
-        final platformName = key == 'x' ? 'twitter' : key;
+        final platformName = key;
 
         // Build the profile URL or username for validation
         final baseUrl = _getBaseUrl(network);

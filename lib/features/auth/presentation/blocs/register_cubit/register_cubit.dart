@@ -467,6 +467,7 @@ class RegisterCubit extends Cubit<RegisterState> {
         return normalizeYouTube(rawData);
       case 'instagram':
         return normalizeInstagram(rawData);
+      case 'x':
       case 'twitter':
         return normalizeTwitter(rawData);
       case 'tiktok':

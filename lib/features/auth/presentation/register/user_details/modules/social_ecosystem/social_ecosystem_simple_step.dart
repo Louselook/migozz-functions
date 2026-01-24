@@ -55,9 +55,7 @@ class SocialEcosystemSimpleStep extends StatelessWidget {
       cubit.state.socialEcosystem ?? [],
     );
 
-    final platformName = config.name.toLowerCase() == 'x'
-        ? 'twitter'
-        : config.name.toLowerCase();
+    final platformName = config.name.toLowerCase();
 
     final index = current.indexWhere((e) {
       final platformKey = e.keys.first.toLowerCase();

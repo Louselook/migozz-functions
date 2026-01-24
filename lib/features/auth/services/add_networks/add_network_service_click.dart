@@ -37,6 +37,7 @@ class AddNetworkServiceClick {
     switch (network.toLowerCase()) {
       case 'instagram':
         return '/instagram/auth';
+      case 'x':
       case 'twitter':
         return '/twitter/auth';
       case 'spotify':

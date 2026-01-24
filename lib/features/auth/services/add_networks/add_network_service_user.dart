@@ -70,6 +70,7 @@ class AddNetworkServiceUser {
       case 'discord':
       case 'snapchat':
       case 'youtube':
+      case 'x':
       case 'twitter':
       case 'spotify':
         return ApiConfig.apiFuctions;
@@ -90,6 +91,7 @@ class AddNetworkServiceUser {
         return '/instagram/profile';
       case 'linkedin':
         return '/linkedin/profile';
+      case 'x':
       case 'twitter':
         return '/twitter/profile';
       case 'spotify':
