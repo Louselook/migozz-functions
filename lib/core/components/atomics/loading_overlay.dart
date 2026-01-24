@@ -2,8 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:migozz_app/features/profile/components/utils/Loader.dart';
 
 class LoadingOverlay {
-  static void show(BuildContext context, {String? message}) {
-    showProfileLoader(context, message: message, barrierDismissible: false);
+  static void show(
+    BuildContext context, {
+    String? message,
+    LoaderType type = LoaderType.generic,
+  }) {
+    showProfileLoader(
+      context,
+      message: message,
+      type: type,
+      barrierDismissible: false,
+    );
   }
 
   static void hide(BuildContext context) {

@@ -14,6 +14,7 @@ import 'package:migozz_app/features/auth/presentation/blocs/login_cubit/login_cu
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/chat/presentation/register/components/chat_operation/functions/email_validation.dart';
 import 'package:migozz_app/core/components/compuestos/custom_snackbar.dart';
+import 'package:migozz_app/features/profile/components/utils/Loader.dart';
 
 class LoginForm extends StatefulWidget {
   const LoginForm({super.key});
@@ -72,8 +73,7 @@ class _LoginFormState extends State<LoginForm> {
       if (!exists) {
         CustomSnackbar.show(
           context: context,
-          message:
-              "login.validations.notExistEmail".tr(),
+          message: "login.validations.notExistEmail".tr(),
           type: SnackbarType.error,
           duration: const Duration(seconds: 4),
         );
@@ -106,7 +106,7 @@ class _LoginFormState extends State<LoginForm> {
 
   Future<void> _handleGoogleSignIn() async {
     FocusScope.of(context).unfocus();
-    LoadingOverlay.show(context);
+    LoadingOverlay.show(context, type: LoaderType.login);
     try {
       final authCubit = context.read<AuthCubit>();
       await authCubit.signInWithGoogle();
@@ -125,7 +125,7 @@ class _LoginFormState extends State<LoginForm> {
 
   Future<void> _handleAppleSignIn() async {
     FocusScope.of(context).unfocus();
-    LoadingOverlay.show(context);
+    LoadingOverlay.show(context, type: LoaderType.login);
     try {
       final authCubit = context.read<AuthCubit>();
       await authCubit.signInWithApple();
@@ -174,7 +174,10 @@ class _LoginFormState extends State<LoginForm> {
               width: double.infinity,
               radius: 19,
               onPressed: _isCheckingEmail ? null : _handleEmailLoginCheck,
-              child: SecondaryText("login.presentation.buttonText".tr(), fontSize: 20),
+              child: SecondaryText(
+                "login.presentation.buttonText".tr(),
+                fontSize: 20,
+              ),
             ),
 
             const SizedBox(height: 40),

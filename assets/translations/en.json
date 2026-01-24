@@ -448,7 +448,12 @@
           "friends": "Friends",
           "fans": "Fans",
           "subscriber": "Subscriber"
-        }
+        },
+        "overview": {
+            "community": "Community",
+            "migozz": "Migozz"
+        },
+        "noData": "No data available"
     },
     "addSocials": {
         "addOtherNetworks": "Add Other Networks",
@@ -662,11 +667,43 @@
         "unknown": "Unknown",
         "noData": "No data",
         "loader_sequence": {
-          "connecting": "Reaching out to {platform}...",
-          "validating": "Making sure it's you...",
-          "syncing": "Getting things ready...",
-          "ready": "You're in!",
-          "delay": "Taking a little longer than usual. Thanks for waiting!"
+          "connecting": "Establishing secure connection with {platform}...",
+          "validating": "Verifying your access credentials...",
+          "syncing": "Synchronizing your profile information...",
+          "ready": "Process completed successfully!",
+          "delay": "We are wrapping up the final details. Almost there!"
+        },
+        "loader_sequences": {
+          "login": {
+            "step1": "Logging into Migozz...",
+            "step2": "Verifying your credentials...",
+            "step3": "Preparing your experience...",
+            "step4": "Welcome back!"
+          },
+          "profile_update": {
+            "step1": "Saving your changes...",
+            "step2": "Updating your profile...",
+            "step3": "Syncing data...",
+            "step4": "Profile updated!"
+          },
+          "qr_scan": {
+            "step1": "Reading QR code...",
+            "step2": "Searching for user...",
+            "step3": "Fetching information...",
+            "step4": "User found!"
+          },
+          "social_auth": {
+            "step1": "Connecting with {platform}...",
+            "step2": "Validating account...",
+            "step3": "Linking profile...",
+            "step4": "Connection successful!"
+          },
+          "logout": {
+            "step1": "Logging out...",
+            "step2": "Saving preferences...",
+            "step3": "Cleaning secure data...",
+            "step4": "See you soon!"
+          }
         }
     },
     "buttons" : {

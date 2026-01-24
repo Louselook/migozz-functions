@@ -15,10 +15,7 @@ import 'components/image_upload_area.dart';
 class AddAnotherNetworkScreen extends StatefulWidget {
   final bool allowUnauthenticated;
 
-  const AddAnotherNetworkScreen({
-    super.key,
-    this.allowUnauthenticated = false,
-  });
+  const AddAnotherNetworkScreen({super.key, this.allowUnauthenticated = false});
 
   @override
   State<AddAnotherNetworkScreen> createState() =>
@@ -26,7 +23,9 @@ class AddAnotherNetworkScreen extends StatefulWidget {
 }
 
 class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
-  final TextEditingController _linkCtrl = TextEditingController(text: 'https://');
+  final TextEditingController _linkCtrl = TextEditingController(
+    text: 'https://',
+  );
 
   File? _pickedImage;
   String? _pickedImageUrl;
@@ -156,9 +155,8 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
     if (!allowed) {
       if (!mounted) return;
       setState(
-        () =>
-            _error = 'profile.customization.customLink.imageTypeNotAllowed'
-                .tr(),
+        () => _error = 'profile.customization.customLink.imageTypeNotAllowed'
+            .tr(),
       );
       return;
     }
@@ -180,11 +178,13 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
 
   Future<void> _showLoader({
     String? message,
+    LoaderType type = LoaderType.profileUpdate,
   }) async {
     _loaderStart = DateTime.now();
     showProfileLoader(
       context,
-      message: message ?? 'common.loading'.tr(),
+      message: message,
+      type: type,
       barrierDismissible: false,
     );
   }
@@ -208,7 +208,8 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
 
   String? _validateLink(String input) {
     final trimmed = input.trim();
-    if (trimmed.isEmpty) return 'profile.customization.customLink.validation.required'.tr();
+    if (trimmed.isEmpty)
+      return 'profile.customization.customLink.validation.required'.tr();
     final uri = Uri.tryParse(trimmed);
     if (uri == null || !(uri.hasScheme && uri.host.isNotEmpty)) {
       return 'profile.customization.customLink.validation.invalidFormat'.tr();
@@ -283,7 +284,7 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
       _isSaving = true;
       _error = null;
     });
-    await _showLoader(message: 'common.saving'.tr());
+    await _showLoader();
 
     final linkError = _validateLink(_linkCtrl.text);
     if (linkError != null) {
@@ -528,8 +529,8 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
                       keyboardType: TextInputType.url,
                       style: const TextStyle(color: Colors.white),
                       decoration: InputDecoration(
-                        hintText:
-                            'profile.customization.customLink.linkHint'.tr(),
+                        hintText: 'profile.customization.customLink.linkHint'
+                            .tr(),
                         hintStyle: const TextStyle(color: Color(0xFFE0E0E0)),
                         filled: true,
                         fillColor: const Color(0xFF7C7480),
@@ -623,5 +624,3 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
     );
   }
 }
-
-

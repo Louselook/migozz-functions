@@ -142,7 +142,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
         if (context.mounted) {
           showProfileLoader(
             context,
-            message: 'common.saving'.tr(),
+            type: LoaderType.profileUpdate,
             onCancel: () {},
           );
         }
@@ -392,7 +392,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
             if (mounted) {
               showProfileLoader(
                 context,
-                message: 'common.removing'.tr(),
+                type: LoaderType.profileUpdate,
                 onCancel: () {},
               );
             }
