@@ -995,12 +995,8 @@ class SocialStats {
     return {
       'name': name,
       'following': followingCount,
-      'media': mediaCount,
       'followers': followers,
       'subscribersCount': subscribers,
-      'likes': likes,
-      'shares': shares,
-      'viewCount': viewCount,
     };
   }
 }
