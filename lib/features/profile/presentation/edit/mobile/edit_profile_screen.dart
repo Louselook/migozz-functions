@@ -407,9 +407,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                   builder: (context, state) {
                     if (state.isLoadingProfile) {
                       return Center(
-                        child: LoaderDialog(
-                          message: 'edit.presentation.loadingProfile'.tr(),
-                        ),
+                        child: LoaderDialog(type: LoaderType.profileUpdate),
                       );
                     }
                     final user = state.userProfile;
@@ -793,8 +791,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                               if (confirm && context.mounted) {
                                 showProfileLoader(
                                   context,
-                                  message: 'edit.presentation.logOutLoading'
-                                      .tr(),
+                                  type: LoaderType.logout,
                                 );
                                 try {
                                   await context.read<AuthCubit>().logout();

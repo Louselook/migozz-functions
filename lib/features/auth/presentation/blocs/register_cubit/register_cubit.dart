@@ -320,6 +320,7 @@ class RegisterCubit extends Cubit<RegisterState> {
             showProfileLoader(
               context,
               platform: config.displayName,
+              type: LoaderType.socialAuth,
               onCancel: () {
                 debugPrint('❌ User cancelled connection');
                 userCancelled = true;

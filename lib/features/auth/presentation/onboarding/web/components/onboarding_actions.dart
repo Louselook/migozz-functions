@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -51,7 +52,7 @@ class OnboardingActions extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Get Started',
+                    "onboarding.buttons.getStarted".tr(),
                     style: TextStyle(
                       fontSize: screenWidth < 600 ? 18 : 24,
                       color: Colors.white,
@@ -88,7 +89,7 @@ class OnboardingActions extends StatelessWidget {
             ),
           ),
           child: Text(
-            "Skip",
+            "onboarding.buttons.skip".tr(),
             style: TextStyle(
               fontSize: screenWidth < 600 ? 18 : 24,
               color: Colors.white,
@@ -133,7 +134,7 @@ class OnboardingActions extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Next',
+                    "onboarding.buttons.next".tr(),
                     style: TextStyle(
                       fontSize: screenWidth < 600 ? 18 : 24,
                       color: Colors.white,

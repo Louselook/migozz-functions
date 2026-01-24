@@ -2,10 +2,20 @@ import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
+enum LoaderType {
+  login,
+  profileUpdate,
+  qrScan,
+  socialAuth,
+  logout,
+  generic, // Fallback
+}
+
 Future<void> showProfileLoader(
   BuildContext context, {
   String? message,
   String? platform,
+  LoaderType type = LoaderType.generic,
   VoidCallback? onCancel,
   bool barrierDismissible = false,
 }) {
@@ -19,6 +29,7 @@ Future<void> showProfileLoader(
       child: LoaderDialog(
         message: message,
         platform: platform,
+        type: type,
         onCancel: onCancel,
       ),
     ),
@@ -35,12 +46,14 @@ Future<void> showProfileLoader(
 class LoaderDialog extends StatefulWidget {
   final String? message;
   final String? platform;
+  final LoaderType type;
   final VoidCallback? onCancel;
 
   const LoaderDialog({
     super.key,
     this.message,
     this.platform,
+    this.type = LoaderType.generic,
     this.onCancel,
   });
 
@@ -54,22 +67,20 @@ class _LoaderDialogState extends State<LoaderDialog> {
   Timer? _delayTimer;
   int _currentStep = 0;
   bool _showingDelay = false;
-
-  final List<String> _steps = [
-    'common.loader_sequence.connecting',
-    'common.loader_sequence.validating',
-    'common.loader_sequence.syncing',
-    'common.loader_sequence.ready',
-  ];
+  late List<String> _steps;
 
   @override
   void initState() {
     super.initState();
-    _displayMessage = widget.message ?? (widget.platform != null 
-        ? 'common.loader_sequence.connecting'.tr(namedArgs: {'platform': widget.platform!})
-        : 'common.loading'.tr());
+    _steps = _getStepsForType(widget.type);
 
-    if (widget.platform != null) {
+    if (widget.message != null) {
+      _displayMessage = widget.message!;
+    } else {
+      // Usar el primer paso de la secuencia
+      _displayMessage = _steps.isNotEmpty
+          ? _steps[0].tr(namedArgs: {'platform': widget.platform ?? 'Migozz'})
+          : 'common.loading'.tr();
       _startSequence();
     }
 
@@ -83,14 +94,64 @@ class _LoaderDialogState extends State<LoaderDialog> {
     });
   }
 
+  List<String> _getStepsForType(LoaderType type) {
+    switch (type) {
+      case LoaderType.login:
+        return [
+          'common.loader_sequences.login.step1',
+          'common.loader_sequences.login.step2',
+          'common.loader_sequences.login.step3',
+          'common.loader_sequences.login.step4',
+        ];
+      case LoaderType.profileUpdate:
+        return [
+          'common.loader_sequences.profile_update.step1',
+          'common.loader_sequences.profile_update.step2',
+          'common.loader_sequences.profile_update.step3',
+          'common.loader_sequences.profile_update.step4',
+        ];
+      case LoaderType.qrScan:
+        return [
+          'common.loader_sequences.qr_scan.step1',
+          'common.loader_sequences.qr_scan.step2',
+          'common.loader_sequences.qr_scan.step3',
+          'common.loader_sequences.qr_scan.step4',
+        ];
+      case LoaderType.logout:
+        return [
+          'common.loader_sequences.logout.step1',
+          'common.loader_sequences.logout.step2',
+          'common.loader_sequences.logout.step3',
+          'common.loader_sequences.logout.step4',
+        ];
+      case LoaderType.socialAuth:
+        return [
+          'common.loader_sequences.social_auth.step1',
+          'common.loader_sequences.social_auth.step2',
+          'common.loader_sequences.social_auth.step3',
+          'common.loader_sequences.social_auth.step4',
+        ];
+      default: // Covers generic and any new cases by default
+        // Fallback to original keys if generic
+        return [
+          'common.loader_sequence.connecting',
+          'common.loader_sequence.validating',
+          'common.loader_sequence.syncing',
+          'common.loader_sequence.ready',
+        ];
+    }
+  }
+
   void _startSequence() {
+    if (_steps.isEmpty) return;
+
     _sequenceTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
       if (_currentStep < _steps.length - 1) {
         setState(() {
           _currentStep++;
           if (!_showingDelay) {
             _displayMessage = _steps[_currentStep].tr(
-              namedArgs: {'platform': widget.platform ?? ''},
+              namedArgs: {'platform': widget.platform ?? 'Migozz'},
             );
           }
         });

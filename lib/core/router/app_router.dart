@@ -345,6 +345,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         '/terms-privacy',
         '/policy-deleted',
         '/support',
+        '/complete-profile', // TEMPORARY: Allow access for testing
       };
 
       bool routeMatches(String loc, String route) {
@@ -408,7 +409,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
             );
             return null;
           }
-          
+
           if (goingTo != '/complete-profile' && goingTo != '/ia-chat') {
             debugPrint(
               '🔄 [Router] Perfil incompleto - redirigiendo a /complete-profile',
