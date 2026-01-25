@@ -1,4 +1,4 @@
-const { createBrowser } = require('../utils/helpers');
+const { createBrowser, sanitizeProfile, wait } = require('../utils/helpers');
 const { saveProfileImageForProfile } = require('../utils/imageSaver');
 
 /**
@@ -10,13 +10,13 @@ const { saveProfileImageForProfile } = require('../utils/imageSaver');
 async function scrapeInstagram(username) {
   username = username.replace('@', '').trim();
   console.log(`📥 [Instagram] Iniciando scraping para: ${username}`);
-  
+
   let browser;
-  
+
   try {
     browser = await createBrowser();
     const page = await browser.newPage();
-    
+
     await page.setViewport({ width: 1920, height: 1080 });
     await page.setUserAgent(
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -31,41 +31,54 @@ async function scrapeInstagram(username) {
     // Interceptar respuestas de la API
     let apiData = null;
     await page.setRequestInterception(true);
-    
+
     page.on('request', request => request.continue());
-    
+
     page.on('response', async response => {
       const url = response.url();
-      if (url.includes('/api/v1/users/web_profile_info') || 
-          url.includes('graphql/query') ||
-          url.includes('/api/v1/users/')) {
+      if (url.includes('/api/v1/users/web_profile_info') ||
+        url.includes('graphql/query') ||
+        url.includes('/api/v1/users/')) {
         try {
           const json = await response.json();
           if (json?.data?.user || json?.user) {
             apiData = json.data?.user || json.user;
           }
-        } catch (e) {}
+        } catch (e) { }
       }
     });
 
     const url = `https://www.instagram.com/${username}/`;
     console.log(`🌐 [Instagram] Navegando a: ${url}`);
-    
-    await page.goto(url, { 
-      waitUntil: 'domcontentloaded', 
-      timeout: 60000 
+
+    await page.goto(url, {
+      waitUntil: 'domcontentloaded',
+      timeout: 60000
     });
-    
+
     console.log('⏳ [Instagram] Esperando contenido...');
-    await new Promise(resolve => setTimeout(resolve, 8000));
+    // Optimized wait: Wait for specific elements or network idle instead of fixed 8s
+    console.log('⏳ [Instagram] Waiting for initial load...');
+    try {
+      // Wait for either the profile picture or a meta tag to appear
+      await Promise.race([
+        page.waitForSelector('img[alt*="profile"]', { timeout: 8000 }),
+        page.waitForSelector('meta[property="og:description"]', { timeout: 8000 }),
+        page.waitForNetworkIdle({ idleTime: 500, timeout: 8000 })
+      ]);
+      // Small buffer to ensure dynamic JS renders stats
+      await wait(2000);
+    } catch (e) {
+      console.log('⚠️ [Instagram] Timeout waiting for specific elements, proceeding with what we have...');
+    }
 
     // Intentar cerrar popups de login
     try {
       const closeButtons = await page.$$('[aria-label="Close"]');
       for (const btn of closeButtons) {
-        await btn.click().catch(() => {});
+        await btn.click().catch(() => { });
       }
-    } catch (e) {}
+    } catch (e) { }
 
     let profileData = null;
 
@@ -92,23 +105,23 @@ async function scrapeInstagram(username) {
         const ogImage = document.querySelector('meta[property="og:image"]');
         const ogDescription = document.querySelector('meta[property="og:description"]');
         const ogTitle = document.querySelector('meta[property="og:title"]');
-        
+
         let followers = 0;
         let following = 0;
         let posts = 0;
         let fullName = '';
         let bio = '';
         let profileImageUrl = ogImage ? ogImage.content : '';
-        
+
         // Extraer datos del og:description
         // Formato típico: "X Followers, X Following, X Posts - See Instagram photos..."
         if (ogDescription) {
           const desc = ogDescription.content;
-          
+
           const followersMatch = desc.match(/(\d+(?:[.,]\d+)?)\s*([KMB])?\s*Followers/i);
           const followingMatch = desc.match(/(\d+(?:[.,]\d+)?)\s*([KMB])?\s*Following/i);
           const postsMatch = desc.match(/(\d+(?:[.,]\d+)?)\s*([KMB])?\s*Posts/i);
-          
+
           function parseNum(match) {
             if (!match) return 0;
             let num = parseFloat(match[1].replace(/,/g, ''));
@@ -118,18 +131,18 @@ async function scrapeInstagram(username) {
             else if (suffix === 'B') num *= 1000000000;
             return Math.round(num);
           }
-          
+
           followers = parseNum(followersMatch);
           following = parseNum(followingMatch);
           posts = parseNum(postsMatch);
         }
-        
+
         // Extraer nombre del título
         if (ogTitle) {
           const titleMatch = ogTitle.content.match(/^([^(]+)\s*\(@/);
           if (titleMatch) fullName = titleMatch[1].trim();
         }
-        
+
         // Método 2: Buscar en scripts JSON
         const scripts = Array.from(document.querySelectorAll('script[type="application/ld+json"]'));
         for (const script of scripts) {
@@ -147,14 +160,14 @@ async function scrapeInstagram(username) {
                 }
               }
             }
-          } catch (e) {}
+          } catch (e) { }
         }
-        
+
         // Método 3: Buscar en scripts regulares
         const allScripts = Array.from(document.querySelectorAll('script'));
         for (const script of allScripts) {
           const text = script.textContent;
-          
+
           if (text.includes('"edge_followed_by"') || text.includes('"follower_count"')) {
             try {
               // Buscar followers
@@ -163,36 +176,36 @@ async function scrapeInstagram(username) {
                 const count = parseInt(followerMatch[1]);
                 if (count > followers) followers = count;
               }
-              
+
               // Buscar following
               const followingMatch = text.match(/"(?:edge_follow|following_count)"[:\s]*\{?"count"?[:\s]*(\d+)/);
               if (followingMatch) {
                 following = parseInt(followingMatch[1]) || following;
               }
-              
+
               // Buscar posts
               const postsMatch = text.match(/"(?:edge_owner_to_timeline_media|media_count)"[:\s]*\{?"count"?[:\s]*(\d+)/);
               if (postsMatch) {
                 posts = parseInt(postsMatch[1]) || posts;
               }
-              
+
               // Buscar nombre
               const nameMatch = text.match(/"full_name"[:\s]*"([^"]+)"/);
               if (nameMatch && !fullName) fullName = nameMatch[1];
-              
+
               // Buscar bio
               const bioMatch = text.match(/"biography"[:\s]*"([^"]+)"/);
               if (bioMatch && !bio) bio = bioMatch[1];
-              
+
               // Buscar imagen
               const imgMatch = text.match(/"profile_pic_url(?:_hd)?"[:\s]*"([^"]+)"/);
               if (imgMatch && !profileImageUrl) {
                 profileImageUrl = imgMatch[1].replace(/\\u0026/g, '&');
               }
-            } catch (e) {}
+            } catch (e) { }
           }
         }
-        
+
         // Método 4: Buscar en elementos del DOM
         const statsElements = document.querySelectorAll('ul li');
         for (const li of statsElements) {
@@ -208,7 +221,7 @@ async function scrapeInstagram(username) {
             }
           }
         }
-        
+
         return {
           followers,
           following,
@@ -258,15 +271,17 @@ async function scrapeInstagram(username) {
       console.warn('[Instagram] Failed to save profile image:', e.message);
       result.profile_image_saved = false;
     }
-    
-    console.log(`✅ [Instagram] Scraped: ${result.full_name || username}`);
-    console.log(`   Followers: ${result.followers}`);
-    
-    return result;
+
+    const sanitizedResult = sanitizeProfile(result, 'instagram');
+
+    console.log(`✅ [Instagram] Scraped: ${sanitizedResult.full_name || username}`);
+    console.log(`   Followers: ${sanitizedResult.followers}`);
+
+    return sanitizedResult;
 
   } catch (error) {
     if (browser) {
-      try { await browser.close(); } catch (e) {}
+      try { await browser.close(); } catch (e) { }
     }
     throw new Error(`Error scraping Instagram: ${error.message}`);
   }

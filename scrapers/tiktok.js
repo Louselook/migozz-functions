@@ -1,4 +1,4 @@
-const { createBrowser } = require('../utils/helpers');
+const { createBrowser, sanitizeProfile, wait } = require('../utils/helpers');
 const { saveProfileImageForProfile } = require('../utils/imageSaver');
 
 /**
@@ -10,15 +10,15 @@ const { saveProfileImageForProfile } = require('../utils/imageSaver');
 async function scrapeTikTok(username) {
   // Limpiar el username (quitar @ si existe)
   username = username.replace('@', '').trim();
-  
+
   console.log(`📥 [TikTok] Iniciando scraping para: ${username}`);
-  
+
   let browser;
-  
+
   try {
     browser = await createBrowser();
     const page = await browser.newPage();
-    
+
     await page.setViewport({ width: 1920, height: 1080 });
     await page.setUserAgent(
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -27,9 +27,9 @@ async function scrapeTikTok(username) {
     // Interceptar respuestas de API
     let apiData = null;
     await page.setRequestInterception(true);
-    
+
     page.on('request', request => request.continue());
-    
+
     page.on('response', async response => {
       const url = response.url();
       // Capturar datos de la API interna de TikTok
@@ -39,29 +39,40 @@ async function scrapeTikTok(username) {
           if (json?.userInfo) {
             apiData = json.userInfo;
           }
-        } catch (e) {}
+        } catch (e) { }
       }
     });
 
     const url = `https://www.tiktok.com/@${username}`;
     console.log(`🌐 [TikTok] Navegando a: ${url}`);
-    
-    await page.goto(url, { 
-      waitUntil: 'domcontentloaded', 
-      timeout: 60000 
+
+    await page.goto(url, {
+      waitUntil: 'domcontentloaded',
+      timeout: 60000
     });
-    
+
     console.log('⏳ [TikTok] Esperando contenido...');
-    await new Promise(resolve => setTimeout(resolve, 8000));
+    // Optimized wait
+    console.log('⏳ [TikTok] Waiting for initial load...');
+    try {
+      await Promise.race([
+        page.waitForSelector('#__UNIVERSAL_DATA_FOR_REHYDRATION__', { timeout: 8000 }),
+        page.waitForSelector('[data-e2e="user-title"]', { timeout: 8000 }),
+        page.waitForNetworkIdle({ idleTime: 500, timeout: 8000 })
+      ]);
+      await wait(2000); // Buffer for hydration
+    } catch (e) {
+      console.log('⚠️ [TikTok] Timeout waiting for elements, proceeding...');
+    }
 
     let profileData = null;
-    
+
     // Método 1: Extraer del script __UNIVERSAL_DATA_FOR_REHYDRATION__
     try {
       profileData = await page.evaluate(() => {
         // Buscar en el script de datos universales (método más confiable)
         const scripts = Array.from(document.querySelectorAll('script'));
-        
+
         for (const script of scripts) {
           if (script.id === '__UNIVERSAL_DATA_FOR_REHYDRATION__') {
             try {
@@ -88,7 +99,7 @@ async function scrapeTikTok(username) {
               console.error('Error parsing rehydration data:', e);
             }
           }
-          
+
           // Método 2: Buscar en SIGI_STATE (formato alternativo)
           if (script.id === 'SIGI_STATE' || script.id === '__NEXT_DATA__') {
             try {
@@ -112,10 +123,10 @@ async function scrapeTikTok(username) {
                   source: 'sigi_state'
                 };
               }
-            } catch (e) {}
+            } catch (e) { }
           }
         }
-        
+
         // Método 3: Buscar en cualquier script con datos de usuario
         for (const script of scripts) {
           try {
@@ -127,7 +138,7 @@ async function scrapeTikTok(username) {
               const nicknameMatch = text.match(/"nickname"\s*:\s*"([^"]+)"/);
               const avatarMatch = text.match(/"avatarLarger"\s*:\s*"([^"]+)"/);
               const bioMatch = text.match(/"signature"\s*:\s*"([^"]*)"/);
-              
+
               if (uniqueIdMatch && followerMatch) {
                 return {
                   id: uniqueIdMatch[1],
@@ -140,9 +151,9 @@ async function scrapeTikTok(username) {
                 };
               }
             }
-          } catch (e) {}
+          } catch (e) { }
         }
-        
+
         return null;
       });
     } catch (evalError) {
@@ -169,23 +180,23 @@ async function scrapeTikTok(username) {
     // Método 4: Extracción del DOM como último recurso
     if (!profileData || !profileData.followers) {
       console.log('⚠️ [TikTok] Intentando extracción del DOM...');
-      
+
       const domData = await page.evaluate(() => {
         let followers = 0;
         let fullName = '';
         let bio = '';
         let profileImage = '';
-        
+
         // Buscar en meta tags
         const ogImage = document.querySelector('meta[property="og:image"]');
         const ogTitle = document.querySelector('meta[property="og:title"]');
-        
+
         if (ogImage) profileImage = ogImage.content;
         if (ogTitle) fullName = ogTitle.content;
-        
+
         // Buscar followers en el texto
         const bodyText = document.body.innerText;
-        
+
         function parseNumber(numStr, suffix) {
           let num = parseFloat(numStr.replace(/[,\s]/g, '').replace(/\./g, ''));
           if (!suffix) return num;
@@ -195,12 +206,12 @@ async function scrapeTikTok(username) {
           if (s === 'B') return Math.round(num * 1000000000);
           return num;
         }
-        
+
         const patterns = [
           /(\d+(?:[.,]\d+)?)\s*([KMB])?\s*(?:followers|seguidores)/gi,
           /(?:followers|seguidores)[:\s]+(\d+(?:[.,]\d+)?)\s*([KMB])?/gi,
         ];
-        
+
         for (const pattern of patterns) {
           const matches = bodyText.matchAll(pattern);
           for (const match of matches) {
@@ -210,18 +221,18 @@ async function scrapeTikTok(username) {
             }
           }
         }
-        
+
         // Buscar nombre y bio en selectores específicos
-        const nameEl = document.querySelector('h1[data-e2e="user-title"]') || 
-                       document.querySelector('h2[data-e2e="user-subtitle"]');
+        const nameEl = document.querySelector('h1[data-e2e="user-title"]') ||
+          document.querySelector('h2[data-e2e="user-subtitle"]');
         if (nameEl) fullName = nameEl.textContent.trim();
-        
+
         const bioEl = document.querySelector('h2[data-e2e="user-bio"]');
         if (bioEl) bio = bioEl.textContent.trim();
-        
+
         return { followers, full_name: fullName, bio, profile_image_url: profileImage };
       });
-      
+
       if (domData.followers > 0) {
         profileData = profileData || {};
         if (domData.followers > (profileData.followers || 0)) {
@@ -244,37 +255,17 @@ async function scrapeTikTok(username) {
     profileData.id = profileData.id || username;
     profileData.url = `https://www.tiktok.com/@${profileData.username}`;
     profileData.platform = 'tiktok';
-    
-    console.log(`✅ [TikTok] Scraped: ${profileData.full_name} (@${profileData.username})`);
-    console.log(`   Followers: ${profileData.followers}`);
-    console.log(`   Source: ${profileData.source || 'unknown'}`);
-    
-    // Limpiar el campo source antes de retornar
-    delete profileData.source;
 
-    try {
-      const saved = await saveProfileImageForProfile({
-        platform: 'tiktok',
-        username: profileData.username || username,
-        imageUrl: profileData.profile_image_url
-      });
-      if (saved) {
-        profileData.profile_image_saved = true;
-        profileData.profile_image_path = saved.path;
-        if (saved.publicUrl) profileData.profile_image_public_url = saved.publicUrl;
-      } else {
-        profileData.profile_image_saved = false;
-      }
-    } catch (e) {
-      console.warn('[TikTok] Failed to save profile image:', e.message);
-      profileData.profile_image_saved = false;
-    }
-    
-    return profileData;
+    const sanitizedResult = sanitizeProfile(profileData, 'tiktok');
+
+    console.log(`✅ [TikTok] Scraped: ${sanitizedResult.full_name} (@${sanitizedResult.username})`);
+    console.log(`   Followers: ${sanitizedResult.followers}`);
+
+    return sanitizedResult;
 
   } catch (error) {
     if (browser) {
-      try { await browser.close(); } catch (e) {}
+      try { await browser.close(); } catch (e) { }
     }
     throw new Error(`Error scraping TikTok: ${error.message}`);
   }

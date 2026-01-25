@@ -1,14 +1,27 @@
 const puppeteerExtraBase = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 
-// Prefer puppeteer-core (system Chrome) when available; fall back to puppeteer.
+// Prefer puppeteer-core (system Chrome) when provided; fall back to full puppeteer.
 let puppeteer;
-try {
-  // puppeteer-extra can wrap puppeteer-core via addExtra
-  const puppeteerCore = require('puppeteer-core');
-  puppeteer = puppeteerExtraBase.addExtra(puppeteerCore);
-} catch (_) {
-  puppeteer = puppeteerExtraBase;
+if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+  try {
+    const puppeteerCore = require('puppeteer-core');
+    puppeteer = puppeteerExtraBase.addExtra(puppeteerCore);
+  } catch (_) {
+    // If core missing, try full
+    const puppeteerFull = require('puppeteer');
+    puppeteer = puppeteerExtraBase.addExtra(puppeteerFull);
+  }
+} else {
+  // Local development or no path provided -> use full puppeteer (bundled Chromium)
+  try {
+    const puppeteerFull = require('puppeteer');
+    puppeteer = puppeteerExtraBase.addExtra(puppeteerFull);
+  } catch (_) {
+    // Fallback to core if full not present (unlikely if installed)
+    const puppeteerCore = require('puppeteer-core');
+    puppeteer = puppeteerExtraBase.addExtra(puppeteerCore);
+  }
 }
 
 puppeteer.use(StealthPlugin());
@@ -22,12 +35,12 @@ puppeteer.use(StealthPlugin());
 function extractUsername(input, platform) {
   if (!input) return '';
   input = input.trim();
-  
+
   if (input.startsWith('http://') || input.startsWith('https://')) {
     try {
       const url = new URL(input);
       const pathname = url.pathname;
-      
+
       switch (platform) {
         case 'tiktok':
           return pathname.replace('/@', '').split('/')[0];
@@ -120,7 +133,7 @@ function extractUsername(input, platform) {
       return input;
     }
   }
-  
+
   return input.replace('@', '');
 }
 
@@ -133,7 +146,7 @@ function extractUsername(input, platform) {
  */
 async function createBrowser() {
   const isProduction = process.env.NODE_ENV === 'production';
-  
+
   const config = {
     headless: 'new',
     args: [
@@ -179,8 +192,49 @@ async function wait(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+/**
+ * Sanitizes profile data to enforce strict public-data policy.
+ * Masks or removes private/sensitive fields based on platform.
+ * @param {Object} data - Raw profile data
+ * @param {string} platform - Platform name (instagram, tiktok, linkedin)
+ * @returns {Object} Sanitized data
+ */
+function sanitizeProfile(data, platform) {
+  if (!data) return null;
+
+  const allowedFieldsBase = ['id', 'username', 'full_name', 'profile_image_url', 'followers', 'verified', 'url', 'platform', 'profile_image_saved', 'profile_image_path', 'profile_image_public_url'];
+
+  // Platform-specific allowances
+  const platformAllowances = {
+    instagram: [], // Only base fields
+    tiktok: [],    // Only base fields
+    linkedin: [],  // Only base fields
+    // Other platforms can retain their current behavior or be restricted later
+    default: []
+  };
+
+  const allowed = new Set([...allowedFieldsBase, ...(platformAllowances[platform] || [])]);
+  const sanitized = {};
+
+  // For platforms not strictly enforced yet, return original data (optional strategy)
+  // But for the target 3, we enforce strictness.
+  const strictPlatforms = ['instagram', 'tiktok', 'linkedin'];
+  if (!strictPlatforms.includes(platform)) {
+    return data;
+  }
+
+  Object.keys(data).forEach(key => {
+    if (allowed.has(key)) {
+      sanitized[key] = data[key];
+    }
+  });
+
+  return sanitized;
+}
+
 module.exports = {
   extractUsername,
   createBrowser,
-  wait
+  wait,
+  sanitizeProfile
 };
