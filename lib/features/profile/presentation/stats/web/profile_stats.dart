@@ -398,12 +398,13 @@ class SocialStats {
     return {
       'name': name,
       'followers': followers,
-      'likes': likes,
-      'shares': shares,
-      'viewCount': viewCount,
-      'mediaCount': mediaCount,
-      'following': followingCount,
-      'subscribersCount': subscribers,
+      // TODO: Descomentar cuando se necesiten estos datos
+      // 'likes': likes,
+      // 'shares': shares,
+      // 'viewCount': viewCount,
+      // 'mediaCount': mediaCount,
+      // 'following': followingCount,
+      // 'subscribersCount': subscribers,
     };
   }
 }

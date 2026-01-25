@@ -131,35 +131,55 @@ class _FollowButtonState extends State<FollowButton> {
 
     return GestureDetector(
       onTap: _toggleFollow,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(
-          horizontal: widget.compact ? 12 : 20,
-          vertical: widget.compact ? 6 : 10,
-        ),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          gradient: _isFollowing
-              ? null
-              : LinearGradient(
+      child: _isFollowing
+          ? _GradientBorderContainer(
+              borderRadius: 20,
+              strokeWidth: 1.5,
+              gradient: AppColors.primaryGradient,
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: widget.compact ? 12 : 20,
+                  vertical: widget.compact ? 6 : 10,
+                ),
+                child: ShaderMask(
+                  shaderCallback: (bounds) =>
+                      AppColors.primaryGradient.createShader(
+                        Rect.fromLTWH(0, 0, bounds.width, bounds.height),
+                      ),
+                  child: Text(
+                    'followers.following'.tr(),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: widget.compact ? 12 : 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            )
+          : AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: EdgeInsets.symmetric(
+                horizontal: widget.compact ? 12 : 20,
+                vertical: widget.compact ? 6 : 10,
+              ),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                gradient: LinearGradient(
                   colors: AppColors.primaryGradient.colors,
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-          border: _isFollowing
-              ? Border.all(color: Colors.white.withValues(alpha: 0.5), width: 1)
-              : null,
-          color: _isFollowing ? Colors.transparent : null,
-        ),
-        child: Text(
-          _isFollowing ? 'followers.following'.tr() : 'followers.follow'.tr(),
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: widget.compact ? 12 : 14,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
+              ),
+              child: Text(
+                'followers.follow'.tr(),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: widget.compact ? 12 : 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
     );
   }
 }
@@ -290,32 +310,110 @@ class _FollowButtonSmallState extends State<FollowButtonSmall> {
 
     return GestureDetector(
       onTap: _toggleFollow,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          gradient: _isFollowing
-              ? null
-              : LinearGradient(
+      child: _isFollowing
+          ? _GradientBorderContainer(
+              borderRadius: 20,
+              strokeWidth: 1.5,
+              gradient: AppColors.primaryGradient,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: ShaderMask(
+                  shaderCallback: (bounds) =>
+                      AppColors.primaryGradient.createShader(
+                        Rect.fromLTWH(0, 0, bounds.width, bounds.height),
+                      ),
+                  child: Text(
+                    'followers.following'.tr(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            )
+          : Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                gradient: LinearGradient(
                   colors: AppColors.primaryGradient.colors,
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-          border: _isFollowing
-              ? Border.all(color: Colors.white.withValues(alpha: 0.5), width: 1)
-              : null,
-        ),
-        child: Text(
-          _isFollowing
-              ? 'followers.following'.tr()
-              : 'followers.followBack'.tr(),
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
+              ),
+              child: Text(
+                'followers.followBack'.tr(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
     );
   }
+}
+
+/// Widget contenedor con borde gradiente
+class _GradientBorderContainer extends StatelessWidget {
+  final Widget child;
+  final double borderRadius;
+  final double strokeWidth;
+  final Gradient gradient;
+
+  const _GradientBorderContainer({
+    required this.child,
+    required this.borderRadius,
+    required this.strokeWidth,
+    required this.gradient,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: _GradientBorderPainter(
+        borderRadius: borderRadius,
+        strokeWidth: strokeWidth,
+        gradient: gradient,
+      ),
+      child: child,
+    );
+  }
+}
+
+/// Painter para dibujar borde con gradiente
+class _GradientBorderPainter extends CustomPainter {
+  final double borderRadius;
+  final double strokeWidth;
+  final Gradient gradient;
+
+  _GradientBorderPainter({
+    required this.borderRadius,
+    required this.strokeWidth,
+    required this.gradient,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Rect.fromLTWH(0, 0, size.width, size.height);
+    final rrect = RRect.fromRectAndRadius(
+      rect.deflate(strokeWidth / 2),
+      Radius.circular(borderRadius),
+    );
+
+    final paint = Paint()
+      ..shader = gradient.createShader(rect)
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    canvas.drawRRect(rrect, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

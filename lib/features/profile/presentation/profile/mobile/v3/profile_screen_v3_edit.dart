@@ -208,16 +208,16 @@ class _MobileProfileContentV3EditState
                             ProfileStrengthIndicator(
                               percentage: _calculateProfileStrength(user),
                             ),
+                            
                             const SizedBox(height: 17),
-
                             BioSection(
                               bio: bio,
                               isOwnProfile: isOwnProfile,
                               profilePercentage: _calculateProfileStrength(user),
                             ),
 
-                            const SizedBox(height: 10),
-                            EmailContactFormSection(isOwnProfile: isOwnProfile),
+                            // const SizedBox(height: 10),
+                            // EmailContactFormSection(isOwnProfile: isOwnProfile),
 
                             const SizedBox(height: 10),
                             FeaturedLinksSection(

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -7,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 
+import 'package:migozz_app/core/components/atomics/network_list.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/social_ecosystem_step_v3.dart';
@@ -291,13 +291,15 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
                                     BlocBuilder<FollowerCubit, FollowerState>(
                                       builder: (context, followerState) {
                                         return _TopMetricItem(
-                                          icon: Icons.favorite,
+                                          icon: Icons.person_add,
                                           value: _formatNum(
                                             followerState.followersCount > 0
                                                 ? followerState.followersCount
                                                 : (_totalsGlobal['profile_likes'] ??
                                                       0),
                                           ),
+                                          label: "stats.fieldLabels.followers"
+                                              .tr(),
                                           onTap: () {
                                             final authState = context
                                                 .read<AuthCubit>()
@@ -322,19 +324,20 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
                                         );
                                       },
                                     ),
-                                    _TopMetricItem(
-                                      icon: Icons.chat_bubble,
-                                      value: _formatNum(
-                                        _totalsGlobal['unread_messages'] ?? 0,
-                                      ),
-                                    ),
-                                    _TopMetricItem(
-                                      icon: Icons.reply, // Curved arrow look
-                                      value: _formatNum(
-                                        _totalsGlobal['profile_shares'] ?? 0,
-                                      ),
-                                      isRotated: true,
-                                    ),
+                                    // TODO: Descomentar cuando se necesiten estos datos para la version paga (usuarios premium)
+                                    // _TopMetricItem(
+                                    //   icon: Icons.chat_bubble,
+                                    //   value: _formatNum(
+                                    //     _totalsGlobal['unread_messages'] ?? 0,
+                                    //   ),
+                                    // ),
+                                    // _TopMetricItem(
+                                    //   icon: Icons.reply, // Curved arrow look
+                                    //   value: _formatNum(
+                                    //     _totalsGlobal['profile_shares'] ?? 0,
+                                    //   ),
+                                    //   isRotated: true,
+                                    // ),
                                   ],
                                 ),
                               ),
@@ -411,13 +414,13 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
 class _TopMetricItem extends StatelessWidget {
   final IconData icon;
   final String value;
-  final bool isRotated;
+  final String? label;
   final VoidCallback? onTap;
 
   const _TopMetricItem({
     required this.icon,
     required this.value,
-    this.isRotated = false,
+    this.label,
     this.onTap,
   });
 
@@ -428,10 +431,7 @@ class _TopMetricItem extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Transform.flip(
-            flipX: isRotated,
-            child: Icon(icon, color: Colors.white, size: 32),
-          ),
+          Icon(icon, color: Colors.white, size: 32),
           const SizedBox(height: 8),
           Text(
             value,
@@ -442,6 +442,17 @@ class _TopMetricItem extends StatelessWidget {
               letterSpacing: 0.5,
             ),
           ),
+          if (label != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              label!,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.7),
+                fontSize: 11,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -581,49 +592,93 @@ class _OverviewCard extends StatelessWidget {
                 const SizedBox(height: 24),
                 // Stats Grid
                 if (selectedMode == 'community')
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          children: [
-                            _SmallSocialRow(
-                              name: 'Instagram',
-                              count: instagram?.followers ?? 0,
-                              iconPath:
-                                  'assets/icons/social_networks/Instagram.svg',
+                  Builder(
+                    builder: (context) {
+                      final rows = <Widget>[];
+
+                      if (instagram != null) {
+                        rows.add(
+                          _SmallSocialRow(
+                            name: 'Instagram',
+                            count: instagram.followers ?? 0,
+                            iconPath:
+                                'assets/icons/social_networks/Instagram.svg',
+                          ),
+                        );
+                      }
+                      if (tiktok != null) {
+                        rows.add(
+                          _SmallSocialRow(
+                            name: 'Tiktok',
+                            count: tiktok.followers ?? 0,
+                            iconPath: 'assets/icons/social_networks/Tiktok.svg',
+                          ),
+                        );
+                      }
+                      if (youtube != null) {
+                        rows.add(
+                          _SmallSocialRow(
+                            name: 'Youtube',
+                            count: (youtube.followers ?? youtube.subscribers) ?? 0,
+                            iconPath: 'assets/icons/social_networks/Youtube.svg',
+                          ),
+                        );
+                      }
+                      if (facebook != null) {
+                        rows.add(
+                          _SmallSocialRow(
+                            name: 'Facebook',
+                            count: facebook.followers ?? 0,
+                            iconPath:
+                                'assets/icons/social_networks/Facebook.svg',
+                          ),
+                        );
+                      }
+
+                      if (rows.isEmpty) {
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 20),
+                            child: Text(
+                              'stats.noData'.tr(),
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.5),
+                              ),
                             ),
-                            const SizedBox(height: 18),
-                            _SmallSocialRow(
-                              name: 'Tiktok',
-                              count: tiktok?.followers ?? 0,
-                              iconPath:
-                                  'assets/icons/social_networks/Tiktok.svg',
-                            ),
+                          ),
+                        );
+                      }
+
+                      List<Widget> withSpacing(List<Widget> items) {
+                        return [
+                          for (int i = 0; i < items.length; i++) ...[
+                            items[i],
+                            if (i != items.length - 1) const SizedBox(height: 18),
                           ],
-                        ),
-                      ),
-                      const SizedBox(width: 24),
-                      Expanded(
-                        child: Column(
-                          children: [
-                            _SmallSocialRow(
-                              name: 'Youtube',
-                              count: youtube?.subscribers ?? 0,
-                              iconPath:
-                                  'assets/icons/social_networks/Youtube.svg',
-                            ),
-                            const SizedBox(height: 18),
-                            _SmallSocialRow(
-                              name: 'Facebook',
-                              count: facebook?.followers ?? 0,
-                              iconPath:
-                                  'assets/icons/social_networks/Facebook.svg',
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                        ];
+                      }
+
+                      final left = <Widget>[];
+                      final right = <Widget>[];
+                      for (int i = 0; i < rows.length; i++) {
+                        if (i.isEven) {
+                          left.add(rows[i]);
+                        } else {
+                          right.add(rows[i]);
+                        }
+                      }
+
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(child: Column(children: withSpacing(left))),
+                          const SizedBox(width: 24),
+                          Expanded(
+                            child: Column(children: withSpacing(right)),
+                          ),
+                        ],
+                      );
+                    },
                   )
                 else
                   // Placeholder for Migozz stats
@@ -664,10 +719,10 @@ class _SmallSocialRow extends StatelessWidget {
       children: [
         SvgPicture.asset(
           iconPath,
-          width: 18,
-          height: 18,
+          width: 12,
+          height: 12,
           placeholderBuilder: (_) =>
-              const Icon(Icons.public, size: 18, color: Colors.white),
+              const Icon(Icons.public, size: 12, color: Colors.white),
         ),
         const SizedBox(width: 10),
         Expanded(
@@ -797,13 +852,16 @@ class _NetworkStatsCard extends StatelessWidget {
     if (name.toLowerCase() == 'instagram') cleanName = 'Instagram';
     if (name.toLowerCase() == 'twitter') cleanName = 'Twitter';
 
-    final path = 'assets/icons/social_networks/$cleanName.svg';
+    // Usar iconByLabel para obtener la ruta correcta, con fallback
+    final path =
+        iconByLabel[cleanName] ?? 'assets/icons/social_networks/Other.svg';
 
     return SvgPicture.asset(
       path,
-      width: 32,
-      height: 32,
-      placeholderBuilder: (_) => const Icon(Icons.public, color: Colors.white),
+      width: 16,
+      height: 16,
+      placeholderBuilder: (_) =>
+          const Icon(Icons.public, color: Colors.white, size: 16),
     );
   }
 
@@ -811,7 +869,7 @@ class _NetworkStatsCard extends StatelessWidget {
     IconData icon;
     switch (key.toLowerCase()) {
       case 'followers':
-        icon = Icons.group_outlined;
+        icon = Icons.person_add_outlined;
         break;
       case 'following':
         icon = Icons.person_add_outlined;
@@ -1037,9 +1095,14 @@ class SocialStats {
   Map<String, dynamic> toJson() {
     return {
       'name': name,
-      'following': followingCount,
       'followers': followers,
-      'subscribersCount': subscribers,
+      // TODO: Descomentar cuando se necesiten estos datos para la version paga (usuarios premium)
+      // 'following': followingCount,
+      // 'subscribersCount': subscribers,
+      // 'likes': likes,
+      // 'shares': shares,
+      // 'viewCount': viewCount,
+      // 'mediaCount': mediaCount,
     };
   }
 }

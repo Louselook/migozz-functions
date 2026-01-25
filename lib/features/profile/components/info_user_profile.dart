@@ -10,6 +10,19 @@ import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+/// Modelo para representar una red social con sus seguidores
+class SocialNetworkData {
+  final String name;
+  final int followers;
+  final String? iconPath;
+
+  const SocialNetworkData({
+    required this.name,
+    required this.followers,
+    this.iconPath,
+  });
+}
+
 class InfoUserProfile extends StatefulWidget {
   final String name;
   final String displayName;
@@ -23,6 +36,9 @@ class InfoUserProfile extends StatefulWidget {
   final VoidCallback? onMessageTap;
   final String? contactEmail;
   final String? contactWebsite;
+
+  /// Lista de redes sociales para mostrar en la animación
+  final List<SocialNetworkData> socialNetworks;
 
   const InfoUserProfile({
     super.key,
@@ -38,20 +54,41 @@ class InfoUserProfile extends StatefulWidget {
     this.onMessageTap,
     this.contactEmail,
     this.contactWebsite,
+    this.socialNetworks = const [],
   });
 
   @override
   State<InfoUserProfile> createState() => _InfoUserProfileState();
 }
 
-class _InfoUserProfileState extends State<InfoUserProfile> {
+class _InfoUserProfileState extends State<InfoUserProfile>
+    with SingleTickerProviderStateMixin {
   final AudioPlayer _player = AudioPlayer();
   bool _isPlaying = false;
   bool _isLoading = false;
 
+  /// Índice actual para la animación de redes sociales
+  /// -1 = community (total), 0+ = índice de red social
+  int _currentSocialIndex = -1;
+
+  /// Controlador de animación para el fade
+  late AnimationController _fadeController;
+  late Animation<double> _fadeAnimation;
+  bool _isAnimating = false;
+
   @override
   void initState() {
     super.initState();
+
+    // Configurar animación de fade
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
+    );
 
     // Aseguramos que no repita el audio en bucle
     _player.setLoopMode(LoopMode.off);
@@ -68,8 +105,79 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
 
   @override
   void dispose() {
+    _fadeController.dispose();
     _player.dispose();
     super.dispose();
+  }
+
+  /// Maneja el tap en community para rotar entre redes sociales
+  void _onCommunityTap() {
+    if (_isAnimating || widget.socialNetworks.isEmpty) return;
+
+    setState(() => _isAnimating = true);
+
+    // Fade out
+    _fadeController.forward().then((_) {
+      setState(() {
+        // Avanzar al siguiente índice
+        if (_currentSocialIndex < widget.socialNetworks.length - 1) {
+          _currentSocialIndex++;
+        } else {
+          _currentSocialIndex = -1; // Volver a community
+        }
+      });
+      // Fade in
+      _fadeController.reverse().then((_) {
+        setState(() => _isAnimating = false);
+      });
+    });
+  }
+
+  /// Obtiene el contador actual (community o red social específica)
+  String _getCurrentCount() {
+    if (_currentSocialIndex == -1) {
+      return widget.comunityCount;
+    }
+    return widget.socialNetworks[_currentSocialIndex].followers.toString();
+  }
+
+  /// Obtiene el nombre actual (community o nombre de red social)
+  String _getCurrentName() {
+    if (_currentSocialIndex == -1) {
+      return widget.nameComunity;
+    }
+    return widget.socialNetworks[_currentSocialIndex].name;
+  }
+
+  /// Construye el contenido del contador de community/red social
+  Widget _buildCommunityContent() {
+    final count = _getCurrentCount();
+    final name = _getCurrentName();
+    final parsedCount = int.tryParse(count) ?? 0;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          formatNumber(parsedCount),
+          style: const TextStyle(
+            color: AppColors.primaryPink,
+            fontSize: 22,
+            fontWeight: FontWeight.w900,
+            height: .7,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          name,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.9),
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -122,11 +230,54 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
     }
   }
 
+  /// Construye una línea horizontal para el icono de menú
+  Widget _buildMenuLine() {
+    return Container(
+      width: 12,
+      height: 2,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(1),
+      ),
+    );
+  }
+
   /// Construye el menú de contacto para perfiles de otros usuarios
   Widget _buildContactMenu() {
+    // Si no hay datos de contacto, no mostrar nada
+    final hasEmail =
+        widget.contactEmail != null && widget.contactEmail!.isNotEmpty;
+    final hasWebsite =
+        widget.contactWebsite != null && widget.contactWebsite!.isNotEmpty;
+
+    if (!hasEmail && !hasWebsite) {
+      return const SizedBox(
+        width: 22,
+      ); // Espacio vacío para mantener alineación
+    }
+
     return PopupMenuButton<String>(
       padding: EdgeInsets.zero,
-      icon: const Icon(Icons.menu, color: Colors.white, size: 22),
+      child: Container(
+        width: 24,
+        height: 24,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: AppColors.primaryGradient,
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildMenuLine(),
+              const SizedBox(height: 3),
+              _buildMenuLine(),
+              const SizedBox(height: 3),
+              _buildMenuLine(),
+            ],
+          ),
+        ),
+      ),
       color: Colors.grey[900],
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       offset: const Offset(0, 30),
@@ -173,21 +324,6 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
               ],
             ),
           ),
-        const PopupMenuDivider(),
-        // Compartir perfil
-        PopupMenuItem<String>(
-          value: 'share',
-          child: Row(
-            children: [
-              Icon(Icons.share_outlined, color: Colors.pinkAccent, size: 20),
-              const SizedBox(width: 12),
-              Text(
-                'profile.share'.tr(),
-                style: const TextStyle(color: Colors.white, fontSize: 14),
-              ),
-            ],
-          ),
-        ),
       ],
       onSelected: (value) async {
         switch (value) {
@@ -211,18 +347,6 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
               }
             }
             break;
-          case 'share':
-            Navigator.push(
-              context,
-              MaterialPageRoute<void>(
-                builder: (context) => ProfileQrScreen(
-                  userId: widget.userId,
-                  overrideUsername: widget.displayName.replaceFirst('@', ''),
-                  overrideDisplayName: widget.name,
-                ),
-              ),
-            );
-            break;
         }
       },
     );
@@ -232,10 +356,13 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Nombre + botón de play
+        // Nombre + menú de contacto (si no es propio) + botón de play
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // Menú de contacto al lado izquierdo del nombre (solo para perfiles de otros)
+            if (!widget.isOwnProfile) _buildContactMenu(),
+            if (!widget.isOwnProfile) const SizedBox(width: 8),
             Flexible(
               child: Text(
                 widget.name,
@@ -299,47 +426,40 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Icono izquierdo: compartir (propio) o menú hamburguesa (otro)
-            widget.isOwnProfile
-                ? GestureDetector(
-                    key: widget.tutorialKeys?.shareButtonKey,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute<void>(
-                          builder: (context) => const ProfileQrScreen(),
-                        ),
-                      );
-                    },
-                    child: SvgPicture.asset(
-                      AssetsConstants.shareIcon,
-                      width: 20,
-                      height: 20,
-                    ),
-                  )
-                : _buildContactMenu(),
+            // Icono izquierdo: compartir (siempre muestra el QR del perfil)
+            GestureDetector(
+              key: widget.tutorialKeys?.shareButtonKey,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (context) => widget.isOwnProfile
+                        ? const ProfileQrScreen()
+                        : ProfileQrScreen(
+                            userId: widget.userId,
+                            overrideUsername: widget.displayName.replaceFirst(
+                              '@',
+                              '',
+                            ),
+                            overrideDisplayName: widget.name,
+                          ),
+                  ),
+                );
+              },
+              child: SvgPicture.asset(
+                AssetsConstants.shareIcon,
+                width: 20,
+                height: 20,
+              ),
+            ),
 
             const SizedBox(width: 15),
-            Column(
-              children: [
-                Text(
-                  formatNumber(int.parse(widget.comunityCount)),
-                  style: const TextStyle(
-                    color: AppColors.primaryPink,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    height: .7,
-                  ),
-                ),
-                Text(
-                  widget.nameComunity,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.9),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
+            GestureDetector(
+              onTap: _onCommunityTap,
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: _buildCommunityContent(),
+              ),
             ),
             const SizedBox(width: 15),
 

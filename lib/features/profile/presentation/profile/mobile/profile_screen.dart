@@ -132,16 +132,26 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
     final currentUserId = authState.firebaseUser?.uid; // UID del usuario actual
     final isOwnProfile = user.email == currentUserEmail;
 
-    // Recuperamos los seguidores y redes desde el perfil
-    final socialFollowers = _calculateTotalFollowers(user.socialEcosystem);
-    final socialLinks = _buildSocialLinks(user.socialEcosystem, user.username);
-    final bool hasSocials = socialLinks.isNotEmpty;
-    final double socialsImageBottom = size.height * 0.43;
-    final double socialsTopSpacer = size.height * 0.33;
-
     // Obtener seguidores de la app para sumar al community count
     final followerState = context.watch<FollowerCubit>().state;
     final appFollowers = isOwnProfile ? followerState.followersCount : 0;
+
+    // Recuperamos los seguidores y redes desde el perfil
+    final socialFollowers = _calculateTotalFollowers(user.socialEcosystem);
+    final socialLinks = _buildSocialLinks(user.socialEcosystem, user.username);
+    // Para el cambio de número al tocar "community" solo se debe mostrar:
+    // - Community (por defecto)
+    // - Seguidores de Migozz (la propia plataforma)
+    final socialNetworksData = <SocialNetworkData>[
+      SocialNetworkData(
+        name: 'Migozz',
+        followers: appFollowers,
+        iconPath: iconByLabel['Migozz'] ?? 'assets/icons/social_networks/Other.svg',
+      ),
+    ];
+    final bool hasSocials = socialLinks.isNotEmpty;
+    final double socialsImageBottom = size.height * 0.43;
+    final double socialsTopSpacer = size.height * 0.33;
     final totalFollowers = socialFollowers + appFollowers;
 
     return PopScope(
@@ -214,6 +224,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                         tutorialKeys: widget.tutorialKeys,
                         isOwnProfile: isOwnProfile,
                         userId: user.email,
+                        socialNetworks: socialNetworksData,
                         contactEmail: isOwnProfile ? null : user.contactEmail,
                         contactWebsite: isOwnProfile
                             ? null
@@ -270,6 +281,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                       tutorialKeys: widget.tutorialKeys,
                       isOwnProfile: isOwnProfile,
                       userId: user.email,
+                      socialNetworks: socialNetworksData,
                       contactEmail: isOwnProfile ? null : user.contactEmail,
                       contactWebsite: isOwnProfile ? null : user.contactWebsite,
                       onMessageTap: () {
