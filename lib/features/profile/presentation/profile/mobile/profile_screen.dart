@@ -40,7 +40,6 @@ class MobileProfileContent extends StatefulWidget {
 class _MobileProfileContentState extends State<MobileProfileContent> {
   /// UID del usuario que estamos viendo (se carga async si no se proporcionó)
   String? _resolvedTargetUserId;
-  bool _isLoadingTargetId = false;
 
   @override
   void initState() {
@@ -72,27 +71,22 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
     }
 
     // Buscar el uid por email del target user
-    setState(() {
-      _isLoadingTargetId = true;
-    });
+    setState(() {});
 
     try {
-      final followerCubit = context.read<FollowerCubit>();
+      context.read<FollowerCubit>();
       // Acceder al servicio para buscar el uid
       final followerService = FollowerService();
       final uid = await followerService.getUserIdByEmail(widget.user.email);
       if (mounted) {
         setState(() {
           _resolvedTargetUserId = uid;
-          _isLoadingTargetId = false;
         });
       }
     } catch (e) {
       debugPrint('❌ [MobileProfileContent] Error resolviendo UID: $e');
       if (mounted) {
-        setState(() {
-          _isLoadingTargetId = false;
-        });
+        setState(() {});
       }
     }
   }
