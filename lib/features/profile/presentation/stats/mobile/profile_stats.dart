@@ -295,19 +295,26 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
                                           value: _formatNum(
                                             followerState.followersCount > 0
                                                 ? followerState.followersCount
-                                                : (_totalsGlobal['profile_likes'] ?? 0),
+                                                : (_totalsGlobal['profile_likes'] ??
+                                                      0),
                                           ),
                                           onTap: () {
-                                            final authState = context.read<AuthCubit>().state;
+                                            final authState = context
+                                                .read<AuthCubit>()
+                                                .state;
                                             final user = authState.userProfile;
-                                            if (user != null) {
+                                            final userId =
+                                                authState.firebaseUser?.uid;
+                                            if (user != null &&
+                                                userId != null) {
                                               Navigator.of(context).push(
                                                 MaterialPageRoute(
-                                                  builder: (_) => FollowersListScreen(
-                                                    userId: user.email,
-                                                    username: user.username,
-                                                    initialTab: 0,
-                                                  ),
+                                                  builder: (_) =>
+                                                      FollowersListScreen(
+                                                        userId: userId,
+                                                        username: user.username,
+                                                        initialTab: 0,
+                                                      ),
                                                 ),
                                               );
                                             }

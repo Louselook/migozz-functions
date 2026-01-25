@@ -3,8 +3,60 @@ import 'package:flutter/material.dart';
 import 'package:migozz_app/features/profile/data/domain/models/follower_dto.dart';
 
 /// Servicio para manejar operaciones de seguidores en Firebase
+///
+/// IMPORTANTE: Este servicio usa UIDs de Firebase Auth (no emails) para identificar usuarios.
+/// Los documentos de followers se almacenan en:
+/// - users/{userId}/followerList/{followerId}
+/// - users/{userId}/followingList/{followingId}
+/// Donde userId, followerId y followingId son UIDs de Firebase Auth.
 class FollowerService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  /// Cache de UIDs por email para evitar consultas repetidas
+  final Map<String, String> _uidCache = {};
+
+  /// ---------------------------
+  /// 🔹 OBTENER UID POR EMAIL
+  /// ---------------------------
+  /// Busca el UID de un usuario en Firestore basándose en su email.
+  /// El documento del usuario está almacenado con su UID como ID del documento.
+  Future<String?> getUserIdByEmail(String email) async {
+    if (email.isEmpty) return null;
+
+    // Verificar cache primero
+    if (_uidCache.containsKey(email)) {
+      return _uidCache[email];
+    }
+
+    try {
+      // Buscar en la colección users donde email == email
+      final querySnapshot = await _firestore
+          .collection('users')
+          .where('email', isEqualTo: email)
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        final uid = querySnapshot.docs.first.id;
+        _uidCache[email] = uid; // Cachear para uso futuro
+        debugPrint('✅ [FollowerService] UID encontrado para $email: $uid');
+        return uid;
+      }
+
+      debugPrint(
+        '⚠️ [FollowerService] No se encontró usuario con email: $email',
+      );
+      return null;
+    } catch (e) {
+      debugPrint('❌ [FollowerService] Error buscando UID por email: $e');
+      return null;
+    }
+  }
+
+  /// Limpia la cache de UIDs (útil para pruebas o logout)
+  void clearUidCache() {
+    _uidCache.clear();
+  }
 
   /// ---------------------------
   /// 🔹 SEGUIR A UN USUARIO

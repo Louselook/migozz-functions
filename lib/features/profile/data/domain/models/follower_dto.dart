@@ -4,8 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 /// Se usa para almacenar en:
 /// - users/{userId}/followerList/{followerId}
 /// - users/{userId}/followingList/{followingId}
+/// Donde userId, followerId y followingId son UIDs de Firebase Auth (no emails).
 class FollowerDTO {
-  /// El ID del usuario (email)
+  /// El UID del usuario (Firebase Auth UID)
   final String oderId;
 
   /// Fecha en que comenzó a seguir

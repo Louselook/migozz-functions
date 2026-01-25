@@ -9,6 +9,7 @@ import 'package:migozz_app/features/chat/presentation/user/list/chats_list_scree
 import 'package:migozz_app/features/chat/presentation/user/user_chat_screen.dart';
 import 'package:migozz_app/features/profile/components/info_user_profile.dart';
 import 'package:migozz_app/features/profile/components/social_rail.dart';
+import 'package:migozz_app/features/profile/data/datasources/follower_service.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/follower_cubit/follower_cubit.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/components/profile_top_actions.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/profile_image_mobile_v3.dart';
@@ -22,10 +23,14 @@ class MobileProfileContent extends StatefulWidget {
   final UserDTO user;
   final TutorialKeys tutorialKeys;
 
+  /// UID del usuario target (opcional, se busca por email si no se proporciona)
+  final String? targetUserId;
+
   const MobileProfileContent({
     super.key,
     required this.user,
     required this.tutorialKeys,
+    this.targetUserId,
   });
 
   @override
@@ -33,6 +38,65 @@ class MobileProfileContent extends StatefulWidget {
 }
 
 class _MobileProfileContentState extends State<MobileProfileContent> {
+  /// UID del usuario que estamos viendo (se carga async si no se proporcionó)
+  String? _resolvedTargetUserId;
+  bool _isLoadingTargetId = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _resolveTargetUserId();
+  }
+
+  /// Resuelve el UID del usuario target
+  Future<void> _resolveTargetUserId() async {
+    // Si ya tenemos el uid, usarlo
+    if (widget.targetUserId != null && widget.targetUserId!.isNotEmpty) {
+      setState(() {
+        _resolvedTargetUserId = widget.targetUserId;
+      });
+      return;
+    }
+
+    // Verificar si es el perfil propio
+    final authState = context.read<AuthCubit>().state;
+    final currentUserEmail = authState.userProfile?.email ?? '';
+    final isOwnProfile = widget.user.email == currentUserEmail;
+
+    if (isOwnProfile) {
+      // Para perfil propio, usar el uid del usuario autenticado
+      setState(() {
+        _resolvedTargetUserId = authState.firebaseUser?.uid;
+      });
+      return;
+    }
+
+    // Buscar el uid por email del target user
+    setState(() {
+      _isLoadingTargetId = true;
+    });
+
+    try {
+      final followerCubit = context.read<FollowerCubit>();
+      // Acceder al servicio para buscar el uid
+      final followerService = FollowerService();
+      final uid = await followerService.getUserIdByEmail(widget.user.email);
+      if (mounted) {
+        setState(() {
+          _resolvedTargetUserId = uid;
+          _isLoadingTargetId = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('❌ [MobileProfileContent] Error resolviendo UID: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingTargetId = false;
+        });
+      }
+    }
+  }
+
   // Detectar si podemos hacer pop o si debemos navegar a home
   bool _canPop() {
     // Verificar si hay historial de navegación
@@ -71,6 +135,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
     // Determinar si es el perfil del usuario autenticado
     final authState = context.watch<AuthCubit>().state;
     final currentUserEmail = authState.userProfile?.email ?? '';
+    final currentUserId = authState.firebaseUser?.uid; // UID del usuario actual
     final isOwnProfile = user.email == currentUserEmail;
 
     // Recuperamos los seguidores y redes desde el perfil
@@ -144,7 +209,9 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                     ),
                     child: _InfoCardGlass(
                       child: InfoUserProfile(
-                        name: name.isNotEmpty ? name : 'profile.presentation.emptyName'.tr(),
+                        name: name.isNotEmpty
+                            ? name
+                            : 'profile.presentation.emptyName'.tr(),
                         displayName: username,
                         comunityCount: totalFollowers.toString(),
                         nameComunity: 'profile.presentation.community'.tr(),
@@ -153,6 +220,10 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                         tutorialKeys: widget.tutorialKeys,
                         isOwnProfile: isOwnProfile,
                         userId: user.email,
+                        contactEmail: isOwnProfile ? null : user.contactEmail,
+                        contactWebsite: isOwnProfile
+                            ? null
+                            : user.contactWebsite,
                         onMessageTap: () {
                           if (!isOwnProfile) {
                             Navigator.push(
@@ -205,6 +276,8 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                       tutorialKeys: widget.tutorialKeys,
                       isOwnProfile: isOwnProfile,
                       userId: user.email,
+                      contactEmail: isOwnProfile ? null : user.contactEmail,
+                      contactWebsite: isOwnProfile ? null : user.contactWebsite,
                       onMessageTap: () {
                         debugPrint("pulsado el chat");
                         if (!isOwnProfile) {
@@ -264,8 +337,8 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                 child: ProfileTopActions(
                   isOwnProfile: isOwnProfile,
                   profilePercentage: _calculateProfileStrength(user),
-                  targetUserId: isOwnProfile ? null : user.email,
-                  currentUserId: isOwnProfile ? null : currentUserEmail,
+                  targetUserId: isOwnProfile ? null : _resolvedTargetUserId,
+                  currentUserId: isOwnProfile ? null : currentUserId,
                   onMenuTap: () {
                     if (isOwnProfile) {
                       Navigator.push(
@@ -517,5 +590,3 @@ class _InfoCardGlass extends StatelessWidget {
     );
   }
 }
-
-

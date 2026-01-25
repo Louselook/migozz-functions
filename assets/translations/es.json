@@ -233,6 +233,14 @@
     }
   },
   "profile": {
+    "contact": {
+      "title": "Contactar a {}",
+      "sendEmail": "Enviar email",
+      "visitWebsite": "Visitar sitio web"
+    },
+    "share": "Compartir perfil",
+    "shareMessage": "¡Mira el perfil de {} en Migozz! {}",
+    "shareSubject": "Perfil de {} en Migozz",
     "chat": {
       "filter": "Nuevo",
       "search": "Buscar"

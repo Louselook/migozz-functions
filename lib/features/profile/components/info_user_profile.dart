@@ -8,6 +8,7 @@ import 'package:migozz_app/core/components/formart/text_formart.dart';
 import 'package:migozz_app/features/profile/presentation/profile/modules/share_profile.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class InfoUserProfile extends StatefulWidget {
   final String name;
@@ -20,6 +21,8 @@ class InfoUserProfile extends StatefulWidget {
   final bool isOwnProfile;
   final String userId;
   final VoidCallback? onMessageTap;
+  final String? contactEmail;
+  final String? contactWebsite;
 
   const InfoUserProfile({
     super.key,
@@ -33,6 +36,8 @@ class InfoUserProfile extends StatefulWidget {
     this.userId = '',
     this.tutorialKeys,
     this.onMessageTap,
+    this.contactEmail,
+    this.contactWebsite,
   });
 
   @override
@@ -117,6 +122,112 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
     }
   }
 
+  /// Construye el menú de contacto para perfiles de otros usuarios
+  Widget _buildContactMenu() {
+    return PopupMenuButton<String>(
+      padding: EdgeInsets.zero,
+      icon: const Icon(Icons.menu, color: Colors.white, size: 22),
+      color: Colors.grey[900],
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      offset: const Offset(0, 30),
+      itemBuilder: (context) => [
+        // Título del menú
+        PopupMenuItem<String>(
+          enabled: false,
+          child: Text(
+            'profile.contact.title'.tr(args: [widget.name]),
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.6),
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        // Enviar email
+        if (widget.contactEmail != null && widget.contactEmail!.isNotEmpty)
+          PopupMenuItem<String>(
+            value: 'email',
+            child: Row(
+              children: [
+                Icon(Icons.email_outlined, color: Colors.pinkAccent, size: 20),
+                const SizedBox(width: 12),
+                Text(
+                  'profile.contact.sendEmail'.tr(),
+                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                ),
+              ],
+            ),
+          ),
+        // Visitar sitio web
+        if (widget.contactWebsite != null && widget.contactWebsite!.isNotEmpty)
+          PopupMenuItem<String>(
+            value: 'website',
+            child: Row(
+              children: [
+                Icon(Icons.language, color: Colors.pinkAccent, size: 20),
+                const SizedBox(width: 12),
+                Text(
+                  'profile.contact.visitWebsite'.tr(),
+                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                ),
+              ],
+            ),
+          ),
+        const PopupMenuDivider(),
+        // Compartir perfil
+        PopupMenuItem<String>(
+          value: 'share',
+          child: Row(
+            children: [
+              Icon(Icons.share_outlined, color: Colors.pinkAccent, size: 20),
+              const SizedBox(width: 12),
+              Text(
+                'profile.share'.tr(),
+                style: const TextStyle(color: Colors.white, fontSize: 14),
+              ),
+            ],
+          ),
+        ),
+      ],
+      onSelected: (value) async {
+        switch (value) {
+          case 'email':
+            if (widget.contactEmail != null) {
+              final uri = Uri(scheme: 'mailto', path: widget.contactEmail);
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri);
+              }
+            }
+            break;
+          case 'website':
+            if (widget.contactWebsite != null) {
+              var url = widget.contactWebsite!;
+              if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                url = 'https://$url';
+              }
+              final uri = Uri.parse(url);
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              }
+            }
+            break;
+          case 'share':
+            Navigator.push(
+              context,
+              MaterialPageRoute<void>(
+                builder: (context) => ProfileQrScreen(
+                  userId: widget.userId,
+                  overrideUsername: widget.displayName.replaceFirst('@', ''),
+                  overrideDisplayName: widget.name,
+                ),
+              ),
+            );
+            break;
+        }
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -127,7 +238,7 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
           children: [
             Flexible(
               child: Text(
-              widget.name,
+                widget.name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
@@ -188,32 +299,25 @@ class _InfoUserProfileState extends State<InfoUserProfile> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Compartir perfil
-            GestureDetector(
-              key: widget.tutorialKeys?.shareButtonKey,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (context) => widget.isOwnProfile
-                        ? const ProfileQrScreen()
-                        : ProfileQrScreen(
-                            overrideUsername: widget.displayName.replaceFirst(
-                              '@',
-                              '',
-                            ),
-                            overrideDisplayName: widget.name,
-                          ),
-                  ),
-                );
-              },
-
-              child: SvgPicture.asset(
-                AssetsConstants.shareIcon,
-                width: 20,
-                height: 20,
-              ),
-            ),
+            // Icono izquierdo: compartir (propio) o menú hamburguesa (otro)
+            widget.isOwnProfile
+                ? GestureDetector(
+                    key: widget.tutorialKeys?.shareButtonKey,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (context) => const ProfileQrScreen(),
+                        ),
+                      );
+                    },
+                    child: SvgPicture.asset(
+                      AssetsConstants.shareIcon,
+                      width: 20,
+                      height: 20,
+                    ),
+                  )
+                : _buildContactMenu(),
 
             const SizedBox(width: 15),
             Column(

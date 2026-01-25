@@ -234,6 +234,14 @@
         }
     },
     "profile":{
+        "contact": {
+            "title": "Contact {}",
+            "sendEmail": "Send email",
+            "visitWebsite": "Visit website"
+        },
+        "share": "Share profile",
+        "shareMessage": "Check out {}'s profile on Migozz! {}",
+        "shareSubject": "{}'s profile on Migozz",
         "chat": {
             "filter":"New",
             "search":"Search"
@@ -408,6 +416,10 @@
             "reels": "Reels",
             "audio": "Audio",
             "hashtags": "Hashtags"
+        },
+        "validations": {
+            "emptySearch": "Please enter a search term",
+            "emptyInterest": "Add at least 1 interest to improve your recommendations"
         }
     },
     "stats":{

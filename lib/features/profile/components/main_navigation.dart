@@ -43,7 +43,7 @@ class _MainNavigationState extends State<MainNavigation> {
     super.initState();
     _currentIndex = widget.initialIndex;
     debugPrint('🚀 [MainNavigation] Inicializado con index: $_currentIndex');
-    
+
     // Inicializar FollowerCubit con el ID del usuario actual
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeFollowerCubit();
@@ -52,12 +52,14 @@ class _MainNavigationState extends State<MainNavigation> {
 
   void _initializeFollowerCubit() {
     final authState = context.read<AuthCubit>().state;
-    final currentUser = authState.userProfile;
-    if (currentUser != null) {
+    final currentUserId = authState.firebaseUser?.uid;
+    if (currentUserId != null) {
       final followerCubit = context.read<FollowerCubit>();
-      followerCubit.initialize(currentUser.email);
-      followerCubit.loadCounts(currentUser.email);
-      debugPrint('✅ [MainNavigation] FollowerCubit inicializado para ${currentUser.email}');
+      followerCubit.initialize(currentUserId);
+      followerCubit.loadCounts(currentUserId);
+      debugPrint(
+        '✅ [MainNavigation] FollowerCubit inicializado para UID: $currentUserId',
+      );
     }
   }
 
@@ -102,6 +104,31 @@ class _MainNavigationState extends State<MainNavigation> {
   }
 
   void _onItemSelected(int index) {
+    // Si tenemos targetUser (estamos en la navegación del perfil de otro usuario)
+    if (widget.targetUser != null) {
+      // Si estamos viendo el perfil del otro (index 0) y presionamos home o lupa, volver atrás
+      if (_currentIndex == 0 && (index == 0 || index == 1)) {
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+        return;
+      }
+
+      // Si estamos en stats/config y presionamos home, volver atrás (a nuestra navegación principal)
+      if (_currentIndex != 0 && index == 0) {
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+        return;
+      }
+
+      // Si estamos en stats/config y presionamos lupa, ir al perfil del otro usuario (índice 0)
+      if (_currentIndex != 0 && index == 1) {
+        _performNavigation(0); // Ir al perfil del otro usuario
+        return;
+      }
+    }
+
     if (_currentIndex == index) {
       debugPrint('⚠️ [MainNavigation] Ya estás en el index $index, ignorando');
       return;
@@ -196,15 +223,13 @@ class _MainNavigationState extends State<MainNavigation> {
     return Scaffold(
       extendBody: true,
       body: IndexedStack(index: _currentIndex, children: screens),
-      bottomNavigationBar: isViewingOtherProfile
-          ? null
-          : GradientBottomNav(
-              currentIndex: _currentIndex,
-              onItemSelected: _onItemSelected,
-              onCenterTap: _onCenterTap,
-              onProfileUpdated: _onProfileUpdated,
-              tutorialKeys: _tutorialKeys, // <- PASAR la MISMA instancia
-            ),
+      bottomNavigationBar: GradientBottomNav(
+        currentIndex: _currentIndex,
+        onItemSelected: _onItemSelected,
+        onCenterTap: _onCenterTap,
+        onProfileUpdated: _onProfileUpdated,
+        tutorialKeys: _tutorialKeys, // <- PASAR la MISMA instancia
+      ),
     );
   }
 }

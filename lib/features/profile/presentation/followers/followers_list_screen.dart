@@ -331,7 +331,7 @@ class _FollowersListScreenState extends State<FollowersListScreen>
 
   void _navigateToChat(FollowerDTO user) {
     final currentUserId =
-        context.read<AuthCubit>().state.userProfile?.email ?? '';
+        context.read<AuthCubit>().state.firebaseUser?.uid ?? '';
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -426,7 +426,7 @@ class _FollowerListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentUserId =
-        context.read<AuthCubit>().state.userProfile?.email ?? '';
+        context.read<AuthCubit>().state.firebaseUser?.uid ?? '';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
