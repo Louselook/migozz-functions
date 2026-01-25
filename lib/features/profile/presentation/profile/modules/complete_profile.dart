@@ -78,7 +78,7 @@ class CompleteProfile extends StatelessWidget {
                   colors: [
                     const Color(
                       0xFF6A0D91,
-                    ).withOpacity(0.5), // Púrpura brillante
+                    ).withValues(alpha: 0.5), // Púrpura brillante
                     Colors.transparent,
                   ],
                   stops: const [0.0, 0.7],
@@ -99,7 +99,9 @@ class CompleteProfile extends StatelessWidget {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFFC0A040).withOpacity(0.15), // Dorado sutil
+                    const Color(
+                      0xFFC0A040,
+                    ).withValues(alpha: 0.15), // Dorado sutil
                     Colors.transparent,
                   ],
                   stops: const [0.0, 0.7],
@@ -150,7 +152,7 @@ class CompleteProfile extends StatelessWidget {
                   Text(
                     'complete_profile.description'.tr(),
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                       fontSize: 15.sp,
                       height: 1.4,
                     ),

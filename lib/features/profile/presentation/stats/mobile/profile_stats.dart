@@ -364,13 +364,17 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
                                       Icon(
                                         Icons.analytics_outlined,
                                         size: 60,
-                                        color: Colors.white.withOpacity(0.3),
+                                        color: Colors.white.withValues(
+                                          alpha: 0.3,
+                                        ),
                                       ),
                                       const SizedBox(height: 16),
                                       Text(
                                         "stats.noStats.notSocials".tr(),
                                         style: TextStyle(
-                                          color: Colors.white.withOpacity(0.7),
+                                          color: Colors.white.withValues(
+                                            alpha: 0.7,
+                                          ),
                                           fontSize: 16,
                                         ),
                                         textAlign: TextAlign.center,
@@ -475,9 +479,9 @@ class _OverviewCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
+        color: Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -505,9 +509,9 @@ class _OverviewCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.04),
+              color: Colors.white.withValues(alpha: 0.04),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withOpacity(0.08)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -517,9 +521,11 @@ class _OverviewCard extends StatelessWidget {
                   height: 32,
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.08),
+                    color: Colors.white.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.white.withOpacity(0.1)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.1),
+                    ),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
@@ -533,7 +539,7 @@ class _OverviewCard extends StatelessWidget {
                       ),
                       dropdownColor: const Color(0xFF2C2C2C),
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
@@ -626,7 +632,9 @@ class _OverviewCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 20),
                       child: Text(
                         "stats.noData".tr(), // Or some placeholder
-                        style: TextStyle(color: Colors.white.withOpacity(0.5)),
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.5),
+                        ),
                       ),
                     ),
                   ),
@@ -669,7 +677,7 @@ class _SmallSocialRow extends StatelessWidget {
               Text(
                 name,
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.6),
+                  color: Colors.white.withValues(alpha: 0.6),
                   fontSize: 13,
                   fontWeight: FontWeight.w400,
                 ),
@@ -715,9 +723,9 @@ class _NetworkStatsCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.08),
+          color: Colors.white.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white.withOpacity(0.2)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
         ),
         child: Column(
           children: [
@@ -757,7 +765,7 @@ class _NetworkStatsCard extends StatelessWidget {
                       child: Text(
                         formatted,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                           fontSize: 15,
                           fontWeight: FontWeight.w400,
                         ),

@@ -60,8 +60,8 @@ class _SocialEcosystemSyncStatusWidgetState
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: needsSync
-                    ? Colors.orange.withOpacity(0.1)
-                    : Colors.green.withOpacity(0.1),
+                    ? Colors.orange.withValues(alpha: 0.1)
+                    : Colors.green.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
@@ -125,9 +125,9 @@ class _SocialEcosystemSyncStatusWidgetState
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.1),
+                  color: Colors.red.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.red.withOpacity(0.3)),
+                  border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
@@ -185,7 +185,7 @@ class _SocialEcosystemSyncStatusWidgetState
                       style: const TextStyle(fontSize: 11),
                     ),
                     avatar: CircleAvatar(
-                      backgroundColor: Colors.grey.withOpacity(0.2),
+                      backgroundColor: Colors.grey.withValues(alpha: 0.2),
                       child: Text(
                         platformLetter,
                         style: const TextStyle(fontSize: 10),
@@ -274,8 +274,8 @@ class SocialEcosystemSyncStatusBadge extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
           color: needsSync
-              ? Colors.orange.withOpacity(0.2)
-              : Colors.green.withOpacity(0.2),
+              ? Colors.orange.withValues(alpha: 0.2)
+              : Colors.green.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: needsSync ? Colors.orange : Colors.green,

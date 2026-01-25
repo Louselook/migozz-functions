@@ -84,7 +84,7 @@ class _FollowButtonState extends State<FollowButton> {
         ),
         content: Text(
           'followers.unfollowConfirmMessage'.tr(),
-          style: TextStyle(color: Colors.white.withOpacity(0.8)),
+          style: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
         ),
         actions: [
           TextButton(
@@ -116,7 +116,7 @@ class _FollowButtonState extends State<FollowButton> {
         ),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
-          color: Colors.grey.withOpacity(0.3),
+          color: Colors.grey.withValues(alpha: 0.3),
         ),
         child: SizedBox(
           width: widget.compact ? 14 : 16,
@@ -147,7 +147,7 @@ class _FollowButtonState extends State<FollowButton> {
                   end: Alignment.bottomRight,
                 ),
           border: _isFollowing
-              ? Border.all(color: Colors.white.withOpacity(0.5), width: 1)
+              ? Border.all(color: Colors.white.withValues(alpha: 0.5), width: 1)
               : null,
           color: _isFollowing ? Colors.transparent : null,
         ),
@@ -249,7 +249,7 @@ class _FollowButtonSmallState extends State<FollowButtonSmall> {
         ),
         content: Text(
           'followers.unfollowConfirmMessage'.tr(),
-          style: TextStyle(color: Colors.white.withOpacity(0.8)),
+          style: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
         ),
         actions: [
           TextButton(
@@ -278,7 +278,7 @@ class _FollowButtonSmallState extends State<FollowButtonSmall> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
-          color: Colors.grey.withOpacity(0.3),
+          color: Colors.grey.withValues(alpha: 0.3),
         ),
         child: const SizedBox(
           width: 14,
@@ -302,7 +302,7 @@ class _FollowButtonSmallState extends State<FollowButtonSmall> {
                   end: Alignment.bottomRight,
                 ),
           border: _isFollowing
-              ? Border.all(color: Colors.white.withOpacity(0.5), width: 1)
+              ? Border.all(color: Colors.white.withValues(alpha: 0.5), width: 1)
               : null,
         ),
         child: Text(

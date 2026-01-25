@@ -110,7 +110,7 @@ class _FollowersListScreenState extends State<FollowersListScreen>
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(
@@ -142,14 +142,24 @@ class _FollowersListScreenState extends State<FollowersListScreen>
       builder: (context, state) {
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: Colors.white.withValues(alpha: 0.2),
+                width: 2,
+              ),
+            ),
+          ),
           child: TabBar(
             controller: _tabController,
             indicator: const UnderlineTabIndicator(
-              borderSide: BorderSide(color: AppColors.primaryPink, width: 3),
-              insets: EdgeInsets.symmetric(horizontal: 40),
+              borderSide: BorderSide(color: AppColors.primaryPink, width: 2),
+              insets: EdgeInsets.zero,
             ),
+            indicatorSize: TabBarIndicatorSize.tab,
             labelColor: Colors.white,
             unselectedLabelColor: Colors.white60,
+            dividerColor: Colors.transparent,
             tabs: [
               Tab(
                 child: Text(
@@ -181,19 +191,19 @@ class _FollowersListScreenState extends State<FollowersListScreen>
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.1),
+          color: Colors.white.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(25),
-          border: Border.all(color: Colors.white.withOpacity(0.2)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
         ),
         child: TextField(
           controller: _searchController,
           style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
             hintText: 'followers.search'.tr(),
-            hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+            hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
             prefixIcon: Icon(
               Icons.search,
-              color: Colors.white.withOpacity(0.5),
+              color: Colors.white.withValues(alpha: 0.5),
             ),
             border: InputBorder.none,
             contentPadding: const EdgeInsets.symmetric(
@@ -296,13 +306,13 @@ class _FollowersListScreenState extends State<FollowersListScreen>
           Icon(
             Icons.people_outline,
             size: 64,
-            color: Colors.white.withOpacity(0.3),
+            color: Colors.white.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 16),
           Text(
             message,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.6),
+              color: Colors.white.withValues(alpha: 0.6),
               fontSize: 16,
             ),
           ),
@@ -364,7 +374,7 @@ class _FollowersListScreenState extends State<FollowersListScreen>
           isFollower
               ? 'followers.removeFollowerMessage'.tr()
               : 'followers.unfollowConfirmMessage'.tr(),
-          style: TextStyle(color: Colors.white.withOpacity(0.8)),
+          style: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
         ),
         actions: [
           TextButton(
@@ -481,7 +491,7 @@ class _FollowerListItem extends StatelessWidget {
                         Text(
                           '@${follower.username ?? 'unknown'}',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.6),
+                            color: Colors.white.withValues(alpha: 0.6),
                             fontSize: 13,
                           ),
                           overflow: TextOverflow.ellipsis,
@@ -516,7 +526,7 @@ class _FollowerListItem extends StatelessWidget {
               padding: const EdgeInsets.all(8),
               child: Icon(
                 Icons.close,
-                color: Colors.white.withOpacity(0.5),
+                color: Colors.white.withValues(alpha: 0.5),
                 size: 20,
               ),
             ),
@@ -541,8 +551,8 @@ class _MessageButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
-          color: Colors.grey.withOpacity(0.3),
-          border: Border.all(color: Colors.white.withOpacity(0.2)),
+          color: Colors.grey.withValues(alpha: 0.3),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
         ),
         child: Text(
           'followers.message'.tr(),
