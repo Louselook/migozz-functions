@@ -975,6 +975,23 @@
       "cancel": "Cancel",
       "confirm": "Delete all"
     }
+  },
+  "followers": {
+    "followers": "Followers",
+    "following": "Following",
+    "follow": "Follow",
+    "followBack": "Follow back",
+    "unfollow": "Unfollow",
+    "message": "Message",
+    "search": "Search",
+    "cancel": "Cancel",
+    "remove": "Remove",
+    "noFollowers": "No followers yet",
+    "noFollowing": "Not following anyone yet",
+    "unfollowConfirmTitle": "Unfollow?",
+    "unfollowConfirmMessage": "Are you sure you want to unfollow this user?",
+    "removeFollowerTitle": "Remove follower?",
+    "removeFollowerMessage": "Are you sure you want to remove this user from your followers?"
   }
 }
 

@@ -9,6 +9,7 @@ import 'package:migozz_app/features/chat/presentation/user/list/chats_list_scree
 import 'package:migozz_app/features/chat/presentation/user/user_chat_screen.dart';
 import 'package:migozz_app/features/profile/components/info_user_profile.dart';
 import 'package:migozz_app/features/profile/components/social_rail.dart';
+import 'package:migozz_app/features/profile/presentation/bloc/follower_cubit/follower_cubit.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/components/profile_top_actions.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/profile_image_mobile_v3.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/social_circles_mobile_v3.dart';
@@ -73,11 +74,16 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
     final isOwnProfile = user.email == currentUserEmail;
 
     // Recuperamos los seguidores y redes desde el perfil
-    final totalFollowers = _calculateTotalFollowers(user.socialEcosystem);
+    final socialFollowers = _calculateTotalFollowers(user.socialEcosystem);
     final socialLinks = _buildSocialLinks(user.socialEcosystem, user.username);
     final bool hasSocials = socialLinks.isNotEmpty;
     final double socialsImageBottom = size.height * 0.43;
     final double socialsTopSpacer = size.height * 0.33;
+
+    // Obtener seguidores de la app para sumar al community count
+    final followerState = context.watch<FollowerCubit>().state;
+    final appFollowers = isOwnProfile ? followerState.followersCount : 0;
+    final totalFollowers = socialFollowers + appFollowers;
 
     return PopScope(
       canPop: false,
@@ -258,6 +264,8 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                 child: ProfileTopActions(
                   isOwnProfile: isOwnProfile,
                   profilePercentage: _calculateProfileStrength(user),
+                  targetUserId: isOwnProfile ? null : user.email,
+                  currentUserId: isOwnProfile ? null : currentUserEmail,
                   onMenuTap: () {
                     if (isOwnProfile) {
                       Navigator.push(

@@ -4,6 +4,7 @@ import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/chat/presentation/user/list/chats_list_screen.dart';
 import 'package:migozz_app/features/profile/components/bottom_nav.dart';
+import 'package:migozz_app/features/profile/presentation/bloc/follower_cubit/follower_cubit.dart';
 import 'package:migozz_app/features/profile/presentation/edit/mobile/edit_profile_screen.dart';
 import 'package:migozz_app/features/profile/presentation/profile_entry.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/profile_search_screen.dart';
@@ -42,6 +43,22 @@ class _MainNavigationState extends State<MainNavigation> {
     super.initState();
     _currentIndex = widget.initialIndex;
     debugPrint('🚀 [MainNavigation] Inicializado con index: $_currentIndex');
+    
+    // Inicializar FollowerCubit con el ID del usuario actual
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeFollowerCubit();
+    });
+  }
+
+  void _initializeFollowerCubit() {
+    final authState = context.read<AuthCubit>().state;
+    final currentUser = authState.userProfile;
+    if (currentUser != null) {
+      final followerCubit = context.read<FollowerCubit>();
+      followerCubit.initialize(currentUser.email);
+      followerCubit.loadCounts(currentUser.email);
+      debugPrint('✅ [MainNavigation] FollowerCubit inicializado para ${currentUser.email}');
+    }
   }
 
   @override

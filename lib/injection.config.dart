@@ -21,6 +21,8 @@ import 'package:migozz_app/features/auth/data/domain/use_cases/auth_use_cases.da
 import 'package:migozz_app/features/auth/services/location_service.dart'
     as _i530;
 import 'package:migozz_app/features/auth/services/media_service.dart' as _i341;
+import 'package:migozz_app/features/profile/data/datasources/follower_service.dart'
+    as _i440;
 import 'package:migozz_app/features/profile/data/datasources/user_service.dart'
     as _i867;
 import 'package:migozz_app/features/profile/data/domain/repository/user_repository.dart'
@@ -42,6 +44,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i530.LocationService>(() => appModule.locationService);
     gh.lazySingleton<_i341.UserMediaService>(() => appModule.userMediaService);
     gh.lazySingleton<_i867.UserService>(() => appModule.userService);
+    gh.lazySingleton<_i440.FollowerService>(() => appModule.followerService);
     gh.lazySingleton<_i345.UserRepository>(() => appModule.userRepository);
     gh.lazySingleton<_i484.UserUseCases>(() => appModule.userUseCases);
     return this;

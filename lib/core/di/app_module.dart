@@ -13,6 +13,7 @@ import 'package:migozz_app/features/auth/data/repository/auth_repository_impl.da
 import 'package:migozz_app/features/auth/services/media_service.dart';
 import 'package:migozz_app/features/auth/services/location_service.dart';
 import 'package:migozz_app/features/profile/data/datasources/user_service.dart';
+import 'package:migozz_app/features/profile/data/datasources/follower_service.dart';
 import 'package:migozz_app/features/profile/data/domain/repository/user_repository.dart';
 import 'package:migozz_app/features/profile/data/domain/use_cases/change_avatar_use_case.dart';
 import 'package:migozz_app/features/profile/data/domain/use_cases/update_user_profile_use_case.dart';
@@ -48,6 +49,9 @@ abstract class AppModule {
 
   @lazySingleton
   UserService get userService => UserService(userMediaService);
+
+  @lazySingleton
+  FollowerService get followerService => FollowerService();
 
   @lazySingleton
   UserRepository get userRepository => UserRepositoryImpl(userService);

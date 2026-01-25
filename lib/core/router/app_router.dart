@@ -25,6 +25,7 @@ import 'package:migozz_app/features/profile/presentation/profile_entry.dart';
 import 'package:migozz_app/features/profile/presentation/stats/web/profile_stats.dart';
 import 'package:migozz_app/features/profile/presentation/profile/web/profile_search_screen.dart'
     as web_profile;
+import 'package:migozz_app/features/profile/presentation/followers/followers_list_screen.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/features/search/web/presentation/search_screen.dart'
     as web_search;
@@ -258,6 +259,21 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         path: '/notifications',
         name: 'notifications',
         builder: (context, state) => const NotificationsListScreen(),
+      ),
+      GoRoute(
+        path: '/followers/:userId',
+        name: 'followers',
+        builder: (context, state) {
+          final userId = Uri.decodeComponent(state.pathParameters['userId'] ?? '');
+          final username = Uri.decodeComponent(state.uri.queryParameters['username'] ?? '');
+          final tab = int.tryParse(state.uri.queryParameters['tab'] ?? '0') ?? 0;
+          
+          return FollowersListScreen(
+            userId: userId,
+            username: username,
+            initialTab: tab,
+          );
+        },
       ),
       GoRoute(
         path: '/chats',

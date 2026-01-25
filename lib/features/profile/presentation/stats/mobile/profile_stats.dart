@@ -13,6 +13,8 @@ import 'package:migozz_app/features/auth/presentation/register/user_details/modu
 import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
 import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
+import 'package:migozz_app/features/profile/presentation/bloc/follower_cubit/follower_cubit.dart';
+import 'package:migozz_app/features/profile/presentation/followers/followers_list_screen.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 
 class ProfileStatsScreen extends StatefulWidget {
@@ -286,11 +288,32 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceAround,
                                   children: [
-                                    _TopMetricItem(
-                                      icon: Icons.favorite,
-                                      value: _formatNum(
-                                        _totalsGlobal['profile_likes'] ?? 0,
-                                      ),
+                                    BlocBuilder<FollowerCubit, FollowerState>(
+                                      builder: (context, followerState) {
+                                        return _TopMetricItem(
+                                          icon: Icons.favorite,
+                                          value: _formatNum(
+                                            followerState.followersCount > 0
+                                                ? followerState.followersCount
+                                                : (_totalsGlobal['profile_likes'] ?? 0),
+                                          ),
+                                          onTap: () {
+                                            final authState = context.read<AuthCubit>().state;
+                                            final user = authState.userProfile;
+                                            if (user != null) {
+                                              Navigator.of(context).push(
+                                                MaterialPageRoute(
+                                                  builder: (_) => FollowersListScreen(
+                                                    userId: user.email,
+                                                    username: user.username,
+                                                    initialTab: 0,
+                                                  ),
+                                                ),
+                                              );
+                                            }
+                                          },
+                                        );
+                                      },
                                     ),
                                     _TopMetricItem(
                                       icon: Icons.chat_bubble,
@@ -378,33 +401,38 @@ class _TopMetricItem extends StatelessWidget {
   final IconData icon;
   final String value;
   final bool isRotated;
+  final VoidCallback? onTap;
 
   const _TopMetricItem({
     required this.icon,
     required this.value,
     this.isRotated = false,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Transform.flip(
-          flipX: isRotated,
-          child: Icon(icon, color: Colors.white, size: 32),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.5,
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Transform.flip(
+            flipX: isRotated,
+            child: Icon(icon, color: Colors.white, size: 32),
           ),
-        ),
-      ],
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -824,5 +824,22 @@
         "step4": "¡Hasta pronto!"
       }
     }
+  },
+  "followers": {
+    "followers": "Seguidores",
+    "following": "Seguidos",
+    "follow": "Seguir",
+    "followBack": "Seguir también",
+    "unfollow": "Dejar de seguir",
+    "message": "Mensaje",
+    "search": "Buscar",
+    "cancel": "Cancelar",
+    "remove": "Eliminar",
+    "noFollowers": "Aún no tienes seguidores",
+    "noFollowing": "Aún no sigues a nadie",
+    "unfollowConfirmTitle": "¿Dejar de seguir?",
+    "unfollowConfirmMessage": "¿Estás seguro de que quieres dejar de seguir a este usuario?",
+    "removeFollowerTitle": "¿Eliminar seguidor?",
+    "removeFollowerMessage": "¿Estás seguro de que quieres eliminar a este usuario de tus seguidores?"
   }
 }
