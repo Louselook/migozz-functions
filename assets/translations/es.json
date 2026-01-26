@@ -827,9 +827,9 @@
       },
       "social_auth": {
         "step1": "Conectando con {platform}...",
-        "step2": "Validando tu cuenta...",
-        "step3": "Vinculando tu perfil...",
-        "step4": "¡Conexión exitosa!"
+        "step2": "Extrayendo la información de tu perfil...",
+        "step3": "Añadiendo tu contenido al ecosistema Migozz...",
+        "step4": "¡Listo! Tus redes ahora están unificadas"
       },
       "logout": {
         "step1": "Cerrando sesión...",

@@ -3,6 +3,14 @@
 
 /// Preguntas en ESPAÑOL
 final Map<String, Map<String, dynamic>> questionsEs = {
+  "welcome": {
+    "text":
+        "¡Bienvenidos Migos! 🌟\n\nEstás a punto de unirte al nuevo ecosistema social digital. Vamos a configurar tu perfil para que puedas conectar con tu comunidad.",
+    "options": [],
+    "step": "regProgress.welcome",
+    "keepTalk": true,
+    "autoAdvance": true,
+  },
   // "language": {
   //   "text": "👋 ¡Hola! Soy Migozz. ¿En qué idioma prefieres continuar?",
   //   "options": ["Español", "English"],
@@ -11,7 +19,7 @@ final Map<String, Map<String, dynamic>> questionsEs = {
   //   "keyboardType": "text",
   // },
   "fullName": {
-    "text": "👋 Bienvenido a Migozz. Escribe tu nombre completo:",
+    "text": "Empecemos. Escribe tu nombre completo:",
     "options": [],
     "step": "regProgress.fullName",
     "keepTalk": false,
@@ -151,6 +159,14 @@ final Map<String, Map<String, dynamic>> questionsEs = {
 
 /// Preguntas en INGLÉS
 final Map<String, Map<String, dynamic>> questionsEn = {
+  "welcome": {
+    "text":
+        "Welcome Migos! 🌟\n\nYou're about to join the new digital social ecosystem. Let's set up your profile so you can connect with your community.",
+    "options": [],
+    "step": "regProgress.welcome",
+    "keepTalk": true,
+    "autoAdvance": true,
+  },
   // "language": {
   //   "text": "👋 Hello! I'm Migozz. What language do you prefer?",
   //   "options": ["English", "Español"],
@@ -159,7 +175,7 @@ final Map<String, Map<String, dynamic>> questionsEn = {
   //   "keyboardType": "text",
   // },
   "fullName": {
-    "text": "👋 Welcome to Migozz. Enter your full name:",
+    "text": "Let's get started. Enter your full name:",
     "options": [],
     "step": "regProgress.fullName",
     "keepTalk": false,

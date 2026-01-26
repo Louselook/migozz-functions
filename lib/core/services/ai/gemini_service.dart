@@ -322,6 +322,7 @@ class GeminiService {
 
   // Flujo completo para usuarios NO autenticados
   final List<String> _questionFlowNotAuth = [
+    'welcome', // 0 - Mensaje de bienvenida
     'fullName', // 1
     'username', // 2
     'location', // 3
@@ -340,6 +341,7 @@ class GeminiService {
 
   //  Flujo reducido para usuarios autenticados
   final List<String> _questionFlowAuth = [
+    'welcome', // 0 - Mensaje de bienvenida
     'location',
     'phone',
     'socialEcosystem',
@@ -785,8 +787,22 @@ class GeminiService {
       return {
         "text": summary,
         "options": isSpanish
-            ? ["Nombre", "Username", "Correo", "Categoría", "Intereses", "Nada, continuar"]
-            : ["Name", "Username", "Email", "Category", "Interests", "Nothing, continue"],
+            ? [
+                "Nombre",
+                "Username",
+                "Correo",
+                "Categoría",
+                "Intereses",
+                "Nada, continuar",
+              ]
+            : [
+                "Name",
+                "Username",
+                "Email",
+                "Category",
+                "Interests",
+                "Nothing, continue",
+              ],
         "step": "regProgress.changeRequest",
         "keepTalk": false,
       };

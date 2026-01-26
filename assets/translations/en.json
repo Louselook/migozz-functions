@@ -712,9 +712,9 @@
           },
           "social_auth": {
             "step1": "Connecting with {platform}...",
-            "step2": "Validating account...",
-            "step3": "Linking profile...",
-            "step4": "Connection successful!"
+            "step2": "Extracting your profile information...",
+            "step3": "Adding your content to the Migozz ecosystem...",
+            "step4": "All set! Your networks are now unified"
           },
           "logout": {
             "step1": "Logging out...",
