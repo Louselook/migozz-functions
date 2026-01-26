@@ -1,8 +1,20 @@
 const { createBrowser } = require('../utils/helpers');
 const { saveProfileImageForProfile } = require('../utils/imageSaver');
 
+// Singleton browser instance for reuse across requests (Cloud Run / Hot Lambda)
+let browserInstance = null;
+
+async function getBrowser() {
+  if (browserInstance && browserInstance.isConnected()) {
+    return browserInstance;
+  }
+  console.log('🚀 [YouTube] Launching new browser instance...');
+  browserInstance = await createBrowser();
+  return browserInstance;
+}
+
 /**
- * Scraper para canales de YouTube - VERSIÓN MEJORADA
+ * Scraper para canales de YouTube - VERSIÓN OPTIMIZADA
  * Devuelve:
  *  - followers: int | null (suscriptores)
  *  - videos: int (0 si no se encuentra)
@@ -10,12 +22,23 @@ const { saveProfileImageForProfile } = require('../utils/imageSaver');
 async function scrapeYouTube(channelInput) {
   console.log(`📥 [YouTube] Iniciando scraping para: ${channelInput}`);
 
-  let browser;
+  let page;
   try {
-    browser = await createBrowser();
-    const page = await browser.newPage();
+    const browser = await getBrowser();
+    page = await browser.newPage();
 
-    await page.setViewport({ width: 1920, height: 1080 });
+    // Optimización 1: Bloquear recursos innecesarios
+    await page.setRequestInterception(true);
+    page.on('request', (req) => {
+      const resourceType = req.resourceType();
+      if (['image', 'stylesheet', 'font', 'media', 'other'].includes(resourceType)) {
+        req.abort();
+      } else {
+        req.continue();
+      }
+    });
+
+    await page.setViewport({ width: 1280, height: 720 }); // Menor resolución para ahorrar recursos
     await page.setUserAgent(
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     );
@@ -34,32 +57,31 @@ async function scrapeYouTube(channelInput) {
 
     console.log(`🌐 [YouTube] Navegando a: ${url}`);
 
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
+    // Optimización 2: waiting menos estricto (domcontentloaded vs networkidle2)
+    // Timeout reducido a 15s para fail-fast
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
 
-    // Espera más robusta para que cargue el contenido dinámico
-    const sleep = ms => new Promise(r => setTimeout(r, ms));
-    await sleep(3000); // Espera inicial
-
+    // Optimización 3: Reemplazar sleep fijo por waitForSelector dinámico
     try {
-      await page.waitForSelector('ytd-c4-tabbed-header-renderer, yt-formatted-string', { timeout: 5000 });
+      // Esperar a que aparezca el header o metadata clave
+      await page.waitForSelector('ytd-c4-tabbed-header-renderer, #meta, #channel-header', { timeout: 5000 });
     } catch {
-      await sleep(2000);
+      console.log('⚠️ [YouTube] Selector principal no encontrado rápido, continuando...');
     }
 
-    // ---------------- Extracción mejorada ----------------
+    // ---------------- Extracción ----------------
     let data = await page.evaluate(() => {
-      // Función parseNumber definida directamente en el contexto del navegador
+      // Función parseNumber inyectada
       const parseNumber = (text) => {
         if (!text) return null;
-        
+
         let cleaned = String(text).trim();
         const match = cleaned.match(/([\d\.,]+)\s*([KkMmBb])?/);
         if (!match) return null;
-        
+
         let numStr = match[1];
         const suffix = (match[2] || '').toUpperCase();
-        
-        // Normaliza formatos
+
         if (numStr.includes('.') && numStr.includes(',')) {
           numStr = numStr.replace(/\./g, '').replace(',', '.');
         } else if (numStr.includes(',')) {
@@ -67,17 +89,17 @@ async function scrapeYouTube(channelInput) {
         } else if (numStr.includes('.') && numStr.split('.')[1]?.length >= 3) {
           numStr = numStr.replace(/\./g, '');
         }
-        
+
         let num = parseFloat(numStr);
-        
+
         if (suffix === 'K') num *= 1000;
         if (suffix === 'M') num *= 1000000;
         if (suffix === 'B') num *= 1000000000;
-        
+
         if (!isFinite(num)) return null;
         return Math.round(num);
       };
-      
+
       const safeText = (node) => node ? (node.textContent || node.innerText || '').trim() : '';
 
       let channelName = '';
@@ -87,44 +109,25 @@ async function scrapeYouTube(channelInput) {
       let followers = null;
       let videos = 0;
 
-      // 1) Meta tags
-      try {
-        const ogTitle = document.querySelector('meta[property="og:title"]');
-        const ogImage = document.querySelector('meta[property="og:image"]');
-        const ogUrl = document.querySelector('meta[property="og:url"]');
-
-        if (ogTitle?.content) channelName = ogTitle.content;
-        if (ogImage?.content) profileImageUrl = ogImage.content;
-        if (ogUrl?.content) {
-          const m = ogUrl.content.match(/channel\/(UC[a-zA-Z0-9_-]{22})/);
-          if (m) channelId = m[1];
-        }
-      } catch (e) {
-        console.error('Error en meta tags:', e);
-      }
-
-      // 2) ytInitialData
+      // 1) ytInitialData (Suele ser lo más rápido y fiable)
       try {
         const ytData = window.ytInitialData;
         if (ytData) {
           const header = ytData?.header?.c4TabbedHeaderRenderer;
           const metadata = ytData?.metadata?.channelMetadataRenderer;
-          
+
           if (header) {
-            if (header.title) channelName = header.title;
-            if (header.channelId) channelId = header.channelId;
-            
-            // Handle
+            channelName = header.title || channelName;
+            channelId = header.channelId || channelId;
+
             if (header.channelHandleText?.runs?.[0]?.text) {
               handle = header.channelHandleText.runs[0].text.replace('@', '');
             }
-            
-            // Avatar
+
             if (header.avatar?.thumbnails?.length) {
               profileImageUrl = header.avatar.thumbnails.at(-1).url || profileImageUrl;
             }
-            
-            // Suscriptores - MEJORADO
+
             if (header.subscriberCountText) {
               if (header.subscriberCountText.simpleText) {
                 followers = parseNumber(header.subscriberCountText.simpleText);
@@ -132,8 +135,7 @@ async function scrapeYouTube(channelInput) {
                 followers = parseNumber(header.subscriberCountText.runs[0].text);
               }
             }
-            
-            // Videos - MEJORADO
+
             if (header.videosCountText) {
               if (header.videosCountText.simpleText) {
                 videos = parseNumber(header.videosCountText.simpleText) || 0;
@@ -142,263 +144,83 @@ async function scrapeYouTube(channelInput) {
               }
             }
           }
-          
+
           if (metadata) {
-            if (!channelName && metadata.title) channelName = metadata.title;
-            if (!channelId && metadata.externalId) channelId = metadata.externalId;
+            if (!channelName) channelName = metadata.title;
+            if (!channelId) channelId = metadata.externalId;
             if (!profileImageUrl && metadata.avatar?.thumbnails?.[0]?.url) {
               profileImageUrl = metadata.avatar.thumbnails[0].url;
             }
           }
         }
       } catch (e) {
-        console.error('Error en ytInitialData:', e);
+        // Ignorar errores de parsing
       }
 
-      // 3) Selectores DOM modernos - MEJORADO
-      try {
-        // Buscar el texto que muestra "885 K suscriptores · 2,3 K vídeos"
-        const channelHandleEl = document.querySelector('#channel-handle');
-        if (channelHandleEl) {
-          const handleText = safeText(channelHandleEl).replace('@', '');
-          if (handleText && !handle) handle = handleText;
-          
-          // El texto de stats suele estar justo después
-          const parent = channelHandleEl.closest('ytd-c4-tabbed-header-renderer');
-          if (parent) {
-            const allText = safeText(parent);
-            
-            // Buscar patrón "X suscriptores" o "X suscriptor"
-            if (followers === null) {
-              const subsMatch = allText.match(/([\d\.,]+\s*[KkMmBb]?)\s*suscriptore?s?/i);
-              if (subsMatch) {
-                followers = parseNumber(subsMatch[1]);
-              }
-            }
-            
-            // Búsqueda especial para canales pequeños (1-999 suscriptores)
-            if (followers === null) {
-              const smallMatch = allText.match(/\b(\d{1,3})\s*suscriptore?s?\b/i);
-              if (smallMatch && smallMatch[1]) {
-                const parsed = parseInt(smallMatch[1], 10);
-                if (parsed > 0 && parsed < 1000) {
-                  followers = parsed;
-                }
-              }
-            }
-            
-            // Buscar patrón "X vídeos" o "X vídeo" o "X videos" o "X video"
-            if (!videos) {
-              const videosMatch = allText.match(/([\d\.,]+\s*[KkMmBb]?)\s*v[ií]deoe?s?/i);
-              if (videosMatch) {
-                videos = parseNumber(videosMatch[1]) || 0;
-              }
-            }
-          }
-        }
-
-        // Selector específico para subscriber count
-        if (followers === null) {
-          const subElements = document.querySelectorAll('yt-formatted-string[id*="subscriber"], #subscriber-count');
-          for (const el of subElements) {
-            const text = safeText(el);
-            if (text) {
-              const parsed = parseNumber(text);
-              if (parsed !== null) {
-                followers = parsed;
-                break;
-              }
-            }
-          }
-        }
-      } catch (e) {
-        console.error('Error en selectores DOM:', e);
+      // Si ya tenemos todo, retornar rápido
+      if (followers !== null && videos > 0 && channelName) {
+        return { channelName, channelId, handle, profileImageUrl, followers, videos };
       }
 
-      // 4) Búsqueda en todo el body como último recurso
+      // 2) Selectores DOM (Fallback)
       try {
-        const bodyText = document.body.innerText || '';
-        
-        // Buscar suscriptores si aún no se encontró
-        if (followers === null) {
-          const patterns = [
-            /([\d\.,]+\s*[KkMmBb]?)\s*suscriptore?s?/i,
-            /([\d\.,]+\s*[KkMmBb]?)\s*subscribere?s?/i,
-            /([\d\.,]+\s*[KkMmBb]?)\s*abonadoe?s?/i
-          ];
-          
-          for (const pattern of patterns) {
-            const match = bodyText.match(pattern);
-            if (match && match[1]) {
-              const parsed = parseNumber(match[1]);
-              if (parsed !== null && parsed > 1000) { // Filtro básico de validez
-                followers = parsed;
-                break;
-              }
-            }
-          }
-        }
-        
-        // Búsqueda especial para suscriptores pequeños (1-999 sin sufijo)
-        if (followers === null) {
-          const smallMatch = bodyText.match(/\b(\d{1,3})\s*suscriptore?s?\b/i);
-          if (smallMatch && smallMatch[1]) {
-            const parsed = parseInt(smallMatch[1], 10);
-            if (parsed > 0 && parsed < 1000) {
-              followers = parsed;
-            }
-          }
-        }
-        
-        // Buscar videos si aún no se encontró
-        if (!videos) {
-          const match = bodyText.match(/([\d\.,]+\s*[KkMmBb]?)\s*v[ií]deoe?s?/i);
-          if (match && match[1]) {
-            videos = parseNumber(match[1]) || 0;
-          }
-        }
-      } catch (e) {
-        console.error('Error en búsqueda body:', e);
-      }
+        const metaTags = {
+          title: document.querySelector('meta[property="og:title"]'),
+          image: document.querySelector('meta[property="og:image"]'),
+          url: document.querySelector('meta[property="og:url"]')
+        };
 
-      // 5) Canonical link para handle
-      try {
-        if (!handle) {
-          const canonical = document.querySelector('link[rel="canonical"]');
-          if (canonical?.href && canonical.href.includes('/@')) {
-            handle = canonical.href.split('/@').pop().split('/')[0];
+        if (!channelName && metaTags.title) channelName = metaTags.title.content;
+        if (!profileImageUrl && metaTags.image) profileImageUrl = metaTags.image.content;
+
+        // Intentar sacar followers del DOM visible
+        if (followers === null) {
+          // Estrategia: Buscar nodo que contenga "subscribers" o "suscriptores"
+          const allText = document.body.innerText;
+          const subsMatch = allText.match(/([\d\.,]+\s*[KkMmBb]?)\s*(?:suscriptore?s?|subscribere?s?)/i);
+          if (subsMatch) {
+            followers = parseNumber(subsMatch[1]);
           }
         }
-      } catch (e) {}
+      } catch (e) { }
 
       return { channelName, channelId, handle, profileImageUrl, followers, videos };
     });
 
-    console.log(`📊 [YouTube] Datos extraídos:`, data);
+    console.log(`📊 [YouTube] Datos extraídos (Iteración 1):`, data);
 
-    // ---------------- Fallback: /about page ----------------
+    // ---------------- Fallback: /about page (Solo si falta info crítica) ----------------
+    // Optimización: Solo ir a /about si realmente no tenemos followers
     if (data.followers === null) {
       try {
         const aboutUrl = url.replace(/\/$/, '') + '/about';
-        console.log(`🔎 [YouTube] Intentando /about: ${aboutUrl}`);
-        
-        await page.goto(aboutUrl, { waitUntil: 'networkidle2', timeout: 60000 });
-        await sleep(2000);
+        console.log(`🔎 [YouTube] Followers no encontrados, saltando a /about: ${aboutUrl}`);
+
+        await page.goto(aboutUrl, { waitUntil: 'domcontentloaded', timeout: 10000 });
 
         const aboutData = await page.evaluate(() => {
-          const parseNumber = (text) => {
-            if (!text) return null;
-            let cleaned = String(text).trim();
-            const match = cleaned.match(/([\d\.,]+)\s*([KkMmBb])?/);
-            if (!match) return null;
-            let numStr = match[1];
-            const suffix = (match[2] || '').toUpperCase();
-            if (numStr.includes('.') && numStr.includes(',')) {
-              numStr = numStr.replace(/\./g, '').replace(',', '.');
-            } else if (numStr.includes(',')) {
-              numStr = numStr.replace(',', '.');
-            } else if (numStr.includes('.') && numStr.split('.')[1]?.length >= 3) {
-              numStr = numStr.replace(/\./g, '');
-            }
-            let num = parseFloat(numStr);
-            if (suffix === 'K') num *= 1000;
-            if (suffix === 'M') num *= 1000000;
-            if (suffix === 'B') num *= 1000000000;
-            if (!isFinite(num)) return null;
-            return Math.round(num);
-          };
-          
+          // Inyectar misma logica simple
           const bodyText = document.body.innerText || '';
-          
-          let followers = null;
           const match = bodyText.match(/([\d\.,]+\s*[KkMmBb]?)\s*(?:suscriptore?s?|subscribere?s?)/i);
-          if (match && match[1]) {
-            followers = parseNumber(match[1]);
-          }
-          
-          // Búsqueda especial para números pequeños
-          if (followers === null) {
-            const smallMatch = bodyText.match(/\b(\d{1,3})\s*suscriptore?s?\b/i);
-            if (smallMatch && smallMatch[1]) {
-              const parsed = parseInt(smallMatch[1], 10);
-              if (parsed > 0 && parsed < 1000) {
-                followers = parsed;
-              }
-            }
-          }
-          
-          return { followers };
+          // TODO: Mejorar parsing reutilizando funcion si es posible, o duplicando la logica minima
+          if (match) return match[1]; // Devolver raw string
+          return null;
         });
 
-        if (aboutData.followers !== null) {
-          data.followers = aboutData.followers;
-          console.log(`✅ [YouTube] Followers encontrados en /about: ${data.followers}`);
+        if (aboutData) {
+          // Parsear afuera para simplificar
+          // (Reimplementamos parseNumber brevemente aqui o extraemos helpers, 
+          //  pero para mantener el scope limpio, asumimos que el evaluate arriba devolvió string)
+          //  Nota: evaluate tiene su propio scope.
+          //  Correction: el scope de evaluate está cerrado. 
+          //  Simple fix: traer el string y parsearlo en Node.
+          data.followers = parseStringNumber(aboutData);
+          console.log(`✅ [YouTube] Followers recuperados de /about: ${data.followers}`);
         }
       } catch (e) {
-        console.error('Error en /about:', e.message);
+        console.warn('⚠️ [YouTube] Fallback /about falló o timeout');
       }
     }
-
-    // ---------------- Fallback: /videos page ----------------
-    if (!data.videos) {
-      try {
-        const videosUrl = url.replace(/\/$/, '') + '/videos';
-        console.log(`🔎 [YouTube] Intentando /videos: ${videosUrl}`);
-        
-        await page.goto(videosUrl, { waitUntil: 'networkidle2', timeout: 60000 });
-        await sleep(2000);
-
-        const videosData = await page.evaluate(() => {
-          const parseNumber = (text) => {
-            if (!text) return null;
-            let cleaned = String(text).trim();
-            const match = cleaned.match(/([\d\.,]+)\s*([KkMmBb])?/);
-            if (!match) return null;
-            let numStr = match[1];
-            const suffix = (match[2] || '').toUpperCase();
-            if (numStr.includes('.') && numStr.includes(',')) {
-              numStr = numStr.replace(/\./g, '').replace(',', '.');
-            } else if (numStr.includes(',')) {
-              numStr = numStr.replace(',', '.');
-            } else if (numStr.includes('.') && numStr.split('.')[1]?.length >= 3) {
-              numStr = numStr.replace(/\./g, '');
-            }
-            let num = parseFloat(numStr);
-            if (suffix === 'K') num *= 1000;
-            if (suffix === 'M') num *= 1000000;
-            if (suffix === 'B') num *= 1000000000;
-            if (!isFinite(num)) return null;
-            return Math.round(num);
-          };
-          
-          const bodyText = document.body.innerText || '';
-          
-          let videos = 0;
-          const match = bodyText.match(/([\d\.,]+\s*[KkMmBb]?)\s*v[ií]deoe?s?/i);
-          if (match && match[1]) {
-            videos = parseNumber(match[1]) || 0;
-          }
-          
-          return { videos };
-        });
-
-        if (videosData.videos) {
-          data.videos = videosData.videos;
-          console.log(`✅ [YouTube] Videos encontrados en /videos: ${data.videos}`);
-        }
-      } catch (e) {
-        console.error('Error en /videos:', e.message);
-      }
-    }
-
-    // Cerrar browser
-    try { await browser.close(); } catch (e) {}
-
-    // Log final
-    console.log(`✅ [YouTube] Resultado final:`, {
-      followers: data.followers,
-      videos: data.videos
-    });
 
     // Prepare result
     const result = {
@@ -410,39 +232,76 @@ async function scrapeYouTube(channelInput) {
       videos: data.videos || 0,
       hiddenSubscriberCount: data.followers === null,
       profile_image_url: data.profileImageUrl || '',
-      url: data.handle 
-        ? `https://www.youtube.com/@${data.handle}` 
+      url: data.handle
+        ? `https://www.youtube.com/@${data.handle}`
         : `https://www.youtube.com/channel/${data.channelId}`,
       platform: 'youtube'
     };
 
+    // Cerrar la PÁGINA, pero mantener el BROWSER abierto
+    await page.close();
+
+    // Guardado de imagen (asíncrono, no bloquear respuesta si es posible, pero aquí debemos esperar para devolver la URL pública)
     try {
-      const saved = await saveProfileImageForProfile({
-        platform: 'youtube',
-        username: result.username,
-        imageUrl: result.profile_image_url
-      });
-      if (saved) {
-        result.profile_image_saved = true;
-        result.profile_image_path = saved.path;
-        if (saved.publicUrl) result.profile_image_public_url = saved.publicUrl;
-      } else {
-        result.profile_image_saved = false;
+      if (result.profile_image_url) {
+        const saved = await saveProfileImageForProfile({
+          platform: 'youtube',
+          username: result.username,
+          imageUrl: result.profile_image_url
+        });
+        if (saved) {
+          result.profile_image_saved = true;
+          result.profile_image_path = saved.path;
+          if (saved.publicUrl) result.profile_image_public_url = saved.publicUrl;
+        }
       }
     } catch (e) {
       console.warn('[YouTube] Failed to save profile image:', e.message);
-      result.profile_image_saved = false;
     }
 
     return result;
 
   } catch (err) {
-    if (browser) {
-      try { await browser.close(); } catch {}
+    // Si falla algo crítico y tenemos página, cerrarla
+    if (page && !page.isClosed()) {
+      try { await page.close(); } catch { }
     }
+    // Si el error fue de navegador desconectado, limpiar la instancia para la proxima
+    if (err.message.includes('Session closed') || err.message.includes('not opened')) {
+      browserInstance = null;
+    }
+
     console.error(`❌ [YouTube] Error:`, err);
     throw new Error(`Error scraping YouTube: ${err.message}`);
   }
+}
+
+// Helper local para parsear números en el contexto Node (para el fallback)
+function parseStringNumber(text) {
+  if (!text) return null;
+  let cleaned = String(text).trim();
+  const match = cleaned.match(/([\d\.,]+)\s*([KkMmBb])?/);
+  if (!match) return null;
+
+  let numStr = match[1];
+  const suffix = (match[2] || '').toUpperCase();
+
+  if (numStr.includes('.') && numStr.includes(',')) {
+    numStr = numStr.replace(/\./g, '').replace(',', '.');
+  } else if (numStr.includes(',')) {
+    numStr = numStr.replace(',', '.');
+  } else if (numStr.includes('.') && numStr.split('.')[1]?.length >= 3) {
+    numStr = numStr.replace(/\./g, '');
+  }
+
+  let num = parseFloat(numStr);
+
+  if (suffix === 'K') num *= 1000;
+  if (suffix === 'M') num *= 1000000;
+  if (suffix === 'B') num *= 1000000000;
+
+  if (!isFinite(num)) return null;
+  return Math.round(num);
 }
 
 module.exports = scrapeYouTube;
