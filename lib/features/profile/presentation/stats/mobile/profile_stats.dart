@@ -290,16 +290,17 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
                                   children: [
                                     BlocBuilder<FollowerCubit, FollowerState>(
                                       builder: (context, followerState) {
+                                        final int migozzFollowers =
+                                            followerState.followersCount;
                                         return _TopMetricItem(
-                                          icon: Icons.person_add,
-                                          value: _formatNum(
-                                            followerState.followersCount > 0
-                                                ? followerState.followersCount
-                                                : (_totalsGlobal['profile_likes'] ??
-                                                      0),
+                                          iconWidget: Image.asset(
+                                            'assets/icons/Migozz_Icon.png',
+                                            width: 32,
+                                            height: 32,
                                           ),
-                                          label: "stats.fieldLabels.followers"
-                                              .tr(),
+                                          value: _formatNum(migozzFollowers),
+                                          // label: "stats.fieldLabels.followers"
+                                          //     .tr(),
                                           onTap: () {
                                             final authState = context
                                                 .read<AuthCubit>()
@@ -324,20 +325,24 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
                                         );
                                       },
                                     ),
-                                    // TODO: Descomentar cuando se necesiten estos datos para la version paga (usuarios premium)
-                                    // _TopMetricItem(
-                                    //   icon: Icons.chat_bubble,
-                                    //   value: _formatNum(
-                                    //     _totalsGlobal['unread_messages'] ?? 0,
-                                    //   ),
-                                    // ),
-                                    // _TopMetricItem(
-                                    //   icon: Icons.reply, // Curved arrow look
-                                    //   value: _formatNum(
-                                    //     _totalsGlobal['profile_shares'] ?? 0,
-                                    //   ),
-                                    //   isRotated: true,
-                                    // ),
+                                    _TopMetricItem(
+                                      icon: Icons.public,
+                                      value: _formatNum(
+                                        _totalsGlobal['followers'] ?? 0,
+                                      ),
+                                    ),
+                                    BlocBuilder<FollowerCubit, FollowerState>(
+                                      builder: (context, followerState) {
+                                        return _TopMetricItem(
+                                          icon: Icons.person_add,
+                                          value: _formatNum(
+                                            followerState.followersCount +
+                                                (_totalsGlobal['followers'] ??
+                                                    0),
+                                          ),
+                                        );
+                                      },
+                                    ),
                                   ],
                                 ),
                               ),
@@ -412,26 +417,30 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
 // --- Helper Widgets ---
 
 class _TopMetricItem extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final Widget? iconWidget;
   final String value;
   final String? label;
   final VoidCallback? onTap;
 
   const _TopMetricItem({
-    required this.icon,
+    this.icon,
+    this.iconWidget,
     required this.value,
     this.label,
     this.onTap,
-  });
+  }) : assert(icon != null || iconWidget != null);
 
   @override
   Widget build(BuildContext context) {
+    final Widget resolvedIcon =
+        iconWidget ?? Icon(icon!, color: Colors.white, size: 32);
     return GestureDetector(
       onTap: onTap,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: Colors.white, size: 32),
+          resolvedIcon,
           const SizedBox(height: 8),
           Text(
             value,
