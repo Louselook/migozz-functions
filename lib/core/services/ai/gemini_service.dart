@@ -333,7 +333,9 @@ class GeminiService {
     'avatarUrl', // 9
     'phone', // 10
     'voiceNoteUrl', // 11
-    'confirmCreateAccount', // 12
+    'category', // 12 - Seleccionar categorías
+    'interests', // 13 - Seleccionar intereses
+    'confirmCreateAccount', // 14
   ];
 
   //  Flujo reducido para usuarios autenticados
@@ -343,6 +345,9 @@ class GeminiService {
     'socialEcosystem',
     'avatarUrl',
     'voiceNoteUrl',
+    'category',
+    'interests',
+    'confirmCreateAccount',
   ];
 
   // Getter dinámico que devuelve el flujo correcto según auth
@@ -1108,6 +1113,116 @@ class GeminiService {
             "action": 0,
           };
         }
+      }
+    }
+
+    // ✅ Manejo especial para category: detectar retorno después de seleccionar categorías
+    if (currentStepKey == 'category') {
+      final normalized = userInput.trim().toLowerCase();
+
+      if (normalized == 'category_updated' ||
+          normalized == 'done' ||
+          normalized == 'continue') {
+        final isSpanish = registerCubit.state.language == 'Español';
+
+        debugPrint(
+          '✅ [category] Categorías seleccionadas, avanzando al siguiente paso',
+        );
+
+        // Salir del modo repetición si estábamos en él
+        if (_isInRepeatMode) {
+          _currentQuestionIndex = _previousQuestionIndex;
+          _isInRepeatMode = false;
+          debugPrint('🔙 Saliendo de modo repetición desde category');
+        } else {
+          _currentQuestionIndex++;
+        }
+
+        // Obtener siguiente pregunta
+        if (_currentQuestionIndex >= questionFlow.length) {
+          return {
+            "text": isSpanish
+                ? "¡ Registro completado.🎉"
+                : " Registration complete.🎉",
+            "options": [],
+            "step": "finished",
+            "keepTalk": false,
+          };
+        }
+
+        final nextQuestion = AssistantFunctions.getCurrentQuestion(
+          questionFlow,
+          _currentQuestionIndex,
+          registerCubit,
+        );
+
+        if (nextQuestion == null) {
+          return {
+            "text": isSpanish
+                ? "¡ Registro completado.🎉"
+                : " Registration complete.🎉",
+            "options": [],
+            "step": "finished",
+            "keepTalk": false,
+          };
+        }
+
+        return await _prepareQuestion(nextQuestion, registerCubit);
+      }
+    }
+
+    // ✅ Manejo especial para interests: detectar retorno después de seleccionar intereses
+    if (currentStepKey == 'interests') {
+      final normalized = userInput.trim().toLowerCase();
+
+      if (normalized == 'interests_updated' ||
+          normalized == 'done' ||
+          normalized == 'continue') {
+        final isSpanish = registerCubit.state.language == 'Español';
+
+        debugPrint(
+          '✅ [interests] Intereses seleccionados, avanzando al siguiente paso',
+        );
+
+        // Salir del modo repetición si estábamos en él
+        if (_isInRepeatMode) {
+          _currentQuestionIndex = _previousQuestionIndex;
+          _isInRepeatMode = false;
+          debugPrint('🔙 Saliendo de modo repetición desde interests');
+        } else {
+          _currentQuestionIndex++;
+        }
+
+        // Obtener siguiente pregunta
+        if (_currentQuestionIndex >= questionFlow.length) {
+          return {
+            "text": isSpanish
+                ? "¡ Registro completado.🎉"
+                : " Registration complete.🎉",
+            "options": [],
+            "step": "finished",
+            "keepTalk": false,
+          };
+        }
+
+        final nextQuestion = AssistantFunctions.getCurrentQuestion(
+          questionFlow,
+          _currentQuestionIndex,
+          registerCubit,
+        );
+
+        if (nextQuestion == null) {
+          return {
+            "text": isSpanish
+                ? "¡ Registro completado.🎉"
+                : " Registration complete.🎉",
+            "options": [],
+            "step": "finished",
+            "keepTalk": false,
+          };
+        }
+
+        return await _prepareQuestion(nextQuestion, registerCubit);
       }
     }
 

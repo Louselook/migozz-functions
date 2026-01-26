@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
+import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/user_details_button.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
@@ -170,12 +171,24 @@ class _CategoryStepState extends State<CategoryStep> {
             ),
             Padding(
               padding: const EdgeInsets.only(top: 20, bottom: 10),
-              child: userDetailsButton(
-                controller: widget.controller,
-                context: context,
-                action: UserDetailsAction.next,
-                mode: widget.mode,
-              ),
+              child: widget.mode == MoreUserDetailsMode.register
+                  // En modo registro (desde chat), cerrar pantalla y volver al chat
+                  ? GradientButton(
+                      width: double.infinity,
+                      radius: 19,
+                      onPressed: () {
+                        _updateCubit();
+                        Navigator.of(context).pop('done');
+                      },
+                      child: const SecondaryText('Continue', fontSize: 20),
+                    )
+                  // En modo edición, ir a la siguiente página
+                  : userDetailsButton(
+                      controller: widget.controller,
+                      context: context,
+                      action: UserDetailsAction.next,
+                      mode: widget.mode,
+                    ),
             ),
           ],
         ),

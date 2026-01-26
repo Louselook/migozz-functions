@@ -53,7 +53,7 @@ class ChatNavigationHandler {
         break;
 
       case 1:
-        // Otro paso (CategoryStep)
+        // CategoryStep - Selección de categorías
         await Navigator.push(
           context,
           MaterialPageRoute(
@@ -63,10 +63,16 @@ class ChatNavigationHandler {
             ),
           ),
         );
+
+        // Al volver, avanzar al siguiente paso
+        if (context.mounted) {
+          chatController.setLastUserMessageForBot('category_updated');
+          chatController.showNextBotMessage();
+        }
         break;
 
       case 2:
-        // Último paso (InterestsStep)
+        // InterestsStep - Selección de intereses
         await Navigator.push(
           context,
           MaterialPageRoute(
@@ -76,6 +82,12 @@ class ChatNavigationHandler {
             ),
           ),
         );
+
+        // Al volver, avanzar al siguiente paso
+        if (context.mounted) {
+          chatController.setLastUserMessageForBot('interests_updated');
+          chatController.showNextBotMessage();
+        }
         break;
 
       default:

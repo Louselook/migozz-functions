@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/modules/category_step.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/interests/interests_step.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/social_network_selection_step.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/social_ecosystem_step_v3.dart';
@@ -111,19 +112,22 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
 
     if (widget.mode == MoreUserDetailsMode.register) {
       // In register mode, show simple or full view based on state
+      // pageIndicator: 0 = SocialEcosystem, 1 = Category, 2 = Interests
       if (_showFullSocialView) {
         // Full view with all categories and search
         steps = [
           SocialEcosystemStepV3(controller: pageController, mode: widget.mode),
+          CategoryStep(controller: pageController, mode: widget.mode),
           InterestsStep(controller: pageController, mode: widget.mode),
         ];
       } else {
-        // Simple view with main networks only - Two-step flow
+        // Simple view with main networks only - Three-step flow
         steps = [
           SocialNetworkSelectionStep(
             controller: pageController,
             onAddOtherNetworks: _navigateToFullSocialView,
           ),
+          CategoryStep(controller: pageController, mode: widget.mode),
           InterestsStep(controller: pageController, mode: widget.mode),
         ];
       }
@@ -131,6 +135,7 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
       // In edit mode, always show full v3 view
       steps = [
         SocialEcosystemStepV3(controller: pageController, mode: widget.mode),
+        CategoryStep(controller: pageController, mode: widget.mode),
         InterestsStep(controller: pageController, mode: widget.mode),
       ];
     }

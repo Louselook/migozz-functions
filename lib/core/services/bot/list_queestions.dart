@@ -134,9 +134,18 @@ final Map<String, Map<String, dynamic>> questionsEs = {
 
   "category": {
     "text": "Elige tus categorías para personalizar tu contenido.",
+    "options": [],
     "step": "regProgress.category",
     "keepTalk": false,
     "action": 1,
+  },
+
+  "interests": {
+    "text": "Ahora elige tus intereses para mostrarte contenido relevante.",
+    "options": [],
+    "step": "regProgress.interests",
+    "keepTalk": false,
+    "action": 2,
   },
 };
 
@@ -271,12 +280,21 @@ final Map<String, Map<String, dynamic>> questionsEn = {
     "keepTalk": false,
   },
 
-  // "category": {
-  //   "text": "Choose your categories to personalize your content.",
-  //   "step": "regProgress.category",
-  //   "keepTalk": false,
-  //   "action": 1,
-  // },
+  "category": {
+    "text": "Choose your categories to personalize your content.",
+    "options": [],
+    "step": "regProgress.category",
+    "keepTalk": false,
+    "action": 1,
+  },
+
+  "interests": {
+    "text": "Now choose your interests to show you relevant content.",
+    "options": [],
+    "step": "regProgress.interests",
+    "keepTalk": false,
+    "action": 2,
+  },
 };
 
 /// MENSAJES DE ERROR (respuestas inválidas)
