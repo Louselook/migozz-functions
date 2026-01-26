@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
@@ -54,6 +56,9 @@ class ChatNavigationHandler {
 
       case 1:
         // CategoryStep - Selección de categorías
+        // Dejar el mensaje del bot visible un momento antes de navegar.
+        await Future<void>.delayed(const Duration(milliseconds: 1400));
+        if (!context.mounted) return;
         await Navigator.push(
           context,
           MaterialPageRoute(
@@ -73,6 +78,9 @@ class ChatNavigationHandler {
 
       case 2:
         // InterestsStep - Selección de intereses
+        // Dejar el mensaje del bot visible un momento antes de navegar.
+        await Future<void>.delayed(const Duration(milliseconds: 1400));
+        if (!context.mounted) return;
         await Navigator.push(
           context,
           MaterialPageRoute(

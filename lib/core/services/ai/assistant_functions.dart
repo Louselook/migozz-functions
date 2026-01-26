@@ -691,6 +691,24 @@ class AssistantFunctions {
         normalized == 'my voice' ||
         normalized == 'mi voz';
 
+    final wantsCategory =
+        normalized.contains('categoría') ||
+        normalized.contains('categoria') ||
+        normalized.contains('category') ||
+        normalized.contains('categor') ||
+        normalized == 'my category' ||
+        normalized == 'mi categoría' ||
+        normalized == 'mi categoria';
+
+    final wantsInterests =
+        normalized.contains('interés') ||
+        normalized.contains('interes') ||
+        normalized.contains('interest') ||
+        normalized.contains('intereses') ||
+        normalized.contains('interests') ||
+        normalized == 'my interests' ||
+        normalized == 'mis intereses';
+
     // Detectar si hay un campo específico mencionado
     final hasFieldMention =
         wantsUsername ||
@@ -700,7 +718,9 @@ class AssistantFunctions {
         wantsEmail ||
         wantsLocation ||
         wantsPhone ||
-        wantsVoiceNote;
+        wantsVoiceNote ||
+        wantsCategory ||
+        wantsInterests;
 
     // IMPORTANTE: Solo detectar cambio implícito (solo mencionar el campo)
     // si el input es corto (< 25 chars) o empieza con "my"/"mi"
@@ -747,6 +767,10 @@ class AssistantFunctions {
       targetField = 'phone';
     } else if (wantsVoiceNote) {
       targetField = 'voiceNoteUrl';
+    } else if (wantsCategory) {
+      targetField = 'category';
+    } else if (wantsInterests) {
+      targetField = 'interests';
     }
 
     return {

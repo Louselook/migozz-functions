@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:migozz_app/features/profile/components/follow_button.dart';
+import 'package:migozz_app/core/color.dart';
 
 class ProfileTopActions extends StatefulWidget {
   final bool isOwnProfile;
@@ -37,7 +39,7 @@ class _ProfileTopActionsState extends State<ProfileTopActions>
   void initState() {
     super.initState();
     _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 600),
+      duration: const Duration(milliseconds: 666),
       vsync: this,
     );
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(
@@ -49,7 +51,7 @@ class _ProfileTopActionsState extends State<ProfileTopActions>
         _pulseController.reverse();
       } else if (status == AnimationStatus.dismissed) {
         _pulseCount++;
-        if (_pulseCount < 3 &&
+        if (_pulseCount < 4 &&
             widget.profilePercentage < 80 &&
             widget.isOwnProfile) {
           _pulseController.forward();
@@ -176,7 +178,10 @@ class _ProfileTopActionsState extends State<ProfileTopActions>
                           const SizedBox(width: 8),
                         ],
                         GestureDetector(
-                          onTap: widget.onMenuTap ?? () {},
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            widget.onMenuTap?.call();
+                          },
                           child: ScaleTransition(
                             scale: shouldPulse
                                 ? _pulseAnimation
@@ -191,10 +196,15 @@ class _ProfileTopActionsState extends State<ProfileTopActions>
                                   width: 1,
                                 ),
                               ),
-                              child: const Icon(
-                                Icons.edit_outlined,
-                                color: Colors.white,
-                                size: 20,
+                              child: ShaderMask(
+                                blendMode: BlendMode.srcIn,
+                                shaderCallback: (bounds) =>
+                                    AppColors.primaryGradient.createShader(bounds),
+                                child: const Icon(
+                                  Icons.edit_outlined,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
                               ),
                             ),
                           ),

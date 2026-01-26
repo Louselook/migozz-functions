@@ -43,12 +43,16 @@ class _CategoryStepState extends State<CategoryStep> {
       if (widget.mode == MoreUserDetailsMode.register) {
         final registerState = context.read<RegisterCubit>().state;
         setState(() {
-          selectedCategories = registerState.category ?? [];
+          selectedCategories = List<String>.from(
+            registerState.category ?? const <String>[],
+          );
         });
       } else {
         final editState = context.read<EditCubit>().state;
         setState(() {
-          selectedCategories = editState.category ?? [];
+          selectedCategories = List<String>.from(
+            editState.category ?? const <String>[],
+          );
         });
       }
     });
@@ -96,9 +100,13 @@ class _CategoryStepState extends State<CategoryStep> {
   // Actualizar el cubit correspondiente según el modo
   void _updateCubit() {
     if (widget.mode == MoreUserDetailsMode.register) {
-      context.read<RegisterCubit>().setCategories(selectedCategories);
+      context
+          .read<RegisterCubit>()
+          .setCategories(List<String>.from(selectedCategories));
     } else {
-      context.read<EditCubit>().updateCategory(selectedCategories);
+      context
+          .read<EditCubit>()
+          .updateCategory(List<String>.from(selectedCategories));
     }
   }
 
@@ -154,6 +162,7 @@ class _CategoryStepState extends State<CategoryStep> {
                                           selectedCategories.add(category);
                                         }
                                       });
+
                                       //  Actualizar el cubit correspondiente
                                       _updateCubit();
                                       debugPrint(

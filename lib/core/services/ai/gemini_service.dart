@@ -630,6 +630,21 @@ class GeminiService {
           normalized == 'mi correo' ||
           normalized == 'my email';
 
+      final wantsChangeCategory =
+          normalized.contains('categoría') ||
+          normalized.contains('categoria') ||
+          normalized.contains('category') ||
+          normalized == 'mi categoría' ||
+          normalized == 'my category';
+
+      final wantsChangeInterests =
+          normalized.contains('interés') ||
+          normalized.contains('interes') ||
+          normalized.contains('interests') ||
+          normalized.contains('interest') ||
+          normalized == 'mis intereses' ||
+          normalized == 'my interests';
+
       final wantsNothingContinue =
           normalized.contains('nada') ||
           normalized.contains('nothing') ||
@@ -684,7 +699,9 @@ class GeminiService {
       if (wantsChangeName ||
           wantsChangeUsername ||
           wantsChangePhone ||
-          wantsChangeEmail) {
+          wantsChangeEmail ||
+          wantsChangeCategory ||
+          wantsChangeInterests) {
         _awaitingFieldSelection = false;
         _returnedFromRepeatMode =
             false; // Limpiar flag - vamos a entrar en un nuevo repeat mode
@@ -709,11 +726,22 @@ class GeminiService {
               : "Enter your new email:";
           // Limpiar el OTP anterior
           registerCubit.setCurrentOTP('');
-        } else {
+        } else if (wantsChangePhone) {
           targetField = 'phone';
           promptText = isSpanish
               ? "Escribe tu número de teléfono:"
               : "Enter your phone number:";
+        } else if (wantsChangeCategory) {
+          targetField = 'category';
+          promptText = isSpanish
+              ? "Perfecto, vamos a actualizar tu categoría. ¿Cuál es tu especialidad principal?"
+              : "Perfect, let's update your category. What's your main specialty?";
+        } else {
+          // wantsChangeInterests
+          targetField = 'interests';
+          promptText = isSpanish
+              ? "Excelente, vamos a actualizar tus intereses. ¿Cuáles son tus temas de interés?"
+              : "Great, let's update your interests. What are your topics of interest?";
         }
 
         // Entrar en modo repetición para ese campo
@@ -722,6 +750,18 @@ class GeminiService {
           _previousQuestionIndex = _currentQuestionIndex;
           _isInRepeatMode = true;
           _currentQuestionIndex = fieldIndex;
+
+          // Para category e interests, mostrar las opciones UI nativas
+          if (targetField == 'category' || targetField == 'interests') {
+            final actionCode = targetField == 'category' ? 1 : 2;
+            return {
+              "text": promptText,
+              "options": [],
+              "step": "regProgress.$targetField",
+              "keepTalk": false,
+              "action": actionCode, // 1 para category, 2 para interests
+            };
+          }
 
           return {
             "text": promptText,
@@ -745,8 +785,8 @@ class GeminiService {
       return {
         "text": summary,
         "options": isSpanish
-            ? ["Nombre", "Username", "Correo", "Nada, continuar"]
-            : ["Name", "Username", "Email", "Nothing, continue"],
+            ? ["Nombre", "Username", "Correo", "Categoría", "Intereses", "Nada, continuar"]
+            : ["Name", "Username", "Email", "Category", "Interests", "Nothing, continue"],
         "step": "regProgress.changeRequest",
         "keepTalk": false,
       };
