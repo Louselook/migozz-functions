@@ -330,8 +330,12 @@ class _InfoUserProfileState extends State<InfoUserProfile>
           case 'email':
             if (widget.contactEmail != null) {
               final uri = Uri(scheme: 'mailto', path: widget.contactEmail);
-              if (await canLaunchUrl(uri)) {
+              try {
+                // Don't use canLaunchUrl for mailto - it often returns false on Android
+                // due to package visibility restrictions. Try launching directly instead.
                 await launchUrl(uri);
+              } catch (e) {
+                debugPrint('Could not launch email: $e');
               }
             }
             break;
