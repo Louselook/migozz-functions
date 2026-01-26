@@ -7,15 +7,20 @@ import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cu
 import 'package:url_launcher/url_launcher.dart';
 import 'add_contact_info_bottom_sheet.dart';
 import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
+import 'section_percentage_header.dart';
 
 class ContactInfoSection extends StatelessWidget {
   final bool isOwnProfile;
   final UserDTO user;
+  final int sectionPercentage;
+  final bool isCompleted;
 
   const ContactInfoSection({
     super.key,
     required this.isOwnProfile,
     required this.user,
+    this.sectionPercentage = 0,
+    this.isCompleted = false,
   });
 
   String _getFieldName(ContactType type) {
@@ -157,36 +162,28 @@ class ContactInfoSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'profile.customization.contact.title'.tr(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
+          SectionPercentageHeader(
+            title: 'profile.customization.contact.title'.tr(),
+            percentage: sectionPercentage,
+            isCompleted: isCompleted,
+            trailing: GestureDetector(
+              onTap: () {
+                // TODO: Toggle visibility
+                debugPrint('Toggle contact info visibility');
+              },
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
+                  color: Colors.white10,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.remove_red_eye_outlined,
+                  color: Colors.white70,
+                  size: 12,
                 ),
               ),
-              GestureDetector(
-                onTap: () {
-                  // TODO: Toggle visibility
-                  debugPrint('Toggle contact info visibility');
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    color: Colors.white10,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.remove_red_eye_outlined,
-                    color: Colors.white70,
-                    size: 12,
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
           const SizedBox(height: 4),
           Text(

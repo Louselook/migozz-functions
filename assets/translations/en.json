@@ -638,7 +638,10 @@
             "errorUploadAudio" : "Upload failed — try again",
             "record" : "Record Your Voicenote",
             "maxLimit" : "Voice note: 1–10 seconds max.",
-            "liste" : "Listen to your audio"
+            "liste" : "Listen to your audio",
+            "recorded" : "Voice note recorded",
+            "noRecording" : "No voice note yet",
+            "tapToRecord" : "Tap to record"
         },
         "editLocation" : {
             "title": "Confirm location",
@@ -656,7 +659,10 @@
         "editInterest" : {
             "title" : "Edit my Interest",
             "saveInterest" : "Interests saved successfully",
-            "errorSave": "Error saving interests"
+            "errorSave": "Error saving interests",
+            "noInterests" : "No interests added yet",
+            "tapToAdd" : "Tap to add interests",
+            "addMore" : "Add more"
         }
     },
     "share" : {

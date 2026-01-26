@@ -7,15 +7,20 @@ import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cu
 import 'package:url_launcher/url_launcher.dart';
 import 'add_link_bottom_sheet.dart';
 import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
+import 'section_percentage_header.dart';
 
 class FeaturedLinksSection extends StatelessWidget {
   final bool isOwnProfile;
   final UserDTO user;
+  final int sectionPercentage;
+  final bool isCompleted;
 
   const FeaturedLinksSection({
     super.key,
     required this.isOwnProfile,
     required this.user,
+    this.sectionPercentage = 0,
+    this.isCompleted = false,
   });
 
   Future<void> _addLink(BuildContext context) async {
@@ -139,13 +144,10 @@ class FeaturedLinksSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'profile.customization.links.title'.tr(),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-            ),
+          SectionPercentageHeader(
+            title: 'profile.customization.links.title'.tr(),
+            percentage: sectionPercentage,
+            isCompleted: isCompleted,
           ),
           const SizedBox(height: 16),
 

@@ -622,7 +622,10 @@
       "maxLimit": "Nota de voz: máximo 1–10 segundos.",
       "liste": "Escucha tu audio",
       "uploading": "Subiendo audio...",
-      "minDuration": "Graba al menos 5 segundos"
+      "minDuration": "Graba al menos 5 segundos",
+      "recorded": "Nota de voz grabada",
+      "noRecording": "Sin nota de voz aún",
+      "tapToRecord": "Toca para grabar"
     },
     "editLocation": {
       "text1": "Detectamos que estás en:\n\n",
@@ -640,7 +643,10 @@
     "editInterest": {
       "title": "Editar mis intereses",
       "saveInterest": "Intereses guardados correctamente",
-      "errorSave": "Error al guardar intereses"
+      "errorSave": "Error al guardar intereses",
+      "noInterests": "Sin intereses aún",
+      "tapToAdd": "Toca para agregar intereses",
+      "addMore": "Agregar más"
     }
   },
   "share": {
