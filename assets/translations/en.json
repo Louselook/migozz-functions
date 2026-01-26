@@ -382,8 +382,8 @@
             "infodeleted" : "Contact info deleted successfully",
             "infoDeleteError" : "Error deleting contact info:",
             "sheetTitle": {
-              "add": "Add {{type}}",
-              "edit": "Edit {{type}}"
+              "add": "Add {type}",
+              "edit": "Edit {type}"
             },
             "sheetType": {
               "website": "Website",
@@ -943,8 +943,8 @@
       "dialogs": {
         "deleteTitle": "Delete chat?",
         "deleteMessage": "The chat will be deleted only for you. The other user will still be able to see it.",
-        "blockTitle": "Block {{name}}?",
-        "unblockTitle": "Unblock {{name}}?",
+        "blockTitle": "Block {name}?",
+        "unblockTitle": "Unblock {name}?",
         "blockMessage": "You will not receive messages from this user while they are blocked. The user will not know you blocked them.",
         "unblockMessage": "You will receive messages from this user again.",
         "cancel": "Cancel",
@@ -957,8 +957,8 @@
         "you": "You",
         "image": "Image",
         "chatDeleted": "Chat deleted",
-        "userBlocked": "{{name}} has been blocked",
-        "userUnblocked": "{{name}} has been unblocked"
+        "userBlocked": "{name} has been blocked",
+        "userUnblocked": "{name} has been unblocked"
       },
       "errors": {
         "sendMessage": "Error sending message: ",

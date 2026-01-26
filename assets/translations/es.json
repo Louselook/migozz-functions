@@ -332,8 +332,8 @@
         "infodeleted": "Información de contacto eliminada correctamente",
         "infoDeleteError": "Error al eliminar la información de contacto:",
         "sheetTitle": {
-          "add": "Agregar {{type}}",
-          "edit": "Editar {{type}}"
+          "add": "Agregar {type}",
+          "edit": "Editar {type}"
         },
         "sheetType": {
           "website": "Sitio web",
@@ -741,8 +741,8 @@
       "dialogs": {
         "deleteTitle": "¿Eliminar chat?",
         "deleteMessage": "El chat se eliminará solo para ti. El otro usuario podrá seguir viéndolo.",
-        "blockTitle": "¿Bloquear a {{name}}?",
-        "unblockTitle": "¿Desbloquear a {{name}}?",
+        "blockTitle": "¿Bloquear a {name}?",
+        "unblockTitle": "¿Desbloquear a {name}?",
         "blockMessage": "No recibirás mensajes de este usuario mientras esté bloqueado. El usuario no sabrá que lo bloqueaste.",
         "unblockMessage": "Volverás a recibir mensajes de este usuario.",
         "cancel": "Cancelar",
@@ -755,8 +755,8 @@
         "you": "Tú",
         "image": "Imagen",
         "chatDeleted": "Chat eliminado",
-        "userBlocked": "{{name}} ha sido bloqueado",
-        "userUnblocked": "{{name}} ha sido desbloqueado"
+        "userBlocked": "{name} ha sido bloqueado",
+        "userUnblocked": "{name} ha sido desbloqueado"
       },
       "errors": {
         "sendMessage": "Error al enviar mensaje: ",
