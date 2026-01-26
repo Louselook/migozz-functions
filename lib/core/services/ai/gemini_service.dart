@@ -1651,19 +1651,41 @@ class GeminiService {
       if (processResult != null && processResult['otpSent'] == true) {
         debugPrint('📧 OTP enviado exitosamente');
         _awaitingEmailChange = false; // Limpiar flag si estaba activo
-        // Continuar al siguiente paso (emailVerification)
+
+        // Avanzar al paso de emailVerification para que el siguiente input sea procesado correctamente
+        _currentQuestionIndex = questionFlow.indexOf('emailVerification');
+        debugPrint(
+          '📧 Avanzando a emailVerification, índice: $_currentQuestionIndex',
+        );
+
+        // Mostrar mensaje de confirmación de envío de OTP
+        final isSpanish = registerCubit.state.language == 'Español';
+        final userEmail = registerCubit.state.email ?? '';
+        return {
+          "text": isSpanish
+              ? "📩 Se ha enviado un código de 6 dígitos a tu correo: $userEmail"
+              : "📩 A 6-digit code has been sent to your email: $userEmail",
+          "options": isSpanish
+              ? ["Reenviar código", "Cambiar correo"]
+              : ["Resend code", "Change email"],
+          "step": "regProgress.emailVerification",
+          "keepTalk": false,
+          "keyboardType": "number",
+        };
       }
 
       // Manejar OTP reenviado
       if (processResult != null && processResult['otpResent'] == true) {
         debugPrint('📧 OTP reenviado exitosamente');
-        // ignore: unused_local_variable
         final isSpanish = registerCubit.state.language == 'Español';
         return {
           "text": processResult['message'],
-          "options": const <String>[],
+          "options": isSpanish
+              ? ["Reenviar código", "Cambiar correo"]
+              : ["Resend code", "Change email"],
           "step": "regProgress.emailVerification",
-          "keepTalk": true,
+          "keepTalk": false,
+          "keyboardType": "number",
         };
       }
 
@@ -1683,6 +1705,34 @@ class GeminiService {
           "keepTalk": false,
           "keyboardType": "email",
         };
+      }
+
+      // Manejar email verificado correctamente
+      if (processResult != null && processResult['verified'] == true) {
+        debugPrint('✅ Email verificado - avanzando al siguiente paso');
+
+        // Saltar los pasos de otpInput y emailSuccess, ir directamente a socialEcosystem
+        final socialIndex = questionFlow.indexOf('socialEcosystem');
+        if (socialIndex != -1) {
+          _currentQuestionIndex = socialIndex;
+        } else {
+          // Fallback: saltar los pasos de transición
+          _currentQuestionIndex = questionFlow.indexOf('emailVerification') + 3;
+        }
+        debugPrint(
+          '📧 Email verificado - saltando a socialEcosystem, nuevo índice: $_currentQuestionIndex',
+        );
+
+        // Mostrar la siguiente pregunta (socialEcosystem)
+        final nextQuestion = AssistantFunctions.getCurrentQuestion(
+          questionFlow,
+          _currentQuestionIndex,
+          registerCubit,
+        );
+
+        if (nextQuestion != null) {
+          return await _prepareQuestion(nextQuestion, registerCubit);
+        }
       }
 
       // Si no hubo errores, AHORA SÍ avanzar
@@ -1992,7 +2042,24 @@ class GeminiService {
       err['keepTalk'] = false;
     }
 
-    // Limpiar opciones y sugerencias de error
+    // Para el paso de emailVerification, siempre mostrar las opciones de reenviar/cambiar
+    if (currentStepKey == 'emailVerification') {
+      final isSpanish = registerCubit.state.language == 'Español';
+      err['options'] = isSpanish
+          ? ["Reenviar código", "Cambiar correo"]
+          : ["Resend code", "Change email"];
+      err['keyboardType'] = 'number';
+      // Usar mensaje de error específico si no hay uno
+      if (err['text'] == null ||
+          (err['text'] is String && (err['text'] as String).trim().isEmpty)) {
+        err['text'] = isSpanish
+            ? 'Por favor ingresa el código de 6 dígitos.'
+            : 'Please enter the 6-digit code.';
+      }
+      return err;
+    }
+
+    // Limpiar opciones y sugerencias de error para otros pasos
     err['options'] = <String>[];
     err['suggestions'] = <Map<String, dynamic>>[];
 

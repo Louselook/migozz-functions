@@ -283,6 +283,7 @@ class AssistantFunctions {
       case 'emailChange': // NUEVO: Cambiar email
         return _evaluateEmailChange(normalized, userInput);
 
+      case 'emailVerification': // Validar código OTP (paso emailVerification)
       case 'otpInput': // AGREGADO: Validar código OTP
         return _evaluateOTP(normalized, userInput, cubit);
 

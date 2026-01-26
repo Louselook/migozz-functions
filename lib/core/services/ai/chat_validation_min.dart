@@ -260,8 +260,8 @@ Future<Map<String, dynamic>?> processBotResponse(
                 return {
                   "otpResent": true,
                   "message": registerCubit.state.language == 'Español'
-                      ? "✅ Código reenviado a tu correo. Intenta nuevamente."
-                      : "✅ Code resent to your email. Try again.",
+                      ? "✅ Se ha reenviado un código de 6 dígitos a tu correo."
+                      : "✅ A 6-digit code has been resent to your email.",
                 };
               } else {
                 debugPrint('❌ Fallo al reenviar OTP');
