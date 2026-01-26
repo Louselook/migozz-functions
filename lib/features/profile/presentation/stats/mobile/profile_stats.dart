@@ -575,10 +575,10 @@ class _OverviewCard extends StatelessWidget {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(
-                                Icons.stars,
-                                size: 14,
-                                color: Colors.white70,
+                              Image.asset(
+                                'assets/icons/Migozz_Icon.png',
+                                width: 14,
+                                height: 14,
                               ),
                               const SizedBox(width: 6),
                               Text("stats.overview.migozz".tr()),
@@ -681,17 +681,30 @@ class _OverviewCard extends StatelessWidget {
                     },
                   )
                 else
-                  // Placeholder for Migozz stats
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 20),
-                      child: Text(
-                        "stats.noData".tr(), // Or some placeholder
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.5),
-                        ),
-                      ),
-                    ),
+                  // Migozz followers stats
+                  BlocBuilder<FollowerCubit, FollowerState>(
+                    builder: (context, followerState) {
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: _SmallSocialRow(
+                              name: 'stats.fieldLabels.followers'.tr(),
+                              count: followerState.followersCount,
+                              iconPath: 'assets/icons/social_networks/mini_icon_migozz.svg',
+                            ),
+                          ),
+                          const SizedBox(width: 24),
+                          Expanded(
+                            child: _SmallSocialRow(
+                              name: 'stats.fieldLabels.following'.tr(),
+                              count: followerState.followingCount,
+                              iconPath: 'assets/icons/social_networks/mini_icon_migozz.svg',
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
               ],
             ),
