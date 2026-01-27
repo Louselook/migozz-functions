@@ -22,7 +22,8 @@ class SectionPercentageHeader extends StatefulWidget {
   });
 
   @override
-  State<SectionPercentageHeader> createState() => _SectionPercentageHeaderState();
+  State<SectionPercentageHeader> createState() =>
+      _SectionPercentageHeaderState();
 }
 
 class _SectionPercentageHeaderState extends State<SectionPercentageHeader>
@@ -32,7 +33,6 @@ class _SectionPercentageHeaderState extends State<SectionPercentageHeader>
   late Animation<double> _checkmarkScaleAnimation;
   late Animation<double> _checkmarkOpacityAnimation;
   late Animation<double> _percentageFadeAnimation;
-  late Animation<double> _shimmerAnimation;
 
   @override
   void initState() {
@@ -45,10 +45,7 @@ class _SectionPercentageHeaderState extends State<SectionPercentageHeader>
     );
 
     _checkmarkScaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _checkmarkController,
-        curve: Curves.elasticOut,
-      ),
+      CurvedAnimation(parent: _checkmarkController, curve: Curves.elasticOut),
     );
 
     _checkmarkOpacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
@@ -65,17 +62,7 @@ class _SectionPercentageHeaderState extends State<SectionPercentageHeader>
     );
 
     _percentageFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _percentageController,
-        curve: Curves.easeOut,
-      ),
-    );
-
-    _shimmerAnimation = Tween<double>(begin: -1.0, end: 2.0).animate(
-      CurvedAnimation(
-        parent: _percentageController,
-        curve: Curves.easeInOut,
-      ),
+      CurvedAnimation(parent: _percentageController, curve: Curves.easeOut),
     );
 
     // Start animations
@@ -137,18 +124,20 @@ class _SectionPercentageHeaderState extends State<SectionPercentageHeader>
               ),
               const SizedBox(width: 6),
               // Checkmark with animation
-             if (widget.isCompleted) ...[ AnimatedBuilder(
-                animation: _checkmarkController,
-                builder: (context, child) {
-                  return Opacity(
-                    opacity: _checkmarkOpacityAnimation.value,
-                    child: Transform.scale(
-                      scale: _checkmarkScaleAnimation.value,
-                      child: _buildCheckmark(),
-                    ),
-                  );
-                },
-              ),],
+              if (widget.isCompleted) ...[
+                AnimatedBuilder(
+                  animation: _checkmarkController,
+                  builder: (context, child) {
+                    return Opacity(
+                      opacity: _checkmarkOpacityAnimation.value,
+                      child: Transform.scale(
+                        scale: _checkmarkScaleAnimation.value,
+                        child: _buildCheckmark(),
+                      ),
+                    );
+                  },
+                ),
+              ],
               // Edit icon if needed
               if (widget.showEditIcon && widget.onEditTap != null) ...[
                 const SizedBox(width: 6),
@@ -178,10 +167,7 @@ class _SectionPercentageHeaderState extends State<SectionPercentageHeader>
       decoration: BoxDecoration(
         gradient: widget.isCompleted
             ? LinearGradient(
-                colors: [
-                  Colors.green.shade600,
-                  Colors.green.shade400,
-                ],
+                colors: [Colors.green.shade600, Colors.green.shade400],
               )
             : LinearGradient(
                 colors: [
@@ -216,11 +202,7 @@ class _SectionPercentageHeaderState extends State<SectionPercentageHeader>
           ),
         ],
       ),
-      child: const Icon(
-        Icons.check,
-        color: Colors.white,
-        size: 10,
-      ),
+      child: const Icon(Icons.check, color: Colors.white, size: 10),
     );
   }
 }
@@ -239,7 +221,8 @@ class AnimatedSectionContainer extends StatefulWidget {
   });
 
   @override
-  State<AnimatedSectionContainer> createState() => _AnimatedSectionContainerState();
+  State<AnimatedSectionContainer> createState() =>
+      _AnimatedSectionContainerState();
 }
 
 class _AnimatedSectionContainerState extends State<AnimatedSectionContainer>
@@ -256,22 +239,15 @@ class _AnimatedSectionContainerState extends State<AnimatedSectionContainer>
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeOut,
-      ),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.1),
       end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeOutCubic,
-      ),
-    );
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
 
     // Delay based on index for staggered animation
     Future.delayed(
@@ -294,11 +270,7 @@ class _AnimatedSectionContainerState extends State<AnimatedSectionContainer>
   Widget build(BuildContext context) {
     return FadeTransition(
       opacity: _fadeAnimation,
-      child: SlideTransition(
-        position: _slideAnimation,
-        child: widget.child,
-      ),
+      child: SlideTransition(position: _slideAnimation, child: widget.child),
     );
   }
 }
-

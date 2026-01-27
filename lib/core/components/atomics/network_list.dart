@@ -51,7 +51,7 @@ final Map<String, String> iconByLabel = {
   "Linkedin": "assets/icons/social_networks/LinkedIn.svg",
   "Threads": "assets/icons/social_networks/Threads.svg",
   "Reddit": "assets/icons/social_networks/Reddit.svg",
-  "Pinterest": "assets/icons/social_networks/pinterest.svg",
+  "Pinterest": "assets/icons/social_networks/Pinterest.svg",
   "Snapchat": "assets/icons/social_networks/Snapchat.svg",
 
   // Streaming

@@ -420,14 +420,14 @@ class _TopMetricItem extends StatelessWidget {
   final IconData? icon;
   final Widget? iconWidget;
   final String value;
-  final String? label;
+  // final String? label;
   final VoidCallback? onTap;
 
   const _TopMetricItem({
     this.icon,
     this.iconWidget,
     required this.value,
-    this.label,
+    // this.label,
     this.onTap,
   }) : assert(icon != null || iconWidget != null);
 
@@ -451,17 +451,17 @@ class _TopMetricItem extends StatelessWidget {
               letterSpacing: 0.5,
             ),
           ),
-          if (label != null) ...[
-            const SizedBox(height: 2),
-            Text(
-              label!,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.7),
-                fontSize: 11,
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ],
+          // if (label != null) ...[
+          //   const SizedBox(height: 2),
+          //   Text(
+          //     label!,
+          //     style: TextStyle(
+          //       color: Colors.white.withValues(alpha: 0.7),
+          //       fontSize: 11,
+          //       fontWeight: FontWeight.w400,
+          //     ),
+          //   ),
+          // ],
         ],
       ),
     );
@@ -628,8 +628,10 @@ class _OverviewCard extends StatelessWidget {
                         rows.add(
                           _SmallSocialRow(
                             name: 'Youtube',
-                            count: (youtube.followers ?? youtube.subscribers) ?? 0,
-                            iconPath: 'assets/icons/social_networks/Youtube.svg',
+                            count:
+                                (youtube.followers ?? youtube.subscribers) ?? 0,
+                            iconPath:
+                                'assets/icons/social_networks/Youtube.svg',
                           ),
                         );
                       }
@@ -662,7 +664,8 @@ class _OverviewCard extends StatelessWidget {
                         return [
                           for (int i = 0; i < items.length; i++) ...[
                             items[i],
-                            if (i != items.length - 1) const SizedBox(height: 18),
+                            if (i != items.length - 1)
+                              const SizedBox(height: 18),
                           ],
                         ];
                       }
@@ -682,9 +685,7 @@ class _OverviewCard extends StatelessWidget {
                         children: [
                           Expanded(child: Column(children: withSpacing(left))),
                           const SizedBox(width: 24),
-                          Expanded(
-                            child: Column(children: withSpacing(right)),
-                          ),
+                          Expanded(child: Column(children: withSpacing(right))),
                         ],
                       );
                     },
@@ -696,20 +697,17 @@ class _OverviewCard extends StatelessWidget {
                       return Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: _SmallSocialRow(
-                              name: 'stats.fieldLabels.followers'.tr(),
-                              count: followerState.followersCount,
-                              iconPath: 'assets/icons/social_networks/mini_icon_migozz.svg',
-                            ),
+                          _SmallSocialRow(
+                            name: 'stats.fieldLabels.followers'.tr(),
+                            count: followerState.followersCount,
+                            iconPath: 'assets/icons/Migozz_Icon.svg',
                           ),
                           const SizedBox(width: 24),
-                          Expanded(
-                            child: _SmallSocialRow(
-                              name: 'stats.fieldLabels.following'.tr(),
-                              count: followerState.followingCount,
-                              iconPath: 'assets/icons/social_networks/mini_icon_migozz.svg',
-                            ),
+                          _SmallSocialRow(
+                            name: 'stats.fieldLabels.following'.tr(),
+                            count: followerState.followingCount,
+                            iconPath: 'assets/icons/Migozz_Icon.svg',
+                            isFollowing: true,
                           ),
                         ],
                       );
@@ -728,47 +726,49 @@ class _SmallSocialRow extends StatelessWidget {
   final String name;
   final int count;
   final String iconPath;
+  final bool isFollowing;
 
   const _SmallSocialRow({
     required this.name,
     required this.count,
     required this.iconPath,
+    this.isFollowing = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        SvgPicture.asset(
-          iconPath,
-          width: 12,
-          height: 12,
-          placeholderBuilder: (_) =>
-              const Icon(Icons.public, size: 12, color: Colors.white),
+        // Columna 1: Ícono de la red social (ancho fijo)
+        SizedBox(
+          width: 24,
+          child: SvgPicture.asset(
+            iconPath,
+            width: 20,
+            height: 20,
+            placeholderBuilder: (_) =>
+                const Icon(Icons.public, size: 20, color: Colors.white),
+          ),
         ),
-        const SizedBox(width: 10),
+        // Columna 2: Ícono de seguidores/siguiendo (ancho fijo)
+        SizedBox(
+          width: 24,
+          child: Icon(
+            isFollowing ? Icons.person_add_alt_1 : Icons.people_alt_outlined,
+            size: 18,
+            color: Colors.white.withValues(alpha: 0.7),
+          ),
+        ),
+        // Columna 3: Valor numérico
         Expanded(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                name,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.6),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-              Text(
-                _formatNum(count),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.3,
-                ),
-              ),
-            ],
+          child: Text(
+            _formatNum(count),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.3,
+            ),
           ),
         ),
       ],

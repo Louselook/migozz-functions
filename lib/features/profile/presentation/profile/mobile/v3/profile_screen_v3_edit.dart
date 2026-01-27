@@ -9,12 +9,8 @@ import 'package:migozz_app/features/auth/presentation/register/user_details/modu
 import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
 import 'package:migozz_app/features/profile/components/social_rail.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
-import 'package:migozz_app/features/profile/presentation/edit/components/profile_option_button.dart';
-import 'package:migozz_app/features/profile/presentation/edit/modules/edit_audio.dart';
-import 'package:migozz_app/features/profile/presentation/edit/modules/edit_my_interest.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/profile_strength_indicator.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/bio_section.dart';
-import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/email_contact_form_section.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/featured_links_section.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/contact_info_section.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
@@ -137,13 +133,10 @@ class _MobileProfileContentV3EditState
                 // CONTENEDOR ZFIJO (sheet)
                 Expanded(
                   child: Container(
-
                     width: double.infinity,
                     decoration: const BoxDecoration(
                       color: Colors.black,
-                      borderRadius: BorderRadius.vertical(
-
-                      ),
+                      borderRadius: BorderRadius.vertical(),
                     ),
 
                     // SCROLL INTERNO
@@ -185,7 +178,7 @@ class _MobileProfileContentV3EditState
                                   Text(
                                     _uploading
                                         ? 'profile.customization.uploadingProfilePicture.uploading'
-                                            .tr()
+                                              .tr()
                                         : 'profile.customization.uploadingProfilePicture.title'
                                               .tr(),
                                     style: const TextStyle(
@@ -221,7 +214,6 @@ class _MobileProfileContentV3EditState
 
                           // const SizedBox(height: 10),
                           // EmailContactFormSection(isOwnProfile: isOwnProfile),
-
                           const SizedBox(height: 10),
                           FeaturedLinksSection(
                             isOwnProfile: isOwnProfile,
@@ -605,20 +597,17 @@ class _MobileProfileContentV3EditState
   bool _hasSocialMedia(UserDTO user) =>
       user.socialEcosystem != null && user.socialEcosystem!.isNotEmpty;
 
-  bool _hasBio(UserDTO user) =>
-      user.bio != null && user.bio!.trim().isNotEmpty;
+  bool _hasBio(UserDTO user) => user.bio != null && user.bio!.trim().isNotEmpty;
 
   bool _hasProfilePicture(UserDTO user) =>
       user.avatarUrl != null && user.avatarUrl!.isNotEmpty;
 
-  bool _hasInterests(UserDTO user) =>
-      user.interests.isNotEmpty;
+  bool _hasInterests(UserDTO user) => user.interests.isNotEmpty;
 
   bool _hasCategory(UserDTO user) =>
       user.category != null && user.category!.isNotEmpty;
 
-  bool _hasFeaturedLinks(UserDTO user) =>
-      (user.featuredLinks ?? []).isNotEmpty;
+  bool _hasFeaturedLinks(UserDTO user) => (user.featuredLinks ?? []).isNotEmpty;
 
   bool _hasContactInfo(UserDTO user) =>
       (user.contactWebsite != null && user.contactWebsite!.isNotEmpty) ||
