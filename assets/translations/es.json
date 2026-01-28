@@ -855,5 +855,76 @@
     "unfollowConfirmMessage": "¿Estás seguro de que quieres dejar de seguir a este usuario?",
     "removeFollowerTitle": "¿Eliminar seguidor?",
     "removeFollowerMessage": "¿Estás seguro de que quieres eliminar a este usuario de tus seguidores?"
+  },
+  "tutorial": {
+    "skip": "Saltar",
+    "welcome": {
+      "title": "Bienvenido a Migozz",
+      "description": "Descubre tu nuevo ecosistema social. Te guiaremos por las funciones principales para que aproveches al máximo tu experiencia.",
+      "start": "Empezar",
+      "skip": "Saltar tutorial"
+    },
+    "profile": {
+      "home": {
+        "title": "El Inicio",
+        "description": "Accede a tu pantalla principal y recarga la información de tu perfil en cualquier momento."
+      },
+      "search": {
+        "title": "Descubre",
+        "description": "Busca a otros usuarios dentro de la aplicación y expande tu red de contactos."
+      },
+      "messages": {
+        "title": "Mantén el Contacto",
+        "description": "Accede a tus mensajes y conversaciones con otros usuarios dentro de la aplicación."
+      },
+      "stats": {
+        "title": "Parametriza tus Redes",
+        "description": "Visualiza las estadísticas de tus redes sociales y mira tu lista de seguidores dentro de la aplicación presionando el icono."
+      },
+      "settings": {
+        "title": "Edita tu Perfil",
+        "description": "Edita la información básica de tu usuario y gestiona la configuración de tu cuenta."
+      },
+      "linkedNetworks": {
+        "title": "Tu Propio Ecosistema",
+        "description": "Otros usuarios podrán visualizar y acceder a las redes vinculadas a tu ecosistema, ya sea presionando los iconos o las fotos de cada una."
+      },
+      "shareQr": {
+        "title": "Comparte",
+        "description": "Comparte tu código QR único con otros usuarios, ya sea descargando la imagen o enviándola mediante diversas redes sociales."
+      },
+      "community": {
+        "title": "Tus Seguidores",
+        "description": "Visualiza el total de seguidores de todas tus redes vinculadas en 'Comunidad'. Presiona para ver tus seguidores dentro de la aplicación."
+      },
+      "messagesHeader": {
+        "title": "Mantén el Contacto",
+        "description": "Accede rápidamente a tus mensajes e inicia conversaciones con otros usuarios."
+      },
+      "nameSection": {
+        "title": "Preséntate",
+        "description": "Los demás usuarios podrán ver tu nombre completo, tu apodo y escuchar tu audio de presentación."
+      },
+      "notifications": {
+        "title": "Tus Notificaciones",
+        "description": "Accede a las notificaciones de seguidores y mensajes. El contador muestra la cantidad de notificaciones pendientes."
+      },
+      "qrScanner": {
+        "title": "Conéctate",
+        "description": "Escanea el código QR de otros usuarios en cualquier momento para conectar con ellos al instante."
+      },
+      "editProfile": {
+        "title": "Personaliza tu Perfil",
+        "description": "Personaliza más aspectos de tu usuario agregando, editando o eliminando información y redes sociales de tu ecosistema."
+      }
+    },
+    "help": {
+      "title": "¿Necesitas Ayuda?",
+      "button": "Repetir Tutorial",
+      "confirmTitle": "¿Repetir Tutorial?",
+      "confirmMessage": "¿Quieres ver el tutorial de nuevo? Te guiaremos por las funciones principales de la aplicación.",
+      "confirmButton": "Sí, mostrar tutorial",
+      "cancelButton": "Cancelar"
+    }
   }
 }

@@ -14,20 +14,24 @@ import 'package:migozz_app/features/profile/presentation/profile/web/v2/profile_
 import 'package:migozz_app/features/profile/presentation/profile/web/v3/profile_page_v3.dart'
     as web_v3;
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
+import 'package:migozz_app/features/tutorial/profile/profile_tutorial_keys.dart';
 
 class ProfileEntry extends StatelessWidget {
-  final TutorialKeys tutorialKeys; // ← Recibir como parámetro requerido
+  final TutorialKeys tutorialKeys;
+  final ProfileTutorialKeys? profileTutorialKeys;
 
   const ProfileEntry({
     super.key,
-    required this.tutorialKeys, // ← Hacerlo requerido
+    required this.tutorialKeys,
+    this.profileTutorialKeys,
   });
 
   @override
   Widget build(BuildContext context) {
     return ProfileWrapper(
-      tutorialKeys: tutorialKeys, // ← Pasar al wrapper
-      builder: (context, authState, receivedKeys) {
+      tutorialKeys: tutorialKeys,
+      profileTutorialKeys: profileTutorialKeys,
+      builder: (context, authState, receivedKeys, receivedProfileKeys) {
         final user = authState.userProfile;
         if (user == null) {
           return Scaffold(
@@ -48,7 +52,7 @@ class ProfileEntry extends StatelessWidget {
             case 2:
               return web_v2.WebProfileContentV2(
                 user: user,
-                tutorialKeys: receivedKeys, // ← Usar las keys recibidas
+                tutorialKeys: receivedKeys,
               );
             case 3:
               return web_v3.WebProfileContentV3(
@@ -67,11 +71,13 @@ class ProfileEntry extends StatelessWidget {
               return mobile_v1.MobileProfileContent(
                 user: user,
                 tutorialKeys: receivedKeys,
+                profileTutorialKeys: receivedProfileKeys,
               );
             default:
               return mobile_v1.MobileProfileContent(
                 user: user,
                 tutorialKeys: receivedKeys,
+                profileTutorialKeys: receivedProfileKeys,
               );
           }
         }

@@ -18,10 +18,12 @@ import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/compo
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/profile_screen_v3_edit.dart';
 import 'package:migozz_app/features/profile/presentation/profile/modules/qr_scanner_screen.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
+import 'package:migozz_app/features/tutorial/profile/profile_tutorial_keys.dart';
 
 class MobileProfileContent extends StatefulWidget {
   final UserDTO user;
   final TutorialKeys tutorialKeys;
+  final ProfileTutorialKeys? profileTutorialKeys;
 
   /// UID del usuario target (opcional, se busca por email si no se proporciona)
   final String? targetUserId;
@@ -30,6 +32,7 @@ class MobileProfileContent extends StatefulWidget {
     super.key,
     required this.user,
     required this.tutorialKeys,
+    this.profileTutorialKeys,
     this.targetUserId,
   });
 
@@ -222,6 +225,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                         voiceNoteUrl: voiceNoteUrl,
                         bio: user.bio,
                         tutorialKeys: widget.tutorialKeys,
+                        profileTutorialKeys: widget.profileTutorialKeys,
                         isOwnProfile: isOwnProfile,
                         userId: user.email,
                         socialNetworks: socialNetworksData,
@@ -279,6 +283,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                       voiceNoteUrl: voiceNoteUrl,
                       bio: user.bio,
                       tutorialKeys: widget.tutorialKeys,
+                      profileTutorialKeys: widget.profileTutorialKeys,
                       isOwnProfile: isOwnProfile,
                       userId: user.email,
                       socialNetworks: socialNetworksData,
@@ -314,6 +319,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                       },
                     ),
                     Expanded(
+                      key: widget.profileTutorialKeys?.linkedNetworksKey,
                       child: SingleChildScrollView(
                         physics: const BouncingScrollPhysics(),
                         child: Column(
@@ -345,6 +351,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                   profilePercentage: _calculateProfileStrength(user),
                   targetUserId: isOwnProfile ? null : _resolvedTargetUserId,
                   currentUserId: isOwnProfile ? null : currentUserId,
+                  profileTutorialKeys: widget.profileTutorialKeys,
                   onMenuTap: () {
                     if (isOwnProfile) {
                       Navigator.push(

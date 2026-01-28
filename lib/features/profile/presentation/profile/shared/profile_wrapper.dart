@@ -5,20 +5,24 @@ import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubi
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
 // import 'package:migozz_app/features/tutorial/profile_tutorial_helper.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
+import 'package:migozz_app/features/tutorial/profile/profile_tutorial_keys.dart';
 import 'package:migozz_app/features/profile/components/utils/Loader.dart';
 
 class ProfileWrapper extends StatefulWidget {
   final TutorialKeys tutorialKeys;
+  final ProfileTutorialKeys? profileTutorialKeys;
   final Widget Function(
     BuildContext context,
     AuthState authState,
     TutorialKeys tutorialKeys,
+    ProfileTutorialKeys? profileTutorialKeys,
   )
   builder;
 
   const ProfileWrapper({
     super.key,
     required this.tutorialKeys,
+    this.profileTutorialKeys,
     required this.builder,
   });
 
@@ -79,7 +83,12 @@ class _ProfileWrapperState extends State<ProfileWrapper> {
         // }
 
         // Si llegamos aquí, el perfil existe y está listo -> delegamos al builder
-        return widget.builder(context, authState, widget.tutorialKeys);
+        return widget.builder(
+          context, 
+          authState, 
+          widget.tutorialKeys,
+          widget.profileTutorialKeys,
+        );
       },
     );
   }

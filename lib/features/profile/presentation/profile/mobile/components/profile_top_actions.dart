@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:migozz_app/features/profile/components/follow_button.dart';
 import 'package:migozz_app/core/color.dart';
+import 'package:migozz_app/features/tutorial/profile/profile_tutorial_keys.dart';
 
 class ProfileTopActions extends StatefulWidget {
   final bool isOwnProfile;
@@ -12,6 +13,7 @@ class ProfileTopActions extends StatefulWidget {
   final int profilePercentage;
   final String? targetUserId;
   final String? currentUserId;
+  final ProfileTutorialKeys? profileTutorialKeys;
 
   const ProfileTopActions({
     super.key,
@@ -23,6 +25,7 @@ class ProfileTopActions extends StatefulWidget {
     this.profilePercentage = 100,
     this.targetUserId,
     this.currentUserId,
+    this.profileTutorialKeys,
   });
 
   @override
@@ -103,6 +106,7 @@ class _ProfileTopActionsState extends State<ProfileTopActions>
                     ),
                   )
                 : GestureDetector(
+                    key: widget.profileTutorialKeys?.notificationsKey,
                     onTap: widget.onNotificationsTap ?? () {},
                     child: Container(
                       padding: const EdgeInsets.all(8),
@@ -157,6 +161,7 @@ class _ProfileTopActionsState extends State<ProfileTopActions>
                       children: [
                         if (widget.onQrScanTap != null) ...[
                           GestureDetector(
+                            key: widget.profileTutorialKeys?.qrScannerKey,
                             onTap: widget.onQrScanTap,
                             child: Container(
                               padding: const EdgeInsets.all(6),
@@ -178,6 +183,7 @@ class _ProfileTopActionsState extends State<ProfileTopActions>
                           const SizedBox(width: 8),
                         ],
                         GestureDetector(
+                          key: widget.profileTutorialKeys?.editProfileKey,
                           onTap: () {
                             HapticFeedback.selectionClick();
                             widget.onMenuTap?.call();

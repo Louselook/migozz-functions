@@ -18,11 +18,19 @@ import 'package:migozz_app/features/profile/presentation/edit/components/profile
 // import 'package:migozz_app/features/profile/presentation/edit/modules/edit_my_interest.dart';
 // import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
+import 'package:migozz_app/features/tutorial/profile/profile_tutorial.dart';
 import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
 import 'package:migozz_app/features/profile/components/utils/Loader.dart';
 
 class EditProfileScreen extends StatefulWidget {
-  const EditProfileScreen({super.key, required TutorialKeys tutorialKeys});
+  final TutorialKeys tutorialKeys;
+  final ProfileTutorialKeys? profileTutorialKeys;
+  
+  const EditProfileScreen({
+    super.key, 
+    required this.tutorialKeys,
+    this.profileTutorialKeys,
+  });
 
   @override
   State<EditProfileScreen> createState() => EditProfileScreenState();
@@ -68,6 +76,51 @@ class EditProfileScreenState extends State<EditProfileScreen> {
     }
 
     return false;
+  }
+
+  /// Muestra el diálogo de confirmación para repetir el tutorial
+  Future<void> _showHelpDialog() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E1E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'tutorial.help.confirmTitle'.tr(),
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          'tutorial.help.confirmMessage'.tr(),
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(
+              'tutorial.help.cancelButton'.tr(),
+              style: const TextStyle(color: Colors.grey),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: ShaderMask(
+              shaderCallback: (bounds) => AppColors.primaryGradient.createShader(bounds),
+              child: Text(
+                'tutorial.help.confirmButton'.tr(),
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      // Pedir replay y navegar al perfil principal.
+      // El tutorial se ejecuta en Profile cuando la UI ya está montada.
+      ProfileTutorialReplayBus.requestReplay();
+      context.go('/profile');
+    }
   }
 
   @override
@@ -382,12 +435,34 @@ class EditProfileScreenState extends State<EditProfileScreen> {
           //   icon: const Icon(Icons.arrow_back, color: Colors.white),
           //   onPressed: () => context.pop(),
           // ),
-          // actions: [
-          //   IconButton(
-          //     icon: const Icon(Icons.close, color: Colors.red),
-          //     onPressed: () => context.pop(),
-          //   ),
-          // ],
+          actions: [
+            // Botón de ayuda para repetir el tutorial
+            if (widget.profileTutorialKeys != null)
+              GestureDetector(
+                onTap: _showHelpDialog,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 16),
+                  child: ShaderMask(
+                    shaderCallback: (bounds) => AppColors.primaryGradient.createShader(bounds),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white,
+                          width: 1.5,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.help_outline,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
         body: Stack(
           fit: StackFit.expand,

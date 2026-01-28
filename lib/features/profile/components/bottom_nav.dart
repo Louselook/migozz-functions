@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/assets_constants.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
+import 'package:migozz_app/features/tutorial/profile/profile_tutorial_keys.dart';
 
 class GradientBottomNav extends StatelessWidget {
   final int currentIndex;
@@ -9,6 +10,7 @@ class GradientBottomNav extends StatelessWidget {
   final VoidCallback onCenterTap;
   final VoidCallback? onProfileUpdated;
   final TutorialKeys? tutorialKeys;
+  final ProfileTutorialKeys? profileTutorialKeys;
 
   const GradientBottomNav({
     super.key,
@@ -17,6 +19,7 @@ class GradientBottomNav extends StatelessWidget {
     required this.onCenterTap,
     this.onProfileUpdated,
     this.tutorialKeys,
+    this.profileTutorialKeys,
   });
 
   static const double _barHeight = 64;
@@ -62,26 +65,26 @@ class GradientBottomNav extends StatelessWidget {
                   child: Row(
                     children: [
                       _NavItem(
-                        tutorialKey: tutorialKeys?.profileScreenKey,
+                        tutorialKey: profileTutorialKeys?.homeNavKey ?? tutorialKeys?.profileScreenKey,
                         icon: Icons.home_outlined,
                         selected: currentIndex == 0,
                         onTap: () => onItemSelected(0), // ✅ Solo callback
                       ),
                       _NavItem(
-                        tutorialKey: tutorialKeys?.searchScreenKey,
+                        tutorialKey: profileTutorialKeys?.searchNavKey ?? tutorialKeys?.searchScreenKey,
                         icon: Icons.search,
                         selected: currentIndex == 1,
                         onTap: () => onItemSelected(1), // ✅ Solo callback
                       ),
                       const Spacer(),
                       _NavItem(
-                        tutorialKey: tutorialKeys?.statScreenKey,
+                        tutorialKey: profileTutorialKeys?.statsNavKey ?? tutorialKeys?.statScreenKey,
                         icon: Icons.bar_chart_rounded,
                         selected: currentIndex == 2,
                         onTap: () => onItemSelected(2), // ✅ Solo callback
                       ),
                       _NavItem(
-                        tutorialKey: tutorialKeys?.editScreenKey,
+                        tutorialKey: profileTutorialKeys?.settingsNavKey ?? tutorialKeys?.editScreenKey,
                         icon: Icons.settings_outlined,
                         selected: currentIndex == 3,
                         onTap: () => onItemSelected(3), // ✅ Solo callback
@@ -98,6 +101,7 @@ class GradientBottomNav extends StatelessWidget {
                 MediaQuery.of(context).size.width / 2 -
                 28, // Center - half the size of the button
             child: SizedBox(
+              key: profileTutorialKeys?.messagesNavKey,
               width: 56, // Fixed button size
               height: 56, // Fixed button size
               child: _CenterActionButton(onTap: onCenterTap),

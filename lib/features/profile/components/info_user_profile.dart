@@ -7,6 +7,7 @@ import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/formart/text_formart.dart';
 import 'package:migozz_app/features/profile/presentation/profile/modules/share_profile.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
+import 'package:migozz_app/features/tutorial/profile/profile_tutorial_keys.dart';
 import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -31,6 +32,7 @@ class InfoUserProfile extends StatefulWidget {
   final String voiceNoteUrl;
   final String? bio;
   final TutorialKeys? tutorialKeys;
+  final ProfileTutorialKeys? profileTutorialKeys;
   final bool isOwnProfile;
   final String userId;
   final VoidCallback? onMessageTap;
@@ -51,6 +53,7 @@ class InfoUserProfile extends StatefulWidget {
     this.isOwnProfile = true,
     this.userId = '',
     this.tutorialKeys,
+    this.profileTutorialKeys,
     this.onMessageTap,
     this.contactEmail,
     this.contactWebsite,
@@ -258,26 +261,6 @@ class _InfoUserProfileState extends State<InfoUserProfile>
 
     return PopupMenuButton<String>(
       padding: EdgeInsets.zero,
-      child: Container(
-        width: 24,
-        height: 24,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: AppColors.primaryGradient,
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildMenuLine(),
-              const SizedBox(height: 3),
-              _buildMenuLine(),
-              const SizedBox(height: 3),
-              _buildMenuLine(),
-            ],
-          ),
-        ),
-      ),
       color: Colors.grey[900],
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       offset: const Offset(0, 30),
@@ -353,6 +336,26 @@ class _InfoUserProfileState extends State<InfoUserProfile>
             break;
         }
       },
+      child: Container(
+        width: 24,
+        height: 24,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: AppColors.primaryGradient,
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildMenuLine(),
+              const SizedBox(height: 3),
+              _buildMenuLine(),
+              const SizedBox(height: 3),
+              _buildMenuLine(),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -361,58 +364,61 @@ class _InfoUserProfileState extends State<InfoUserProfile>
     return Column(
       children: [
         // Nombre + menú de contacto (si no es propio) + botón de play
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Menú de contacto al lado izquierdo del nombre (solo para perfiles de otros)
-            if (!widget.isOwnProfile) _buildContactMenu(),
-            if (!widget.isOwnProfile) const SizedBox(width: 8),
-            Flexible(
-              child: Text(
-                widget.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 27,
-                  fontWeight: FontWeight.w700,
-                  height: 1.1,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            GestureDetector(
-              key: widget.tutorialKeys?.playButtonKey,
-              onTap: _isLoading ? null : _togglePlay,
-              child: Container(
-                width: 20,
-                height: 20,
-
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: .5),
-                  gradient: LinearGradient(
-                    colors: AppColors.primaryGradient.colors,
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+        Container(
+          key: widget.profileTutorialKeys?.nameSectionKey,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Menú de contacto al lado izquierdo del nombre (solo para perfiles de otros)
+              if (!widget.isOwnProfile) _buildContactMenu(),
+              if (!widget.isOwnProfile) const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  widget.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 27,
+                    fontWeight: FontWeight.w700,
+                    height: 1.1,
                   ),
                 ),
-                child: _isLoading
-                    ? const SizedBox(
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : Icon(
-                        _isPlaying ? Icons.pause : Icons.play_arrow_rounded,
-                        size: 16,
-                        color: Colors.white.withValues(alpha: 0.9),
-                      ),
               ),
-            ),
-          ],
+              const SizedBox(width: 12),
+              GestureDetector(
+                key: widget.tutorialKeys?.playButtonKey,
+                onTap: _isLoading ? null : _togglePlay,
+                child: Container(
+                  width: 20,
+                  height: 20,
+
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: .5),
+                    gradient: LinearGradient(
+                      colors: AppColors.primaryGradient.colors,
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Icon(
+                          _isPlaying ? Icons.pause : Icons.play_arrow_rounded,
+                          size: 16,
+                          color: Colors.white.withValues(alpha: 0.9),
+                        ),
+                ),
+              ),
+            ],
+          ),
         ),
 
         // DisplayName (@username)
@@ -432,7 +438,7 @@ class _InfoUserProfileState extends State<InfoUserProfile>
           children: [
             // Icono izquierdo: compartir (siempre muestra el QR del perfil)
             GestureDetector(
-              key: widget.tutorialKeys?.shareButtonKey,
+              key: widget.profileTutorialKeys?.shareQrKey ?? widget.tutorialKeys?.shareButtonKey,
               onTap: () {
                 Navigator.push(
                   context,
@@ -459,6 +465,7 @@ class _InfoUserProfileState extends State<InfoUserProfile>
 
             const SizedBox(width: 15),
             GestureDetector(
+              key: widget.profileTutorialKeys?.communityKey,
               onTap: _onCommunityTap,
               child: FadeTransition(
                 opacity: _fadeAnimation,
@@ -469,6 +476,7 @@ class _InfoUserProfileState extends State<InfoUserProfile>
 
             // Ícono de mensaje
             GestureDetector(
+              key: widget.profileTutorialKeys?.messagesHeaderKey,
               onTap: widget.onMessageTap,
               child: Image.asset(
                 AssetsConstants.inboxIcon,

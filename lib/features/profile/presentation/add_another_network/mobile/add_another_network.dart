@@ -208,8 +208,9 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
 
   String? _validateLink(String input) {
     final trimmed = input.trim();
-    if (trimmed.isEmpty)
+    if (trimmed.isEmpty) {
       return 'profile.customization.customLink.validation.required'.tr();
+    }
     final uri = Uri.tryParse(trimmed);
     if (uri == null || !(uri.hasScheme && uri.host.isNotEmpty)) {
       return 'profile.customization.customLink.validation.invalidFormat'.tr();

@@ -1010,6 +1010,77 @@
     "unfollowConfirmMessage": "Are you sure you want to unfollow this user?",
     "removeFollowerTitle": "Remove follower?",
     "removeFollowerMessage": "Are you sure you want to remove this user from your followers?"
+  },
+  "tutorial": {
+    "skip": "Skip",
+    "welcome": {
+      "title": "Welcome to Migozz",
+      "description": "Discover your new social ecosystem. We'll guide you through the main features so you can make the most of your experience.",
+      "start": "Get Started",
+      "skip": "Skip tutorial"
+    },
+    "profile": {
+      "home": {
+        "title": "Home",
+        "description": "Access your main screen and reload your profile information anytime."
+      },
+      "search": {
+        "title": "Discover",
+        "description": "Search for other users within the app and expand your network."
+      },
+      "messages": {
+        "title": "Stay Connected",
+        "description": "Access your messages and conversations with other users within the app."
+      },
+      "stats": {
+        "title": "Track Your Networks",
+        "description": "View statistics from your social networks and see your followers list within the app by tapping the app icon."
+      },
+      "settings": {
+        "title": "Edit Your Profile",
+        "description": "Edit your basic information and manage your account settings."
+      },
+      "linkedNetworks": {
+        "title": "Your Own Ecosystem",
+        "description": "Other users can view and access your linked networks by tapping the icons or photos of each one."
+      },
+      "shareQr": {
+        "title": "Share",
+        "description": "Share your unique QR code with others by downloading the image or sending it through various social networks."
+      },
+      "community": {
+        "title": "Your Followers",
+        "description": "View the total followers across all your linked networks in 'Community'. Tap to see your followers within the app."
+      },
+      "messagesHeader": {
+        "title": "Stay Connected",
+        "description": "Quickly access your messages and start conversations with other users."
+      },
+      "nameSection": {
+        "title": "Introduce Yourself",
+        "description": "Other users can see your full name, username, and listen to your audio introduction."
+      },
+      "notifications": {
+        "title": "Your Notifications",
+        "description": "Access notifications for followers and messages. The badge shows the number of pending notifications."
+      },
+      "qrScanner": {
+        "title": "Connect",
+        "description": "Scan other users' QR codes anytime to connect with them instantly."
+      },
+      "editProfile": {
+        "title": "Customize Your Profile",
+        "description": "Customize more aspects of your profile by adding, editing, or removing information and social networks from your ecosystem."
+      }
+    },
+    "help": {
+      "title": "Need Help?",
+      "button": "Repeat Tutorial",
+      "confirmTitle": "Repeat Tutorial?",
+      "confirmMessage": "Do you want to see the tutorial again? This will guide you through the main features of the app.",
+      "confirmButton": "Yes, show tutorial",
+      "cancelButton": "Cancel"
+    }
   }
 }
 
