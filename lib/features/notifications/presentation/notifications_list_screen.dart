@@ -1,10 +1,12 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/services/notifications/notification_model.dart'
-    show ChatNotificationModel;
+    show ChatNotificationModel, NotificationType;
 import 'package:migozz_app/core/services/notifications/notification_service.dart';
+import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 
 /// Screen to display list of notifications
 class NotificationsListScreen extends StatefulWidget {
@@ -47,20 +49,46 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
     // Mark as read
     await NotificationService.instance.markNotificationAsRead(notification.id);
 
-    // Navigate to chats list first, then to the specific chat
     if (mounted) {
-      context.push('/chats');
+      // Navigate based on notification type
+      if (notification.notificationType == NotificationType.follow) {
+        // Navigate to the follower's profile by loading user data first
+        await _navigateToUserProfile(notification.senderId);
+      } else {
+        // Navigate to chats list first, then to the specific chat
+        context.push('/chats');
 
-      // Then navigate to the specific chat after a short delay
-      Future.delayed(const Duration(milliseconds: 300), () {
-        if (mounted) {
-          context.push('/chat/${notification.senderId}');
-        }
-      });
+        // Then navigate to the specific chat after a short delay
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) {
+            context.push('/chat/${notification.senderId}');
+          }
+        });
+      }
     }
 
     // Reload to update UI
     await _loadNotifications();
+  }
+
+  /// Navigate to a user's profile by their user ID
+  Future<void> _navigateToUserProfile(String userId) async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .get();
+
+      if (doc.exists && mounted) {
+        final userData = doc.data()!;
+        final user = UserDTO.fromMap(userData);
+        context.push('/profile-view', extra: user);
+      } else {
+        debugPrint('❌ [NotificationsListScreen] User not found: $userId');
+      }
+    } catch (e) {
+      debugPrint('❌ [NotificationsListScreen] Error loading user profile: $e');
+    }
   }
 
   Future<void> _clearAllNotifications() async {
@@ -201,32 +229,44 @@ class _NotificationTile extends StatelessWidget {
     required this.onTap,
   });
 
+  bool get isFollowNotification =>
+      notification.notificationType == NotificationType.follow;
+
+  Color get _accentColor => isFollowNotification
+      ? const Color(0xFF9C27B0) // Purple for follow
+      : const Color(0xFFE91E63); // Pink for chat
+
+  IconData get _badgeIcon => isFollowNotification
+      ? Icons.person_add
+      : Icons.chat_bubble;
+
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
-        color: notification.isRead 
-            ? const Color(0xFF1C1C1E) 
+        color: notification.isRead
+            ? const Color(0xFF1C1C1E)
             : const Color(0xFF2C2C2E),
         borderRadius: BorderRadius.circular(12),
-        border: notification.isRead 
-            ? null 
-            : Border.all(color: const Color(0xFFE91E63).withValues(alpha: 0.3)),
+        border: notification.isRead
+            ? null
+            : Border.all(color: _accentColor.withValues(alpha: 0.3)),
       ),
       child: ListTile(
         onTap: onTap,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: Stack(
+          clipBehavior: Clip.none,
           children: [
             CircleAvatar(
               radius: 24,
               backgroundColor: Colors.grey[800],
-              backgroundImage: notification.senderAvatar != null && 
+              backgroundImage: notification.senderAvatar != null &&
                   notification.senderAvatar!.isNotEmpty
                   ? NetworkImage(notification.senderAvatar!)
                   : null,
-              child: notification.senderAvatar == null || 
+              child: notification.senderAvatar == null ||
                   notification.senderAvatar!.isEmpty
                   ? Text(
                       (notification.senderName ?? notification.title)
@@ -241,15 +281,35 @@ class _NotificationTile extends StatelessWidget {
                     )
                   : null,
             ),
+            // Notification type badge
+            Positioned(
+              right: -4,
+              bottom: -4,
+              child: Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  color: _accentColor,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFF1C1C1E), width: 2),
+                ),
+                child: Icon(
+                  _badgeIcon,
+                  size: 10,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            // Unread indicator
             if (!notification.isRead)
               Positioned(
                 right: 0,
                 top: 0,
                 child: Container(
-                  width: 12,
-                  height: 12,
+                  width: 10,
+                  height: 10,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE91E63),
+                    color: Colors.red,
                     shape: BoxShape.circle,
                     border: Border.all(color: const Color(0xFF1C1C1E), width: 2),
                   ),

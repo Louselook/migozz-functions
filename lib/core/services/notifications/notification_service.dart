@@ -7,7 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/services/notifications/active_chat_manager.dart';
 import 'package:migozz_app/core/services/notifications/notification_model.dart'
-    show ChatNotificationModel;
+    show ChatNotificationModel, NotificationType;
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Background message handler - must be a top-level function
@@ -43,6 +43,10 @@ class NotificationService {
   static const String _chatChannelKey = 'chat_notifications';
   static const String _chatChannelName = 'Chat Notifications';
   static const String _chatChannelDescription = 'Notifications for new chat messages';
+
+  static const String _followChannelKey = 'follow_notifications';
+  static const String _followChannelName = 'Follow Notifications';
+  static const String _followChannelDescription = 'Notifications when someone follows you';
 
   /// Initialize the notification service
   Future<void> initialize({
@@ -83,6 +87,17 @@ class NotificationService {
           channelDescription: _chatChannelDescription,
           defaultColor: const Color(0xFFE91E63),
           ledColor: const Color(0xFFE91E63),
+          importance: NotificationImportance.High,
+          channelShowBadge: true,
+          playSound: true,
+          enableVibration: true,
+        ),
+        NotificationChannel(
+          channelKey: _followChannelKey,
+          channelName: _followChannelName,
+          channelDescription: _followChannelDescription,
+          defaultColor: const Color(0xFF9C27B0),
+          ledColor: const Color(0xFF9C27B0),
           importance: NotificationImportance.High,
           channelShowBadge: true,
           playSound: true,
@@ -339,7 +354,51 @@ class NotificationService {
       chatRoomId: chatRoomId,
       senderName: senderName,
       senderAvatar: senderAvatar,
+      notificationType: NotificationType.chat,
     );
+  }
+
+  /// Show a follow notification
+  Future<void> showFollowNotification({
+    required String followerId,
+    required String followerName,
+    String? followerAvatar,
+  }) async {
+    final title = followerName;
+    final body = 'Started following you';
+
+    final payload = jsonEncode({
+      'followerId': followerId,
+      'followerName': followerName,
+      'followerAvatar': followerAvatar,
+      'notificationType': 'follow',
+    });
+
+    await AwesomeNotifications().createNotification(
+      content: NotificationContent(
+        id: DateTime.now().millisecondsSinceEpoch.remainder(100000),
+        channelKey: _followChannelKey,
+        title: title,
+        body: body,
+        payload: {'data': payload},
+        notificationLayout: NotificationLayout.Default,
+        category: NotificationCategory.Social,
+        wakeUpScreen: true,
+        autoDismissible: true,
+      ),
+    );
+
+    // Save notification to local storage for the notifications list
+    await _saveNotificationToHistory(
+      title: title,
+      body: body,
+      senderId: followerId,
+      senderName: followerName,
+      senderAvatar: followerAvatar,
+      notificationType: NotificationType.follow,
+    );
+
+    debugPrint('🔔 [NotificationService] Follow notification shown for $followerName');
   }
 
   /// Save notification to local history
@@ -347,9 +406,10 @@ class NotificationService {
     required String title,
     required String body,
     required String senderId,
-    required String chatRoomId,
+    String chatRoomId = '',
     String? senderName,
     String? senderAvatar,
+    NotificationType notificationType = NotificationType.chat,
   }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -365,6 +425,7 @@ class NotificationService {
         senderAvatar: senderAvatar,
         timestamp: DateTime.now(),
         isRead: false,
+        notificationType: notificationType,
       );
 
       notificationsJson.insert(0, jsonEncode(notification.toJson()));

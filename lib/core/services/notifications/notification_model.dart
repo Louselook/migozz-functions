@@ -1,4 +1,10 @@
-/// Model class for chat notification data
+/// Enum for notification types
+enum NotificationType {
+  chat,
+  follow,
+}
+
+/// Model class for notification data
 /// Named ChatNotificationModel to avoid conflict with awesome_notifications
 class ChatNotificationModel {
   final String id;
@@ -10,6 +16,7 @@ class ChatNotificationModel {
   final String? senderAvatar;
   final DateTime timestamp;
   final bool isRead;
+  final NotificationType notificationType;
 
   ChatNotificationModel({
     required this.id,
@@ -21,6 +28,7 @@ class ChatNotificationModel {
     this.senderAvatar,
     required this.timestamp,
     this.isRead = false,
+    this.notificationType = NotificationType.chat,
   });
 
   /// Create from JSON
@@ -30,11 +38,15 @@ class ChatNotificationModel {
       title: json['title'] as String,
       body: json['body'] as String,
       senderId: json['senderId'] as String,
-      chatRoomId: json['chatRoomId'] as String,
+      chatRoomId: json['chatRoomId'] as String? ?? '',
       senderName: json['senderName'] as String?,
       senderAvatar: json['senderAvatar'] as String?,
       timestamp: DateTime.parse(json['timestamp'] as String),
       isRead: json['isRead'] as bool? ?? false,
+      notificationType: NotificationType.values.firstWhere(
+        (e) => e.name == (json['notificationType'] as String? ?? 'chat'),
+        orElse: () => NotificationType.chat,
+      ),
     );
   }
 
@@ -50,6 +62,7 @@ class ChatNotificationModel {
       'senderAvatar': senderAvatar,
       'timestamp': timestamp.toIso8601String(),
       'isRead': isRead,
+      'notificationType': notificationType.name,
     };
   }
 
@@ -64,6 +77,7 @@ class ChatNotificationModel {
     String? senderAvatar,
     DateTime? timestamp,
     bool? isRead,
+    NotificationType? notificationType,
   }) {
     return ChatNotificationModel(
       id: id ?? this.id,
@@ -75,6 +89,7 @@ class ChatNotificationModel {
       senderAvatar: senderAvatar ?? this.senderAvatar,
       timestamp: timestamp ?? this.timestamp,
       isRead: isRead ?? this.isRead,
+      notificationType: notificationType ?? this.notificationType,
     );
   }
 

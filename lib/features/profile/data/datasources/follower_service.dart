@@ -99,15 +99,94 @@ class FollowerService {
 
       batch.set(followingRef, {'followingDate': timestamp});
 
+      // 3. Create a notification document for the target user
+      final notificationRef = _firestore
+          .collection('users')
+          .doc(targetUserId)
+          .collection('notifications')
+          .doc();
+
+      batch.set(notificationRef, {
+        'type': 'follow',
+        'fromUserId': currentUserId,
+        'timestamp': timestamp,
+        'isRead': false,
+      });
+
       await batch.commit();
 
       debugPrint(
         '✅ [FollowerService] $currentUserId ahora sigue a $targetUserId',
       );
+
+      // 4. Send push notification to target user (async, don't wait)
+      _sendFollowPushNotification(
+        currentUserId: currentUserId,
+        targetUserId: targetUserId,
+      );
     } catch (e, stack) {
       debugPrint('❌ [FollowerService] Error siguiendo usuario: $e');
       debugPrint(stack.toString());
       throw Exception('Error al seguir usuario');
+    }
+  }
+
+  /// ---------------------------
+  /// 🔹 SEND FOLLOW PUSH NOTIFICATION
+  /// ---------------------------
+  /// Sends a push notification to the target user when someone follows them
+  Future<void> _sendFollowPushNotification({
+    required String currentUserId,
+    required String targetUserId,
+  }) async {
+    try {
+      // Get current user info for the notification
+      final currentUserDoc = await _firestore
+          .collection('users')
+          .doc(currentUserId)
+          .get();
+
+      if (!currentUserDoc.exists) {
+        debugPrint('⚠️ [FollowerService] Current user not found for notification');
+        return;
+      }
+
+      final currentUserData = currentUserDoc.data()!;
+      final followerName = currentUserData['displayName']?.toString() ??
+                          currentUserData['username']?.toString() ??
+                          'Someone';
+      final followerAvatar = currentUserData['avatarUrl']?.toString();
+
+      // Get target user's FCM token
+      final targetUserDoc = await _firestore
+          .collection('users')
+          .doc(targetUserId)
+          .get();
+
+      if (!targetUserDoc.exists) {
+        debugPrint('⚠️ [FollowerService] Target user not found for notification');
+        return;
+      }
+
+      final targetUserData = targetUserDoc.data()!;
+      final fcmToken = targetUserData['lastFcmToken'] as String?;
+
+      if (fcmToken == null || fcmToken.isEmpty) {
+        debugPrint('⚠️ [FollowerService] Target user has no FCM token');
+        return;
+      }
+
+      // Send push notification via FCM HTTP v1 API
+      // Note: This requires a server-side implementation or Cloud Functions
+      // For now, we save the notification to Firestore and the user will see it
+      // when they open the app or via a Cloud Function trigger
+      debugPrint('🔔 [FollowerService] Follow notification saved for $targetUserId from $followerName');
+      debugPrint('🔔 [FollowerService] FCM token available: ${fcmToken.substring(0, 20)}...');
+
+      // The actual push notification should be sent via Cloud Functions
+      // triggered by the notification document creation above
+    } catch (e) {
+      debugPrint('❌ [FollowerService] Error sending follow notification: $e');
     }
   }
 
