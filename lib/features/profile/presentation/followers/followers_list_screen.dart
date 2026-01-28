@@ -339,20 +339,40 @@ class _FollowersListScreenState extends State<FollowersListScreen>
     }
   }
 
-  void _navigateToChat(FollowerDTO user) {
-    final currentUserId =
-        context.read<AuthCubit>().state.firebaseUser?.uid ?? '';
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => UserChatScreen(
-          otherUserId: user.oderId,
-          otherUserName: user.displayName ?? user.username ?? 'User',
-          otherUserAvatar: user.avatarUrl,
-          currentUserId: currentUserId,
-        ),
-      ),
-    );
+  Future<void> _navigateToChat(FollowerDTO user) async {
+    final currentUserEmail =
+        context.read<AuthCubit>().state.userProfile?.email ?? '';
+
+    // Obtener el email del otro usuario desde Firestore usando su UID
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.oderId)
+          .get();
+
+      if (doc.exists && mounted) {
+        final userData = doc.data()!;
+        final otherUserEmail = userData['email'] as String? ?? '';
+
+        if (otherUserEmail.isNotEmpty) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => UserChatScreen(
+                otherUserId: otherUserEmail,
+                otherUserName: user.displayName ?? user.username ?? 'User',
+                otherUserAvatar: user.avatarUrl,
+                currentUserId: currentUserEmail,
+              ),
+            ),
+          );
+        } else {
+          debugPrint('❌ Email del usuario no encontrado');
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ Error obteniendo email del usuario para chat: $e');
+    }
   }
 
   Future<void> _showRemoveConfirmation(

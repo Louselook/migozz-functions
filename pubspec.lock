@@ -1651,7 +1651,7 @@ packages:
     source: hosted
     version: "0.7.7"
   tutorial_coach_mark:
-    dependency: "direct dev"
+    dependency: "direct main"
     description:
       name: tutorial_coach_mark
       sha256: "99293a61756b31fe89adf416053359c8db02bf9102da018fbd9846b512d394f2"

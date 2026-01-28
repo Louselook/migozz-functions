@@ -13,17 +13,6 @@ class ProfileTutorialHelper {
     'settingsNav',
   ];
 
-  static const List<String> _profileKeyNames = <String>[
-    'linkedNetworks',
-    'shareQr',
-    'community',
-    'messagesHeader',
-    'nameSection',
-    'notifications',
-    'qrScanner',
-    'editProfile',
-  ];
-
   /// Poll de keys hasta que la UI monte los widgets.
   ///
   /// Evita esperar en secuencia por cada key (lo cual multiplica el tiempo).
@@ -78,7 +67,8 @@ class ProfileTutorialHelper {
     final navReady = _navKeyNames.every((name) => availableKeys[name] == true);
 
     // Targets del perfil que siempre deberían existir en la pantalla principal.
-    final coreProfileReady = (availableKeys['nameSection'] == true) &&
+    final coreProfileReady =
+        (availableKeys['nameSection'] == true) &&
         (availableKeys['shareQr'] == true) &&
         (availableKeys['editProfile'] == true);
 
@@ -86,7 +76,7 @@ class ProfileTutorialHelper {
   }
 
   /// Intenta mostrar el tutorial del perfil
-  /// 
+  ///
   /// [context] - BuildContext actual
   /// [keys] - Las keys del tutorial
   /// [forceShow] - Si es true, muestra el tutorial incluso si ya fue completado
@@ -98,13 +88,18 @@ class ProfileTutorialHelper {
     int initialDelayMs = 300,
     int autoRetries = 1,
   }) async {
-    debugPrint('🎓 [ProfileTutorialHelper] Iniciando verificación del tutorial...');
+    debugPrint(
+      '🎓 [ProfileTutorialHelper] Iniciando verificación del tutorial...',
+    );
 
     // Verificar si ya completó el tutorial (a menos que sea forzado)
     if (!forceShow) {
-      final alreadyCompleted = await ProfileTutorialService.hasCompletedTutorial();
+      final alreadyCompleted =
+          await ProfileTutorialService.hasCompletedTutorial();
       if (alreadyCompleted) {
-        debugPrint('🎓 [ProfileTutorialHelper] Tutorial ya completado; no se mostrará.');
+        debugPrint(
+          '🎓 [ProfileTutorialHelper] Tutorial ya completado; no se mostrará.',
+        );
         return;
       }
     }
@@ -117,7 +112,9 @@ class ProfileTutorialHelper {
 
     // Si aún no están los targets mínimos, reintentar una vez.
     if (!_hasMinimumTargets(availableKeys)) {
-      debugPrint('⚠️ [ProfileTutorialHelper] La UI aún no está lista para el tutorial.');
+      debugPrint(
+        '⚠️ [ProfileTutorialHelper] La UI aún no está lista para el tutorial.',
+      );
       if (autoRetries > 0 && context.mounted) {
         Future.delayed(const Duration(milliseconds: 900), () {
           if (!context.mounted) return;
@@ -150,9 +147,9 @@ class ProfileTutorialHelper {
   /// Muestra la pantalla de bienvenida y luego el tutorial
   static void _showWelcomeAndTutorial(
     BuildContext context,
-    ProfileTutorialKeys keys,
-    {required bool markAsCompleteOnEnd,}
-  ) {
+    ProfileTutorialKeys keys, {
+    required bool markAsCompleteOnEnd,
+  }) {
     showGeneralDialog(
       context: context,
       barrierDismissible: false,
@@ -165,7 +162,7 @@ class ProfileTutorialHelper {
             onStart: () {
               // Cerrar la pantalla de bienvenida
               Navigator.of(dialogContext).pop();
-              
+
               // Iniciar el tutorial coach
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (context.mounted) {
@@ -203,15 +200,19 @@ class ProfileTutorialHelper {
   /// Esta versión NO modifica Firebase.
   static Future<void> replayTutorial(
     BuildContext context,
-    ProfileTutorialKeys keys,
-    {int initialDelayMs = 300,}
-  ) async {
-    debugPrint('🔄 [ProfileTutorialHelper] Reproduciendo tutorial por petición del usuario');
+    ProfileTutorialKeys keys, {
+    int initialDelayMs = 300,
+  }) async {
+    debugPrint(
+      '🔄 [ProfileTutorialHelper] Reproduciendo tutorial por petición del usuario',
+    );
 
     await Future.delayed(Duration(milliseconds: initialDelayMs));
     final availableKeys = await _pollAvailableKeys(keys);
     if (!_hasMinimumTargets(availableKeys)) {
-      debugPrint('⚠️ [ProfileTutorialHelper] UI no lista para replay del tutorial.');
+      debugPrint(
+        '⚠️ [ProfileTutorialHelper] UI no lista para replay del tutorial.',
+      );
       return;
     }
 
