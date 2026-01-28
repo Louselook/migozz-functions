@@ -147,15 +147,18 @@ class FollowerService {
           .get();
 
       if (!currentUserDoc.exists) {
-        debugPrint('⚠️ [FollowerService] Current user not found for notification');
+        debugPrint(
+          '⚠️ [FollowerService] Current user not found for notification',
+        );
         return;
       }
 
       final currentUserData = currentUserDoc.data()!;
-      final followerName = currentUserData['displayName']?.toString() ??
-                          currentUserData['username']?.toString() ??
-                          'Someone';
-      final followerAvatar = currentUserData['avatarUrl']?.toString();
+      final followerName =
+          currentUserData['displayName']?.toString() ??
+          currentUserData['username']?.toString() ??
+          'Someone';
+      currentUserData['avatarUrl']?.toString();
 
       // Get target user's FCM token
       final targetUserDoc = await _firestore
@@ -164,7 +167,9 @@ class FollowerService {
           .get();
 
       if (!targetUserDoc.exists) {
-        debugPrint('⚠️ [FollowerService] Target user not found for notification');
+        debugPrint(
+          '⚠️ [FollowerService] Target user not found for notification',
+        );
         return;
       }
 
@@ -180,8 +185,12 @@ class FollowerService {
       // Note: This requires a server-side implementation or Cloud Functions
       // For now, we save the notification to Firestore and the user will see it
       // when they open the app or via a Cloud Function trigger
-      debugPrint('🔔 [FollowerService] Follow notification saved for $targetUserId from $followerName');
-      debugPrint('🔔 [FollowerService] FCM token available: ${fcmToken.substring(0, 20)}...');
+      debugPrint(
+        '🔔 [FollowerService] Follow notification saved for $targetUserId from $followerName',
+      );
+      debugPrint(
+        '🔔 [FollowerService] FCM token available: ${fcmToken.substring(0, 20)}...',
+      );
 
       // The actual push notification should be sent via Cloud Functions
       // triggered by the notification document creation above
