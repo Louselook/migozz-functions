@@ -13,6 +13,7 @@ import 'package:migozz_app/features/profile/components/utils/Loader.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 import 'package:migozz_app/features/profile/presentation/add_another_network/mobile/add_another_network.dart';
 
+import 'package:flutter/foundation.dart';
 import '../../../../../../../core/components/atomics/network_list.dart';
 import '../../../../../../../core/components/formart/text_formart.dart';
 import '../../../../../../profile/components/social_rail.dart';
@@ -20,6 +21,9 @@ import '../../../../../../profile/presentation/profile/mobile/v3/components/prof
 import '../../../../../../profile/presentation/profile/mobile/v3/components/social_circles_mobile_v3.dart';
 import '../../../../../data/domain/models/user/user_dto.dart';
 import 'social_network_input_step.dart';
+import 'web_add_custom_link_modal.dart';
+import 'web_social_ecosystem_modal.dart';
+import 'web_social_network_input_modal.dart';
 
 class SocialEcosystemStepV3 extends StatefulWidget {
   final PageController controller;
@@ -220,26 +224,46 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     final registerCubit = context.read<RegisterCubit>();
 
     // Navigate to input step
-    Navigator.of(context).push(
-      MaterialPageRoute(
+    if (kIsWeb) {
+      showDialog(
+        context: context,
+        barrierColor: Colors.black.withOpacity(0.8),
         builder: (_) => BlocProvider.value(
           value: registerCubit,
-          child: SocialNetworkInputStep(
+          child: WebSocialNetworkInputModal(
             selectedNetworks: selectedConfigs,
             onComplete: () {
-              // Pop back and clear pending selections
               Navigator.of(context).pop();
               setState(() {
                 _pendingSelections.clear();
               });
             },
-            onBack: () {
-              Navigator.of(context).pop();
-            },
+            onBack: () => Navigator.of(context).pop(),
           ),
         ),
-      ),
-    );
+      );
+    } else {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => BlocProvider.value(
+            value: registerCubit,
+            child: SocialNetworkInputStep(
+              selectedNetworks: selectedConfigs,
+              onComplete: () {
+                // Pop back and clear pending selections
+                Navigator.of(context).pop();
+                setState(() {
+                  _pendingSelections.clear();
+                });
+              },
+              onBack: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ),
+        ),
+      );
+    }
   }
 
   List<NetworkConfig> _getFilteredNetworks() {
@@ -775,6 +799,36 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
 
   @override
   Widget build(BuildContext context) {
+    if (kIsWeb) {
+      return Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Center(
+          child: BlocProvider.value(
+            value: context.read<RegisterCubit>(),
+            child: WebSocialEcosystemModal(
+              mode: widget.mode,
+              onContinue: () {
+                final registerState = context.read<RegisterCubit>().state;
+                final ecosystem = registerState.socialEcosystem ?? [];
+                if (ecosystem.isEmpty) {
+                  CustomSnackbar.show(
+                    context: context,
+                    message: 'addSocials.validation.atLeastOne'.tr(),
+                    type: SnackbarType.warning,
+                  );
+                  return;
+                }
+                widget.controller.nextPage(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                );
+              },
+            ),
+          ),
+        ),
+      );
+    }
+
     String normalizeUsername(String username) {
       if (username.isEmpty) return '';
       return username.startsWith('@') ? username : '@$username';
@@ -1333,6 +1387,56 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     return GestureDetector(
       onTap: () async {
         final isRegister = widget.mode == MoreUserDetailsMode.register;
+
+        if (kIsWeb) {
+          await showDialog(
+            context: context,
+            barrierColor: Colors.black.withOpacity(0.8),
+            builder: (_) {
+              if (isRegister) {
+                return BlocProvider.value(
+                  value: context.read<RegisterCubit>(),
+                  child: WebAddCustomLinkModal(
+                    onComplete: () {
+                      Navigator.pop(context, 'done');
+                    },
+                    onBack: () => Navigator.pop(context),
+                    isRegister: true,
+                  ),
+                );
+              } else {
+                return MultiBlocProvider(
+                  providers: [
+                    BlocProvider.value(value: context.read<EditCubit>()),
+                    BlocProvider.value(value: context.read<AuthCubit>()),
+                  ],
+                  child: WebAddCustomLinkModal(
+                    onComplete: () {
+                      Navigator.pop(context, 'done');
+                    },
+                    onBack: () => Navigator.pop(context),
+                    isRegister: false,
+                  ),
+                );
+              }
+            },
+          ).then((res) {
+            // WebAddCustomLinkModal handles saving internally, so we just need to know when it's done.
+            // But 'res' might be null if dismissed.
+            // We rely on 'onComplete' triggering callback or setState.
+            // However, the logic below expects 'result'.
+            // We can return 'done' from onComplete pop if we want uniformity.
+
+            // Actually, WebAddCustomLinkModal calls onComplete, inside we pop.
+            // We can pass result there.
+          });
+
+          // Since WebAddCustomLinkModal saves internally and updates Cubit,
+          // we might just need to refresh UI or show snackbar if needed.
+          // The code below handles 'result'.
+          // Let's adapt.
+          return; // Web modal handles its own feedback
+        }
 
         final result = await Navigator.push(
           context,

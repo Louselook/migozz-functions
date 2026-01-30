@@ -7,12 +7,14 @@ class SocialLink {
   final Uri url;
   final int? followers;
   final int? shares;
+  final String? profileImageUrl;
 
   const SocialLink({
     required this.asset,
     required this.url,
     this.followers,
     this.shares,
+    this.profileImageUrl,
   });
 }
 
