@@ -5,7 +5,7 @@
 final Map<String, Map<String, dynamic>> questionsEs = {
   "welcome": {
     "text":
-        "¡Bienvenidos Migos! 🌟\n\nEstás a punto de unirte al nuevo ecosistema social digital. Vamos a configurar tu perfil para que puedas conectar con tu comunidad.",
+        "¡Bienvenidos Migozz! 🌟\n\nEstás a punto de unirte al nuevo ecosistema social digital. Vamos a configurar tu perfil para que puedas conectar con tu comunidad.",
     "options": [],
     "step": "regProgress.welcome",
     "keepTalk": true,
@@ -161,7 +161,7 @@ final Map<String, Map<String, dynamic>> questionsEs = {
 final Map<String, Map<String, dynamic>> questionsEn = {
   "welcome": {
     "text":
-        "Welcome Migos! 🌟\n\nYou're about to join the new digital social ecosystem. Let's set up your profile so you can connect with your community.",
+        "Welcome Migozz! 🌟\n\nYou're about to join the new digital social ecosystem. Let's set up your profile so you can connect with your community.",
     "options": [],
     "step": "regProgress.welcome",
     "keepTalk": true,
