@@ -35,8 +35,10 @@ class NotificationService {
 
   StreamSubscription<RemoteMessage>? _foregroundSubscription;
   StreamSubscription<RemoteMessage>? _messageOpenedSubscription;
+  StreamSubscription<QuerySnapshot>? _notificationListener;
 
   String? _currentUserId;
+  String? _currentUserDocId;
   Function(String senderId, String chatRoomId)? _onNotificationTap;
 
   // Notification channel constants
@@ -69,6 +71,9 @@ class NotificationService {
 
     // Set up message handlers
     _setupMessageHandlers();
+
+    // Set up Firestore notification listener for follow notifications
+    await _setupFirestoreNotificationListener();
 
     // Check for initial message (app opened from terminated state via notification)
     await _checkInitialMessage();
@@ -251,6 +256,115 @@ class NotificationService {
     if (initialMessage != null) {
       debugPrint('🔔 [FCM] App opened from terminated state via notification');
       _handleNotificationTap(initialMessage);
+    }
+  }
+
+  /// Set up Firestore notification listener
+  /// Listens for new notification documents in users/{userId}/notifications
+  Future<void> _setupFirestoreNotificationListener() async {
+    try {
+      // Cancel existing listener
+      _notificationListener?.cancel();
+
+      // Get user document ID from email
+      final querySnapshot = await _firestore
+          .collection('users')
+          .where('email', isEqualTo: _currentUserId)
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isEmpty) {
+        debugPrint('❌ [NotificationService] User not found for Firestore listener');
+        return;
+      }
+
+      final userDocId = querySnapshot.docs.first.id;
+      _currentUserDocId = userDocId;
+
+      debugPrint('🔔 [NotificationService] Setting up Firestore listener for user: $userDocId');
+
+      // Listen for new notifications
+      // Note: Using simple orderBy to avoid needing composite index
+      _notificationListener = _firestore
+          .collection('users')
+          .doc(userDocId)
+          .collection('notifications')
+          .orderBy('timestamp', descending: true)
+          .limit(20)
+          .snapshots()
+          .listen((snapshot) {
+        debugPrint('🔔 [NotificationService] Firestore notification snapshot: ${snapshot.docs.length} docs, ${snapshot.docChanges.length} changes');
+
+        for (var change in snapshot.docChanges) {
+          if (change.type == DocumentChangeType.added) {
+            final data = change.doc.data();
+            final isRead = data?['isRead'] as bool? ?? false;
+
+            // Only process unread notifications
+            if (!isRead) {
+              debugPrint('🔔 [NotificationService] New unread notification document detected');
+              _handleFirestoreNotification(change.doc);
+            }
+          }
+        }
+      }, onError: (error) {
+        debugPrint('❌ [NotificationService] Error in Firestore listener: $error');
+      });
+
+      debugPrint('✅ [NotificationService] Firestore notification listener set up');
+    } catch (e) {
+      debugPrint('❌ [NotificationService] Error setting up Firestore listener: $e');
+    }
+  }
+
+  /// Handle a notification document from Firestore
+  Future<void> _handleFirestoreNotification(DocumentSnapshot doc) async {
+    try {
+      final data = doc.data() as Map<String, dynamic>?;
+      if (data == null) return;
+
+      final type = data['type'] as String?;
+      final fromUserId = data['fromUserId'] as String?;
+      final pushSent = data['pushSent'] as bool? ?? false;
+
+      debugPrint('🔔 [NotificationService] Handling Firestore notification: type=$type, from=$fromUserId, pushSent=$pushSent');
+
+      // Skip if push was already sent by Cloud Function
+      if (pushSent) {
+        debugPrint('🔔 [NotificationService] Push already sent, skipping local notification');
+        // Still save to history for the list
+      }
+
+      if (type == 'follow' && fromUserId != null) {
+        // Get follower info
+        final followerDoc = await _firestore.collection('users').doc(fromUserId).get();
+        if (!followerDoc.exists) {
+          debugPrint('⚠️ [NotificationService] Follower user not found: $fromUserId');
+          return;
+        }
+
+        final followerData = followerDoc.data()!;
+        final followerName = followerData['displayName']?.toString() ??
+                            followerData['username']?.toString() ??
+                            'Someone';
+        final followerAvatar = followerData['avatarUrl']?.toString();
+
+        debugPrint('🔔 [NotificationService] Follower info: name=$followerName');
+
+        // Show the notification (this also saves to history)
+        await showFollowNotification(
+          followerId: fromUserId,
+          followerName: followerName,
+          followerAvatar: followerAvatar,
+        );
+
+        // Mark as read in Firestore to prevent duplicate notifications
+        await doc.reference.update({'isRead': true});
+
+        debugPrint('✅ [NotificationService] Follow notification processed for $followerName');
+      }
+    } catch (e) {
+      debugPrint('❌ [NotificationService] Error handling Firestore notification: $e');
     }
   }
 
@@ -497,6 +611,7 @@ class NotificationService {
   void dispose() {
     _foregroundSubscription?.cancel();
     _messageOpenedSubscription?.cancel();
+    _notificationListener?.cancel();
   }
 
   /// Remove FCM token when user logs out
