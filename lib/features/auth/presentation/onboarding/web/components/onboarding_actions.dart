@@ -77,25 +77,50 @@ class OnboardingActions extends StatelessWidget {
           ? MainAxisAlignment.start
           : MainAxisAlignment.spaceBetween,
       children: [
-        TextButton(
-          onPressed: () => context.go('/login'),
-          style: TextButton.styleFrom(
-            padding: EdgeInsets.symmetric(
-              horizontal: screenWidth < 600 ? 16 : 50,
-              vertical: screenWidth < 600 ? 8 : 23,
+        if (isDesktop) ...[
+          // Desktop: Skip button on the left of Next button, grouped
+          TextButton(
+            onPressed: () => context.go('/login'),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+            child: Text(
+              "onboarding.buttons.skip".tr(),
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.white.withOpacity(
+                  0.7,
+                ), // Slightly dimmer for secondary action
+              ),
             ),
           ),
-          child: Text(
-            "onboarding.buttons.skip".tr(),
-            style: TextStyle(
-              fontSize: screenWidth < 600 ? 18 : 24,
-              color: Colors.white,
+          const SizedBox(width: 24), // Spacing between Skip and Next
+        ],
+
+        if (!isDesktop)
+          TextButton(
+            onPressed: () => context.go('/login'),
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.symmetric(
+                horizontal: screenWidth < 600 ? 16 : 24,
+                vertical: screenWidth < 600 ? 8 : 16,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: Text(
+              "onboarding.buttons.skip".tr(),
+              style: TextStyle(
+                fontSize: screenWidth < 600 ? 18 : 24,
+                color: Colors.white,
+              ),
             ),
           ),
-        ),
+
         ElevatedButton(
           onPressed: () {
             if (controller.hasClients) {
@@ -108,12 +133,14 @@ class OnboardingActions extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             padding: EdgeInsets.zero,
             fixedSize: Size(
-              screenWidth < 600 ? 90 : 116,
-              screenWidth < 600 ? 40 : 50,
+              screenWidth < 600 ? 120 : 160, // Slightly wider
+              screenWidth < 600 ? 44 : 56, // Slightly taller
             ),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(12), // Rounder corners
             ),
+            elevation: 8, // Add some shadow
+            shadowColor: const Color(0xFFD43AB6).withOpacity(0.5),
           ),
           child: Ink(
             decoration: BoxDecoration(
@@ -126,7 +153,7 @@ class OnboardingActions extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Container(
               alignment: Alignment.center,
@@ -136,15 +163,16 @@ class OnboardingActions extends StatelessWidget {
                   Text(
                     "onboarding.buttons.next".tr(),
                     style: TextStyle(
-                      fontSize: screenWidth < 600 ? 18 : 24,
+                      fontSize: screenWidth < 600 ? 16 : 18,
+                      fontWeight: FontWeight.w600,
                       color: Colors.white,
                     ),
                   ),
                   const SizedBox(width: 8),
                   Icon(
-                    Icons.arrow_forward_ios,
+                    Icons.arrow_forward_rounded, // Rounded arrow
                     color: Colors.white,
-                    size: screenWidth < 600 ? 16 : 24,
+                    size: screenWidth < 600 ? 18 : 20,
                   ),
                 ],
               ),

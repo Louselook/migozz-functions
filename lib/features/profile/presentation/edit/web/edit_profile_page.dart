@@ -199,7 +199,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
             usernameCtrl.text = user.username;
             emailCtrl.text = user.email;
             phoneCtrl.text = user.phone ?? '';
-            genderCtrl.text = user.gender ?? '';
+            // genderCtrl.text = user.gender ?? ''; // Replaced by _selectedGender
+            _selectedGender = _normalizeGender(user.gender);
+            genderCtrl.text = _selectedGender ?? (user.gender ?? '');
 
             if (user.birthDate != null) {
               _dob = user.birthDate;
@@ -306,6 +308,27 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
+  String? _selectedGender;
+
+  String? _normalizeGender(String? raw) {
+    if (raw == null) return null;
+    final value = raw.trim().toLowerCase();
+    if (value.isEmpty) return null;
+    switch (value) {
+      case 'male':
+      case 'masculino':
+      case 'm':
+        return 'male';
+      case 'female':
+      case 'famale':
+      case 'femenino':
+      case 'f':
+        return 'female';
+      default:
+        return 'male'; // Default fallback if needed, or null
+    }
+  }
+
   Widget _buildRightColumn(
     BuildContext context,
     AuthState authState,
@@ -316,6 +339,17 @@ class _EditProfilePageState extends State<EditProfilePage> {
       if (user.location.city.isNotEmpty) user.location.city,
       if (user.location.country.isNotEmpty) user.location.country,
     ].join(', ');
+
+    // Initialize gender if not already set (re-run on build is okay as long as text field logic handles it, but let's be careful.
+    // Actually, in the original code, initialization happens once in the BlocBuilder:
+    // if (nameCtrl.text.isEmpty) { ... }
+    // We should allow that block to initialize _selectedGender too.
+
+    // Define options
+    final genderOptions = <String, String>{
+      'male': 'edit.presentation.genderOptions.male'.tr(),
+      'female': 'edit.presentation.genderOptions.female'.tr(),
+    };
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -353,11 +387,57 @@ class _EditProfilePageState extends State<EditProfilePage> {
           onTap: _pickBirthday,
         ),
         const SizedBox(height: 16),
-        _buildTextField(
-          hint: 'edit.presentation.fields.gender'.tr(),
-          controller: genderCtrl,
-          icon: Icons.transgender,
+
+        // Gender Dropdown
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1A1A1A),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.5),
+                offset: const Offset(0, 4),
+                blurRadius: 8,
+              ),
+            ],
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.05),
+              width: 1,
+            ),
+          ),
+          child: DropdownButtonFormField<String>(
+            value: _selectedGender,
+            icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey.shade400),
+            dropdownColor: const Color(0xFF1A1A1A),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w500,
+            ),
+            decoration: InputDecoration(
+              prefixIcon: Icon(Icons.transgender, color: Colors.grey.shade400),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(vertical: 14),
+            ),
+            hint: Text(
+              'edit.presentation.fields.gender'.tr(),
+              style: TextStyle(color: Colors.grey.shade600),
+            ),
+            items: genderOptions.entries.map((entry) {
+              return DropdownMenuItem<String>(
+                value: entry.key,
+                child: Text(entry.value),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                _selectedGender = value;
+                genderCtrl.text = value ?? '';
+              });
+            },
+          ),
         ),
+
         const SizedBox(height: 16),
         _buildTextField(
           hint: formattedLocation.isNotEmpty
@@ -367,9 +447,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
           readOnly: true,
           onTap: () => _confirmAndChangeLocation(user.email),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 24),
 
-        // Botón Logout centrado y con el mismo tamaño que los inputs
+        // Premium Logout Button
         Center(
           child: SizedBox(
             width: double.infinity,
@@ -380,10 +460,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
               icon: const Icon(Icons.logout, color: Colors.white),
               label: Text(
                 'edit.presentation.logOut'.tr(),
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
                 ),
               ),
               style: ElevatedButton.styleFrom(

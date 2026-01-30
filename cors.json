@@ -5,7 +5,16 @@
         ],
         "method": [
             "GET",
-            "HEAD"
+            "HEAD",
+            "PUT",
+            "POST",
+            "DELETE",
+            "OPTIONS",
+            "PATCH",
+            "COPY",
+            "MOVE",
+            "PROPFIND",
+            "VIEW"
         ],
         "maxAgeSeconds": 3600
     }
