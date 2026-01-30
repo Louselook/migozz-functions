@@ -524,6 +524,62 @@ class ChatService {
     }
   }
 
+  /// 🆕 Verificar si el usuario actual fue bloqueado por el otro usuario
+  Future<bool> isBlockedByOtherUser({
+    required String chatRoomId,
+    required String currentUserId,
+    required String otherUserId,
+  }) async {
+    try {
+      final doc = await _firestore
+          .collection('chat_rooms')
+          .doc(chatRoomId)
+          .get();
+
+      if (!doc.exists) return false;
+
+      final data = doc.data() ?? {};
+      final blockedBy = Map<String, dynamic>.from(data['blockedBy'] ?? {});
+
+      // Verificar si otherUserId bloqueó a currentUserId
+      if (blockedBy[otherUserId] != null) {
+        final List<dynamic> blocked = List.from(blockedBy[otherUserId]);
+        return blocked.contains(currentUserId);
+      }
+
+      return false;
+    } catch (e) {
+      debugPrint('❌ [ChatService] Error al verificar si fue bloqueado: $e');
+      return false;
+    }
+  }
+
+  /// 🆕 Reportar usuario
+  /// Guarda el reporte en una colección 'reports' para revisión del admin
+  Future<void> reportUser({
+    required String reporterId,
+    required String reportedUserId,
+    required String chatRoomId,
+    required String reason,
+  }) async {
+    try {
+      final now = DateTime.now();
+      await _firestore.collection('reports').add({
+        'reporterId': reporterId,
+        'reportedUserId': reportedUserId,
+        'chatRoomId': chatRoomId,
+        'reason': reason,
+        'status': 'pending', // pending, reviewed, resolved, dismissed
+        'createdAt': Timestamp.fromDate(now),
+        'updatedAt': Timestamp.fromDate(now),
+      });
+      debugPrint('✅ [ChatService] Reporte enviado para usuario: $reportedUserId');
+    } catch (e) {
+      debugPrint('❌ [ChatService] Error al enviar reporte: $e');
+      rethrow;
+    }
+  }
+
   /// 🆕 Eliminar chat para un usuario específico (estilo WhatsApp)
   /// Guarda el timestamp de eliminación para filtrar mensajes antiguos
   Future<void> deleteChatForUser({

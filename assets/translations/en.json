@@ -944,7 +944,8 @@
         "viewProfile": "View profile",
         "deleteChat": "Delete chat",
         "block": "Block",
-        "unblock": "Unblock"
+        "unblock": "Unblock",
+        "report": "Report"
       },
       "dialogs": {
         "deleteTitle": "Delete chat?",
@@ -956,7 +957,12 @@
         "cancel": "Cancel",
         "delete": "Delete",
         "block": "Block",
-        "unblock": "Unblock"
+        "unblock": "Unblock",
+        "reportTitle": "Report {name}",
+        "reportHint": "Describe the reason for your report...",
+        "reportSubmit": "Submit Report",
+        "reportSuccess": "Report submitted successfully",
+        "reportError": "Error submitting report: "
       },
       "messages": {
         "sending": "Sending...",
@@ -964,7 +970,9 @@
         "image": "Image",
         "chatDeleted": "Chat deleted",
         "userBlocked": "{name} has been blocked",
-        "userUnblocked": "{name} has been unblocked"
+        "userUnblocked": "{name} has been unblocked",
+        "youAreBlocked": "You can't send messages to this user",
+        "unblockToChat": "Unblock to send messages"
       },
       "errors": {
         "sendMessage": "Error sending message: ",
