@@ -13,7 +13,7 @@ class WalletModel {
     required this.totalExpense,
   });
 
-
+  //Transform firestore map to WalletModel
   factory WalletModel.fromFirestore(Map<String, dynamic> data) {
     return WalletModel(
       id: data['id'],

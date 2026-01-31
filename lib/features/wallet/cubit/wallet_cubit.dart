@@ -13,20 +13,22 @@ import 'package:migozz_app/features/wallet/model/wallet_model.dart';
 class WalletCubit extends Cubit<WalletState> {
   final AuthCubit authCubit;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  ///I created this bool to prevent the creation of multiple snapshots when the AuthState change
+  bool initialized = false;
   
   StreamSubscription? _userSubscription;
   StreamSubscription? _walletSubscription;
 
   WalletCubit({required this.authCubit}) : super(WalletState.initial()) {
     //Here i created a stream to listen the authCubit state, making sure wallet exists
-    debugPrint("Wallet cubit");
-
     _userSubscription = authCubit.stream.listen((authState) {
-      debugPrint("Wallet ${authState.status.name}");
+      if (authState.status == AuthStatus.authenticated && authState.userProfile != null) {
 
-      if (authState.status == AuthStatus.authenticated && authState.userProfile != null && authState.userProfile?.wallet != null) {
-        debugPrint('[WalletCubit] Usuario detectado: ${authState.userProfile!.email}');
-        _activateWalletSnapshot(authState.userProfile?.wallet);
+        if(authState.userProfile!.wallet != null && !initialized){
+          debugPrint("Creating wallet snapshot: ${authState.userProfile!.wallet}");
+          _activateWalletSnapshot(authState.userProfile?.wallet);
+        }
       } 
     });
   }
@@ -34,7 +36,7 @@ class WalletCubit extends Cubit<WalletState> {
   //This creates the snapshot to listen user's wallet document if exists
   void _activateWalletSnapshot(String? id) {
     emit(WalletState.loading());
-    
+    debugPrint("Wallet is Loading");
     // close previous connection
     _walletSubscription?.cancel();
 
@@ -45,14 +47,15 @@ class WalletCubit extends Cubit<WalletState> {
         .snapshots()
         .listen((snapshot) {
       if (snapshot.exists) {
-        print(snapshot.data());
         final walletData = WalletModel.fromFirestore(snapshot.data()!);
+        initialized = true;
         emit(WalletState.initialized(walletData));
+        debugPrint("Wallet information updated");
       } else {
-        print("Wallet doesn't exist");
+        debugPrint("Wallet doesn't exist");
       }
     }, onError: (error) {
-      print(error.toString());
+      debugPrint(error.toString());
     });
   }
 

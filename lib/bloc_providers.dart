@@ -36,6 +36,8 @@ void initializeBlocProviders() {
     debugPrint('🧹 [Logout] Limpiando FollowerCubit...');
     followerCubit.reset();
 
+    walletCubit.close();
+
     debugPrint('✅ [Logout] Todos los cubits limpiados');
   };
 

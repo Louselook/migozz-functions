@@ -211,6 +211,7 @@ class UserDTO {
     final contactWebsite = map['contactWebsite']?.toString();
     final contactPhone = map['contactPhone']?.toString();
     final contactEmail = map['contactEmail']?.toString();
+    final wallet = map['wallet']?.toString();
 
     // ✅ birthDate defensivo
     DateTime? birthDate;
@@ -447,6 +448,7 @@ class UserDTO {
       updatedAt: updatedAt,
       lastSocialEcosystemSync: lastSocialEcosystemSync,
       socialEcosystemAddedDates: socialEcosystemAddedDates,
+      wallet: wallet
     );
   }
 }

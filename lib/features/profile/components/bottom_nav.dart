@@ -1,8 +1,11 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/assets_constants.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/tutorial/profile/profile_tutorial_keys.dart';
+import 'package:migozz_app/features/wallet/cubit/wallet_cubit.dart';
+import 'package:migozz_app/features/wallet/cubit/wallet_state.dart';
 
 class GradientBottomNav extends StatelessWidget {
   final int currentIndex;
@@ -29,93 +32,111 @@ class GradientBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).padding.bottom;
 
-    return SizedBox(
-      width: double.infinity,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(_radius)),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-              child: Container(
-                width: double.infinity,
-                height: _barHeight + bottomInset,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(_radius),
-                  ),
-                  gradient: LinearGradient(
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                    colors: [
-                      Colors.black.withValues(alpha: 0.75),
-                      Colors.black.withValues(alpha: 0.55),
-                      const Color(0x00000000),
-                    ],
-                    stops: const [0.0, 0.55, 1.0],
-                  ),
+    return BlocBuilder<WalletCubit, WalletState>(
+      builder: (context, state) {
+        return SizedBox(
+          width: double.infinity,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(_radius),
                 ),
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    left: 12,
-                    right: 12,
-                    bottom: bottomInset,
-                  ),
-                  child: Row(
-                    children: [
-                      _NavItem(
-                        tutorialKey: profileTutorialKeys?.homeNavKey ?? tutorialKeys?.profileScreenKey,
-                        icon: Icons.home_outlined,
-                        selected: currentIndex == 0,
-                        onTap: () => onItemSelected(0), // ✅ Solo callback
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                  child: Container(
+                    width: double.infinity,
+                    height: _barHeight + bottomInset,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(_radius),
                       ),
-                      _NavItem(
-                        tutorialKey: profileTutorialKeys?.searchNavKey ?? tutorialKeys?.searchScreenKey,
-                        icon: Icons.search,
-                        selected: currentIndex == 1,
-                        onTap: () => onItemSelected(1), // ✅ Solo callback
+                      gradient: LinearGradient(
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                        colors: [
+                          Colors.black.withValues(alpha: 0.75),
+                          Colors.black.withValues(alpha: 0.55),
+                          const Color(0x00000000),
+                        ],
+                        stops: const [0.0, 0.55, 1.0],
                       ),
-       
-                      _NavItem(
-                        tutorialKey: profileTutorialKeys?.statsNavKey ?? tutorialKeys?.statScreenKey,
-                        icon: Icons.bar_chart_rounded,
-                        selected: currentIndex == 2,
-                        onTap: () => onItemSelected(2), // ✅ Solo callback
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        left: 12,
+                        right: 12,
+                        bottom: bottomInset,
                       ),
-                      _NavItem(
-                        tutorialKey: profileTutorialKeys?.settingsNavKey ?? tutorialKeys?.editScreenKey,
-                        icon: Icons.settings_outlined,
-                        selected: currentIndex == 3,
-                        onTap: () => onItemSelected(3), // ✅ Solo callback
-                      ),
+                      child: Row(
+                        children: [
+                          _NavItem(
+                            tutorialKey:
+                                profileTutorialKeys?.homeNavKey ??
+                                tutorialKeys?.profileScreenKey,
+                            icon: Icons.home_outlined,
+                            selected: currentIndex == 0,
+                            onTap: () => onItemSelected(0), // ✅ Solo callback
+                          ),
 
-                      _NavItem(
-                        tutorialKey: null,
-                        icon: Icons.wallet,
-                        selected: currentIndex == 4,
-                        onTap: () => onItemSelected(4), // ✅ Solo callback
+                          _NavItem(
+                            tutorialKey:
+                                profileTutorialKeys?.searchNavKey ??
+                                tutorialKeys?.searchScreenKey,
+                            icon: Icons.search,
+                            selected: currentIndex == 1,
+                            onTap: () => onItemSelected(1), // ✅ Solo callback
+                          ),
+
+                          state.walletData == null ? Spacer() : SizedBox.shrink(),
+
+                          _NavItem(
+                            tutorialKey:
+                                profileTutorialKeys?.statsNavKey ??
+                                tutorialKeys?.statScreenKey,
+                            icon: Icons.bar_chart_rounded,
+                            selected: currentIndex == 2,
+                            onTap: () => onItemSelected(2), // ✅ Solo callback
+                          ),
+
+                          _NavItem(
+                            tutorialKey:
+                                profileTutorialKeys?.settingsNavKey ??
+                                tutorialKeys?.editScreenKey,
+                            icon: Icons.settings_outlined,
+                            selected: currentIndex == 3,
+                            onTap: () => onItemSelected(3), // ✅ Solo callback
+                          ),
+
+                          state.walletData != null ? _NavItem(
+                            tutorialKey: null,
+                            icon: Icons.wallet,
+                            selected: currentIndex == 4,
+                            onTap: () => onItemSelected(4),
+                          ) : SizedBox.shrink(),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
+              Positioned(
+                top: 8,
+                left:
+                    MediaQuery.of(context).size.width / 2 -
+                    28, // Center - half the size of the button
+                child: SizedBox(
+                  key: profileTutorialKeys?.messagesNavKey,
+                  width: 56, // Fixed button size
+                  height: 56, // Fixed button size
+                  child: _CenterActionButton(onTap: onCenterTap),
+                ),
+              ),
+            ],
           ),
-          Positioned(
-            top: 8,
-            left:
-                MediaQuery.of(context).size.width / 2 -
-                28, // Center - half the size of the button
-            child: SizedBox(
-              key: profileTutorialKeys?.messagesNavKey,
-              width: 56, // Fixed button size
-              height: 56, // Fixed button size
-              child: _CenterActionButton(onTap: onCenterTap),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -136,6 +157,7 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = selected ? Colors.white : Colors.white.withValues(alpha: 0.7);
+
     return Expanded(
       child: InkResponse(
         key: tutorialKey,
@@ -147,6 +169,7 @@ class _NavItem extends StatelessWidget {
         ),
       ),
     );
+    
   }
 }
 
