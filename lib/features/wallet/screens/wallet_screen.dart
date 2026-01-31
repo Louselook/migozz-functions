@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
+import 'package:migozz_app/features/wallet/cubit/wallet_cubit/wallet_cubit.dart';
+import 'package:migozz_app/features/wallet/cubit/wallet_cubit/wallet_state.dart';
 import 'package:migozz_app/features/wallet/widgets/wallet_balance.dart';
+import 'package:migozz_app/features/wallet/widgets/wallet_history.dart';
 
 class WalletScreen extends StatelessWidget {
   const WalletScreen({super.key});
@@ -35,7 +39,15 @@ class WalletScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 20),
 
-                  Expanded(child: Column(children: [WalletBalance()])),
+                  BlocBuilder<WalletCubit, WalletState>(
+                    builder: (context, state) {
+                      return (Expanded(
+                        child: Column(
+                          children: [WalletBalance(), WalletHistory()],
+                        ),
+                      ));
+                    },
+                  ),
                 ],
               ),
             ),

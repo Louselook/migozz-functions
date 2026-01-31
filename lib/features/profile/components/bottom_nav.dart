@@ -4,8 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/assets_constants.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/tutorial/profile/profile_tutorial_keys.dart';
-import 'package:migozz_app/features/wallet/cubit/wallet_cubit.dart';
-import 'package:migozz_app/features/wallet/cubit/wallet_state.dart';
+import 'package:migozz_app/features/wallet/cubit/wallet_cubit/wallet_cubit.dart';
+import 'package:migozz_app/features/wallet/cubit/wallet_cubit/wallet_state.dart';
 
 class GradientBottomNav extends StatelessWidget {
   final int currentIndex;

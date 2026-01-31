@@ -9,7 +9,7 @@ import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cu
 import 'package:migozz_app/features/profile/presentation/bloc/follower_cubit/follower_cubit.dart';
 import 'package:migozz_app/features/profile/data/datasources/user_service.dart';
 import 'package:migozz_app/features/profile/data/datasources/follower_service.dart';
-import 'package:migozz_app/features/wallet/cubit/wallet_cubit.dart';
+import 'package:migozz_app/features/wallet/cubit/wallet_cubit/wallet_cubit.dart';
 import 'package:migozz_app/injection.dart';
 
 // ✅ Crear instancias de los cubits ANTES de los providers
