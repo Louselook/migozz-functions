@@ -43,7 +43,8 @@ class _UserChatScreenState extends State<UserChatScreen>
   final ChatService _chatService = ChatService();
   final TextEditingController _textController = TextEditingController();
   bool _isInitialized = false;
-  bool _isBlocked = false;
+  bool _isBlocked = false; // Current user blocked the other user
+  bool _isBlockedByOther = false; // Current user was blocked by the other user
   StreamSubscription? _messagesSubscription;
   late GlobalKey<GenericChatScreenState> _genericChatKey;
 
@@ -109,9 +110,17 @@ class _UserChatScreenState extends State<UserChatScreen>
 
       await _markAllAsReadSilently();
 
+      // Check if current user blocked the other user
       _isBlocked = await _chatService.isUserBlocked(
         chatRoomId: _chatRoomId,
         userId: widget.currentUserId,
+        otherUserId: widget.otherUserId,
+      );
+
+      // Check if current user was blocked by the other user
+      _isBlockedByOther = await _chatService.isBlockedByOtherUser(
+        chatRoomId: _chatRoomId,
+        currentUserId: widget.currentUserId,
         otherUserId: widget.otherUserId,
       );
 
@@ -416,6 +425,96 @@ class _UserChatScreenState extends State<UserChatScreen>
     }
   }
 
+  Future<void> _showReportDialog() async {
+    final reportController = TextEditingController();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF2C2C2E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          "chat.userChat.dialogs.reportTitle".tr(
+            namedArgs: {'name': widget.otherUserName},
+          ),
+          style: const TextStyle(color: Colors.white),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: reportController,
+              maxLines: 4,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: "chat.userChat.dialogs.reportHint".tr(),
+                hintStyle: const TextStyle(color: Colors.white54),
+                filled: true,
+                fillColor: Colors.black26,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              "chat.userChat.dialogs.cancel".tr(),
+              style: const TextStyle(color: Colors.grey),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              if (reportController.text.trim().isNotEmpty) {
+                Navigator.pop(context, true);
+              }
+            },
+            child: Text(
+              "chat.userChat.dialogs.reportSubmit".tr(),
+              style: const TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && reportController.text.trim().isNotEmpty) {
+      try {
+        await _chatService.reportUser(
+          reporterId: widget.currentUserId,
+          reportedUserId: widget.otherUserId,
+          chatRoomId: _chatRoomId,
+          reason: reportController.text.trim(),
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("chat.userChat.dialogs.reportSuccess".tr()),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        debugPrint('❌ [UserChat] Error al reportar: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("${"chat.userChat.dialogs.reportError".tr()}$e"),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+
+    reportController.dispose();
+  }
+
   Future<void> _sendAudioMessage(String audioPath) async {
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -530,17 +629,73 @@ class _UserChatScreenState extends State<UserChatScreen>
       customAppBar: _buildAppBar(),
       otherUserName: widget.otherUserName,
       otherUserAvatar: widget.otherUserAvatar,
-      customInput: ChatInputWidget(
-        controller: _textController,
-        onSend: () {
-          if (_textController.text.trim().isNotEmpty) {
-            _chatController.sendTextMessage(_textController.text);
-            _textController.clear();
-          }
-        },
-        onSendAudio: _sendAudioMessage,
-        onSendImage: _sendImageMessage,
-      ),
+      customInput: _buildCustomInput(),
+    );
+  }
+
+  /// Build the custom input widget based on block status
+  Widget _buildCustomInput() {
+    // If current user was blocked by the other user, show blocked indicator
+    if (_isBlockedByOther) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        color: Colors.black54,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.block, color: Colors.red, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              "chat.userChat.messages.youAreBlocked".tr(),
+              style: const TextStyle(color: Colors.white70, fontSize: 14),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // If current user blocked the other user, show unblock button
+    if (_isBlocked) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        color: Colors.black54,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.block, color: Colors.orange, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              "chat.userChat.messages.unblockToChat".tr(),
+              style: const TextStyle(color: Colors.white70, fontSize: 14),
+            ),
+            const SizedBox(width: 12),
+            TextButton(
+              onPressed: _toggleBlockUser,
+              style: TextButton.styleFrom(
+                backgroundColor: const Color(0x33008000), // Green with 20% opacity
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              ),
+              child: Text(
+                "chat.userChat.dialogs.unblock".tr(),
+                style: const TextStyle(color: Colors.green),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Normal input widget
+    return ChatInputWidget(
+      controller: _textController,
+      onSend: () {
+        if (_textController.text.trim().isNotEmpty) {
+          _chatController.sendTextMessage(_textController.text);
+          _textController.clear();
+        }
+      },
+      onSendAudio: _sendAudioMessage,
+      onSendImage: _sendImageMessage,
     );
   }
 
@@ -612,31 +767,20 @@ class _UserChatScreenState extends State<UserChatScreen>
           color: const Color(0xFF2C2C2E),
           onSelected: (value) {
             switch (value) {
-              case 'profile':
-                _goToProfile();
-                break;
+
               case 'delete':
                 _deleteChat();
                 break;
               case 'block':
                 _toggleBlockUser();
                 break;
+              case 'report':
+                _showReportDialog();
+                break;
             }
           },
           itemBuilder: (context) => [
-            PopupMenuItem(
-              value: 'profile',
-              child: Row(
-                children: [
-                  const Icon(Icons.person, size: 20, color: Colors.white),
-                  const SizedBox(width: 12),
-                  Text(
-                    "chat.userChat.menu.viewProfile".tr(),
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ],
-              ),
-            ),
+
             PopupMenuItem(
               value: 'delete',
               child: Row(
@@ -667,6 +811,19 @@ class _UserChatScreenState extends State<UserChatScreen>
                     style: TextStyle(
                       color: _isBlocked ? Colors.green : Colors.orange,
                     ),
+                  ),
+                ],
+              ),
+            ),
+            PopupMenuItem(
+              value: 'report',
+              child: Row(
+                children: [
+                  const Icon(Icons.flag, size: 20, color: Colors.red),
+                  const SizedBox(width: 12),
+                  Text(
+                    "chat.userChat.menu.report".tr(),
+                    style: const TextStyle(color: Colors.red),
                   ),
                 ],
               ),

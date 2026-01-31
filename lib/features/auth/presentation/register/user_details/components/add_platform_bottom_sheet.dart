@@ -78,7 +78,9 @@ class _AddPlatformBottomSheetState extends State<AddPlatformBottomSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${'profile.customization.plataform.camera'.tr()} $e'),
+            content: Text(
+              '${'profile.customization.plataform.camera'.tr()} $e',
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -102,7 +104,9 @@ class _AddPlatformBottomSheetState extends State<AddPlatformBottomSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${'profile.customization.plataform.gallery'.tr()} $e'),
+            content: Text(
+              '${'profile.customization.plataform.gallery'.tr()} $e',
+            ),
             backgroundColor: Colors.red,
           ),
         );

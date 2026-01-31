@@ -18,10 +18,10 @@ const messaging = getMessaging();
 
 /**
  * Send push notification when a new follow notification is created
- * 
+ *
  * Triggers when a document is created in:
  * users/{userId}/notifications/{notificationId}
- * 
+ *
  * The notification document should have:
  * - type: 'follow'
  * - fromUserId: the ID of the user who followed
@@ -29,7 +29,10 @@ const messaging = getMessaging();
  * - isRead: false
  */
 exports.onFollowNotificationCreated = onDocumentCreated(
-  "users/{userId}/notifications/{notificationId}",
+  {
+    document: "users/{userId}/notifications/{notificationId}",
+    region: "us-central1", // Change this to match your Firestore region if different
+  },
   async (event) => {
     const snapshot = event.data;
     if (!snapshot) {

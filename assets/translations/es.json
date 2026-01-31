@@ -742,7 +742,8 @@
         "viewProfile": "Ver perfil",
         "deleteChat": "Eliminar chat",
         "block": "Bloquear",
-        "unblock": "Desbloquear"
+        "unblock": "Desbloquear",
+        "report": "Reportar"
       },
       "dialogs": {
         "deleteTitle": "¿Eliminar chat?",
@@ -754,7 +755,12 @@
         "cancel": "Cancelar",
         "delete": "Eliminar",
         "block": "Bloquear",
-        "unblock": "Desbloquear"
+        "unblock": "Desbloquear",
+        "reportTitle": "Reportar a {name}",
+        "reportHint": "Describe el motivo de tu reporte...",
+        "reportSubmit": "Enviar Reporte",
+        "reportSuccess": "Reporte enviado correctamente",
+        "reportError": "Error al enviar reporte: "
       },
       "messages": {
         "sending": "Enviando...",
@@ -762,7 +768,9 @@
         "image": "Imagen",
         "chatDeleted": "Chat eliminado",
         "userBlocked": "{name} ha sido bloqueado",
-        "userUnblocked": "{name} ha sido desbloqueado"
+        "userUnblocked": "{name} ha sido desbloqueado",
+        "youAreBlocked": "No puedes enviar mensajes a este usuario",
+        "unblockToChat": "Desbloquea para enviar mensajes"
       },
       "errors": {
         "sendMessage": "Error al enviar mensaje: ",

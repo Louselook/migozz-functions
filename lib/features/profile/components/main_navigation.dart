@@ -15,6 +15,7 @@ import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/tutorial/profile/profile_tutorial.dart';
 import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
 import 'package:migozz_app/features/wallet/screens/wallet_screen.dart';
+import 'package:migozz_app/core/utils/platform_utils.dart';
 
 class MainNavigation extends StatefulWidget {
   final TutorialKeys? tutorialKeys;
@@ -41,7 +42,7 @@ class _MainNavigationState extends State<MainNavigation> {
   int _lastReplayToken = 0;
 
   late final TutorialKeys _tutorialKeys = widget.tutorialKeys ?? TutorialKeys();
-  late final ProfileTutorialKeys _profileTutorialKeys = 
+  late final ProfileTutorialKeys _profileTutorialKeys =
       widget.profileTutorialKeys ?? ProfileTutorialKeys();
   final GlobalKey<EditProfileScreenState> editProfileKey =
       GlobalKey<EditProfileScreenState>();
@@ -253,7 +254,7 @@ class _MainNavigationState extends State<MainNavigation> {
 
       ProfileStatsScreen(tutorialKeys: _tutorialKeys),
       EditProfileScreen(
-        key: editProfileKey, 
+        key: editProfileKey,
         tutorialKeys: _tutorialKeys,
         profileTutorialKeys: _profileTutorialKeys,
       ),
@@ -264,14 +265,16 @@ class _MainNavigationState extends State<MainNavigation> {
     return Scaffold(
       extendBody: true,
       body: IndexedStack(index: _currentIndex, children: screens),
-      bottomNavigationBar: GradientBottomNav(
-        currentIndex: _currentIndex,
-        onItemSelected: _onItemSelected,
-        onCenterTap: _onCenterTap,
-        onProfileUpdated: _onProfileUpdated,
-        tutorialKeys: _tutorialKeys,
-        profileTutorialKeys: _profileTutorialKeys,
-      ),
+      bottomNavigationBar: PlatformUtils.isWeb
+          ? null
+          : GradientBottomNav(
+              currentIndex: _currentIndex,
+              onItemSelected: _onItemSelected,
+              onCenterTap: _onCenterTap,
+              onProfileUpdated: _onProfileUpdated,
+              tutorialKeys: _tutorialKeys,
+              profileTutorialKeys: _profileTutorialKeys,
+            ),
     );
   }
 }
