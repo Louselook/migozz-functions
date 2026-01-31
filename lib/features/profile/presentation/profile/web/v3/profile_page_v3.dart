@@ -1,19 +1,19 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/components/atomics/network_list.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
-import 'package:migozz_app/features/profile/components/profile_version_button.dart';
 import 'package:migozz_app/features/profile/components/social_rail.dart';
 import 'package:migozz_app/features/profile/components/utils/side_menu.dart';
-import 'package:migozz_app/features/profile/presentation/profile/web/components/profile_background_gradients.dart';
-import 'package:migozz_app/features/profile/presentation/profile/web/components/profile_search_button.dart';
-import 'package:migozz_app/features/profile/presentation/profile/web/v3/components/profile_header_v3.dart';
-import 'package:migozz_app/features/profile/presentation/profile/web/v3/components/social_circles_v3.dart';
+import 'package:migozz_app/features/profile/presentation/profile/web/v3/components/profile_info_panel.dart';
+import 'package:migozz_app/features/profile/presentation/profile/web/v3/components/profile_media_grid.dart';
+import 'package:migozz_app/features/profile/presentation/profile/web/v3/components/web_complete_profile_modal.dart';
+import 'package:migozz_app/features/chat/presentation/user/list/web_chat_list_widget.dart';
+import 'package:migozz_app/features/chat/data/datasources/chat_service.dart';
 
-class WebProfileContentV3 extends StatelessWidget {
+class WebProfileContentV3 extends StatefulWidget {
   final UserDTO user;
   final TutorialKeys tutorialKeys;
 
@@ -24,98 +24,193 @@ class WebProfileContentV3 extends StatelessWidget {
   });
 
   @override
+  State<WebProfileContentV3> createState() => _WebProfileContentV3State();
+}
+
+class _WebProfileContentV3State extends State<WebProfileContentV3> {
+  bool _isChatOpen = false;
+  final ChatService _chatService = ChatService();
+
+  void _toggleChat() {
+    setState(() {
+      _isChatOpen = !_isChatOpen;
+    });
+  }
+
+  void _closeChat() {
+    setState(() {
+      _isChatOpen = false;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final isSmallScreen = size.width < 600;
+    final isSmallScreen = size.width < 900;
     final leftMenuWidth = isSmallScreen ? 80.0 : 100.0;
 
-    // Calcular seguidores totales desde socialEcosystem
-    final totalFollowers = _calculateTotalFollowers(user.socialEcosystem);
+    // Calculate stats
+    final totalFollowers = _calculateTotalFollowers(
+      widget.user.socialEcosystem,
+    );
 
-    // Construir enlaces de redes sociales
-    final socialLinks = _buildSocialLinks(user.socialEcosystem, user.username);
+    // Build social links
+    final socialLinks = _buildSocialLinks(
+      widget.user.socialEcosystem,
+      widget.user.username,
+    );
 
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            minWidth: 360,
-            maxWidth: double.infinity,
-          ),
-          child: Stack(
-            children: [
-              // Fondo con gradientes
-              const ProfileBackgroundGradients(),
+    return BlocBuilder<AuthCubit, AuthState>(
+      builder: (context, authState) {
+        final currentUserEmail = authState.userProfile?.email ?? '';
+        final isOwnProfile = widget.user.email == currentUserEmail;
 
-              // Contenido principal con scroll
-              Positioned.fill(
-                child: Padding(
-                  padding: EdgeInsets.only(left: leftMenuWidth),
-                  child: CustomScrollView(
-                    slivers: [
-                      // Header con avatar y nombre
-                      SliverToBoxAdapter(
-                        child: Builder(
-                          builder: (context) {
-                            final authState = context.read<AuthCubit>().state;
-                            final currentUserEmail =
-                                authState.userProfile?.email ?? '';
-                            final isOwnProfile = user.email == currentUserEmail;
+        final isProfileComplete = isOwnProfile
+            ? (authState.userProfile?.complete ?? true)
+            : true;
+        final hasSeenDialog = authState.hasSeenCompleteProfileDialog;
 
-                            return ProfileHeaderV3(
-                              name: user.displayName,
-                              displayName: user.username,
-                              communityCount: totalFollowers.toString(),
-                              communityName: 'profile.presentation.community'.tr(),
-                              avatarUrl: user.avatarUrl,
-                              voiceNoteUrl: user.voiceNoteUrl ?? '',
-                              tutorialKeys: tutorialKeys,
-                              isOwnProfile: isOwnProfile,
-                              userId: user.email,
-                            );
-                          },
-                        ),
-                      ),
+        final showCompleteModal =
+            isOwnProfile && !isProfileComplete && !hasSeenDialog;
 
-                      // Iconos circulares de redes sociales (versión 3)
-                      SliverToBoxAdapter(
-                        child: Center(
-                          child: SocialCirclesV3(links: socialLinks),
-                        ),
-                      ),
+        // Stream unread count only if user is logged in
+        final unreadStream = (currentUserEmail.isNotEmpty)
+            ? _chatService.getTotalUnreadCountStream(currentUserEmail)
+            : Stream.value(0);
 
-                      // Espacio para futuras publicaciones u otro contenido
-                      SliverToBoxAdapter(
-                        child: SizedBox(height: isSmallScreen ? 40 : 60),
-                      ),
-                    ],
+        return StreamBuilder<int>(
+          stream: unreadStream,
+          initialData: 0,
+          builder: (context, snapshot) {
+            final unreadCount = snapshot.data ?? 0;
+
+            return Scaffold(
+              backgroundColor: Colors.black,
+              body: Stack(
+                children: [
+                  // Main Content Area with Padding for SideMenu
+                  Positioned.fill(
+                    child: Padding(
+                      padding: EdgeInsets.only(left: leftMenuWidth),
+                      child: isSmallScreen
+                          ? SingleChildScrollView(
+                              child: Column(
+                                children: [
+                                  // Mobile Layout (Stacked)
+                                  SizedBox(
+                                    height: 600,
+                                    child: ProfileInfoPanel(
+                                      user: widget.user,
+                                      socialLinks: socialLinks,
+                                      communityCount: totalFollowers.toString(),
+                                      isOwnProfile: isOwnProfile,
+                                      unreadCount: isOwnProfile
+                                          ? unreadCount
+                                          : 0,
+                                      onNotificationTap: isOwnProfile
+                                          ? _toggleChat
+                                          : null,
+                                    ),
+                                  ),
+                                  ProfileMediaGrid(
+                                    socialLinks: socialLinks,
+                                    rawSocialData: widget.user.socialEcosystem,
+                                    scrollingEnabled: false,
+                                  ),
+                                ],
+                              ),
+                            )
+                          : Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                // Desktop Layout (Split)
+
+                                // LEFT PANEL: User Info
+                                Expanded(
+                                  flex: 5,
+                                  child: ProfileInfoPanel(
+                                    user: widget.user,
+                                    socialLinks: socialLinks,
+                                    communityCount: totalFollowers.toString(),
+                                    isOwnProfile: isOwnProfile,
+                                    unreadCount: isOwnProfile ? unreadCount : 0,
+                                    onNotificationTap: isOwnProfile
+                                        ? _toggleChat
+                                        : null,
+                                  ),
+                                ),
+
+                                // RIGHT PANEL: Media Grid
+                                Expanded(
+                                  flex: 7,
+                                  child: ProfileMediaGrid(
+                                    socialLinks: socialLinks,
+                                    rawSocialData: widget.user.socialEcosystem,
+                                    scrollingEnabled: true,
+                                  ),
+                                ),
+                              ],
+                            ),
+                    ),
                   ),
-                ),
+
+                  // Side Menu (Fixed on Left)
+                  Positioned(
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    width: leftMenuWidth,
+                    child: SideMenu(
+                      tutorialKeys: widget.tutorialKeys,
+                      onChatTap: _toggleChat,
+                      isChatOpen: _isChatOpen,
+                      unreadCount: unreadCount,
+                    ),
+                  ),
+
+                  // Chat Panel
+                  if (_isChatOpen)
+                    Positioned(
+                      right: 0,
+                      top: 0,
+                      bottom: 0,
+                      width: 350,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1C1C1E),
+                          border: const Border(
+                            left: BorderSide(color: Colors.white12),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.5),
+                              blurRadius: 20,
+                              offset: const Offset(-5, 0),
+                            ),
+                          ],
+                        ),
+                        child: WebChatListWidget(
+                          username: widget.user.username.replaceFirst('@', ''),
+                          currentUserId: currentUserEmail,
+                          onClose: _closeChat,
+                        ),
+                      ),
+                    ),
+
+                  // Complete Profile Modal Overlay
+                  if (showCompleteModal)
+                    const Positioned.fill(child: WebCompleteProfileModal()),
+                ],
               ),
-
-              // Menú lateral izquierdo (se mantiene igual)
-              Positioned(
-                left: 0,
-                top: 0,
-                bottom: 0,
-                child: SideMenu(tutorialKeys: tutorialKeys),
-              ),
-
-              // Botón de búsqueda (se mantiene igual)
-              ProfileSearchButton(key: tutorialKeys.searchScreenKey),
-
-              // Botón para cambiar versión de perfil
-              ProfileVersionButton(currentVersion: user.profileVersion),
-            ],
-          ),
-        ),
-      ),
+            );
+          },
+        );
+      },
     );
   }
 
-  // Calcular total de seguidores
-  
+  // --- Helper Methods ---
+
   int _calculateTotalFollowers(List<Map<String, dynamic>>? socialEcosystem) {
     if (socialEcosystem == null || socialEcosystem.isEmpty) return 0;
     int total = 0;
@@ -134,9 +229,6 @@ class WebProfileContentV3 extends StatelessWidget {
     return total;
   }
 
-  
-  // Construir enlaces de redes
-  
   List<SocialLink> _buildSocialLinks(
     List<Map<String, dynamic>>? socialEcosystem,
     String username,
@@ -149,14 +241,23 @@ class WebProfileContentV3 extends StatelessWidget {
       for (final entry in social.entries) {
         final platform = entry.key.toLowerCase();
         final data = entry.value;
+
+        // Initialize variables
         int? followers;
         int? shares;
         String? customUrl;
+        String? profileImageUrl;
 
         if (data is Map<String, dynamic>) {
           followers = _parseIntFromDynamic(data['followers']);
           shares = _parseIntFromDynamic(data['shares']);
           customUrl = data['url']?.toString();
+
+          profileImageUrl =
+              data['photoUrl']?.toString() ??
+              data['profileUrl']?.toString() ??
+              data['avatar']?.toString() ??
+              data['image']?.toString();
         }
 
         final socialInfo = _getSocialInfo(platform, cleanUsername, customUrl);
@@ -167,6 +268,7 @@ class WebProfileContentV3 extends StatelessWidget {
               url: Uri.parse(socialInfo['url']!),
               followers: followers,
               shares: shares,
+              profileImageUrl: profileImageUrl,
             ),
           );
         }
@@ -182,18 +284,25 @@ class WebProfileContentV3 extends StatelessWidget {
     return null;
   }
 
-  
-  // Generar URL + ícono por red
-  
   Map<String, String>? _getSocialInfo(
     String platform,
     String username,
     String? customUrl,
   ) {
-    final normalizedLabel =
-        platform[0].toUpperCase() + platform.substring(1).toLowerCase();
+    final normalizedLabel = platform.length > 0
+        ? (platform[0].toUpperCase() + platform.substring(1).toLowerCase())
+        : platform;
 
-    final asset = iconByLabel[normalizedLabel];
+    var asset = iconByLabel[normalizedLabel];
+
+    if (asset == null) {
+      final entry = iconByLabel.entries.firstWhere(
+        (e) => e.key.toLowerCase() == platform.toLowerCase(),
+        orElse: () => const MapEntry('', ''),
+      );
+      if (entry.key.isNotEmpty) asset = entry.value;
+    }
+
     if (asset == null) return null;
 
     String url;

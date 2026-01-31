@@ -54,25 +54,25 @@ class OnboardingContainer extends StatelessWidget {
                 t: t,
               ),
 
-              const SizedBox(width: 56),
-
               // Contenido (texto y botones)
               Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  constraints: const BoxConstraints(maxWidth: 500),
-                  child: Opacity(
-                    opacity: contentOpacity,
-                    child: Transform.translate(
-                      offset: Offset(0, contentTranslateY),
-                      child: OnboardingContent(
-                        data: data,
-                        controller: controller,
-                        lastPage: lastPage,
-                        currentPage: currentPage,
-                        totalPages: totalPages,
-                        pageIndex: pageIndex,
-                        isDesktop: isDesktop,
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 48),
+                    constraints: const BoxConstraints(maxWidth: 600),
+                    child: Opacity(
+                      opacity: contentOpacity,
+                      child: Transform.translate(
+                        offset: Offset(0, contentTranslateY),
+                        child: OnboardingContent(
+                          data: data,
+                          controller: controller,
+                          lastPage: lastPage,
+                          currentPage: currentPage,
+                          totalPages: totalPages,
+                          pageIndex: pageIndex,
+                          isDesktop: isDesktop,
+                        ),
                       ),
                     ),
                   ),

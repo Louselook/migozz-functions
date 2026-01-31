@@ -97,7 +97,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
         // En vez de loguear directamente, inyectamos el OTP al LoginCubit
         // para que el flujo normal de OTP se dispare (y LoginWrapper navegue).
-        context.read<LoginCubit>().sendOTPLoginCubit(email, forcedOTP: testOtp);
+        context.read<LoginCubit>().sendOTPLoginCubit(
+          email,
+          forcedOTP: testOtp,
+          language: context.locale.languageCode,
+        );
 
         // Salimos: LoginWrapper escuchará currentOTP y hará la navegación.
         return;
@@ -105,7 +109,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // Si existe -> continuar con el flujo de login: enviamos OTP por el LoginCubit
       // Resetear flags por si acaso
-      context.read<LoginCubit>().sendOTPLoginCubit(email);
+      context.read<LoginCubit>().sendOTPLoginCubit(
+        email,
+        language: context.locale.languageCode,
+      );
     } catch (e) {
       // Manejo de errores de red / firestore
       CustomSnackbar.show(
@@ -259,13 +266,23 @@ class _LoginScreenState extends State<LoginScreen> {
                       ? Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Expanded(child: googleButton(onPressed: _handleGoogleSignIn,width: MediaQuery.of(context).size.width)),
+                            Expanded(
+                              child: googleButton(
+                                onPressed: _handleGoogleSignIn,
+                                width: MediaQuery.of(context).size.width,
+                              ),
+                            ),
                             const SizedBox(width: 10),
-                            Expanded(child: appleButton(onPressed: _handleAppleSignIn)),
+                            Expanded(
+                              child: appleButton(onPressed: _handleAppleSignIn),
+                            ),
                           ],
                         )
                       : Center(
-                          child: googleButton(onPressed: _handleGoogleSignIn,width: MediaQuery.of(context).size.width),
+                          child: googleButton(
+                            onPressed: _handleGoogleSignIn,
+                            width: MediaQuery.of(context).size.width,
+                          ),
                         ),
 
                   const SizedBox(height: 30),

@@ -1,4 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -8,6 +9,7 @@ import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/regis
 import 'package:migozz_app/features/auth/services/add_networks/network_config.dart';
 
 import 'social_network_input_step.dart';
+import 'web_social_network_input_modal.dart';
 
 /// Step 1: Select which networks to add (toggle selection only)
 class SocialNetworkSelectionStep extends StatefulWidget {
@@ -72,24 +74,43 @@ class _SocialNetworkSelectionStepState
     final registerCubit = context.read<RegisterCubit>();
 
     // Navigate to input step
-    Navigator.of(context).push(
-      MaterialPageRoute(
+    if (kIsWeb) {
+      showDialog(
+        context: context,
         builder: (_) => BlocProvider.value(
           value: registerCubit,
-          child: SocialNetworkInputStep(
+          child: WebSocialNetworkInputModal(
             selectedNetworks: selectedConfigs,
             onComplete: () {
-              // Pop back to this screen and then to chat
-              Navigator.of(context).pop(); // Pop input step
+              Navigator.of(context).pop(); // Pop dialog
               Navigator.of(context).pop('done'); // Pop selection step
             },
             onBack: () {
-              Navigator.of(context).pop(); // Just go back to selection
+              Navigator.of(context).pop(); // Just close dialog
             },
           ),
         ),
-      ),
-    );
+      );
+    } else {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => BlocProvider.value(
+            value: registerCubit,
+            child: SocialNetworkInputStep(
+              selectedNetworks: selectedConfigs,
+              onComplete: () {
+                // Pop back to this screen and then to chat
+                Navigator.of(context).pop(); // Pop input step
+                Navigator.of(context).pop('done'); // Pop selection step
+              },
+              onBack: () {
+                Navigator.of(context).pop(); // Just go back to selection
+              },
+            ),
+          ),
+        ),
+      );
+    }
   }
 
   void _handleBackTap() {

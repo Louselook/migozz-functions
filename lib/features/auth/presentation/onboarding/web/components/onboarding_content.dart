@@ -33,7 +33,9 @@ class OnboardingContent extends StatelessWidget {
         ? (MediaQuery.of(context).size.width < 900 ? 32 : 40)
         : 28;
     final double textSize = isDesktop
-        ? (MediaQuery.of(context).size.width < 900 ? 20 : 24)
+        ? (MediaQuery.of(context).size.width < 900
+              ? 16
+              : 18) // Reduced from 20/24 to 16/18
         : 14;
 
     return Column(
@@ -41,6 +43,7 @@ class OnboardingContent extends StatelessWidget {
           ? MainAxisAlignment.center
           : MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min, // Ensure it doesn't expand unnecessarily
       children: [
         if (!isDesktop) SizedBox(height: 5), // Spacer similar to mobile
         // Progress indicators
@@ -49,7 +52,7 @@ class OnboardingContent extends StatelessWidget {
             currentIndex: currentPage,
             isDesktop: isDesktop,
           ),
-          SizedBox(height: 20),
+          SizedBox(height: 32), // Increased spacing from indicator to title
         ],
 
         // Título
@@ -60,8 +63,7 @@ class OnboardingContent extends StatelessWidget {
           textAlign: TextAlign.start,
         ),
 
-        SizedBox(height: 8),
-
+        SizedBox(height: 16), // Increased spacing between title and subtitle
         // Subtítulo (si existe)
         if (data.subTitleKey != null && data.subTitleKey!.isNotEmpty) ...[
           SecondaryText(
@@ -71,7 +73,7 @@ class OnboardingContent extends StatelessWidget {
             fontSize: textSize,
             color: AppColors.secondaryText,
           ),
-          SizedBox(height: 4), // Pequeño espacio entre subtítulo y descripción
+          SizedBox(height: 8),
         ],
 
         // Descripción
@@ -80,13 +82,14 @@ class OnboardingContent extends StatelessWidget {
           textAlign: TextAlign.start,
           fontfamily: 'Inter',
           fontSize: textSize,
-          color: AppColors.secondaryText.withValues(alpha: 0.53),
+          color: AppColors.secondaryText.withValues(
+            alpha: 0.7,
+          ), // Slightly darker for better readability
         ),
 
         if (!isDesktop) Spacer(),
 
-        SizedBox(height: isDesktop ? 60 : 20),
-
+        SizedBox(height: isDesktop ? 48 : 20), // Reduced from 60 to 48
         // Actions (Next / Skip / Get Started)
         OnboardingActions(
           controller: controller,

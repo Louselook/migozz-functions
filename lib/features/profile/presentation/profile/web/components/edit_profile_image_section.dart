@@ -60,7 +60,7 @@ class EditProfileImageSection extends StatelessWidget {
                         },
                       )
                     : Image.asset(
-                        'assets/image/ImgPefil.webp',
+                        'assets/image/avatar.webp',
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return Container(

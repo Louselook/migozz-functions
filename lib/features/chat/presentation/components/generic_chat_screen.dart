@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
@@ -270,75 +271,83 @@ class GenericChatScreenState extends State<GenericChatScreen> {
               centerTitle: true,
             ),
       body: SafeArea(
-        child: Column(
-          children: [
-            // Lista de mensajes
-            Expanded(
-              child: ListenableBuilder(
-                listenable: widget.chatController,
-                builder: (context, child) {
-                  final messages = widget.chatController.messages;
-                  return ListView.builder(
-                    controller: widget.chatController.scrollController,
-                    padding: const EdgeInsets.all(10),
-                    reverse: widget.reverseMessages,
-                    itemCount: messages.length,
-                    itemBuilder: (context, index) {
-                      // Invertir índice si reverse es true
-                      final messageIndex = widget.reverseMessages
-                          ? messages.length - 1 - index
-                          : index;
-                      final message = messages[messageIndex];
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: kIsWeb ? 800 : double.infinity,
+            ),
+            child: Column(
+              children: [
+                // Lista de mensajes
+                Expanded(
+                  child: ListenableBuilder(
+                    listenable: widget.chatController,
+                    builder: (context, child) {
+                      final messages = widget.chatController.messages;
+                      return ListView.builder(
+                        controller: widget.chatController.scrollController,
+                        padding: const EdgeInsets.all(10),
+                        reverse: widget.reverseMessages,
+                        itemCount: messages.length,
+                        itemBuilder: (context, index) {
+                          // Invertir índice si reverse es true
+                          final messageIndex = widget.reverseMessages
+                              ? messages.length - 1 - index
+                              : index;
+                          final message = messages[messageIndex];
 
-                      // Verificar si es último mensaje con opciones
-                      final isLastBotMsgWithOptions =
-                          widget.showSuggestions &&
-                          message["other"] == true &&
-                          (message["options"] != null &&
-                              (message["options"] as List).isNotEmpty) &&
-                          !messages
-                              .sublist(messageIndex + 1)
-                              .any(
-                                (m) =>
-                                    m["other"] == true &&
-                                    (m["options"] != null &&
-                                        (m["options"] as List).isNotEmpty),
-                              );
+                          // Verificar si es último mensaje con opciones
+                          final isLastBotMsgWithOptions =
+                              widget.showSuggestions &&
+                              message["other"] == true &&
+                              (message["options"] != null &&
+                                  (message["options"] as List).isNotEmpty) &&
+                              !messages
+                                  .sublist(messageIndex + 1)
+                                  .any(
+                                    (m) =>
+                                        m["other"] == true &&
+                                        (m["options"] != null &&
+                                            (m["options"] as List).isNotEmpty),
+                                  );
 
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ChatMessageBuilder.buildMessage(
-                            message,
-                            chatController: widget.passChatControllerToMessages
-                                ? widget.chatController
-                                : null,
-                            otherUserName: widget.otherUserName,
-                            otherUserAvatar: widget.otherUserAvatar,
-                          ),
-                          // Mostrar sugerencias si existe el builder
-                          if (isLastBotMsgWithOptions &&
-                              widget.suggestionBuilder != null)
-                            widget.suggestionBuilder!
-                          else if (isLastBotMsgWithOptions &&
-                              widget.onSugestionSelected != null)
-                            _buildDefaultSuggestions(
-                              List<String>.from(message["options"]),
-                            ),
-                        ],
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ChatMessageBuilder.buildMessage(
+                                message,
+                                chatController:
+                                    widget.passChatControllerToMessages
+                                    ? widget.chatController
+                                    : null,
+                                otherUserName: widget.otherUserName,
+                                otherUserAvatar: widget.otherUserAvatar,
+                              ),
+                              // Mostrar sugerencias si existe el builder
+                              if (isLastBotMsgWithOptions &&
+                                  widget.suggestionBuilder != null)
+                                widget.suggestionBuilder!
+                              else if (isLastBotMsgWithOptions &&
+                                  widget.onSugestionSelected != null)
+                                _buildDefaultSuggestions(
+                                  List<String>.from(message["options"]),
+                                ),
+                            ],
+                          );
+                        },
                       );
                     },
-                  );
-                },
-              ),
-            ),
+                  ),
+                ),
 
-            // Input personalizado o por defecto
-            if (widget.customInput != null)
-              widget.customInput!
-            else if (widget.showDefaultInput)
-              _buildDefaultInput(),
-          ],
+                // Input personalizado o por defecto
+                if (widget.customInput != null)
+                  widget.customInput!
+                else if (widget.showDefaultInput)
+                  _buildDefaultInput(),
+              ],
+            ),
+          ),
         ),
       ),
       // Botón flotante para scroll al bottom con contador

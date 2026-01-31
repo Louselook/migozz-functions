@@ -431,7 +431,10 @@ class _ResendButton extends StatelessWidget {
     return TextButton(
       onPressed: () {
         // Reenvío de OTP
-        context.read<LoginCubit>().sendOTPLoginCubit(email);
+        context.read<LoginCubit>().sendOTPLoginCubit(
+          email,
+          language: context.locale.languageCode,
+        );
       },
       child: SecondaryText(
         "login.otp.resend".tr(),

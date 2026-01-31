@@ -177,8 +177,17 @@ Future<Map<String, dynamic>?> processBotResponse(
         // Usuario confirmó el email
         if (registerCubit.state.email != null) {
           try {
-            debugPrint('📧 Enviando OTP a: ${registerCubit.state.email}');
-            final result = await sendOTP(email: registerCubit.state.email!);
+            // Convert language label to code: 'Español' -> 'es', otherwise 'en'
+            final langCode = registerCubit.state.language == 'Español'
+                ? 'es'
+                : 'en';
+            debugPrint(
+              '📧 Enviando OTP a: ${registerCubit.state.email} (lang: $langCode)',
+            );
+            final result = await sendOTP(
+              email: registerCubit.state.email!,
+              language: langCode,
+            );
 
             if (result['sent'] == true) {
               registerCubit.setCurrentOTP(result['myOTP']);
@@ -251,8 +260,17 @@ Future<Map<String, dynamic>?> processBotResponse(
           debugPrint('📧 Usuario solicitó reenviar código OTP');
           if (registerCubit.state.email != null) {
             try {
-              debugPrint('📧 Reenviando OTP a: ${registerCubit.state.email}');
-              final result = await sendOTP(email: registerCubit.state.email!);
+              // Convert language label to code: 'Español' -> 'es', otherwise 'en'
+              final langCode = registerCubit.state.language == 'Español'
+                  ? 'es'
+                  : 'en';
+              debugPrint(
+                '📧 Reenviando OTP a: ${registerCubit.state.email} (lang: $langCode)',
+              );
+              final result = await sendOTP(
+                email: registerCubit.state.email!,
+                language: langCode,
+              );
 
               if (result['sent'] == true) {
                 registerCubit.setCurrentOTP(result['myOTP']);
