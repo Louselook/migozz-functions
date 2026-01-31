@@ -9,6 +9,7 @@ import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cu
 import 'package:migozz_app/features/profile/presentation/bloc/follower_cubit/follower_cubit.dart';
 import 'package:migozz_app/features/profile/data/datasources/user_service.dart';
 import 'package:migozz_app/features/profile/data/datasources/follower_service.dart';
+import 'package:migozz_app/features/wallet/cubit/wallet_cubit.dart';
 import 'package:migozz_app/injection.dart';
 
 // ✅ Crear instancias de los cubits ANTES de los providers
@@ -17,6 +18,7 @@ final registerCubit = RegisterCubit(locator<LocationService>());
 final authCubit = AuthCubit(locator<AuthUseCases>(), locator<UserService>());
 late final EditCubit editCubit;
 late final FollowerCubit followerCubit;
+late final WalletCubit walletCubit;
 
 // ✅ Inicializar los cubits y configurar callbacks
 void initializeBlocProviders() {
@@ -42,6 +44,9 @@ void initializeBlocProviders() {
   
   // Crear FollowerCubit
   followerCubit = FollowerCubit(locator<FollowerService>());
+  //Passing authCubit to Wallet cubit
+  walletCubit = WalletCubit(authCubit: authCubit);
+
 }
 
 /// Lista de providers globales de la app - ESTÁTICA, creada UNA SOLA VEZ
@@ -51,4 +56,5 @@ final List<BlocProvider> blocProviders = [
   BlocProvider<RegisterCubit>(create: (_) => registerCubit),
   BlocProvider<EditCubit>(create: (_) => editCubit),
   BlocProvider<FollowerCubit>(create: (_) => followerCubit),
+  BlocProvider<WalletCubit>(create: (_) => walletCubit)
 ];

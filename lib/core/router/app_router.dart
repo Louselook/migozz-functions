@@ -32,6 +32,7 @@ import 'package:migozz_app/features/search/web/presentation/search_screen.dart'
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/notifications/presentation/notifications_list_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:migozz_app/features/wallet/screens/wallet_screen.dart';
 
 Widget localizedBuilder(BuildContext context, Widget Function() screenBuilder) {
   final easy = EasyLocalization.of(context);
@@ -201,6 +202,13 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       ),
 
       GoRoute(
+        path: '/wallet',
+        name: 'wallet',
+        builder: (context, state) =>
+            localizedBuilder(context, () => const WalletScreen()),
+      ),
+
+      GoRoute(
         path: '/search',
         builder: (context, state) {
           final screenWidth = MediaQuery.of(context).size.width;
@@ -264,10 +272,15 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         path: '/followers/:userId',
         name: 'followers',
         builder: (context, state) {
-          final userId = Uri.decodeComponent(state.pathParameters['userId'] ?? '');
-          final username = Uri.decodeComponent(state.uri.queryParameters['username'] ?? '');
-          final tab = int.tryParse(state.uri.queryParameters['tab'] ?? '0') ?? 0;
-          
+          final userId = Uri.decodeComponent(
+            state.pathParameters['userId'] ?? '',
+          );
+          final username = Uri.decodeComponent(
+            state.uri.queryParameters['username'] ?? '',
+          );
+          final tab =
+              int.tryParse(state.uri.queryParameters['tab'] ?? '0') ?? 0;
+
           return FollowersListScreen(
             userId: userId,
             username: username,

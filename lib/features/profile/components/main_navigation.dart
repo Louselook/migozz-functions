@@ -14,6 +14,7 @@ import 'package:migozz_app/features/search/mobile/presentation/search_screen.dar
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/tutorial/profile/profile_tutorial.dart';
 import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
+import 'package:migozz_app/features/wallet/screens/wallet_screen.dart';
 
 class MainNavigation extends StatefulWidget {
   final TutorialKeys? tutorialKeys;
@@ -256,6 +257,8 @@ class _MainNavigationState extends State<MainNavigation> {
         tutorialKeys: _tutorialKeys,
         profileTutorialKeys: _profileTutorialKeys,
       ),
+
+      WalletScreen()
     ];
 
     return Scaffold(

@@ -17,6 +17,7 @@ class UserDTO {
   final String? avatarUrl;
   final String? phone;
   final String? voiceNoteUrl;
+  final String? wallet;
   final List<String>? category;
   final int profileVersion; // 1, 2 o 3 - versión del diseño de perfil
 
@@ -54,6 +55,7 @@ class UserDTO {
     this.phone,
     this.voiceNoteUrl,
     this.category,
+    this.wallet,
     this.profileVersion = 1,
     this.contactWebsite,
     this.contactPhone,

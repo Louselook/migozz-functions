@@ -76,7 +76,7 @@ class GradientBottomNav extends StatelessWidget {
                         selected: currentIndex == 1,
                         onTap: () => onItemSelected(1), // ✅ Solo callback
                       ),
-                      const Spacer(),
+       
                       _NavItem(
                         tutorialKey: profileTutorialKeys?.statsNavKey ?? tutorialKeys?.statScreenKey,
                         icon: Icons.bar_chart_rounded,
@@ -88,6 +88,13 @@ class GradientBottomNav extends StatelessWidget {
                         icon: Icons.settings_outlined,
                         selected: currentIndex == 3,
                         onTap: () => onItemSelected(3), // ✅ Solo callback
+                      ),
+
+                      _NavItem(
+                        tutorialKey: null,
+                        icon: Icons.wallet,
+                        selected: currentIndex == 4,
+                        onTap: () => onItemSelected(4), // ✅ Solo callback
                       ),
                     ],
                   ),
