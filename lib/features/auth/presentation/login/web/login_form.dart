@@ -86,13 +86,20 @@ class _LoginFormState extends State<LoginForm> {
 
         // En vez de loguear directamente, inyectamos el OTP al LoginCubit
         // para que el flujo normal de OTP se dispare (y LoginWrapper navegue).
-        context.read<LoginCubit>().sendOTPLoginCubit(email, forcedOTP: testOtp);
+        context.read<LoginCubit>().sendOTPLoginCubit(
+          email,
+          forcedOTP: testOtp,
+          language: context.locale.languageCode,
+        );
 
         // Salimos: LoginWrapper escuchará currentOTP y hará la navegación.
         return;
       }
 
-      context.read<LoginCubit>().sendOTPLoginCubit(email);
+      context.read<LoginCubit>().sendOTPLoginCubit(
+        email,
+        language: context.locale.languageCode,
+      );
     } catch (e) {
       CustomSnackbar.show(
         context: context,

@@ -11,7 +11,12 @@ class LoginCubit extends Cubit<LoginState> {
   LoginCubit() : super(const LoginState());
 
   /// Enviar OTP al email (solo UI/UX, no autenticación)
-  Future<void> sendOTPLoginCubit(String email, {String? forcedOTP}) async {
+  /// [language] - Language code ('en' or 'es') for email content
+  Future<void> sendOTPLoginCubit(
+    String email, {
+    String? forcedOTP,
+    String language = 'en',
+  }) async {
     if (!state.isLoading) {
       emit(
         state.copyWith(
@@ -42,7 +47,7 @@ class LoginCubit extends Cubit<LoginState> {
       }
 
       // Flujo real: llamar al servicio que envía OTP
-      final result = await sendOTP(email: email);
+      final result = await sendOTP(email: email, language: language);
 
       if (result["sent"] == true) {
         debugPrint("✅ OTP enviado a $email: ${result["myOTP"]}");
