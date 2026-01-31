@@ -331,8 +331,10 @@ class NotificationService {
 
       // Skip if push was already sent by Cloud Function
       if (pushSent) {
-        debugPrint('🔔 [NotificationService] Push already sent, skipping local notification');
-        // Still save to history for the list
+        debugPrint('🔔 [NotificationService] Push already sent by Cloud Function, skipping local notification');
+        // Mark as read to prevent reprocessing
+        await doc.reference.update({'isRead': true});
+        return;
       }
 
       if (type == 'follow' && fromUserId != null) {
