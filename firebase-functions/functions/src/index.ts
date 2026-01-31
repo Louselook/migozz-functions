@@ -2,14 +2,14 @@ import {
   onDocumentCreated,
   onDocumentUpdated,
 } from "firebase-functions/v2/firestore";
-import {onCall} from "firebase-functions/v2/https";
-import {initializeApp} from "firebase-admin/app";
-import {getFirestore, FieldValue, type DocumentData} from "firebase-admin/firestore";
-import {getStorage} from "firebase-admin/storage";
-import {getMessaging} from "firebase-admin/messaging";
+import { onCall } from "firebase-functions/v2/https";
+import { initializeApp } from "firebase-admin/app";
+import { getFirestore, FieldValue, type DocumentData } from "firebase-admin/firestore";
+import { getStorage } from "firebase-admin/storage";
+import { getMessaging } from "firebase-admin/messaging";
 import QRCode from "qrcode";
 import { logger } from "firebase-functions";
-import nodemailer, { SendMailOptions } from "nodemailer";
+import { Resend } from "resend";
 
 initializeApp();
 const db = getFirestore();
@@ -60,7 +60,7 @@ export const onUserCreate = onDocumentCreated("users/{uid}", async (event) => {
 
 // 2. verifyHandle → reserva usernames
 export const verifyHandle = onCall(async (request) => {
-  const {handle, uid} = request.data;
+  const { handle, uid } = request.data;
 
   const ref = db.collection("shareHandles").doc(handle);
   const snap = await ref.get();
@@ -74,7 +74,7 @@ export const verifyHandle = onCall(async (request) => {
     createdAt: FieldValue.serverTimestamp(),
   });
 
-  return {success: true};
+  return { success: true };
 });
 
 
@@ -112,13 +112,13 @@ export const profilesPublicSync = onDocumentUpdated("users/{uid}",
       totalFollowers,
       linksCount,
       t: FieldValue.serverTimestamp(),
-    }, {merge: true});
+    }, { merge: true });
   });
 
 
 // 4. fetchSocialMetrics (ejemplo básico, sin APIs reales)
 export const fetchSocialMetrics = onCall(async (request) => {
-  const {uid, linkId} = request.data;
+  const { uid, linkId } = request.data;
 
   const followers = Math.floor(Math.random() * 10000);
   const postsCount = Math.floor(Math.random() * 500);
@@ -141,21 +141,21 @@ export const fetchSocialMetrics = onCall(async (request) => {
   const totalFollowers = linksSnap
     .docs.reduce((sum, doc) => sum + (doc.data().followers || 0), 0);
 
-  await db.collection("users").doc(uid).update({totalFollowers});
+  await db.collection("users").doc(uid).update({ totalFollowers });
 
-  return {success: true, followers, postsCount};
+  return { success: true, followers, postsCount };
 });
 
 
 // 5. generateProfileQR → genera QR y lo guarda en Storage
 export const generateProfileQR = onCall(async (request) => {
-  const {uid, publicUrl} = request.data;
+  const { uid, publicUrl } = request.data;
 
   const qrDataUrl = await QRCode.toDataURL(publicUrl);
   const buffer = Buffer.from(qrDataUrl.split(",")[1], "base64");
 
   const file = storage.bucket().file(`qr/${uid}/profile.png`);
-  await file.save(buffer, {contentType: "image/png"});
+  await file.save(buffer, { contentType: "image/png" });
 
   const qrUrl = `https://storage.googleapis.com/${file.bucket.name}/${file.name}`;
 
@@ -163,7 +163,7 @@ export const generateProfileQR = onCall(async (request) => {
     "share.qrUrl": qrUrl,
   });
 
-  return {success: true, qrUrl};
+  return { success: true, qrUrl };
 });
 
 // 6. sendSupportEmail → envía correo al crear ticket de soporte
@@ -175,45 +175,45 @@ export const sendSupportEmail = onDocumentCreated(
 
     logger.info("📨 Nuevo ticket de soporte recibido:", data);
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: "issamu382@gmail.com",
-        pass: "nfnsyuwdkymgbwbs",
-      },
-    });
+    const resendApiKey = process.env.RESEND_API_KEY;
+    if (!resendApiKey) {
+      logger.error("RESEND_API_KEY is not configured in the environment");
+      return;
+    }
 
-    const mailOptions: SendMailOptions = {
-      from: "Migozz Support <MigozzSupport@migozz.com>",
-      to: "issamu382@gmail.com",
-      subject: `Nuevo Ticket de Soporte — ${data.email}`,
-      html: `
-        <h2>Nuevo Ticket de Soporte</h2>
+    const resend = new Resend(resendApiKey);
 
-        <p><strong>Nombre:</strong> ${data.name}</p>
-        <p><strong>Email:</strong> ${data.email}</p>
+    const attachments = data.fileBase64
+      ? [
+        {
+          filename: data.fileName,
+          content: data.fileBase64,
+        },
+      ]
+      : [];
 
-        <p><strong>Mensaje:</strong></p>
-        <p>${data.message}</p>
+    try {
+      await resend.emails.send({
+        from: "Migozz Support <support@migozz.com>",
+        to: ["issamu382@gmail.com"],
+        subject: `Nuevo Ticket de Soporte — ${data.email}`,
+        html: `
+          <h2>Nuevo Ticket de Soporte</h2>
+          <p><strong>Nombre:</strong> ${data.name}</p>
+          <p><strong>Email:</strong> ${data.email}</p>
+          <p><strong>Mensaje:</strong></p>
+          <p>${data.message}</p>
+          ${data.fileName ? `<p><strong>Adjunto:</strong> ${data.fileName}</p>` : ""}
+          <br><hr>
+          <p>Ticket generado automáticamente desde Migozz.</p>
+        `,
+        attachments: attachments,
+      });
 
-        ${data.fileName ? `<p><strong>Adjunto:</strong> ${data.fileName}</p>` : ""}
-
-        <br><hr>
-        <p>Ticket generado automáticamente desde Migozz.</p>
-      `,
-      attachments: data.fileBase64
-        ? [
-            {
-              filename: data.fileName,
-              content: Buffer.from(data.fileBase64, "base64"),
-            },
-          ]
-        : [],
-    };
-
-    await transporter.sendMail(mailOptions);
-
-    logger.info("📧 Correo de soporte enviado correctamente.");
+      logger.info("📧 Correo de soporte enviado correctamente vía Resend.");
+    } catch (error) {
+      logger.error("❌ Error enviando correo de soporte vía Resend:", error);
+    }
   }
 );
 
@@ -377,8 +377,8 @@ export const sendChatNotification = onDocumentCreated(
 
           // Check if token is invalid and should be removed
           if (errorMessage.includes("not-registered") ||
-              errorMessage.includes("invalid-registration-token") ||
-              errorMessage.includes("registration-token-not-registered")) {
+            errorMessage.includes("invalid-registration-token") ||
+            errorMessage.includes("registration-token-not-registered")) {
             invalidTokens.push(token);
           }
         }
