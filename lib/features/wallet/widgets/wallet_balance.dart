@@ -1,15 +1,17 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:migozz_app/features/wallet/cubit/conversion_cubit/conversion_cubit.dart';
+import 'package:migozz_app/features/wallet/cubit/conversion_cubit/conversion_state.dart';
 import 'package:migozz_app/features/wallet/cubit/wallet_cubit/wallet_cubit.dart';
-import 'package:migozz_app/features/wallet/cubit/wallet_cubit/wallet_state.dart';
-import 'package:migozz_app/features/wallet/widgets/transaction_button.dart';
+import 'package:migozz_app/features/wallet/model/wallet_model.dart';
 
 class WalletBalance extends StatelessWidget {
   const WalletBalance({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final balance = context.read<WalletCubit>().state.walletData!.totalBalance.toString();
+    final balance = context.read<WalletCubit>().state.walletData!.totalBalance;
 
     return Container(
       decoration: BoxDecoration(
@@ -34,71 +36,90 @@ class WalletBalance extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Available Balance",
+                  "wallet.title".tr(),
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.6),
                     fontSize: 18,
                   ),
                 ),
+
                 const SizedBox(height: 3),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    Text(
-                      balance,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 36,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      "MigoCoins",
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.6),
-                        fontSize: 18,
-                      ),
-                    ),
-                  ],
+
+                BlocBuilder<ConversionCubit, ConversionState>(
+                  builder: (context, state) {
+                    final conversion = state.conversion ?? 1;
+                    final migozzCoins = balance * conversion;
+
+                    return (Column(
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            Text(
+                              WalletModel.formattedAmount(balance),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 36,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+
+                            const SizedBox(width: 8),
+                            Text(
+                              "USD",
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.6),
+                                fontSize: 18,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        Row(
+                          spacing: 5,
+                          children: [
+                            Text(
+                              WalletModel.formattedAmount(migozzCoins),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+
+                            ShaderMask(
+                              blendMode: BlendMode.srcIn,
+                              shaderCallback: (Rect bounds) {
+                                return const LinearGradient(
+                                  colors: [
+                                    Color(0xFF9022BA),
+                                    Color(0xFFDC44AA),
+                                  ],
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                ).createShader(bounds);
+                              },
+                              child: const Text(
+                                'migozz coins',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors
+                                      .white, // El color base debe ser blanco para que el degradado brille
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ));
+                  },
                 ),
               ],
             ),
           ),
-
-          // Fila de botones de acción
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            spacing: 6,
-            children: [
-              TransactionButton(
-                icon: Icons.money_outlined,
-                text: "Deposit Funds",
-                colors: [
-                  Color.fromARGB(255, 87, 156, 235),
-                  Color.fromARGB(255, 13, 115, 173),
-                ],
-              ),
-
-              TransactionButton(
-                icon: Icons.account_balance_wallet_outlined,
-                text: "Withdraw Funds",
-                colors: [Color(0xFFE040FB), Color(0xFFF48FB1)],
-              ),
-
-              TransactionButton(
-                icon: Icons.send,
-                text: "Send funds",
-                colors: [
-                  Color.fromARGB(255, 52, 160, 97),
-                  Color.fromARGB(255, 10, 117, 51),
-                ],
-              ),
-            ],
-          ),
-
-          SizedBox(height: 20),
+          SizedBox(height: 10),
         ],
       ),
     );

@@ -40,6 +40,13 @@ class AssetsConstants {
   static const String discordIcon = '$socialBlackWhiteIcons/DiscordNegro.svg';
   static const String wrnsitePerIcon =
       '$socialBlackWhiteIcons/WrnsitePerNegro.svg';
+
+  //Wallet and transfer
+  static const String depositIcon = '$icons/deposit.svg';
+  static const String sentIcon = '$icons/fund_transfer.svg';
+  static const String walletBuy = '$icons/wallet_buy.svg';
+  static const String walletUp = '$icons/wallet_up.svg';
+  static const String walletDown = '$icons/wallet_down.svg';
 }
 
 class SocialIconResolver {

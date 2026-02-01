@@ -933,6 +933,17 @@
       "confirmMessage": "¿Quieres ver el tutorial de nuevo? Te guiaremos por las funciones principales de la aplicación.",
       "confirmButton": "Sí, mostrar tutorial",
       "cancelButton": "Cancelar"
+    },
+    "wallet": {
+      "mainTitle": "Mi Wallet",
+      "title": "Balance Disponible",
+      "historyTitle": "Actividad reciente",
+      "deposit": "Recibido de",
+      "sent": "Enviado a",
+      "purchase": "Compra de",
+      "buyText": "Comprar",
+      "sentText": "Enviar",
+      "withdraw": "Retirar"
     }
   }
 }

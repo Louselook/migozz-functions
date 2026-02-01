@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:migozz_app/features/wallet/model/transaction_model.dart';
 
 // Definimos el semáforo de la Wallet
-enum TransactionsStatus { initial, loading, initialized, error }
+enum TransactionsStatus { initial, loading, initialized, error, empty }
 
 class TransactionsState extends Equatable {
   final TransactionsStatus status;
@@ -22,6 +22,11 @@ class TransactionsState extends Equatable {
 
   const TransactionsState.loading()
       : status = TransactionsStatus.loading,
+        transactions = null,
+        errorMessage = null;
+
+  const TransactionsState.empty()
+      : status = TransactionsStatus.empty,
         transactions = null,
         errorMessage = null;
 
@@ -49,6 +54,8 @@ class TransactionsState extends Equatable {
 
   bool get isLoading => status == TransactionsStatus.loading;
   bool get hasData => status == TransactionsStatus.initialized && transactions != null;
+  bool get isEmpty => status == TransactionsStatus.empty && transactions == null;
+  bool get errorLoading => status == TransactionsStatus.error;
 
   @override
   List<Object?> get props => [status, transactions, errorMessage];

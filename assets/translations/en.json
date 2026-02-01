@@ -1,92 +1,91 @@
 {
-    "onboarding":{
-        "titles":{
-            "onboardingTitle1" : "⭐ Welcome to Your New Social Ecosystem",
-            "onboardingTitle2" : "More connections. More impact",
-            "onboardingTitle3" : "Create Your Smart Link and Activate Your Community in Seconds"
-        },
-        "subtitles":{
-            "onboardingSubtitle1" : "Your content. Your Rules. Your Universe."
-        },
-        "descriptions":{
-            "onboardingDescription1" : "Centralize everything you are. Share instantly. Grow effortlessly.",
-            "onboardingDescription2" : "Migozz merges your networks and introduces you to new communities in one tap.",
-            "onboardingDescription3" : "Share posts, links, photos, stories, music, services, and more. Your Migozz Profile becomes your command center to go viral and join creator, fan, or business circles."
-        },
-        "buttons":{
-            "skip" : "Skip",
-            "next" : "Next",
-            "getStarted" : "Get Started"
-        }
+  "onboarding": {
+    "titles": {
+      "onboardingTitle1": "⭐ Welcome to Your New Social Ecosystem",
+      "onboardingTitle2": "More connections. More impact",
+      "onboardingTitle3": "Create Your Smart Link and Activate Your Community in Seconds"
     },
-    "login": {
-      "validations": {
-        "emptyEmail": "Email cannot be empty",
-        "invalidEmail": "Please enter a valid email",
-        "notExistEmail": "This email is not registered. Please create an account first.",
-        "validationEmail": "Error verifying email: ",
-        "cancelledGoogle": "Login with Google was cancelled",
-        "cancelledApple": "Login with Apple was cancelled",
-        "errorGoogle": "Error logging in with Google. Please try again.",
-        "errorApple": "Error logging in with Apple. Please try again."
-      },
-      "presentation": {
-        "title": "Welcome to Migozz!",
-        "subtitle1": "Connect your Community",
-        "inputText": "Enter Email",
-        "buttonText": "Login",
-        "subtitle2": "Or login with",
-        "bottomText": {
-          "newUser": "NEW USER?\n",
-          "register": "REGISTER HERE!",
-          "agreement": "By registering you agree to our ",
-          "terms": "Terms and conditions"
-        }
-      },
-      "otp": {
-        "title": "Enter OTP Code",
-        "subtitle": "OTP code has been sent to {email}",
-        "resend": "Resend",
-        "errorSend": "Error sending OTP",
-        "errorInvalid": "Incorrect OTP ❌",
-        "errorPassword": "Error changing password"
+    "subtitles": {
+      "onboardingSubtitle1": "Your content. Your Rules. Your Universe."
+    },
+    "descriptions": {
+      "onboardingDescription1": "Centralize everything you are. Share instantly. Grow effortlessly.",
+      "onboardingDescription2": "Migozz merges your networks and introduces you to new communities in one tap.",
+      "onboardingDescription3": "Share posts, links, photos, stories, music, services, and more. Your Migozz Profile becomes your command center to go viral and join creator, fan, or business circles."
+    },
+    "buttons": {
+      "skip": "Skip",
+      "next": "Next",
+      "getStarted": "Get Started"
+    }
+  },
+  "login": {
+    "validations": {
+      "emptyEmail": "Email cannot be empty",
+      "invalidEmail": "Please enter a valid email",
+      "notExistEmail": "This email is not registered. Please create an account first.",
+      "validationEmail": "Error verifying email: ",
+      "cancelledGoogle": "Login with Google was cancelled",
+      "cancelledApple": "Login with Apple was cancelled",
+      "errorGoogle": "Error logging in with Google. Please try again.",
+      "errorApple": "Error logging in with Apple. Please try again."
+    },
+    "presentation": {
+      "title": "Welcome to Migozz!",
+      "subtitle1": "Connect your Community",
+      "inputText": "Enter Email",
+      "buttonText": "Login",
+      "subtitle2": "Or login with",
+      "bottomText": {
+        "newUser": "NEW USER?\n",
+        "register": "REGISTER HERE!",
+        "agreement": "By registering you agree to our ",
+        "terms": "Terms and conditions"
       }
     },
-    "register":{
-        "validations":{
-            "emptyEmail" : "Email cannot be empty",
-            "validationEmail" :"Please enter a valid Email",
-            "registerEmail" : "This email is already registered",
-            "errorVerify": "Error verifying email: ",
-
-            "audioMinLimit": "The audio is very short ({duration}s). It must last between 1 and 10 seconds.",
-            "audioMaxLimit": "The audio is very long ({duration}s). It must last between 1 and 10 seconds.",
-            "picConfirmation": "Selected photo from {platform} has been set as your profile picture.",
-            "avatarSkipped": "Profile photo step skipped",
-            "audioSkipped": "Voice note step skipped"
-        },
-        "presentation":{
-            "title" : "Register Now!",
-            "subtitle1" : "Enter your information below",
-            "inputText" : "Enter email",
-            "buttonText" : "Create Account",
-            "social": "Here is the information extracted from their social networks.",
-            "socialName": "Photo from {platform}",
-            "profilePic": "Use this photo",
-            "skipAvatarButton": "Skip step",
-            "takeCameraButton": "Take photo",
-            "chooseGalleryButton": "Choose from gallery",
-            "skipAudioButton": "Skip step",
-            "recordAudioButton": "Record audio",
-            "bottonText" : {
-                "login" : "Already a member?",
-                "LoginReturn" : "Login"
-            }
-        },
-        "warnings":{
-            "profilePic": "Tip: Photos from social media are convenient, but if you prefer maximum resolution, we recommend uploading an original one from your gallery."
-        }
+    "otp": {
+      "title": "Enter OTP Code",
+      "subtitle": "OTP code has been sent to {email}",
+      "resend": "Resend",
+      "errorSend": "Error sending OTP",
+      "errorInvalid": "Incorrect OTP ❌",
+      "errorPassword": "Error changing password"
+    }
+  },
+  "register": {
+    "validations": {
+      "emptyEmail": "Email cannot be empty",
+      "validationEmail": "Please enter a valid Email",
+      "registerEmail": "This email is already registered",
+      "errorVerify": "Error verifying email: ",
+      "audioMinLimit": "The audio is very short ({duration}s). It must last between 1 and 10 seconds.",
+      "audioMaxLimit": "The audio is very long ({duration}s). It must last between 1 and 10 seconds.",
+      "picConfirmation": "Selected photo from {platform} has been set as your profile picture.",
+      "avatarSkipped": "Profile photo step skipped",
+      "audioSkipped": "Voice note step skipped"
     },
+    "presentation": {
+      "title": "Register Now!",
+      "subtitle1": "Enter your information below",
+      "inputText": "Enter email",
+      "buttonText": "Create Account",
+      "social": "Here is the information extracted from their social networks.",
+      "socialName": "Photo from {platform}",
+      "profilePic": "Use this photo",
+      "skipAvatarButton": "Skip step",
+      "takeCameraButton": "Take photo",
+      "chooseGalleryButton": "Choose from gallery",
+      "skipAudioButton": "Skip step",
+      "recordAudioButton": "Record audio",
+      "bottonText": {
+        "login": "Already a member?",
+        "LoginReturn": "Login"
+      }
+    },
+    "warnings": {
+      "profilePic": "Tip: Photos from social media are convenient, but if you prefer maximum resolution, we recommend uploading an original one from your gallery."
+    }
+  },
   "termsPrivacy": {
     "header": "Terms & Privacy",
     "button": {
@@ -225,666 +224,663 @@
       "backToLogin": "Back to Login"
     }
   },
-    "complete_profile": {
-        "title": "Complete Your Profile",
-        "description": "To get the most out of Migozz,\ncomplete your profile information",
-        "buttons": {
-            "completeNow": "Complete Now",
-            "completeLater": "Complete Later"
+  "complete_profile": {
+    "title": "Complete Your Profile",
+    "description": "To get the most out of Migozz,\ncomplete your profile information",
+    "buttons": {
+      "completeNow": "Complete Now",
+      "completeLater": "Complete Later"
+    }
+  },
+  "profile": {
+    "contact": {
+      "title": "Contact {}",
+      "sendEmail": "Send email",
+      "visitWebsite": "Visit website"
+    },
+    "share": "Share profile",
+    "shareMessage": "Check out {}'s profile on Migozz! {}",
+    "shareSubject": "{}'s profile on Migozz",
+    "chat": {
+      "filter": "New",
+      "search": "Search"
+    },
+    "design": {
+      "buttonText": "Design",
+      "title": "Choose your profile design",
+      "subtitle": "Select the style you like the most",
+      "versions": {
+        "classic": {
+          "name": "Version 1 - Classic",
+          "description": "Floating social media on the side"
+        },
+        "modern": {
+          "name": "Version 2 - Modern",
+          "description": "Horizontal social media bars"
+        },
+        "minimalist": {
+          "name": "Version 3 - Minimalist",
+          "description": "Circles with social media icons"
         }
+      },
+      "cancelButton": "Cancel"
     },
-    "profile":{
-        "contact": {
-            "title": "Contact {}",
-            "sendEmail": "Send email",
-            "visitWebsite": "Visit website"
-        },
-        "share": "Share profile",
-        "shareMessage": "Check out {}'s profile on Migozz! {}",
-        "shareSubject": "{}'s profile on Migozz",
-        "chat": {
-            "filter":"New",
-            "search":"Search"
-        },
-        "design":{
-            "buttonText": "Design",
-            "title": "Choose your profile design",
-            "subtitle": "Select the style you like the most",
-            "versions": {
-                "classic": {
-                    "name": "Version 1 - Classic",
-                    "description": "Floating social media on the side"
-                },
-                "modern": {
-                    "name": "Version 2 - Modern",
-                    "description": "Horizontal social media bars"
-                },
-                "minimalist": {
-                    "name": "Version 3 - Minimalist",
-                    "description": "Circles with social media icons"
-                }
-            },
-            "cancelButton": "Cancel"
-        },
-        "validations":{
-            "emptyAudio" : "No audio available",
-            "errorAudio" : "Error playing audio"
-        },
-        "tutorial":{
-            "searchStep" : "Search for other users, topics, and posts.",
-            "audioStep" : "Play your audio with this button, other users will do the same!",
-            "QRStep" : "Share your profile using your own QR code or by sharing your link on other apps.",
-            "homeStep" : "Access to your profile here, it also serves to reload your user information.",
-            "statsStep" : "Check your social media statistics; if you haven't synced any, do so!",
-            "settings" : "Modify your information and synchronize your socials"
-        },
-        "presentation": {
-            "emptyName": "Name not set",
-            "community": "Community",
-            "noAuthenticatedUser": "No authenticated user",
-            "redirectCompleteProfile": "Redirecting to complete profile..."
-        },
-        "qrScanner": {
-            "title": "Scan QR Code",
-            "instruction": "Point your camera at a Migozz QR code",
-            "invalidFormat": "Invalid QR code format",
-            "userNotFound": "User not found",
-            "errorProcessing": "Error processing QR code"
-        },
-        "customization":{
-          "uploadingProfilePicture": {
-            "title": "Update avatar",
-            "uploading": "Uploading",
-            "success": "Profile picture updated successfully",
-            "error": "Error updating profile picture:"
-            },
-          "emailContactFormSection" : {
-            "title" : "Email Contact Form",
-            "subtitle" : "Visitors can share their email with you through a contact form on your profile."
-          },
-          "profileStrength": {
-            "title": "Your link is",
-            "ready": "ready",
-            "subtitle": "Complete it to stand out"
-          },
-          "editButton": {
-            "tooltip": "Customize your link"
-          },
-          "coverImage": {
-            "add": "Add a cover",
-            "subtitle": "Make your link instantly recognizable",
-            "success": "Cover added"
-          },
-          "bio" : {
-            "title" : "About you",
-            "label": "About you",
-            "add" : "Tell visitors who you are in one line",
-            "editCta": "Edit bio",
-            "hint": "Tell people about yourself...",
-            "save" : "Save Bio",
-            "success": "Bio updated successfully",
-            "errorUpdate": "Error updating bio:"
-          },
-          "plataform" : {
-            "title" : "Add New Platform",
-            "image": "Select Image Source",
-            "imageError": "Error selecting image:",
-            "addName": "Add platform name",
-            "addUsername": "Add your username",
-            "addLogo": "Add Platform Logo",
-            "addTapLogo": "Tap to add Logo",
-            "addLink": "Add your Profile Link",
-            "camera": "Camera",
-            "gallery": "Gallery"
-          },
-          "links": {
-            "title" : "Your links",
-            "add" : "+ Add link",
-            "emptyTitle": "Your link is empty",
-            "emptySubtitle": "Add at least one link to get started",
-            "sheetTitle": "Add Website Link",
-            "labelHint": "Label (optional)",
-            "urlHint": "https://example.com",
-            "save": "Save Link",
-            "defaultLabel": "Website",
-            "validationEmptyUrl": "Please enter a URL",
-            "validationUrlFormat": "URL must start with http:// or https://",
-            "validationInvalidUrl": "Invalid link format. Enter a valid website (e.g., www.example.com)",
-            "successAdd" : "Link added",
-            "errorAdd" : "Error adding link:",
-            "maximumLinks" : "Maximum 2 links allowed."
-          },
-          "customLink": {
-            "title": "Custom Link Icon",
-            "linkHint": "Add custom link",
-            "applyIconFromLink": "Apply custom icon from link",
-            "deleteLink": "Delete Link",
-            "deleted": "Link deleted",
-            "saved": "Custom link saved",
-            "errorSave": "Error saving: ",
-            "imageTypeNotAllowed": "Image type not allowed",
-            "imageTooLarge": "Image exceeds 5MB",
-            "validation": {
-              "required": "Link is required",
-              "invalidFormat": "Invalid link format",
-              "invalidScheme": "Link must start with http/https"
-            }
-          },
-          "contact": {
-            "title" : "Get in touch",
-            "helperText": "Make it easy for people to reach you",
-            "addCta": "Add contact details",
-            "website" : "Website",
-            "number" : "Number",
-            "email" : "Email",
-            "infoAdded" : "Contact info added successfully",
-            "infoAddError" : "Error adding contact info:",
-            "infodeleted" : "Contact info deleted successfully",
-            "infoDeleteError" : "Error deleting contact info:",
-            "sheetTitle": {
-              "add": "Add {type}",
-              "edit": "Edit {type}"
-            },
-            "sheetType": {
-              "website": "Website",
-              "phone": "Phone Number",
-              "email": "Email"
-            },
-            "hints": {
-              "website": "https://example.com",
-              "phone": "+1 234 567 8900",
-              "email": "Email@example.com"
-            },
-            "validation": {
-              "required": "Please enter a value",
-              "websiteFormat": "Website must start with http:// or https://",
-              "emailFormat": "Please enter a valid email address",
-              "phoneFormat": "Please enter a valid phone number"
-            }
-          }
+    "validations": {
+      "emptyAudio": "No audio available",
+      "errorAudio": "Error playing audio"
+    },
+    "tutorial": {
+      "searchStep": "Search for other users, topics, and posts.",
+      "audioStep": "Play your audio with this button, other users will do the same!",
+      "QRStep": "Share your profile using your own QR code or by sharing your link on other apps.",
+      "homeStep": "Access to your profile here, it also serves to reload your user information.",
+      "statsStep": "Check your social media statistics; if you haven't synced any, do so!",
+      "settings": "Modify your information and synchronize your socials"
+    },
+    "presentation": {
+      "emptyName": "Name not set",
+      "community": "Community",
+      "noAuthenticatedUser": "No authenticated user",
+      "redirectCompleteProfile": "Redirecting to complete profile..."
+    },
+    "qrScanner": {
+      "title": "Scan QR Code",
+      "instruction": "Point your camera at a Migozz QR code",
+      "invalidFormat": "Invalid QR code format",
+      "userNotFound": "User not found",
+      "errorProcessing": "Error processing QR code"
+    },
+    "customization": {
+      "uploadingProfilePicture": {
+        "title": "Update avatar",
+        "uploading": "Uploading",
+        "success": "Profile picture updated successfully",
+        "error": "Error updating profile picture:"
+      },
+      "emailContactFormSection": {
+        "title": "Email Contact Form",
+        "subtitle": "Visitors can share their email with you through a contact form on your profile."
+      },
+      "profileStrength": {
+        "title": "Your link is",
+        "ready": "ready",
+        "subtitle": "Complete it to stand out"
+      },
+      "editButton": {
+        "tooltip": "Customize your link"
+      },
+      "coverImage": {
+        "add": "Add a cover",
+        "subtitle": "Make your link instantly recognizable",
+        "success": "Cover added"
+      },
+      "bio": {
+        "title": "About you",
+        "label": "About you",
+        "add": "Tell visitors who you are in one line",
+        "editCta": "Edit bio",
+        "hint": "Tell people about yourself...",
+        "save": "Save Bio",
+        "success": "Bio updated successfully",
+        "errorUpdate": "Error updating bio:"
+      },
+      "plataform": {
+        "title": "Add New Platform",
+        "image": "Select Image Source",
+        "imageError": "Error selecting image:",
+        "addName": "Add platform name",
+        "addUsername": "Add your username",
+        "addLogo": "Add Platform Logo",
+        "addTapLogo": "Tap to add Logo",
+        "addLink": "Add your Profile Link",
+        "camera": "Camera",
+        "gallery": "Gallery"
+      },
+      "links": {
+        "title": "Your links",
+        "add": "+ Add link",
+        "emptyTitle": "Your link is empty",
+        "emptySubtitle": "Add at least one link to get started",
+        "sheetTitle": "Add Website Link",
+        "labelHint": "Label (optional)",
+        "urlHint": "https://example.com",
+        "save": "Save Link",
+        "defaultLabel": "Website",
+        "validationEmptyUrl": "Please enter a URL",
+        "validationUrlFormat": "URL must start with http:// or https://",
+        "validationInvalidUrl": "Invalid link format. Enter a valid website (e.g., www.example.com)",
+        "successAdd": "Link added",
+        "errorAdd": "Error adding link:",
+        "maximumLinks": "Maximum 2 links allowed."
+      },
+      "customLink": {
+        "title": "Custom Link Icon",
+        "linkHint": "Add custom link",
+        "applyIconFromLink": "Apply custom icon from link",
+        "deleteLink": "Delete Link",
+        "deleted": "Link deleted",
+        "saved": "Custom link saved",
+        "errorSave": "Error saving: ",
+        "imageTypeNotAllowed": "Image type not allowed",
+        "imageTooLarge": "Image exceeds 5MB",
+        "validation": {
+          "required": "Link is required",
+          "invalidFormat": "Invalid link format",
+          "invalidScheme": "Link must start with http/https"
         }
-    },
-    "search" : {
-        "searchText": "Search...",
-        "notFound": {
-            "searchNoResult": "No matches were found",
-            "suggestedNoResult": "No users found"
+      },
+      "contact": {
+        "title": "Get in touch",
+        "helperText": "Make it easy for people to reach you",
+        "addCta": "Add contact details",
+        "website": "Website",
+        "number": "Number",
+        "email": "Email",
+        "infoAdded": "Contact info added successfully",
+        "infoAddError": "Error adding contact info:",
+        "infodeleted": "Contact info deleted successfully",
+        "infoDeleteError": "Error deleting contact info:",
+        "sheetTitle": {
+          "add": "Add {type}",
+          "edit": "Edit {type}"
         },
-        "options": {
-            "forYou": "For You",
-            "accounts": "Accounts",
-            "reels": "Reels",
-            "audio": "Audio",
-            "hashtags": "Hashtags"
+        "sheetType": {
+          "website": "Website",
+          "phone": "Phone Number",
+          "email": "Email"
         },
-        "validations": {
-            "emptySearch": "Please enter a search term",
-            "emptyInterest": "Add at least 1 interest to improve your recommendations"
+        "hints": {
+          "website": "https://example.com",
+          "phone": "+1 234 567 8900",
+          "email": "Email@example.com"
+        },
+        "validation": {
+          "required": "Please enter a value",
+          "websiteFormat": "Website must start with http:// or https://",
+          "emailFormat": "Please enter a valid email address",
+          "phoneFormat": "Please enter a valid phone number"
         }
+      }
+    }
+  },
+  "search": {
+    "searchText": "Search...",
+    "notFound": {
+      "searchNoResult": "No matches were found",
+      "suggestedNoResult": "No users found"
     },
-    "stats":{
-        "title":"My Stats",
-        "rangeText" : "Not selected",
-        "noStats":{
-            "notSocials" : "You don't have any social networks connected yet, connect them!",
-            "addButton" : "Add Socials"
-        },
-        "date": "Select Date",
-        "dataCardLabel": {
-          "title" : "Overview",
-          "likes" : "Likes:",
-          "shares" : "Shares:",
-          "followers" : "Followers:"
-        },
-        "metrics": {
-          "likes": "Likes",
-          "shares": "Shares",
-          "followers": "Followers"
-        },
-        "fieldLabels": {
-          "followers": "Followers",
-          "likes": "Likes",
-          "media": "Media",
-          "views": "Views",
-          "viewCount": "Views",
-          "shares": "Shares",
-          "following": "Following",
-          "subscribersCount": "Subscribers",
-          "subscribers": "Subscribers",
-          "hearts": "Likes",
-          "favorites": "Favorites",
-          "videos": "Videos",
-          "videoCount": "Videos",
-          "likes_count": "Likes",
-          "mediaCount": "Media",
-          "friends": "Friends",
-          "fans": "Fans",
-          "subscriber": "Subscriber"
-        },
-        "overview": {
-            "community": "Community",
-            "migozz": "Migozz"
-        },
-        "noData": "No data available"
+    "options": {
+      "forYou": "For You",
+      "accounts": "Accounts",
+      "reels": "Reels",
+      "audio": "Audio",
+      "hashtags": "Hashtags"
     },
-    "addSocials": {
-        "addOtherNetworks": "Add Other Networks",
-        "addSelected": "Add {count} networks",
-        "validation":{
-          "atLeastOne": "At least one social network is required",
-          "selectAtLeastOne": "Select at least one network",
-          "enterAtLeastOne": "Enter username for at least one network",
-          "invalidProfile": "Could not verify {platform} profile",
-          "noValidProfiles": "No profiles could be validated"
-        },
-        "selection": {
-          "selectAtLeastOne": "Select at least one network to continue"
-        },
-        "selectNetworks": {
-          "title": "Select Your Networks",
-          "subtitle": "Choose which platforms to add"
-        },
-        "inputStep": {
-          "title": "Connect Your Profiles",
-          "subtitle": "Enter your username for each network",
-          "connectYour": "Your",
-          "placeholder": "Enter username",
-          "oauthSection": "Connect with one click",
-          "manualSection": "Enter manually",
-          "connectWith": "Connect with {platform}",
-          "connected": "{platform} connected ✓",
-          "oauthHint": "Tap to sign in"
-        },
-        "success": {
-          "networksAdded": "Networks added successfully!"
-        },
-        "register": {
-            "title": "Your Social Ecosystem",
-            "subtitle": "Add your platforms"
-        },
-        "edit": {
-            "title": "Edit Social Ecosystem",
-            "subtitle": "Add or remove platforms"
-        },
-        "popUp":{
-            "title": "Unlink ",
-            "subtitle": "Are you sure you want to unlink ",
-            "yes": "Yes",
-            "no": "No"
-        },
-        "categories": {
-            "social": "Social",
-            "streaming": "Streaming",
-            "music": "Music",
-            "stores": "Stores",
-            "chat": "Chat"
-        },
-        "search": {
-            "hint": "Search for platforms",
-            "results": "Search Results",
-            "noResults": "No platforms found"
-        },
-        "customLink": {
-            "title": "Add Custom Link",
-            "updated": "Custom link updated",
-            "newLabel": "New"
-        },
-        "dialogs": {
-            "addTitle": "Add {platform}",
-            "editTitle": "Edit {platform}",
-            "addUsernameHint": "Add {platform} username",
-            "usernameHint": "Enter username",
-            "usernameRequired": "Please enter a username",
-            "removeQuestion": "Do you want to remove {platform}?",
-            "deleteLink": "Delete"
-        },
-        "buttons": {
-          "cancel": "Cancel"
-        },
-        "messages": {
-            "socialConnected": "{platform} saved successfully!",
-            "errorSave": "Error saving: {error}",
-            "errorRemove": "Error removing: {error}",
-            "removed": "{platform} removed successfully!",
-            "usernameUpdated": "{platform} username updated!",
-            "usernameUpdatedSuccess": "{platform} username updated successfully!"
-        },
-        "networkAuth": {
-            "connectTitle": "Connect {platform}",
-            "oneClickTitle": "Connect with one click",
-            "oneClickSubtitle": "Authorize via {platform}",
-            "manualTitle": "Enter manually",
-            "manualSubtitle": "Paste username or link",
-            "backToOptions": "Back to options",
-            "phoneInvalid": "Please enter a valid phone number",
-            "searchCountry": "Search country",
-            "hints": {
-                "instagram": "Enter Instagram username or link",
-                "tiktok": "Enter TikTok username or link",
-                "youtube": "Enter YouTube channel or user link",
-                "twitter": "Enter X username or link",
-                "facebook": "Enter Facebook username or link",
-                "whatsapp": "1234567890",
-                "telegram": "1234567890",
-                "pinterest": "Enter Pinterest username or link",
-                "default": "Enter username or link"
-            },
-            "examples": {
-                "instagram": "https://www.instagram.com/username",
-                "tiktok": "https://www.tiktok.com/@username",
-                "youtube": "https://www.youtube.com/@username",
-                "twitter": "https://x.com/username",
-                "facebook": "https://www.facebook.com/username",
-                "whatsapp": "Enter your phone number with country code",
-                "telegram": "Enter your phone number with country code",
-                "pinterest": "https://www.pinterest.com/username",
-                "default": "https://www.example.com/username"
-            }
-        }
+    "validations": {
+      "emptySearch": "Please enter a search term",
+      "emptyInterest": "Add at least 1 interest to improve your recommendations"
+    }
+  },
+  "stats": {
+    "title": "My Stats",
+    "rangeText": "Not selected",
+    "noStats": {
+      "notSocials": "You don't have any social networks connected yet, connect them!",
+      "addButton": "Add Socials"
     },
-    "edit" : {
-        "validations" : {
-            "updateProfilePic" : "Profile photo updated",
-            "errorUpdateProfilePic" : "Error updating photo:",
-            "updateProfile" : "Profile updated successfully",
-            "errorUpdateProfile" : "'Error saving profile:'",
-            "detectLocation" : "🔍 Detecting location...",
-            "errorDetecLocation" : "❌ Could not fetch current location",
-            "errorUserLogin" : "Error: User not logged in",
-            "updateLocation" : "✅ Location updated to {city}, {country}",
-            "errorUpdateLocation" : "❌ Error updating location: {error}"
-        },
-        "presentation" : {
-            "title" : "Edit Profile",
-            "loadingProfile" : "Loading profile...",
-            "errorUserEmpty" : "No user data",
-            "locationNotSet" : "Location not set",
-            "fields" : {
-                "fullName" : "Full Name",
-                "nickname" : "Nickname",
-                "email" : "Email",
-                "cellPhone" : "Cell Phone",
-                "dateOfBirth" : "Date of birth",
-                "gender" : "Gender",
-                "location" : "Location"
-            },
-            "genderOptions" : {
-                "male" : "Male",
-                "female" : "Female",
-                "other" : "Other"
-            },
-            "record" : "Edit Record",
-            "interest" : "Edit My Interests",
-            "socials" : "Edit Socials",
-            "logOut" : "Logout",
-                "logOutConfirmation" : "Are you sure you want to log out?",
-                "logOutLoading": "Logging out...",
-            "deleteAccount": {
-                "title": "Delete account",
-                "description": "Are you sure you want to delete your account?\n\nThis action will start a deletion process that may take up to 30 business days to be fully completed. During this time, all your data will be permanently removed and cannot be recovered.",
-                "confirm": "Delete Account",
-                "submitted": "Account deletion request submitted. Your data will be permanently deleted within 30 business days."
-            },
-            "webRestriction": {
-                "audio": "Use the app to change your audio"
-            }
-        },
-        "editAudio": {
-            "title" : "Edit Audio",
-            "permissionDenied" : "Permission to record denied",
-            "uploading" : "Uploading audio...",
-            "minDuration" : "Record at least 5 seconds",
-            "audioSaved" : "Audio uploaded and saved ✅",
-            "errorUploadAudio" : "Upload failed — try again",
-            "record" : "Record Your Voicenote",
-            "maxLimit" : "Voice note: 1–10 seconds max.",
-            "liste" : "Listen to your audio",
-            "recorded" : "Voice note recorded",
-            "noRecording" : "No voice note yet",
-            "tapToRecord" : "Tap to record"
-        },
-        "editLocation" : {
-            "title": "Confirm location",
-            "text1" : "We detected you're in:\n\n",
-            "text2" : "{city}, {state}\n",
-            "text3" : "{country}\n\n",
-            "text4" : "Is that correct?"
-        },
-        "unsavedChanges": {
-            "title": "Unsaved changes",
-            "message": "You have unsaved changes. Do you want to save them?",
-            "discard": "Discard",
-            "save": "Save"
-        },
-        "editInterest" : {
-            "title" : "Edit my Interest",
-            "saveInterest" : "Interests saved successfully",
-            "errorSave": "Error saving interests",
-            "noInterests" : "No interests added yet",
-            "tapToAdd" : "Tap to add interests",
-            "addMore" : "Add more"
-        }
+    "date": "Select Date",
+    "dataCardLabel": {
+      "title": "Overview",
+      "likes": "Likes:",
+      "shares": "Shares:",
+      "followers": "Followers:"
     },
-    "share" : {
-        "title" : "🚀 Hey! Connect with @{displayName} on Migozz - where all their content lives in one place! 🔗\n\n{link}\n\n#Migozz #LinkInBio",
-        "subject" : "🌟 {displayName}'s Migozz Profile",
-        "label" : "Share Profile",
-        "customization": {
-            "emoji": "Emoji",
-            "colors": "Colors",
-            "image": "Image",
-            "default": "Default",
-            "chooseImage": "Choose Image"
-        }
+    "metrics": {
+      "likes": "Likes",
+      "shares": "Shares",
+      "followers": "Followers"
     },
-    "common": {
-        "loading": "Loading...",
-        "saving": "Saving...",
-        "removing": "Removing...",
-        "loader": "Loader",
-        "unknown": "Unknown",
-        "noData": "No data",
-        "loader_sequence": {
-          "connecting": "Establishing secure connection with {platform}...",
-          "validating": "Verifying your access credentials...",
-          "syncing": "Synchronizing your profile information...",
-          "ready": "Process completed successfully!",
-          "delay": "We are wrapping up the final details. Almost there!"
-        },
-        "loader_sequences": {
-          "login": {
-            "step1": "Logging into Migozz...",
-            "step2": "Verifying your credentials...",
-            "step3": "Preparing your experience...",
-            "step4": "Welcome back!"
-          },
-          "profile_update": {
-            "step1": "Saving your changes...",
-            "step2": "Updating your profile...",
-            "step3": "Syncing data...",
-            "step4": "Profile updated!"
-          },
-          "qr_scan": {
-            "step1": "Reading QR code...",
-            "step2": "Searching for user...",
-            "step3": "Fetching information...",
-            "step4": "User found!"
-          },
-          "social_auth": {
-            "step1": "Connecting with {platform}...",
-            "step2": "Extracting your profile information...",
-            "step3": "Adding your content to the Migozz ecosystem...",
-            "step4": "All set! Your networks are now unified"
-          },
-          "logout": {
-            "step1": "Logging out...",
-            "step2": "Saving preferences...",
-            "step3": "Cleaning secure data...",
-            "step4": "See you soon!"
-          }
-        }
+    "fieldLabels": {
+      "followers": "Followers",
+      "likes": "Likes",
+      "media": "Media",
+      "views": "Views",
+      "viewCount": "Views",
+      "shares": "Shares",
+      "following": "Following",
+      "subscribersCount": "Subscribers",
+      "subscribers": "Subscribers",
+      "hearts": "Likes",
+      "favorites": "Favorites",
+      "videos": "Videos",
+      "videoCount": "Videos",
+      "likes_count": "Likes",
+      "mediaCount": "Media",
+      "friends": "Friends",
+      "fans": "Fans",
+      "subscriber": "Subscriber"
     },
-    "buttons" : {
-        "confirm" : "Confirm",
-        "cancel" : "Cancel",
-        "save" : "Save",
-        "delete": "Delete",
-        "continue" : "Continue"
+    "overview": {
+      "community": "Community",
+      "migozz": "Migozz"
     },
-    "category" : {
-        "title" : "Choose Your Category",
-        "model" : "Model",
-        "artist" : "Artist",
-        "publicFigure" : "Public Figure",
-        "streamer" : "Streamer",
-        "influencer" : "Influencer",
-        "sport" : "Sport",
-        "actor/Actress" : "Actor/Actress"
+    "noData": "No data available"
+  },
+  "addSocials": {
+    "addOtherNetworks": "Add Other Networks",
+    "addSelected": "Add {count} networks",
+    "validation": {
+      "atLeastOne": "At least one social network is required",
+      "selectAtLeastOne": "Select at least one network",
+      "enterAtLeastOne": "Enter username for at least one network",
+      "invalidProfile": "Could not verify {platform} profile",
+      "noValidProfiles": "No profiles could be validated"
     },
-    "interest": {
-        "goingOut": {
-            "title": "Going Out",
-            "options": [
-                "Concerts",
-                "Museums & Galleries",
-                "Yoga",
-                "Comedy",
-                "Theater",
-                "Clubs",
-                "Bars",
-                "Karaoke",
-                "Film Festivals",
-                "Lounging"
-            ]
-        },
-        "sports": {
-            "title": "Sports",
-            "options": [
-                "Football",
-                "Soccer",
-                "Hockey",
-                "Sports News",
-                "Fishing",
-                "Basketball",
-                "Cricket",
-                "Pickleball",
-                "Gymnastics",
-                "Horse Riding",
-                "MMA",
-                "Tennis",
-                "Swimming",
-                "Snowboarding",
-                "Gym",
-                "Surfing",
-                "Skiing",
-                "Baseball",
-                "Golf",
-                "Boxing"
-            ]
-        },
-        "filmAndTv": {
-            "title": "Film & TV",
-            "options": [
-                "Drama",
-                "Thriller",
-                "Crime",
-                "Fantasy",
-                "Anime",
-                "Sci-fi",
-                "Mystery",
-                "Comedy",
-                "Romance",
-                "Action",
-                "Horror"
-            ]
-        },
-        "valuesAndTraits": {
-            "title": "Values & Traits",
-            "options": [
-                "Intelligence",
-                "Positivity",
-                "Confidence",
-                "Family Oriented",
-                "Ambition",
-                "Creativity",
-                "Empathy"
-            ]
-        },
-        "traveling": {
-            "title": "Traveling",
-            "options": [
-                "Beaches",
-                "Spa Weekends",
-                "Staycations",
-                "Backpacking",
-                "Winter Sports",
-                "Hiking Trips",
-                "Road Trips",
-                "Exploring New Cities",
-                "Fishing Trips",
-                "Camping"
-            ]
-        },
-        "business": {
-            "title": "Business",
-            "options": [
-                "Entrepreneurship",
-                "Sales",
-                "Real Estate",
-                "Crypto",
-                "Marketing",
-                "Stocks"
-            ]
-        },
-        "creativity": {
-            "title": "Creativity",
-            "options": [
-                "Writing",
-                "Photography",
-                "Dancing",
-                "Singing",
-                "Design",
-                "Content Creation",
-                "Art",
-                "Make-up"
-            ]
-        },
-        "stayingIn": {
-            "title": "Staying In",
-            "options": [
-                "Reading",
-                "Baking",
-                "Take Out",
-                "Cooking",
-                "Board Games",
-                "Gardening",
-                "Video Games"
-            ]
-        },
-        "pets": {
-            "title": "Pets",
-            "options": [
-                "Snakes",
-                "Birds",
-                "Fish",
-                "Turtles",
-                "Hamsters",
-                "Cats",
-                "Dogs",
-                "Lizards",
-                "Rabbits"
-            ]
-        }
+    "selection": {
+      "selectAtLeastOne": "Select at least one network to continue"
     },
-  
+    "selectNetworks": {
+      "title": "Select Your Networks",
+      "subtitle": "Choose which platforms to add"
+    },
+    "inputStep": {
+      "title": "Connect Your Profiles",
+      "subtitle": "Enter your username for each network",
+      "connectYour": "Your",
+      "placeholder": "Enter username",
+      "oauthSection": "Connect with one click",
+      "manualSection": "Enter manually",
+      "connectWith": "Connect with {platform}",
+      "connected": "{platform} connected ✓",
+      "oauthHint": "Tap to sign in"
+    },
+    "success": {
+      "networksAdded": "Networks added successfully!"
+    },
+    "register": {
+      "title": "Your Social Ecosystem",
+      "subtitle": "Add your platforms"
+    },
+    "edit": {
+      "title": "Edit Social Ecosystem",
+      "subtitle": "Add or remove platforms"
+    },
+    "popUp": {
+      "title": "Unlink ",
+      "subtitle": "Are you sure you want to unlink ",
+      "yes": "Yes",
+      "no": "No"
+    },
+    "categories": {
+      "social": "Social",
+      "streaming": "Streaming",
+      "music": "Music",
+      "stores": "Stores",
+      "chat": "Chat"
+    },
+    "search": {
+      "hint": "Search for platforms",
+      "results": "Search Results",
+      "noResults": "No platforms found"
+    },
+    "customLink": {
+      "title": "Add Custom Link",
+      "updated": "Custom link updated",
+      "newLabel": "New"
+    },
+    "dialogs": {
+      "addTitle": "Add {platform}",
+      "editTitle": "Edit {platform}",
+      "addUsernameHint": "Add {platform} username",
+      "usernameHint": "Enter username",
+      "usernameRequired": "Please enter a username",
+      "removeQuestion": "Do you want to remove {platform}?",
+      "deleteLink": "Delete"
+    },
+    "buttons": {
+      "cancel": "Cancel"
+    },
+    "messages": {
+      "socialConnected": "{platform} saved successfully!",
+      "errorSave": "Error saving: {error}",
+      "errorRemove": "Error removing: {error}",
+      "removed": "{platform} removed successfully!",
+      "usernameUpdated": "{platform} username updated!",
+      "usernameUpdatedSuccess": "{platform} username updated successfully!"
+    },
+    "networkAuth": {
+      "connectTitle": "Connect {platform}",
+      "oneClickTitle": "Connect with one click",
+      "oneClickSubtitle": "Authorize via {platform}",
+      "manualTitle": "Enter manually",
+      "manualSubtitle": "Paste username or link",
+      "backToOptions": "Back to options",
+      "phoneInvalid": "Please enter a valid phone number",
+      "searchCountry": "Search country",
+      "hints": {
+        "instagram": "Enter Instagram username or link",
+        "tiktok": "Enter TikTok username or link",
+        "youtube": "Enter YouTube channel or user link",
+        "twitter": "Enter X username or link",
+        "facebook": "Enter Facebook username or link",
+        "whatsapp": "1234567890",
+        "telegram": "1234567890",
+        "pinterest": "Enter Pinterest username or link",
+        "default": "Enter username or link"
+      },
+      "examples": {
+        "instagram": "https://www.instagram.com/username",
+        "tiktok": "https://www.tiktok.com/@username",
+        "youtube": "https://www.youtube.com/@username",
+        "twitter": "https://x.com/username",
+        "facebook": "https://www.facebook.com/username",
+        "whatsapp": "Enter your phone number with country code",
+        "telegram": "Enter your phone number with country code",
+        "pinterest": "https://www.pinterest.com/username",
+        "default": "https://www.example.com/username"
+      }
+    }
+  },
+  "edit": {
+    "validations": {
+      "updateProfilePic": "Profile photo updated",
+      "errorUpdateProfilePic": "Error updating photo:",
+      "updateProfile": "Profile updated successfully",
+      "errorUpdateProfile": "'Error saving profile:'",
+      "detectLocation": "🔍 Detecting location...",
+      "errorDetecLocation": "❌ Could not fetch current location",
+      "errorUserLogin": "Error: User not logged in",
+      "updateLocation": "✅ Location updated to {city}, {country}",
+      "errorUpdateLocation": "❌ Error updating location: {error}"
+    },
+    "presentation": {
+      "title": "Edit Profile",
+      "loadingProfile": "Loading profile...",
+      "errorUserEmpty": "No user data",
+      "locationNotSet": "Location not set",
+      "fields": {
+        "fullName": "Full Name",
+        "nickname": "Nickname",
+        "email": "Email",
+        "cellPhone": "Cell Phone",
+        "dateOfBirth": "Date of birth",
+        "gender": "Gender",
+        "location": "Location"
+      },
+      "genderOptions": {
+        "male": "Male",
+        "female": "Female",
+        "other": "Other"
+      },
+      "record": "Edit Record",
+      "interest": "Edit My Interests",
+      "socials": "Edit Socials",
+      "logOut": "Logout",
+      "logOutConfirmation": "Are you sure you want to log out?",
+      "logOutLoading": "Logging out...",
+      "deleteAccount": {
+        "title": "Delete account",
+        "description": "Are you sure you want to delete your account?\n\nThis action will start a deletion process that may take up to 30 business days to be fully completed. During this time, all your data will be permanently removed and cannot be recovered.",
+        "confirm": "Delete Account",
+        "submitted": "Account deletion request submitted. Your data will be permanently deleted within 30 business days."
+      },
+      "webRestriction": {
+        "audio": "Use the app to change your audio"
+      }
+    },
+    "editAudio": {
+      "title": "Edit Audio",
+      "permissionDenied": "Permission to record denied",
+      "uploading": "Uploading audio...",
+      "minDuration": "Record at least 5 seconds",
+      "audioSaved": "Audio uploaded and saved ✅",
+      "errorUploadAudio": "Upload failed — try again",
+      "record": "Record Your Voicenote",
+      "maxLimit": "Voice note: 1–10 seconds max.",
+      "liste": "Listen to your audio",
+      "recorded": "Voice note recorded",
+      "noRecording": "No voice note yet",
+      "tapToRecord": "Tap to record"
+    },
+    "editLocation": {
+      "title": "Confirm location",
+      "text1": "We detected you're in:\n\n",
+      "text2": "{city}, {state}\n",
+      "text3": "{country}\n\n",
+      "text4": "Is that correct?"
+    },
+    "unsavedChanges": {
+      "title": "Unsaved changes",
+      "message": "You have unsaved changes. Do you want to save them?",
+      "discard": "Discard",
+      "save": "Save"
+    },
+    "editInterest": {
+      "title": "Edit my Interest",
+      "saveInterest": "Interests saved successfully",
+      "errorSave": "Error saving interests",
+      "noInterests": "No interests added yet",
+      "tapToAdd": "Tap to add interests",
+      "addMore": "Add more"
+    }
+  },
+  "share": {
+    "title": "🚀 Hey! Connect with @{displayName} on Migozz - where all their content lives in one place! 🔗\n\n{link}\n\n#Migozz #LinkInBio",
+    "subject": "🌟 {displayName}'s Migozz Profile",
+    "label": "Share Profile",
+    "customization": {
+      "emoji": "Emoji",
+      "colors": "Colors",
+      "image": "Image",
+      "default": "Default",
+      "chooseImage": "Choose Image"
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "removing": "Removing...",
+    "loader": "Loader",
+    "unknown": "Unknown",
+    "noData": "No data",
+    "loader_sequence": {
+      "connecting": "Establishing secure connection with {platform}...",
+      "validating": "Verifying your access credentials...",
+      "syncing": "Synchronizing your profile information...",
+      "ready": "Process completed successfully!",
+      "delay": "We are wrapping up the final details. Almost there!"
+    },
+    "loader_sequences": {
+      "login": {
+        "step1": "Logging into Migozz...",
+        "step2": "Verifying your credentials...",
+        "step3": "Preparing your experience...",
+        "step4": "Welcome back!"
+      },
+      "profile_update": {
+        "step1": "Saving your changes...",
+        "step2": "Updating your profile...",
+        "step3": "Syncing data...",
+        "step4": "Profile updated!"
+      },
+      "qr_scan": {
+        "step1": "Reading QR code...",
+        "step2": "Searching for user...",
+        "step3": "Fetching information...",
+        "step4": "User found!"
+      },
+      "social_auth": {
+        "step1": "Connecting with {platform}...",
+        "step2": "Extracting your profile information...",
+        "step3": "Adding your content to the Migozz ecosystem...",
+        "step4": "All set! Your networks are now unified"
+      },
+      "logout": {
+        "step1": "Logging out...",
+        "step2": "Saving preferences...",
+        "step3": "Cleaning secure data...",
+        "step4": "See you soon!"
+      }
+    }
+  },
+  "buttons": {
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "continue": "Continue"
+  },
+  "category": {
+    "title": "Choose Your Category",
+    "model": "Model",
+    "artist": "Artist",
+    "publicFigure": "Public Figure",
+    "streamer": "Streamer",
+    "influencer": "Influencer",
+    "sport": "Sport",
+    "actor/Actress": "Actor/Actress"
+  },
+  "interest": {
+    "goingOut": {
+      "title": "Going Out",
+      "options": [
+        "Concerts",
+        "Museums & Galleries",
+        "Yoga",
+        "Comedy",
+        "Theater",
+        "Clubs",
+        "Bars",
+        "Karaoke",
+        "Film Festivals",
+        "Lounging"
+      ]
+    },
+    "sports": {
+      "title": "Sports",
+      "options": [
+        "Football",
+        "Soccer",
+        "Hockey",
+        "Sports News",
+        "Fishing",
+        "Basketball",
+        "Cricket",
+        "Pickleball",
+        "Gymnastics",
+        "Horse Riding",
+        "MMA",
+        "Tennis",
+        "Swimming",
+        "Snowboarding",
+        "Gym",
+        "Surfing",
+        "Skiing",
+        "Baseball",
+        "Golf",
+        "Boxing"
+      ]
+    },
+    "filmAndTv": {
+      "title": "Film & TV",
+      "options": [
+        "Drama",
+        "Thriller",
+        "Crime",
+        "Fantasy",
+        "Anime",
+        "Sci-fi",
+        "Mystery",
+        "Comedy",
+        "Romance",
+        "Action",
+        "Horror"
+      ]
+    },
+    "valuesAndTraits": {
+      "title": "Values & Traits",
+      "options": [
+        "Intelligence",
+        "Positivity",
+        "Confidence",
+        "Family Oriented",
+        "Ambition",
+        "Creativity",
+        "Empathy"
+      ]
+    },
+    "traveling": {
+      "title": "Traveling",
+      "options": [
+        "Beaches",
+        "Spa Weekends",
+        "Staycations",
+        "Backpacking",
+        "Winter Sports",
+        "Hiking Trips",
+        "Road Trips",
+        "Exploring New Cities",
+        "Fishing Trips",
+        "Camping"
+      ]
+    },
+    "business": {
+      "title": "Business",
+      "options": [
+        "Entrepreneurship",
+        "Sales",
+        "Real Estate",
+        "Crypto",
+        "Marketing",
+        "Stocks"
+      ]
+    },
+    "creativity": {
+      "title": "Creativity",
+      "options": [
+        "Writing",
+        "Photography",
+        "Dancing",
+        "Singing",
+        "Design",
+        "Content Creation",
+        "Art",
+        "Make-up"
+      ]
+    },
+    "stayingIn": {
+      "title": "Staying In",
+      "options": [
+        "Reading",
+        "Baking",
+        "Take Out",
+        "Cooking",
+        "Board Games",
+        "Gardening",
+        "Video Games"
+      ]
+    },
+    "pets": {
+      "title": "Pets",
+      "options": [
+        "Snakes",
+        "Birds",
+        "Fish",
+        "Turtles",
+        "Hamsters",
+        "Cats",
+        "Dogs",
+        "Lizards",
+        "Rabbits"
+      ]
+    }
+  },
   "support": {
     "header": "Support / Report a Problem",
-
     "button": {
       "send": "Send Report",
       "back": "Back"
     },
-
     "form": {
       "name": {
         "label": "Your Name",
@@ -904,14 +900,12 @@
         "selected": "File Selected"
       }
     },
-
     "snackbar": {
       "success": "Report sent successfully",
       "validationError": "Please complete all required fields",
       "invalidEmail": "Enter a valid email address"
     }
   },
-
   "chat": {
     "input": {
       "webRestriction": "If you'd like to add images or audio, please use the app!",
@@ -1089,6 +1083,17 @@
       "confirmButton": "Yes, show tutorial",
       "cancelButton": "Cancel"
     }
+  },
+
+  "wallet": {
+    "mainTitle": "My Wallet",
+    "title": "Avaliable Balance",
+    "historyTitle": "Recent activity",
+    "deposit": "Received from",
+    "sent": "Sent to",
+    "purchase": "Purchase of",
+    "buyText": "Buy",
+    "sentText": "Sent",
+    "withdraw": "Withdraw"
   }
 }
-

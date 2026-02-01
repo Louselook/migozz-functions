@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+
 class WalletModel {
   final String id;
   final String user;
@@ -22,5 +24,13 @@ class WalletModel {
       totalGains: (data['totalGains'] ?? 0).toDouble(),
       totalExpense: (data['totalExpense'] ?? 0).toDouble(),
     );
+  }
+
+  static formattedAmount(double? amount) {
+    if(amount != null){
+      final formatter = NumberFormat.simpleCurrency(decimalDigits: 2);
+      return formatter.format(amount);
+    }
+    return "";
   }
 }

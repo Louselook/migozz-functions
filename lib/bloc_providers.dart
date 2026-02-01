@@ -9,6 +9,7 @@ import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cu
 import 'package:migozz_app/features/profile/presentation/bloc/follower_cubit/follower_cubit.dart';
 import 'package:migozz_app/features/profile/data/datasources/user_service.dart';
 import 'package:migozz_app/features/profile/data/datasources/follower_service.dart';
+import 'package:migozz_app/features/wallet/cubit/conversion_cubit/conversion_cubit.dart';
 import 'package:migozz_app/features/wallet/cubit/wallet_cubit/wallet_cubit.dart';
 import 'package:migozz_app/injection.dart';
 
@@ -16,6 +17,7 @@ import 'package:migozz_app/injection.dart';
 final loginCubit = LoginCubit();
 final registerCubit = RegisterCubit(locator<LocationService>());
 final authCubit = AuthCubit(locator<AuthUseCases>(), locator<UserService>());
+final conversionCubit = ConversionCubit();
 late final EditCubit editCubit;
 late final FollowerCubit followerCubit;
 late final WalletCubit walletCubit;
@@ -37,6 +39,7 @@ void initializeBlocProviders() {
     followerCubit.reset();
 
     walletCubit.close();
+    conversionCubit.close();
 
     debugPrint('✅ [Logout] Todos los cubits limpiados');
   };
@@ -58,5 +61,6 @@ final List<BlocProvider> blocProviders = [
   BlocProvider<RegisterCubit>(create: (_) => registerCubit),
   BlocProvider<EditCubit>(create: (_) => editCubit),
   BlocProvider<FollowerCubit>(create: (_) => followerCubit),
-  BlocProvider<WalletCubit>(create: (_) => walletCubit)
+  BlocProvider<WalletCubit>(create: (_) => walletCubit),
+  BlocProvider<ConversionCubit>(create:(_) => conversionCubit)
 ];

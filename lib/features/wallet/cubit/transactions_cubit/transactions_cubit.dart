@@ -33,6 +33,8 @@ class TransactionsCubit extends Cubit<TransactionsState> {
         .collection('wallets')
         .doc(walletId)
         .collection("transactions")
+        .orderBy("created", descending: true)
+        .limit(3)
         .snapshots()
         .listen((snapshot) {
       if (snapshot.docs.isNotEmpty) {
@@ -43,6 +45,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
         debugPrint("Transactions updated");
       } else {
         debugPrint("No transactions avaliable");
+        emit(TransactionsState.empty());
       }
     }, onError: (error) {
       debugPrint("Transactions error: ${error.toString()}");
