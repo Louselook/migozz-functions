@@ -11,7 +11,11 @@ class WalletBalance extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final balance = context.read<WalletCubit>().state.walletData!.totalBalance;
+    final walletState = context.read<WalletCubit>().state;
+    double balance = 0;
+    if(walletState.walletData != null){
+      balance = walletState.walletData!.totalBalance;
+    }
 
     return Container(
       decoration: BoxDecoration(

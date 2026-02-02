@@ -21,7 +21,7 @@ const transactionsController = onDocumentCreated('/wallets/{walletId}/transactio
             case 1:
                 updates = {
                     totalBalance: FieldValue.increment(transaction.amount),
-                    gains: FieldValue.increment(transaction.amount)
+                    totalGains: FieldValue.increment(transaction.amount)
                 }
 
                 isGain = true
@@ -31,7 +31,7 @@ const transactionsController = onDocumentCreated('/wallets/{walletId}/transactio
             case 3:
                 updates = {
                     totalBalance: FieldValue.increment(-transaction.amount),
-                    expenses: FieldValue.increment(transaction.amount)
+                    totalExpense: FieldValue.increment(transaction.amount)
                 }
                 isGain = false
             break;
@@ -41,7 +41,7 @@ const transactionsController = onDocumentCreated('/wallets/{walletId}/transactio
 
         if (isGain) {
             dayUpdates = {
-                gains: FieldValue.increment(transaction.amount),
+                totalGains: FieldValue.increment(transaction.amount),
                 lastUpdate: admin.firestore.Timestamp.now()
             };
         }
