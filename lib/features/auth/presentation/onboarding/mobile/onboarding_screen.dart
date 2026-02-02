@@ -103,15 +103,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   data.subTitleKey != null ? data.subTitleKey!.tr() : "",
                   textAlign: TextAlign.start,
                   fontfamily: 'Inter',
-                  fontSize: 14.sp,
-                  color: AppColors.secondaryText,
+                  fontSize: 15.sp,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
                 ),
+                SizedBox(height: 4.h),
                 SecondaryText(
                   data.descriptionKey.tr(),
                   textAlign: TextAlign.start,
                   fontfamily: 'Inter',
                   fontSize: 14.sp,
-                  color: AppColors.secondaryText.withValues(alpha: 0.53),
+                  color: AppColors.secondaryText.withValues(alpha: 0.85),
                 ),
                 const Spacer(),
 
@@ -184,12 +186,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         duration: const Duration(milliseconds: 400),
                         switchInCurve: Curves.easeInOut,
                         switchOutCurve: Curves.easeInOut,
-                        transitionBuilder: (Widget child, Animation<double> animation) {
-                          return FadeTransition(
-                            opacity: animation,
-                            child: child,
-                          );
-                        },
+                        transitionBuilder:
+                            (Widget child, Animation<double> animation) {
+                              return FadeTransition(
+                                opacity: animation,
+                                child: child,
+                              );
+                            },
                         child: Image.asset(
                           data.imagePath,
                           key: ValueKey<String>(data.imagePath),
@@ -198,19 +201,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           height: double.infinity,
                           alignment: Alignment.center,
                           gaplessPlayback: true,
-                          frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-                            if (wasSynchronouslyLoaded) {
-                              return child;
-                            }
-                            return AnimatedOpacity(
-                              opacity: frame == null ? 0 : 1,
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeOut,
-                              child: child,
-                            );
-                          },
+                          frameBuilder:
+                              (context, child, frame, wasSynchronouslyLoaded) {
+                                if (wasSynchronouslyLoaded) {
+                                  return child;
+                                }
+                                return AnimatedOpacity(
+                                  opacity: frame == null ? 0 : 1,
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeOut,
+                                  child: child,
+                                );
+                              },
                           errorBuilder: (context, error, stackTrace) {
-                            debugPrint('Error loading image ${data.imagePath}: $error');
+                            debugPrint(
+                              'Error loading image ${data.imagePath}: $error',
+                            );
                             return Container(
                               color: Colors.grey.withValues(alpha: 0.3),
                               child: Center(

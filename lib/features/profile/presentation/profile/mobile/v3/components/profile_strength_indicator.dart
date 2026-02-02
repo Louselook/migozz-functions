@@ -5,13 +5,11 @@ import 'package:migozz_app/core/color.dart';
 class ProfileStrengthIndicator extends StatefulWidget {
   final int percentage;
 
-  const ProfileStrengthIndicator({
-    super.key,
-    required this.percentage,
-  });
+  const ProfileStrengthIndicator({super.key, required this.percentage});
 
   @override
-  State<ProfileStrengthIndicator> createState() => _ProfileStrengthIndicatorState();
+  State<ProfileStrengthIndicator> createState() =>
+      _ProfileStrengthIndicatorState();
 }
 
 class _ProfileStrengthIndicatorState extends State<ProfileStrengthIndicator>
@@ -27,13 +25,13 @@ class _ProfileStrengthIndicatorState extends State<ProfileStrengthIndicator>
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    _progressAnimation = Tween<double>(
-      begin: 0,
-      end: widget.percentage / 100,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutCubic,
-    ));
+    _progressAnimation = Tween<double>(begin: 0, end: widget.percentage / 100)
+        .animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
     _previousPercentage = widget.percentage;
     _animationController.forward();
   }
@@ -42,13 +40,16 @@ class _ProfileStrengthIndicatorState extends State<ProfileStrengthIndicator>
   void didUpdateWidget(ProfileStrengthIndicator oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.percentage != widget.percentage) {
-      _progressAnimation = Tween<double>(
-        begin: _previousPercentage / 100,
-        end: widget.percentage / 100,
-      ).animate(CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeOutCubic,
-      ));
+      _progressAnimation =
+          Tween<double>(
+            begin: _previousPercentage / 100,
+            end: widget.percentage / 100,
+          ).animate(
+            CurvedAnimation(
+              parent: _animationController,
+              curve: Curves.easeOutCubic,
+            ),
+          );
       _previousPercentage = widget.percentage;
       _animationController.forward(from: 0);
     }
@@ -73,8 +74,9 @@ class _ProfileStrengthIndicatorState extends State<ProfileStrengthIndicator>
               Text(
                 'profile.customization.profileStrength.title'.tr(),
                 style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 11,
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(width: 4),
@@ -82,16 +84,17 @@ class _ProfileStrengthIndicatorState extends State<ProfileStrengthIndicator>
                 '${widget.percentage}%',
                 style: TextStyle(
                   color: Colors.purple.shade400,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(width: 4),
               Text(
                 'profile.customization.profileStrength.ready'.tr(),
                 style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 11,
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],
@@ -100,8 +103,8 @@ class _ProfileStrengthIndicatorState extends State<ProfileStrengthIndicator>
           Text(
             'profile.customization.profileStrength.subtitle'.tr(),
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.5),
-              fontSize: 10,
+              color: Colors.white.withValues(alpha: 0.6),
+              fontSize: 13,
             ),
           ),
           const SizedBox(height: 8),
@@ -139,4 +142,3 @@ class _ProfileStrengthIndicatorState extends State<ProfileStrengthIndicator>
     );
   }
 }
-

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:migozz_app/features/profile/components/follow_button.dart';
@@ -74,36 +75,103 @@ class _ProfileTopActionsState extends State<ProfileTopActions>
     super.dispose();
   }
 
+  void _showSendGiftsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.card_giftcard, color: Colors.white, size: 48),
+            const SizedBox(height: 16),
+            Text(
+              'profile.sendGifts.title'.tr(),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'profile.sendGifts.comingSoon'.tr(),
+              style: TextStyle(color: Colors.grey[400], fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              'profile.sendGifts.ok'.tr(),
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final shouldPulse = widget.profilePercentage < 80 && widget.isOwnProfile;
 
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.only(left: 10, right: 10, top: 0),
+        padding: const EdgeInsets.only(left: 10, right: 10, top: 20),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ✅ BOTÓN IZQUIERDO (menú o regresar)
             !widget.isOwnProfile
-                ? GestureDetector(
-                    onTap: widget.onMenuTap,
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          width: 1,
+                ? Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      GestureDetector(
+                        onTap: widget.onMenuTap,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              width: 1,
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.arrow_back,
+                            color: const Color(0xFFFFFFFF),
+                            size: 32,
+                          ),
                         ),
                       ),
-                      child: Icon(
-                        Icons.arrow_back,
-                        color: const Color(0xFFFFFFFF),
-                        size: 32,
+                      const SizedBox(height: 8),
+                      GestureDetector(
+                        onTap: () => _showSendGiftsDialog(context),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              width: 1,
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.card_giftcard,
+                            color: const Color(0xFFFFFFFF),
+                            size: 28,
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   )
                 : GestureDetector(
                     key: widget.profileTutorialKeys?.notificationsKey,
@@ -204,8 +272,9 @@ class _ProfileTopActionsState extends State<ProfileTopActions>
                               ),
                               child: ShaderMask(
                                 blendMode: BlendMode.srcIn,
-                                shaderCallback: (bounds) =>
-                                    AppColors.primaryGradient.createShader(bounds),
+                                shaderCallback: (bounds) => AppColors
+                                    .primaryGradient
+                                    .createShader(bounds),
                                 child: const Icon(
                                   Icons.edit_outlined,
                                   color: Colors.white,

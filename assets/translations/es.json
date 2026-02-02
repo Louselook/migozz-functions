@@ -233,6 +233,11 @@
     }
   },
   "profile": {
+    "sendGifts": {
+      "title": "Enviar Regalos",
+      "comingSoon": "Próximamente",
+      "ok": "OK"
+    },
     "contact": {
       "title": "Contactar a {}",
       "sendEmail": "Enviar email",
@@ -242,7 +247,7 @@
     "shareMessage": "¡Mira el perfil de {} en Migozz! {}",
     "shareSubject": "Perfil de {} en Migozz",
     "chat": {
-      "filter": "Nuevo",
+      "filter": "+ DM",
       "search": "Buscar"
     },
     "design": {
@@ -279,7 +284,7 @@
     },
     "customization": {
       "uploadingProfilePicture": {
-        "title": "Subir",
+        "title": "Cambiar foto",
         "uploading": "Cargando",
         "success": "Foto de perfil actualizada exitosamente",
         "error": "Error al actualizar la foto de perfil:"

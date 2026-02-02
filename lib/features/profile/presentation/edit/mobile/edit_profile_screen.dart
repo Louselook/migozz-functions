@@ -25,9 +25,9 @@ import 'package:migozz_app/features/profile/components/utils/Loader.dart';
 class EditProfileScreen extends StatefulWidget {
   final TutorialKeys tutorialKeys;
   final ProfileTutorialKeys? profileTutorialKeys;
-  
+
   const EditProfileScreen({
-    super.key, 
+    super.key,
     required this.tutorialKeys,
     this.profileTutorialKeys,
   });
@@ -87,7 +87,10 @@ class EditProfileScreenState extends State<EditProfileScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           'tutorial.help.confirmTitle'.tr(),
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         content: Text(
           'tutorial.help.confirmMessage'.tr(),
@@ -104,10 +107,14 @@ class EditProfileScreenState extends State<EditProfileScreen> {
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             child: ShaderMask(
-              shaderCallback: (bounds) => AppColors.primaryGradient.createShader(bounds),
+              shaderCallback: (bounds) =>
+                  AppColors.primaryGradient.createShader(bounds),
               child: Text(
                 'tutorial.help.confirmButton'.tr(),
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
@@ -245,6 +252,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
           context,
           1,
           message: "edit.validations.updateProfile".tr(),
+          autoDismissAfter: const Duration(seconds: 1),
         );
       }
       return true;
@@ -443,15 +451,13 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                 child: Padding(
                   padding: const EdgeInsets.only(right: 16),
                   child: ShaderMask(
-                    shaderCallback: (bounds) => AppColors.primaryGradient.createShader(bounds),
+                    shaderCallback: (bounds) =>
+                        AppColors.primaryGradient.createShader(bounds),
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white,
-                          width: 1.5,
-                        ),
+                        border: Border.all(color: Colors.white, width: 1.5),
                       ),
                       child: const Icon(
                         Icons.help_outline,

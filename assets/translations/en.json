@@ -234,6 +234,11 @@
         }
     },
     "profile":{
+            "sendGifts": {
+            "title": "Send Gifts",
+            "comingSoon": "Coming Soon",
+            "ok": "OK"
+        },
         "contact": {
             "title": "Contact {}",
             "sendEmail": "Send email",
@@ -243,7 +248,7 @@
         "shareMessage": "Check out {}'s profile on Migozz! {}",
         "shareSubject": "{}'s profile on Migozz",
         "chat": {
-            "filter":"New",
+            "filter":"+ DM",
             "search":"Search"
         },
         "design":{
@@ -293,7 +298,7 @@
         },
         "customization":{
           "uploadingProfilePicture": {
-            "title": "Update avatar",
+            "title": "Change photo",
             "uploading": "Uploading",
             "success": "Profile picture updated successfully",
             "error": "Error updating profile picture:"

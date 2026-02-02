@@ -88,7 +88,16 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/icons/Migozz300x.png"
+  remove_alpha_ios: true
+  image_path: "assets/migozz_icon/Migozz1024.png"
+  adaptive_icon_background: "#0D0D0D"
+  adaptive_icon_foreground: "assets/migozz_icon/Migozz1024.png"
+  web:
+    generate: true
+    image_path: "assets/migozz_icon/Migozz512.png"
+  windows:
+    generate: true
+    image_path: "assets/migozz_icon/Migozz1024.png"
 flutter:
   uses-material-design: true
 
@@ -98,6 +107,7 @@ flutter:
     - assets/images/
     - assets/translations/
     - assets/icons/
+    - assets/migozz_icon/
     - assets/emojis/
     - assets/icons/social_networks/
     - assets/icons/social_networks/social_black_white_icons/

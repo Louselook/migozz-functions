@@ -77,6 +77,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           context,
           1,
           message: 'edit.validations.updateProfile'.tr(),
+          autoDismissAfter: const Duration(seconds: 1),
         );
       }
     } catch (e) {
