@@ -577,6 +577,7 @@
       "errorUpdateProfilePic": "Error al actualizar la foto: $e",
       "updateProfile": "Perfil actualizado con éxito",
       "errorUpdateProfile": "Error al guardar el perfil: $e",
+      "usernameTaken": "Este nombre de usuario ya está en uso. Por favor elige otro.",
       "detectLocation": "🔍 Detectando ubicación...",
       "errorDetecLocation": "❌ No se pudo obtener la ubicación actual",
       "errorUserLogin": "Error: usuario no ha iniciado sesión",
@@ -675,7 +676,9 @@
     "delete": "Eliminar"
   },
   "category": {
-    "title": "Elige tu categoría",
+    "title": "Elige tu tipo de cuenta",
+    "subtitle": "Selecciona máximo 2 categorías",
+    "maxSelection": "Solo puedes elegir máximo 2 categorías. Deselecciona una para elegir otra.",
     "model": "Modelo",
     "artist": "Artista",
     "publicFigure": "Figura pública",

@@ -593,6 +593,7 @@
             "errorUpdateProfilePic" : "Error updating photo:",
             "updateProfile" : "Profile updated successfully",
             "errorUpdateProfile" : "'Error saving profile:'",
+            "usernameTaken" : "This username is already taken. Please choose another.",
             "detectLocation" : "🔍 Detecting location...",
             "errorDetecLocation" : "❌ Could not fetch current location",
             "errorUserLogin" : "Error: User not logged in",
@@ -737,7 +738,9 @@
         "continue" : "Continue"
     },
     "category" : {
-        "title" : "Choose Your Category",
+        "title" : "Choose Your Account Type",
+        "subtitle" : "Select up to 2 categories",
+        "maxSelection" : "You can only choose up to 2 categories. Deselect one to choose another.",
         "model" : "Model",
         "artist" : "Artist",
         "publicFigure" : "Public Figure",

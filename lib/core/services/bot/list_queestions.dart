@@ -27,7 +27,8 @@ final Map<String, Map<String, dynamic>> questionsEs = {
   },
 
   "username": {
-    "text": "Perfecto {fullName}. Ahora necesito tu nombre de usuario:",
+    "text":
+        "Perfecto {fullName}. \u00bfQu\u00e9 nombre de usuario quieres usar?",
     "options": [],
     "step": "regProgress.username",
     "keepTalk": false,
@@ -43,7 +44,7 @@ final Map<String, Map<String, dynamic>> questionsEs = {
   //   "keyboardType": "text",
   // },
   "socialEcosystem": {
-    "text": "Vincula tus redes sociales:",
+    "text": "\u00a1Casi terminamos! Vincula tus redes sociales \ud83d\udcf1",
     "options": [],
     "step": "regProgress.socialEcosystem",
     "keepTalk": false,
@@ -134,26 +135,30 @@ final Map<String, Map<String, dynamic>> questionsEs = {
   },
 
   "confirmCreateAccount": {
-    "text": "✅ Datos completos. ¿Creamos tu cuenta?",
-    "options": ["Crear cuenta", "Cambiar algo"],
+    "text":
+        "🎉 \u00a1Perfecto! Aqu\u00ed est\u00e1 el resumen de tu perfil. \u00bfTodo listo para crear tu cuenta?",
+    "options": ["\u2705 Crear cuenta", "\u270f\ufe0f Cambiar algo"],
     "step": "regProgress.confirmCreateAccount",
     "keepTalk": false,
+    "isFinalConfirmation": true,
   },
 
   "category": {
-    "text": "Elige tus categorías para personalizar tu contenido.",
+    "text": "¿Cuál es tu especialidad o tipo de contenido? 🎯",
     "options": [],
     "step": "regProgress.category",
     "keepTalk": false,
     "action": 1,
+    "showTyping": true,
   },
 
   "interests": {
-    "text": "Ahora elige tus intereses para mostrarte contenido relevante.",
+    "text": "Elige tus intereses para mostrarte contenido relevante 💡",
     "options": [],
     "step": "regProgress.interests",
     "keepTalk": false,
     "action": 2,
+    "showTyping": true,
   },
 };
 
@@ -183,7 +188,7 @@ final Map<String, Map<String, dynamic>> questionsEn = {
   },
 
   "username": {
-    "text": "Got it {fullName}. Now enter your username:",
+    "text": "Got it {fullName}. What username would you like to use?",
     "options": [],
     "step": "regProgress.username",
     "keepTalk": false,
@@ -199,7 +204,7 @@ final Map<String, Map<String, dynamic>> questionsEn = {
   //   "keyboardType": "text",
   // },
   "socialEcosystem": {
-    "text": "Link your social networks:",
+    "text": "Almost done! Link your social networks \ud83d\udcf1",
     "options": [],
     "step": "regProgress.socialEcosystem",
     "keepTalk": false,
@@ -290,26 +295,30 @@ final Map<String, Map<String, dynamic>> questionsEn = {
   },
 
   "confirmCreateAccount": {
-    "text": "✅ Data complete. Create your account?",
-    "options": ["Create account", "Change something"],
+    "text":
+        "🎉 Perfect! Here's your profile summary. Ready to create your account?",
+    "options": ["\u2705 Create account", "\u270f\ufe0f Change something"],
     "step": "regProgress.confirmCreateAccount",
     "keepTalk": false,
+    "isFinalConfirmation": true,
   },
 
   "category": {
-    "text": "Choose your categories to personalize your content.",
+    "text": "What's your specialty or content type? 🎯",
     "options": [],
     "step": "regProgress.category",
     "keepTalk": false,
     "action": 1,
+    "showTyping": true,
   },
 
   "interests": {
-    "text": "Now choose your interests to show you relevant content.",
+    "text": "Choose your interests to see relevant content 💡",
     "options": [],
     "step": "regProgress.interests",
     "keepTalk": false,
     "action": 2,
+    "showTyping": true,
   },
 };
 

@@ -3,6 +3,8 @@ import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/regis
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_state.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/location_dto.dart';
 import 'package:migozz_app/features/auth/services/send_otp.dart';
+import 'package:migozz_app/features/auth/services/media_service.dart';
+import 'package:migozz_app/features/profile/data/datasources/user_service.dart';
 
 Future<Map<String, dynamic>?> processBotResponse(
   Map<String, dynamic> resp, {
@@ -40,8 +42,26 @@ Future<Map<String, dynamic>?> processBotResponse(
 
     case RegisterStatusProgress.username:
       if (isValid == true && userResponse != null) {
-        registerCubit.setUsername(userResponse);
-        debugPrint('✅ Username guardado: $userResponse');
+        // Verificar si el username ya está en uso
+        final userService = UserService(UserMediaService());
+        final normalizedUsername = userResponse.trim().toLowerCase();
+        final isTaken = await userService.isUsernameTaken(normalizedUsername);
+
+        if (isTaken) {
+          debugPrint('⚠️ Username "$normalizedUsername" ya está en uso');
+          final isSpanish = registerCubit.state.language == 'Español';
+          return {
+            'error': true,
+            'message': isSpanish
+                ? 'El nombre de usuario "@$normalizedUsername" ya está en uso. Por favor elige otro.'
+                : 'The username "@$normalizedUsername" is already taken. Please choose another.',
+            'usernameTaken': true,
+            'step': 'regProgress.username',
+          };
+        }
+
+        registerCubit.setUsername(normalizedUsername);
+        debugPrint('✅ Username guardado: $normalizedUsername');
       }
       break;
 

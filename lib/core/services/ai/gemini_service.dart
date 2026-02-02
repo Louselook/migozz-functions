@@ -321,35 +321,35 @@ class GeminiService {
   bool _requestedMicPermissionForVoiceStep = false;
 
   // Flujo completo para usuarios NO autenticados
+  // Orden: nombre, username, categoría, intereses, ubicación, audio, email OTP, redes sociales, foto, confirmar
   final List<String> _questionFlowNotAuth = [
     'welcome', // 0 - Mensaje de bienvenida
-    'fullName', // 1
-    'username', // 2
-    'location', // 3
-    'sendOTP', // 4 - Confirmar email (ya disponible) y enviar código
-    'emailVerification', // 5
-    'otpInput', // 6
-    'emailSuccess', // 7
-    'socialEcosystem', // 8
-    'avatarUrl', // 9
-    'phone', // 10
-    'voiceNoteUrl', // 11
-    'category', // 12 - Seleccionar categorías
-    'interests', // 13 - Seleccionar intereses
-    'confirmCreateAccount', // 14
+    'fullName', // 1 - Nombre completo
+    'username', // 2 - Username
+    'category', // 3 - Categoría/tipo de perfil
+    'interests', // 4 - Intereses
+    'location', // 5 - Ubicación (país, departamento, ciudad)
+    'voiceNoteUrl', // 6 - Nota de voz
+    'sendOTP', // 7 - Confirmar email y enviar código
+    'emailVerification', // 8
+    'otpInput', // 9
+    'emailSuccess', // 10
+    'socialEcosystem', // 11 - Redes sociales
+    'avatarUrl', // 12 - Foto de perfil
+    'confirmCreateAccount', // 13 - Resumen final con todos los datos
   ];
 
-  //  Flujo reducido para usuarios autenticados
+  //  Flujo reducido para usuarios autenticados (Google/Apple)
+  // Orden: categoría, intereses, ubicación, audio, redes sociales, foto, confirmar
   final List<String> _questionFlowAuth = [
     'welcome', // 0 - Mensaje de bienvenida
-    'location',
-    'phone',
-    'socialEcosystem',
-    'avatarUrl',
-    'voiceNoteUrl',
-    'category',
-    'interests',
-    'confirmCreateAccount',
+    'category', // 1 - Categoría/tipo de perfil
+    'interests', // 2 - Intereses
+    'location', // 3 - Ubicación
+    'voiceNoteUrl', // 4 - Nota de voz
+    'socialEcosystem', // 5 - Redes sociales
+    'avatarUrl', // 6 - Foto de perfil
+    'confirmCreateAccount', // 7 - Resumen final
   ];
 
   // Getter dinámico que devuelve el flujo correcto según auth
@@ -469,10 +469,126 @@ class GeminiService {
   }
 
   /// Lista de campos que requieren confirmación (no pasos intermedios como OTP)
+  /// DESHABILITADO: Ahora el flujo es dinámico sin confirmaciones intermedias
   bool _shouldConfirmField(String fieldKey) {
-    // Campos que sí requieren confirmación explícita
-    const confirmableFields = ['fullName', 'username', 'phone'];
-    return confirmableFields.contains(fieldKey);
+    // Flujo dinámico: NO pedir confirmación después de cada campo
+    // La confirmación se hace al final con todos los datos
+    return false;
+  }
+
+  /// Genera el resumen completo de todos los datos recolectados para el paso final
+  /// Muestra: nombre, username, categoría, intereses, ubicación, audio, email, redes sociales
+  String _buildFullDataSummary(RegisterCubit cubit) {
+    final state = cubit.state;
+    final isSpanish = state.language == 'Español';
+    final buffer = StringBuffer();
+
+    // Nombre completo
+    final fullName = state.fullName ?? '';
+    if (fullName.isNotEmpty) {
+      buffer.writeln(isSpanish ? '👤 Nombre: $fullName' : '👤 Name: $fullName');
+    }
+
+    // Username
+    final username = state.username ?? '';
+    if (username.isNotEmpty) {
+      buffer.writeln(
+        isSpanish ? '🆔 Usuario: @$username' : '🆔 Username: @$username',
+      );
+    }
+
+    // Categoría/Tipo de perfil
+    final category = state.category;
+    if (category != null && category.isNotEmpty) {
+      buffer.writeln(
+        isSpanish ? '🏷️ Categoría: $category' : '🏷️ Category: $category',
+      );
+    }
+
+    // Intereses
+    final interests = state.interests;
+    if (interests != null && interests.isNotEmpty) {
+      final interestsList = interests.keys.take(3).join(', ');
+      final suffix = interests.keys.length > 3 ? '...' : '';
+      buffer.writeln(
+        isSpanish
+            ? '💡 Intereses: $interestsList$suffix'
+            : '💡 Interests: $interestsList$suffix',
+      );
+    }
+
+    // Ubicación
+    final loc = state.location;
+    if (loc != null && loc.hasCityAndCountry) {
+      final hasState = loc.state.isNotEmpty;
+      final locationStr = hasState
+          ? '${loc.city}, ${loc.state}, ${loc.country}'
+          : '${loc.city}, ${loc.country}';
+      buffer.writeln(
+        isSpanish ? '📍 Ubicación: $locationStr' : '📍 Location: $locationStr',
+      );
+    }
+
+    // Audio/Nota de voz
+    final hasVoice =
+        state.voiceNoteUrl != null && state.voiceNoteUrl!.isNotEmpty;
+    buffer.writeln(
+      isSpanish
+          ? '🎤 Audio: ${hasVoice ? "✓ Grabado" : "No grabado"}'
+          : '🎤 Audio: ${hasVoice ? "✓ Recorded" : "Not recorded"}',
+    );
+
+    // Email
+    final email = state.email ?? '';
+    if (email.isNotEmpty) {
+      buffer.writeln(isSpanish ? '📧 Email: $email' : '📧 Email: $email');
+    }
+
+    // Redes sociales
+    final socials = state.socialEcosystem;
+    if (socials != null && socials.isNotEmpty) {
+      final socialNames = socials.map((s) => s.keys.first).take(4).join(', ');
+      final suffix = socials.length > 4 ? '...' : '';
+      buffer.writeln(
+        isSpanish
+            ? '📱 Redes: $socialNames$suffix (${socials.length})'
+            : '📱 Socials: $socialNames$suffix (${socials.length})',
+      );
+    }
+
+    // Foto de perfil
+    final hasAvatar = state.avatarUrl != null && state.avatarUrl!.isNotEmpty;
+    buffer.writeln(
+      isSpanish
+          ? '📸 Foto: ${hasAvatar ? "✓ Añadida" : "No añadida"}'
+          : '📸 Photo: ${hasAvatar ? "✓ Added" : "Not added"}',
+    );
+
+    return buffer.toString().trim();
+  }
+
+  /// Genera el mensaje final con el resumen de datos y opciones
+  Map<String, dynamic> _buildFinalConfirmationMessage(RegisterCubit cubit) {
+    final isSpanish = cubit.state.language == 'Español';
+    final summary = _buildFullDataSummary(cubit);
+
+    final headerText = isSpanish
+        ? '🎉 ¡Perfecto! Aquí está el resumen de tu perfil:\n\n'
+        : '🎉 Perfect! Here\'s your profile summary:\n\n';
+
+    final footerText = isSpanish
+        ? '\n\n¿Todo listo para crear tu cuenta?'
+        : '\n\nReady to create your account?';
+
+    return {
+      "text": '$headerText$summary$footerText',
+      "options": isSpanish
+          ? ["✅ Crear cuenta", "✏️ Cambiar algo"]
+          : ["✅ Create account", "✏️ Change something"],
+      "step": "regProgress.confirmCreateAccount",
+      "keepTalk": false,
+      "isFinalConfirmation": true,
+    };
   }
 
   void setModel(String modelName, {double? temperature, int? maxTokens}) {
@@ -1185,6 +1301,20 @@ class GeminiService {
           '✅ [category] Categorías seleccionadas, avanzando al siguiente paso',
         );
 
+        // Obtener las categorías seleccionadas para el feedback
+        final selectedCategories = registerCubit.state.category ?? [];
+        String feedbackMessage;
+        if (selectedCategories.isNotEmpty) {
+          final categoryText = selectedCategories.join(', ');
+          feedbackMessage = isSpanish
+              ? "✅ Agregaste: $categoryText"
+              : "✅ You added: $categoryText";
+        } else {
+          feedbackMessage = isSpanish
+              ? "⚠️ No agregaste ninguna categoría"
+              : "⚠️ You didn't add any category";
+        }
+
         // Salir del modo repetición si estábamos en él
         if (_isInRepeatMode) {
           _currentQuestionIndex = _previousQuestionIndex;
@@ -1223,7 +1353,16 @@ class GeminiService {
           };
         }
 
-        return await _prepareQuestion(nextQuestion, registerCubit);
+        final nextQuestionData = await _prepareQuestion(
+          nextQuestion,
+          registerCubit,
+        );
+
+        return {
+          ...nextQuestionData,
+          "feedbackMessage": feedbackMessage,
+          "showTyping": true,
+        };
       }
     }
 
@@ -1239,6 +1378,25 @@ class GeminiService {
         debugPrint(
           '✅ [interests] Intereses seleccionados, avanzando al siguiente paso',
         );
+
+        // Obtener los intereses seleccionados para el feedback
+        final selectedInterests = registerCubit.state.interests ?? {};
+        final allInterests = selectedInterests.values
+            .expand((list) => list)
+            .toList();
+        String feedbackMessage;
+        if (allInterests.isNotEmpty) {
+          final interestsText =
+              allInterests.take(5).join(', ') +
+              (allInterests.length > 5 ? '...' : '');
+          feedbackMessage = isSpanish
+              ? "✅ Agregaste: $interestsText"
+              : "✅ You added: $interestsText";
+        } else {
+          feedbackMessage = isSpanish
+              ? "⚠️ No agregaste ningún interés"
+              : "⚠️ You didn't add any interest";
+        }
 
         // Salir del modo repetición si estábamos en él
         if (_isInRepeatMode) {
@@ -1278,7 +1436,16 @@ class GeminiService {
           };
         }
 
-        return await _prepareQuestion(nextQuestion, registerCubit);
+        final nextQuestionData = await _prepareQuestion(
+          nextQuestion,
+          registerCubit,
+        );
+
+        return {
+          ...nextQuestionData,
+          "feedbackMessage": feedbackMessage,
+          "showTyping": true,
+        };
       }
     }
 
@@ -1610,6 +1777,17 @@ class GeminiService {
             "step": "regProgress.emailVerification",
             "keepTalk": false,
             "keyboardType": "number",
+            "isError": true,
+          };
+        }
+
+        // Manejar username duplicado
+        if (processResult['usernameTaken'] == true) {
+          return {
+            "text": processResult['message'],
+            "options": const <String>[],
+            "step": "regProgress.username",
+            "keepTalk": false,
             "isError": true,
           };
         }
@@ -2088,7 +2266,13 @@ class GeminiService {
   ) async {
     final currentStepKey = questionFlow[_currentQuestionIndex];
 
-    // � Si el paso actual es un paso de autoAdvance (como emailSuccess), avanzar automáticamente
+    // 🎉 Si estamos en confirmCreateAccount, mostrar el resumen completo de datos
+    if (currentStepKey == 'confirmCreateAccount') {
+      debugPrint('📋 [_prepareQuestion] Mostrando resumen final de datos');
+      return _buildFinalConfirmationMessage(registerCubit);
+    }
+
+    // 🔄 Si el paso actual es un paso de autoAdvance (como emailSuccess), avanzar automáticamente
     // Estos pasos solo muestran un mensaje y avanzan sin esperar input del usuario
     if (currentStepKey == 'emailSuccess' ||
         currentStepKey == 'emailVerification') {

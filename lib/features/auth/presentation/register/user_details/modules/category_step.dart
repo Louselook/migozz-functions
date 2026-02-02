@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/color.dart';
@@ -24,6 +25,7 @@ class CategoryStep extends StatefulWidget {
 }
 
 class _CategoryStepState extends State<CategoryStep> {
+  static const int maxCategories = 2;
   List<String> selectedCategories = [];
   List<String> dynamicCategories = [];
   bool isLoading = true;
@@ -100,13 +102,13 @@ class _CategoryStepState extends State<CategoryStep> {
   // Actualizar el cubit correspondiente según el modo
   void _updateCubit() {
     if (widget.mode == MoreUserDetailsMode.register) {
-      context
-          .read<RegisterCubit>()
-          .setCategories(List<String>.from(selectedCategories));
+      context.read<RegisterCubit>().setCategories(
+        List<String>.from(selectedCategories),
+      );
     } else {
-      context
-          .read<EditCubit>()
-          .updateCategory(List<String>.from(selectedCategories));
+      context.read<EditCubit>().updateCategory(
+        List<String>.from(selectedCategories),
+      );
     }
   }
 
@@ -118,7 +120,13 @@ class _CategoryStepState extends State<CategoryStep> {
         child: Column(
           children: [
             const SizedBox(height: 10),
-            const PrimaryText('Choose Your Category'),
+            PrimaryText('category.title'.tr()),
+            const SizedBox(height: 8),
+            SecondaryText(
+              'category.subtitle'.tr(),
+              fontSize: 14,
+              color: Colors.grey,
+            ),
             const SizedBox(height: 20),
             Expanded(
               child: Center(
@@ -157,8 +165,28 @@ class _CategoryStepState extends State<CategoryStep> {
                                         if (selectedCategories.contains(
                                           category,
                                         )) {
+                                          // Deseleccionar categoría
                                           selectedCategories.remove(category);
                                         } else {
+                                          // Verificar límite de máximo 2 categorías
+                                          if (selectedCategories.length >=
+                                              maxCategories) {
+                                            // Mostrar mensaje de límite alcanzado
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  'category.maxSelection'.tr(),
+                                                ),
+                                                backgroundColor: Colors.orange,
+                                                duration: const Duration(
+                                                  seconds: 2,
+                                                ),
+                                              ),
+                                            );
+                                            return;
+                                          }
                                           selectedCategories.add(category);
                                         }
                                       });

@@ -102,7 +102,10 @@ class UserService {
                   },
                 ),
                 ListTile(
-                  leading: const Icon(Icons.photo_library, color: Colors.purple),
+                  leading: const Icon(
+                    Icons.photo_library,
+                    color: Colors.purple,
+                  ),
                   title: const Text(
                     'Choose from Gallery',
                     style: TextStyle(color: Colors.white),
@@ -131,5 +134,51 @@ class UserService {
         );
       },
     );
+  }
+
+  /// ---------------------------
+  /// 🔹 VERIFICAR SI USERNAME YA EXISTE
+  /// ---------------------------
+  /// Retorna true si el username ya está en uso por otro usuario
+  /// [username] - El username a verificar
+  /// [excludeUserId] - El ID del usuario actual (para excluirlo de la búsqueda al editar)
+  Future<bool> isUsernameTaken(String username, {String? excludeUserId}) async {
+    try {
+      final normalizedUsername = username.trim().toLowerCase();
+
+      if (normalizedUsername.isEmpty || normalizedUsername.length < 3) {
+        return false; // Username inválido, no buscar
+      }
+
+      final querySnapshot = await _firestore
+          .collection('users')
+          .where('username', isEqualTo: normalizedUsername)
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isEmpty) {
+        debugPrint('✅ [UserService] Username "$normalizedUsername" disponible');
+        return false;
+      }
+
+      // Si hay un resultado, verificar si es el mismo usuario (para edición)
+      if (excludeUserId != null) {
+        final existingUserId = querySnapshot.docs.first.id;
+        if (existingUserId == excludeUserId) {
+          debugPrint(
+            '✅ [UserService] Username "$normalizedUsername" pertenece al mismo usuario',
+          );
+          return false; // El username pertenece al usuario actual, está OK
+        }
+      }
+
+      debugPrint(
+        '⚠️ [UserService] Username "$normalizedUsername" ya está en uso',
+      );
+      return true;
+    } catch (e) {
+      debugPrint('❌ [UserService] Error verificando username: $e');
+      return false; // En caso de error, permitir (la validación final será en el servidor)
+    }
   }
 }

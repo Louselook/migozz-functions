@@ -56,9 +56,13 @@ class ChatNavigationHandler {
 
       case 1:
         // CategoryStep - Selección de categorías
+        // Mostrar typing indicator mientras carga
+        chatController.showTypingIndicator(name: "Migozz");
         // Dejar el mensaje del bot visible un momento antes de navegar.
-        await Future<void>.delayed(const Duration(milliseconds: 1400));
+        await Future<void>.delayed(const Duration(milliseconds: 800));
         if (!context.mounted) return;
+        chatController.removeTypingIndicator();
+
         await Navigator.push(
           context,
           MaterialPageRoute(
@@ -69,8 +73,11 @@ class ChatNavigationHandler {
           ),
         );
 
-        // Al volver, avanzar al siguiente paso
+        // Al volver, mostrar typing mientras procesa
         if (context.mounted) {
+          chatController.showTypingIndicator(name: "Migozz");
+          await Future<void>.delayed(const Duration(milliseconds: 400));
+          chatController.removeTypingIndicator();
           chatController.setLastUserMessageForBot('category_updated');
           chatController.showNextBotMessage();
         }
@@ -78,9 +85,13 @@ class ChatNavigationHandler {
 
       case 2:
         // InterestsStep - Selección de intereses
+        // Mostrar typing indicator mientras carga
+        chatController.showTypingIndicator(name: "Migozz");
         // Dejar el mensaje del bot visible un momento antes de navegar.
-        await Future<void>.delayed(const Duration(milliseconds: 1400));
+        await Future<void>.delayed(const Duration(milliseconds: 800));
         if (!context.mounted) return;
+        chatController.removeTypingIndicator();
+
         await Navigator.push(
           context,
           MaterialPageRoute(
@@ -91,8 +102,11 @@ class ChatNavigationHandler {
           ),
         );
 
-        // Al volver, avanzar al siguiente paso
+        // Al volver, mostrar typing mientras procesa
         if (context.mounted) {
+          chatController.showTypingIndicator(name: "Migozz");
+          await Future<void>.delayed(const Duration(milliseconds: 400));
+          chatController.removeTypingIndicator();
           chatController.setLastUserMessageForBot('interests_updated');
           chatController.showNextBotMessage();
         }

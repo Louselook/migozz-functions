@@ -115,49 +115,60 @@ class _InterestsStepState extends State<InterestsStep>
     return SafeArea(
       child: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : ScrollbarTheme(
-              data: ScrollbarThemeData(
-                thumbColor: WidgetStateProperty.all(Colors.grey[400]),
-                thickness: WidgetStateProperty.all(8.0),
-                radius: const Radius.circular(10),
-                thumbVisibility: WidgetStateProperty.all(true),
-              ),
-              child: Scrollbar(
-                child: SingleChildScrollView(
-                  child: Center(
-                    child: Container(
-                      constraints: const BoxConstraints(maxWidth: 680),
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 20,
-                        horizontal: 24,
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const SizedBox(height: 10),
-                          const PrimaryText('Choose Your Interest'),
-                          const SizedBox(height: 20),
+          : Column(
+              children: [
+                // Contenido scrolleable
+                Expanded(
+                  child: ScrollbarTheme(
+                    data: ScrollbarThemeData(
+                      thumbColor: WidgetStateProperty.all(Colors.grey[400]),
+                      thickness: WidgetStateProperty.all(8.0),
+                      radius: const Radius.circular(10),
+                      thumbVisibility: WidgetStateProperty.all(true),
+                    ),
+                    child: Scrollbar(
+                      child: SingleChildScrollView(
+                        child: Center(
+                          child: Container(
+                            constraints: const BoxConstraints(maxWidth: 680),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 20,
+                              horizontal: 24,
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const SizedBox(height: 10),
+                                const PrimaryText('Choose Your Interest'),
+                                const SizedBox(height: 20),
 
-                          // secciones
-                          ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: dynamicSections.length,
-                            itemBuilder: (context, index) {
-                              final section = dynamicSections[index];
-                              return _buildSection(section, index);
-                            },
+                                // secciones
+                                ListView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: dynamicSections.length,
+                                  itemBuilder: (context, index) {
+                                    final section = dynamicSections[index];
+                                    return _buildSection(section, index);
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
-
-                          const SizedBox(height: 40),
-                          // Botones
-                          _buildActionButton(),
-                        ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
+                // Botón fijo abajo
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 16,
+                  ),
+                  child: _buildActionButton(),
+                ),
+              ],
             ),
     );
   }
@@ -273,9 +284,13 @@ class _InterestsStepState extends State<InterestsStep>
                   gradient: AppColors.primaryGradient,
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Icon(
-                  section.expanded ? Icons.arrow_drop_down : Icons.add,
-                  color: AppColors.secondaryText,
+                child: AnimatedRotation(
+                  turns: section.expanded ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  child: const Icon(
+                    Icons.keyboard_arrow_down,
+                    color: AppColors.secondaryText,
+                  ),
                 ),
               ),
               const SizedBox(width: 10),

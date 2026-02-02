@@ -11,6 +11,8 @@ import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
 import 'package:migozz_app/features/auth/services/location_service.dart';
+import 'package:migozz_app/features/auth/services/media_service.dart';
+import 'package:migozz_app/features/profile/data/datasources/user_service.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 import 'package:migozz_app/features/profile/presentation/edit/components/profile_field.dart';
 import 'package:migozz_app/features/profile/presentation/edit/components/profile_option_button.dart';
@@ -226,9 +228,33 @@ class EditProfileScreenState extends State<EditProfileScreen> {
   Future<bool> _saveProfile(String userId) async {
     final editCubit = context.read<EditCubit>();
     try {
+      final newUsername = usernameCtrl.text.trim().toLowerCase();
+      final currentUsername = _initialUser?.username.toLowerCase() ?? '';
+
+      // Verificar si el username cambió y si ya está en uso
+      if (newUsername != currentUsername && newUsername.isNotEmpty) {
+        final userService = UserService(UserMediaService());
+        final isTaken = await userService.isUsernameTaken(
+          newUsername,
+          excludeUserId: userId,
+        );
+
+        if (isTaken) {
+          if (mounted) {
+            await AlertGeneral.show(
+              context,
+              4,
+              message: 'edit.validations.usernameTaken'.tr(),
+              autoDismissAfter: const Duration(seconds: 3),
+            );
+          }
+          return false;
+        }
+      }
+
       final data = {
         'displayName': nameCtrl.text.trim(),
-        'username': usernameCtrl.text.trim(),
+        'username': newUsername,
         'phone': phoneCtrl.text.trim(),
         'gender': genderCtrl.text.trim(),
         'birthDate': _dob != null ? Timestamp.fromDate(_dob!) : null,
@@ -240,7 +266,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
       if (_initialUser != null) {
         _initialUser = _initialUser!.copyWith(
           displayName: nameCtrl.text.trim(),
-          username: usernameCtrl.text.trim(),
+          username: newUsername,
           phone: phoneCtrl.text.trim(),
           gender: genderCtrl.text.trim(),
           birthDate: _dob,
