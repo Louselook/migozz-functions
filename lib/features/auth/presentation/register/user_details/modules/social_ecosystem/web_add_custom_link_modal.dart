@@ -470,7 +470,7 @@ class _WebAddCustomLinkModalState extends State<WebAddCustomLinkModal> {
                             ),
                             Switch(
                               value: _applyIconFromLink,
-                              activeColor: AppColors.primaryPink,
+                              activeThumbColor: AppColors.primaryPink,
                               activeTrackColor: AppColors.primaryPink
                                   .withValues(alpha: 0.3),
                               onChanged: (val) {

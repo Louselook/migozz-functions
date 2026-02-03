@@ -227,7 +227,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     if (kIsWeb) {
       showDialog(
         context: context,
-        barrierColor: Colors.black.withOpacity(0.8),
+        barrierColor: Colors.black.withValues(alpha:0.8),
         builder: (_) => BlocProvider.value(
           value: registerCubit,
           child: WebSocialNetworkInputModal(
@@ -1391,7 +1391,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
         if (kIsWeb) {
           await showDialog(
             context: context,
-            barrierColor: Colors.black.withOpacity(0.8),
+            barrierColor: Colors.black.withValues(alpha:0.8),
             builder: (_) {
               if (isRegister) {
                 return BlocProvider.value(

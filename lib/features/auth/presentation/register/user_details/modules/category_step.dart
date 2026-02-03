@@ -8,6 +8,7 @@ import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/user_details_button.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
+import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 
 class CategoryStep extends StatefulWidget {
@@ -115,120 +116,112 @@ class _CategoryStepState extends State<CategoryStep> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40),
-        child: Column(
-          children: [
-            const SizedBox(height: 10),
-            PrimaryText('category.title'.tr()),
-            const SizedBox(height: 8),
-            SecondaryText(
-              'category.subtitle'.tr(),
-              fontSize: 14,
-              color: Colors.grey,
-            ),
-            const SizedBox(height: 20),
-            Expanded(
-              child: Center(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    return SingleChildScrollView(
-                      child: Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: 12.0,
-                        runSpacing: 12.0,
-                        children: isLoading
-                            ? [const Center(child: CircularProgressIndicator())]
-                            : dynamicCategories.isEmpty
-                            ? [
-                                const Center(
-                                  child: SecondaryText(
-                                    'No hay categorías disponibles',
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ]
-                            : dynamicCategories.map((category) {
-                                final isSelected = selectedCategories.contains(
-                                  category,
-                                );
-                                return ConstrainedBox(
-                                  constraints: BoxConstraints(
-                                    minWidth: constraints.maxWidth * 0.4,
-                                    maxWidth: constraints.maxWidth * 0.9,
-                                  ),
-                                  child: _categoryButton(
-                                    category,
-                                    selected: isSelected,
-                                    onTap: () {
-                                      setState(() {
-                                        if (selectedCategories.contains(
-                                          category,
-                                        )) {
-                                          // Deseleccionar categoría
-                                          selectedCategories.remove(category);
-                                        } else {
-                                          // Verificar límite de máximo 2 categorías
-                                          if (selectedCategories.length >=
-                                              maxCategories) {
-                                            // Mostrar mensaje de límite alcanzado
-                                            ScaffoldMessenger.of(
-                                              context,
-                                            ).showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                  'category.maxSelection'.tr(),
-                                                ),
-                                                backgroundColor: Colors.orange,
-                                                duration: const Duration(
-                                                  seconds: 2,
-                                                ),
-                                              ),
-                                            );
-                                            return;
-                                          }
-                                          selectedCategories.add(category);
-                                        }
-                                      });
-
-                                      //  Actualizar el cubit correspondiente
-                                      _updateCubit();
-                                      debugPrint(
-                                        "🏷️ Categorías seleccionadas: $selectedCategories",
-                                      );
-                                    },
-                                  ),
-                                );
-                              }).toList(),
-                      ),
-                    );
-                  },
+      child: Stack(
+        children: [
+          Positioned.fill(child: Container(color: AppColors.backgroundDark)),
+          const Positioned.fill(
+            child: TintesGradients(child: SizedBox.expand()),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40),
+            child: Column(
+              children: [
+                const SizedBox(height: 10),
+                PrimaryText('category.title'.tr()),
+                const SizedBox(height: 8),
+                SecondaryText(
+                  'category.subtitle'.tr(),
+                  fontSize: 14,
+                  color: Colors.grey,
                 ),
-              ),
+                const SizedBox(height: 20),
+                Expanded(
+                  child: isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : dynamicCategories.isEmpty
+                      ? const Center(
+                          child: SecondaryText(
+                            'No hay categorías disponibles',
+                            fontSize: 16,
+                          ),
+                        )
+                      : GridView.builder(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                mainAxisSpacing: 12,
+                                crossAxisSpacing: 12,
+                                childAspectRatio: 3.2,
+                              ),
+                          itemCount: dynamicCategories.length,
+                          itemBuilder: (context, index) {
+                            final category = dynamicCategories[index];
+                            final isSelected = selectedCategories.contains(
+                              category,
+                            );
+
+                            return _categoryButton(
+                              category,
+                              selected: isSelected,
+                              onTap: () {
+                                setState(() {
+                                  if (selectedCategories.contains(category)) {
+                                    selectedCategories.remove(category);
+                                  } else {
+                                    if (selectedCategories.length >=
+                                        maxCategories) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'category.maxSelection'.tr(),
+                                          ),
+                                          backgroundColor: Colors.orange,
+                                          duration: const Duration(seconds: 2),
+                                        ),
+                                      );
+                                      return;
+                                    }
+                                    selectedCategories.add(category);
+                                  }
+                                });
+
+                                _updateCubit();
+                                debugPrint(
+                                  '🏷️ Categorías seleccionadas: $selectedCategories',
+                                );
+                              },
+                            );
+                          },
+                        ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 20, bottom: 10),
+                  child: widget.mode == MoreUserDetailsMode.register
+                      // En modo registro (desde chat), cerrar pantalla y volver al chat
+                      ? GradientButton(
+                          width: double.infinity,
+                          radius: 19,
+                          onPressed: () {
+                            _updateCubit();
+                            Navigator.of(context).pop('done');
+                          },
+                          child: const SecondaryText('Continue', fontSize: 20),
+                        )
+                      // En modo edición, ir a la siguiente página
+                      : userDetailsButton(
+                          controller: widget.controller,
+                          context: context,
+                          action: UserDetailsAction.next,
+                          mode: widget.mode,
+                        ),
+                ),
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.only(top: 20, bottom: 10),
-              child: widget.mode == MoreUserDetailsMode.register
-                  // En modo registro (desde chat), cerrar pantalla y volver al chat
-                  ? GradientButton(
-                      width: double.infinity,
-                      radius: 19,
-                      onPressed: () {
-                        _updateCubit();
-                        Navigator.of(context).pop('done');
-                      },
-                      child: const SecondaryText('Continue', fontSize: 20),
-                    )
-                  // En modo edición, ir a la siguiente página
-                  : userDetailsButton(
-                      controller: widget.controller,
-                      context: context,
-                      action: UserDetailsAction.next,
-                      mode: widget.mode,
-                    ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -238,47 +231,41 @@ class _CategoryStepState extends State<CategoryStep> {
     bool selected = false,
     VoidCallback? onTap,
   }) {
+    const borderRadius = BorderRadius.all(Radius.circular(8));
+    final tileColor = Color.lerp(
+      AppColors.greyBackground,
+      AppColors.backgroundDark,
+      0.55,
+    )!;
+
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        // ajustar el width a un tamaño más ajustado pero responsive
-        width: 350,
-        constraints: const BoxConstraints(minHeight: 50),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-        decoration: BoxDecoration(
-          gradient: selected
-              ? LinearGradient(colors: AppColors.primaryGradient.colors)
-              : LinearGradient(colors: AppColors.primaryGradient.colors),
-          border: Border.all(
-            color: selected
-                ? const Color.fromARGB(255, 96, 27, 255)
-                : AppColors.greyBackground,
-            width: 3,
-          ),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Center(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Flexible(
-                child: SecondaryText(label, fontSize: 18, color: Colors.white),
-              ),
-              if (selected) ...[
-                const SizedBox(width: 8),
-                Container(
-                  width: 20,
-                  height: 20,
-                  decoration: const BoxDecoration(
-                    color: Colors.green,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.check, color: Colors.white, size: 14),
+      borderRadius: BorderRadius.circular(8),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeOut,
+        decoration: selected
+            ? BoxDecoration(
+                gradient: AppColors.primaryGradient,
+                borderRadius: borderRadius,
+              )
+            : BoxDecoration(
+                color: tileColor,
+                borderRadius: borderRadius,
+                border: Border.all(
+                  color: tileColor.withValues(alpha: 0.9),
+                  width: 1.5,
                 ),
-              ],
-            ],
+              ),
+        padding: selected ? const EdgeInsets.all(2) : EdgeInsets.zero,
+        child: Container(
+          decoration: BoxDecoration(
+            color: tileColor,
+            borderRadius: borderRadius,
           ),
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: SecondaryText(label, fontSize: 16, color: Colors.white),
         ),
       ),
     );

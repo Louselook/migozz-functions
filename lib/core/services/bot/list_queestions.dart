@@ -28,7 +28,7 @@ final Map<String, Map<String, dynamic>> questionsEs = {
 
   "username": {
     "text":
-        "Perfecto {fullName}. \u00bfQu\u00e9 nombre de usuario quieres usar?",
+        "Perfecto {fullName}. Ahora escribe tu nombre de usuario:",
     "options": [],
     "step": "regProgress.username",
     "keepTalk": false,
@@ -188,7 +188,7 @@ final Map<String, Map<String, dynamic>> questionsEn = {
   },
 
   "username": {
-    "text": "Got it {fullName}. What username would you like to use?",
+    "text": "Got it {fullName}. Now enter your username:",
     "options": [],
     "step": "regProgress.username",
     "keepTalk": false,

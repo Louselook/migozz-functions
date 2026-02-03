@@ -152,20 +152,23 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
     return StreamBuilder<List<ChatRoom>>(
       stream: stream,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting)
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
             child: CircularProgressIndicator(color: Color(0xFFE91E63)),
           );
-        if (snapshot.hasError)
+        }
+        if (snapshot.hasError) {
           return _buildEmptyState(
             'Oops! Algo salió mal',
             icon: Icons.error_outline,
           );
+        }
         final chatRooms = snapshot.data ?? [];
-        if (chatRooms.isEmpty)
+        if (chatRooms.isEmpty) {
           return _buildEmptyState(
             isActive ? 'No messages yet' : 'No new messages',
           );
+        }
 
         final unreadKey = chatRooms
             .map(
@@ -180,18 +183,20 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
             chatRooms.map((room) => _chatRoomToPreview(room)),
           ),
           builder: (context, previewSnapshot) {
-            if (!previewSnapshot.hasData)
+            if (!previewSnapshot.hasData) {
               return const Center(
                 child: CircularProgressIndicator(color: Color(0xFFE91E63)),
               );
+            }
             final filteredChats = _filterChats(
               previewSnapshot.data!
                   .where((p) => p != null)
                   .cast<ChatPreview>()
                   .toList(),
             );
-            if (filteredChats.isEmpty)
+            if (filteredChats.isEmpty) {
               return _buildEmptyState('No results found');
+            }
             return _buildChatList(filteredChats);
           },
         );

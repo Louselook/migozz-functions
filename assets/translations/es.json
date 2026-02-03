@@ -35,6 +35,11 @@
       "subtitle1": "Conecta tu comunidad",
       "inputText": "Ingresa tu correo",
       "buttonText": "Iniciar sesión",
+      "registration": {
+        "step1": "Creando tu cuenta...",
+        "step2": "Configurando tu perfil...",
+        "step3": "Casi listo..."
+      },
       "subtitle2": "O inicia sesión con",
       "bottomText": {
         "newUser": "¿NUEVO USUARIO?\n ",
@@ -236,7 +241,9 @@
     "sendGifts": {
       "title": "Enviar Regalos",
       "comingSoon": "Próximamente",
-      "ok": "OK"
+      "ok": "OK",
+      "tooltipTitle": "¡Próximamente!",
+      "tooltipMessage": " 🚀 Estamos dando los últimos toques a las herramientas de monetización para tu ecosistema. Esta función estará disponible en la próxima actualización. ¡Prepárate para empezar a generar ingresos!"
     },
     "contact": {
       "title": "Contactar a {}",
@@ -828,6 +835,11 @@
         "step2": "Verificando tus credenciales...",
         "step3": "Preparando tu experiencia...",
         "step4": "¡Bienvenido de nuevo!"
+      },
+      "registration": {
+        "step1": "Creando tu cuenta...",
+        "step2": "Configurando tu perfil...",
+        "step3": "Casi listo..."
       },
       "profile_update": {
         "step1": "Guardando tus cambios...",

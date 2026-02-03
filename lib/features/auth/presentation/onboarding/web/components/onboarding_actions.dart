@@ -91,7 +91,7 @@ class OnboardingActions extends StatelessWidget {
               "onboarding.buttons.skip".tr(),
               style: TextStyle(
                 fontSize: 18,
-                color: Colors.white.withOpacity(
+                color: Colors.white.withValues(alpha:
                   0.7,
                 ), // Slightly dimmer for secondary action
               ),
@@ -140,7 +140,7 @@ class OnboardingActions extends StatelessWidget {
               borderRadius: BorderRadius.circular(12), // Rounder corners
             ),
             elevation: 8, // Add some shadow
-            shadowColor: const Color(0xFFD43AB6).withOpacity(0.5),
+            shadowColor: const Color(0xFFD43AB6).withValues(alpha:0.5),
           ),
           child: Ink(
             decoration: BoxDecoration(

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/components/atomics/loading_overlay.dart';
+import 'package:migozz_app/features/profile/components/utils/Loader.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 
@@ -44,6 +45,8 @@ class RegistrationHandler {
       final missing = <String>[];
       final s = registerCubit.state;
       if (s.email == null || (s.email as String).trim().isEmpty) {
+        // Only required for Email/OTP flow (non-social). Here we don't know the
+        // flow, so we log it, but Email/OTP is already validated earlier.
         missing.add('email');
       }
       if (s.fullName == null || (s.fullName as String).trim().isEmpty) {
@@ -52,13 +55,10 @@ class RegistrationHandler {
       if (s.username == null || (s.username as String).trim().isEmpty) {
         missing.add('username');
       }
-      if (s.voiceNoteUrl == null || (s.voiceNoteUrl as String).trim().isEmpty) {
-        missing.add('voiceNoteUrl');
+      if (s.location == null || (s.location?.isEmpty ?? true)) missing.add('location');
+      if (s.socialEcosystem == null || s.socialEcosystem!.isEmpty) {
+        missing.add('socialEcosystem');
       }
-      if (s.avatarUrl == null || (s.avatarUrl as String).trim().isEmpty) {
-        missing.add('avatarUrl');
-      }
-      if (s.location == null) missing.add('location');
       debugPrint('   -> Campos faltantes: ${missing.join(", ")}');
 
       if (context.mounted) {
@@ -75,7 +75,7 @@ class RegistrationHandler {
     // Proceder con el registro según el flujo
     try {
       if (!context.mounted) return;
-      LoadingOverlay.show(context);
+      LoadingOverlay.show(context, type: LoaderType.registration);
 
       if (isSocialAuthUser) {
         // firebaseUser ya no es null porque isSocialAuthUser es true
@@ -275,23 +275,6 @@ class RegistrationHandler {
     try {
       String uid;
 
-      // ✅ Si es pre-registrado, primero eliminar el documento pre-order
-      // para evitar conflictos de email/UID, luego registrar normalmente
-      if (isPreRegistered && preOrderId != null) {
-        debugPrint(
-          '🗑️ [RegistrationHandler] Eliminando pre-order $preOrderId antes de registrar...',
-        );
-
-        final deleteSuccess = await registerCubit.deletePreOrder();
-        if (!deleteSuccess) {
-          debugPrint('❌ [RegistrationHandler] No se pudo eliminar pre-order');
-          throw Exception('Error eliminando documento pre-order');
-        }
-        debugPrint(
-          '✅ [RegistrationHandler] Pre-order eliminado, procediendo con registro normal...',
-        );
-      }
-
       // 🆕 FLUJO NORMAL para todos los usuarios:
       // Crear usuario Auth + documento Firestore
       debugPrint('🆕 [RegistrationHandler] Registrando usuario...');
@@ -302,6 +285,20 @@ class RegistrationHandler {
         userData: registerCubit.state.buildUserDTO(),
       );
       debugPrint('✅ [RegistrationHandler] Usuario creado con UID: $uid');
+
+      // ✅ Si es pre-registrado, eliminar el documento pre-order DESPUÉS del registro.
+      // Deleting before creating the user can fail due to Firestore security rules.
+      if (isPreRegistered && preOrderId != null) {
+        debugPrint(
+          '🗑️ [RegistrationHandler] Eliminando pre-order $preOrderId después de registrar (uid=$uid)...',
+        );
+        final deleteSuccess = await registerCubit.deletePreOrder();
+        if (!deleteSuccess) {
+          debugPrint(
+            '⚠️ [RegistrationHandler] No se pudo eliminar pre-order; continuando igualmente.',
+          );
+        }
+      }
 
       // Resetear el cubit
       registerCubit.reset();

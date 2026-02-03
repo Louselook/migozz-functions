@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:ui' as ui;
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -64,11 +67,96 @@ class InfoUserProfile extends StatefulWidget {
   State<InfoUserProfile> createState() => _InfoUserProfileState();
 }
 
+class _BelowTooltipBubble extends StatelessWidget {
+  final double width;
+  final double arrowCenterX;
+  final Widget child;
+
+  const _BelowTooltipBubble({
+    required this.width,
+    required this.arrowCenterX,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const arrowHeight = 10.0;
+    const arrowWidth = 18.0;
+    final backgroundColor = Colors.black.withValues(alpha: 0.78);
+
+    final arrowLeft = (arrowCenterX - (arrowWidth / 2)).clamp(
+      12.0,
+      width - 12.0 - arrowWidth,
+    );
+
+    return SizedBox(
+      width: width,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            margin: const EdgeInsets.only(top: arrowHeight),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.10),
+                width: 1,
+              ),
+            ),
+            child: child,
+          ),
+          Positioned(
+            top: 0,
+            left: arrowLeft.toDouble(),
+            child: CustomPaint(
+              size: const Size(arrowWidth, arrowHeight),
+              painter: _UpTrianglePainter(color: backgroundColor),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _UpTrianglePainter extends CustomPainter {
+  final Color color;
+
+  const _UpTrianglePainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    // Tip at top, base at bottom
+    final path = Path()
+      ..moveTo(size.width / 2, 0)
+      ..lineTo(0, size.height)
+      ..lineTo(size.width, size.height)
+      ..close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _UpTrianglePainter oldDelegate) {
+    return oldDelegate.color != color;
+  }
+}
+
 class _InfoUserProfileState extends State<InfoUserProfile>
     with SingleTickerProviderStateMixin {
   final AudioPlayer _player = AudioPlayer();
   bool _isPlaying = false;
   bool _isLoading = false;
+
+  final GlobalKey _sendGiftButtonKey = GlobalKey();
+  OverlayEntry? _sendGiftTooltipOverlay;
+  Timer? _sendGiftTooltipAutoHideTimer;
 
   /// Índice actual para la animación de redes sociales
   /// -1 = community (total), 0+ = índice de red social
@@ -108,9 +196,129 @@ class _InfoUserProfileState extends State<InfoUserProfile>
 
   @override
   void dispose() {
+    _hideSendGiftTooltip();
     _fadeController.dispose();
     _player.dispose();
     super.dispose();
+  }
+
+  void _hideSendGiftTooltip() {
+    _sendGiftTooltipAutoHideTimer?.cancel();
+    _sendGiftTooltipAutoHideTimer = null;
+    _sendGiftTooltipOverlay?.remove();
+    _sendGiftTooltipOverlay = null;
+  }
+
+  void _toggleSendGiftTooltip() {
+    if (_sendGiftTooltipOverlay != null) {
+      _hideSendGiftTooltip();
+      return;
+    }
+
+    final overlayState = Overlay.maybeOf(context);
+    if (overlayState == null) return;
+
+    final renderBox =
+        _sendGiftButtonKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+
+    final buttonSize = renderBox.size;
+    final buttonOffset = renderBox.localToGlobal(Offset.zero);
+    final buttonCenter = Offset(
+      buttonOffset.dx + (buttonSize.width / 2),
+      buttonOffset.dy + (buttonSize.height / 2),
+    );
+
+    final mediaQuery = MediaQuery.of(context);
+    final screenWidth = mediaQuery.size.width;
+
+    const screenPadding = 16.0;
+    const bubbleMaxWidth = 360.0;
+    const gapBelowButton = 10.0;
+    const arrowWidth = 18.0;
+
+    final bubbleWidth = (screenWidth - (screenPadding * 2)).clamp(
+      0.0,
+      bubbleMaxWidth,
+    );
+
+    // Measure text height so we can position bubble vertically centered to the button.
+    final tooltipSpan = TextSpan(
+      style: const TextStyle(color: Colors.white, fontSize: 13, height: 1.3),
+      children: [
+        TextSpan(
+          text: 'profile.sendGifts.tooltipTitle'.tr(),
+          style: const TextStyle(fontWeight: FontWeight.w800),
+        ),
+        TextSpan(
+          text: 'profile.sendGifts.tooltipMessage'.tr(),
+          style: const TextStyle(fontWeight: FontWeight.w500),
+        ),
+      ],
+    );
+
+    final textPainter = TextPainter(
+      text: tooltipSpan,
+      textDirection: ui.TextDirection.ltr,
+      maxLines: null,
+    )..layout(maxWidth: (bubbleWidth - arrowWidth - 28).clamp(0.0, bubbleWidth));
+
+    final bubbleHeight = textPainter.height + 24; // vertical padding
+    final screenHeight = mediaQuery.size.height;
+
+    // Bubble should appear BELOW the button.
+    final preferredLeft = buttonCenter.dx - (bubbleWidth / 2);
+    final bubbleLeft = preferredLeft
+      .clamp(screenPadding, screenWidth - bubbleWidth - screenPadding)
+      .toDouble();
+
+    final preferredTop = buttonOffset.dy + buttonSize.height + gapBelowButton;
+    final maxTop =
+      screenHeight - mediaQuery.padding.bottom - 8.0 - bubbleHeight;
+    final bubbleTop = preferredTop
+      .clamp(mediaQuery.padding.top + 8.0, maxTop)
+      .toDouble();
+
+    final arrowCenterX = (buttonCenter.dx - bubbleLeft)
+      .clamp(18.0, bubbleWidth - 18.0)
+      .toDouble();
+
+    _sendGiftTooltipOverlay = OverlayEntry(
+      builder: (context) {
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: _hideSendGiftTooltip,
+                child: const SizedBox.expand(),
+              ),
+            ),
+            Positioned(
+              left: bubbleLeft,
+              top: bubbleTop,
+              child: Material(
+                color: Colors.transparent,
+                child: _BelowTooltipBubble(
+                  width: bubbleWidth,
+                  arrowCenterX: arrowCenterX,
+                  child: RichText(text: tooltipSpan),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    overlayState.insert(_sendGiftTooltipOverlay!);
+
+    // Auto-hide after 30 seconds if the user doesn't dismiss it.
+    _sendGiftTooltipAutoHideTimer?.cancel();
+    _sendGiftTooltipAutoHideTimer = Timer(const Duration(seconds: 30), () {
+      if (!mounted) return;
+      _hideSendGiftTooltip();
+    });
   }
 
   /// Maneja el tap en community para rotar entre redes sociales
@@ -207,7 +415,9 @@ class _InfoUserProfileState extends State<InfoUserProfile>
     }
 
     try {
-      setState(() => _isLoading = true);
+      if (mounted) {
+        setState(() => _isLoading = true);
+      }
 
       if (_isPlaying) {
         await _player.pause();
@@ -220,16 +430,20 @@ class _InfoUserProfileState extends State<InfoUserProfile>
         await _player.play();
       }
 
-      setState(() => _isPlaying = !_isPlaying);
+      if (mounted) {
+        setState(() => _isPlaying = !_isPlaying);
+      }
     } catch (e) {
-      // ignore: use_build_context_synchronously
+      if (!mounted) return;
       AlertGeneral.show(
         context,
         4,
         message: "profile.validations.errorAudio".tr(),
       );
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -359,6 +573,139 @@ class _InfoUserProfileState extends State<InfoUserProfile>
     );
   }
 
+  Widget _buildSendGiftButton() {
+    return GestureDetector(
+      key: _sendGiftButtonKey,
+      onTap: _toggleSendGiftTooltip,
+      child: SizedBox(
+        width: 28,
+        height: 28,
+        child: Center(
+          child: SvgPicture.asset(
+            'assets/icons/Gift_Icon.svg',
+            width: 22,
+            height: 22,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNameHeader() {
+    const nameStyle = TextStyle(
+      color: Colors.white,
+      fontSize: 27,
+      fontWeight: FontWeight.w700,
+      height: 1.1,
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const contactWidth = 22.0;
+        const playSize = 20.0;
+        const giftSize = 28.0;
+        const gap = 8.0;
+        const giftGap = 10.0;
+        const playGap = 12.0;
+
+        final reservedLeft = widget.isOwnProfile
+            ? 0.0
+            : (contactWidth + gap + giftSize + giftGap);
+        final reservedRight = playGap + playSize;
+        final nameMaxWidth = (constraints.maxWidth - reservedLeft - reservedRight)
+            .clamp(0.0, constraints.maxWidth)
+            .toDouble();
+
+        final painter = TextPainter(
+          text: TextSpan(text: widget.name, style: nameStyle),
+          textDirection: ui.TextDirection.ltr,
+          maxLines: 1,
+          ellipsis: '…',
+        )..layout(maxWidth: nameMaxWidth);
+
+        final textWidth = painter.width;
+        final centerX = constraints.maxWidth / 2;
+        final nameStart = centerX - (textWidth / 2);
+        final nameEnd = centerX + (textWidth / 2);
+
+        final contactX = (nameStart - giftGap - giftSize - gap - contactWidth)
+            .clamp(0.0, constraints.maxWidth - contactWidth)
+            .toDouble();
+        final giftX = (nameStart - giftGap - giftSize)
+            .clamp(0.0, constraints.maxWidth - giftSize)
+            .toDouble();
+        final playX = (nameEnd + playGap)
+            .clamp(0.0, constraints.maxWidth - playSize)
+            .toDouble();
+
+        return SizedBox(
+          height: 30,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: nameMaxWidth),
+                  child: Text(
+                    widget.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: nameStyle,
+                  ),
+                ),
+              ),
+              if (!widget.isOwnProfile)
+                Positioned(
+                  left: contactX,
+                  child: _buildContactMenu(),
+                ),
+              if (!widget.isOwnProfile)
+                Positioned(
+                  left: giftX,
+                  child: _buildSendGiftButton(),
+                ),
+              Positioned(
+                left: playX,
+                child: GestureDetector(
+                  key: widget.tutorialKeys?.playButtonKey,
+                  onTap: _isLoading ? null : _togglePlay,
+                  child: Container(
+                    width: playSize,
+                    height: playSize,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: .5),
+                      gradient: LinearGradient(
+                        colors: AppColors.primaryGradient.colors,
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Icon(
+                            _isPlaying
+                                ? Icons.pause
+                                : Icons.play_arrow_rounded,
+                            size: 16,
+                            color: Colors.white.withValues(alpha: 0.9),
+                          ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -366,59 +713,7 @@ class _InfoUserProfileState extends State<InfoUserProfile>
         // Nombre + menú de contacto (si no es propio) + botón de play
         Container(
           key: widget.profileTutorialKeys?.nameSectionKey,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Menú de contacto al lado izquierdo del nombre (solo para perfiles de otros)
-              if (!widget.isOwnProfile) _buildContactMenu(),
-              if (!widget.isOwnProfile) const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  widget.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 27,
-                    fontWeight: FontWeight.w700,
-                    height: 1.1,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              GestureDetector(
-                key: widget.tutorialKeys?.playButtonKey,
-                onTap: _isLoading ? null : _togglePlay,
-                child: Container(
-                  width: 20,
-                  height: 20,
-
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: .5),
-                    gradient: LinearGradient(
-                      colors: AppColors.primaryGradient.colors,
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Icon(
-                          _isPlaying ? Icons.pause : Icons.play_arrow_rounded,
-                          size: 16,
-                          color: Colors.white.withValues(alpha: 0.9),
-                        ),
-                ),
-              ),
-            ],
-          ),
+          child: _buildNameHeader(),
         ),
 
         // DisplayName (@username)
@@ -438,7 +733,9 @@ class _InfoUserProfileState extends State<InfoUserProfile>
           children: [
             // Icono izquierdo: compartir (siempre muestra el QR del perfil)
             GestureDetector(
-              key: widget.profileTutorialKeys?.shareQrKey ?? widget.tutorialKeys?.shareButtonKey,
+              key:
+                  widget.profileTutorialKeys?.shareQrKey ??
+                  widget.tutorialKeys?.shareButtonKey,
               onTap: () {
                 Navigator.push(
                   context,

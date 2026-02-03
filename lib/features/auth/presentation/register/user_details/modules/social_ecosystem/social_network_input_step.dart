@@ -164,9 +164,6 @@ class _SocialNetworkInputStepState extends State<SocialNetworkInputStep> {
       return;
     }
 
-    // Show custom loader dialog
-    showProfileLoader(context, message: 'common.loader_sequence.syncing'.tr());
-
     try {
       final cubit = context.read<RegisterCubit>();
       final current = List<Map<String, dynamic>>.from(
@@ -182,6 +179,11 @@ class _SocialNetworkInputStepState extends State<SocialNetworkInputStep> {
 
         if (username.isEmpty) continue;
 
+        // Show loader for each network being registered
+        if (mounted) {
+          showProfileLoader(context, type: LoaderType.registration);
+        }
+
         // Normalize platform name
         final platformName = key;
 
@@ -194,11 +196,19 @@ class _SocialNetworkInputStepState extends State<SocialNetworkInputStep> {
         final profileUrl = '$baseUrl$cleanUsername';
 
         // Validate and get profile using cubit's new method
-        final profileData = await cubit.addNetworkByUsername(
-          network: platformName,
-          usernameOrLink: profileUrl,
-          iconPath: network.iconPath,
-        );
+        Map<String, dynamic>? profileData;
+        try {
+          profileData = await cubit.addNetworkByUsername(
+            network: platformName,
+            usernameOrLink: profileUrl,
+            iconPath: network.iconPath,
+          );
+        } finally {
+          // Close per-network loader
+          if (mounted && Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          }
+        }
 
         if (profileData == null) {
           // Validation failed - show error and continue with others
@@ -225,9 +235,6 @@ class _SocialNetworkInputStepState extends State<SocialNetworkInputStep> {
         successCount++;
       }
 
-      // Close loader dialog
-      if (mounted) Navigator.of(context).pop();
-
       // Save all networks if at least one succeeded
       if (successCount > 0) {
         cubit.setSocialEcosystem(current);
@@ -249,8 +256,6 @@ class _SocialNetworkInputStepState extends State<SocialNetworkInputStep> {
       }
     } catch (e) {
       debugPrint('Error saving networks: $e');
-      // Close loader dialog on error
-      if (mounted) Navigator.of(context).pop();
       if (mounted) {
         CustomSnackbar.show(
           context: context,

@@ -320,7 +320,7 @@ class RegisterCubit extends Cubit<RegisterState> {
             showProfileLoader(
               context,
               platform: config.displayName,
-              type: LoaderType.socialAuth,
+              type: inEditMode ? LoaderType.socialAuth : LoaderType.registration,
               onCancel: () {
                 debugPrint('❌ User cancelled connection');
                 userCancelled = true;
@@ -614,32 +614,36 @@ class RegisterCubit extends Cubit<RegisterState> {
   Future<void> checkCompletion({bool forGoogle = false, String? uid}) async {
     emit(state.copyWith(status: RegisterIsLogin.loading));
     try {
-      final hasLocationData = state.location != null;
+      final missing = <String>[];
 
-      final completeFull =
-          state.email != null &&
-          state.language != null &&
-          state.fullName != null &&
-          state.username != null &&
-          // state.gender != null &&
-          hasLocationData &&
-          state.phone != null; // &&
-      // state.category != null &&
-      // state.interests != null;
+      final hasFullName = (state.fullName ?? '').trim().isNotEmpty;
+      if (!hasFullName) missing.add('fullName');
 
-      final completeForGoogle =
-          state.language != null &&
-          // state.gender != null &&
-          hasLocationData &&
-          state.phone != null; // &&
-      // state.category != null &&
-      // state.interests != null;
+      final hasUsername = (state.username ?? '').trim().isNotEmpty;
+      if (!hasUsername) missing.add('username');
 
-      final complete = forGoogle ? completeForGoogle : completeFull;
+      final hasLocationData = state.location != null && !(state.location?.isEmpty ?? true);
+      if (!hasLocationData) missing.add('location');
+
+      // Requirement: at least 1 social network
+      // We treat any non-empty entry in socialEcosystem as "at least one".
+      final hasAtLeastOneSocial = (state.socialEcosystem?.isNotEmpty ?? false);
+      if (!hasAtLeastOneSocial) missing.add('socialEcosystem');
+
+      // Email/OTP flow only (non-social).
+      final hasEmail = (state.email ?? '').trim().isNotEmpty;
+      final hasOtp = (state.currentOTP ?? '').trim().isNotEmpty;
+      if (!forGoogle) {
+        if (!hasEmail) missing.add('email');
+        if (!hasOtp) missing.add('otp');
+      }
+
+      final complete = missing.isEmpty;
 
       debugPrint(
         '✅ [Cubit] Registro completo (forGoogle=$forGoogle): $complete',
       );
+      debugPrint('✅ [Cubit] Missing required: ${missing.join(', ')}');
       debugPrint('📍 [Cubit] Location exists: $hasLocationData');
       debugPrint('📍 [Cubit] Location isEmpty: ${state.location?.isEmpty}');
       if (state.location != null) {

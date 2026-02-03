@@ -378,7 +378,11 @@ class _InterestsStepState extends State<InterestsStep>
     required VoidCallback onTap,
   }) {
     final borderColor = selected ? const Color(0xFFB646F6) : Colors.transparent;
-    final innerBg = AppColors.secondaryText;
+    final innerBg = Color.lerp(
+      AppColors.greyBackground,
+      AppColors.backgroundDark,
+      0.75,
+    )!;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 220),
@@ -432,7 +436,7 @@ class _InterestsStepState extends State<InterestsStep>
                 ),
                 SecondaryText(
                   label,
-                  color: AppColors.backgroundDark,
+                  color: Colors.white,
                   fontWeight: FontWeight.w500,
                 ),
               ],

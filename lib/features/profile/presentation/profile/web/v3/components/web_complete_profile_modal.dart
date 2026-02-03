@@ -18,10 +18,12 @@ class WebCompleteProfileModal extends StatelessWidget {
 
     // Sync logic from mobile CompleteProfile
     if (profile.email.isNotEmpty) registerCubit.updateEmail(profile.email);
-    if (profile.username.isNotEmpty)
+    if (profile.username.isNotEmpty) {
       registerCubit.setUsername(profile.username);
-    if (profile.displayName.isNotEmpty)
+    }
+    if (profile.displayName.isNotEmpty) {
       registerCubit.setFullName(profile.displayName);
+    }
 
     if (profile.isPreRegistered) {
       registerCubit.markAsPreRegistered(

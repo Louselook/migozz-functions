@@ -234,11 +234,13 @@
         }
     },
     "profile":{
-            "sendGifts": {
-            "title": "Send Gifts",
-            "comingSoon": "Coming Soon",
-            "ok": "OK"
-        },
+        "sendGifts": {
+        "title": "Send Gifts",
+        "comingSoon": "Coming Soon",
+        "ok": "OK",
+        "tooltipTitle": "Coming soon!",
+        "tooltipMessage": " 🚀 We're putting the finishing touches on the monetization tools for your ecosystem. This feature will be available in the next update. Get ready to start generating revenue!"
+      },
         "contact": {
             "title": "Contact {}",
             "sendEmail": "Send email",
@@ -703,6 +705,11 @@
             "step2": "Verifying your credentials...",
             "step3": "Preparing your experience...",
             "step4": "Welcome back!"
+          },
+          "registration": {
+            "step1": "Creating your account...",
+            "step2": "Setting up your profile...",
+            "step3": "Almost ready..."
           },
           "profile_update": {
             "step1": "Saving your changes...",

@@ -183,7 +183,7 @@ class _WebProfileContentV3State extends State<WebProfileContentV3> {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.5),
+                              color: Colors.black.withValues(alpha:0.5),
                               blurRadius: 20,
                               offset: const Offset(-5, 0),
                             ),
@@ -289,7 +289,7 @@ class _WebProfileContentV3State extends State<WebProfileContentV3> {
     String username,
     String? customUrl,
   ) {
-    final normalizedLabel = platform.length > 0
+    final normalizedLabel = platform.isNotEmpty
         ? (platform[0].toUpperCase() + platform.substring(1).toLowerCase())
         : platform;
 

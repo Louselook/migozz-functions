@@ -159,8 +159,6 @@ class _WebSocialNetworkInputModalState
       return;
     }
 
-    showProfileLoader(context, message: 'common.loader_sequence.syncing'.tr());
-
     try {
       final cubit = context.read<RegisterCubit>();
       final current = List<Map<String, dynamic>>.from(
@@ -175,6 +173,11 @@ class _WebSocialNetworkInputModalState
 
         if (username.isEmpty) continue;
 
+        // Show loader for each network being registered
+        if (mounted) {
+          showProfileLoader(context, type: LoaderType.registration);
+        }
+
         final platformName = key;
         final baseUrl = _getBaseUrl(network);
         final cleanUsername = username
@@ -183,11 +186,19 @@ class _WebSocialNetworkInputModalState
             .trim();
         final profileUrl = '$baseUrl$cleanUsername';
 
-        final profileData = await cubit.addNetworkByUsername(
-          network: platformName,
-          usernameOrLink: profileUrl,
-          iconPath: network.iconPath,
-        );
+        Map<String, dynamic>? profileData;
+        try {
+          profileData = await cubit.addNetworkByUsername(
+            network: platformName,
+            usernameOrLink: profileUrl,
+            iconPath: network.iconPath,
+          );
+        } finally {
+          // Close per-network loader
+          if (mounted && Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          }
+        }
 
         if (profileData == null) {
           if (mounted) {
@@ -211,8 +222,6 @@ class _WebSocialNetworkInputModalState
         successCount++;
       }
 
-      if (mounted) Navigator.of(context).pop(); // Close loader
-
       if (successCount > 0) {
         cubit.setSocialEcosystem(current);
         if (mounted) {
@@ -232,7 +241,6 @@ class _WebSocialNetworkInputModalState
       }
     } catch (e) {
       debugPrint('Error saving networks: $e');
-      if (mounted) Navigator.of(context).pop(); // Close loader
       if (mounted) {
         CustomSnackbar.show(
           context: context,
@@ -517,13 +525,13 @@ class _WebSocialNetworkInputModalState
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
             color: isConnected
-                ? Colors.green.withOpacity(0.15)
-                : Colors.white.withOpacity(0.05),
+                ? Colors.green.withValues(alpha:0.15)
+                : Colors.white.withValues(alpha:0.05),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isConnected
-                  ? Colors.green.withOpacity(0.5)
-                  : Colors.white.withOpacity(0.15),
+                  ? Colors.green.withValues(alpha:0.5)
+                  : Colors.white.withValues(alpha:0.15),
               width: 1,
             ),
           ),

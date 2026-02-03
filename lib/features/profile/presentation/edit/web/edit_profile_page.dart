@@ -408,7 +408,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
           ),
           child: DropdownButtonFormField<String>(
-            value: _selectedGender,
+            initialValue: _selectedGender,
             icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey.shade400),
             dropdownColor: const Color(0xFF1A1A1A),
             style: const TextStyle(

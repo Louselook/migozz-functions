@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -7,6 +9,7 @@ enum LoaderType {
   qrScan,
   socialAuth,
   logout,
+  registration,
   generic, // Fallback
 }
 
@@ -62,6 +65,9 @@ class LoaderDialog extends StatefulWidget {
 
 class _LoaderDialogState extends State<LoaderDialog> {
   late String _displayMessage;
+  Timer? _messageTimer;
+  List<String> _sequenceMessages = const [];
+  int _sequenceIndex = 0;
 
   @override
   void initState() {
@@ -72,13 +78,43 @@ class _LoaderDialogState extends State<LoaderDialog> {
     } else {
       // Usar mensaje según el tipo de loader
       _displayMessage = _getMessageForType(widget.type);
+
+      _sequenceMessages = _getSequenceMessages(widget.type);
+      if (_sequenceMessages.isEmpty) return;
+
+      _sequenceIndex = 0;
+      _displayMessage = _sequenceMessages[_sequenceIndex];
+
+      // Rotate a few messages while loading to provide feedback.
+      // Stop after the last message to avoid infinite cycling.
+      if (_sequenceMessages.length > 1) {
+        _messageTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
+          if (!mounted) return;
+          if (_sequenceIndex >= _sequenceMessages.length - 1) {
+            timer.cancel();
+            return;
+          }
+          setState(() {
+            _sequenceIndex += 1;
+            _displayMessage = _sequenceMessages[_sequenceIndex];
+          });
+        });
+      }
     }
+  }
+
+  @override
+  void dispose() {
+    _messageTimer?.cancel();
+    super.dispose();
   }
 
   String _getMessageForType(LoaderType type) {
     switch (type) {
       case LoaderType.login:
         return 'common.loader_sequences.login.step1'.tr();
+      case LoaderType.registration:
+        return 'common.loader_sequences.registration.step1'.tr();
       case LoaderType.profileUpdate:
         return 'common.loader_sequences.profile_update.step1'.tr();
       case LoaderType.qrScan:
@@ -91,6 +127,61 @@ class _LoaderDialogState extends State<LoaderDialog> {
         return 'common.loader_sequences.logout.step1'.tr();
       default:
         return 'common.loading'.tr();
+    }
+  }
+
+  List<String> _getSequenceMessages(LoaderType type) {
+    switch (type) {
+      case LoaderType.login:
+        return [
+          'common.loader_sequences.login.step1'.tr(),
+          'common.loader_sequences.login.step2'.tr(),
+          'common.loader_sequences.login.step3'.tr(),
+          'common.loader_sequence.delay'.tr(),
+        ];
+      case LoaderType.registration:
+        return [
+          'common.loader_sequences.registration.step1'.tr(),
+          'common.loader_sequences.registration.step2'.tr(),
+          'common.loader_sequences.registration.step3'.tr(),
+          'common.loader_sequence.delay'.tr(),
+        ];
+      case LoaderType.profileUpdate:
+        return [
+          'common.loader_sequences.profile_update.step1'.tr(),
+          'common.loader_sequences.profile_update.step2'.tr(),
+          'common.loader_sequences.profile_update.step3'.tr(),
+          'common.loader_sequence.delay'.tr(),
+        ];
+      case LoaderType.qrScan:
+        return [
+          'common.loader_sequences.qr_scan.step1'.tr(),
+          'common.loader_sequences.qr_scan.step2'.tr(),
+          'common.loader_sequences.qr_scan.step3'.tr(),
+          'common.loader_sequence.delay'.tr(),
+        ];
+      case LoaderType.logout:
+        return [
+          'common.loader_sequences.logout.step1'.tr(),
+          'common.loader_sequences.logout.step2'.tr(),
+          'common.loader_sequences.logout.step3'.tr(),
+          'common.loader_sequence.delay'.tr(),
+        ];
+      case LoaderType.socialAuth:
+        return [
+          'common.loader_sequences.social_auth.step1'
+              .tr(namedArgs: {'platform': widget.platform ?? 'Social'}),
+          'common.loader_sequences.social_auth.step2'
+              .tr(namedArgs: {'platform': widget.platform ?? 'Social'}),
+          'common.loader_sequences.social_auth.step3'
+              .tr(namedArgs: {'platform': widget.platform ?? 'Social'}),
+          'common.loader_sequence.delay'.tr(),
+        ];
+      default:
+        return [
+          'common.loading'.tr(),
+          'common.loader_sequence.delay'.tr(),
+        ];
     }
   }
 
