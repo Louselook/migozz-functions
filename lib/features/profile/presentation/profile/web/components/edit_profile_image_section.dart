@@ -1,22 +1,17 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:migozz_app/core/color.dart';
-import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 
 class EditProfileImageSection extends StatelessWidget {
   final bool isSmallScreen;
   final double imageSize;
-  final VoidCallback onDeleteAccount;
-  final VoidCallback onSave;
   final String? avatarUrl;
+  final VoidCallback? onEditImage;
 
   const EditProfileImageSection({
     super.key,
     required this.isSmallScreen,
     required this.imageSize,
-    required this.onDeleteAccount,
-    required this.onSave,
     this.avatarUrl,
+    this.onEditImage,
   });
 
   @override
@@ -78,74 +73,77 @@ class EditProfileImageSection extends StatelessWidget {
             Positioned(
               bottom: 25,
               right: 25,
-              child: Container(
-                width: isSmallScreen ? 50 : 58,
-                height: isSmallScreen ? 50 : 58,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFE91E63), Color(0xFF9C27B0)],
+              child: _BouncingButton(
+                onTap: onEditImage,
+                child: Container(
+                  width: isSmallScreen ? 50 : 58,
+                  height: isSmallScreen ? 50 : 58,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFE91E63), Color(0xFF9C27B0)],
+                    ),
+                    border: Border.all(color: Colors.black, width: 3),
                   ),
-                  border: Border.all(color: Colors.black, width: 3),
-                ),
-                child: Icon(
-                  Icons.edit,
-                  size: isSmallScreen ? 24 : 28,
-                  color: Colors.white,
+                  child: Icon(
+                    Icons.edit,
+                    size: isSmallScreen ? 24 : 28,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),
           ],
         ),
-
-        SizedBox(height: isSmallScreen ? 30 : 40),
-
-        // Botón Delete Account
-        GradientButton(
-          onPressed: onDeleteAccount,
-          width: double.infinity,
-          height: isSmallScreen ? 48 : 54,
-          radius: 10,
-          gradient: AppColors.verticalOrangeRed,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.delete_outline,
-                color: Colors.white,
-                size: isSmallScreen ? 18 : 20,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'edit.presentation.deleteAccount.title'.tr(),
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: isSmallScreen ? 13 : 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 12),
-
-        // Botón Save
-        GradientButton(
-          onPressed: onSave,
-          width: double.infinity,
-          height: isSmallScreen ? 48 : 54,
-          radius: 10,
-          child: Text(
-            'buttons.save'.tr(),
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: isSmallScreen ? 13 : 14,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
       ],
+    );
+  }
+}
+
+class _BouncingButton extends StatefulWidget {
+  final Widget child;
+  final VoidCallback? onTap;
+
+  const _BouncingButton({required this.child, this.onTap});
+
+  @override
+  State<_BouncingButton> createState() => _BouncingButtonState();
+}
+
+class _BouncingButtonState extends State<_BouncingButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.9,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _controller.forward(),
+      onTapUp: (_) {
+        _controller.reverse();
+        widget.onTap?.call();
+      },
+      onTapCancel: () => _controller.reverse(),
+      child: ScaleTransition(scale: _scaleAnimation, child: widget.child),
     );
   }
 }

@@ -39,16 +39,16 @@ void initializeBlocProviders() {
 
   // Crear EditCubit después de configurar el callback
   editCubit = EditCubit(locator<UserService>(), authCubit);
-  
+
   // Crear FollowerCubit
   followerCubit = FollowerCubit(locator<FollowerService>());
 }
 
 /// Lista de providers globales de la app - ESTÁTICA, creada UNA SOLA VEZ
 final List<BlocProvider> blocProviders = [
-  BlocProvider<AuthCubit>(create: (_) => authCubit),
-  BlocProvider<LoginCubit>(create: (_) => loginCubit),
-  BlocProvider<RegisterCubit>(create: (_) => registerCubit),
-  BlocProvider<EditCubit>(create: (_) => editCubit),
-  BlocProvider<FollowerCubit>(create: (_) => followerCubit),
+  BlocProvider<AuthCubit>.value(value: authCubit),
+  BlocProvider<LoginCubit>.value(value: loginCubit),
+  BlocProvider<RegisterCubit>.value(value: registerCubit),
+  BlocProvider<EditCubit>.value(value: editCubit),
+  BlocProvider<FollowerCubit>.value(value: followerCubit),
 ];

@@ -75,26 +75,44 @@ class _SocialMediaCard extends StatelessWidget {
 
     final hasProfileImage =
         link.profileImageUrl != null && link.profileImageUrl!.isNotEmpty;
-    final imageProvider = hasProfileImage
-        ? NetworkImage(link.profileImageUrl!)
-        : const AssetImage('assets/images/avatar.webp') as ImageProvider;
-
     return Container(
       height: height,
       decoration: BoxDecoration(
         color: Colors.grey[900],
         borderRadius: BorderRadius.circular(12),
-        image: DecorationImage(
-          image: imageProvider,
-          fit: BoxFit.cover,
-          opacity:
-              0.8, // Slight opacity to make it look cool? Or full. User said "traer la imagen de perfil". Full is better.
-        ),
       ),
       child: Stack(
+        fit: StackFit.expand,
         children: [
-          // If using full opacity, we might need a gradient at bottom for the icon visibility?
-          // But the icon has a bubble background, so it's fine.
+          // Image Layer
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: hasProfileImage
+                ? Image.network(
+                    'https://images.weserv.nl/?url=${Uri.encodeComponent(link.profileImageUrl!)}',
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      debugPrint(
+                        '❌ Error loading social image (proxy): $error',
+                      );
+                      return Image.asset(
+                        'assets/images/avatar.webp',
+                        fit: BoxFit.cover,
+                      );
+                    },
+                  )
+                : Image.asset('assets/images/avatar.webp', fit: BoxFit.cover),
+          ),
+
+          // Overlay for slight darkening (optional, matches previous opacity effect)
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: Colors.black.withValues(alpha: 0.1),
+            ),
+          ),
+
+          // Icon Layer
           Positioned(
             bottom: 8,
             right: 8,
