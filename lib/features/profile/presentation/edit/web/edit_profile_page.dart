@@ -15,6 +15,8 @@ import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_stat
 import 'package:migozz_app/features/profile/presentation/profile/web/components/edit_profile_options.dart';
 import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
 import 'package:migozz_app/features/profile/components/utils/Loader.dart';
+import 'package:migozz_app/core/color.dart';
+import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -134,10 +136,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
       AlertGeneral.show(
         context,
         1,
-        message: "edit.validations.updateLocation"
-            .tr()
-            .replaceAll("\${newLocation.city}", newLocation.city)
-            .replaceAll("\${newLocation.country}", newLocation.country),
+        message: "edit.validations.updateLocation".tr(
+          namedArgs: {'city': newLocation.city, 'country': newLocation.country},
+        ),
       );
     }
   }
@@ -227,7 +228,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       padding: EdgeInsets.only(
                         left: isSmallScreen ? 20 : 40,
                         right: isSmallScreen ? 20 : 40,
-                        top: isSmallScreen ? 150 : 200,
+                        top: isSmallScreen ? 30 : 70,
                         bottom: 20,
                       ),
                       child: isMobile
@@ -239,7 +240,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                   authState,
                                 ),
                                 const SizedBox(height: 30),
-                                _buildRightColumn(context, authState, user),
+                                _buildRightColumn(
+                                  context,
+                                  authState,
+                                  user,
+                                  isSmallScreen,
+                                ),
                               ],
                             )
                           : Row(
@@ -256,6 +262,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                     context,
                                     authState,
                                     user,
+                                    isSmallScreen,
                                   ),
                                 ),
                               ],
@@ -297,12 +304,64 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
         return SizedBox(
           width: containerWidth,
-          child: EditProfileImageSection(
-            isSmallScreen: isSmallScreen,
-            imageSize: imageSize,
-            avatarUrl: imageProfile,
-            onDeleteAccount: () {},
-            onSave: () => _saveProfile(authState.firebaseUser!.uid),
+          child: Column(
+            children: [
+              EditProfileImageSection(
+                isSmallScreen: isSmallScreen,
+                imageSize: imageSize,
+                avatarUrl: imageProfile,
+                onEditImage: () async {
+                  await context.read<EditCubit>().changeAvatar(
+                    authState.firebaseUser!.uid,
+                    context,
+                  );
+                },
+              ),
+              const SizedBox(height: 30),
+              EditProfileOptions(
+                onEditRecord: () {
+                  AlertGeneral.show(
+                    context,
+                    2,
+                    message: "edit.presentation.webRestriction.audio".tr(),
+                  );
+                },
+                onEditInterest: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const EditInterestsScreen(),
+                  ),
+                ),
+                onEditSocials: () {
+                  final userId = authState.firebaseUser?.uid;
+                  if (userId == null) {
+                    AlertGeneral.show(
+                      context,
+                      4,
+                      message: 'edit.validations.errorUserLogin'.tr(),
+                    );
+                    return;
+                  }
+
+                  final editCubit = context.read<EditCubit>();
+                  editCubit.setEditItem(EditItem.socialEcosystem);
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => BlocProvider.value(
+                        value: editCubit,
+                        child: MoreUserDetails(
+                          pageIndicator: 0,
+                          mode: MoreUserDetailsMode.edit,
+                          userId: userId,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
         );
       },
@@ -334,6 +393,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     BuildContext context,
     AuthState authState,
     dynamic user,
+    bool isSmallScreen,
   ) {
     final userId = authState.firebaseUser?.uid;
     final formattedLocation = [
@@ -479,46 +539,52 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ),
         ),
 
-        const SizedBox(height: 30),
-        EditProfileOptions(
-          onEditRecord: () {
-            AlertGeneral.show(
-              context,
-              2,
-              message: "edit.presentation.webRestriction.audio".tr(),
-            );
-          },
-          onEditInterest: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const EditInterestsScreen()),
+        const SizedBox(height: 20),
+
+        // Botón Save
+        GradientButton(
+          onPressed: () => _saveProfile(authState.firebaseUser!.uid),
+          width: double.infinity,
+          height: isSmallScreen ? 48 : 54,
+          radius: 10,
+          child: Text(
+            'buttons.save'.tr(),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: isSmallScreen ? 13 : 14,
+              fontWeight: FontWeight.w600,
+            ),
           ),
-          onEditSocials: () {
-            if (userId == null) {
-              AlertGeneral.show(
-                context,
-                4,
-                message: 'edit.validations.errorUserLogin'.tr(),
-              );
-              return;
-            }
+        ),
 
-            final editCubit = context.read<EditCubit>();
-            editCubit.setEditItem(EditItem.socialEcosystem);
+        const SizedBox(height: 12),
 
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => BlocProvider.value(
-                  value: editCubit,
-                  child: MoreUserDetails(
-                    pageIndicator: 0,
-                    mode: MoreUserDetailsMode.edit,
-                    userId: userId,
-                  ),
+        // Botón Delete Account
+        GradientButton(
+          onPressed: () {},
+          width: double.infinity,
+          height: isSmallScreen ? 48 : 54,
+          radius: 10,
+          gradient: AppColors.verticalOrangeRed,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.delete_outline,
+                color: Colors.white,
+                size: isSmallScreen ? 18 : 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'edit.presentation.deleteAccount.title'.tr(),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: isSmallScreen ? 13 : 14,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-            );
-          },
+            ],
+          ),
         ),
       ],
     );

@@ -17,7 +17,13 @@ class AuthService {
   final PreRegisterService _preRegisterService = PreRegisterService();
 
   // Stream de auth
-  Stream<User?> authStateChanges() => _auth.authStateChanges();
+  Stream<User?> authStateChanges() {
+    // Asegurar persistencia LOCAL habilitada en Web
+    if (kIsWeb) {
+      _auth.setPersistence(Persistence.LOCAL);
+    }
+    return _auth.authStateChanges();
+  }
 
   // Helper para obtener UserDTO
   Future<UserDTO?> _getUserFromFirestore(String uid) async {

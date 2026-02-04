@@ -1,6 +1,6 @@
-import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:migozz_app/core/utils/camera_permission_handler.dart';
 import 'package:migozz_app/features/auth/services/media_service.dart';
 
@@ -43,17 +43,16 @@ class UserService {
   Future<String?> changeAvatar(String userId, BuildContext context) async {
     try {
       // Show bottom sheet to select source
-      final imagePath = await _showImageSourceBottomSheet(context);
+      final xfile = await _showImageSourceBottomSheet(context);
 
-      if (imagePath == null) {
+      if (xfile == null) {
         debugPrint('⚠️ [UserService] No se seleccionó imagen.');
         return null;
       }
 
-      final file = File(imagePath);
       final urls = await _mediaService.uploadFiles(
         uid: userId,
-        files: {MediaType.avatar: file},
+        files: {MediaType.avatar: xfile},
       );
 
       final url = urls[MediaType.avatar];
@@ -71,8 +70,8 @@ class UserService {
   }
 
   /// Show bottom sheet to select image source
-  Future<String?> _showImageSourceBottomSheet(BuildContext context) async {
-    return showModalBottomSheet<String>(
+  Future<XFile?> _showImageSourceBottomSheet(BuildContext context) async {
+    return showModalBottomSheet<XFile>(
       context: context,
       backgroundColor: Colors.grey[900],
       shape: const RoundedRectangleBorder(
@@ -92,12 +91,12 @@ class UserService {
                     style: TextStyle(color: Colors.white),
                   ),
                   onTap: () async {
-                    final path = await CameraPermissionHandler.openCamera(
+                    final file = await CameraPermissionHandler.openCameraXFile(
                       imageQuality: 85,
                       context: context,
                     );
                     if (context.mounted) {
-                      Navigator.pop(context, path);
+                      Navigator.pop(context, file);
                     }
                   },
                 ),
@@ -111,12 +110,12 @@ class UserService {
                     style: TextStyle(color: Colors.white),
                   ),
                   onTap: () async {
-                    final path = await CameraPermissionHandler.openGallery(
+                    final file = await CameraPermissionHandler.openGalleryXFile(
                       imageQuality: 85,
                       context: context,
                     );
                     if (context.mounted) {
-                      Navigator.pop(context, path);
+                      Navigator.pop(context, file);
                     }
                   },
                 ),

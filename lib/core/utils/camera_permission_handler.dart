@@ -14,7 +14,21 @@ class CameraPermissionHandler {
     int imageQuality = 85,
     BuildContext? context,
   }) async {
-    debugPrint('📷 [CameraPermission] Opening camera directly via image_picker...');
+    final file = await openCameraXFile(
+      imageQuality: imageQuality,
+      context: context,
+    );
+    return file?.path;
+  }
+
+  /// Open camera returning XFile for web compatibility
+  static Future<XFile?> openCameraXFile({
+    int imageQuality = 85,
+    BuildContext? context,
+  }) async {
+    debugPrint(
+      '📷 [CameraPermission] Opening camera directly via image_picker...',
+    );
 
     try {
       // image_picker automatically shows native permission dialog on iOS/Android
@@ -25,13 +39,17 @@ class CameraPermissionHandler {
 
       if (photo != null) {
         debugPrint('✅ [CameraPermission] Photo captured: ${photo.path}');
-        return photo.path;
+        return photo;
       } else {
-        debugPrint('⚠️ [CameraPermission] No photo captured (user cancelled or denied)');
+        debugPrint(
+          '⚠️ [CameraPermission] No photo captured (user cancelled or denied)',
+        );
         return null;
       }
     } on PlatformException catch (e) {
-      debugPrint('❌ [CameraPermission] Platform exception: ${e.code} - ${e.message}');
+      debugPrint(
+        '❌ [CameraPermission] Platform exception: ${e.code} - ${e.message}',
+      );
 
       // If permission denied, show settings dialog
       if (e.code == 'camera_access_denied' ||
@@ -66,10 +84,7 @@ class CameraPermissionHandler {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(color: Colors.grey),
-              ),
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
             ),
             TextButton(
               onPressed: () async {
@@ -93,7 +108,21 @@ class CameraPermissionHandler {
     int imageQuality = 85,
     BuildContext? context,
   }) async {
-    debugPrint('📸 [GalleryPermission] Opening gallery directly via image_picker...');
+    final file = await openGalleryXFile(
+      imageQuality: imageQuality,
+      context: context,
+    );
+    return file?.path;
+  }
+
+  /// Open gallery returning XFile for web compatibility
+  static Future<XFile?> openGalleryXFile({
+    int imageQuality = 85,
+    BuildContext? context,
+  }) async {
+    debugPrint(
+      '📸 [GalleryPermission] Opening gallery directly via image_picker...',
+    );
 
     try {
       // image_picker automatically shows native permission dialog on iOS/Android
@@ -104,13 +133,17 @@ class CameraPermissionHandler {
 
       if (image != null) {
         debugPrint('✅ [GalleryPermission] Image selected: ${image.path}');
-        return image.path;
+        return image;
       } else {
-        debugPrint('⚠️ [GalleryPermission] No image selected (user cancelled or denied)');
+        debugPrint(
+          '⚠️ [GalleryPermission] No image selected (user cancelled or denied)',
+        );
         return null;
       }
     } on PlatformException catch (e) {
-      debugPrint('❌ [GalleryPermission] Platform exception: ${e.code} - ${e.message}');
+      debugPrint(
+        '❌ [GalleryPermission] Platform exception: ${e.code} - ${e.message}',
+      );
 
       // If permission denied, show settings dialog
       if (e.code == 'photo_access_denied' ||
@@ -144,10 +177,7 @@ class CameraPermissionHandler {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(color: Colors.grey),
-              ),
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
             ),
             TextButton(
               onPressed: () async {
@@ -165,4 +195,3 @@ class CameraPermissionHandler {
     );
   }
 }
-

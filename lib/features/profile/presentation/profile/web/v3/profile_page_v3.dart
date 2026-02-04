@@ -254,6 +254,7 @@ class _WebProfileContentV3State extends State<WebProfileContentV3> {
           customUrl = data['url']?.toString();
 
           profileImageUrl =
+              data['profile_image_url']?.toString() ??
               data['photoUrl']?.toString() ??
               data['profileUrl']?.toString() ??
               data['avatar']?.toString() ??

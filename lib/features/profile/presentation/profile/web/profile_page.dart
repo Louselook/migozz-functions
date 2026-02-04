@@ -74,7 +74,8 @@ class WebProfileContent extends StatelessWidget {
                               name: user.displayName,
                               displayName: user.username,
                               communityCount: totalFollowers.toString(),
-                              communityName: 'profile.presentation.community'.tr(),
+                              communityName: 'profile.presentation.community'
+                                  .tr(),
                               avatarUrl: user.avatarUrl,
                               voiceNoteUrl: user.voiceNoteUrl ?? '',
                               tutorialKeys: tutorialKeys,
@@ -114,7 +115,7 @@ class WebProfileContent extends StatelessWidget {
   }
 
   // Calcular total de seguidores
-  
+
   int _calculateTotalFollowers(List<Map<String, dynamic>>? socialEcosystem) {
     if (socialEcosystem == null || socialEcosystem.isEmpty) return 0;
     int total = 0;
@@ -133,9 +134,8 @@ class WebProfileContent extends StatelessWidget {
     return total;
   }
 
-  
   // Construir enlaces de redes
-  
+
   List<SocialLink> _buildSocialLinks(
     List<Map<String, dynamic>>? socialEcosystem,
     String username,
@@ -181,9 +181,8 @@ class WebProfileContent extends StatelessWidget {
     return null;
   }
 
-  
   // Generar URL + ícono por red
-  
+
   Map<String, String>? _getSocialInfo(
     String platform,
     String username,
