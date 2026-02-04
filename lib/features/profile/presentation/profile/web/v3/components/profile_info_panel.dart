@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/features/profile/components/social_rail.dart';
+import 'package:migozz_app/features/profile/presentation/profile/modules/share_profile.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:go_router/go_router.dart';
 
@@ -382,8 +383,13 @@ class ProfileInfoPanel extends StatelessWidget {
                       icon: Icons.qr_code_scanner,
                       label: 'Scan QR',
                       onTap: () {
-                        // Action to scan QR code
-                        Navigator.pushNamed(context, '/qr_scan'); // or similar
+                        // Navigate to ProfileQR Screen
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ProfileQrScreen(),
+                          ),
+                        );
                       },
                     ),
                     const SizedBox(width: 8),

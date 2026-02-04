@@ -316,36 +316,6 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
     }
   }
 
-  // Toggle between modes
-  void _toggleMode() {
-    setState(() {
-      switch (_currentMode) {
-        case BackgroundMode.emoji:
-          _currentMode = BackgroundMode.colors;
-          break;
-        case BackgroundMode.colors:
-          _currentMode = BackgroundMode.image;
-          break;
-        case BackgroundMode.image:
-          _currentMode = BackgroundMode.emoji;
-          break;
-      }
-    });
-    _saveMode(_currentMode);
-  }
-
-  // Get button label based on current mode
-  String _getButtonLabel() {
-    switch (_currentMode) {
-      case BackgroundMode.emoji:
-        return 'share.customization.emoji'.tr();
-      case BackgroundMode.colors:
-        return 'share.customization.colors'.tr();
-      case BackgroundMode.image:
-        return 'share.customization.image'.tr();
-    }
-  }
-
   // Handle background tap based on current mode
   void _handleBackgroundTap() {
     switch (_currentMode) {
@@ -973,49 +943,69 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
                                         size: 256,
                                       ),
                                       // Center logo
-                                     Positioned(top: 17,right: 17,
-                                       child: Container(
-                                         width: 45,
-                                         height: 45,
-
-                                         decoration: BoxDecoration(
-                                           color: Colors.white,border: Border.all(color: _qrColor,width: 2),
-
-                                         ),
-                                         child: Image.asset(
-                                           'assets/icons/Migozz_Icon.png',
-                                           width: 35,
-                                           height: 35,color:  _qrColor,
-                                         ),
-                                       ),
-                                     ),Positioned(top: 17,left: 17,
+                                      Positioned(
+                                        top: 17,
+                                        right: 17,
                                         child: Container(
                                           width: 45,
                                           height: 45,
 
                                           decoration: BoxDecoration(
-                                            color: Colors.white,border: Border.all(color: _qrColor,width: 2),
-
+                                            color: Colors.white,
+                                            border: Border.all(
+                                              color: _qrColor,
+                                              width: 2,
+                                            ),
                                           ),
                                           child: Image.asset(
                                             'assets/icons/Migozz_Icon.png',
                                             width: 35,
-                                            height: 35,color:  _qrColor,
+                                            height: 35,
+                                            color: _qrColor,
                                           ),
-                                        )
-                                      ),Positioned(bottom: 17,left: 17,
-                                        child: Container(
-                                          width: 45,
-                                          height: 45,
-
-                                          decoration: BoxDecoration(
-                                          color: Colors.white,border: Border.all(color: _qrColor,width: 2),
-
                                         ),
+                                      ),
+                                      Positioned(
+                                        top: 17,
+                                        left: 17,
+                                        child: Container(
+                                          width: 45,
+                                          height: 45,
+
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            border: Border.all(
+                                              color: _qrColor,
+                                              width: 2,
+                                            ),
+                                          ),
                                           child: Image.asset(
                                             'assets/icons/Migozz_Icon.png',
                                             width: 35,
-                                            height: 35,color:  _qrColor,
+                                            height: 35,
+                                            color: _qrColor,
+                                          ),
+                                        ),
+                                      ),
+                                      Positioned(
+                                        bottom: 17,
+                                        left: 17,
+                                        child: Container(
+                                          width: 45,
+                                          height: 45,
+
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            border: Border.all(
+                                              color: _qrColor,
+                                              width: 2,
+                                            ),
+                                          ),
+                                          child: Image.asset(
+                                            'assets/icons/Migozz_Icon.png',
+                                            width: 35,
+                                            height: 35,
+                                            color: _qrColor,
                                           ),
                                         ),
                                       ),
@@ -1095,25 +1085,40 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
                   icon: Icon(Icons.save_alt, color: Colors.white),
                   onPressed: _captureAndSaveScreenshot,
                 ),
-                GestureDetector(
-                  onTap: _toggleMode,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 5,
+                // Options buttons
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _CustomOptionButton(
+                      icon: Icons.palette_outlined,
+                      label: 'Colors',
+                      isSelected: _currentMode == BackgroundMode.colors,
+                      onTap: () {
+                        setState(() => _currentMode = BackgroundMode.colors);
+                        _showColorPicker();
+                      },
                     ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
+                    const SizedBox(width: 8),
+                    _CustomOptionButton(
+                      icon: Icons.emoji_emotions_outlined,
+                      label: 'Emojis',
+                      isSelected: _currentMode == BackgroundMode.emoji,
+                      onTap: () {
+                        setState(() => _currentMode = BackgroundMode.emoji);
+                        _showEmojiPicker();
+                      },
                     ),
-                    child: Text(
-                      _getButtonLabel(),
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    const SizedBox(width: 8),
+                    _CustomOptionButton(
+                      icon: Icons.image_outlined,
+                      label: 'Image',
+                      isSelected: _currentMode == BackgroundMode.image,
+                      onTap: () {
+                        setState(() => _currentMode = BackgroundMode.image);
+                        _showImagePicker();
+                      },
                     ),
-                  ),
+                  ],
                 ),
                 IconButton(
                   icon: const Icon(Icons.close, color: Colors.white),
@@ -1137,4 +1142,39 @@ class _ProfileData {
     required this.displayName,
     required this.link,
   });
+}
+
+class _CustomOptionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _CustomOptionButton({
+    required this.icon,
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? Colors.white
+              : Colors.white.withValues(alpha: 0.3),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(
+          icon,
+          color: isSelected ? Colors.black : Colors.white,
+          size: 20,
+        ),
+      ),
+    );
+  }
 }
