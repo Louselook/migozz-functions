@@ -281,6 +281,25 @@ class AuthCubit extends Cubit<AuthState> {
       _isLoginInProgress = true; // ✅ Marcar login en progreso
       final result = await _authUseCases.loginGoogle.run();
       debugPrint('✅ [AuthCubit] Login exitoso: ${result.user}');
+
+      // ✅ NUEVO: Forzar carga del perfil después del login exitoso
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null && result.user != null) {
+        debugPrint('🔄 [AuthCubit] Forzando carga de perfil post-login...');
+        // Pequeña espera para asegurar que Firestore tenga el documento
+        await Future.delayed(const Duration(milliseconds: 300));
+
+        final userProfile = await _loadUserProfileWithRetry(currentUser.uid);
+        emit(
+          AuthState.authenticated(
+            firebaseUser: currentUser,
+            userProfile: userProfile,
+          ),
+        );
+        _setupUserProfileListener(currentUser.uid);
+        debugPrint('✅ [AuthCubit] Estado authenticated emitido post-login');
+      }
+
       return result;
     } catch (e) {
       debugPrint('❌ [AuthCubit] Error en login con Google: $e');
@@ -297,6 +316,24 @@ class AuthCubit extends Cubit<AuthState> {
       _isLoginInProgress = true; // ✅ Marcar login en progreso
       final result = await _authUseCases.loginApple.run();
       debugPrint('✅ [AuthCubit] Login exitoso: ${result.user}');
+
+      // ✅ NUEVO: Forzar carga del perfil después del login exitoso
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null && result.user != null) {
+        debugPrint('🔄 [AuthCubit] Forzando carga de perfil post-login...');
+        await Future.delayed(const Duration(milliseconds: 300));
+
+        final userProfile = await _loadUserProfileWithRetry(currentUser.uid);
+        emit(
+          AuthState.authenticated(
+            firebaseUser: currentUser,
+            userProfile: userProfile,
+          ),
+        );
+        _setupUserProfileListener(currentUser.uid);
+        debugPrint('✅ [AuthCubit] Estado authenticated emitido post-login');
+      }
+
       return result;
     } catch (e) {
       debugPrint('❌ [AuthCubit] Error en login con Apple: $e');
