@@ -395,7 +395,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     dynamic user,
     bool isSmallScreen,
   ) {
-    final userId = authState.firebaseUser?.uid;
     final formattedLocation = [
       if (user.location.city.isNotEmpty) user.location.city,
       if (user.location.country.isNotEmpty) user.location.country,

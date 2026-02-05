@@ -38,17 +38,18 @@ class NotificationService {
   StreamSubscription<QuerySnapshot>? _notificationListener;
 
   String? _currentUserId;
-  String? _currentUserDocId;
   Function(String senderId, String chatRoomId)? _onNotificationTap;
 
   // Notification channel constants
   static const String _chatChannelKey = 'chat_notifications';
   static const String _chatChannelName = 'Chat Notifications';
-  static const String _chatChannelDescription = 'Notifications for new chat messages';
+  static const String _chatChannelDescription =
+      'Notifications for new chat messages';
 
   static const String _followChannelKey = 'follow_notifications';
   static const String _followChannelName = 'Follow Notifications';
-  static const String _followChannelDescription = 'Notifications when someone follows you';
+  static const String _followChannelDescription =
+      'Notifications when someone follows you';
 
   /// Initialize the notification service
   Future<void> initialize({
@@ -135,21 +136,30 @@ class NotificationService {
         sound: true,
       );
 
-      debugPrint('🔔 [NotificationService] FCM permission status: ${settings.authorizationStatus}');
+      debugPrint(
+        '🔔 [NotificationService] FCM permission status: ${settings.authorizationStatus}',
+      );
 
       if (settings.authorizationStatus == AuthorizationStatus.denied) {
-        debugPrint('⚠️ [NotificationService] Notification permission denied by user');
-      } else if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+        debugPrint(
+          '⚠️ [NotificationService] Notification permission denied by user',
+        );
+      } else if (settings.authorizationStatus ==
+          AuthorizationStatus.authorized) {
         debugPrint('✅ [NotificationService] Notification permission granted');
       }
 
       // Request awesome_notifications permissions
       final isAllowed = await AwesomeNotifications().isNotificationAllowed();
       if (!isAllowed) {
-        debugPrint('🔔 [NotificationService] Requesting awesome_notifications permission');
+        debugPrint(
+          '🔔 [NotificationService] Requesting awesome_notifications permission',
+        );
         await AwesomeNotifications().requestPermissionToSendNotifications();
       } else {
-        debugPrint('✅ [NotificationService] awesome_notifications already allowed');
+        debugPrint(
+          '✅ [NotificationService] awesome_notifications already allowed',
+        );
       }
     } catch (e) {
       debugPrint('❌ [NotificationService] Error requesting permissions: $e');
@@ -169,16 +179,26 @@ class NotificationService {
       } else {
         debugPrint('🔔 [NotificationService] Getting FCM token...');
         token = await _messaging.getToken();
-        debugPrint('🔔 [NotificationService] FCM Token result: ${token != null ? "received" : "null"}');
+        debugPrint(
+          '🔔 [NotificationService] FCM Token result: ${token != null ? "received" : "null"}',
+        );
       }
 
       if (token != null) {
-        debugPrint('🔔 [NotificationService] FCM Token: ${token.substring(0, 20)}...');
-        debugPrint('🔔 [NotificationService] Full token length: ${token.length}');
+        debugPrint(
+          '🔔 [NotificationService] FCM Token: ${token.substring(0, 20)}...',
+        );
+        debugPrint(
+          '🔔 [NotificationService] Full token length: ${token.length}',
+        );
         await _saveFCMToken(token);
       } else {
-        debugPrint('⚠️ [NotificationService] FCM Token is null - push notifications will not work');
-        debugPrint('⚠️ [NotificationService] This may happen on iOS simulator or if APNs is not configured');
+        debugPrint(
+          '⚠️ [NotificationService] FCM Token is null - push notifications will not work',
+        );
+        debugPrint(
+          '⚠️ [NotificationService] This may happen on iOS simulator or if APNs is not configured',
+        );
       }
 
       // Listen for token refresh
@@ -195,11 +215,15 @@ class NotificationService {
   /// Save FCM token to Firestore
   Future<void> _saveFCMToken(String token) async {
     if (_currentUserId == null) {
-      debugPrint('⚠️ [NotificationService] Cannot save FCM token - currentUserId is null');
+      debugPrint(
+        '⚠️ [NotificationService] Cannot save FCM token - currentUserId is null',
+      );
       return;
     }
 
-    debugPrint('🔔 [NotificationService] Saving FCM token for user: $_currentUserId');
+    debugPrint(
+      '🔔 [NotificationService] Saving FCM token for user: $_currentUserId',
+    );
 
     try {
       // _currentUserId is an email, so we need to query by email to find the user document
@@ -209,10 +233,14 @@ class NotificationService {
           .limit(1)
           .get();
 
-      debugPrint('🔔 [NotificationService] Query returned ${querySnapshot.docs.length} documents');
+      debugPrint(
+        '🔔 [NotificationService] Query returned ${querySnapshot.docs.length} documents',
+      );
 
       if (querySnapshot.docs.isEmpty) {
-        debugPrint('❌ [NotificationService] User not found for email: $_currentUserId');
+        debugPrint(
+          '❌ [NotificationService] User not found for email: $_currentUserId',
+        );
         return;
       }
 
@@ -224,7 +252,9 @@ class NotificationService {
         'lastFcmToken': token,
         'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
       });
-      debugPrint('✅ [NotificationService] FCM token saved to Firestore for user ${userDoc.id}');
+      debugPrint(
+        '✅ [NotificationService] FCM token saved to Firestore for user ${userDoc.id}',
+      );
     } catch (e, stackTrace) {
       debugPrint('❌ [NotificationService] Error saving FCM token: $e');
       debugPrint('❌ [NotificationService] Stack trace: $stackTrace');
@@ -244,7 +274,9 @@ class NotificationService {
     });
 
     // Handle when app is opened from background via notification
-    _messageOpenedSubscription = FirebaseMessaging.onMessageOpenedApp.listen((message) {
+    _messageOpenedSubscription = FirebaseMessaging.onMessageOpenedApp.listen((
+      message,
+    ) {
       debugPrint('🔔 [FCM] App opened from notification: ${message.messageId}');
       _handleNotificationTap(message);
     });
@@ -274,14 +306,17 @@ class NotificationService {
           .get();
 
       if (querySnapshot.docs.isEmpty) {
-        debugPrint('❌ [NotificationService] User not found for Firestore listener');
+        debugPrint(
+          '❌ [NotificationService] User not found for Firestore listener',
+        );
         return;
       }
 
       final userDocId = querySnapshot.docs.first.id;
-      _currentUserDocId = userDocId;
 
-      debugPrint('🔔 [NotificationService] Setting up Firestore listener for user: $userDocId');
+      debugPrint(
+        '🔔 [NotificationService] Setting up Firestore listener for user: $userDocId',
+      );
 
       // Listen for new notifications
       // Note: Using simple orderBy to avoid needing composite index
@@ -292,28 +327,41 @@ class NotificationService {
           .orderBy('timestamp', descending: true)
           .limit(20)
           .snapshots()
-          .listen((snapshot) {
-        debugPrint('🔔 [NotificationService] Firestore notification snapshot: ${snapshot.docs.length} docs, ${snapshot.docChanges.length} changes');
+          .listen(
+            (snapshot) {
+              debugPrint(
+                '🔔 [NotificationService] Firestore notification snapshot: ${snapshot.docs.length} docs, ${snapshot.docChanges.length} changes',
+              );
 
-        for (var change in snapshot.docChanges) {
-          if (change.type == DocumentChangeType.added) {
-            final data = change.doc.data();
-            final isRead = data?['isRead'] as bool? ?? false;
+              for (var change in snapshot.docChanges) {
+                if (change.type == DocumentChangeType.added) {
+                  final data = change.doc.data();
+                  final isRead = data?['isRead'] as bool? ?? false;
 
-            // Only process unread notifications
-            if (!isRead) {
-              debugPrint('🔔 [NotificationService] New unread notification document detected');
-              _handleFirestoreNotification(change.doc);
-            }
-          }
-        }
-      }, onError: (error) {
-        debugPrint('❌ [NotificationService] Error in Firestore listener: $error');
-      });
+                  // Only process unread notifications
+                  if (!isRead) {
+                    debugPrint(
+                      '🔔 [NotificationService] New unread notification document detected',
+                    );
+                    _handleFirestoreNotification(change.doc);
+                  }
+                }
+              }
+            },
+            onError: (error) {
+              debugPrint(
+                '❌ [NotificationService] Error in Firestore listener: $error',
+              );
+            },
+          );
 
-      debugPrint('✅ [NotificationService] Firestore notification listener set up');
+      debugPrint(
+        '✅ [NotificationService] Firestore notification listener set up',
+      );
     } catch (e) {
-      debugPrint('❌ [NotificationService] Error setting up Firestore listener: $e');
+      debugPrint(
+        '❌ [NotificationService] Error setting up Firestore listener: $e',
+      );
     }
   }
 
@@ -327,11 +375,15 @@ class NotificationService {
       final fromUserId = data['fromUserId'] as String?;
       final pushSent = data['pushSent'] as bool? ?? false;
 
-      debugPrint('🔔 [NotificationService] Handling Firestore notification: type=$type, from=$fromUserId, pushSent=$pushSent');
+      debugPrint(
+        '🔔 [NotificationService] Handling Firestore notification: type=$type, from=$fromUserId, pushSent=$pushSent',
+      );
 
       // Skip if push was already sent by Cloud Function
       if (pushSent) {
-        debugPrint('🔔 [NotificationService] Push already sent by Cloud Function, skipping local notification');
+        debugPrint(
+          '🔔 [NotificationService] Push already sent by Cloud Function, skipping local notification',
+        );
         // Mark as read to prevent reprocessing
         await doc.reference.update({'isRead': true});
         return;
@@ -339,19 +391,27 @@ class NotificationService {
 
       if (type == 'follow' && fromUserId != null) {
         // Get follower info
-        final followerDoc = await _firestore.collection('users').doc(fromUserId).get();
+        final followerDoc = await _firestore
+            .collection('users')
+            .doc(fromUserId)
+            .get();
         if (!followerDoc.exists) {
-          debugPrint('⚠️ [NotificationService] Follower user not found: $fromUserId');
+          debugPrint(
+            '⚠️ [NotificationService] Follower user not found: $fromUserId',
+          );
           return;
         }
 
         final followerData = followerDoc.data()!;
-        final followerName = followerData['displayName']?.toString() ??
-                            followerData['username']?.toString() ??
-                            'Someone';
+        final followerName =
+            followerData['displayName']?.toString() ??
+            followerData['username']?.toString() ??
+            'Someone';
         final followerAvatar = followerData['avatarUrl']?.toString();
 
-        debugPrint('🔔 [NotificationService] Follower info: name=$followerName');
+        debugPrint(
+          '🔔 [NotificationService] Follower info: name=$followerName',
+        );
 
         // Show the notification (this also saves to history)
         await showFollowNotification(
@@ -363,10 +423,14 @@ class NotificationService {
         // Mark as read in Firestore to prevent duplicate notifications
         await doc.reference.update({'isRead': true});
 
-        debugPrint('✅ [NotificationService] Follow notification processed for $followerName');
+        debugPrint(
+          '✅ [NotificationService] Follow notification processed for $followerName',
+        );
       }
     } catch (e) {
-      debugPrint('❌ [NotificationService] Error handling Firestore notification: $e');
+      debugPrint(
+        '❌ [NotificationService] Error handling Firestore notification: $e',
+      );
     }
   }
 
@@ -377,11 +441,14 @@ class NotificationService {
     final chatRoomId = data['chatRoomId'] as String?;
 
     // Check if we should show the notification
-    if (senderId != null && !_activeChatManager.shouldShowNotification(
-      senderId: senderId,
-      chatRoomId: chatRoomId,
-    )) {
-      debugPrint('🔕 [NotificationService] Notification suppressed - user in active chat');
+    if (senderId != null &&
+        !_activeChatManager.shouldShowNotification(
+          senderId: senderId,
+          chatRoomId: chatRoomId,
+        )) {
+      debugPrint(
+        '🔕 [NotificationService] Notification suppressed - user in active chat',
+      );
       return;
     }
 
@@ -514,7 +581,9 @@ class NotificationService {
       notificationType: NotificationType.follow,
     );
 
-    debugPrint('🔔 [NotificationService] Follow notification shown for $followerName');
+    debugPrint(
+      '🔔 [NotificationService] Follow notification shown for $followerName',
+    );
   }
 
   /// Save notification to local history
@@ -529,7 +598,8 @@ class NotificationService {
   }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final notificationsJson = prefs.getStringList('notifications_history') ?? [];
+      final notificationsJson =
+          prefs.getStringList('notifications_history') ?? [];
 
       final notification = ChatNotificationModel(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -553,7 +623,9 @@ class NotificationService {
 
       await prefs.setStringList('notifications_history', notificationsJson);
     } catch (e) {
-      debugPrint('❌ [NotificationService] Error saving notification to history: $e');
+      debugPrint(
+        '❌ [NotificationService] Error saving notification to history: $e',
+      );
     }
   }
 
@@ -561,13 +633,16 @@ class NotificationService {
   Future<List<ChatNotificationModel>> getNotificationHistory() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final notificationsJson = prefs.getStringList('notifications_history') ?? [];
+      final notificationsJson =
+          prefs.getStringList('notifications_history') ?? [];
 
       return notificationsJson
           .map((json) => ChatNotificationModel.fromJson(jsonDecode(json)))
           .toList();
     } catch (e) {
-      debugPrint('❌ [NotificationService] Error getting notification history: $e');
+      debugPrint(
+        '❌ [NotificationService] Error getting notification history: $e',
+      );
       return [];
     }
   }
@@ -576,7 +651,8 @@ class NotificationService {
   Future<void> markNotificationAsRead(String notificationId) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final notificationsJson = prefs.getStringList('notifications_history') ?? [];
+      final notificationsJson =
+          prefs.getStringList('notifications_history') ?? [];
 
       final updatedNotifications = notificationsJson.map((json) {
         final notification = ChatNotificationModel.fromJson(jsonDecode(json));
@@ -588,7 +664,9 @@ class NotificationService {
 
       await prefs.setStringList('notifications_history', updatedNotifications);
     } catch (e) {
-      debugPrint('❌ [NotificationService] Error marking notification as read: $e');
+      debugPrint(
+        '❌ [NotificationService] Error marking notification as read: $e',
+      );
     }
   }
 
@@ -660,7 +738,9 @@ Future<void> _onActionReceivedMethod(ReceivedAction receivedAction) async {
         // Store the navigation data for when the app is ready
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('pending_notification_navigation', payloadData);
-        debugPrint('🔔 [Notification] Stored pending navigation: senderId=$senderId, chatRoomId=$chatRoomId');
+        debugPrint(
+          '🔔 [Notification] Stored pending navigation: senderId=$senderId, chatRoomId=$chatRoomId',
+        );
       }
     } catch (e) {
       debugPrint('❌ [Notification] Error parsing payload: $e');
@@ -669,17 +749,22 @@ Future<void> _onActionReceivedMethod(ReceivedAction receivedAction) async {
 }
 
 @pragma('vm:entry-point')
-Future<void> _onNotificationCreatedMethod(ReceivedNotification receivedNotification) async {
+Future<void> _onNotificationCreatedMethod(
+  ReceivedNotification receivedNotification,
+) async {
   debugPrint('🔔 [Notification] Created: ${receivedNotification.id}');
 }
 
 @pragma('vm:entry-point')
-Future<void> _onNotificationDisplayedMethod(ReceivedNotification receivedNotification) async {
+Future<void> _onNotificationDisplayedMethod(
+  ReceivedNotification receivedNotification,
+) async {
   debugPrint('🔔 [Notification] Displayed: ${receivedNotification.id}');
 }
 
 @pragma('vm:entry-point')
-Future<void> _onDismissActionReceivedMethod(ReceivedAction receivedAction) async {
+Future<void> _onDismissActionReceivedMethod(
+  ReceivedAction receivedAction,
+) async {
   debugPrint('🔔 [Notification] Dismissed: ${receivedAction.id}');
 }
-

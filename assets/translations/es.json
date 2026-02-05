@@ -238,6 +238,10 @@
     }
   },
   "profile": {
+    "donation": {
+      "title": "¡Próximamente! 🚀",
+      "message": "Estamos dando los últimos toques a las herramientas de monetización para tu ecosistema. Esta función estará disponible en la próxima actualización. ¡Prepárate para empezar a generar ingresos!"
+    },
     "sendGifts": {
       "title": "Enviar Regalos",
       "comingSoon": "Próximamente",

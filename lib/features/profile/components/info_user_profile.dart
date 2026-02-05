@@ -42,6 +42,9 @@ class InfoUserProfile extends StatefulWidget {
   final String? contactEmail;
   final String? contactWebsite;
 
+  /// URL para donación (PayPal, etc.)
+  final String? donationUrl;
+
   /// Lista de redes sociales para mostrar en la animación
   final List<SocialNetworkData> socialNetworks;
 
@@ -60,6 +63,7 @@ class InfoUserProfile extends StatefulWidget {
     this.onMessageTap,
     this.contactEmail,
     this.contactWebsite,
+    this.donationUrl,
     this.socialNetworks = const [],
   });
 
@@ -67,96 +71,11 @@ class InfoUserProfile extends StatefulWidget {
   State<InfoUserProfile> createState() => _InfoUserProfileState();
 }
 
-class _BelowTooltipBubble extends StatelessWidget {
-  final double width;
-  final double arrowCenterX;
-  final Widget child;
-
-  const _BelowTooltipBubble({
-    required this.width,
-    required this.arrowCenterX,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    const arrowHeight = 10.0;
-    const arrowWidth = 18.0;
-    final backgroundColor = Colors.black.withValues(alpha: 0.78);
-
-    final arrowLeft = (arrowCenterX - (arrowWidth / 2)).clamp(
-      12.0,
-      width - 12.0 - arrowWidth,
-    );
-
-    return SizedBox(
-      width: width,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Container(
-            margin: const EdgeInsets.only(top: arrowHeight),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: backgroundColor,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.10),
-                width: 1,
-              ),
-            ),
-            child: child,
-          ),
-          Positioned(
-            top: 0,
-            left: arrowLeft.toDouble(),
-            child: CustomPaint(
-              size: const Size(arrowWidth, arrowHeight),
-              painter: _UpTrianglePainter(color: backgroundColor),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _UpTrianglePainter extends CustomPainter {
-  final Color color;
-
-  const _UpTrianglePainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-
-    // Tip at top, base at bottom
-    final path = Path()
-      ..moveTo(size.width / 2, 0)
-      ..lineTo(0, size.height)
-      ..lineTo(size.width, size.height)
-      ..close();
-
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _UpTrianglePainter oldDelegate) {
-    return oldDelegate.color != color;
-  }
-}
-
 class _InfoUserProfileState extends State<InfoUserProfile>
     with SingleTickerProviderStateMixin {
   final AudioPlayer _player = AudioPlayer();
   bool _isPlaying = false;
   bool _isLoading = false;
-
-  final GlobalKey _sendGiftButtonKey = GlobalKey();
-  OverlayEntry? _sendGiftTooltipOverlay;
-  Timer? _sendGiftTooltipAutoHideTimer;
 
   /// Índice actual para la animación de redes sociales
   /// -1 = community (total), 0+ = índice de red social
@@ -196,129 +115,9 @@ class _InfoUserProfileState extends State<InfoUserProfile>
 
   @override
   void dispose() {
-    _hideSendGiftTooltip();
     _fadeController.dispose();
     _player.dispose();
     super.dispose();
-  }
-
-  void _hideSendGiftTooltip() {
-    _sendGiftTooltipAutoHideTimer?.cancel();
-    _sendGiftTooltipAutoHideTimer = null;
-    _sendGiftTooltipOverlay?.remove();
-    _sendGiftTooltipOverlay = null;
-  }
-
-  void _toggleSendGiftTooltip() {
-    if (_sendGiftTooltipOverlay != null) {
-      _hideSendGiftTooltip();
-      return;
-    }
-
-    final overlayState = Overlay.maybeOf(context);
-    if (overlayState == null) return;
-
-    final renderBox =
-        _sendGiftButtonKey.currentContext?.findRenderObject() as RenderBox?;
-    if (renderBox == null) return;
-
-    final buttonSize = renderBox.size;
-    final buttonOffset = renderBox.localToGlobal(Offset.zero);
-    final buttonCenter = Offset(
-      buttonOffset.dx + (buttonSize.width / 2),
-      buttonOffset.dy + (buttonSize.height / 2),
-    );
-
-    final mediaQuery = MediaQuery.of(context);
-    final screenWidth = mediaQuery.size.width;
-
-    const screenPadding = 16.0;
-    const bubbleMaxWidth = 360.0;
-    const gapBelowButton = 10.0;
-    const arrowWidth = 18.0;
-
-    final bubbleWidth = (screenWidth - (screenPadding * 2)).clamp(
-      0.0,
-      bubbleMaxWidth,
-    );
-
-    // Measure text height so we can position bubble vertically centered to the button.
-    final tooltipSpan = TextSpan(
-      style: const TextStyle(color: Colors.white, fontSize: 13, height: 1.3),
-      children: [
-        TextSpan(
-          text: 'profile.sendGifts.tooltipTitle'.tr(),
-          style: const TextStyle(fontWeight: FontWeight.w800),
-        ),
-        TextSpan(
-          text: 'profile.sendGifts.tooltipMessage'.tr(),
-          style: const TextStyle(fontWeight: FontWeight.w500),
-        ),
-      ],
-    );
-
-    final textPainter = TextPainter(
-      text: tooltipSpan,
-      textDirection: ui.TextDirection.ltr,
-      maxLines: null,
-    )..layout(maxWidth: (bubbleWidth - arrowWidth - 28).clamp(0.0, bubbleWidth));
-
-    final bubbleHeight = textPainter.height + 24; // vertical padding
-    final screenHeight = mediaQuery.size.height;
-
-    // Bubble should appear BELOW the button.
-    final preferredLeft = buttonCenter.dx - (bubbleWidth / 2);
-    final bubbleLeft = preferredLeft
-      .clamp(screenPadding, screenWidth - bubbleWidth - screenPadding)
-      .toDouble();
-
-    final preferredTop = buttonOffset.dy + buttonSize.height + gapBelowButton;
-    final maxTop =
-      screenHeight - mediaQuery.padding.bottom - 8.0 - bubbleHeight;
-    final bubbleTop = preferredTop
-      .clamp(mediaQuery.padding.top + 8.0, maxTop)
-      .toDouble();
-
-    final arrowCenterX = (buttonCenter.dx - bubbleLeft)
-      .clamp(18.0, bubbleWidth - 18.0)
-      .toDouble();
-
-    _sendGiftTooltipOverlay = OverlayEntry(
-      builder: (context) {
-        return Stack(
-          children: [
-            Positioned.fill(
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: _hideSendGiftTooltip,
-                child: const SizedBox.expand(),
-              ),
-            ),
-            Positioned(
-              left: bubbleLeft,
-              top: bubbleTop,
-              child: Material(
-                color: Colors.transparent,
-                child: _BelowTooltipBubble(
-                  width: bubbleWidth,
-                  arrowCenterX: arrowCenterX,
-                  child: RichText(text: tooltipSpan),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-
-    overlayState.insert(_sendGiftTooltipOverlay!);
-
-    // Auto-hide after 30 seconds if the user doesn't dismiss it.
-    _sendGiftTooltipAutoHideTimer?.cancel();
-    _sendGiftTooltipAutoHideTimer = Timer(const Duration(seconds: 30), () {
-      if (!mounted) return;
-      _hideSendGiftTooltip();
-    });
   }
 
   /// Maneja el tap en community para rotar entre redes sociales
@@ -573,24 +372,6 @@ class _InfoUserProfileState extends State<InfoUserProfile>
     );
   }
 
-  Widget _buildSendGiftButton() {
-    return GestureDetector(
-      key: _sendGiftButtonKey,
-      onTap: _toggleSendGiftTooltip,
-      child: SizedBox(
-        width: 28,
-        height: 28,
-        child: Center(
-          child: SvgPicture.asset(
-            'assets/icons/Gift_Icon.svg',
-            width: 22,
-            height: 22,
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildNameHeader() {
     const nameStyle = TextStyle(
       color: Colors.white,
@@ -603,18 +384,15 @@ class _InfoUserProfileState extends State<InfoUserProfile>
       builder: (context, constraints) {
         const contactWidth = 22.0;
         const playSize = 20.0;
-        const giftSize = 28.0;
         const gap = 8.0;
-        const giftGap = 10.0;
         const playGap = 12.0;
 
-        final reservedLeft = widget.isOwnProfile
-            ? 0.0
-            : (contactWidth + gap + giftSize + giftGap);
+        final reservedLeft = widget.isOwnProfile ? 0.0 : (contactWidth + gap);
         final reservedRight = playGap + playSize;
-        final nameMaxWidth = (constraints.maxWidth - reservedLeft - reservedRight)
-            .clamp(0.0, constraints.maxWidth)
-            .toDouble();
+        final nameMaxWidth =
+            (constraints.maxWidth - reservedLeft - reservedRight)
+                .clamp(0.0, constraints.maxWidth)
+                .toDouble();
 
         final painter = TextPainter(
           text: TextSpan(text: widget.name, style: nameStyle),
@@ -628,11 +406,8 @@ class _InfoUserProfileState extends State<InfoUserProfile>
         final nameStart = centerX - (textWidth / 2);
         final nameEnd = centerX + (textWidth / 2);
 
-        final contactX = (nameStart - giftGap - giftSize - gap - contactWidth)
+        final contactX = (nameStart - gap - contactWidth)
             .clamp(0.0, constraints.maxWidth - contactWidth)
-            .toDouble();
-        final giftX = (nameStart - giftGap - giftSize)
-            .clamp(0.0, constraints.maxWidth - giftSize)
             .toDouble();
         final playX = (nameEnd + playGap)
             .clamp(0.0, constraints.maxWidth - playSize)
@@ -656,15 +431,7 @@ class _InfoUserProfileState extends State<InfoUserProfile>
                 ),
               ),
               if (!widget.isOwnProfile)
-                Positioned(
-                  left: contactX,
-                  child: _buildContactMenu(),
-                ),
-              if (!widget.isOwnProfile)
-                Positioned(
-                  left: giftX,
-                  child: _buildSendGiftButton(),
-                ),
+                Positioned(left: contactX, child: _buildContactMenu()),
               Positioned(
                 left: playX,
                 child: GestureDetector(
@@ -690,9 +457,7 @@ class _InfoUserProfileState extends State<InfoUserProfile>
                             ),
                           )
                         : Icon(
-                            _isPlaying
-                                ? Icons.pause
-                                : Icons.play_arrow_rounded,
+                            _isPlaying ? Icons.pause : Icons.play_arrow_rounded,
                             size: 16,
                             color: Colors.white.withValues(alpha: 0.9),
                           ),
@@ -784,10 +549,13 @@ class _InfoUserProfileState extends State<InfoUserProfile>
             ),
           ],
         ),
+        // Bio centrada
         if (widget.bio != null && widget.bio!.isNotEmpty) ...[
           const SizedBox(height: 10),
           Container(
-            width: MediaQuery.of(context).size.width * 0.7,
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.7,
+            ),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(4),
@@ -804,7 +572,93 @@ class _InfoUserProfileState extends State<InfoUserProfile>
             ),
           ),
         ],
+        // Icono de donación siempre debajo
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: () => _showDonationComingSoonDialog(context),
+          child: Container(
+            width: 32,
+            height: 32,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Color(0xFF22C55E), // Verde
+            ),
+            child: const Center(
+              child: Text(
+                '\$',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ),
       ],
+    );
+  }
+
+  void _showDonationComingSoonDialog(BuildContext context) {
+    // Debug para diferenciar si es mi cuenta o de otro usuario
+    if (widget.isOwnProfile) {
+      debugPrint('💰 [DONATION] Click desde MI CUENTA');
+    } else {
+      debugPrint('💰 [DONATION] Click desde OTRO USUARIO: ${widget.userId}');
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.85),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Botón X para cerrar
+              Align(
+                alignment: Alignment.topRight,
+                child: GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: const Icon(
+                    Icons.close,
+                    color: Colors.white70,
+                    size: 24,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              // Título
+              Text(
+                'profile.donation.title'.tr(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              // Mensaje
+              Text(
+                'profile.donation.message'.tr(),
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 14,
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

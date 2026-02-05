@@ -145,10 +145,6 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
   }
 
   // Save current mode
-  Future<void> _saveMode(BackgroundMode mode) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('background_mode', mode.toString());
-  }
 
   // Extract dominant color from emoji image
   Future<void> _extractColorFromEmoji(String emojiPath) async {

@@ -142,6 +142,8 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
     // Recuperamos los seguidores y redes desde el perfil
     final socialFollowers = _calculateTotalFollowers(user.socialEcosystem);
     final socialLinks = _buildSocialLinks(user.socialEcosystem, user.username);
+    // Extraer URL de donación (PayPal)
+    final donationUrl = _extractDonationUrl(user.socialEcosystem);
     // Para el cambio de número al tocar "community" solo se debe mostrar:
     // - Community (por defecto)
     // - Seguidores de Migozz (la propia plataforma)
@@ -149,7 +151,8 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
       SocialNetworkData(
         name: 'Migozz',
         followers: appFollowers,
-        iconPath: iconByLabel['Migozz'] ?? 'assets/icons/social_networks/Other.svg',
+        iconPath:
+            iconByLabel['Migozz'] ?? 'assets/icons/social_networks/Other.svg',
       ),
     ];
     final bool hasSocials = socialLinks.isNotEmpty;
@@ -224,6 +227,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                         nameComunity: 'profile.presentation.community'.tr(),
                         voiceNoteUrl: voiceNoteUrl,
                         bio: user.bio,
+                        donationUrl: donationUrl,
                         tutorialKeys: widget.tutorialKeys,
                         profileTutorialKeys: widget.profileTutorialKeys,
                         isOwnProfile: isOwnProfile,
@@ -282,6 +286,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                       nameComunity: 'profile.presentation.community'.tr(),
                       voiceNoteUrl: voiceNoteUrl,
                       bio: user.bio,
+                      donationUrl: donationUrl,
                       tutorialKeys: widget.tutorialKeys,
                       profileTutorialKeys: widget.profileTutorialKeys,
                       isOwnProfile: isOwnProfile,
@@ -581,6 +586,39 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
     }
 
     return strength;
+  }
+
+  /// Extract donation URL (PayPal) from social ecosystem
+  String? _extractDonationUrl(List<Map<String, dynamic>>? socialEcosystem) {
+    if (socialEcosystem == null || socialEcosystem.isEmpty) return null;
+
+    for (final social in socialEcosystem) {
+      // Check for custom type with paypal domain
+      final type = social['type']?.toString().toLowerCase();
+      if (type == 'custom') {
+        final url = social['url']?.toString() ?? '';
+        final domain = social['domain']?.toString().toLowerCase() ?? '';
+        if (domain.contains('paypal') || url.toLowerCase().contains('paypal')) {
+          return url;
+        }
+        continue;
+      }
+
+      // Check for direct paypal entry
+      for (final entry in social.entries) {
+        final platform = entry.key.toLowerCase();
+        if (platform == 'paypal') {
+          final data = entry.value;
+          if (data is Map<String, dynamic>) {
+            return data['url']?.toString();
+          } else if (data is String && data.isNotEmpty) {
+            // If it's just a string URL
+            return data;
+          }
+        }
+      }
+    }
+    return null;
   }
 }
 

@@ -76,9 +76,13 @@ final Map<String, String> iconByLabel = {
   "WooCommerce": "assets/icons/social_networks/WooCommerce.svg",
   "Etsy": "assets/icons/social_networks/Etsy.svg",
 
+  // Donaciones / Pagos
+  "Paypal": "assets/icons/social_networks/Paypal.svg",
+
   // Otros
   "Enlace": "assets/icons/social_networks/Enlace.svg",
   "Global": "assets/icons/Migozz_Icon.svg",
+  "Migozz": "assets/icons/Migozz_Icon.svg",
 };
 
 final Map<String, String> iconBlackByLabel = {

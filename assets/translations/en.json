@@ -234,6 +234,10 @@
         }
     },
     "profile":{
+        "donation": {
+            "title": "Coming soon! 🚀",
+            "message": "We're putting the finishing touches on the monetization tools for your ecosystem. This feature will be available in the next update. Get ready to start generating revenue!"
+        },
         "sendGifts": {
         "title": "Send Gifts",
         "comingSoon": "Coming Soon",
