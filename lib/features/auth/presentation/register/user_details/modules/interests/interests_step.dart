@@ -4,7 +4,6 @@ import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
-import 'package:migozz_app/features/auth/presentation/register/user_details/components/interest_section_model.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 
@@ -22,10 +21,9 @@ class InterestsStep extends StatefulWidget {
   State<InterestsStep> createState() => _InterestsStepState();
 }
 
-class _InterestsStepState extends State<InterestsStep>
-    with TickerProviderStateMixin {
+class _InterestsStepState extends State<InterestsStep> {
   Set<String> selectedInterests = {};
-  List<InterestSectionModel> dynamicSections = [];
+  List<String> allInterests = [];
   bool isLoading = true;
 
   @override
@@ -35,7 +33,6 @@ class _InterestsStepState extends State<InterestsStep>
     _initializeSelectedInterests();
   }
 
-  // Inicializar intereses seleccionados según el modo
   void _initializeSelectedInterests() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Map<String, List<String>> existingInterests = {};
@@ -48,7 +45,6 @@ class _InterestsStepState extends State<InterestsStep>
         existingInterests = editState.interests ?? {};
       }
 
-      // Convertir el mapa a un Set de intereses individuales
       setState(() {
         selectedInterests = existingInterests.values
             .expand((list) => list)
@@ -59,55 +55,59 @@ class _InterestsStepState extends State<InterestsStep>
 
   Future<void> fetchCollection() async {
     try {
-      setState(() {
-        isLoading = true;
-      });
+      setState(() => isLoading = true);
 
       CollectionReference collection = FirebaseFirestore.instance.collection(
         'interests_catalog',
       );
       QuerySnapshot snapshot = await collection.get();
 
-      List<InterestSectionModel> fetchedSections = [];
+      List<String> fetchedInterests = [];
 
       for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
         data.forEach((categoryTitle, categoryOptions) {
           if (categoryOptions is List) {
-            fetchedSections.add(
-              InterestSectionModel(
-                title: categoryTitle,
-                options: List<String>.from(categoryOptions),
-                expanded: false,
-              ),
-            );
+            for (var option in categoryOptions) {
+              fetchedInterests.add(option.toString());
+            }
           }
         });
       }
 
       setState(() {
-        dynamicSections = fetchedSections;
+        allInterests = fetchedInterests;
         isLoading = false;
       });
 
-      debugPrint(
-        '✅ Secciones cargadas desde Firebase: ${dynamicSections.length}',
-      );
+      debugPrint('✅ Intereses cargados: ${allInterests.length}');
     } catch (e) {
       debugPrint('Error al traer datos: $e');
-      setState(() {
-        isLoading = false;
-      });
+      setState(() => isLoading = false);
     }
   }
 
-  // Actualizar el cubit correspondiente
-  void _updateCubit(Map<String, List<String>> selectedBySection) {
+  void _updateCubit() {
+    final selectedBySection = <String, List<String>>{
+      'interests': selectedInterests.toList(),
+    };
+
     if (widget.mode == MoreUserDetailsMode.register) {
       context.read<RegisterCubit>().setInterests(selectedBySection);
     } else {
       context.read<EditCubit>().updateInterests(selectedBySection);
     }
+  }
+
+  void _toggleInterest(String interestId) {
+    setState(() {
+      if (selectedInterests.contains(interestId)) {
+        selectedInterests.remove(interestId);
+      } else {
+        selectedInterests.add(interestId);
+      }
+    });
+    _updateCubit();
   }
 
   @override
@@ -117,46 +117,41 @@ class _InterestsStepState extends State<InterestsStep>
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                // Contenido scrolleable
                 Expanded(
-                  child: ScrollbarTheme(
-                    data: ScrollbarThemeData(
-                      thumbColor: WidgetStateProperty.all(Colors.grey[400]),
-                      thickness: WidgetStateProperty.all(8.0),
-                      radius: const Radius.circular(10),
-                      thumbVisibility: WidgetStateProperty.all(true),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 20,
+                      horizontal: 20,
                     ),
-                    child: Scrollbar(
-                      child: SingleChildScrollView(
-                        child: Center(
-                          child: Container(
-                            constraints: const BoxConstraints(maxWidth: 680),
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 20,
-                              horizontal: 24,
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const SizedBox(height: 10),
-                                const PrimaryText('Choose Your Interest'),
-                                const SizedBox(height: 20),
-
-                                // secciones
-                                ListView.builder(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  itemCount: dynamicSections.length,
-                                  itemBuilder: (context, index) {
-                                    final section = dynamicSections[index];
-                                    return _buildSection(section, index);
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 10),
+                        const PrimaryText('Choose Your Interests'),
+                        const SizedBox(height: 8),
+                        SecondaryText(
+                          'Select what you\'re passionate about',
+                          fontSize: 14,
+                          color: Colors.grey,
                         ),
-                      ),
+                        const SizedBox(height: 24),
+                        // Wrap fluido - se organizan dinámicamente
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          spacing: 8,
+                          runSpacing: 10,
+                          children: allInterests.map((interest) {
+                            final isSelected = selectedInterests.contains(
+                              interest,
+                            );
+                            return _interestChip(
+                              name: interest,
+                              selected: isSelected,
+                              onTap: () => _toggleInterest(interest),
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 20),
+                      ],
                     ),
                   ),
                 ),
@@ -173,273 +168,74 @@ class _InterestsStepState extends State<InterestsStep>
     );
   }
 
-  // Construir botón de acción según el modo (ahora con gradient Save para edición)
   Widget _buildActionButton() {
-    if (widget.mode == MoreUserDetailsMode.register) {
-      // En modo registro (desde chat), guardar intereses y cerrar pantalla
-      return GestureDetector(
-        onTap: () {
-          final selectedBySection = <String, List<String>>{};
-          for (final section in dynamicSections) {
-            final picked = section.options
-                .where((o) => selectedInterests.contains(o))
-                .toList();
-            if (picked.isNotEmpty) {
-              selectedBySection[section.title] = picked;
-            }
-          }
-
-          _updateCubit(selectedBySection);
-          Navigator.of(context).pop('done');
-        },
-        child: Container(
-          width: double.infinity,
-          height: 56,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFFF59A3C), Color(0xFFB646F6)],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
+    return GestureDetector(
+      onTap: () {
+        _updateCubit();
+        Navigator.of(context).pop('done');
+      },
+      child: Container(
+        width: double.infinity,
+        height: 56,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFF59A3C), Color(0xFFB646F6)],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.35),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
-            borderRadius: BorderRadius.circular(28),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.35),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: const Center(
-            child: SecondaryText('Continue', fontSize: 20, color: Colors.white),
+          ],
+        ),
+        child: Center(
+          child: SecondaryText(
+            widget.mode == MoreUserDetailsMode.register ? 'Continue' : 'Save',
+            fontSize: 20,
+            color: Colors.white,
           ),
         ),
-      );
-    } else {
-      // En modo edición, mostrar "Save" con gradiente como en el mock
-      return GestureDetector(
-        onTap: () {
-          final selectedBySection = <String, List<String>>{};
-          for (final section in dynamicSections) {
-            final picked = section.options
-                .where((o) => selectedInterests.contains(o))
-                .toList();
-            if (picked.isNotEmpty) {
-              selectedBySection[section.title] = picked;
-            }
-          }
-
-          _updateCubit(selectedBySection);
-
-          Navigator.of(context).pop();
-        },
-        child: Container(
-          width: double.infinity,
-          height: 56,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFFF59A3C), Color(0xFFB646F6)],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
-            borderRadius: BorderRadius.circular(28),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.35),
-                offset: const Offset(0, 6),
-                blurRadius: 18,
-              ),
-            ],
-          ),
-          alignment: Alignment.center,
-          child: const Text(
-            'Save',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      );
-    }
-  }
-
-  Widget _buildSection(InterestSectionModel section, int index) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () {
-            setState(() {
-              section.expanded = !section.expanded;
-            });
-          },
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: AnimatedRotation(
-                  turns: section.expanded ? 0.5 : 0,
-                  duration: const Duration(milliseconds: 200),
-                  child: const Icon(
-                    Icons.keyboard_arrow_down,
-                    color: AppColors.secondaryText,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              SecondaryText(section.title, fontSize: 18),
-              const Spacer(),
-              // small count of selected in this section
-              if (section.options.any((o) => selectedInterests.contains(o)))
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white10,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: SecondaryText(
-                    '${section.options.where((o) => selectedInterests.contains(o)).length}',
-                    fontSize: 14,
-                  ),
-                ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 8),
-
-        // Animated size + fade for the content
-        AnimatedSize(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 250),
-            switchInCurve: Curves.easeIn,
-            switchOutCurve: Curves.easeOut,
-            child: section.expanded
-                ? Padding(
-                    key: ValueKey('expanded_$index'),
-                    padding: const EdgeInsets.only(top: 8, bottom: 16),
-                    child: Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: section.options.map((opt) {
-                        final selected = selectedInterests.contains(opt);
-                        return _optionChip(
-                          label: opt,
-                          selected: selected,
-                          onTap: () {
-                            setState(() {
-                              if (selected) {
-                                selectedInterests.remove(opt);
-                              } else {
-                                selectedInterests.add(opt);
-                              }
-                            });
-
-                            // Actualizar el cubit en tiempo real
-                            final selectedBySection = <String, List<String>>{};
-                            for (final sec in dynamicSections) {
-                              final picked = sec.options
-                                  .where((o) => selectedInterests.contains(o))
-                                  .toList();
-                              if (picked.isNotEmpty) {
-                                selectedBySection[sec.title] = picked;
-                              }
-                            }
-                            _updateCubit(selectedBySection);
-                          },
-                        );
-                      }).toList(),
-                    ),
-                  )
-                : const SizedBox.shrink(key: ValueKey('collapsed')),
-          ),
-        ),
-
-        const SizedBox(height: 12),
-      ],
+      ),
     );
   }
 
-  Widget _optionChip({
-    required String label,
-    bool selected = false,
+  Widget _interestChip({
+    required String name,
+    required bool selected,
     required VoidCallback onTap,
   }) {
-    final borderColor = selected ? const Color(0xFFB646F6) : Colors.transparent;
-    final innerBg = Color.lerp(
+    final tileColor = Color.lerp(
       AppColors.greyBackground,
       AppColors.backgroundDark,
-      0.75,
+      0.6,
     )!;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 220),
-      curve: Curves.easeInOut,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(width: 2, color: borderColor),
-        boxShadow: selected
-            ? [
-                BoxShadow(
-                  color: const Color(0xFFB646F6).withValues(alpha: 0.12),
-                  blurRadius: 10,
-                  offset: const Offset(0, 6),
-                ),
-              ]
-            : null,
-      ),
-      child: Material(
-        color: innerBg,
-        borderRadius: BorderRadius.circular(18),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(18),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // check marker
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 180),
-                  transitionBuilder: (child, anim) =>
-                      FadeTransition(opacity: anim, child: child),
-                  child: selected
-                      ? Container(
-                          key: const ValueKey('check'),
-                          width: 18,
-                          height: 18,
-                          margin: const EdgeInsets.only(right: 6),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF4CAF50),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: const Icon(
-                            Icons.check,
-                            color: Colors.white,
-                            size: 12,
-                          ),
-                        )
-                      : const SizedBox.shrink(key: ValueKey('empty')),
-                ),
-                SecondaryText(
-                  label,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                ),
-              ],
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.all(2),
+        decoration: BoxDecoration(
+          gradient: selected ? AppColors.primaryGradient : null,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: tileColor,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Text(
+            name,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ),
