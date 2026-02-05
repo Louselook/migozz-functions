@@ -55,6 +55,8 @@ class AppGate extends StatefulWidget {
 }
 
 class _AppGateState extends State<AppGate> {
+  bool _hasShownBannedDialog = false;
+
   @override
   void initState() {
     super.initState();
@@ -69,8 +71,54 @@ class _AppGateState extends State<AppGate> {
         if (mounted) context.go('/profile');
       } else if (authStatus == AuthStatus.notAuthenticated) {
         if (mounted) context.go('/onboarding');
+      } else if (authStatus == AuthStatus.userBanned) {
+        _showBannedDialog();
       }
       // Si está checking, se mantiene el splash hasta que cambie
+    });
+  }
+
+  void _showBannedDialog() {
+    if (_hasShownBannedDialog || !mounted) return;
+    _hasShownBannedDialog = true;
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.block, color: Colors.red, size: 28),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'tutorial.accountStatus.bannedLogin.title'.tr(),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'tutorial.accountStatus.bannedLogin.message'.tr(),
+          style: const TextStyle(fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+            },
+            child: Text('tutorial.accountStatus.button'.tr()),
+          ),
+        ],
+      ),
+    ).then((_) {
+      // Se ejecuta cuando el diálogo se cierra (botón o tocar fuera)
+      context.read<AuthCubit>().clearBannedState();
+      if (mounted) context.go('/onboarding');
     });
   }
 
@@ -90,6 +138,9 @@ class _AppGateState extends State<AppGate> {
             '🔐 [AppGate] Auth resolved: notAuthenticated → going to /onboarding',
           );
           context.go('/onboarding');
+        } else if (state.status == AuthStatus.userBanned && mounted) {
+          debugPrint('🚫 [AppGate] Auth resolved: userBanned → showing popup');
+          _showBannedDialog();
         }
       },
       child: const SplashScreen(),
@@ -264,10 +315,15 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         path: '/followers/:userId',
         name: 'followers',
         builder: (context, state) {
-          final userId = Uri.decodeComponent(state.pathParameters['userId'] ?? '');
-          final username = Uri.decodeComponent(state.uri.queryParameters['username'] ?? '');
-          final tab = int.tryParse(state.uri.queryParameters['tab'] ?? '0') ?? 0;
-          
+          final userId = Uri.decodeComponent(
+            state.pathParameters['userId'] ?? '',
+          );
+          final username = Uri.decodeComponent(
+            state.uri.queryParameters['username'] ?? '',
+          );
+          final tab =
+              int.tryParse(state.uri.queryParameters['tab'] ?? '0') ?? 0;
+
           return FollowersListScreen(
             userId: userId,
             username: username,
@@ -386,6 +442,12 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         if (goingTo == '/splash' || goingTo == '/') return null;
         // Si intenta ir a cualquier otro lado, quedarse en splash (no redirigir aún)
         return null;
+      }
+
+      // 🚫 Usuario baneado - redirigir a splash para mostrar popup
+      if (status == AuthStatus.userBanned) {
+        debugPrint('🚫 [Router] Usuario baneado - redirigiendo a / para popup');
+        return '/';
       }
 
       // 1) NO autenticado

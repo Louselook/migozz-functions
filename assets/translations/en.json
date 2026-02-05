@@ -1103,6 +1103,21 @@
       "confirmMessage": "Do you want to see the tutorial again? This will guide you through the main features of the app.",
       "confirmButton": "Yes, show tutorial",
       "cancelButton": "Cancel"
+    },
+    "accountStatus": {
+      "deleted": {
+        "title": "Account Deleted",
+        "message": "This account has been deleted by the development team."
+      },
+      "banned": {
+        "title": "Account Suspended",
+        "message": "This account has been suspended for violating the application rules."
+      },
+      "bannedLogin": {
+        "title": "Account Suspended",
+        "message": "This email/account has been suspended for violating the application rules. You cannot create a new account with this email."
+      },
+      "button": "OK"
     }
   }
 }

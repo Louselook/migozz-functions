@@ -49,6 +49,50 @@ class AuthService {
     return querySnapshot.docs.isNotEmpty;
   }
 
+  /// ✅ Verifica si un email está asociado a una cuenta baneada
+  /// Retorna: null si no existe o está activa, 'banned' si está baneada
+  Future<String?> checkEmailBanned(String email) async {
+    final querySnapshot = await _firestore
+        .collection('users')
+        .where('email', isEqualTo: email)
+        .limit(1)
+        .get();
+
+    if (querySnapshot.docs.isEmpty) return null;
+
+    final data = querySnapshot.docs.first.data();
+    final isActive = data['active'];
+
+    // Si active es false o 0, la cuenta está baneada
+    if (isActive == false || isActive == 0) {
+      return 'banned';
+    }
+
+    return null;
+  }
+
+  /// ✅ Verifica si un username está asociado a una cuenta baneada
+  /// Retorna: null si no existe o está activa, 'banned' si está baneada
+  Future<String?> checkUsernameBanned(String username) async {
+    final querySnapshot = await _firestore
+        .collection('users')
+        .where('username', isEqualTo: username.toLowerCase())
+        .limit(1)
+        .get();
+
+    if (querySnapshot.docs.isEmpty) return null;
+
+    final data = querySnapshot.docs.first.data();
+    final isActive = data['active'];
+
+    // Si active es false o 0, la cuenta está baneada
+    if (isActive == false || isActive == 0) {
+      return 'banned';
+    }
+
+    return null;
+  }
+
   // LOGIN con Google
   Future<AuthResult> loginWithGoogle() async {
     try {
@@ -151,6 +195,7 @@ class AuthService {
           'complete': false,
           'isPreRegistered':
               reservedUsername != null, // Marcar si viene de pre-order
+          'active': true, // ✅ Usuario activo por defecto
         };
         await docRef.set(baseData);
         profileExists = true;
@@ -262,6 +307,7 @@ class AuthService {
           'complete': false,
           'isPreRegistered':
               reservedUsername != null, // Marcar si viene de pre-order
+          'active': true, // ✅ Usuario activo por defecto
         };
         await docRef.set(baseData);
         profileExists = true;

@@ -76,6 +76,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final authService = AuthService();
+
+      // ✅ NUEVO: Verificar si el email está baneado
+      final bannedStatus = await authService.checkEmailBanned(email);
+      if (bannedStatus == 'banned' && mounted) {
+        _showBannedDialog();
+        return;
+      }
+
       final exists = await authService.emailExists(email);
 
       if (!mounted) return;
@@ -127,6 +135,47 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() => _isCheckingEmail = false);
       }
     }
+  }
+
+  /// ✅ NUEVO: Mostrar popup de cuenta baneada
+  void _showBannedDialog() {
+    LoadingOverlay.hide(context);
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E1E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.block_rounded, color: Colors.red, size: 28),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'tutorial.accountStatus.bannedLogin.title'.tr(),
+                style: const TextStyle(color: Colors.white, fontSize: 18),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'tutorial.accountStatus.bannedLogin.message'.tr(),
+          style: const TextStyle(color: Colors.grey, fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              'tutorial.accountStatus.button'.tr(),
+              style: const TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _handleGoogleSignIn() async {

@@ -953,6 +953,21 @@
       "confirmMessage": "¿Quieres ver el tutorial de nuevo? Te guiaremos por las funciones principales de la aplicación.",
       "confirmButton": "Sí, mostrar tutorial",
       "cancelButton": "Cancelar"
+    },
+    "accountStatus": {
+      "deleted": {
+        "title": "Cuenta Eliminada",
+        "message": "Esta cuenta fue eliminada por el equipo de desarrollo."
+      },
+      "banned": {
+        "title": "Cuenta Suspendida",
+        "message": "Esta cuenta ha sido suspendida por infringir las reglas de la aplicación."
+      },
+      "bannedLogin": {
+        "title": "Cuenta Suspendida",
+        "message": "Este correo/cuenta ha sido suspendido por infringir las reglas de la aplicación. No puedes crear una nueva cuenta con este correo."
+      },
+      "button": "OK"
     }
   }
 }
