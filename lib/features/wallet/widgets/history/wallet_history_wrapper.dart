@@ -48,7 +48,7 @@ class WalletHistory extends StatelessWidget {
               padding: EdgeInsets.symmetric(vertical: 20, horizontal: 12),
               margin: EdgeInsets.symmetric(horizontal: 10),
               decoration: BoxDecoration(
-                color: const Color.fromARGB(225, 217, 217, 217),
+                color: const Color(0xFFD9D9D9),
                 borderRadius: BorderRadius.only(bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10)),
                 border: Border.all(
                   color: const Color.fromARGB(76, 255, 255, 255),

@@ -1094,6 +1094,8 @@
     "purchase": "Purchase of",
     "buyText": "Buy",
     "sentText": "Sent",
-    "withdraw": "Withdraw"
+    "withdraw": "Withdraw",
+    "textEmpty1": "Your history is empty.",
+    "textEmpty2": "Ready to begin?"
   }
 }

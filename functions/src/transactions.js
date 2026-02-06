@@ -1,12 +1,16 @@
 const admin = require("firebase-admin")
 const { FieldValue } = require("firebase-admin/firestore");
 const { onDocumentCreated } = require("firebase-functions/firestore")
+const { onRequest } = require("firebase-functions/https")
 
 /*TRANSACTION CONTROLLER*/
 /*
     Depending on the created transaction type we Increment the gains or expenses in the wallet
     The "Increment" FieldValue is perfect for the case because it orders multiple requests and doesn't make calculation mistakes
 */
+
+
+
 
 const transactionsController = onDocumentCreated('/wallets/{walletId}/transactions/{transactionId}', async(data) => {
     let transaction = data.data.data()

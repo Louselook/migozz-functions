@@ -1,0 +1,20 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
+import 'package:migozz_app/features/wallet/cubit/buy_coins_cubit/buy_coins_cubit.dart';
+import 'package:migozz_app/features/wallet/cubit/buy_coins_cubit/buy_coins_state.dart';
+
+class BuyCoinsWrapper  extends StatelessWidget{
+  const BuyCoinsWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<BuyCoinsCubit, BuyCoinsState>(builder: (context, state){
+      if(state.inititialized){
+        return Text("Buy initialized");
+      }
+
+      return Text("Loading...");
+    });
+  }
+}

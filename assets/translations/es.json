@@ -943,7 +943,9 @@
       "purchase": "Compra de",
       "buyText": "Comprar",
       "sentText": "Enviar",
-      "withdraw": "Retirar"
+      "withdraw": "Retirar",
+      "textEmpty1": "Tu historial está vacío.",
+      "textEmpty2": "¿Listo para comenzar?"
     }
   }
 }

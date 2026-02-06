@@ -7,7 +7,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class ConversionCubit extends Cubit<ConversionState> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  ///I created this bool to prevent the creation of multiple snapshots when the AuthState change
   bool initialized = false;
 
   StreamSubscription? _conversionSubscription;

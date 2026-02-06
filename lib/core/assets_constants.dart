@@ -47,6 +47,7 @@ class AssetsConstants {
   static const String walletBuy = '$icons/wallet_buy.svg';
   static const String walletUp = '$icons/wallet_up.svg';
   static const String walletDown = '$icons/wallet_down.svg';
+  static const String walletEmpty = '$icons/wallet_empty.svg';
 }
 
 class SocialIconResolver {

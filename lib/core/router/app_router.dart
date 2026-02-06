@@ -32,6 +32,7 @@ import 'package:migozz_app/features/search/web/presentation/search_screen.dart'
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/notifications/presentation/notifications_list_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:migozz_app/features/wallet/screens/buy_coins/buy_coins_screen.dart';
 import 'package:migozz_app/features/wallet/screens/wallet_screen.dart';
 
 Widget localizedBuilder(BuildContext context, Widget Function() screenBuilder) {
@@ -206,6 +207,13 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         name: 'wallet',
         builder: (context, state) =>
             localizedBuilder(context, () => const WalletScreen()),
+      ),
+
+      GoRoute(
+        path: '/wallet/buy-coins',
+        name: 'buy-coins',
+        builder: (context, state) =>
+            localizedBuilder(context, () => const BuyCoinsScreen()),
       ),
 
       GoRoute(
