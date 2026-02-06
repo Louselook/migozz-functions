@@ -224,20 +224,45 @@ class _InterestsStepState extends State<InterestsStep> {
           gradient: selected ? AppColors.primaryGradient : null,
           borderRadius: BorderRadius.circular(20),
         ),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: tileColor,
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: Text(
-            name,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: tileColor,
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Text(
+                name,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
-          ),
+            if (selected)
+              Positioned(
+                top: -4,
+                right: -4,
+                child: Container(
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    gradient: AppColors.primaryGradient,
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.all(3),
+                  child: Image.asset(
+                    'assets/icons/Migozz_Icon.png',
+                    color: Colors.white,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );

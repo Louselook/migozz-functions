@@ -104,6 +104,7 @@ class _CategoryStepState extends State<CategoryStep> {
 
   Future<void> fetchIdentitiesCatalog() async {
     try {
+      if (!mounted) return;
       setState(() {
         isLoading = true;
       });
@@ -171,6 +172,7 @@ class _CategoryStepState extends State<CategoryStep> {
         }
       }
 
+      if (!mounted) return;
       setState(() {
         groups = fetchedGroups;
         // Expandir el primer grupo por defecto
@@ -188,6 +190,7 @@ class _CategoryStepState extends State<CategoryStep> {
       }
     } catch (e) {
       debugPrint('❌ Error al traer identidades: $e');
+      if (!mounted) return;
       setState(() {
         isLoading = false;
       });
@@ -438,39 +441,43 @@ class _CategoryStepState extends State<CategoryStep> {
                 ),
               ),
         padding: selected ? const EdgeInsets.all(2) : EdgeInsets.zero,
-        child: Container(
-          decoration: BoxDecoration(
-            color: tileColor,
-            borderRadius: borderRadius,
-          ),
-          alignment: Alignment.center,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Flexible(
-                child: Text(
-                  label,
-                  style: const TextStyle(fontSize: 14, color: Colors.white),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+        child: Stack(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: tileColor,
+                borderRadius: borderRadius,
               ),
-              if (selected) ...[
-                const SizedBox(width: 6),
-                Container(
-                  width: 18,
-                  height: 18,
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Text(
+                label,
+                style: const TextStyle(fontSize: 14, color: Colors.white),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (selected)
+              Positioned(
+                top: 4,
+                right: 4,
+                child: Container(
+                  width: 20,
+                  height: 20,
                   decoration: BoxDecoration(
                     gradient: AppColors.primaryGradient,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.close, size: 12, color: Colors.white),
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.all(3),
+                  child: Image.asset(
+                    'assets/icons/Migozz_Icon.png',
+                    color: Colors.white,
+                    fit: BoxFit.contain,
+                  ),
                 ),
-              ],
-            ],
-          ),
+              ),
+          ],
         ),
       ),
     );
