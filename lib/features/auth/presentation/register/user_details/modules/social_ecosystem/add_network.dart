@@ -58,6 +58,7 @@ class _AddNetworkBottomSheetState extends State<AddNetworkBottomSheet> {
           SnackBar(
             content: Text('addSocials.networkAuth.phoneInvalid'.tr()),
             backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 5),
           ),
         );
       }

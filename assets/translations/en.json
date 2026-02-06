@@ -750,8 +750,8 @@
     },
     "category" : {
         "title" : "Choose Your Account Type",
-        "subtitle" : "Select up to 2 categories",
-        "maxSelection" : "You can only choose up to 2 categories. Deselect one to choose another.",
+      "subtitle" : "Select 1 category",
+      "maxSelection" : "You can only choose 1 category.",
         "model" : "Model",
         "artist" : "Artist",
         "publicFigure" : "Public Figure",

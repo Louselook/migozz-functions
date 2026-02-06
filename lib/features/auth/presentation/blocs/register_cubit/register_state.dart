@@ -13,6 +13,7 @@ enum RegisterStatusProgress {
   socialEcosystem,
   location,
   email, // Nuevo paso para capturar email antes de sendOTP
+  emailReask, // Re-preguntar email sin OTP
   sendOTP,
   emailChange,
   emailVerification,

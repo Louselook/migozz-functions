@@ -19,6 +19,7 @@ final Map<String, InputStepType> stepInputTypeMap = {
   'fullName': InputStepType.text,
   'username': InputStepType.text,
   'gender': InputStepType.choice,
+  'emailReask': InputStepType.choice,
   'location': InputStepType.location,
   'sendOTP': InputStepType.choice,
   'emailChange': InputStepType.text,

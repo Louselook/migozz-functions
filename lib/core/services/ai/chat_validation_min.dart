@@ -72,6 +72,13 @@ Future<Map<String, dynamic>?> processBotResponse(
     //   }
     //   break;
 
+    case RegisterStatusProgress.gender:
+      if (isValid == true && userResponse != null) {
+        registerCubit.setGender(userResponse);
+        debugPrint('✅ Género guardado: $userResponse');
+      }
+      break;
+
     // case RegisterStatusProgress.socialEcosystem:
     //   debugPrint('📱 Paso de redes sociales - se maneja en navigation handler');
     //   break;
@@ -179,6 +186,30 @@ Future<Map<String, dynamic>?> processBotResponse(
               : "Please enter a valid email address.",
         };
       }
+
+    case RegisterStatusProgress.emailReask:
+      if (isValid == true && userResponse != null) {
+        // Si el usuario escribió un nuevo email directamente
+        if (resp['newEmail'] == true) {
+          registerCubit.setEmail(userResponse.trim());
+          debugPrint('✅ Email actualizado desde emailReask: $userResponse');
+          return null;
+        }
+        // Si el usuario quiere cambiar (respuesta = "change")
+        if (resp['changeEmail'] == true || userResponse == 'change') {
+          debugPrint('📝 Usuario quiere cambiar email desde emailReask');
+          return {
+            "changeEmail": true,
+            "message": registerCubit.state.language == 'Español'
+                ? "De acuerdo, ingresa tu nuevo correo electrónico"
+                : "Okay, please enter your new email address",
+          };
+        }
+        // Si el usuario dice que está bien (respuesta = "keep")
+        debugPrint('✅ Email confirmado sin cambios desde emailReask');
+        return null;
+      }
+      break;
 
     case RegisterStatusProgress.sendOTP:
       // Caso 1: Usuario quiere cambiar email (dijo "No")
@@ -441,6 +472,7 @@ RegisterStatusProgress _parseStep(String raw) {
   }
   if (raw.contains('username')) return RegisterStatusProgress.username;
   // if (raw.contains('gender')) return RegisterStatusProgress.gender;
+  if (raw.contains('gender')) return RegisterStatusProgress.gender;
 
   // Habilitar socialEcosystem y avatarUrl para que el flujo los maneje correctamente
   if (raw.contains('socialecosystem') || raw.contains('social')) {
@@ -448,6 +480,7 @@ RegisterStatusProgress _parseStep(String raw) {
   }
   if (raw.contains('location')) return RegisterStatusProgress.location;
   if (raw.contains('sendotp')) return RegisterStatusProgress.sendOTP;
+  if (raw.contains('emailreask')) return RegisterStatusProgress.emailReask;
   if (raw.contains('emailchange')) return RegisterStatusProgress.emailChange;
 
   // IMPORTANTE: emailSuccess también mapea a emailVerification

@@ -280,6 +280,9 @@ class AssistantFunctions {
       case 'sendOTP': //  SEPARADO de emailVerification
         return _evaluateSendOTP(normalized, userInput);
 
+      case 'emailReask': // Re-preguntar email sin OTP
+        return _evaluateEmailReask(normalized, userInput);
+
       case 'emailChange': // NUEVO: Cambiar email
         return _evaluateEmailChange(normalized, userInput);
 
@@ -374,14 +377,36 @@ class AssistantFunctions {
           };
         }
 
+        // If user wants to update/change something
+        final wantsUpdate =
+            n.contains('actualizar') ||
+            n.contains('update') ||
+            n.contains('cambiar') ||
+            n.contains('change') ||
+            n.contains('editar') ||
+            n.contains('edit') ||
+            n.contains('modificar') ||
+            n.contains('corregir');
+
+        if (wantsUpdate) {
+          return {
+            "step": "regProgress.changeRequest",
+            "valid": false,
+            "changeRequest": true,
+            "message": isSpanish
+                ? "¿Qué información quieres actualizar?"
+                : "What information would you like to update?",
+          };
+        }
+
         // Otherwise, keep the user on the confirmation question.
         return {
           "step": "regProgress.confirmCreateAccount",
           "valid": false,
           "userResponse": userInput.trim(),
           "text": isSpanish
-              ? "¿Deseas crear tu cuenta ahora? Responde: \"Sí\" o \"Quiero cambiar algo\"."
-              : "Do you want to create your account now? Reply: \"Yes\" or \"I want to change something\".",
+              ? "¿Listo para crear tu cuenta? Responde: \"Sí\" o \"Actualizar\"."
+              : "Ready to create your account? Reply: \"Yes\" or \"Update\".",
         };
 
       case 'avatarUrl':
@@ -1010,7 +1035,11 @@ class AssistantFunctions {
     String normalized,
     String original,
   ) {
-    final validGenders = ['hombre', 'mujer', 'otro', 'male', 'female', 'other'];
+    final validGenders = [
+      'hombre', 'mujer', 'prefiero no decir',
+      'male', 'female', 'rather not say',
+      'otro', 'other',
+    ];
 
     if (validGenders.any((g) => normalized.contains(g))) {
       return {
@@ -1021,6 +1050,58 @@ class AssistantFunctions {
     }
     return {
       "step": "regProgress.gender",
+      "valid": false,
+      "userResponse": original.trim(),
+    };
+  }
+
+  /// Evaluación para el paso de re-preguntar email (sin OTP)
+  static Map<String, dynamic> _evaluateEmailReask(
+    String normalized,
+    String original,
+  ) {
+    // Si el usuario dice que está bien, continuar
+    if (normalized.contains('no') ||
+        normalized.contains('está bien') ||
+        normalized.contains('esta bien') ||
+        normalized.contains('it\'s fine') ||
+        normalized.contains('its fine') ||
+        normalized.contains('fine') ||
+        normalized.contains('correcto') ||
+        normalized.contains('correct')) {
+      return {
+        "step": "regProgress.emailReask",
+        "valid": true,
+        "userResponse": "keep",
+      };
+    }
+    // Si el usuario quiere cambiar
+    if (normalized.contains('si') ||
+        normalized.contains('sí') ||
+        normalized.contains('yes') ||
+        normalized.contains('cambiar') ||
+        normalized.contains('change')) {
+      return {
+        "step": "regProgress.emailReask",
+        "valid": true,
+        "userResponse": "change",
+        "changeEmail": true,
+      };
+    }
+    // Si el usuario escribe un email directamente
+    final emailRegex = RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+    );
+    if (emailRegex.hasMatch(original.trim())) {
+      return {
+        "step": "regProgress.emailReask",
+        "valid": true,
+        "userResponse": original.trim(),
+        "newEmail": true,
+      };
+    }
+    return {
+      "step": "regProgress.emailReask",
       "valid": false,
       "userResponse": original.trim(),
     };

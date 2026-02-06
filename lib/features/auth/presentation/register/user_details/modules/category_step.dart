@@ -56,21 +56,10 @@ class CategoryStep extends StatefulWidget {
 }
 
 class _CategoryStepState extends State<CategoryStep> {
-  static const int maxCategories = 2;
+  static const int maxCategories = 1;
   List<String> selectedCategories = [];
   List<IdentityGroup> groups = [];
-  Set<String> expandedGroups = {};
   bool isLoading = true;
-
-  // Orden de los grupos según el diseño
-  static const List<String> groupOrder = [
-    'creative_arts',
-    'tech_science',
-    'education_coaching',
-    'health_wellness',
-    'service_events',
-    'lifestyle_hobbies',
-  ];
 
   @override
   void initState() {
@@ -109,85 +98,57 @@ class _CategoryStepState extends State<CategoryStep> {
         isLoading = true;
       });
 
-      // Obtener el idioma actual (en o es)
-      final lang = context.locale.languageCode == 'es' ? 'es' : 'en';
-      debugPrint('🌐 Idioma actual: $lang');
-
       final firestore = FirebaseFirestore.instance;
-      final List<IdentityGroup> fetchedGroups = [];
+      final List<Identity> identities = [];
 
-      // Recorrer los grupos en el orden definido
-      for (final groupId in groupOrder) {
-        debugPrint('📂 Buscando grupo: $groupId');
+      // Leer todas las categorías desde la colección plana categories_catalog
+      final snapshot = await firestore.collection('categories_catalog').get();
 
-        // Obtener las identidades de cada grupo (sin orderBy para evitar índice)
-        final identitiesSnapshot = await firestore
-            .collection('identities_catalog')
-            .doc(lang)
-            .collection(groupId)
-            .get();
+      debugPrint('📂 categories_catalog documentos: ${snapshot.docs.length}');
 
-        debugPrint(
-          '   📄 Documentos encontrados: ${identitiesSnapshot.docs.length}',
-        );
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        debugPrint('   📝 Doc: ${doc.id} -> $data');
 
-        String groupName = groupId;
-        final List<Identity> identities = [];
-
-        for (final doc in identitiesSnapshot.docs) {
-          final data = doc.data();
-          debugPrint('   📝 Doc: ${doc.id} -> $data');
-
-          // Si es el documento de metadata, obtener el nombre del grupo
-          if (doc.id == '_metadata') {
-            groupName = data['name'] ?? groupId;
-            continue;
-          }
-
-          // Solo agregar identidades activas
-          if (data['status'] == 'active') {
-            identities.add(
-              Identity(
-                id: data['identity_id'] ?? doc.id,
-                name: data['name'] ?? '',
-                order: data['order'] ?? 0,
-                status: data['status'] ?? 'active',
-              ),
-            );
-          }
-        }
-
-        // Ordenar las identidades localmente por order
-        identities.sort((a, b) => a.order.compareTo(b.order));
-
-        if (identities.isNotEmpty) {
-          fetchedGroups.add(
-            IdentityGroup(
-              id: groupId,
-              name: groupName,
-              order: groupOrder.indexOf(groupId),
-              identities: identities,
+        // Solo agregar categorías activas
+        if (data['status'] == 'active') {
+          identities.add(
+            Identity(
+              id: doc.id,
+              name: data['name'] ?? '',
+              order: data['order'] ?? 0,
+              status: data['status'] ?? 'active',
             ),
           );
         }
       }
 
+      // Ordenar localmente por order (si existe) y luego por nombre
+      identities.sort((a, b) {
+        final orderCompare = a.order.compareTo(b.order);
+        if (orderCompare != 0) return orderCompare;
+        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      });
+
+      final List<IdentityGroup> fetchedGroups = [];
+      if (identities.isNotEmpty) {
+        fetchedGroups.add(
+          IdentityGroup(
+            id: 'all',
+            name: 'all',
+            order: 0,
+            identities: identities,
+          ),
+        );
+      }
+
       if (!mounted) return;
       setState(() {
         groups = fetchedGroups;
-        // Expandir el primer grupo por defecto
-        if (groups.isNotEmpty) {
-          expandedGroups.add(groups.first.id);
-        }
         isLoading = false;
       });
 
-      debugPrint('✅ Grupos cargados: ${groups.length}');
-      for (final group in groups) {
-        debugPrint(
-          '   📁 ${group.name}: ${group.identities.length} identidades',
-        );
-      }
+      debugPrint('✅ Categorías cargadas: ${identities.length}');
     } catch (e) {
       debugPrint('❌ Error al traer identidades: $e');
       if (!mounted) return;
@@ -209,16 +170,6 @@ class _CategoryStepState extends State<CategoryStep> {
     }
   }
 
-  void _toggleGroup(String groupId) {
-    setState(() {
-      if (expandedGroups.contains(groupId)) {
-        expandedGroups.remove(groupId);
-      } else {
-        expandedGroups.add(groupId);
-      }
-    });
-  }
-
   void _selectIdentity(String identityId) {
     setState(() {
       if (selectedCategories.contains(identityId)) {
@@ -229,7 +180,7 @@ class _CategoryStepState extends State<CategoryStep> {
             SnackBar(
               content: Text('category.maxSelection'.tr()),
               backgroundColor: Colors.orange,
-              duration: const Duration(seconds: 2),
+              duration: const Duration(seconds: 5),
             ),
           );
           return;
@@ -251,7 +202,7 @@ class _CategoryStepState extends State<CategoryStep> {
             child: TintesGradients(child: SizedBox.expand()),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40),
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
             child: Column(
               children: [
                 const SizedBox(height: 10),
@@ -267,19 +218,44 @@ class _CategoryStepState extends State<CategoryStep> {
                   child: isLoading
                       ? const Center(child: CircularProgressIndicator())
                       : groups.isEmpty
-                      ? const Center(
-                          child: SecondaryText(
-                            'No hay categorías disponibles',
-                            fontSize: 16,
-                          ),
-                        )
-                      : ListView.builder(
-                          itemCount: groups.length,
-                          itemBuilder: (context, index) {
-                            final group = groups[index];
-                            return _buildGroupSection(group);
-                          },
-                        ),
+                          ? const Center(
+                              child: SecondaryText(
+                                'No hay categorías disponibles',
+                                fontSize: 16,
+                              ),
+                            )
+                          : LayoutBuilder(
+                              builder: (context, constraints) {
+                                return SingleChildScrollView(
+                                  child: ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                      minHeight: constraints.maxHeight,
+                                    ),
+                                    child: Center(
+                                      child: Wrap(
+                                        alignment: WrapAlignment.center,
+                                        spacing: 8,
+                                        runSpacing: 10,
+                                        children: [
+                                          for (final group in groups)
+                                            for (final identity
+                                                in group.identities)
+                                              _identityButton(
+                                                identity.name,
+                                                selected: selectedCategories
+                                                    .contains(identity.id),
+                                                onTap: () =>
+                                                    _selectIdentity(
+                                                  identity.id,
+                                                ),
+                                              ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: 20, bottom: 10),
@@ -308,122 +284,23 @@ class _CategoryStepState extends State<CategoryStep> {
     );
   }
 
-  Widget _buildGroupSection(IdentityGroup group) {
-    final isExpanded = expandedGroups.contains(group.id);
-    // Color del título: rosa si está expandido, gris si está colapsado
-    final headerColor = isExpanded ? AppColors.primaryPink : AppColors.grey;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border(
-          left: BorderSide(
-            color: isExpanded ? AppColors.primaryPink : Colors.transparent,
-            width: 3,
-          ),
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.only(left: 12, right: 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header del grupo (clickeable para expandir/colapsar)
-            InkWell(
-              onTap: () => _toggleGroup(group.id),
-              borderRadius: BorderRadius.circular(8),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Row(
-                  children: [
-                    // Título con animación de color
-                    Expanded(
-                      child: AnimatedDefaultTextStyle(
-                        duration: const Duration(milliseconds: 250),
-                        curve: Curves.easeInOut,
-                        style: TextStyle(
-                          color: headerColor,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 1.2,
-                        ),
-                        child: Text(group.name.toUpperCase()),
-                      ),
-                    ),
-                    // Icono con animación de color
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 250),
-                      transitionBuilder: (child, animation) {
-                        return FadeTransition(opacity: animation, child: child);
-                      },
-                      child: Icon(
-                        isExpanded ? Icons.remove : Icons.add,
-                        key: ValueKey(isExpanded),
-                        color: headerColor,
-                        size: 20,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            // Contenido expandible con animación de arriba hacia abajo
-            AnimatedSize(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOutCubic,
-              alignment: Alignment.topCenter,
-              child: isExpanded
-                  ? Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              mainAxisSpacing: 10,
-                              crossAxisSpacing: 10,
-                              childAspectRatio: 3.2,
-                            ),
-                        itemCount: group.identities.length,
-                        itemBuilder: (context, index) {
-                          final identity = group.identities[index];
-                          final isSelected = selectedCategories.contains(
-                            identity.id,
-                          );
-                          return _identityButton(
-                            identity.name,
-                            selected: isSelected,
-                            onTap: () => _selectIdentity(identity.id),
-                          );
-                        },
-                      ),
-                    )
-                  : const SizedBox.shrink(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // Ya no usamos secciones desplegables: las categorías se muestran
+  // todas juntas en un solo Wrap, similar a intereses.
 
   Widget _identityButton(
     String label, {
     bool selected = false,
     VoidCallback? onTap,
   }) {
-    const borderRadius = BorderRadius.all(Radius.circular(8));
+    const borderRadius = BorderRadius.all(Radius.circular(16));
     final tileColor = Color.lerp(
       AppColors.greyBackground,
       AppColors.backgroundDark,
       0.55,
     )!;
 
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         curve: Curves.easeOut,
@@ -437,47 +314,51 @@ class _CategoryStepState extends State<CategoryStep> {
                 borderRadius: borderRadius,
                 border: Border.all(
                   color: tileColor.withValues(alpha: 0.9),
-                  width: 1.5,
+                  width: 1,
                 ),
               ),
-        padding: selected ? const EdgeInsets.all(2) : EdgeInsets.zero,
-        child: Stack(
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                color: tileColor,
-                borderRadius: borderRadius,
+        padding: selected ? const EdgeInsets.all(1.5) : EdgeInsets.zero,
+        child: Container(
+          decoration: BoxDecoration(
+            color: tileColor,
+            borderRadius: borderRadius,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: selected ? Colors.white : Colors.white70,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              alignment: Alignment.center,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Text(
-                label,
-                style: const TextStyle(fontSize: 14, color: Colors.white),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            if (selected)
-              Positioned(
-                top: 4,
-                right: 4,
-                child: Container(
-                  width: 20,
-                  height: 20,
+              if (selected) ...[
+                const SizedBox(width: 4),
+                Container(
+                  width: 14,
+                  height: 14,
                   decoration: BoxDecoration(
                     gradient: AppColors.primaryGradient,
                     shape: BoxShape.circle,
                   ),
                   alignment: Alignment.center,
-                  padding: const EdgeInsets.all(3),
+                  padding: const EdgeInsets.all(2),
                   child: Image.asset(
                     'assets/icons/Migozz_Icon.png',
                     color: Colors.white,
                     fit: BoxFit.contain,
                   ),
                 ),
-              ),
-          ],
+              ],
+            ],
+          ),
         ),
       ),
     );

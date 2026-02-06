@@ -321,35 +321,32 @@ class GeminiService {
   bool _requestedMicPermissionForVoiceStep = false;
 
   // Flujo completo para usuarios NO autenticados
-  // Orden: nombre, username, categoría, intereses, ubicación, audio, email OTP, redes sociales, foto, confirmar
+  // Orden: nombre, username, email re-ask, categoría, intereses, género, ubicación, confirmar, email OTP
   final List<String> _questionFlowNotAuth = [
     'welcome', // 0 - Mensaje de bienvenida
     'fullName', // 1 - Nombre completo
-    'username', // 2 - Username
-    'category', // 3 - Categoría/tipo de perfil
-    'interests', // 4 - Intereses
-    'location', // 5 - Ubicación (país, departamento, ciudad)
-    'voiceNoteUrl', // 6 - Nota de voz
-    'sendOTP', // 7 - Confirmar email y enviar código
-    'emailVerification', // 8
-    'otpInput', // 9
-    'emailSuccess', // 10
-    'socialEcosystem', // 11 - Redes sociales
-    'avatarUrl', // 12 - Foto de perfil
-    'confirmCreateAccount', // 13 - Resumen final con todos los datos
+    'username', // 2 - Username/Apodo
+    'emailReask', // 3 - Re-preguntar email (sin OTP)
+    'category', // 4 - Categoría/tipo de perfil
+    'interests', // 5 - Intereses
+    'gender', // 6 - Género
+    'location', // 7 - Ubicación
+    'confirmCreateAccount', // 8 - ¿Listo para crear tu cuenta? (Sí / Actualizar)
+    'sendOTP', // 9 - Confirmar email y enviar código
+    'emailVerification', // 10
+    'otpInput', // 11
+    'emailSuccess', // 12
   ];
 
   //  Flujo reducido para usuarios autenticados (Google/Apple)
-  // Orden: categoría, intereses, ubicación, audio, redes sociales, foto, confirmar
+  // Orden: categoría, intereses, género, ubicación, confirmar
   final List<String> _questionFlowAuth = [
     'welcome', // 0 - Mensaje de bienvenida
     'category', // 1 - Categoría/tipo de perfil
     'interests', // 2 - Intereses
-    'location', // 3 - Ubicación
-    'voiceNoteUrl', // 4 - Nota de voz
-    'socialEcosystem', // 5 - Redes sociales
-    'avatarUrl', // 6 - Foto de perfil
-    'confirmCreateAccount', // 7 - Resumen final
+    'gender', // 3 - Género
+    'location', // 4 - Ubicación
+    'confirmCreateAccount', // 5 - Confirmación final
   ];
 
   // Getter dinámico que devuelve el flujo correcto según auth
@@ -360,20 +357,12 @@ class GeminiService {
     if (user != null) {
       debugPrint('🔑 Usuario autenticado - usando flujo reducido');
       final flow = List<String>.from(_questionFlowAuth);
-      if (kIsWeb) {
-        flow.removeWhere(
-          (step) => step == 'voiceNoteUrl' || step == 'avatarUrl',
-        );
-      }
       return flow;
     }
 
     // flujo completo si NO autenticado
     debugPrint('🆕 Usuario no autenticado - usando flujo completo');
     final flow = List<String>.from(_questionFlowNotAuth);
-    if (kIsWeb) {
-      flow.removeWhere((step) => step == 'voiceNoteUrl' || step == 'avatarUrl');
-    }
     return flow;
   }
 
@@ -476,115 +465,17 @@ class GeminiService {
     return false;
   }
 
-  /// Genera el resumen completo de todos los datos recolectados para el paso final
-  /// Muestra: nombre, username, categoría, intereses, ubicación, audio, email, redes sociales
-  String _buildFullDataSummary(RegisterCubit cubit) {
-    final state = cubit.state;
-    final isSpanish = state.language == 'Español';
-    final buffer = StringBuffer();
-
-    // Nombre completo
-    final fullName = state.fullName ?? '';
-    if (fullName.isNotEmpty) {
-      buffer.writeln(isSpanish ? '👤 Nombre: $fullName' : '👤 Name: $fullName');
-    }
-
-    // Username
-    final username = state.username ?? '';
-    if (username.isNotEmpty) {
-      buffer.writeln(
-        isSpanish ? '🆔 Usuario: @$username' : '🆔 Username: @$username',
-      );
-    }
-
-    // Categoría/Tipo de perfil
-    final category = state.category;
-    if (category != null && category.isNotEmpty) {
-      buffer.writeln(
-        isSpanish ? '🏷️ Categoría: $category' : '🏷️ Category: $category',
-      );
-    }
-
-    // Intereses
-    final interests = state.interests;
-    if (interests != null && interests.isNotEmpty) {
-      final interestsList = interests.keys.take(3).join(', ');
-      final suffix = interests.keys.length > 3 ? '...' : '';
-      buffer.writeln(
-        isSpanish
-            ? '💡 Intereses: $interestsList$suffix'
-            : '💡 Interests: $interestsList$suffix',
-      );
-    }
-
-    // Ubicación
-    final loc = state.location;
-    if (loc != null && loc.hasCityAndCountry) {
-      final hasState = loc.state.isNotEmpty;
-      final locationStr = hasState
-          ? '${loc.city}, ${loc.state}, ${loc.country}'
-          : '${loc.city}, ${loc.country}';
-      buffer.writeln(
-        isSpanish ? '📍 Ubicación: $locationStr' : '📍 Location: $locationStr',
-      );
-    }
-
-    // Audio/Nota de voz
-    final hasVoice =
-        state.voiceNoteUrl != null && state.voiceNoteUrl!.isNotEmpty;
-    buffer.writeln(
-      isSpanish
-          ? '🎤 Audio: ${hasVoice ? "✓ Grabado" : "No grabado"}'
-          : '🎤 Audio: ${hasVoice ? "✓ Recorded" : "Not recorded"}',
-    );
-
-    // Email
-    final email = state.email ?? '';
-    if (email.isNotEmpty) {
-      buffer.writeln(isSpanish ? '📧 Email: $email' : '📧 Email: $email');
-    }
-
-    // Redes sociales
-    final socials = state.socialEcosystem;
-    if (socials != null && socials.isNotEmpty) {
-      final socialNames = socials.map((s) => s.keys.first).take(4).join(', ');
-      final suffix = socials.length > 4 ? '...' : '';
-      buffer.writeln(
-        isSpanish
-            ? '📱 Redes: $socialNames$suffix (${socials.length})'
-            : '📱 Socials: $socialNames$suffix (${socials.length})',
-      );
-    }
-
-    // Foto de perfil
-    final hasAvatar = state.avatarUrl != null && state.avatarUrl!.isNotEmpty;
-    buffer.writeln(
-      isSpanish
-          ? '📸 Foto: ${hasAvatar ? "✓ Añadida" : "No añadida"}'
-          : '📸 Photo: ${hasAvatar ? "✓ Added" : "Not added"}',
-    );
-
-    return buffer.toString().trim();
-  }
-
-  /// Genera el mensaje final con el resumen de datos y opciones
+  /// Genera el mensaje final sin resumen, solo la pregunta con opciones
   Map<String, dynamic> _buildFinalConfirmationMessage(RegisterCubit cubit) {
     final isSpanish = cubit.state.language == 'Español';
-    final summary = _buildFullDataSummary(cubit);
-
-    final headerText = isSpanish
-        ? '🎉 ¡Perfecto! Aquí está el resumen de tu perfil:\n\n'
-        : '🎉 Perfect! Here\'s your profile summary:\n\n';
-
-    final footerText = isSpanish
-        ? '\n\n¿Todo listo para crear tu cuenta?'
-        : '\n\nReady to create your account?';
 
     return {
-      "text": '$headerText$summary$footerText',
+      "text": isSpanish
+          ? '¿Listo para crear tu cuenta?'
+          : 'Ready to create your account?',
       "options": isSpanish
-          ? ["✅ Crear cuenta", "✏️ Cambiar algo"]
-          : ["✅ Create account", "✏️ Change something"],
+          ? ["Sí", "Actualizar"]
+          : ["Yes", "Update"],
       "step": "regProgress.confirmCreateAccount",
       "keepTalk": false,
       "isFinalConfirmation": true,
@@ -1073,6 +964,110 @@ class GeminiService {
         : (_awaitingEmailChange
               ? 'emailChange'
               : questionFlow[_currentQuestionIndex]);
+
+    // ✅ Manejo especial para emailReask: si el usuario quiere cambiar email
+    if (currentStepKey == 'emailReask') {
+      final normalized = userInput.trim().toLowerCase();
+      final isSpanish = registerCubit.state.language == 'Español';
+
+      // Check if user wrote a new email directly
+      final emailRegex = RegExp(
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+      );
+      if (emailRegex.hasMatch(userInput.trim())) {
+        registerCubit.setEmail(userInput.trim());
+        debugPrint('✅ Email actualizado directamente desde emailReask: ${userInput.trim()}');
+        _currentQuestionIndex++;
+        final nextQuestion = AssistantFunctions.getCurrentQuestion(
+          questionFlow,
+          _currentQuestionIndex,
+          registerCubit,
+        );
+        if (nextQuestion != null) {
+          return await _prepareQuestion(nextQuestion, registerCubit);
+        }
+      }
+
+      // Si quiere cambiar
+      if (normalized.contains('si') ||
+          normalized.contains('sí') ||
+          normalized.contains('yes') ||
+          normalized.contains('cambiar') ||
+          normalized.contains('change')) {
+        _awaitingEmailChange = true;
+        return {
+          "text": isSpanish
+              ? "Por favor, ingresa tu nuevo correo electrónico:"
+              : "Please enter your new email address:",
+          "options": const <String>[],
+          "step": "regProgress.emailChange",
+          "keepTalk": false,
+          "keyboardType": "email",
+        };
+      }
+
+      // Si dice que está bien, continuar
+      if (normalized.contains('no') ||
+          normalized.contains('está bien') ||
+          normalized.contains('esta bien') ||
+          normalized.contains('fine') ||
+          normalized.contains('correcto') ||
+          normalized.contains('correct')) {
+        _currentQuestionIndex++;
+        final nextQuestion = AssistantFunctions.getCurrentQuestion(
+          questionFlow,
+          _currentQuestionIndex,
+          registerCubit,
+        );
+        if (nextQuestion != null) {
+          return await _prepareQuestion(nextQuestion, registerCubit);
+        }
+      }
+    }
+
+    // ✅ Manejo especial para gender: guardar y avanzar
+    if (currentStepKey == 'gender') {
+      final normalized = userInput.trim().toLowerCase();
+      final isSpanish = registerCubit.state.language == 'Español';
+
+      final validGenders = [
+        'hombre', 'mujer', 'prefiero no decir',
+        'male', 'female', 'rather not say',
+        'otro', 'other',
+      ];
+
+      if (validGenders.any((g) => normalized.contains(g))) {
+        registerCubit.setGender(userInput.trim());
+        debugPrint('✅ Género guardado: ${userInput.trim()}');
+
+        if (_isInRepeatMode) {
+          _currentQuestionIndex = _previousQuestionIndex;
+          _isInRepeatMode = false;
+        } else {
+          _currentQuestionIndex++;
+        }
+
+        if (_currentQuestionIndex >= questionFlow.length) {
+          return {
+            "text": isSpanish
+                ? "¡ Registro completado.🎉"
+                : " Registration complete.🎉",
+            "options": [],
+            "step": "finished",
+            "keepTalk": false,
+          };
+        }
+
+        final nextQuestion = AssistantFunctions.getCurrentQuestion(
+          questionFlow,
+          _currentQuestionIndex,
+          registerCubit,
+        );
+        if (nextQuestion != null) {
+          return await _prepareQuestion(nextQuestion, registerCubit);
+        }
+      }
+    }
 
     // ✅ Manejo especial para socialEcosystem: detectar retorno con redes vinculadas
     // Cuando el usuario regresa de vincular redes, el mensaje interno es 'socials_updated'
@@ -1905,19 +1900,31 @@ class GeminiService {
       if (processResult != null && processResult['verified'] == true) {
         debugPrint('✅ Email verificado - avanzando al siguiente paso');
 
-        // Saltar los pasos de otpInput y emailSuccess, ir directamente a socialEcosystem
-        final socialIndex = questionFlow.indexOf('socialEcosystem');
-        if (socialIndex != -1) {
-          _currentQuestionIndex = socialIndex;
+        // Saltar los pasos de otpInput y emailSuccess, ir al siguiente paso del flujo
+        final emailSuccessIndex = questionFlow.indexOf('emailSuccess');
+        if (emailSuccessIndex != -1) {
+          _currentQuestionIndex = emailSuccessIndex + 1;
         } else {
-          // Fallback: saltar los pasos de transición
+          // Fallback: saltar los pasos de transición después de emailVerification
           _currentQuestionIndex = questionFlow.indexOf('emailVerification') + 3;
         }
         debugPrint(
-          '📧 Email verificado - saltando a socialEcosystem, nuevo índice: $_currentQuestionIndex',
+          '📧 Email verificado - avanzando al siguiente paso, nuevo índice: $_currentQuestionIndex',
         );
 
-        // Mostrar la siguiente pregunta (socialEcosystem)
+        if (_currentQuestionIndex >= questionFlow.length) {
+          debugPrint('🎉 Registro completado después de verificación de email.');
+          return {
+            "text": registerCubit.state.language == 'Español'
+                ? "¡ Registro completado.🎉"
+                : " Registration complete.🎉",
+            "options": [],
+            "step": "finished",
+            "keepTalk": false,
+          };
+        }
+
+        // Mostrar la siguiente pregunta
         final nextQuestion = AssistantFunctions.getCurrentQuestion(
           questionFlow,
           _currentQuestionIndex,

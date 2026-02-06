@@ -688,8 +688,8 @@
   },
   "category": {
     "title": "Elige tu tipo de cuenta",
-    "subtitle": "Selecciona máximo 2 categorías",
-    "maxSelection": "Solo puedes elegir máximo 2 categorías. Deselecciona una para elegir otra.",
+    "subtitle": "Selecciona 1 categoría",
+    "maxSelection": "Solo puedes elegir 1 categoría.",
     "model": "Modelo",
     "artist": "Artista",
     "publicFigure": "Figura pública",

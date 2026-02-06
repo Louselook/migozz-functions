@@ -176,7 +176,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                   ),
                 ),
                 backgroundColor: Colors.red,
-                duration: const Duration(seconds: 2),
+                duration: const Duration(seconds: 5),
               ),
             );
           }
@@ -429,7 +429,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                       ),
                     ),
                     backgroundColor: Colors.green,
-                    duration: const Duration(seconds: 2),
+                    duration: const Duration(seconds: 5),
                   ),
                 );
               }
@@ -448,7 +448,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                       ),
                     ),
                     backgroundColor: Colors.red,
-                    duration: const Duration(seconds: 2),
+                    duration: const Duration(seconds: 5),
                   ),
                 );
               }
@@ -1464,7 +1464,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
             SnackBar(
               content: Text('addSocials.customLink.updated'.tr()),
               backgroundColor: Colors.green,
-              duration: const Duration(seconds: 2),
+              duration: const Duration(seconds: 5),
             ),
           );
           return;
@@ -1475,7 +1475,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
             SnackBar(
               content: Text('addSocials.customLink.updated'.tr()),
               backgroundColor: Colors.green,
-              duration: const Duration(seconds: 2),
+              duration: const Duration(seconds: 5),
             ),
           );
         }

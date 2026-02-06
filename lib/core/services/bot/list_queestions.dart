@@ -19,7 +19,7 @@ final Map<String, Map<String, dynamic>> questionsEs = {
   //   "keyboardType": "text",
   // },
   "fullName": {
-    "text": "Empecemos. Escribe tu nombre completo:",
+    "text": "¿Cuál es tu nombre y apellido?",
     "options": [],
     "step": "regProgress.fullName",
     "keepTalk": false,
@@ -28,7 +28,7 @@ final Map<String, Map<String, dynamic>> questionsEs = {
 
   "username": {
     "text":
-        "Perfecto {fullName}. Ahora escribe tu nombre de usuario:",
+        "Perfecto {fullName}. Elige tu apodo:",
     "options": [],
     "step": "regProgress.username",
     "keepTalk": false,
@@ -36,13 +36,20 @@ final Map<String, Map<String, dynamic>> questionsEs = {
     "generateSuggestions": true,
   },
 
-  // "gender": {
-  //   "text": "¡Excelente apodo! ¿Cuál es tu género?",
-  //   "options": ["Hombre", "Mujer"],
-  //   "step": "regProgress.gender",
-  //   "keepTalk": false,
-  //   "keyboardType": "text",
-  // },
+  "emailReask": {
+    "text": "Tu correo actual es: {email}. ¿Deseas cambiarlo?",
+    "options": ["No, está bien", "Sí, cambiar"],
+    "step": "regProgress.emailReask",
+    "keepTalk": false,
+  },
+
+  "gender": {
+    "text": "¿Cuál es tu género?",
+    "options": ["Hombre", "Mujer", "Prefiero no decir"],
+    "step": "regProgress.gender",
+    "keepTalk": false,
+    "keyboardType": "text",
+  },
   "socialEcosystem": {
     "text": "\u00a1Casi terminamos! Vincula tus redes sociales \ud83d\udcf1",
     "options": [],
@@ -135,9 +142,8 @@ final Map<String, Map<String, dynamic>> questionsEs = {
   },
 
   "confirmCreateAccount": {
-    "text":
-        "🎉 \u00a1Perfecto! Aqu\u00ed est\u00e1 el resumen de tu perfil. \u00bfTodo listo para crear tu cuenta?",
-    "options": ["\u2705 Crear cuenta", "\u270f\ufe0f Cambiar algo"],
+    "text": "¿Listo para crear tu cuenta?",
+    "options": ["Sí", "Actualizar"],
     "step": "regProgress.confirmCreateAccount",
     "keepTalk": false,
     "isFinalConfirmation": true,
@@ -180,7 +186,7 @@ final Map<String, Map<String, dynamic>> questionsEn = {
   //   "keyboardType": "text",
   // },
   "fullName": {
-    "text": "Let's get started. Enter your full name:",
+    "text": "What is your first and last name?",
     "options": [],
     "step": "regProgress.fullName",
     "keepTalk": false,
@@ -188,7 +194,7 @@ final Map<String, Map<String, dynamic>> questionsEn = {
   },
 
   "username": {
-    "text": "Got it {fullName}. Now enter your username:",
+    "text": "Got it {fullName}. Choose your nickname:",
     "options": [],
     "step": "regProgress.username",
     "keepTalk": false,
@@ -196,13 +202,20 @@ final Map<String, Map<String, dynamic>> questionsEn = {
     "generateSuggestions": true,
   },
 
-  // "gender": {
-  //   "text": "Great nickname! What is your gender?",
-  //   "options": ["Male", "Female"],
-  //   "step": "regProgress.gender",
-  //   "keepTalk": false,
-  //   "keyboardType": "text",
-  // },
+  "emailReask": {
+    "text": "Your current email is: {email}. Would you like to change it?",
+    "options": ["No, it's fine", "Yes, change it"],
+    "step": "regProgress.emailReask",
+    "keepTalk": false,
+  },
+
+  "gender": {
+    "text": "What is your gender?",
+    "options": ["Male", "Female", "Rather not say"],
+    "step": "regProgress.gender",
+    "keepTalk": false,
+    "keyboardType": "text",
+  },
   "socialEcosystem": {
     "text": "Almost done! Link your social networks \ud83d\udcf1",
     "options": [],
@@ -295,9 +308,8 @@ final Map<String, Map<String, dynamic>> questionsEn = {
   },
 
   "confirmCreateAccount": {
-    "text":
-        "🎉 Perfect! Here's your profile summary. Ready to create your account?",
-    "options": ["\u2705 Create account", "\u270f\ufe0f Change something"],
+    "text": "Ready to create your account?",
+    "options": ["Yes", "Update"],
     "step": "regProgress.confirmCreateAccount",
     "keepTalk": false,
     "isFinalConfirmation": true,
@@ -344,12 +356,12 @@ final Map<String, Map<String, dynamic>> errorMessagesEs = {
     "keepTalk": false,
   },
 
-  // "gender": {
-  //   "text": "Por favor elige una opción válida.",
-  //   "options": ["Hombre", "Mujer", "Otro"],
-  //   "step": "regProgress.gender",
-  //   "keepTalk": false,
-  // },
+  "gender": {
+    "text": "Por favor elige una opción válida.",
+    "options": ["Hombre", "Mujer", "Prefiero no decir"],
+    "step": "regProgress.gender",
+    "keepTalk": false,
+  },
   "location": {
     "text": "Responde Sí o No.",
     "options": ["Sí", "No"],
@@ -416,12 +428,12 @@ final Map<String, Map<String, dynamic>> errorMessagesEn = {
     "keepTalk": false,
   },
 
-  // "gender": {
-  //   "text": "Please choose a valid option.",
-  //   "options": ["Male", "Female"],
-  //   "step": "regProgress.gender",
-  //   "keepTalk": false,
-  // },
+  "gender": {
+    "text": "Please choose a valid option.",
+    "options": ["Male", "Female", "Rather not say"],
+    "step": "regProgress.gender",
+    "keepTalk": false,
+  },
   "location": {
     "text": "Answer Yes or No.",
     "options": ["Yes", "No"],
