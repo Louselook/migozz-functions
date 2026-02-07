@@ -98,7 +98,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   fontSize: 28.sp,
                   fontfamily: 'Inter',
                 ),
-                SizedBox(height: 8.h),
+                SizedBox(height: 1.h),
                 SecondaryText(
                   data.subTitleKey != null ? data.subTitleKey!.tr() : "",
                   textAlign: TextAlign.start,
@@ -107,13 +107,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   fontWeight: FontWeight.w500,
                   color: Colors.white,
                 ),
-                SizedBox(height: 4.h),
+                SizedBox(height: 1.h),
                 SecondaryText(
                   data.descriptionKey.tr(),
                   textAlign: TextAlign.start,
                   fontfamily: 'Inter',
-                  fontSize: 14.sp,
-                  color: AppColors.secondaryText.withValues(alpha: 0.85),
+                  fontSize: 15.sp,
+                  color: AppColors.secondaryText,
                 ),
                 const Spacer(),
 
