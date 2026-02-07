@@ -31,7 +31,7 @@ class PrimaryText extends StatelessWidget {
         text,
         textAlign: textAlign ?? TextAlign.start,
         style: TextStyle(
-          fontSize: 24, // tamaño fijo H2
+          fontSize: fontSize ?? 24, // tamaño fijo H2
           fontWeight: FontWeight.bold,
           color: color ?? AppColors.backgroundLight, // color por defecto blanco
         ),
