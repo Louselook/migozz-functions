@@ -90,24 +90,33 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   ) {
     final double screenHeight = MediaQuery.of(context).size.height;
     final double screenWidth = MediaQuery.of(context).size.width;
-    final bool isSmallScreen = screenHeight <= 800;
+    final bool isMediumScreen = screenHeight <= 850;
+    final bool isSmallScreen = screenHeight <= 750;
+
+    double descriptionSize = 15.sp;
+
+    isMediumScreen ? descriptionSize = 14.sp : null;
+    isSmallScreen ? descriptionSize = 12.sp : null;
 
     return Column(
       children: [
         Expanded(
-          flex: isSmallScreen ? 3 : 4,
+          flex: isMediumScreen ? 3 : 4,
           child: Padding(
             padding: EdgeInsets.all(20.w),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: 15,
+              spacing: isSmallScreen ? 10: 15,
               children: [
-                PrimaryText(
+                Text(
                   data.titleKey.tr(),
-                  fontSize: isSmallScreen ? 20 : 24,
-                  fontfamily: 'Inter',
-                  width: index == 1 ? (screenWidth * 60 / 100) : null,
+                  style: (TextStyle(
+                    fontSize: isMediumScreen ? 20 : 24,
+                    fontFamily: 'Inter',
+                    color: Color(0xFFFFFFFF),
+                    fontWeight: FontWeight.bold
+                  )),
                 ),
 
                 Column(
@@ -128,13 +137,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
                     Container(
                       constraints: BoxConstraints(
-                        minHeight: 60
+                        minHeight: isSmallScreen ? 0 : 60,
                       ),
                       child: SecondaryText(
                         data.descriptionKey.tr(),
                         textAlign: TextAlign.start,
                         fontfamily: 'Inter',
-                        fontSize: isSmallScreen ? 14.sp : 15.sp,
+                        fontSize: descriptionSize,
                         color: AppColors.secondaryText,
                       ),
                     ),
