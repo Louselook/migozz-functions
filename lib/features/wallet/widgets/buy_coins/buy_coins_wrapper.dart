@@ -11,7 +11,7 @@ class BuyCoinsWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<BuyCoinsCubit, BuyCoinsState>(
       builder: (context, state) {
-        if(state.inititialized){
+        if (state.inititialized) {
           return BuyCoinsForm();
         }
 

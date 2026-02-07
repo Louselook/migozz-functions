@@ -8,6 +8,36 @@ import 'package:migozz_app/features/wallet/widgets/wallet_actions.dart';
 import 'package:migozz_app/features/wallet/widgets/wallet_balance.dart';
 import 'package:migozz_app/features/wallet/widgets/history/wallet_history_wrapper.dart';
 
+class GradientText extends StatelessWidget {
+  final String text;
+  final double size;
+
+  const GradientText({super.key, required this.text, required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    return ShaderMask(
+      blendMode: BlendMode.srcIn,
+      shaderCallback: (Rect bounds) {
+        return const LinearGradient(
+          colors: [Color(0xFF9022BA), Color(0xFFDC44AA)],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ).createShader(bounds);
+      },
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: size,
+          fontWeight: FontWeight.bold,
+          color: Colors
+              .white, // El color base debe ser blanco para que el degradado brille
+        ),
+      ),
+    );
+  }
+}
+
 class WalletScreen extends StatelessWidget {
   const WalletScreen({super.key});
 
@@ -50,7 +80,7 @@ class WalletScreen extends StatelessWidget {
                             SizedBox(height: 20),
                             WalletActions(),
                             SizedBox(height: 30),
-                            WalletHistory()
+                            WalletHistory(),
                           ],
                         ),
                       ));

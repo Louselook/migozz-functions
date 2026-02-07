@@ -33,6 +33,7 @@ import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/notifications/presentation/notifications_list_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:migozz_app/features/wallet/cubit/buy_coins_cubit/buy_coins_cubit.dart';
+import 'package:migozz_app/features/wallet/cubit/conversion_cubit/conversion_cubit.dart';
 import 'package:migozz_app/features/wallet/cubit/wallet_cubit/wallet_cubit.dart';
 import 'package:migozz_app/features/wallet/screens/buy_coins_screen.dart';
 import 'package:migozz_app/features/wallet/screens/wallet_screen.dart';
@@ -213,8 +214,11 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
             path:'buy-coins',
             name: 'buy-coins',
             builder: (context, state) => BlocProvider(
-              create: (context) =>
-                  BuyCoinsCubit(walletCubit: context.read<WalletCubit>()),
+              create: (context) => 
+                  BuyCoinsCubit(
+                    walletCubit: context.read<WalletCubit>(),
+                    conversionCubit: context.read<ConversionCubit>()
+                  ),
               child: localizedBuilder(context, () => const BuyCoinsScreen()),
             ),
           ),

@@ -5,6 +5,7 @@ import 'package:migozz_app/features/wallet/cubit/conversion_cubit/conversion_cub
 import 'package:migozz_app/features/wallet/cubit/conversion_cubit/conversion_state.dart';
 import 'package:migozz_app/features/wallet/cubit/wallet_cubit/wallet_cubit.dart';
 import 'package:migozz_app/features/wallet/model/wallet_model.dart';
+import 'package:migozz_app/features/wallet/widgets/wallet_styles.dart';
 
 class WalletBalance extends StatelessWidget {
   const WalletBalance({super.key});
@@ -92,28 +93,7 @@ class WalletBalance extends StatelessWidget {
                               ),
                             ),
 
-                            ShaderMask(
-                              blendMode: BlendMode.srcIn,
-                              shaderCallback: (Rect bounds) {
-                                return const LinearGradient(
-                                  colors: [
-                                    Color(0xFF9022BA),
-                                    Color(0xFFDC44AA),
-                                  ],
-                                  begin: Alignment.centerLeft,
-                                  end: Alignment.centerRight,
-                                ).createShader(bounds);
-                              },
-                              child: const Text(
-                                'migozz coins',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors
-                                      .white, // El color base debe ser blanco para que el degradado brille
-                                ),
-                              ),
-                            ),
+                            GradientText(text: 'migozz coins', size: 14)
                           ],
                         ),
                       ],
