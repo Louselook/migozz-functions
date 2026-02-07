@@ -128,7 +128,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
                     Container(
                       constraints: BoxConstraints(
-                        minHeight: isSmallScreen ? 40 : 80
+                        minHeight: isSmallScreen ? 40 : 0
                       ),
                       child: SecondaryText(
                         data.descriptionKey.tr(),
