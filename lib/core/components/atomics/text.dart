@@ -25,16 +25,13 @@ class PrimaryText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: width ?? double.infinity,
-      child: Text(
-        text,
-        textAlign: textAlign ?? TextAlign.start,
-        style: TextStyle(
-          fontSize: fontSize ?? 24, // tamaño fijo H2
-          fontWeight: FontWeight.bold,
-          color: color ?? AppColors.backgroundLight, // color por defecto blanco
-        ),
+    return Text(
+      text,
+      textAlign: textAlign ?? TextAlign.start,
+      style: TextStyle(
+        fontSize: fontSize ?? 24, // tamaño fijo H2
+        fontWeight: FontWeight.bold,
+        color: color ?? AppColors.backgroundLight, // color por defecto blanco
       ),
     );
   }
