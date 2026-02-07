@@ -90,7 +90,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   ) {
     final double screenHeight = MediaQuery.of(context).size.height;
     final double screenWidth = MediaQuery.of(context).size.width;
-    final bool isSmallScreen = screenHeight <= 900;
+    final bool isSmallScreen = screenHeight <= 750;
 
     return Column(
       children: [
