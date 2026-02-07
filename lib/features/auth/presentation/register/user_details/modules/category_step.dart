@@ -248,18 +248,23 @@ class _CategoryStepState extends State<CategoryStep> {
               child: TintesGradients(child: SizedBox.expand()),
             ),
             Container(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 34),
               child: Column(
                 children: [
-                  const SizedBox(height: 12),
-                  PrimaryText('category.title'.tr(), fontSize: 22),
-                  const SizedBox(height: 8),
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.06),
+                  PrimaryText(
+                    'category.title'.tr(),
+                    fontSize: 22,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 4),
                   SecondaryText(
                     'category.subtitle'.tr(),
                     fontSize: 14,
                     color: Colors.grey,
+                    textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 8),
                   Expanded(
                     child: isLoading
                         ? const Center(child: CircularProgressIndicator())
@@ -276,48 +281,43 @@ class _CategoryStepState extends State<CategoryStep> {
                               final availableHeight = constraints.maxHeight;
                               final availableWidth = constraints.maxWidth;
 
-                              // Calcular escala óptima según items y espacio disponible
                               final totalItems = groups.fold<int>(
                                 0,
+                                // ignore: avoid_types_as_parameter_names
                                 (sum, g) => sum + g.identities.length,
                               );
-                              const baseItemW = 120.0;
-                              const baseRowH = 44.0;
-                              const baseGap = 6.0;
 
-                              double bestScale = 0.65;
-                              for (
-                                int tryPerRow = 2;
-                                tryPerRow <= 5;
-                                tryPerRow++
-                              ) {
-                                final tryRows = (totalItems / tryPerRow).ceil();
-                                final tryScale =
-                                    availableHeight / (tryRows * baseRowH);
-                                final scaledStep =
-                                    (baseItemW + baseGap) * tryScale;
-                                final actualPerRow =
-                                    (availableWidth / scaledStep).floor();
-                                if (actualPerRow >= tryPerRow &&
-                                    tryScale > bestScale) {
-                                  bestScale = tryScale;
-                                }
-                              }
-                              final scaleFactor = bestScale.clamp(0.65, 1.5);
+                              // Base: item ~110px ancho, ~42px alto
+                              const baseItemWidth = 110.0;
+                              const baseItemHeight = 42.0;
+                              const baseGap = 8.0;
 
-                              final spacing = (6.0 * scaleFactor).clamp(
-                                4.0,
-                                14.0,
-                              );
+                              // Cuántos items caben por fila
+                              final itemsPerRow =
+                                  (availableWidth / (baseItemWidth + baseGap))
+                                      .floor()
+                                      .clamp(2, 5);
+                              final totalRows = (totalItems / itemsPerRow)
+                                  .ceil();
 
-                              return SizedBox(
-                                width: availableWidth,
-                                height: availableHeight,
+                              // Altura necesaria vs disponible
+                              final neededHeight =
+                                  totalRows * (baseItemHeight + baseGap);
+                              final scaleFactor =
+                                  (availableHeight / neededHeight).clamp(
+                                    0.5,
+                                    1.0,
+                                  );
+
+                              final horizontalSpacing = 8.0 * scaleFactor;
+                              final verticalSpacing = 8.0 * scaleFactor;
+
+                              return Center(
                                 child: Wrap(
                                   alignment: WrapAlignment.center,
                                   runAlignment: WrapAlignment.spaceEvenly,
-                                  spacing: spacing,
-                                  runSpacing: 0,
+                                  spacing: horizontalSpacing,
+                                  runSpacing: verticalSpacing,
                                   children: [
                                     for (final group in groups)
                                       for (final identity in group.identities)
@@ -338,7 +338,10 @@ class _CategoryStepState extends State<CategoryStep> {
                           ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.only(top: 12, bottom: 8),
+                    padding: EdgeInsets.only(
+                      top: MediaQuery.of(context).size.height * 0.01,
+                      bottom: MediaQuery.of(context).size.height * 0.02,
+                    ),
                     child: widget.mode == MoreUserDetailsMode.register
                         ? GradientButton(
                             width: double.infinity,

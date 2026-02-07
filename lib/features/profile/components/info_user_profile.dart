@@ -493,39 +493,43 @@ class _InfoUserProfileState extends State<InfoUserProfile>
         const SizedBox(height: 11),
 
         Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Icono izquierdo: compartir (siempre muestra el QR del perfil)
-            GestureDetector(
-              key:
-                  widget.profileTutorialKeys?.shareQrKey ??
-                  widget.tutorialKeys?.shareButtonKey,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (context) => widget.isOwnProfile
-                        ? const ProfileQrScreen()
-                        : ProfileQrScreen(
-                            userId: widget.userId,
-                            overrideUsername: widget.displayName.replaceFirst(
-                              '@',
-                              '',
-                            ),
-                            overrideDisplayName: widget.name,
-                          ),
+            // Lado izquierdo: share icon (ocupa mismo espacio que derecha)
+            Expanded(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  GestureDetector(
+                    key:
+                        widget.profileTutorialKeys?.shareQrKey ??
+                        widget.tutorialKeys?.shareButtonKey,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (context) => widget.isOwnProfile
+                              ? const ProfileQrScreen()
+                              : ProfileQrScreen(
+                                  userId: widget.userId,
+                                  overrideUsername: widget.displayName
+                                      .replaceFirst('@', ''),
+                                  overrideDisplayName: widget.name,
+                                ),
+                        ),
+                      );
+                    },
+                    child: SvgPicture.asset(
+                      AssetsConstants.shareIcon,
+                      width: 20,
+                      height: 20,
+                    ),
                   ),
-                );
-              },
-              child: SvgPicture.asset(
-                AssetsConstants.shareIcon,
-                width: 20,
-                height: 20,
+                  const SizedBox(width: 15),
+                ],
               ),
             ),
 
-            const SizedBox(width: 15),
+            // Centro: community counter
             GestureDetector(
               key: widget.profileTutorialKeys?.communityKey,
               onTap: _onCommunityTap,
@@ -534,33 +538,39 @@ class _InfoUserProfileState extends State<InfoUserProfile>
                 child: _buildCommunityContent(),
               ),
             ),
-            const SizedBox(width: 15),
 
-            // Ícono de mensaje
-            GestureDetector(
-              key: widget.profileTutorialKeys?.messagesHeaderKey,
-              onTap: widget.onMessageTap,
-              child: Image.asset(
-                AssetsConstants.inboxIcon,
-                width: 20,
-                height: 20,
-                color: Colors.white,
-              ),
-            ),
-
-            const SizedBox(width: 5),
-
-            // Ícono de donación (regalo)
-            GestureDetector(
-              onTap: () => _showDonationComingSoonDialog(context),
-              child: SvgPicture.asset(
-                'assets/icons/Gift_Icon.svg',
-                width: 24,
-                height: 24,
-                colorFilter: const ColorFilter.mode(
-                  Color(0xFF22C55E),
-                  BlendMode.srcIn,
-                ),
+            // Lado derecho: inbox + gift (ocupa mismo espacio que izquierda)
+            Expanded(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  const SizedBox(width: 15),
+                  // Ícono de mensaje
+                  GestureDetector(
+                    key: widget.profileTutorialKeys?.messagesHeaderKey,
+                    onTap: widget.onMessageTap,
+                    child: Image.asset(
+                      AssetsConstants.inboxIcon,
+                      width: 20,
+                      height: 20,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Ícono de donación (regalo)
+                  GestureDetector(
+                    onTap: () => _showDonationComingSoonDialog(context),
+                    child: SvgPicture.asset(
+                      'assets/icons/Gift_Icon.svg',
+                      width: 22,
+                      height: 22,
+                      colorFilter: const ColorFilter.mode(
+                        Color(0xFF22C55E),
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

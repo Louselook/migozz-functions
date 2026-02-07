@@ -65,9 +65,7 @@ class LoaderDialog extends StatefulWidget {
 
 class _LoaderDialogState extends State<LoaderDialog> {
   late String _displayMessage;
-  Timer? _messageTimer;
   List<String> _sequenceMessages = const [];
-  int _sequenceIndex = 0;
 
   @override
   void initState() {
@@ -80,39 +78,30 @@ class _LoaderDialogState extends State<LoaderDialog> {
       _sequenceMessages = _getSequenceMessages(widget.type);
     }
 
-    _sequenceIndex = 0;
     _displayMessage = _sequenceMessages.isNotEmpty
         ? _sequenceMessages[0]
         : 'common.loading'.tr();
 
-    // Avanza cada 2 segundos sin loop.
-    // Cada mensaje se muestra mínimo 2 segundos.
-    // Al llegar al último, se queda hasta que se cierre el dialog.
+    // Avanza mensaje por mensaje con delay, sin loop.
     if (_sequenceMessages.length > 1) {
-      _messageTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
-        if (!mounted) {
-          timer.cancel();
-          return;
-        }
+      _advanceMessages();
+    }
+  }
 
-        _sequenceIndex++;
-
-        // Último mensaje alcanzado → detener, sin volver al inicio.
-        if (_sequenceIndex >= _sequenceMessages.length) {
-          timer.cancel();
-          return;
-        }
-
-        setState(() {
-          _displayMessage = _sequenceMessages[_sequenceIndex];
-        });
+  /// Avanza al siguiente mensaje después de 2s. Se detiene en el último.
+  Future<void> _advanceMessages() async {
+    for (int i = 1; i < _sequenceMessages.length; i++) {
+      await Future.delayed(const Duration(seconds: 2));
+      if (!mounted) return;
+      setState(() {
+        _displayMessage = _sequenceMessages[i];
       });
     }
+    // Último mensaje queda visible hasta que se cierre el dialog.
   }
 
   @override
   void dispose() {
-    _messageTimer?.cancel();
     super.dispose();
   }
 
