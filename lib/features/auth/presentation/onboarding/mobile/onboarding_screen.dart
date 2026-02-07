@@ -39,85 +39,104 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     // Usa ScreenUtil valores escalados para paddings/medidas
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
-      body: Column(
-        children: [
-          // Indicadores de progreso
-          Padding(
-            padding: EdgeInsets.only(top: 40.h, left: 20.w, right: 20.w),
-            child: Row(
-              children: List.generate(
-                AppConstants.onboardingImages.length,
-                (index) => CustomProgressIndicator(
-                  index,
-                  currentIndex: _currentPage,
-                  borderRadius: BorderRadius.circular(4.r),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Indicadores de progreso
+            Padding(
+              padding: EdgeInsets.only(top: 10, left: 20.w, right: 20.w),
+              child: Row(
+                spacing: 5,
+                children: List.generate(
+                  AppConstants.onboardingImages.length,
+                  (index) => CustomProgressIndicator(
+                    index,
+                    currentIndex: _currentPage,
+                    borderRadius: BorderRadius.circular(4.r),
+                  ),
                 ),
               ),
             ),
-          ),
 
-          // Contenido de páginas
-          Expanded(
-            child: PageView.builder(
-              controller: _pageController,
-              onPageChanged: (int page) {
-                setState(() {
-                  _currentPage = page;
-                });
-              },
-              itemCount: AppConstants.onboardingImages.length,
-              itemBuilder: (context, index) {
-                return _buildOnboardingPage(
-                  context,
-                  AppConstants.onboardingPages[index],
-                );
-              },
+            // Contenido de páginas
+            Expanded(
+              child: PageView.builder(
+                controller: _pageController,
+                onPageChanged: (int page) {
+                  setState(() {
+                    _currentPage = page;
+                  });
+                },
+                itemCount: AppConstants.onboardingImages.length,
+                itemBuilder: (context, index) {
+                  return _buildOnboardingPage(
+                    context,
+                    AppConstants.onboardingPages[index],
+                    index,
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildOnboardingPage(BuildContext context, OnboardingData data) {
+  Widget _buildOnboardingPage(
+    BuildContext context,
+    OnboardingData data,
+    int index,
+  ) {
     final double screenHeight = MediaQuery.of(context).size.height;
+    final double screenWidth = MediaQuery.of(context).size.width;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Parte superior → 50%
         Expanded(
-          flex: screenHeight < 800 ? 5 : 3, // para no chocar componetes
+          flex: 3,
           child: Padding(
             padding: EdgeInsets.all(20.w),
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 15,
               children: [
-                SizedBox(height: 5.h),
                 PrimaryText(
                   data.titleKey.tr(),
                   fontSize: 28.sp,
                   fontfamily: 'Inter',
+                  width: index == 1 ? (screenWidth * 60 / 100) : null,
                 ),
-                SizedBox(height: 1.h),
-                SecondaryText(
-                  data.subTitleKey != null ? data.subTitleKey!.tr() : "",
-                  textAlign: TextAlign.start,
-                  fontfamily: 'Inter',
-                  fontSize: 15.sp,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
-                ),
-                SizedBox(height: 1.h),
-                SecondaryText(
-                  data.descriptionKey.tr(),
-                  textAlign: TextAlign.start,
-                  fontfamily: 'Inter',
-                  fontSize: 15.sp,
-                  color: AppColors.secondaryText,
-                ),
-                const Spacer(),
 
-                // Botones
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    data.subTitleKey != null
+                        ? SecondaryText(
+                            data.subTitleKey != null
+                                ? data.subTitleKey!.tr()
+                                : "",
+                            textAlign: TextAlign.start,
+                            fontfamily: 'Inter',
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white,
+                          )
+                        : SizedBox.shrink(),
+
+                    Container(
+                      constraints: const BoxConstraints(minHeight: 80),
+                      child: SecondaryText(
+                        data.descriptionKey.tr(),
+                        textAlign: TextAlign.start,
+                        fontfamily: 'Inter',
+                        fontSize: 15.sp,
+                        color: AppColors.secondaryText,
+                      ),
+                    ),
+                  ],
+                ),
+
                 _currentPage == AppConstants.onboardingImages.length - 1
                     ? SizedBox(
                         width: double.infinity,

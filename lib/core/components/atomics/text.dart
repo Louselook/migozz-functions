@@ -9,11 +9,13 @@ class PrimaryText extends StatelessWidget {
   final TextAlign? textAlign;
   final double? fontSize;
   final String? fontfamily;
+  final double? width;
 
   const PrimaryText(
     this.text, {
     this.color,
     this.textAlign,
+    this.width,
     super.key,
     maxLines,
     TextOverflow? overflow,
@@ -23,13 +25,16 @@ class PrimaryText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      text,
-      textAlign: textAlign ?? TextAlign.start,
-      style: TextStyle(
-        fontSize: 24, // tamaño fijo H2
-        fontWeight: FontWeight.bold,
-        color: color ?? AppColors.backgroundLight, // color por defecto blanco
+    return SizedBox(
+      width: width ?? double.infinity,
+      child: Text(
+        text,
+        textAlign: textAlign ?? TextAlign.start,
+        style: TextStyle(
+          fontSize: 24, // tamaño fijo H2
+          fontWeight: FontWeight.bold,
+          color: color ?? AppColors.backgroundLight, // color por defecto blanco
+        ),
       ),
     );
   }
