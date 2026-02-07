@@ -121,7 +121,7 @@ class _LoaderDialogState extends State<LoaderDialog> {
           'common.loader_sequences.registration.step3'.tr(),
           'common.loader_sequences.registration.step4'.tr(),
           'common.loader_sequences.registration.step5'.tr(),
-          'common.loader_sequences.registration.step6'.tr(),
+          // 'common.loader_sequences.registration.step6'.tr(),
         ];
       case LoaderType.profileUpdate:
         return [
