@@ -32,7 +32,9 @@ import 'package:migozz_app/features/search/web/presentation/search_screen.dart'
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/notifications/presentation/notifications_list_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:migozz_app/features/wallet/screens/buy_coins/buy_coins_screen.dart';
+import 'package:migozz_app/features/wallet/cubit/buy_coins_cubit/buy_coins_cubit.dart';
+import 'package:migozz_app/features/wallet/cubit/wallet_cubit/wallet_cubit.dart';
+import 'package:migozz_app/features/wallet/screens/buy_coins_screen.dart';
 import 'package:migozz_app/features/wallet/screens/wallet_screen.dart';
 
 Widget localizedBuilder(BuildContext context, Widget Function() screenBuilder) {
@@ -205,15 +207,18 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       GoRoute(
         path: '/wallet',
         name: 'wallet',
-        builder: (context, state) =>
-            localizedBuilder(context, () => const WalletScreen()),
-      ),
-
-      GoRoute(
-        path: '/wallet/buy-coins',
-        name: 'buy-coins',
-        builder: (context, state) =>
-            localizedBuilder(context, () => const BuyCoinsScreen()),
+        builder: (context, state) => localizedBuilder(context, () => const WalletScreen()),
+        routes: [
+          GoRoute(
+            path:'buy-coins',
+            name: 'buy-coins',
+            builder: (context, state) => BlocProvider(
+              create: (context) =>
+                  BuyCoinsCubit(walletCubit: context.read<WalletCubit>()),
+              child: localizedBuilder(context, () => const BuyCoinsScreen()),
+            ),
+          ),
+        ],
       ),
 
       GoRoute(
@@ -469,6 +474,8 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
           '/search',
           '/notifications',
           '/chat',
+          '/wallet',
+          '/wallet/buy-coins'
         };
 
         final allowed =

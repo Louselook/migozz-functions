@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:migozz_app/core/assets_constants.dart';
+import 'package:go_router/go_router.dart';
 
 class TransactionButton extends StatelessWidget {
   final String icon;
   final String text;
+  final String route;
 
-  const TransactionButton({super.key, required this.icon, required this.text});
+  const TransactionButton({super.key, required this.icon, required this.text, required this.route});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => {},
+      onTap: () {
+        context.goNamed(route);
+      },
       child: Container(
         width: 70,
         height: 70,

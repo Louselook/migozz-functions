@@ -13,9 +13,9 @@ class WalletActions extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         spacing: 40,
         children: [
-        TransactionButton(icon: AssetsConstants.walletBuy, text: "wallet.buyText".tr()),
-        TransactionButton(icon: AssetsConstants.walletUp, text: "wallet.sentText".tr()),
-        TransactionButton(icon: AssetsConstants.walletDown, text: "wallet.withdraw".tr()),
+        TransactionButton(icon: AssetsConstants.walletBuy, text: "wallet.buyText".tr(), route: "buy-coins"),
+        TransactionButton(icon: AssetsConstants.walletUp, text: "wallet.sentText".tr(), route: "buy-coins"),
+        TransactionButton(icon: AssetsConstants.walletDown, text: "wallet.withdraw".tr(), route: "buy-coins"),
       ],)
     );
   }

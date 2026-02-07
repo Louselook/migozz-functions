@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/assets_constants.dart';
 
 class WalletHistoryEmpty extends StatelessWidget {
@@ -34,7 +35,7 @@ class WalletHistoryEmpty extends StatelessWidget {
           ),
           child: ElevatedButton(
             onPressed: () {
-              print("Compra de monedas iniciada");
+              context.pushNamed("buy-coins");
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors
