@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:migozz_app/features/wallet/cubit/buy_coins_cubit/buy_coins_cubit.dart';
+import 'package:migozz_app/features/wallet/cubit/buy_coins_cubit/buy_coins_state.dart';
 import 'package:migozz_app/features/wallet/cubit/conversion_cubit/conversion_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/wallet/widgets/history/gradient_button.dart';
@@ -41,8 +42,8 @@ class BuyLabelItem extends StatelessWidget {
 class BuyCoinsDetails extends StatelessWidget {
   const BuyCoinsDetails({super.key});
 
-  void _handleContinue(){
-    
+  void _handleContinue(BuildContext context){
+    context.read<BuyCoinsCubit>().nextStep(() => const BuyCoinsState.paymentMethod(10)); 
   }
 
   @override
@@ -112,7 +113,7 @@ class BuyCoinsDetails extends StatelessWidget {
             ),
           ),
 
-          WalletGradientButton(action: _handleContinue, text: "Continue")
+          WalletGradientButton(action: () => _handleContinue(context), text: "Continue")
         ],
       ),
     );

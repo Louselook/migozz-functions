@@ -26,4 +26,8 @@ class BuyCoinsCubit extends Cubit<BuyCoinsState> {
     emit(state.copyWith(amount: value, total: total));
   }
 
+  void nextStep(BuyCoinsState Function() status ){
+    emit(status());
+  }
+
 }
