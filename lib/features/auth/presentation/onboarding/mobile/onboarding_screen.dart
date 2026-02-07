@@ -95,13 +95,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return Column(
       children: [
         Expanded(
-          flex: isSmallScreen ? 4 : 3,
+          flex: isSmallScreen ? 3 : 4,
           child: Padding(
             padding: EdgeInsets.all(20.w),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: isSmallScreen ? 8 : 15,
+              spacing: 15,
               children: [
                 PrimaryText(
                   data.titleKey.tr(),
@@ -128,7 +128,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
                     Container(
                       constraints: BoxConstraints(
-                
+                        minHeight: 60
                       ),
                       child: SecondaryText(
                         data.descriptionKey.tr(),
