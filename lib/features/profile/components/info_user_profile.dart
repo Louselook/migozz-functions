@@ -547,6 +547,22 @@ class _InfoUserProfileState extends State<InfoUserProfile>
                 color: Colors.white,
               ),
             ),
+
+            const SizedBox(width: 5),
+
+            // Ícono de donación (regalo)
+            GestureDetector(
+              onTap: () => _showDonationComingSoonDialog(context),
+              child: SvgPicture.asset(
+                'assets/icons/Gift_Icon.svg',
+                width: 24,
+                height: 24,
+                colorFilter: const ColorFilter.mode(
+                  Color(0xFF22C55E),
+                  BlendMode.srcIn,
+                ),
+              ),
+            ),
           ],
         ),
         // Bio centrada
@@ -572,29 +588,6 @@ class _InfoUserProfileState extends State<InfoUserProfile>
             ),
           ),
         ],
-        // Icono de donación siempre debajo
-        const SizedBox(height: 8),
-        GestureDetector(
-          onTap: () => _showDonationComingSoonDialog(context),
-          child: Container(
-            width: 32,
-            height: 32,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Color(0xFF22C55E), // Verde
-            ),
-            child: const Center(
-              child: Text(
-                '\$',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-        ),
       ],
     );
   }

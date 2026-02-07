@@ -75,31 +75,38 @@ class _LoaderDialogState extends State<LoaderDialog> {
 
     if (widget.message != null) {
       _displayMessage = widget.message!;
+      _sequenceMessages = [widget.message!];
     } else {
-      // Usar mensaje según el tipo de loader
-      _displayMessage = _getMessageForType(widget.type);
-
       _sequenceMessages = _getSequenceMessages(widget.type);
-      if (_sequenceMessages.isEmpty) return;
+    }
 
-      _sequenceIndex = 0;
-      _displayMessage = _sequenceMessages[_sequenceIndex];
+    _sequenceIndex = 0;
+    _displayMessage = _sequenceMessages.isNotEmpty
+        ? _sequenceMessages[0]
+        : 'common.loading'.tr();
 
-      // Rotate a few messages while loading to provide feedback.
-      // Stop after the last message to avoid infinite cycling.
-      if (_sequenceMessages.length > 1) {
-        _messageTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
-          if (!mounted) return;
-          if (_sequenceIndex >= _sequenceMessages.length - 1) {
-            timer.cancel();
-            return;
-          }
-          setState(() {
-            _sequenceIndex += 1;
-            _displayMessage = _sequenceMessages[_sequenceIndex];
-          });
+    // Avanza cada 2 segundos sin loop.
+    // Cada mensaje se muestra mínimo 2 segundos.
+    // Al llegar al último, se queda hasta que se cierre el dialog.
+    if (_sequenceMessages.length > 1) {
+      _messageTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
+        if (!mounted) {
+          timer.cancel();
+          return;
+        }
+
+        _sequenceIndex++;
+
+        // Último mensaje alcanzado → detener, sin volver al inicio.
+        if (_sequenceIndex >= _sequenceMessages.length) {
+          timer.cancel();
+          return;
+        }
+
+        setState(() {
+          _displayMessage = _sequenceMessages[_sequenceIndex];
         });
-      }
+      });
     }
   }
 
@@ -107,27 +114,6 @@ class _LoaderDialogState extends State<LoaderDialog> {
   void dispose() {
     _messageTimer?.cancel();
     super.dispose();
-  }
-
-  String _getMessageForType(LoaderType type) {
-    switch (type) {
-      case LoaderType.login:
-        return 'common.loader_sequences.login.step1'.tr();
-      case LoaderType.registration:
-        return 'common.loader_sequences.registration.step1'.tr();
-      case LoaderType.profileUpdate:
-        return 'common.loader_sequences.profile_update.step1'.tr();
-      case LoaderType.qrScan:
-        return 'common.loader_sequences.qr_scan.step1'.tr();
-      case LoaderType.socialAuth:
-        return 'common.loader_sequences.social_auth.step2'.tr(
-          namedArgs: {'platform': widget.platform ?? 'Migozz'},
-        );
-      case LoaderType.logout:
-        return 'common.loader_sequences.logout.step1'.tr();
-      default:
-        return 'common.loading'.tr();
-    }
   }
 
   List<String> _getSequenceMessages(LoaderType type) {
@@ -144,7 +130,9 @@ class _LoaderDialogState extends State<LoaderDialog> {
           'common.loader_sequences.registration.step1'.tr(),
           'common.loader_sequences.registration.step2'.tr(),
           'common.loader_sequences.registration.step3'.tr(),
-          'common.loader_sequence.delay'.tr(),
+          'common.loader_sequences.registration.step4'.tr(),
+          'common.loader_sequences.registration.step5'.tr(),
+          'common.loader_sequences.registration.step6'.tr(),
         ];
       case LoaderType.profileUpdate:
         return [
@@ -169,19 +157,19 @@ class _LoaderDialogState extends State<LoaderDialog> {
         ];
       case LoaderType.socialAuth:
         return [
-          'common.loader_sequences.social_auth.step1'
-              .tr(namedArgs: {'platform': widget.platform ?? 'Social'}),
-          'common.loader_sequences.social_auth.step2'
-              .tr(namedArgs: {'platform': widget.platform ?? 'Social'}),
-          'common.loader_sequences.social_auth.step3'
-              .tr(namedArgs: {'platform': widget.platform ?? 'Social'}),
+          'common.loader_sequences.social_auth.step1'.tr(
+            namedArgs: {'platform': widget.platform ?? 'Social'},
+          ),
+          'common.loader_sequences.social_auth.step2'.tr(
+            namedArgs: {'platform': widget.platform ?? 'Social'},
+          ),
+          'common.loader_sequences.social_auth.step3'.tr(
+            namedArgs: {'platform': widget.platform ?? 'Social'},
+          ),
           'common.loader_sequence.delay'.tr(),
         ];
       default:
-        return [
-          'common.loading'.tr(),
-          'common.loader_sequence.delay'.tr(),
-        ];
+        return ['common.loading'.tr(), 'common.loader_sequence.delay'.tr()];
     }
   }
 
@@ -221,16 +209,20 @@ class _LoaderDialogState extends State<LoaderDialog> {
               fit: BoxFit.contain,
             ),
             const SizedBox(height: 16),
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              child: Text(
-                _displayMessage,
-                key: ValueKey(_displayMessage),
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
+            SizedBox(
+              width: double.infinity,
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: Text(
+                  _displayMessage,
+                  key: ValueKey(_displayMessage),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    height: 1.4,
+                  ),
                 ),
               ),
             ),

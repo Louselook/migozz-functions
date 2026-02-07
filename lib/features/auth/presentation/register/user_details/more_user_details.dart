@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/color.dart';
@@ -142,9 +143,27 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
 
     return WillPopScope(
       onWillPop: () async {
-        // En modo registro, permitir volver pero con código especial si no hay redes
+        // En modo registro, validar según la página actual
         if (widget.mode == MoreUserDetailsMode.register) {
           final registerState = context.read<RegisterCubit>().state;
+          final currentPage = pageController.page?.round() ?? 0;
+
+          // Página 1 = CategoryStep - Verificar que tenga categoría seleccionada
+          if (currentPage == 1) {
+            final categories = registerState.category ?? [];
+            if (categories.isEmpty) {
+              // No permitir salir sin categoría
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('category.required'.tr()),
+                  backgroundColor: Colors.orange,
+                  duration: const Duration(seconds: 3),
+                ),
+              );
+              return false;
+            }
+          }
+
           final socialEcosystem = registerState.socialEcosystem ?? [];
 
           if (socialEcosystem.isEmpty) {

@@ -27,8 +27,7 @@ final Map<String, Map<String, dynamic>> questionsEs = {
   },
 
   "username": {
-    "text":
-        "Perfecto {fullName}. Elige tu apodo:",
+    "text": "Perfecto {fullName}. Elige tu apodo:",
     "options": [],
     "step": "regProgress.username",
     "keepTalk": false,
@@ -143,7 +142,7 @@ final Map<String, Map<String, dynamic>> questionsEs = {
 
   "confirmCreateAccount": {
     "text": "¿Listo para crear tu cuenta?",
-    "options": ["Sí", "Actualizar"],
+    "options": ["Sí, vamos a Migozz", "Cambiar algo"],
     "step": "regProgress.confirmCreateAccount",
     "keepTalk": false,
     "isFinalConfirmation": true,
@@ -194,7 +193,7 @@ final Map<String, Map<String, dynamic>> questionsEn = {
   },
 
   "username": {
-    "text": "Got it {fullName}. Choose your nickname:",
+    "text": "Got it {fullName}. Choose your Username:",
     "options": [],
     "step": "regProgress.username",
     "keepTalk": false,
@@ -309,7 +308,7 @@ final Map<String, Map<String, dynamic>> questionsEn = {
 
   "confirmCreateAccount": {
     "text": "Ready to create your account?",
-    "options": ["Yes", "Update"],
+    "options": ["Yes, go to Migozz", "Change something"],
     "step": "regProgress.confirmCreateAccount",
     "keepTalk": false,
     "isFinalConfirmation": true,
