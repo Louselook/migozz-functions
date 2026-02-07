@@ -184,7 +184,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
         // Parte inferior → 50%
         Expanded(
-          flex: isSmallScreen ? 4 : 5,
+          flex: 4,
           child: Padding(
             padding: EdgeInsets.all(8.w),
             child: Container(
