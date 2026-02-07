@@ -106,6 +106,7 @@ flutter:
     - assets/
     - assets/images/
     - assets/translations/
+    - assets/icons/account_type/
     - assets/icons/
     - assets/migozz_icon/
     - assets/emojis/

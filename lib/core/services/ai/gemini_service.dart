@@ -326,16 +326,22 @@ class GeminiService {
     'welcome', // 0 - Mensaje de bienvenida
     'fullName', // 1 - Nombre completo
     'username', // 2 - Username/Apodo
-    'emailReask', // 3 - Re-preguntar email (sin OTP)
+    // 'emailReask', // 3 - Re-preguntar email (sin OTP)
     'category', // 4 - Categoría/tipo de perfil
     'interests', // 5 - Intereses
     'gender', // 6 - Género
     'location', // 7 - Ubicación
-    'confirmCreateAccount', // 8 - ¿Listo para crear tu cuenta? (Sí / Actualizar)
+    'voiceNoteUrl',
+    'socialEcosystem',
+    'avatarUrl',
+
+    // start email
     'sendOTP', // 9 - Confirmar email y enviar código
     'emailVerification', // 10
     'otpInput', // 11
-    'emailSuccess', // 12
+    'emailSuccess', // 12'
+    // end email
+    'confirmCreateAccount', // 8 - ¿Listo para crear tu cuenta? (Sí / Actualizar)
   ];
 
   //  Flujo reducido para usuarios autenticados (Google/Apple)
@@ -346,6 +352,9 @@ class GeminiService {
     'interests', // 2 - Intereses
     'gender', // 3 - Género
     'location', // 4 - Ubicación
+    'voiceNoteUrl',
+    'socialEcosystem',
+    'avatarUrl',
     'confirmCreateAccount', // 5 - Confirmación final
   ];
 
@@ -465,17 +474,71 @@ class GeminiService {
     return false;
   }
 
-  /// Genera el mensaje final sin resumen, solo la pregunta con opciones
+  /// Genera el mensaje final con resumen de datos y opciones
   Map<String, dynamic> _buildFinalConfirmationMessage(RegisterCubit cubit) {
     final isSpanish = cubit.state.language == 'Español';
+    final s = cubit.state;
+
+    // Construir resumen de datos
+    final lines = <String>[];
+
+    if (s.fullName != null && s.fullName!.isNotEmpty) {
+      lines.add('${isSpanish ? '👤 Nombre' : '👤 Name'}: ${s.fullName}');
+    }
+    if (s.username != null && s.username!.isNotEmpty) {
+      lines.add(
+        '${isSpanish ? '🏷️ Usuario' : '🏷️ Username'}: @${s.username}',
+      );
+    }
+    if (s.email != null && s.email!.isNotEmpty) {
+      lines.add('${isSpanish ? '📧 Email' : '📧 Email'}: ${s.email}');
+    }
+    if (s.gender != null && s.gender!.isNotEmpty) {
+      lines.add('${isSpanish ? '⚧ Género' : '⚧ Gender'}: ${s.gender}');
+    }
+    if (s.location != null && s.location!.hasData) {
+      final loc = s.location!;
+      final locationStr = [
+        loc.city,
+        loc.state,
+        loc.country,
+      ].where((e) => e.isNotEmpty).join(', ');
+      lines.add('${isSpanish ? '📍 Ubicación' : '📍 Location'}: $locationStr');
+    }
+    if (s.phone != null && s.phone!.isNotEmpty) {
+      lines.add('${isSpanish ? '📱 Teléfono' : '📱 Phone'}: ${s.phone}');
+    }
+    if (s.category != null && s.category!.isNotEmpty) {
+      lines.add(
+        '${isSpanish ? '🎯 Categoría' : '🎯 Category'}: ${s.category!.join(', ')}',
+      );
+    }
+    if (s.socialEcosystem != null && s.socialEcosystem!.isNotEmpty) {
+      final count = s.socialEcosystem!.length;
+      lines.add(
+        '${isSpanish ? '🔗 Redes sociales' : '🔗 Social networks'}: $count ${isSpanish ? 'conectadas' : 'connected'}',
+      );
+    }
+    if (s.voiceNoteUrl != null && s.voiceNoteUrl!.isNotEmpty) {
+      lines.add(isSpanish ? '🎤 Nota de voz: ✅' : '🎤 Voice note: ✅');
+    }
+    if (s.avatarUrl != null && s.avatarUrl!.isNotEmpty) {
+      lines.add(isSpanish ? '📸 Foto de perfil: ✅' : '📸 Profile photo: ✅');
+    }
+
+    final summary = lines.join('\n');
+    final header = isSpanish
+        ? '📋 Resumen de tu cuenta:\n\n'
+        : '📋 Your account summary:\n\n';
+    final footer = isSpanish
+        ? '\n\n¿Todo se ve bien?'
+        : '\n\nDoes everything look good?';
 
     return {
-      "text": isSpanish
-          ? '¿Listo para crear tu cuenta?'
-          : 'Ready to create your account?',
+      "text": '$header$summary$footer',
       "options": isSpanish
-          ? ["Sí", "Actualizar"]
-          : ["Yes", "Update"],
+          ? ["Sí, vamos a Migozz", "Cambiar algo"]
+          : ["Yes, go to Migozz", "Change something"],
       "step": "regProgress.confirmCreateAccount",
       "keepTalk": false,
       "isFinalConfirmation": true,
@@ -976,7 +1039,9 @@ class GeminiService {
       );
       if (emailRegex.hasMatch(userInput.trim())) {
         registerCubit.setEmail(userInput.trim());
-        debugPrint('✅ Email actualizado directamente desde emailReask: ${userInput.trim()}');
+        debugPrint(
+          '✅ Email actualizado directamente desde emailReask: ${userInput.trim()}',
+        );
         _currentQuestionIndex++;
         final nextQuestion = AssistantFunctions.getCurrentQuestion(
           questionFlow,
@@ -1031,9 +1096,14 @@ class GeminiService {
       final isSpanish = registerCubit.state.language == 'Español';
 
       final validGenders = [
-        'hombre', 'mujer', 'prefiero no decir',
-        'male', 'female', 'rather not say',
-        'otro', 'other',
+        'hombre',
+        'mujer',
+        'prefiero no decir',
+        'male',
+        'female',
+        'rather not say',
+        'otro',
+        'other',
       ];
 
       if (validGenders.any((g) => normalized.contains(g))) {
@@ -1913,7 +1983,9 @@ class GeminiService {
         );
 
         if (_currentQuestionIndex >= questionFlow.length) {
-          debugPrint('🎉 Registro completado después de verificación de email.');
+          debugPrint(
+            '🎉 Registro completado después de verificación de email.',
+          );
           return {
             "text": registerCubit.state.language == 'Español'
                 ? "¡ Registro completado.🎉"

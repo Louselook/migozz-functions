@@ -236,7 +236,7 @@
     "profile":{
         "donation": {
             "title": "Coming soon! 🚀",
-            "message": "We're putting the finishing touches on the monetization tools for your ecosystem. This feature will be available in the next update. Get ready to start generating revenue!"
+            "message": "This feature will be coming soon!"
         },
         "sendGifts": {
         "title": "Send Gifts",
@@ -613,7 +613,7 @@
             "locationNotSet" : "Location not set",
             "fields" : {
                 "fullName" : "Full Name",
-                "nickname" : "Nickname",
+                "nickname" : "Username",
                 "email" : "Email",
                 "cellPhone" : "Cell Phone",
                 "dateOfBirth" : "Date of birth",
@@ -711,9 +711,12 @@
             "step4": "Welcome back!"
           },
           "registration": {
-            "step1": "Creating your account...",
-            "step2": "Setting up your profile...",
-            "step3": "Almost ready..."
+            "step1": "Connection Confirmed — Your socials are connected.",
+            "step2": "Sync Mode — Your identity is loading into Migozz.",
+            "step3": "Social Ecosystem Build — Your personal ecosystem is coming together.",
+            "step4": "Power Check Verified — Structure clean. Access secured.",
+            "step5": "Link Ready — Your exclusive Migozz link is loading. One link. One identity.",
+            "step6": "You're Live. Post It — Welcome to Migozz. Your social ecosystem is live — own it, share it, grow it."
           },
           "profile_update": {
             "step1": "Saving your changes...",
@@ -749,9 +752,10 @@
         "continue" : "Continue"
     },
     "category" : {
-        "title" : "Choose Your Account Type",
+        "title" : "Choose Your Profile",
       "subtitle" : "Select 1 category",
       "maxSelection" : "You can only choose 1 category.",
+      "required" : "Please select a category to continue.",
         "model" : "Model",
         "artist" : "Artist",
         "publicFigure" : "Public Figure",

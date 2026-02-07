@@ -59,7 +59,7 @@ class ChatNavigationHandler {
         // Mostrar typing indicator mientras carga
         chatController.showTypingIndicator(name: "Migozz");
         // Dejar el mensaje del bot visible un momento antes de navegar.
-        await Future<void>.delayed(const Duration(milliseconds: 800));
+        await Future<void>.delayed(const Duration(milliseconds: 2200));
         if (!context.mounted) return;
         chatController.removeTypingIndicator();
 
@@ -76,7 +76,7 @@ class ChatNavigationHandler {
         // Al volver, mostrar typing mientras procesa
         if (context.mounted) {
           chatController.showTypingIndicator(name: "Migozz");
-          await Future<void>.delayed(const Duration(milliseconds: 400));
+          await Future<void>.delayed(const Duration(milliseconds: 2200));
           chatController.removeTypingIndicator();
           chatController.setLastUserMessageForBot('category_updated');
           chatController.showNextBotMessage();
@@ -88,7 +88,7 @@ class ChatNavigationHandler {
         // Mostrar typing indicator mientras carga
         chatController.showTypingIndicator(name: "Migozz");
         // Dejar el mensaje del bot visible un momento antes de navegar.
-        await Future<void>.delayed(const Duration(milliseconds: 800));
+        await Future<void>.delayed(const Duration(milliseconds: 2200));
         if (!context.mounted) return;
         chatController.removeTypingIndicator();
 
@@ -105,7 +105,7 @@ class ChatNavigationHandler {
         // Al volver, mostrar typing mientras procesa
         if (context.mounted) {
           chatController.showTypingIndicator(name: "Migozz");
-          await Future<void>.delayed(const Duration(milliseconds: 400));
+          await Future<void>.delayed(const Duration(milliseconds: 2200));
           chatController.removeTypingIndicator();
           chatController.setLastUserMessageForBot('interests_updated');
           chatController.showNextBotMessage();

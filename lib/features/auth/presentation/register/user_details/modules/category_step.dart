@@ -26,19 +26,26 @@ class IdentityGroup {
   });
 }
 
-/// Modelo para representar una identidad
+/// Modelo para representar una identidad/categoría
 class Identity {
   final String id;
-  final String name;
+  final Map<String, String> name; // { en: "...", es: "..." }
   final int order;
   final String status;
+  final int iconNumber;
 
   Identity({
     required this.id,
     required this.name,
     required this.order,
     required this.status,
+    required this.iconNumber,
   });
+
+  /// Obtiene el nombre según el idioma actual
+  String getLocalizedName(String languageCode) {
+    return name[languageCode] ?? name['en'] ?? id;
+  }
 }
 
 class CategoryStep extends StatefulWidget {
@@ -112,22 +119,42 @@ class _CategoryStepState extends State<CategoryStep> {
 
         // Solo agregar categorías activas
         if (data['status'] == 'active') {
+          // Parsear el campo name que puede ser Map o String
+          Map<String, String> nameMap;
+          if (data['name'] is Map) {
+            nameMap = Map<String, String>.from(
+              (data['name'] as Map).map(
+                (key, value) => MapEntry(key.toString(), value.toString()),
+              ),
+            );
+          } else {
+            // Fallback si es string simple
+            nameMap = {
+              'en': data['name']?.toString() ?? '',
+              'es': data['name']?.toString() ?? '',
+            };
+          }
+
           identities.add(
             Identity(
               id: doc.id,
-              name: data['name'] ?? '',
+              name: nameMap,
               order: data['order'] ?? 0,
               status: data['status'] ?? 'active',
+              iconNumber: data['icon_number'] ?? 0,
             ),
           );
         }
       }
 
-      // Ordenar localmente por order (si existe) y luego por nombre
+      // Ordenar localmente por order (si existe) y luego por nombre en inglés
       identities.sort((a, b) {
         final orderCompare = a.order.compareTo(b.order);
         if (orderCompare != 0) return orderCompare;
-        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+        return a
+            .getLocalizedName('en')
+            .toLowerCase()
+            .compareTo(b.getLocalizedName('en').toLowerCase());
       });
 
       final List<IdentityGroup> fetchedGroups = [];
@@ -176,13 +203,15 @@ class _CategoryStepState extends State<CategoryStep> {
         selectedCategories.remove(identityId);
       } else {
         if (selectedCategories.length >= maxCategories) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('category.maxSelection'.tr()),
-              backgroundColor: Colors.orange,
-              duration: const Duration(seconds: 5),
-            ),
-          );
+          ScaffoldMessenger.of(context)
+            ..clearSnackBars()
+            ..showSnackBar(
+              SnackBar(
+                content: Text('category.maxSelection'.tr()),
+                backgroundColor: Colors.orange,
+                duration: const Duration(seconds: 5),
+              ),
+            );
           return;
         }
         selectedCategories.add(identityId);
@@ -194,92 +223,159 @@ class _CategoryStepState extends State<CategoryStep> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Stack(
-        children: [
-          Positioned.fill(child: Container(color: AppColors.backgroundDark)),
-          const Positioned.fill(
-            child: TintesGradients(child: SizedBox.expand()),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-            child: Column(
-              children: [
-                const SizedBox(height: 10),
-                PrimaryText('category.title'.tr()),
-                const SizedBox(height: 8),
-                SecondaryText(
-                  'category.subtitle'.tr(),
-                  fontSize: 14,
-                  color: Colors.grey,
-                ),
-                const SizedBox(height: 20),
-                Expanded(
-                  child: isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : groups.isEmpty
-                          ? const Center(
-                              child: SecondaryText(
-                                'No hay categorías disponibles',
-                                fontSize: 16,
-                              ),
-                            )
-                          : LayoutBuilder(
-                              builder: (context, constraints) {
-                                return SingleChildScrollView(
-                                  child: ConstrainedBox(
-                                    constraints: BoxConstraints(
-                                      minHeight: constraints.maxHeight,
-                                    ),
-                                    child: Center(
-                                      child: Wrap(
-                                        alignment: WrapAlignment.center,
-                                        spacing: 8,
-                                        runSpacing: 10,
-                                        children: [
-                                          for (final group in groups)
-                                            for (final identity
-                                                in group.identities)
-                                              _identityButton(
-                                                identity.name,
-                                                selected: selectedCategories
-                                                    .contains(identity.id),
-                                                onTap: () =>
-                                                    _selectIdentity(
-                                                  identity.id,
-                                                ),
-                                              ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 20, bottom: 10),
-                  child: widget.mode == MoreUserDetailsMode.register
-                      ? GradientButton(
-                          width: double.infinity,
-                          radius: 19,
-                          onPressed: () {
-                            _updateCubit();
-                            Navigator.of(context).pop('done');
-                          },
-                          child: const SecondaryText('Continue', fontSize: 20),
-                        )
-                      : userDetailsButton(
-                          controller: widget.controller,
-                          context: context,
-                          action: UserDetailsAction.next,
-                          mode: widget.mode,
-                        ),
-                ),
-              ],
+    return PopScope(
+      // Solo permite cerrar si hay al menos una categoría seleccionada
+      canPop: selectedCategories.isNotEmpty,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && selectedCategories.isEmpty) {
+          // Mostrar mensaje si intenta salir sin seleccionar
+          ScaffoldMessenger.of(context)
+            ..clearSnackBars()
+            ..showSnackBar(
+              SnackBar(
+                content: Text('category.required'.tr()),
+                backgroundColor: Colors.orange,
+                duration: const Duration(seconds: 3),
+              ),
+            );
+        }
+      },
+      child: SafeArea(
+        child: Stack(
+          children: [
+            Positioned.fill(child: Container(color: AppColors.backgroundDark)),
+            const Positioned.fill(
+              child: TintesGradients(child: SizedBox.expand()),
             ),
-          ),
-        ],
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              child: Column(
+                children: [
+                  const SizedBox(height: 12),
+                  PrimaryText('category.title'.tr(), fontSize: 22),
+                  const SizedBox(height: 8),
+                  SecondaryText(
+                    'category.subtitle'.tr(),
+                    fontSize: 14,
+                    color: Colors.grey,
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : groups.isEmpty
+                        ? const Center(
+                            child: SecondaryText(
+                              'No hay categorías disponibles',
+                              fontSize: 16,
+                            ),
+                          )
+                        : LayoutBuilder(
+                            builder: (context, constraints) {
+                              final langCode = context.locale.languageCode;
+                              final availableHeight = constraints.maxHeight;
+                              final availableWidth = constraints.maxWidth;
+
+                              // Calcular escala óptima según items y espacio disponible
+                              final totalItems = groups.fold<int>(
+                                0,
+                                (sum, g) => sum + g.identities.length,
+                              );
+                              const baseItemW = 120.0;
+                              const baseRowH = 44.0;
+                              const baseGap = 6.0;
+
+                              double bestScale = 0.65;
+                              for (
+                                int tryPerRow = 2;
+                                tryPerRow <= 5;
+                                tryPerRow++
+                              ) {
+                                final tryRows = (totalItems / tryPerRow).ceil();
+                                final tryScale =
+                                    availableHeight / (tryRows * baseRowH);
+                                final scaledStep =
+                                    (baseItemW + baseGap) * tryScale;
+                                final actualPerRow =
+                                    (availableWidth / scaledStep).floor();
+                                if (actualPerRow >= tryPerRow &&
+                                    tryScale > bestScale) {
+                                  bestScale = tryScale;
+                                }
+                              }
+                              final scaleFactor = bestScale.clamp(0.65, 1.5);
+
+                              final spacing = (6.0 * scaleFactor).clamp(
+                                4.0,
+                                14.0,
+                              );
+
+                              return SizedBox(
+                                width: availableWidth,
+                                height: availableHeight,
+                                child: Wrap(
+                                  alignment: WrapAlignment.center,
+                                  runAlignment: WrapAlignment.spaceEvenly,
+                                  spacing: spacing,
+                                  runSpacing: 0,
+                                  children: [
+                                    for (final group in groups)
+                                      for (final identity in group.identities)
+                                        _identityButton(
+                                          identity.getLocalizedName(langCode),
+                                          iconNumber: identity.iconNumber,
+                                          selected: selectedCategories.contains(
+                                            identity.id,
+                                          ),
+                                          onTap: () =>
+                                              _selectIdentity(identity.id),
+                                          scaleFactor: scaleFactor,
+                                        ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12, bottom: 8),
+                    child: widget.mode == MoreUserDetailsMode.register
+                        ? GradientButton(
+                            width: double.infinity,
+                            radius: 19,
+                            onPressed: () {
+                              if (selectedCategories.isEmpty) {
+                                ScaffoldMessenger.of(context)
+                                  ..clearSnackBars()
+                                  ..showSnackBar(
+                                    SnackBar(
+                                      content: Text('category.required'.tr()),
+                                      backgroundColor: Colors.orange,
+                                      duration: const Duration(seconds: 3),
+                                    ),
+                                  );
+                                return;
+                              }
+                              _updateCubit();
+                              Navigator.of(context).pop('done');
+                            },
+                            child: const SecondaryText(
+                              'Continue',
+                              fontSize: 20,
+                            ),
+                          )
+                        : userDetailsButton(
+                            controller: widget.controller,
+                            context: context,
+                            action: UserDetailsAction.next,
+                            mode: widget.mode,
+                          ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -289,10 +385,12 @@ class _CategoryStepState extends State<CategoryStep> {
 
   Widget _identityButton(
     String label, {
+    int iconNumber = 0,
     bool selected = false,
     VoidCallback? onTap,
+    double scaleFactor = 1.0,
   }) {
-    const borderRadius = BorderRadius.all(Radius.circular(16));
+    final borderRadius = BorderRadius.all(Radius.circular(20 * scaleFactor));
     final tileColor = Color.lerp(
       AppColors.greyBackground,
       AppColors.backgroundDark,
@@ -323,15 +421,28 @@ class _CategoryStepState extends State<CategoryStep> {
             color: tileColor,
             borderRadius: borderRadius,
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          padding: EdgeInsets.symmetric(
+            horizontal: 14 * scaleFactor,
+            vertical: 10 * scaleFactor,
+          ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Icono de la categoría
+              if (iconNumber > 0) ...[
+                Image.asset(
+                  'assets/icons/account_type/$iconNumber.png',
+                  width: 22 * scaleFactor,
+                  height: 22 * scaleFactor,
+                  color: selected ? Colors.white : Colors.white70,
+                ),
+                SizedBox(width: 6 * scaleFactor),
+              ],
               Flexible(
                 child: Text(
                   label,
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 15 * scaleFactor,
                     color: selected ? Colors.white : Colors.white70,
                     fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
                   ),
@@ -340,10 +451,10 @@ class _CategoryStepState extends State<CategoryStep> {
                 ),
               ),
               if (selected) ...[
-                const SizedBox(width: 4),
+                SizedBox(width: 5 * scaleFactor),
                 Container(
-                  width: 14,
-                  height: 14,
+                  width: 16 * scaleFactor,
+                  height: 16 * scaleFactor,
                   decoration: BoxDecoration(
                     gradient: AppColors.primaryGradient,
                     shape: BoxShape.circle,

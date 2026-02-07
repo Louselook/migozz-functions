@@ -240,7 +240,7 @@
   "profile": {
     "donation": {
       "title": "¡Próximamente! 🚀",
-      "message": "Estamos dando los últimos toques a las herramientas de monetización para tu ecosistema. Esta función estará disponible en la próxima actualización. ¡Prepárate para empezar a generar ingresos!"
+      "message": "¡Esta función estará disponible pronto!"
     },
     "sendGifts": {
       "title": "Enviar Regalos",
@@ -687,9 +687,10 @@
     "delete": "Eliminar"
   },
   "category": {
-    "title": "Elige tu tipo de cuenta",
+    "title": "Elige tu Perfil",
     "subtitle": "Selecciona 1 categoría",
     "maxSelection": "Solo puedes elegir 1 categoría.",
+    "required": "Por favor selecciona una categoría para continuar.",
     "model": "Modelo",
     "artist": "Artista",
     "publicFigure": "Figura pública",
@@ -841,9 +842,12 @@
         "step4": "¡Bienvenido de nuevo!"
       },
       "registration": {
-        "step1": "Creando tu cuenta...",
-        "step2": "Configurando tu perfil...",
-        "step3": "Casi listo..."
+        "step1": "Conexión Confirmada — Tus redes están conectadas.",
+        "step2": "Modo Sincronización — Tu identidad se está cargando en Migozz.",
+        "step3": "Ecosistema Social en Construcción — Tu ecosistema personal está tomando forma.",
+        "step4": "Verificación de Seguridad — Estructura limpia. Acceso asegurado.",
+        "step5": "Enlace Listo — Tu enlace exclusivo de Migozz se está cargando. Un enlace. Una identidad.",
+        "step6": "¡Estás en Vivo. Compártelo! — Bienvenido a Migozz. Tu ecosistema social está activo — domínalo, compártelo, hazlo crecer."
       },
       "profile_update": {
         "step1": "Guardando tus cambios...",

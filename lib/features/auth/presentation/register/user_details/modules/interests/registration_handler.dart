@@ -55,7 +55,8 @@ class RegistrationHandler {
       if (s.username == null || (s.username as String).trim().isEmpty) {
         missing.add('username');
       }
-      if (s.location == null || (s.location?.isEmpty ?? true)) missing.add('location');
+      if (s.location == null || (s.location?.isEmpty ?? true))
+        missing.add('location');
       if (s.socialEcosystem == null || s.socialEcosystem!.isEmpty) {
         missing.add('socialEcosystem');
       }
@@ -77,6 +78,9 @@ class RegistrationHandler {
       if (!context.mounted) return;
       LoadingOverlay.show(context, type: LoaderType.registration);
 
+      // Track when the loader was shown so we can enforce a minimum display time
+      final loaderStartTime = DateTime.now();
+
       if (isSocialAuthUser) {
         // firebaseUser ya no es null porque isSocialAuthUser es true
         await _completeSocialAuthRegistration(
@@ -91,6 +95,19 @@ class RegistrationHandler {
           registerCubit: registerCubit,
           authCubit: authCubit,
         );
+      }
+
+      // Ensure the loader is displayed for a minimum of 12 seconds so the user
+      // can read through all 6 registration sequence messages (2 s each).
+      final elapsed = DateTime.now().difference(loaderStartTime);
+      const minLoaderDuration = Duration(seconds: 12);
+      if (elapsed < minLoaderDuration) {
+        await Future.delayed(minLoaderDuration - elapsed);
+      }
+
+      // Hide the loader after the minimum display time
+      if (context.mounted) {
+        LoadingOverlay.hide(context);
       }
     } catch (e, st) {
       if (context.mounted) {
@@ -114,7 +131,9 @@ class RegistrationHandler {
     required AuthCubit authCubit,
     required String uid,
   }) async {
-    debugPrint('🔵 [RegistrationHandler] Flujo Social Auth (Google/Apple) iniciado');
+    debugPrint(
+      '🔵 [RegistrationHandler] Flujo Social Auth (Google/Apple) iniciado',
+    );
 
     final Map<String, dynamic> updateData = {};
 
@@ -217,19 +236,12 @@ class RegistrationHandler {
 
       debugPrint('✅ [RegistrationHandler] Firestore actualizado');
 
-      if (context.mounted) {
-        LoadingOverlay.hide(context);
-      }
-
       // Actualizar estados (esto dispara la redirección del router)
       await authCubit.refreshUserProfile();
       registerCubit.reset();
 
       debugPrint('🎉 [RegistrationHandler] Flujo Social Auth completado');
     } catch (e, st) {
-      if (context.mounted) {
-        LoadingOverlay.hide(context);
-      }
       debugPrint('❌ [RegistrationHandler] Error en flujo Social Auth: $e\n$st');
       rethrow;
     }
@@ -309,16 +321,8 @@ class RegistrationHandler {
       // Refrescar perfil (dispara redirección del router)
       await authCubit.refreshUserProfile();
 
-      // Ocultar loading
-      if (context.mounted) {
-        LoadingOverlay.hide(context);
-      }
-
       debugPrint('🎉 [RegistrationHandler] Flujo Email/OTP completado');
     } catch (e, st) {
-      if (context.mounted) {
-        LoadingOverlay.hide(context);
-      }
       debugPrint('❌ [RegistrationHandler] Error en flujo Email/OTP: $e\n$st');
       rethrow;
     }

@@ -366,6 +366,8 @@ class AssistantFunctions {
             n.contains('all set') ||
             n.contains('ready') ||
             n.contains('go ahead') ||
+            n.contains('go to migozz') ||
+            n.contains('vamos a migozz') ||
             n.contains('let\'s do it') ||
             n.contains('lets do it');
 
@@ -405,8 +407,8 @@ class AssistantFunctions {
           "valid": false,
           "userResponse": userInput.trim(),
           "text": isSpanish
-              ? "¿Listo para crear tu cuenta? Responde: \"Sí\" o \"Actualizar\"."
-              : "Ready to create your account? Reply: \"Yes\" or \"Update\".",
+              ? "¿Listo para crear tu cuenta? Responde: \"Sí, vamos a Migozz\" o \"Cambiar algo\"."
+              : "Ready to create your account? Reply: \"Yes, go to Migozz\" or \"Change something\".",
         };
 
       case 'avatarUrl':
@@ -642,8 +644,6 @@ class AssistantFunctions {
         normalized.contains('username') ||
         normalized.contains('usuario') ||
         normalized.contains('apodo') ||
-        normalized.contains('nick') ||
-        normalized.contains('nickname') ||
         normalized == 'my username' ||
         normalized == 'mi usuario';
 
@@ -1036,9 +1036,14 @@ class AssistantFunctions {
     String original,
   ) {
     final validGenders = [
-      'hombre', 'mujer', 'prefiero no decir',
-      'male', 'female', 'rather not say',
-      'otro', 'other',
+      'hombre',
+      'mujer',
+      'prefiero no decir',
+      'male',
+      'female',
+      'rather not say',
+      'otro',
+      'other',
     ];
 
     if (validGenders.any((g) => normalized.contains(g))) {
