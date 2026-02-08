@@ -57,3 +57,32 @@ extension AppDelegate: MessagingDelegate {
     )
   }
 }
+
+// MARK: - UNUserNotificationCenterDelegate
+extension AppDelegate {
+  // This method is called when a notification is received while the app is in the FOREGROUND
+  // We let iOS show the notification to avoid duplicates with Flutter's custom notifications
+  override func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    willPresent notification: UNNotification,
+    withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+  ) {
+    // Show notification in foreground - iOS will handle it
+    // This prevents Flutter from also showing a custom notification (which would cause duplicates)
+    if #available(iOS 14.0, *) {
+      completionHandler([.banner, .sound, .badge])
+    } else {
+      completionHandler([.alert, .sound, .badge])
+    }
+  }
+
+  // This method is called when user taps on a notification
+  override func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    didReceive response: UNNotificationResponse,
+    withCompletionHandler completionHandler: @escaping () -> Void
+  ) {
+    // Let Flutter handle the notification tap
+    super.userNotificationCenter(center, didReceive: response, withCompletionHandler: completionHandler)
+  }
+}
