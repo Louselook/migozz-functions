@@ -149,7 +149,7 @@ final Map<String, Map<String, dynamic>> questionsEs = {
   },
 
   "category": {
-    "text": "¿Cuál es tu especialidad o tipo de contenido? 🎯",
+    "text": "Seleccione el tipo de perfil de cuenta que aparecerá en la pantalla. 🎯",
     "options": [],
     "step": "regProgress.category",
     "keepTalk": false,
@@ -158,7 +158,7 @@ final Map<String, Map<String, dynamic>> questionsEs = {
   },
 
   "interests": {
-    "text": "Elige tus intereses para mostrarte contenido relevante 💡",
+    "text": "Prepárate para seleccionar tus intereses 💡",
     "options": [],
     "step": "regProgress.interests",
     "keepTalk": false,
@@ -315,7 +315,7 @@ final Map<String, Map<String, dynamic>> questionsEn = {
   },
 
   "category": {
-    "text": "What's your specialty or content type? 🎯",
+    "text": "Select your type of account profile screen coming up 🎯",
     "options": [],
     "step": "regProgress.category",
     "keepTalk": false,
@@ -324,7 +324,7 @@ final Map<String, Map<String, dynamic>> questionsEn = {
   },
 
   "interests": {
-    "text": "Choose your interests to see relevant content 💡",
+    "text": "Get ready interest selection coming up 💡",
     "options": [],
     "step": "regProgress.interests",
     "keepTalk": false,
