@@ -76,7 +76,7 @@ class RegistrationHandler {
     // Proceder con el registro según el flujo
     try {
       if (!context.mounted) return;
-      LoadingOverlay.show(context, type: LoaderType.registration);
+      LoadingOverlay.show(context, type: LoaderType.createAccount);
 
       // Track when the loader was shown so we can enforce a minimum display time
       final loaderStartTime = DateTime.now();

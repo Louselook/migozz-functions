@@ -475,7 +475,7 @@ class GeminiService {
   }
 
   /// Genera el mensaje final con resumen de datos y opciones
-Map<String, dynamic> _buildFinalConfirmationMessage(RegisterCubit cubit){
+  Map<String, dynamic> _buildFinalConfirmationMessage(RegisterCubit cubit) {
     final isSpanish = cubit.state.language == 'Español';
     final s = cubit.state;
 
@@ -1356,7 +1356,7 @@ Map<String, dynamic> _buildFinalConfirmationMessage(RegisterCubit cubit){
     }
 
     // ✅ Manejo especial para category: detectar retorno después de seleccionar categorías
-    if (currentStepKey == 'category') {
+if (currentStepKey == 'category') {
       final normalized = userInput.trim().toLowerCase();
 
       if (normalized == 'category_updated' ||
@@ -1364,24 +1364,10 @@ Map<String, dynamic> _buildFinalConfirmationMessage(RegisterCubit cubit){
           normalized == 'continue') {
         final isSpanish = registerCubit.state.language == 'Español';
 
-        debugPrint(
-          '✅ [category] Categorías seleccionadas, avanzando al siguiente paso',
-        );
+        debugPrint('✅ [category] Avanzando sin mensaje de confirmación redundante');
 
-        // Obtener las categorías seleccionadas para el feedback
-        final selectedCategories = registerCubit.state.category ?? [];
-        String feedbackMessage;
-        if (selectedCategories.isNotEmpty) {
-          final categoryText = selectedCategories.join(', ');
-          feedbackMessage = isSpanish
-              ? "✅ Agregaste: $categoryText"
-              : "✅ You added: $categoryText";
-        } else {
-          feedbackMessage = isSpanish
-              ? "⚠️ No agregaste ninguna categoría"
-              : "⚠️ You didn't add any category";
-        }
-
+        // 1. Eliminamos toda la lógica de feedbackMessage que ensuciaba el flujo
+        
         // Salir del modo repetición si estábamos en él
         if (_isInRepeatMode) {
           _currentQuestionIndex = _previousQuestionIndex;
@@ -1391,12 +1377,10 @@ Map<String, dynamic> _buildFinalConfirmationMessage(RegisterCubit cubit){
           _currentQuestionIndex++;
         }
 
-        // Obtener siguiente pregunta
+        // Verificar fin del flujo
         if (_currentQuestionIndex >= questionFlow.length) {
           return {
-            "text": isSpanish
-                ? "¡ Registro completado.🎉"
-                : " Registration complete.🎉",
+            "text": isSpanish ? "¡Registro completado! 🎉" : "Registration complete! 🎉",
             "options": [],
             "step": "finished",
             "keepTalk": false,
@@ -1411,9 +1395,7 @@ Map<String, dynamic> _buildFinalConfirmationMessage(RegisterCubit cubit){
 
         if (nextQuestion == null) {
           return {
-            "text": isSpanish
-                ? "¡ Registro completado.🎉"
-                : " Registration complete.🎉",
+            "text": isSpanish ? "¡Registro completado! 🎉" : "Registration complete! 🎉",
             "options": [],
             "step": "finished",
             "keepTalk": false,
@@ -1425,15 +1407,17 @@ Map<String, dynamic> _buildFinalConfirmationMessage(RegisterCubit cubit){
           registerCubit,
         );
 
+        // 2. Retornamos limpio, saltando directamente a la siguiente pregunta
         return {
           ...nextQuestionData,
-          "feedbackMessage": feedbackMessage,
+          // "feedbackMessage": feedbackMessage, // <-- ELIMINADO
           "showTyping": true,
         };
       }
     }
 
     // ✅ Manejo especial para interests: detectar retorno después de seleccionar intereses
+
     if (currentStepKey == 'interests') {
       final normalized = userInput.trim().toLowerCase();
 
@@ -1443,29 +1427,13 @@ Map<String, dynamic> _buildFinalConfirmationMessage(RegisterCubit cubit){
         final isSpanish = registerCubit.state.language == 'Español';
 
         debugPrint(
-          '✅ [interests] Intereses seleccionados, avanzando al siguiente paso',
+          '✅ [interests] Avanzando al siguiente paso sin feedback redundante',
         );
 
-        // Obtener los intereses seleccionados para el feedback
-        final selectedInterests = registerCubit.state.interests ?? {};
-        final allInterests = selectedInterests.values
-            .expand((list) => list)
-            .toList();
-        String feedbackMessage;
-        if (allInterests.isNotEmpty) {
-          final interestsText =
-              allInterests.take(5).join(', ') +
-              (allInterests.length > 5 ? '...' : '');
-          feedbackMessage = isSpanish
-              ? "✅ Agregaste: $interestsText"
-              : "✅ You added: $interestsText";
-        } else {
-          feedbackMessage = isSpanish
-              ? "⚠️ No agregaste ningún interés"
-              : "⚠️ You didn't add any interest";
-        }
+        // 1. Eliminamos toda la lógica de 'selectedInterests' y 'feedbackMessage'
+        // que estaba aquí, ya no la necesitamos para nada.
 
-        // Salir del modo repetición si estábamos en él
+        // Salir del modo repetición
         if (_isInRepeatMode) {
           _currentQuestionIndex = _previousQuestionIndex;
           _isInRepeatMode = false;
@@ -1474,12 +1442,12 @@ Map<String, dynamic> _buildFinalConfirmationMessage(RegisterCubit cubit){
           _currentQuestionIndex++;
         }
 
-        // Obtener siguiente pregunta
+        // Verificar si terminamos el flujo
         if (_currentQuestionIndex >= questionFlow.length) {
           return {
             "text": isSpanish
-                ? "¡ Registro completado.🎉"
-                : " Registration complete.🎉",
+                ? "¡Registro completado! 🎉"
+                : "Registration complete! 🎉",
             "options": [],
             "step": "finished",
             "keepTalk": false,
@@ -1495,8 +1463,8 @@ Map<String, dynamic> _buildFinalConfirmationMessage(RegisterCubit cubit){
         if (nextQuestion == null) {
           return {
             "text": isSpanish
-                ? "¡ Registro completado.🎉"
-                : " Registration complete.🎉",
+                ? "¡Registro completado! 🎉"
+                : "Registration complete! 🎉",
             "options": [],
             "step": "finished",
             "keepTalk": false,
@@ -1508,9 +1476,10 @@ Map<String, dynamic> _buildFinalConfirmationMessage(RegisterCubit cubit){
           registerCubit,
         );
 
+        // 2. Retornamos SIN el "feedbackMessage"
         return {
           ...nextQuestionData,
-          "feedbackMessage": feedbackMessage,
+          // "feedbackMessage": feedbackMessage, // <-- ESTO ES LO QUE DEBES ELIMINAR
           "showTyping": true,
         };
       }
@@ -2494,7 +2463,6 @@ Map<String, dynamic> _buildFinalConfirmationMessage(RegisterCubit cubit){
         }
       }
       */
-
     }
 
     // Paso de nota de voz: pedir permiso de micrófono aquí (mobile) para que el prompt

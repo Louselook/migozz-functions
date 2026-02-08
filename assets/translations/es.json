@@ -846,12 +846,20 @@
         "step4": "¡Bienvenido de nuevo!"
       },
       "registration": {
-        "step1": "Conexión Confirmada — Tus redes están conectadas.",
-        "step2": "Modo Sincronización — Tu identidad se está cargando en Migozz.",
-        "step3": "Ecosistema Social en Construcción — Tu ecosistema personal está tomando forma.",
-        "step4": "Verificación de Seguridad — Estructura limpia. Acceso asegurado.",
-        "step5": "Enlace Listo — Tu enlace exclusivo de Migozz se está cargando. Un enlace. Una identidad.",
-        "step6": "¡Estás en Vivo. Compártelo! — Bienvenido a Migozz. Tu ecosistema social está activo — domínalo, compártelo, hazlo crecer."
+        "step1": "Tejiendo tus hilos digitales.",
+        "step2": "Centralizando tu huella social.",
+        "step3": "Analizando seguidores y alcance.",
+        "step4": "Analizando seguidores y alcance.",
+        "step5": "Analizando seguidores y alcance.",
+        "step6": "Tus canales de Migozz están listos."
+      },
+      "createAccount": {
+        "step1": "SINCRONIZANDO Vinculando tus cuentas de forma segura.",
+        "step2": "FUSIONANDO Centralizando tu huella digital.",
+        "step3": "VERIFICANDO Analizando tu audiencia.",
+        "step4": "VERIFICANDO Analizando tu audiencia.",
+        "step5": "VERIFICANDO Analizando tu audiencia.",
+        "step6": "LISTO Canales en línea."
       },
       "profile_update": {
         "step1": "Guardando tus cambios...",
