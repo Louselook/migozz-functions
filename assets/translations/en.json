@@ -714,14 +714,25 @@
             "step3": "Preparing your experience...",
             "step4": "Welcome back!"
           },
+
           "registration": {
-            "step1": "Connection Confirmed — Your socials are connected.",
-            "step2": "Sync Mode — Your identity is loading into Migozz.",
-            "step3": "Social Ecosystem Build — Your personal ecosystem is coming together.",
-            "step4": "Power Check Verified — Structure clean. Access secured.",
-            "step5": "Link Ready — Your exclusive Migozz link is loading. One link. One identity.",
-            "step6": "You're Live. Post It — Welcome to Migozz. Your social ecosystem is live — own it, share it, grow it."
+            "step1": "Weaving your digital threads.",
+            "step2": "Centralizing your social footprint.",
+            "step3": "Analyzing followers and reach.",
+            "step4": "Analyzing followers and reach.",
+            "step5": "Analyzing followers and reach.",
+            "step6": "Your Migozz Channels are ready."
           },
+
+          "createAccount": {
+            "step1": "SYNCING UP Linking your accounts securely.",
+            "step2": "MERGING Centralizing your footprint.",
+            "step3": "VERIFYING Analyzing your audience.",
+            "step4": "VERIFYING Analyzing your audience.",
+            "step5": "VERIFYING Analyzing your audience.",
+            "step6": "DONE Channels online."
+          },
+
           "profile_update": {
             "step1": "Saving your changes...",
             "step2": "Updating your profile...",
