@@ -437,10 +437,9 @@ class NotificationService {
   }
 
   /// Handle a notification document from Firestore.
-  /// This is the SINGLE source of truth for creating follow notification
-  /// entries in the local notification history. The Cloud Function sends
-  /// an FCM push that the system displays automatically, so we wait briefly
-  /// to check if the Cloud Function sent it, then only save to history.
+  /// This is the SINGLE source of truth for displaying follow notifications.
+  /// The Cloud Function sends a data-only FCM message (no notification payload),
+  /// so we are responsible for showing the notification banner.
   Future<void> _handleFirestoreNotification(DocumentSnapshot doc) async {
     try {
       final data = doc.data() as Map<String, dynamic>?;
@@ -457,20 +456,6 @@ class NotificationService {
         await doc.reference.update({'isRead': true});
         return;
       }
-
-      // Wait 2 seconds to give the Cloud Function time to send FCM push
-      // and update pushSent field. This prevents race condition where we
-      // show a notification before the Cloud Function's FCM arrives.
-      await Future.delayed(const Duration(seconds: 2));
-
-      // Re-fetch the document to get the latest pushSent status
-      final updatedDoc = await doc.reference.get();
-      final updatedData = updatedDoc.data() as Map<String, dynamic>?;
-      final pushSent = updatedData?['pushSent'] as bool? ?? false;
-
-      debugPrint(
-        '🔔 [NotificationService] After delay, pushSent=$pushSent',
-      );
 
       // Get follower info
       final followerDoc = await _firestore
@@ -500,30 +485,15 @@ class NotificationService {
       // from the snapshot results, preventing any re-processing.
       await doc.reference.update({'isRead': true});
 
-      // If Cloud Function already sent FCM push, only save to history.
-      // Otherwise, show the notification banner AND save to history.
-      if (pushSent) {
-        debugPrint(
-          '🔔 [NotificationService] FCM push already sent by Cloud Function, only saving to history',
-        );
-        await _saveNotificationToHistory(
-          title: followerName,
-          body: 'Started following you',
-          senderId: fromUserId,
-          senderName: followerName,
-          senderAvatar: followerAvatar,
-          notificationType: NotificationType.follow,
-        );
-      } else {
-        debugPrint(
-          '🔔 [NotificationService] FCM push not sent yet, showing notification',
-        );
-        await showFollowNotification(
-          followerId: fromUserId,
-          followerName: followerName,
-          followerAvatar: followerAvatar,
-        );
-      }
+      // Show the notification banner AND save to history
+      debugPrint(
+        '🔔 [NotificationService] Showing follow notification for $followerName',
+      );
+      await showFollowNotification(
+        followerId: fromUserId,
+        followerName: followerName,
+        followerAvatar: followerAvatar,
+      );
 
       debugPrint(
         '✅ [NotificationService] Follow notification processed for $followerName',
@@ -564,9 +534,9 @@ class NotificationService {
     }
 
     // Show custom notification in foreground for non-follow types (e.g. chat)
-    // Firebase doesn't auto-display in foreground on Android
+    // Firebase doesn't auto-display in foreground on Android, so we must show it
     debugPrint('🔔 [NotificationService] Showing foreground notification');
-    showNotificationFromFCM(message);
+    showNotificationFromFCM(message, isForeground: true);
   }
 
   /// Handle notification tap
@@ -581,10 +551,20 @@ class NotificationService {
   }
 
   /// Show notification from FCM message
-  Future<void> showNotificationFromFCM(RemoteMessage message) async {
-    final notification = message.notification;
+  ///
+  /// [isForeground] - true if app is in foreground, false if in background.
+  /// Since Cloud Functions now send data-only messages (no notification payload),
+  /// we ALWAYS show custom notification for both foreground and background.
+  Future<void> showNotificationFromFCM(
+    RemoteMessage message, {
+    bool isForeground = false,
+  }) async {
     final data = message.data;
     final type = data['type'] as String?;
+
+    debugPrint(
+      '🔔 [FCM] showNotificationFromFCM called: type=$type, isForeground=$isForeground',
+    );
 
     // Skip follow notifications - they are handled by the Firestore listener
     // to avoid duplicate entries in the notifications list
@@ -595,13 +575,20 @@ class NotificationService {
       return;
     }
 
-    final title = notification?.title ?? data['title'] ?? 'New Message';
-    final body = notification?.body ?? data['body'] ?? 'You have a new message';
+    // Extract notification data from the data payload
+    final title = data['title'] ?? 'New Message';
+    final body = data['body'] ?? 'You have a new message';
     final senderId = data['senderId'] as String?;
     final chatRoomId = data['chatRoomId'] as String?;
     final senderName = data['senderName'] as String?;
     final senderAvatar = data['senderAvatar'] as String?;
 
+    debugPrint(
+      '🔔 [NotificationService] Showing notification: title=$title, senderId=$senderId',
+    );
+
+    // Always show custom notification since Cloud Functions send data-only messages
+    // This works for both foreground and background
     await showChatNotification(
       title: title,
       body: body,
@@ -707,7 +694,15 @@ class NotificationService {
     );
   }
 
-  /// Save notification to local history
+  /// Save notification to local history with grouping/deduplication.
+  ///
+  /// Grouping rules:
+  /// - For the same person and same notification type: Only keep the most recent.
+  ///   Example: If User A sends multiple chat messages, only show the latest.
+  /// - For the same person but different notification types: Keep one per type.
+  ///   Example: If User A follows you AND sends a chat, show both notifications.
+  /// - When a new notification arrives from the same person with the same type,
+  ///   it replaces the old one (not creating a duplicate entry).
   Future<void> _saveNotificationToHistory({
     required String title,
     required String body,
@@ -722,10 +717,8 @@ class NotificationService {
       final notificationsJson =
           prefs.getStringList('notifications_history') ?? [];
 
-      // Deduplication: Only check for exact duplicates within 2 seconds
-      // (same sender, type, title, and body). This prevents the same
-      // notification from being saved twice due to race conditions, but
-      // allows multiple messages from the same person.
+      // First, check for exact duplicates within 2 seconds to prevent
+      // race condition duplicates (same sender, type, title, and body).
       final now = DateTime.now();
       for (final existingJson in notificationsJson) {
         try {
@@ -748,6 +741,32 @@ class NotificationService {
         }
       }
 
+      // Remove any existing notification from the same sender with the same type.
+      // This implements the grouping logic: only keep the most recent notification
+      // per sender per type.
+      String? removedNotificationId;
+      notificationsJson.removeWhere((existingJson) {
+        try {
+          final existing = ChatNotificationModel.fromJson(
+            jsonDecode(existingJson) as Map<String, dynamic>,
+          );
+          if (existing.senderId == senderId &&
+              existing.notificationType == notificationType) {
+            removedNotificationId = existing.id;
+            debugPrint(
+              '🔄 [NotificationService] Replacing old notification from same sender/type: '
+              'senderId=$senderId, type=$notificationType, oldId=${existing.id}',
+            );
+            return true; // Remove this notification
+          }
+          return false; // Keep this notification
+        } catch (_) {
+          // Skip malformed entries
+          return false;
+        }
+      });
+
+      // Create the new notification
       final notification = ChatNotificationModel(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         title: title,
@@ -761,6 +780,7 @@ class NotificationService {
         notificationType: notificationType,
       );
 
+      // Insert at the beginning (most recent first)
       notificationsJson.insert(0, jsonEncode(notification.toJson()));
 
       // Keep only last 100 notifications
@@ -770,10 +790,18 @@ class NotificationService {
 
       await prefs.setStringList('notifications_history', notificationsJson);
 
-      debugPrint(
-        '✅ [NotificationService] Notification saved to history: '
-        'senderId=$senderId, type=$notificationType, body=$body',
-      );
+      if (removedNotificationId != null) {
+        debugPrint(
+          '✅ [NotificationService] Notification replaced in history: '
+          'senderId=$senderId, type=$notificationType, newId=${notification.id}, '
+          'replacedId=$removedNotificationId',
+        );
+      } else {
+        debugPrint(
+          '✅ [NotificationService] New notification saved to history: '
+          'senderId=$senderId, type=$notificationType, id=${notification.id}',
+        );
+      }
     } catch (e) {
       debugPrint(
         '❌ [NotificationService] Error saving notification to history: $e',
