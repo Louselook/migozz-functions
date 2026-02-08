@@ -593,6 +593,10 @@
             }
         }
     },
+    "interestSelect": {
+      "choose": "Choose Your Interests",
+      "desc": "Select what you 're passionate about"
+    },
     "edit" : {
         "validations" : {
             "updateProfilePic" : "Profile photo updated",

@@ -93,14 +93,14 @@ class _InterestsStepState extends State<InterestsStep> {
                   // Margen superior dinámico
                   SizedBox(height: isSmallDevice ? 10.h : 25.h),
                   
-                  const PrimaryText(
-                    'Choose Your Interests',
+                   PrimaryText(
+                    'interestSelect.choose'.tr(),
                     fontSize: 22,
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(height: 4.h),
                   SecondaryText(
-                    'Select what you\'re passionate about',
+                    'interestSelect.desc'.tr(),
                     fontSize: 14,
                     color: Colors.grey,
                     textAlign: TextAlign.center,
