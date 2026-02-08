@@ -517,8 +517,9 @@ class RegisterChatController extends GenericChatController {
       final stepStr = botResponse["step"]?.toString() ?? '';
 
       // Si el bot indica que el flujo terminó, llamamos al callback de registro
-      if (stepStr == 'finished' ||
-          botResponse["action"] == 'complete_registration') {
+      if (stepStr == 'finished' || botResponse["action"] == 'complete_registration') {
+
+
         debugPrint(
           '🎯 [RegisterChat] Bot indica FIN del flujo, disparando registro final...',
         );

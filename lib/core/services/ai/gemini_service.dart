@@ -330,7 +330,7 @@ class GeminiService {
     'category', // 4 - Categoría/tipo de perfil
     'interests', // 5 - Intereses
     'gender', // 6 - Género
-    'location', // 7 - Ubicación
+    //'location', // 7 - Ubicación
     'voiceNoteUrl',
     'socialEcosystem',
     'avatarUrl',
@@ -351,7 +351,7 @@ class GeminiService {
     'category', // 1 - Categoría/tipo de perfil
     'interests', // 2 - Intereses
     'gender', // 3 - Género
-    'location', // 4 - Ubicación
+    //'location', // 4 - Ubicación
     'voiceNoteUrl',
     'socialEcosystem',
     'avatarUrl',
@@ -475,12 +475,14 @@ class GeminiService {
   }
 
   /// Genera el mensaje final con resumen de datos y opciones
-  Map<String, dynamic> _buildFinalConfirmationMessage(RegisterCubit cubit) {
+Map<String, dynamic> _buildFinalConfirmationMessage(RegisterCubit cubit){
     final isSpanish = cubit.state.language == 'Español';
     final s = cubit.state;
 
     // Construir resumen de datos
     final lines = <String>[];
+
+    debugPrint("Aquí ya se supone que encontró la ubicación");
 
     if (s.fullName != null && s.fullName!.isNotEmpty) {
       lines.add('${isSpanish ? '👤 Nombre' : '👤 Name'}: ${s.fullName}');
@@ -2348,6 +2350,9 @@ class GeminiService {
     // 🎉 Si estamos en confirmCreateAccount, mostrar el resumen completo de datos
     if (currentStepKey == 'confirmCreateAccount') {
       debugPrint('📋 [_prepareQuestion] Mostrando resumen final de datos');
+      final lang = registerCubit.state.language ?? "en";
+      await registerCubit.fetchLocation(lang);
+
       return _buildFinalConfirmationMessage(registerCubit);
     }
 
@@ -2421,6 +2426,7 @@ class GeminiService {
     // SI estamos en el paso de ubicación, obtener la ubicación PRIMERO
     if (currentStepKey == 'location') {
       // Si ya estamos en modo ubicación manual, NO intentamos permisos ni geolocalización.
+      /*
       if (_awaitingManualLocation) {
         final isSpanish = registerCubit.state.language == 'Español';
         return {
@@ -2434,7 +2440,9 @@ class GeminiService {
           "manualLocationPrompt": true,
         };
       }
+      */
 
+      /*
       final currentLocation = registerCubit.state.location;
       // Obtener ubicación si está vacía o null
       if (currentLocation == null ||
@@ -2485,6 +2493,8 @@ class GeminiService {
           question = refreshed;
         }
       }
+      */
+
     }
 
     // Paso de nota de voz: pedir permiso de micrófono aquí (mobile) para que el prompt
