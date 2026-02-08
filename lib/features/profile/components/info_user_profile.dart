@@ -268,7 +268,7 @@ class _InfoUserProfileState extends State<InfoUserProfile>
 
     if (!hasEmail && !hasWebsite) {
       return const SizedBox(
-        width: 22,
+        width: 20,
       ); // Espacio vacío para mantener alineación
     }
 
@@ -350,8 +350,8 @@ class _InfoUserProfileState extends State<InfoUserProfile>
         }
       },
       child: Container(
-        width: 24,
-        height: 24,
+        width: 20,
+        height: 20,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: AppColors.primaryGradient,
@@ -380,99 +380,63 @@ class _InfoUserProfileState extends State<InfoUserProfile>
       height: 1.1,
     );
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        const contactWidth = 22.0;
-        const playSize = 20.0;
-        const gap = 8.0;
-        const playGap = 12.0;
-
-        final reservedLeft = widget.isOwnProfile ? 0.0 : (contactWidth + gap);
-        final reservedRight = playGap + playSize;
-        final nameMaxWidth =
-            (constraints.maxWidth - reservedLeft - reservedRight)
-                .clamp(0.0, constraints.maxWidth)
-                .toDouble();
-
-        final painter = TextPainter(
-          text: TextSpan(text: widget.name, style: nameStyle),
-          textDirection: ui.TextDirection.ltr,
-          maxLines: 1,
-          ellipsis: '…',
-        )..layout(maxWidth: nameMaxWidth);
-
-        final textWidth = painter.width;
-        final centerX = constraints.maxWidth / 2;
-        final nameStart = centerX - (textWidth / 2);
-        final nameEnd = centerX + (textWidth / 2);
-
-        final contactX = (nameStart - gap - contactWidth)
-            .clamp(0.0, constraints.maxWidth - contactWidth)
-            .toDouble();
-        final playX = (nameEnd + playGap)
-            .clamp(0.0, constraints.maxWidth - playSize)
-            .toDouble();
-
-        return SizedBox(
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: nameMaxWidth),
-                  child: Text(
-                    widget.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: nameStyle,
-                  ),
-                ),
-              ),
-              if (!widget.isOwnProfile)
-                Positioned(left: contactX, child: _buildContactMenu()),
-              Positioned(
-                left: playX,
-                child: GestureDetector(
-                  key: widget.tutorialKeys?.playButtonKey,
-                  onTap: _isLoading ? null : _togglePlay,
-                  child: Container(
-                    width: playSize,
-                    height: playSize,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: .5),
-                      gradient: LinearGradient(
-                        colors: AppColors.primaryGradient.colors,
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                    ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Icon(
-                            _isPlaying ? Icons.pause : Icons.play_arrow_rounded,
-                            size: 16,
-                            color: Colors.white.withValues(alpha: 0.9),
-                          ),
-                  ),
-                ),
-              ),
-            ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (!widget.isOwnProfile)
+            Padding(
+              padding: const EdgeInsets.only(right: 10.0),
+              child: _buildContactMenu(),
+            ),
+          Flexible(
+            child: Text(
+              widget.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: nameStyle,
+            ),
           ),
-        );
-      },
+          GestureDetector(
+            key: widget.tutorialKeys?.playButtonKey,
+            onTap: _isLoading ? null : _togglePlay,
+            child: Container(
+              margin: EdgeInsets.only(left: 10),
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: .5),
+                gradient: LinearGradient(
+                  colors: AppColors.primaryGradient.colors,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Icon(
+                      _isPlaying ? Icons.pause : Icons.play_arrow_rounded,
+                      size: 16,
+                      color: Colors.white.withValues(alpha: 0.9),
+                    ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Column(crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         // Nombre + menú de contacto (si no es propio) + botón de play + @username
         Container(
@@ -497,40 +461,35 @@ class _InfoUserProfileState extends State<InfoUserProfile>
         // Contador de comunidad
         const SizedBox(height: 11),
 
-        Row(
+        Row(mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Lado izquierdo: share icon (ocupa mismo espacio que derecha)
-            Expanded(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  GestureDetector(
-                    key:
-                        widget.profileTutorialKeys?.shareQrKey ??
-                        widget.tutorialKeys?.shareButtonKey,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute<void>(
-                          builder: (context) => widget.isOwnProfile
-                              ? const ProfileQrScreen()
-                              : ProfileQrScreen(
-                                  userId: widget.userId,
-                                  overrideUsername: widget.displayName
-                                      .replaceFirst('@', ''),
-                                  overrideDisplayName: widget.name,
-                                ),
-                        ),
-                      );
-                    },
-                    child: SvgPicture.asset(
-                      AssetsConstants.shareIcon,
-                      width: 20,
-                      height: 20,
+            Padding(
+              padding: const EdgeInsets.only(right: 15,left: 25),
+              child: GestureDetector(
+                key:
+                    widget.profileTutorialKeys?.shareQrKey ??
+                    widget.tutorialKeys?.shareButtonKey,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (context) => widget.isOwnProfile
+                          ? const ProfileQrScreen()
+                          : ProfileQrScreen(
+                              userId: widget.userId,
+                              overrideUsername: widget.displayName
+                                  .replaceFirst('@', ''),
+                              overrideDisplayName: widget.name,
+                            ),
                     ),
-                  ),
-                  const SizedBox(width: 15),
-                ],
+                  );
+                },
+                child: SvgPicture.asset(
+                  AssetsConstants.shareIcon,
+                  width: 20,
+                  height: 20,
+                ),
               ),
             ),
 
@@ -545,38 +504,36 @@ class _InfoUserProfileState extends State<InfoUserProfile>
             ),
 
             // Lado derecho: inbox + gift (ocupa mismo espacio que izquierda)
-            Expanded(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  const SizedBox(width: 15),
-                  // Ícono de mensaje
-                  GestureDetector(
-                    key: widget.profileTutorialKeys?.messagesHeaderKey,
-                    onTap: widget.onMessageTap,
-                    child: Image.asset(
-                      AssetsConstants.inboxIcon,
-                      width: 20,
-                      height: 20,
-                      color: Colors.white,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                const SizedBox(width: 15),
+                // Ícono de mensaje
+                GestureDetector(
+                  key: widget.profileTutorialKeys?.messagesHeaderKey,
+                  onTap: widget.onMessageTap,
+                  child: Image.asset(
+                    AssetsConstants.inboxIcon,
+                    width: 20,
+                    height: 20,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Ícono de donación (regalo)
+                GestureDetector(
+                  onTap: () => _showDonationComingSoonDialog(context),
+                  child: SvgPicture.asset(
+                    'assets/icons/Gift_Icon.svg',
+                    width: 22,
+                    height: 22,
+                    colorFilter: const ColorFilter.mode(
+                      Color(0xFF22C55E),
+                      BlendMode.srcIn,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  // Ícono de donación (regalo)
-                  GestureDetector(
-                    onTap: () => _showDonationComingSoonDialog(context),
-                    child: SvgPicture.asset(
-                      'assets/icons/Gift_Icon.svg',
-                      width: 22,
-                      height: 22,
-                      colorFilter: const ColorFilter.mode(
-                        Color(0xFF22C55E),
-                        BlendMode.srcIn,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ],
         ),
