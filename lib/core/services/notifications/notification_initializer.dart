@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -38,19 +37,8 @@ class _NotificationInitializerState extends State<NotificationInitializer> {
     // Set the global router reference
     _globalRouter = widget.router;
     debugPrint('✅ [NotificationInitializer] Global router set');
-    // Set up background message handler - MUST be called early
-    _setupBackgroundHandler();
     // Listen for app lifecycle changes to check for pending navigation
     _setupAppLifecycleListener();
-  }
-
-  void _setupBackgroundHandler() {
-    try {
-      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-      debugPrint('✅ [NotificationInitializer] Background message handler registered');
-    } catch (e) {
-      debugPrint('❌ [NotificationInitializer] Error registering background handler: $e');
-    }
   }
 
   void _setupAppLifecycleListener() {
