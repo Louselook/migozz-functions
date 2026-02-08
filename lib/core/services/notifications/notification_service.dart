@@ -514,6 +514,10 @@ class NotificationService {
     final senderId = data['senderId'] as String?;
     final chatRoomId = data['chatRoomId'] as String?;
 
+    debugPrint(
+      '🔔 [FCM] Foreground message: type=$type, hasNotification=${message.notification != null}',
+    );
+
     // Skip follow notifications - they are handled by the Firestore listener
     // to avoid duplicate entries in the notifications list
     if (type == 'follow') {
@@ -535,10 +539,11 @@ class NotificationService {
       return;
     }
 
-    // Show custom notification in foreground for non-follow types (e.g. chat)
-    // Firebase doesn't auto-display in foreground on Android, so we must show it
-    debugPrint('🔔 [NotificationService] Showing foreground notification');
-    showNotificationFromFCM(message, isForeground: true);
+    // IMPORTANT: Do NOT show custom notification in foreground for chat messages
+    // The iOS AppDelegate willPresent method returns [.banner, .sound, .badge]
+    // which tells iOS to show the notification from the notification payload
+    // If we also show a custom notification here, we'll get duplicates
+    debugPrint('🔕 [NotificationService] Skipping custom notification in foreground - iOS handles it');
   }
 
   /// Handle notification tap
@@ -557,7 +562,7 @@ class NotificationService {
   /// [isForeground] - true if app is in foreground, false if in background.
   ///
   /// IMPORTANT: Cloud Functions send messages with BOTH notification and data payloads.
-  /// - In FOREGROUND: System doesn't auto-display, so we show custom notification
+  /// - In FOREGROUND: iOS AppDelegate returns [] so system doesn't show it, we show custom notification
   /// - In BACKGROUND: System auto-displays, so we DON'T show custom notification (avoid duplicates)
   Future<void> showNotificationFromFCM(
     RemoteMessage message, {
@@ -567,7 +572,7 @@ class NotificationService {
     final type = data['type'] as String?;
 
     debugPrint(
-      '🔔 [FCM] showNotificationFromFCM called: type=$type, isForeground=$isForeground',
+      '🔔 [FCM] showNotificationFromFCM called: type=$type, isForeground=$isForeground, hasNotification=${message.notification != null}',
     );
 
     // Skip follow notifications - they are handled by the Firestore listener

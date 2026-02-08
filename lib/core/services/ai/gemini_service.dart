@@ -323,9 +323,8 @@ class GeminiService {
   // Flujo completo para usuarios NO autenticados
   // Orden: nombre, username, email re-ask, categoría, intereses, género, ubicación, confirmar, email OTP
   final List<String> _questionFlowNotAuth = [
-    'welcome', // 0 - Mensaje de bienvenida
-    'fullName', // 1 - Nombre completo
-    'username', // 2 - Username/Apodo
+    'fullName', // 0 - Nombre completo
+    'username', // 1 - Username/Apodo
     // 'emailReask', // 3 - Re-preguntar email (sin OTP)
     'category', // 4 - Categoría/tipo de perfil
     'interests', // 5 - Intereses
@@ -347,15 +346,14 @@ class GeminiService {
   //  Flujo reducido para usuarios autenticados (Google/Apple)
   // Orden: categoría, intereses, género, ubicación, confirmar
   final List<String> _questionFlowAuth = [
-    'welcome', // 0 - Mensaje de bienvenida
-    'category', // 1 - Categoría/tipo de perfil
-    'interests', // 2 - Intereses
-    'gender', // 3 - Género
+    'category', // 0 - Categoría/tipo de perfil
+    'interests', // 1 - Intereses
+    'gender', // 2 - Género
     //'location', // 4 - Ubicación
     'voiceNoteUrl',
     'socialEcosystem',
     'avatarUrl',
-    'confirmCreateAccount', // 5 - Confirmación final
+    'confirmCreateAccount', // 4 - Confirmación final
   ];
 
   // Getter dinámico que devuelve el flujo correcto según auth
