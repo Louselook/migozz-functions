@@ -81,7 +81,7 @@ final Map<String, Map<String, dynamic>> questionsEs = {
   },
 
   "emailVerification": {
-    "text": "📩 Se ha enviado un código de 6 dígitos a tu correo electrónico.",
+    "text": "📩 Se ha enviado un código de 6 dígitos a {email}.",
     "options": [],
     "step": "regProgress.emailVerification",
     "keepTalk": true,
@@ -240,7 +240,7 @@ final Map<String, Map<String, dynamic>> questionsEn = {
   },
 
   "emailVerification": {
-    "text": "📩 A 6-digit code has been sent to your email.",
+    "text": "📩 A 6-digit code has been sent to {email}.",
     "options": [],
     "step": "regProgress.emailVerification",
     "keepTalk": true,
