@@ -86,12 +86,13 @@ exports.onFollowNotificationCreated = onDocumentCreated(
       }
 
       // Build the notification message
+      // ⚠️ IMPORTANT: For follow notifications, we send ONLY data payload (no notification payload)
+      // This prevents duplicate notifications because the Firestore listener in the app
+      // will handle displaying the notification. If we include the notification payload,
+      // the system will auto-display it AND the app will also display it = duplicates!
       const message = {
         token: fcmToken,
-        notification: {
-          title: followerName,
-          body: "Started following you",
-        },
+        // ❌ NO notification payload - prevents system from auto-displaying
         data: {
           type: "follow",
           followerId: fromUserId,
@@ -100,42 +101,27 @@ exports.onFollowNotificationCreated = onDocumentCreated(
           notificationId: notificationId,
           click_action: "FLUTTER_NOTIFICATION_CLICK",
         },
+        // Set high priority to ensure delivery even when app is in background
         android: {
-          notification: {
-            channelId: "follow_channel",
-            priority: "high",
-            defaultSound: true,
-            defaultVibrateTimings: true,
-            icon: "ic_notification",
-            color: "#9C27B0",
-          },
+          priority: "high",
         },
         apns: {
+          headers: {
+            "apns-priority": "10",
+          },
           payload: {
             aps: {
-              alert: {
-                title: followerName,
-                body: "Started following you",
-              },
-              sound: "default",
+              "content-available": 1, // Silent notification for iOS
               badge: 1,
-              "mutable-content": 1,
-              category: "FOLLOW_CATEGORY",
             },
           },
         },
       };
 
       // Send the notification
-      console.log(`📤 Sending push notification to ${targetUserId}`);
+      console.log(`📤 Sending data-only push notification to ${targetUserId}`);
       const response = await messaging.send(message);
       console.log(`✅ Successfully sent notification: ${response}`);
-
-      // Update the notification document to mark that push was sent
-      await snapshot.ref.update({
-        pushSent: true,
-        pushSentAt: new Date(),
-      });
 
       return response;
     } catch (error) {
@@ -238,12 +224,13 @@ exports.onChatMessageCreated = onDocumentCreated(
       }
 
       // Build the notification message
+      // ⚠️ IMPORTANT: Send ONLY data payload (no notification payload)
+      // This prevents duplicate notifications. The app will handle displaying
+      // the notification via the FCM message handler. If we include the notification
+      // payload, the system will auto-display it AND the app will also display it = duplicates!
       const message = {
         token: fcmToken,
-        notification: {
-          title: senderName,
-          body: messageBody,
-        },
+        // ❌ NO notification payload - prevents system from auto-displaying
         data: {
           type: "chat",
           senderId: senderId,
@@ -251,29 +238,22 @@ exports.onChatMessageCreated = onDocumentCreated(
           senderAvatar: senderAvatar || "",
           chatRoomId: chatRoomId,
           messageId: messageId,
+          title: senderName, // Include title in data for app to use
+          body: messageBody, // Include body in data for app to use
           click_action: "FLUTTER_NOTIFICATION_CLICK",
         },
+        // Set high priority to ensure delivery even when app is in background
         android: {
-          notification: {
-            channelId: "chat_channel",
-            priority: "high",
-            defaultSound: true,
-            defaultVibrateTimings: true,
-            icon: "ic_notification",
-            color: "#E91E63",
-          },
+          priority: "high",
         },
         apns: {
+          headers: {
+            "apns-priority": "10",
+          },
           payload: {
             aps: {
-              alert: {
-                title: senderName,
-                body: messageBody,
-              },
-              sound: "default",
+              "content-available": 1, // Silent notification for iOS
               badge: 1,
-              "mutable-content": 1,
-              category: "MESSAGE_CATEGORY",
             },
           },
         },

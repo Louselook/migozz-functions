@@ -1,4 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -14,6 +15,7 @@ import 'package:migozz_app/core/router/app_router_notifier.dart';
 import 'package:migozz_app/core/services/deeplink/deeplink_functions/users/profile_deeplink_service.dart';
 import 'package:migozz_app/core/services/deeplink/deeplink_service.dart';
 import 'package:migozz_app/core/services/notifications/notification_initializer.dart';
+import 'package:migozz_app/core/services/notifications/notification_service.dart';
 import 'package:migozz_app/core/services/social_auth_service.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
@@ -27,6 +29,13 @@ Future<void> main() async {
   await configureDependencies();
   await FirebaseConfig.initialize();
   await dotenv.load(fileName: ".env");
+
+  // Register FCM background message handler ONCE globally
+  // This MUST be done at the top level, not in a widget's initState
+  if (!kIsWeb) {
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    debugPrint('✅ [Main] FCM background message handler registered globally');
+  }
   SocialAuthService().init();
 
   // ✅ Inicializar providers ANTES de runApp

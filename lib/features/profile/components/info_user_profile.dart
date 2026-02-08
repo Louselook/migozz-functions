@@ -414,7 +414,7 @@ class _InfoUserProfileState extends State<InfoUserProfile>
             .toDouble();
 
         return SizedBox(
-          height: 30,
+
           child: Stack(
             alignment: Alignment.center,
             children: [

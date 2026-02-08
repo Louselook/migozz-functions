@@ -15,8 +15,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   debugPrint('🔔 [FCM] Background message received: ${message.messageId}');
 
-  // Always show custom notification in background
-  // This ensures consistent notification display across all scenarios
+  final type = message.data['type'] as String?;
+
+  // Skip follow notifications - they are handled by the Firestore listener
+  // to avoid duplicate entries in the notifications list
+  if (type == 'follow') {
+    debugPrint(
+      '🔔 [FCM] Skipping follow notification in background handler - handled by Firestore listener',
+    );
+    return;
+  }
+
+  // Show custom notification in background for non-follow types (e.g. chat)
   debugPrint('🔔 [FCM] Showing background notification');
   await NotificationService.instance.showNotificationFromFCM(message);
 }
@@ -39,6 +49,14 @@ class NotificationService {
 
   String? _currentUserId;
   Function(String senderId, String chatRoomId)? _onNotificationTap;
+  bool _isInitialized = false;
+
+  /// Track processed Firestore notification doc IDs to prevent duplicates.
+  /// The Firestore snapshot listener can re-fire 'added' events for the same
+  /// document when the query result set changes (e.g. when we update isRead
+  /// or when the Cloud Function sets pushSent). This set ensures we never
+  /// process the same notification document more than once.
+  final Set<String> _processedNotificationIds = {};
 
   // Notification channel constants
   static const String _chatChannelKey = 'chat_notifications';
@@ -56,6 +74,22 @@ class NotificationService {
     required String userId,
     Function(String senderId, String chatRoomId)? onNotificationTap,
   }) async {
+    // Prevent duplicate initialization for the same user
+    if (_isInitialized && _currentUserId == userId) {
+      debugPrint(
+        '⚠️ [NotificationService] Already initialized for user: $userId, skipping',
+      );
+      return;
+    }
+
+    // If switching users, clean up first
+    if (_isInitialized && _currentUserId != userId) {
+      debugPrint(
+        '🔔 [NotificationService] Switching from $_currentUserId to $userId, cleaning up first',
+      );
+      dispose();
+    }
+
     _currentUserId = userId;
     _onNotificationTap = onNotificationTap;
 
@@ -78,6 +112,8 @@ class NotificationService {
 
     // Check for initial message (app opened from terminated state via notification)
     await _checkInitialMessage();
+
+    _isInitialized = true;
 
     debugPrint('✅ [NotificationService] Initialization complete');
   }
@@ -295,8 +331,9 @@ class NotificationService {
   /// Listens for new notification documents in users/{userId}/notifications
   Future<void> _setupFirestoreNotificationListener() async {
     try {
-      // Cancel existing listener
+      // Cancel existing listener and clear processed IDs
       _notificationListener?.cancel();
+      _processedNotificationIds.clear();
 
       // Get user document ID from email
       final querySnapshot = await _firestore
@@ -318,14 +355,41 @@ class NotificationService {
         '🔔 [NotificationService] Setting up Firestore listener for user: $userDocId',
       );
 
-      // Listen for new notifications
-      // Note: Using simple orderBy to avoid needing composite index
+      // First, mark all existing unread follow notifications as read so the
+      // listener's initial snapshot doesn't re-process old notifications.
+      // This prevents the "5 notifications on app start" problem.
+      final existingUnread = await _firestore
+          .collection('users')
+          .doc(userDocId)
+          .collection('notifications')
+          .where('type', isEqualTo: 'follow')
+          .where('isRead', isEqualTo: false)
+          .get();
+
+      if (existingUnread.docs.isNotEmpty) {
+        debugPrint(
+          '🔔 [NotificationService] Marking ${existingUnread.docs.length} existing unread follow notifications as read',
+        );
+        final batch = _firestore.batch();
+        for (final doc in existingUnread.docs) {
+          batch.update(doc.reference, {'isRead': true});
+          // Also add to processed set in case the listener fires before batch completes
+          _processedNotificationIds.add(doc.id);
+        }
+        await batch.commit();
+      }
+
+      // Listen only for unread follow notifications.
+      // Since we just marked all existing ones as read above, only truly NEW
+      // notifications (created after this point) will appear in the results.
       _notificationListener = _firestore
           .collection('users')
           .doc(userDocId)
           .collection('notifications')
+          .where('type', isEqualTo: 'follow')
+          .where('isRead', isEqualTo: false)
           .orderBy('timestamp', descending: true)
-          .limit(20)
+          .limit(10)
           .snapshots()
           .listen(
             (snapshot) {
@@ -335,16 +399,23 @@ class NotificationService {
 
               for (var change in snapshot.docChanges) {
                 if (change.type == DocumentChangeType.added) {
-                  final data = change.doc.data();
-                  final isRead = data?['isRead'] as bool? ?? false;
+                  final docId = change.doc.id;
 
-                  // Only process unread notifications
-                  if (!isRead) {
+                  // Skip if we already processed this document
+                  if (_processedNotificationIds.contains(docId)) {
                     debugPrint(
-                      '🔔 [NotificationService] New unread notification document detected',
+                      '🔕 [NotificationService] Skipping already-processed notification: $docId',
                     );
-                    _handleFirestoreNotification(change.doc);
+                    continue;
                   }
+
+                  // Mark as processed immediately to prevent any race conditions
+                  _processedNotificationIds.add(docId);
+
+                  debugPrint(
+                    '🔔 [NotificationService] New unread notification document detected: $docId',
+                  );
+                  _handleFirestoreNotification(change.doc);
                 }
               }
             },
@@ -365,68 +436,68 @@ class NotificationService {
     }
   }
 
-  /// Handle a notification document from Firestore
+  /// Handle a notification document from Firestore.
+  /// This is the SINGLE source of truth for displaying follow notifications.
+  /// The Cloud Function sends a data-only FCM message (no notification payload),
+  /// so we are responsible for showing the notification banner.
   Future<void> _handleFirestoreNotification(DocumentSnapshot doc) async {
     try {
       final data = doc.data() as Map<String, dynamic>?;
       if (data == null) return;
 
-      final type = data['type'] as String?;
       final fromUserId = data['fromUserId'] as String?;
-      final pushSent = data['pushSent'] as bool? ?? false;
 
       debugPrint(
-        '🔔 [NotificationService] Handling Firestore notification: type=$type, from=$fromUserId, pushSent=$pushSent',
+        '🔔 [NotificationService] Handling Firestore notification: docId=${doc.id}, from=$fromUserId',
       );
 
-      // Skip if push was already sent by Cloud Function
-      if (pushSent) {
-        debugPrint(
-          '🔔 [NotificationService] Push already sent by Cloud Function, skipping local notification',
-        );
-        // Mark as read to prevent reprocessing
+      if (fromUserId == null || fromUserId.isEmpty) {
+        // Mark as read so it doesn't keep appearing
         await doc.reference.update({'isRead': true});
         return;
       }
 
-      if (type == 'follow' && fromUserId != null) {
-        // Get follower info
-        final followerDoc = await _firestore
-            .collection('users')
-            .doc(fromUserId)
-            .get();
-        if (!followerDoc.exists) {
-          debugPrint(
-            '⚠️ [NotificationService] Follower user not found: $fromUserId',
-          );
-          return;
-        }
-
-        final followerData = followerDoc.data()!;
-        final followerName =
-            followerData['displayName']?.toString() ??
-            followerData['username']?.toString() ??
-            'Someone';
-        final followerAvatar = followerData['avatarUrl']?.toString();
-
+      // Get follower info
+      final followerDoc = await _firestore
+          .collection('users')
+          .doc(fromUserId)
+          .get();
+      if (!followerDoc.exists) {
         debugPrint(
-          '🔔 [NotificationService] Follower info: name=$followerName',
+          '⚠️ [NotificationService] Follower user not found: $fromUserId',
         );
-
-        // Show the notification (this also saves to history)
-        await showFollowNotification(
-          followerId: fromUserId,
-          followerName: followerName,
-          followerAvatar: followerAvatar,
-        );
-
-        // Mark as read in Firestore to prevent duplicate notifications
         await doc.reference.update({'isRead': true});
-
-        debugPrint(
-          '✅ [NotificationService] Follow notification processed for $followerName',
-        );
+        return;
       }
+
+      final followerData = followerDoc.data()!;
+      final followerName =
+          followerData['displayName']?.toString() ??
+          followerData['username']?.toString() ??
+          'Someone';
+      final followerAvatar = followerData['avatarUrl']?.toString();
+
+      debugPrint(
+        '🔔 [NotificationService] Follower info: name=$followerName',
+      );
+
+      // Mark as read in Firestore FIRST to ensure the query drops this doc
+      // from the snapshot results, preventing any re-processing.
+      await doc.reference.update({'isRead': true});
+
+      // Show the notification banner AND save to history
+      debugPrint(
+        '🔔 [NotificationService] Showing follow notification for $followerName',
+      );
+      await showFollowNotification(
+        followerId: fromUserId,
+        followerName: followerName,
+        followerAvatar: followerAvatar,
+      );
+
+      debugPrint(
+        '✅ [NotificationService] Follow notification processed for $followerName',
+      );
     } catch (e) {
       debugPrint(
         '❌ [NotificationService] Error handling Firestore notification: $e',
@@ -437,8 +508,18 @@ class NotificationService {
   /// Handle foreground messages
   void _handleForegroundMessage(RemoteMessage message) {
     final data = message.data;
+    final type = data['type'] as String?;
     final senderId = data['senderId'] as String?;
     final chatRoomId = data['chatRoomId'] as String?;
+
+    // Skip follow notifications - they are handled by the Firestore listener
+    // to avoid duplicate entries in the notifications list
+    if (type == 'follow') {
+      debugPrint(
+        '🔕 [NotificationService] Skipping follow FCM in foreground - handled by Firestore listener',
+      );
+      return;
+    }
 
     // Check if we should show the notification
     if (senderId != null &&
@@ -452,10 +533,10 @@ class NotificationService {
       return;
     }
 
-    // Always show custom notification in foreground
-    // Firebase doesn't auto-display in foreground on Android
+    // Show custom notification in foreground for non-follow types (e.g. chat)
+    // Firebase doesn't auto-display in foreground on Android, so we must show it
     debugPrint('🔔 [NotificationService] Showing foreground notification');
-    showNotificationFromFCM(message);
+    showNotificationFromFCM(message, isForeground: true);
   }
 
   /// Handle notification tap
@@ -470,17 +551,44 @@ class NotificationService {
   }
 
   /// Show notification from FCM message
-  Future<void> showNotificationFromFCM(RemoteMessage message) async {
-    final notification = message.notification;
+  ///
+  /// [isForeground] - true if app is in foreground, false if in background.
+  /// Since Cloud Functions now send data-only messages (no notification payload),
+  /// we ALWAYS show custom notification for both foreground and background.
+  Future<void> showNotificationFromFCM(
+    RemoteMessage message, {
+    bool isForeground = false,
+  }) async {
     final data = message.data;
+    final type = data['type'] as String?;
 
-    final title = notification?.title ?? data['title'] ?? 'New Message';
-    final body = notification?.body ?? data['body'] ?? 'You have a new message';
+    debugPrint(
+      '🔔 [FCM] showNotificationFromFCM called: type=$type, isForeground=$isForeground',
+    );
+
+    // Skip follow notifications - they are handled by the Firestore listener
+    // to avoid duplicate entries in the notifications list
+    if (type == 'follow') {
+      debugPrint(
+        '🔕 [NotificationService] Skipping follow FCM in showNotificationFromFCM - handled by Firestore listener',
+      );
+      return;
+    }
+
+    // Extract notification data from the data payload
+    final title = data['title'] ?? 'New Message';
+    final body = data['body'] ?? 'You have a new message';
     final senderId = data['senderId'] as String?;
     final chatRoomId = data['chatRoomId'] as String?;
     final senderName = data['senderName'] as String?;
     final senderAvatar = data['senderAvatar'] as String?;
 
+    debugPrint(
+      '🔔 [NotificationService] Showing notification: title=$title, senderId=$senderId',
+    );
+
+    // Always show custom notification since Cloud Functions send data-only messages
+    // This works for both foreground and background
     await showChatNotification(
       title: title,
       body: body,
@@ -586,7 +694,15 @@ class NotificationService {
     );
   }
 
-  /// Save notification to local history
+  /// Save notification to local history with grouping/deduplication.
+  ///
+  /// Grouping rules:
+  /// - For the same person and same notification type: Only keep the most recent.
+  ///   Example: If User A sends multiple chat messages, only show the latest.
+  /// - For the same person but different notification types: Keep one per type.
+  ///   Example: If User A follows you AND sends a chat, show both notifications.
+  /// - When a new notification arrives from the same person with the same type,
+  ///   it replaces the old one (not creating a duplicate entry).
   Future<void> _saveNotificationToHistory({
     required String title,
     required String body,
@@ -601,6 +717,56 @@ class NotificationService {
       final notificationsJson =
           prefs.getStringList('notifications_history') ?? [];
 
+      // First, check for exact duplicates within 2 seconds to prevent
+      // race condition duplicates (same sender, type, title, and body).
+      final now = DateTime.now();
+      for (final existingJson in notificationsJson) {
+        try {
+          final existing = ChatNotificationModel.fromJson(
+            jsonDecode(existingJson) as Map<String, dynamic>,
+          );
+          if (existing.senderId == senderId &&
+              existing.notificationType == notificationType &&
+              existing.title == title &&
+              existing.body == body &&
+              now.difference(existing.timestamp).inSeconds.abs() < 2) {
+            debugPrint(
+              '🔕 [NotificationService] Exact duplicate notification skipped: '
+              'senderId=$senderId, type=$notificationType, body=$body',
+            );
+            return;
+          }
+        } catch (_) {
+          // Skip malformed entries during dedup check
+        }
+      }
+
+      // Remove any existing notification from the same sender with the same type.
+      // This implements the grouping logic: only keep the most recent notification
+      // per sender per type.
+      String? removedNotificationId;
+      notificationsJson.removeWhere((existingJson) {
+        try {
+          final existing = ChatNotificationModel.fromJson(
+            jsonDecode(existingJson) as Map<String, dynamic>,
+          );
+          if (existing.senderId == senderId &&
+              existing.notificationType == notificationType) {
+            removedNotificationId = existing.id;
+            debugPrint(
+              '🔄 [NotificationService] Replacing old notification from same sender/type: '
+              'senderId=$senderId, type=$notificationType, oldId=${existing.id}',
+            );
+            return true; // Remove this notification
+          }
+          return false; // Keep this notification
+        } catch (_) {
+          // Skip malformed entries
+          return false;
+        }
+      });
+
+      // Create the new notification
       final notification = ChatNotificationModel(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         title: title,
@@ -614,6 +780,7 @@ class NotificationService {
         notificationType: notificationType,
       );
 
+      // Insert at the beginning (most recent first)
       notificationsJson.insert(0, jsonEncode(notification.toJson()));
 
       // Keep only last 100 notifications
@@ -622,6 +789,19 @@ class NotificationService {
       }
 
       await prefs.setStringList('notifications_history', notificationsJson);
+
+      if (removedNotificationId != null) {
+        debugPrint(
+          '✅ [NotificationService] Notification replaced in history: '
+          'senderId=$senderId, type=$notificationType, newId=${notification.id}, '
+          'replacedId=$removedNotificationId',
+        );
+      } else {
+        debugPrint(
+          '✅ [NotificationService] New notification saved to history: '
+          'senderId=$senderId, type=$notificationType, id=${notification.id}',
+        );
+      }
     } catch (e) {
       debugPrint(
         '❌ [NotificationService] Error saving notification to history: $e',
@@ -689,9 +869,14 @@ class NotificationService {
 
   /// Dispose the service
   void dispose() {
+    debugPrint('🔔 [NotificationService] Disposing service');
     _foregroundSubscription?.cancel();
     _messageOpenedSubscription?.cancel();
     _notificationListener?.cancel();
+    _processedNotificationIds.clear();
+    _isInitialized = false;
+    _currentUserId = null;
+    _onNotificationTap = null;
   }
 
   /// Remove FCM token when user logs out
