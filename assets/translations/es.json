@@ -898,6 +898,8 @@
   },
   "tutorial": {
     "skip": "Saltar",
+    "continue": "Continuar",
+    "skipTutorial": "Saltar tutorial",
     "welcome": {
       "title": "Bienvenido a Migozz",
       "description": "Descubre tu nuevo ecosistema social. Te guiaremos por las funciones principales para que aproveches al máximo tu experiencia.",

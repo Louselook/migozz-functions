@@ -414,7 +414,6 @@ class _InfoUserProfileState extends State<InfoUserProfile>
             .toDouble();
 
         return SizedBox(
-
           child: Stack(
             alignment: Alignment.center,
             children: [
@@ -475,18 +474,24 @@ class _InfoUserProfileState extends State<InfoUserProfile>
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Nombre + menú de contacto (si no es propio) + botón de play
+        // Nombre + menú de contacto (si no es propio) + botón de play + @username
         Container(
           key: widget.profileTutorialKeys?.nameSectionKey,
-          child: _buildNameHeader(),
-        ),
-
-        // DisplayName (@username)
-        const SizedBox(height: 3),
-        Text(
-          widget.displayName,
-          textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.white, fontSize: 14, height: 1.2),
+          child: Column(
+            children: [
+              _buildNameHeader(),
+              const SizedBox(height: 3),
+              Text(
+                widget.displayName,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  height: 1.2,
+                ),
+              ),
+            ],
+          ),
         ),
 
         // Contador de comunidad
