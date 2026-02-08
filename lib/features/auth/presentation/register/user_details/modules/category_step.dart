@@ -455,21 +455,7 @@ class _CategoryStepState extends State<CategoryStep> {
               ),
               if (selected) ...[
                 SizedBox(width: 5 * scaleFactor),
-                Container(
-                  width: 16 * scaleFactor,
-                  height: 16 * scaleFactor,
-                  decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  padding: const EdgeInsets.all(2),
-                  child: Image.asset(
-                    'assets/icons/Migozz_Icon.png',
-                    color: Colors.white,
-                    fit: BoxFit.contain,
-                  ),
-                ),
+    
               ],
             ],
           ),
