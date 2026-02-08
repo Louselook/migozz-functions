@@ -1059,6 +1059,8 @@
   },
   "tutorial": {
     "skip": "Skip",
+    "continue": "Continue",
+    "skipTutorial": "Skip tutorial",
     "welcome": {
       "title": "Welcome to Migozz",
       "description": "Discover your new social ecosystem. We'll guide you through the main features so you can make the most of your experience.",
