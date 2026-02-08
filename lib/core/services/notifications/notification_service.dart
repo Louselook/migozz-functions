@@ -26,9 +26,11 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     return;
   }
 
-  // Show custom notification in background for non-follow types (e.g. chat)
-  debugPrint('🔔 [FCM] Showing background notification');
-  await NotificationService.instance.showNotificationFromFCM(message);
+  // For chat notifications: System already displays the notification from the notification payload
+  // We don't need to show a custom notification here to avoid duplicates
+  debugPrint('🔔 [FCM] Background notification received - system will display it');
+  // Note: The notification is already shown by the system from the notification payload
+  // We only need to handle the tap action, which is done by onMessageOpenedApp listener
 }
 
 /// Main notification service for handling FCM and local notifications
@@ -553,8 +555,10 @@ class NotificationService {
   /// Show notification from FCM message
   ///
   /// [isForeground] - true if app is in foreground, false if in background.
-  /// Since Cloud Functions now send data-only messages (no notification payload),
-  /// we ALWAYS show custom notification for both foreground and background.
+  ///
+  /// IMPORTANT: Cloud Functions send messages with BOTH notification and data payloads.
+  /// - In FOREGROUND: System doesn't auto-display, so we show custom notification
+  /// - In BACKGROUND: System auto-displays, so we DON'T show custom notification (avoid duplicates)
   Future<void> showNotificationFromFCM(
     RemoteMessage message, {
     bool isForeground = false,
@@ -575,28 +579,34 @@ class NotificationService {
       return;
     }
 
-    // Extract notification data from the data payload
-    final title = data['title'] ?? 'New Message';
-    final body = data['body'] ?? 'You have a new message';
+    // Extract notification data
+    // Try to get from notification payload first, then fall back to data payload
+    final title = message.notification?.title ?? data['senderName'] ?? 'New Message';
+    final body = message.notification?.body ?? data['body'] ?? 'You have a new message';
     final senderId = data['senderId'] as String?;
     final chatRoomId = data['chatRoomId'] as String?;
     final senderName = data['senderName'] as String?;
     final senderAvatar = data['senderAvatar'] as String?;
 
     debugPrint(
-      '🔔 [NotificationService] Showing notification: title=$title, senderId=$senderId',
+      '🔔 [NotificationService] Notification data: title=$title, senderId=$senderId, isForeground=$isForeground',
     );
 
-    // Always show custom notification since Cloud Functions send data-only messages
-    // This works for both foreground and background
-    await showChatNotification(
-      title: title,
-      body: body,
-      senderId: senderId ?? '',
-      chatRoomId: chatRoomId ?? '',
-      senderName: senderName,
-      senderAvatar: senderAvatar,
-    );
+    // Only show custom notification in FOREGROUND
+    // In background, the system already displays the notification from the notification payload
+    if (isForeground) {
+      debugPrint('🔔 [NotificationService] Showing custom notification (foreground)');
+      await showChatNotification(
+        title: title,
+        body: body,
+        senderId: senderId ?? '',
+        chatRoomId: chatRoomId ?? '',
+        senderName: senderName,
+        senderAvatar: senderAvatar,
+      );
+    } else {
+      debugPrint('🔕 [NotificationService] Skipping custom notification (background - system already showed it)');
+    }
   }
 
   /// Show a chat notification

@@ -224,13 +224,14 @@ exports.onChatMessageCreated = onDocumentCreated(
       }
 
       // Build the notification message
-      // ⚠️ IMPORTANT: Send ONLY data payload (no notification payload)
-      // This prevents duplicate notifications. The app will handle displaying
-      // the notification via the FCM message handler. If we include the notification
-      // payload, the system will auto-display it AND the app will also display it = duplicates!
+      // ✅ Include notification payload for reliable delivery on iOS
+      // The app's background handler will prevent duplicates by checking message type
       const message = {
         token: fcmToken,
-        // ❌ NO notification payload - prevents system from auto-displaying
+        notification: {
+          title: senderName,
+          body: messageBody,
+        },
         data: {
           type: "chat",
           senderId: senderId,
@@ -238,8 +239,6 @@ exports.onChatMessageCreated = onDocumentCreated(
           senderAvatar: senderAvatar || "",
           chatRoomId: chatRoomId,
           messageId: messageId,
-          title: senderName, // Include title in data for app to use
-          body: messageBody, // Include body in data for app to use
           click_action: "FLUTTER_NOTIFICATION_CLICK",
         },
         // Set high priority to ensure delivery even when app is in background
@@ -252,7 +251,6 @@ exports.onChatMessageCreated = onDocumentCreated(
           },
           payload: {
             aps: {
-              "content-available": 1, // Silent notification for iOS
               badge: 1,
             },
           },
