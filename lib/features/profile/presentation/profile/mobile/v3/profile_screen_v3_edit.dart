@@ -45,7 +45,7 @@ class _MobileProfileContentV3EditState
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final socialsImageBottom = size.height * 0.53;
-    final socialsTopSpacer = size.height * 0.42;
+    final socialsTopSpacer = size.height * 0.40;
 
     // Watch AuthCubit to get real-time updates when avatar changes
     final authState = context.watch<AuthCubit>().state;
@@ -114,11 +114,24 @@ class _MobileProfileContentV3EditState
             top: MediaQuery.of(context).padding.top + 8,
             left: 16,
             child: GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: const Icon(
-                Icons.arrow_back_ios,
-                color: Colors.white,
-                size: 24,
+              onTap: () {
+                Navigator.pop(context);
+              },
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    width: 1,
+                  ),
+                ),
+                child: const Icon(
+                  Icons.arrow_back,
+                  color: Color(0xFFFFFFFF),
+                  size: 32,
+                ),
               ),
             ),
           ),

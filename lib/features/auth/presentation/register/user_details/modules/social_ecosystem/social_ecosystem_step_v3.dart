@@ -1061,31 +1061,42 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                 Positioned(
                   top: MediaQuery.of(context).padding.top + 8,
                   left: 16,
-                  child: GestureDetector(
-                    onTap: () {
-                      // En modo registro, enviar código especial si no hay redes
-                      if (widget.mode == MoreUserDetailsMode.register) {
-                        final socialEcosystem =
-                            context
-                                .read<RegisterCubit>()
-                                .state
-                                .socialEcosystem ??
-                            [];
-                        if (socialEcosystem.isEmpty) {
-                          Navigator.pop(context, 'back_no_socials');
-                        } else {
-                          Navigator.pop(context, 'done');
-                        }
-                      } else {
-                        Navigator.pop(context);
-                      }
-                    },
-                    child: const Icon(
-                      Icons.arrow_back_ios,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
+                  child:  GestureDetector(
+    onTap: () {
+    // En modo registro, enviar código especial si no hay redes
+    if (widget.mode == MoreUserDetailsMode.register) {
+    final socialEcosystem =
+    context
+        .read<RegisterCubit>()
+        .state
+        .socialEcosystem ??
+    [];
+    if (socialEcosystem.isEmpty) {
+    Navigator.pop(context, 'back_no_socials');
+    } else {
+    Navigator.pop(context, 'done');
+    }
+    } else {
+    Navigator.pop(context);
+    }
+    },
+    child: Container(
+    padding: const EdgeInsets.all(8),
+    decoration: BoxDecoration(
+    color: Colors.black.withValues(alpha: 0.3),
+    borderRadius: BorderRadius.circular(12),
+    border: Border.all(
+    color: Colors.white.withValues(alpha: 0.2),
+    width: 1,
+    ),
+    ),
+    child: const Icon(
+    Icons.arrow_back,
+    color: Color(0xFFFFFFFF),
+    size: 32,
+    ),
+    ),
+    )
                 ),
               ],
             ),
