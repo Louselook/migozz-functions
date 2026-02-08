@@ -67,6 +67,7 @@ class AssistantFunctions {
     }
 
     // Location
+    /*
     if (normalized.contains('ubicación') ||
         normalized.contains('ubicacion') ||
         normalized.contains('dirección') ||
@@ -78,6 +79,7 @@ class AssistantFunctions {
         normalized == 'mi ubicacion') {
       return 'location';
     }
+    */
 
     // Phone
     if (normalized.contains('teléfono') ||
