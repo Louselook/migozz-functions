@@ -97,10 +97,10 @@ class RegistrationHandler {
         );
       }
 
-      // Ensure the loader is displayed for a minimum of 12 seconds so the user
-      // can read through all 6 registration sequence messages (2 s each).
+      // Ensure the loader is displayed for a minimum of 10 seconds so the user
+      // can read through all 5 registration sequence messages (2 s each).
       final elapsed = DateTime.now().difference(loaderStartTime);
-      const minLoaderDuration = Duration(seconds: 12);
+      const minLoaderDuration = Duration(seconds: 10);
       if (elapsed < minLoaderDuration) {
         await Future.delayed(minLoaderDuration - elapsed);
       }

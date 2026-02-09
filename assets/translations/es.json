@@ -21,7 +21,7 @@
   },
   "interestSelect": {
     "choose": "Elige tus intereses",
-    "desc": "Selecciona lo que te apasiona"
+    "desc": "Selecciona todo aquello que te apasiona"
   },
   "login": {
     "validations": {
@@ -846,20 +846,17 @@
         "step4": "¡Bienvenido de nuevo!"
       },
       "registration": {
-        "step1": "Tejiendo tus hilos digitales.",
-        "step2": "Centralizando tu huella social.",
-        "step3": "Analizando seguidores y alcance.",
-        "step4": "Analizando seguidores y alcance.",
-        "step5": "Analizando seguidores y alcance.",
-        "step6": "Tus canales de Migozz están listos."
+        "step1": "SINCRONIZANDO\nVinculando tus cuentas de forma segura.",
+        "step2": "FUSIONANDO\nCentralizando tu huella digital.",
+        "step3": "VERIFICANDO\nAnalizando tu audiencia.",
+        "step4": "LISTO\nCanales en línea."
       },
       "createAccount": {
-        "step1": "SINCRONIZANDO \n Vinculando tus cuentas de forma segura.",
-        "step2": "FUSIONANDO \n Centralizando tu huella digital.",
-        "step3": "VERIFICANDO \n Analizando tu audiencia.",
-        "step4": "VERIFICANDO \n Analizando tu audiencia.",
-        "step5": "VERIFICANDO \n Analizando tu audiencia.",
-        "step6": "LISTO \n Canales en línea."
+        "step1": "Modo Sincronización\nTu identidad se está cargando en Migozz.",
+        "step2": "Construcción del Ecosistema Social\nTu ecosistema personal se está formando.",
+        "step3": "Verificación de Poder Completada\nEstructura limpia. Acceso asegurado.",
+        "step4": "Enlace Listo\nTu enlace exclusivo de Migozz se está cargando.\nUn enlace. Una identidad.",
+        "step5": "Estás en Vivo. Publícalo\nBienvenido a Migozz.\nTu ecosistema social está activo, poséelo, compártelo, hazlo crecer."
       },
       "profile_update": {
         "step1": "Guardando tus cambios...",
@@ -874,10 +871,10 @@
         "step4": "¡Usuario encontrado!"
       },
       "social_auth": {
-        "step1": "Conectando con {platform}...",
-        "step2": "Extrayendo la información de tu perfil...",
-        "step3": "Añadiendo tu contenido al ecosistema Migozz...",
-        "step4": "¡Listo! Tus redes ahora están unificadas"
+        "step1": "SINCRONIZANDO\nVinculando tus cuentas de forma segura.",
+        "step2": "FUSIONANDO\nCentralizando tu huella digital.",
+        "step3": "VERIFICANDO\nAnalizando tu audiencia.",
+        "step4": "LISTO\nCanales en línea."
       },
       "logout": {
         "step1": "Cerrando sesión...",

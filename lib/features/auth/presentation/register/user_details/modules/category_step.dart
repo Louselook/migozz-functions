@@ -257,13 +257,7 @@ class _CategoryStepState extends State<CategoryStep> {
                     fontSize: 22,
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 4),
-                  SecondaryText(
-                    'category.subtitle'.tr(),
-                    fontSize: 14,
-                    color: Colors.grey,
-                    textAlign: TextAlign.center,
-                  ),
+
                   const SizedBox(height: 8),
                   Expanded(
                     child: isLoading

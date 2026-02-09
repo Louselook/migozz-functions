@@ -122,7 +122,7 @@ class _LoaderDialogState extends State<LoaderDialog> {
           'common.loader_sequences.registration.step2'.tr(),
           'common.loader_sequences.registration.step3'.tr(),
           'common.loader_sequences.registration.step4'.tr(),
-          'common.loader_sequences.registration.step5'.tr(),
+          // 'common.loader_sequences.registration.step5'.tr(),
           // 'common.loader_sequences.registration.step6'.tr(),
         ];
 
@@ -133,7 +133,6 @@ class _LoaderDialogState extends State<LoaderDialog> {
           'common.loader_sequences.createAccount.step3'.tr(),
           'common.loader_sequences.createAccount.step4'.tr(),
           'common.loader_sequences.createAccount.step5'.tr(),
-          'common.loader_sequences.createAccount.step6'.tr(),
         ];
       case LoaderType.profileUpdate:
         return [
