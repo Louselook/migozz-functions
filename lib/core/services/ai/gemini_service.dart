@@ -510,7 +510,7 @@ class GeminiService {
     }
     if (s.category != null && s.category!.isNotEmpty) {
       lines.add(
-        '${isSpanish ? '🎯 Categoría' : '🎯 Category'}: ${s.category!.join(', ')}',
+        '${isSpanish ? '🎯 Tipo de cuenta' : '🎯 Type of Account'}: ${s.category!.join(', ')}',
       );
     }
     if (s.socialEcosystem != null && s.socialEcosystem!.isNotEmpty) {
@@ -537,8 +537,8 @@ class GeminiService {
     return {
       "text": '$header$summary$footer',
       "options": isSpanish
-          ? ["Sí, vamos a Migozz", "Cambiar algo"]
-          : ["Yes, go to Migozz", "Change something"],
+          ? ["Sí", "Cambiar algo"]
+          : ["Yes", "Change something"],
       "step": "regProgress.confirmCreateAccount",
       "keepTalk": false,
       "isFinalConfirmation": true,
