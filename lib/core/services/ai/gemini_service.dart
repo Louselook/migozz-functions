@@ -1891,8 +1891,8 @@ if (currentStepKey == 'category') {
         final userEmail = registerCubit.state.email ?? '';
         return {
           "text": isSpanish
-              ? "📩 Se ha enviado un código de 6 dígitos a tu correo: $userEmail"
-              : "📩 A 6-digit code has been sent to your email: $userEmail",
+              ? "📩 Se ha enviado un código de 6 dígitos a $userEmail"
+              : "📩 A 6-digit code has been sent to $userEmail",
           "options": isSpanish
               ? ["Reenviar código", "Cambiar correo"]
               : ["Resend code", "Change email"],
