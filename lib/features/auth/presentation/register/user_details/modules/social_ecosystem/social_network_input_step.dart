@@ -172,67 +172,88 @@ class _SocialNetworkInputStepState extends State<SocialNetworkInputStep> {
 
       int successCount = 0;
 
-      // Process each MANUAL network with input (OAuth already handled)
-      for (final network in _manualNetworks) {
+      // Count how many networks will be processed
+      final networksToProcess = _manualNetworks.where((network) {
         final key = network.name.toLowerCase();
         final username = _controllers[key]?.text.trim() ?? '';
+        return username.isNotEmpty;
+      }).length;
 
-        if (username.isEmpty) continue;
+      // Calculate delay per message based on number of networks
+      // If 1 network: 2000ms (2s) per message (default)
+      // If 2 networks: 1000ms (1s) per message
+      // If 3+ networks: 700ms per message
+      final delayPerMessage = networksToProcess <= 1
+          ? 2000
+          : networksToProcess == 2
+              ? 1000
+              : 700;
 
-        // Show loader for each network being registered
-        if (mounted) {
-          showProfileLoader(context, type: LoaderType.registration);
-        }
+      // Show loader ONCE before processing all networks
+      if (mounted && networksToProcess > 0) {
+        showProfileLoader(
+          context,
+          type: LoaderType.registration,
+          delayPerMessageMs: delayPerMessage,
+        );
+      }
 
-        // Normalize platform name
-        final platformName = key;
+      try {
+        // Process each MANUAL network with input (OAuth already handled)
+        for (final network in _manualNetworks) {
+          final key = network.name.toLowerCase();
+          final username = _controllers[key]?.text.trim() ?? '';
 
-        // Build the profile URL or username for validation
-        final baseUrl = _getBaseUrl(network);
-        final cleanUsername = username
-            .replaceAll('@', '')
-            .replaceAll(baseUrl, '')
-            .trim();
-        final profileUrl = '$baseUrl$cleanUsername';
+          if (username.isEmpty) continue;
 
-        // Validate and get profile using cubit's new method
-        Map<String, dynamic>? profileData;
-        try {
+          // Normalize platform name
+          final platformName = key;
+
+          // Build the profile URL or username for validation
+          final baseUrl = _getBaseUrl(network);
+          final cleanUsername = username
+              .replaceAll('@', '')
+              .replaceAll(baseUrl, '')
+              .trim();
+          final profileUrl = '$baseUrl$cleanUsername';
+
+          // Validate and get profile using cubit's new method
+          Map<String, dynamic>? profileData;
           profileData = await cubit.addNetworkByUsername(
             network: platformName,
             usernameOrLink: profileUrl,
             iconPath: network.iconPath,
           );
-        } finally {
-          // Close per-network loader
-          if (mounted && Navigator.of(context).canPop()) {
-            Navigator.of(context).pop();
+
+          if (profileData == null) {
+            // Validation failed - show error and continue with others
+            if (mounted) {
+              CustomSnackbar.show(
+                context: context,
+                message: 'addSocials.validation.invalidProfile'.tr(
+                  namedArgs: {'platform': network.displayName},
+                ),
+                type: SnackbarType.error,
+              );
+            }
+            continue;
           }
+
+          // Remove existing entry for this platform if any
+          current.removeWhere((e) {
+            final existingKey = e.keys.first.toLowerCase();
+            return existingKey == platformName;
+          });
+
+          // Add the new entry
+          current.add({platformName: profileData});
+          successCount++;
         }
-
-        if (profileData == null) {
-          // Validation failed - show error and continue with others
-          if (mounted) {
-            CustomSnackbar.show(
-              context: context,
-              message: 'addSocials.validation.invalidProfile'.tr(
-                namedArgs: {'platform': network.displayName},
-              ),
-              type: SnackbarType.error,
-            );
-          }
-          continue;
+      } finally {
+        // Close loader ONCE after all networks are processed
+        if (mounted && Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
         }
-
-        // Remove existing entry for this platform if any
-        current.removeWhere((e) {
-          final existingKey = e.keys.first.toLowerCase();
-          return existingKey == platformName;
-        });
-
-        // Add the new entry
-        current.add({platformName: profileData});
-        successCount++;
       }
 
       // Save all networks if at least one succeeded

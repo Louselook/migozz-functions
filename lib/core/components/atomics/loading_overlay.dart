@@ -6,12 +6,14 @@ class LoadingOverlay {
     BuildContext context, {
     String? message,
     LoaderType type = LoaderType.generic,
+    int? delayPerMessageMs, // Custom delay per message in milliseconds
   }) {
     showProfileLoader(
       context,
       message: message,
       type: type,
       barrierDismissible: false,
+      delayPerMessageMs: delayPerMessageMs,
     );
   }
 

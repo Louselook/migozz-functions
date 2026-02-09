@@ -22,6 +22,7 @@ Future<void> showProfileLoader(
   LoaderType type = LoaderType.generic,
   VoidCallback? onCancel,
   bool barrierDismissible = false,
+  int? delayPerMessageMs, // Custom delay per message in milliseconds
 }) {
   return showGeneralDialog(
     context: context,
@@ -35,6 +36,7 @@ Future<void> showProfileLoader(
         platform: platform,
         type: type,
         onCancel: onCancel,
+        delayPerMessageMs: delayPerMessageMs,
       ),
     ),
     transitionBuilder: (ctx, anim, _, child) => FadeTransition(
@@ -52,6 +54,7 @@ class LoaderDialog extends StatefulWidget {
   final String? platform;
   final LoaderType type;
   final VoidCallback? onCancel;
+  final int? delayPerMessageMs; // Custom delay per message in milliseconds
 
   const LoaderDialog({
     super.key,
@@ -59,6 +62,7 @@ class LoaderDialog extends StatefulWidget {
     this.platform,
     this.type = LoaderType.generic,
     this.onCancel,
+    this.delayPerMessageMs,
   });
 
   @override
@@ -90,10 +94,12 @@ class _LoaderDialogState extends State<LoaderDialog> {
     }
   }
 
-  /// Avanza al siguiente mensaje después de 2s. Se detiene en el último.
+  /// Avanza al siguiente mensaje. Se detiene en el último.
+  /// Usa delay personalizado si se proporciona, sino usa 2s por defecto.
   Future<void> _advanceMessages() async {
+    final delayMs = widget.delayPerMessageMs ?? 2000; // Default 2 seconds
     for (int i = 1; i < _sequenceMessages.length; i++) {
-      await Future.delayed(const Duration(seconds: 2));
+      await Future.delayed(Duration(milliseconds: delayMs));
       if (!mounted) return;
       setState(() {
         _displayMessage = _sequenceMessages[i];
