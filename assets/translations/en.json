@@ -725,12 +725,12 @@
           },
 
           "createAccount": {
-            "step1": "SYNCING UP Linking your accounts securely.",
-            "step2": "MERGING Centralizing your footprint.",
-            "step3": "VERIFYING Analyzing your audience.",
-            "step4": "VERIFYING Analyzing your audience.",
-            "step5": "VERIFYING Analyzing your audience.",
-            "step6": "DONE Channels online."
+            "step1": "SYNCING UP \n Linking your accounts securely.",
+            "step2": "MERGING \n Centralizing your footprint.",
+            "step3": "VERIFYING \n Analyzing your audience.",
+            "step4": "VERIFYING \n Analyzing your audience.",
+            "step5": "VERIFYING \n Analyzing your audience.",
+            "step6": "DONE \n Channels online."
           },
 
           "profile_update": {

@@ -854,12 +854,12 @@
         "step6": "Tus canales de Migozz están listos."
       },
       "createAccount": {
-        "step1": "SINCRONIZANDO Vinculando tus cuentas de forma segura.",
-        "step2": "FUSIONANDO Centralizando tu huella digital.",
-        "step3": "VERIFICANDO Analizando tu audiencia.",
-        "step4": "VERIFICANDO Analizando tu audiencia.",
-        "step5": "VERIFICANDO Analizando tu audiencia.",
-        "step6": "LISTO Canales en línea."
+        "step1": "SINCRONIZANDO \n Vinculando tus cuentas de forma segura.",
+        "step2": "FUSIONANDO \n Centralizando tu huella digital.",
+        "step3": "VERIFICANDO \n Analizando tu audiencia.",
+        "step4": "VERIFICANDO \n Analizando tu audiencia.",
+        "step5": "VERIFICANDO \n Analizando tu audiencia.",
+        "step6": "LISTO \n Canales en línea."
       },
       "profile_update": {
         "step1": "Guardando tus cambios...",
