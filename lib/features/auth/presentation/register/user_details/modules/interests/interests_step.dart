@@ -3,7 +3,6 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
@@ -16,15 +15,26 @@ class Interest {
   final int order;
   final String status;
 
-  Interest({required this.id, required this.name, required this.emoji, required this.order, required this.status});
+  Interest({
+    required this.id,
+    required this.name,
+    required this.emoji,
+    required this.order,
+    required this.status,
+  });
 
-  String getLocalizedName(String languageCode) => name[languageCode] ?? name['en'] ?? id;
+  String getLocalizedName(String languageCode) =>
+      name[languageCode] ?? name['en'] ?? id;
 }
 
 class InterestsStep extends StatefulWidget {
   final PageController controller;
   final MoreUserDetailsMode mode;
-  const InterestsStep({super.key, required this.controller, this.mode = MoreUserDetailsMode.register});
+  const InterestsStep({
+    super.key,
+    required this.controller,
+    this.mode = MoreUserDetailsMode.register,
+  });
 
   @override
   State<InterestsStep> createState() => _InterestsStepState();
@@ -51,7 +61,9 @@ class _InterestsStepState extends State<InterestsStep> {
         existingInterests = context.read<EditCubit>().state.interests ?? {};
       }
       setState(() {
-        selectedInterests = existingInterests.values.expand((list) => list).toSet();
+        selectedInterests = existingInterests.values
+            .expand((list) => list)
+            .toSet();
       });
     });
   }
@@ -59,22 +71,33 @@ class _InterestsStepState extends State<InterestsStep> {
   Future<void> fetchCollection() async {
     try {
       setState(() => isLoading = true);
-      final snapshot = await FirebaseFirestore.instance.collection('interests_catalog_new').get();
+      final snapshot = await FirebaseFirestore.instance
+          .collection('interests_catalog_new')
+          .get();
       final List<Interest> fetchedInterests = [];
       for (final doc in snapshot.docs) {
         final data = doc.data();
         if (data['status'] != 'active') continue;
-        fetchedInterests.add(Interest(
-          id: doc.id,
-          name: data['name'] is Map ? Map<String, String>.from(data['name']) : {'en': data['name'], 'es': data['name']},
-          emoji: data['emoji']?.toString() ?? '',
-          order: data['order'] ?? 0,
-          status: data['status'] ?? 'active',
-        ));
+        fetchedInterests.add(
+          Interest(
+            id: doc.id,
+            name: data['name'] is Map
+                ? Map<String, String>.from(data['name'])
+                : {'en': data['name'], 'es': data['name']},
+            emoji: data['emoji']?.toString() ?? '',
+            order: data['order'] ?? 0,
+            status: data['status'] ?? 'active',
+          ),
+        );
       }
       fetchedInterests.sort((a, b) => a.order.compareTo(b.order));
-      setState(() { allInterests = fetchedInterests; isLoading = false; });
-    } catch (e) { setState(() => isLoading = false); }
+      setState(() {
+        allInterests = fetchedInterests;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() => isLoading = false);
+    }
   }
 
   @override
@@ -92,8 +115,8 @@ class _InterestsStepState extends State<InterestsStep> {
                 children: [
                   // Margen superior dinámico
                   SizedBox(height: isSmallDevice ? 10.h : 25.h),
-                  
-                   PrimaryText(
+
+                  PrimaryText(
                     'interestSelect.choose'.tr(),
                     fontSize: 22,
                     textAlign: TextAlign.center,
@@ -115,7 +138,9 @@ class _InterestsStepState extends State<InterestsStep> {
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
                         child: ConstrainedBox(
-                          constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width),
+                          constraints: BoxConstraints(
+                            maxWidth: MediaQuery.of(context).size.width,
+                          ),
                           child: Wrap(
                             alignment: WrapAlignment.center,
                             runAlignment: WrapAlignment.center,
@@ -123,14 +148,18 @@ class _InterestsStepState extends State<InterestsStep> {
                             runSpacing: 10.h,
                             children: allInterests.map((interest) {
                               return _interestChip(
-                                name: interest.getLocalizedName(context.locale.languageCode),
+                                name: interest.getLocalizedName(
+                                  context.locale.languageCode,
+                                ),
                                 emoji: interest.emoji,
-                                selected: selectedInterests.contains(interest.id),
+                                selected: selectedInterests.contains(
+                                  interest.id,
+                                ),
                                 onTap: () {
                                   setState(() {
-                                    selectedInterests.contains(interest.id) 
-                                      ? selectedInterests.remove(interest.id) 
-                                      : selectedInterests.add(interest.id);
+                                    selectedInterests.contains(interest.id)
+                                        ? selectedInterests.remove(interest.id)
+                                        : selectedInterests.add(interest.id);
                                   });
                                   _updateCubit();
                                 },
@@ -155,39 +184,57 @@ class _InterestsStepState extends State<InterestsStep> {
 
   void _updateCubit() {
     final res = {'interests': selectedInterests.toList()};
-    widget.mode == MoreUserDetailsMode.register 
-      ? context.read<RegisterCubit>().setInterests(res) 
-      : context.read<EditCubit>().updateInterests(res);
+    widget.mode == MoreUserDetailsMode.register
+        ? context.read<RegisterCubit>().setInterests(res)
+        : context.read<EditCubit>().updateInterests(res);
   }
 
   Widget _buildActionButton() {
     return GestureDetector(
-      onTap: () { _updateCubit(); Navigator.of(context).pop('done'); },
+      onTap: () {
+        _updateCubit();
+        Navigator.of(context).pop('done');
+      },
       child: Container(
         width: double.infinity,
         height: 54.h,
         decoration: BoxDecoration(
-          gradient: const LinearGradient(colors: [Color(0xFFF59A3C), Color(0xFFB646F6)]),
+          gradient: const LinearGradient(
+            colors: [Color(0xFFF59A3C), Color(0xFFB646F6)],
+          ),
           borderRadius: BorderRadius.circular(28.r),
         ),
         child: Center(
           child: Text(
             widget.mode == MoreUserDetailsMode.register ? 'Continue' : 'Save',
-            style: TextStyle(color: Colors.white, fontSize: 18.sp, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18.sp,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _interestChip({required String name, required String emoji, required bool selected, required VoidCallback onTap}) {
+  Widget _interestChip({
+    required String name,
+    required String emoji,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(1.5),
         decoration: BoxDecoration(
-          gradient: selected ? const LinearGradient(colors: [Color(0xFFF59A3C), Color(0xFFB646F6)]) : null,
+          gradient: selected
+              ? const LinearGradient(
+                  colors: [Color(0xFFF59A3C), Color(0xFFB646F6)],
+                )
+              : null,
           borderRadius: BorderRadius.circular(20.r),
         ),
         child: Container(
@@ -199,11 +246,16 @@ class _InterestsStepState extends State<InterestsStep> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (emoji.isNotEmpty) Text(emoji, style: TextStyle(fontSize: 15.sp)),
+              if (emoji.isNotEmpty)
+                Text(emoji, style: TextStyle(fontSize: 15.sp)),
               SizedBox(width: 4.w),
               Text(
                 name,
-                style: TextStyle(color: Colors.white, fontSize: 13.sp, fontWeight: selected ? FontWeight.bold : FontWeight.w500),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 13.sp,
+                  fontWeight: selected ? FontWeight.bold : FontWeight.w500,
+                ),
               ),
             ],
           ),

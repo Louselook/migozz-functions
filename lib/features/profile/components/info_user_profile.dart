@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui' as ui;
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -436,7 +435,8 @@ class _InfoUserProfileState extends State<InfoUserProfile>
 
   @override
   Widget build(BuildContext context) {
-    return Column(crossAxisAlignment: CrossAxisAlignment.center,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         // Nombre + menú de contacto (si no es propio) + botón de play + @username
         Container(
@@ -461,11 +461,12 @@ class _InfoUserProfileState extends State<InfoUserProfile>
         // Contador de comunidad
         const SizedBox(height: 11),
 
-        Row(mainAxisAlignment: MainAxisAlignment.center,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Lado izquierdo: share icon (ocupa mismo espacio que derecha)
             Padding(
-              padding: const EdgeInsets.only(right: 15,left: 25),
+              padding: const EdgeInsets.only(right: 15, left: 25),
               child: GestureDetector(
                 key:
                     widget.profileTutorialKeys?.shareQrKey ??
@@ -478,8 +479,10 @@ class _InfoUserProfileState extends State<InfoUserProfile>
                           ? const ProfileQrScreen()
                           : ProfileQrScreen(
                               userId: widget.userId,
-                              overrideUsername: widget.displayName
-                                  .replaceFirst('@', ''),
+                              overrideUsername: widget.displayName.replaceFirst(
+                                '@',
+                                '',
+                              ),
                               overrideDisplayName: widget.name,
                             ),
                     ),
