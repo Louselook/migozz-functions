@@ -636,6 +636,7 @@ class RegisterChatController extends GenericChatController {
           registerCubit,
           onResetAudioUI: onResetAudioUI,
           addMessage: addMessage,
+          removeTyping: _removeTypingMessage,
           firebaseUid: firebaseUid,
         );
 

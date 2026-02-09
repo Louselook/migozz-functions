@@ -723,11 +723,11 @@
           },
 
           "createAccount": {
-            "step1": "Sync Mode\nYour identity is loading into Migozz.",
-            "step2": "Social Ecosystem Build\nYour personal ecosystem is coming together.",
-            "step3": "Power Check Verified\nStructure clean. Access secured.",
-            "step4": "Link Ready\nYour exclusive Migozz link is loading.\nOne link. One identity.",
-            "step5": "You're Live. Post It\nWelcome to Migozz.\nYour social ecosystem is live own it, share it, grow it."
+            "step1": "SYNC MODE\nYour identity is loading into Migozz.",
+            "step2": "SOCIAL ECOSYSTEM BUILD\nYour personal ecosystem is coming together.",
+            "step3": "POWER CHECK VERIFIED\nStructure clean. Access secured.",
+            "step4": "LINK READY\nYour exclusive Migozz link is loading.\nOne link. One identity.",
+            "step5": "YOU'RE LIVE. POST IT\nWelcome to Migozz.\nYour social ecosystem is live own it, share it, grow it."
           },
 
           "profile_update": {

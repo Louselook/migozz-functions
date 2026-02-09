@@ -180,6 +180,7 @@ class AudioChatHandler {
     RegisterCubit registerCubit, {
     VoidCallback? onResetAudioUI,
     Function(Map<String, dynamic>)? addMessage,
+    VoidCallback? removeTyping,
     String? firebaseUid, // Agregar este parámetro
   }) async {
     if (_permanentAudioPath == null) {
@@ -220,16 +221,9 @@ class AudioChatHandler {
         registerCubit.setVoiceNoteUrl(voiceUrl);
         registerCubit.setVoiceNoteFile(audioFile);
 
-        if (addMessage != null) {
-          final isSpanish = registerCubit.state.language == 'Español';
-          addMessage({
-            "other": true,
-            "type": MessageType.text,
-            "text": isSpanish ? "✅ Audio guardado" : "✅ Audio saved",
-            "name": "Migozz",
-            "time": getTimeNow(),
-          });
-        }
+        // Remove typing indicator without showing "Audio saved" message
+        // Just proceed to next step directly
+        removeTyping?.call();
       } else {
         debugPrint('❌ No se obtuvo URL del audio');
         if (addMessage != null) {
