@@ -235,8 +235,8 @@
     },
     "profile":{
         "donation": {
-            "title": "Coming soon! 🚀",
-            "message": "This feature will be coming soon!"
+            "title": "Send Gifts! 🎁",
+            "message": "Coming soon!"
         },
         "sendGifts": {
         "title": "Send Gifts",
@@ -768,7 +768,6 @@
     },
     "category" : {
         "title" : "Choose Your Profile",
-      "subtitle" : "Select 1 category",
       "maxSelection" : "You can only choose 1 category.",
       "required" : "Please select a category to continue.",
         "model" : "Model",
