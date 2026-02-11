@@ -54,6 +54,7 @@
         { "source": "/.well-known/**", "destination": "/.well-known/assetlinks.json" },
         { "source": "/u/**", "destination": "/index.html" },
         { "source": "/terms-privacy", "destination": "/index.html" },
+        { "source": "/", "destination": "/index.html" },
         { "source": "**", "destination": "/index.html" }
       ],
       "headers": [
