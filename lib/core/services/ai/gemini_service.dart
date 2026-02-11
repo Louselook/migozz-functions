@@ -1,8 +1,8 @@
 ﻿import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:migozz_app/core/config/api/api_config.dart';
 import 'package:migozz_app/core/services/ai/assistant_functions.dart';
 import 'package:migozz_app/core/services/ai/chat_validation_min.dart';
 import 'package:migozz_app/core/services/ai/migozz_context.dart';
@@ -219,7 +219,7 @@ class GeminiService {
   }
 
   void ensureConfigured() {
-    final apiKey = dotenv.env['GEMINI_API_KEY'];
+    final apiKey = getEnvVar('GEMINI_API_KEY');
     if (apiKey == null || apiKey.isEmpty) {
       if (kDebugMode) {
         debugPrint('GeminiService: GEMINI_API_KEY missing; AI text disabled.');
@@ -228,12 +228,12 @@ class GeminiService {
     }
     try {
       // Always re-read env, and rebuild model/session if config changed.
-      final envModel = dotenv.env['GEMINI_MODEL'];
+      final envModel = getEnvVar('GEMINI_MODEL');
       if (envModel != null && envModel.trim().isNotEmpty) {
         _modelName = envModel.trim();
       }
 
-      final envEnrich = dotenv.env['GEMINI_ENRICH'];
+      final envEnrich = getEnvVar('GEMINI_ENRICH');
       if (envEnrich != null) {
         final v = envEnrich.toLowerCase();
         _enrichEnabled = v == '1' || v == 'true' || v == 'yes';
@@ -241,17 +241,17 @@ class GeminiService {
         _enrichEnabled = false;
       }
 
-      final envAllowSwitch = dotenv.env['GEMINI_ALLOW_RUNTIME_SWITCH'];
+      final envAllowSwitch = getEnvVar('GEMINI_ALLOW_RUNTIME_SWITCH');
       if (envAllowSwitch != null) {
         final v = envAllowSwitch.toLowerCase();
         _allowRuntimeSwitch = v == '1' || v == 'true' || v == 'yes';
       }
-      final envTemp = dotenv.env['GEMINI_TEMPERATURE'];
+      final envTemp = getEnvVar('GEMINI_TEMPERATURE');
       if (envTemp != null) {
         final t = double.tryParse(envTemp);
         if (t != null) _temperature = t;
       }
-      final envMax = dotenv.env['GEMINI_MAX_TOKENS'];
+      final envMax = getEnvVar('GEMINI_MAX_TOKENS');
       if (envMax != null) {
         final m = int.tryParse(envMax);
         if (m != null) {
@@ -1354,7 +1354,7 @@ class GeminiService {
     }
 
     // ✅ Manejo especial para category: detectar retorno después de seleccionar categorías
-if (currentStepKey == 'category') {
+    if (currentStepKey == 'category') {
       final normalized = userInput.trim().toLowerCase();
 
       if (normalized == 'category_updated' ||
@@ -1362,10 +1362,12 @@ if (currentStepKey == 'category') {
           normalized == 'continue') {
         final isSpanish = registerCubit.state.language == 'Español';
 
-        debugPrint('✅ [category] Avanzando sin mensaje de confirmación redundante');
+        debugPrint(
+          '✅ [category] Avanzando sin mensaje de confirmación redundante',
+        );
 
         // 1. Eliminamos toda la lógica de feedbackMessage que ensuciaba el flujo
-        
+
         // Salir del modo repetición si estábamos en él
         if (_isInRepeatMode) {
           _currentQuestionIndex = _previousQuestionIndex;
@@ -1378,7 +1380,9 @@ if (currentStepKey == 'category') {
         // Verificar fin del flujo
         if (_currentQuestionIndex >= questionFlow.length) {
           return {
-            "text": isSpanish ? "¡Registro completado! 🎉" : "Registration complete! 🎉",
+            "text": isSpanish
+                ? "¡Registro completado! 🎉"
+                : "Registration complete! 🎉",
             "options": [],
             "step": "finished",
             "keepTalk": false,
@@ -1393,7 +1397,9 @@ if (currentStepKey == 'category') {
 
         if (nextQuestion == null) {
           return {
-            "text": isSpanish ? "¡Registro completado! 🎉" : "Registration complete! 🎉",
+            "text": isSpanish
+                ? "¡Registro completado! 🎉"
+                : "Registration complete! 🎉",
             "options": [],
             "step": "finished",
             "keepTalk": false,

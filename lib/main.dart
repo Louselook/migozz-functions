@@ -28,7 +28,14 @@ Future<void> main() async {
   await EasyLocalization.ensureInitialized();
   await configureDependencies();
   await FirebaseConfig.initialize();
-  await dotenv.load(fileName: ".env");
+
+  // Cargar .env si existe (en desarrollo). En producción usamos --dart-define
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    // .env no existe en producción, las variables vienen de --dart-define
+    debugPrint('ℹ️ [Main] .env not found, using --dart-define variables');
+  }
 
   // Register FCM background message handler ONCE globally
   // This MUST be done at the top level, not in a widget's initState

@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:migozz_app/core/config/api/api_config.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/auth_result.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
@@ -99,8 +99,9 @@ class AuthService {
       final googleSignIn = GoogleSignIn.instance;
 
       // Inicializa: solo pasa clientId en web
-      if (kIsWeb && dotenv.env['GOOGLE_CLIENT_ID'] != null) {
-        await googleSignIn.initialize(clientId: dotenv.env['GOOGLE_CLIENT_ID']);
+      final googleClientId = getEnvVar('GOOGLE_CLIENT_ID');
+      if (kIsWeb && googleClientId != null) {
+        await googleSignIn.initialize(clientId: googleClientId);
       } else {
         await googleSignIn.initialize();
       }
