@@ -6,7 +6,7 @@ import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/custom_snackbar.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/services/add_networks/network_config.dart';
-import 'package:migozz_app/features/profile/components/utils/Loader.dart';
+import 'package:migozz_app/features/profile/components/utils/loader.dart';
 
 /// Web version: Modal dialog to input usernames for selected networks
 class WebSocialNetworkInputModal extends StatefulWidget {
@@ -181,8 +181,8 @@ class _WebSocialNetworkInputModalState
       final delayPerMessage = networksToProcess <= 1
           ? 2000
           : networksToProcess == 2
-              ? 1000
-              : 700;
+          ? 1000
+          : 700;
 
       // Show loader ONCE before processing all networks
       if (mounted && networksToProcess > 0) {
@@ -550,13 +550,13 @@ class _WebSocialNetworkInputModalState
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
             color: isConnected
-                ? Colors.green.withValues(alpha:0.15)
-                : Colors.white.withValues(alpha:0.05),
+                ? Colors.green.withValues(alpha: 0.15)
+                : Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isConnected
-                  ? Colors.green.withValues(alpha:0.5)
-                  : Colors.white.withValues(alpha:0.15),
+                  ? Colors.green.withValues(alpha: 0.5)
+                  : Colors.white.withValues(alpha: 0.15),
               width: 1,
             ),
           ),

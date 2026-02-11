@@ -183,6 +183,7 @@ class CompleteProfile extends StatelessWidget {
                                 '🔄 Navegar a completar perfil en IA Chat',
                               );
                               await _syncProfileDataToRegisterCubit(context);
+                              // ignore: use_build_context_synchronously
                               final authState = context.read<AuthCubit>().state;
                               if (!context.mounted) return;
                               context.go(

@@ -532,6 +532,7 @@ class _VoiceNoteButton extends StatelessWidget {
           await launchUrl(Uri.parse(url));
         } else {
           // Optional: Show snackbar or alert if URL is empty
+          // ignore: use_build_context_synchronously
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('profile.validations.emptyAudio'.tr())),
           );

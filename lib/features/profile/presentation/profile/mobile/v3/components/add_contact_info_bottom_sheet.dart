@@ -3,19 +3,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
-import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
+import 'package:migozz_app/features/profile/components/utils/alert_general.dart';
 
 import '../../../../../../../core/assets_constants.dart';
 
 enum ContactType { website, phone, email }
-Stack placeHolderWidget(Size size) {
-  return Stack(alignment: Alignment.center,
-    children: [
-      SvgPicture.asset(AssetsConstants.placeholderIcon, fit: BoxFit.cover,width: size.width, height: size.height*0.3,),
 
+Stack placeHolderWidget(Size size) {
+  return Stack(
+    alignment: Alignment.center,
+    children: [
+      SvgPicture.asset(
+        AssetsConstants.placeholderIcon,
+        fit: BoxFit.cover,
+        width: size.width,
+        height: size.height * 0.3,
+      ),
     ],
   );
 }
+
 class AddContactInfoBottomSheet extends StatefulWidget {
   final ContactType type;
   final Function(String value) onSave;
@@ -31,7 +38,8 @@ class AddContactInfoBottomSheet extends StatefulWidget {
   });
 
   @override
-  State<AddContactInfoBottomSheet> createState() => _AddContactInfoBottomSheetState();
+  State<AddContactInfoBottomSheet> createState() =>
+      _AddContactInfoBottomSheetState();
 }
 
 class _AddContactInfoBottomSheetState extends State<AddContactInfoBottomSheet> {
@@ -72,7 +80,8 @@ class _AddContactInfoBottomSheetState extends State<AddContactInfoBottomSheet> {
   }
 
   String _getTitle(BuildContext context) {
-    final isEditing = widget.currentValue != null && widget.currentValue!.isNotEmpty;
+    final isEditing =
+        widget.currentValue != null && widget.currentValue!.isNotEmpty;
     final actionKey = isEditing
         ? 'profile.customization.contact.sheetTitle.edit'
         : 'profile.customization.contact.sheetTitle.add';
@@ -217,7 +226,9 @@ class _AddContactInfoBottomSheetState extends State<AddContactInfoBottomSheet> {
               ),
 
               // Delete button (only show when editing)
-              if (widget.onDelete != null && widget.currentValue != null && widget.currentValue!.isNotEmpty) ...[
+              if (widget.onDelete != null &&
+                  widget.currentValue != null &&
+                  widget.currentValue!.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,

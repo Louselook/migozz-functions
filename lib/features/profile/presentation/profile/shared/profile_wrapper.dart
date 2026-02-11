@@ -6,7 +6,7 @@ import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_stat
 // import 'package:migozz_app/features/tutorial/profile_tutorial_helper.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/tutorial/profile/profile_tutorial_keys.dart';
-import 'package:migozz_app/features/profile/components/utils/Loader.dart';
+import 'package:migozz_app/features/profile/components/utils/loader.dart';
 
 class ProfileWrapper extends StatefulWidget {
   final TutorialKeys tutorialKeys;
@@ -84,8 +84,8 @@ class _ProfileWrapperState extends State<ProfileWrapper> {
 
         // Si llegamos aquí, el perfil existe y está listo -> delegamos al builder
         return widget.builder(
-          context, 
-          authState, 
+          context,
+          authState,
           widget.tutorialKeys,
           widget.profileTutorialKeys,
         );

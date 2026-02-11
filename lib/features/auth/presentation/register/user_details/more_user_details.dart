@@ -141,6 +141,7 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
       ];
     }
 
+    // ignore: deprecated_member_use
     return WillPopScope(
       onWillPop: () async {
         // En modo registro, validar según la página actual

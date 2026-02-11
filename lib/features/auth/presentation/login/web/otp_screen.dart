@@ -658,7 +658,9 @@ class _OtpBoxField extends StatelessWidget {
         decoration: InputDecoration(
           counterText: '',
           filled: true,
-          fillColor: isDarkMode ? Colors.white.withOpacity(0.15) : Colors.white,
+          fillColor: isDarkMode
+              ? Colors.white.withValues(alpha: 0.15)
+              : Colors.white,
           contentPadding: EdgeInsets.zero,
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),

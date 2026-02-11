@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+// ignore: depend_on_referenced_packages
 import 'package:path/path.dart' as p;
 import 'package:migozz_app/features/chat/data/datasources/firestore_message.dart';
 import 'package:migozz_app/features/chat/data/domain/models/chat_rooms.dart';
@@ -573,7 +574,9 @@ class ChatService {
         'createdAt': Timestamp.fromDate(now),
         'updatedAt': Timestamp.fromDate(now),
       });
-      debugPrint('✅ [ChatService] Reporte enviado para usuario: $reportedUserId');
+      debugPrint(
+        '✅ [ChatService] Reporte enviado para usuario: $reportedUserId',
+      );
     } catch (e) {
       debugPrint('❌ [ChatService] Error al enviar reporte: $e');
       rethrow;
@@ -851,6 +854,7 @@ class ChatService {
 
   Stream<int> getTotalUnreadCountStream(String userId) {
     return getUserChatsStream(userId).map(
+      // ignore: avoid_types_as_parameter_names
       (chats) => chats.fold<int>(0, (sum, c) => sum + c.getUnreadCount(userId)),
     );
   }

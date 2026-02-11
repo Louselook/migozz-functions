@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:migozz_app/features/profile/components/utils/Loader.dart';
+import 'package:migozz_app/features/profile/components/utils/loader.dart';
 
 class LoadingOverlay {
   static void show(

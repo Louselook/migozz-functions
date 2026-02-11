@@ -14,7 +14,7 @@ import 'package:migozz_app/features/auth/presentation/blocs/login_cubit/login_cu
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/chat/presentation/register/components/chat_operation/functions/email_validation.dart';
 import 'package:migozz_app/core/components/compuestos/custom_snackbar.dart';
-import 'package:migozz_app/features/profile/components/utils/Loader.dart';
+import 'package:migozz_app/features/profile/components/utils/loader.dart';
 
 class LoginForm extends StatefulWidget {
   const LoginForm({super.key});

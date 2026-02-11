@@ -14,7 +14,7 @@ import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/compo
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/featured_links_section.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/contact_info_section.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
-import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
+import 'package:migozz_app/features/profile/components/utils/alert_general.dart';
 
 // import '../../../../components/tintes_gradients.dart';
 import 'components/audio_section.dart';

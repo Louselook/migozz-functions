@@ -21,8 +21,8 @@ import 'package:migozz_app/features/profile/presentation/edit/components/profile
 // import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/tutorial/profile/profile_tutorial.dart';
-import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
-import 'package:migozz_app/features/profile/components/utils/Loader.dart';
+import 'package:migozz_app/features/profile/components/utils/alert_general.dart';
+import 'package:migozz_app/features/profile/components/utils/loader.dart';
 
 class EditProfileScreen extends StatefulWidget {
   final TutorialKeys tutorialKeys;
@@ -217,6 +217,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
       _resetFields();
       return true;
     } else if (action == 'save') {
+      // ignore: use_build_context_synchronously
       final userId = context.read<AuthCubit>().state.firebaseUser?.uid;
       if (userId != null) {
         return await _saveProfile(userId);

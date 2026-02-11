@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/components/atomics/loading_overlay.dart';
-import 'package:migozz_app/features/profile/components/utils/Loader.dart';
+import 'package:migozz_app/features/profile/components/utils/loader.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 
@@ -55,8 +55,9 @@ class RegistrationHandler {
       if (s.username == null || (s.username as String).trim().isEmpty) {
         missing.add('username');
       }
-      if (s.location == null || (s.location?.isEmpty ?? true))
+      if (s.location == null || (s.location?.isEmpty ?? true)) {
         missing.add('location');
+      }
       if (s.socialEcosystem == null || s.socialEcosystem!.isEmpty) {
         missing.add('socialEcosystem');
       }
