@@ -102,8 +102,6 @@ flutter:
   uses-material-design: true
 
   assets:
-    # .env se carga opcionalmente (solo en desarrollo)
-    - .env
     - assets/
     - assets/images/
     - assets/translations/
