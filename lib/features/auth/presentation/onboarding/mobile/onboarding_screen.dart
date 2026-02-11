@@ -89,7 +89,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     int index,
   ) {
     final double screenHeight = MediaQuery.of(context).size.height;
-    final double screenWidth = MediaQuery.of(context).size.width;
     final bool isMediumScreen = screenHeight <= 850;
     final bool isSmallScreen = screenHeight <= 750;
 
@@ -107,7 +106,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: isSmallScreen ? 10: 15,
+              spacing: isSmallScreen ? 10 : 15,
               children: [
                 Text(
                   data.titleKey.tr(),
@@ -115,7 +114,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     fontSize: isMediumScreen ? 20 : 24,
                     fontFamily: 'Inter',
                     color: Color(0xFFFFFFFF),
-                    fontWeight: FontWeight.bold
+                    fontWeight: FontWeight.bold,
                   )),
                 ),
 

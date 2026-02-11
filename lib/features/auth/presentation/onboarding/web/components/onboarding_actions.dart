@@ -18,6 +18,11 @@ class OnboardingActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final aspectRatio = screenHeight / screenWidth;
+    final isVeryTallScreen = aspectRatio > 2.0;
+    final isMobileWeb = !isDesktop && screenWidth < 500;
+
     if (lastPage) {
       return SizedBox(
         width: isDesktop ? null : double.infinity,
@@ -26,8 +31,8 @@ class OnboardingActions extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             padding: EdgeInsets.zero,
             fixedSize: Size(
-              screenWidth < 600 ? 200 : 260,
-              screenWidth < 600 ? 40 : 50,
+              screenWidth < 500 ? 180 : (screenWidth < 600 ? 200 : 260),
+              isVeryTallScreen ? 36 : (screenWidth < 600 ? 40 : 50),
             ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
@@ -54,7 +59,9 @@ class OnboardingActions extends StatelessWidget {
                   Text(
                     "onboarding.buttons.getStarted".tr(),
                     style: TextStyle(
-                      fontSize: screenWidth < 600 ? 18 : 24,
+                      fontSize: isVeryTallScreen
+                          ? 14
+                          : (screenWidth < 600 ? 18 : 24),
                       color: Colors.white,
                     ),
                   ),
@@ -62,7 +69,7 @@ class OnboardingActions extends StatelessWidget {
                   Icon(
                     Icons.arrow_forward_ios,
                     color: Colors.white,
-                    size: screenWidth < 600 ? 16 : 24,
+                    size: isVeryTallScreen ? 14 : (screenWidth < 600 ? 16 : 24),
                   ),
                 ],
               ),
@@ -91,8 +98,8 @@ class OnboardingActions extends StatelessWidget {
               "onboarding.buttons.skip".tr(),
               style: TextStyle(
                 fontSize: 18,
-                color: Colors.white.withValues(alpha:
-                  0.7,
+                color: Colors.white.withValues(
+                  alpha: 0.7,
                 ), // Slightly dimmer for secondary action
               ),
             ),
@@ -105,8 +112,8 @@ class OnboardingActions extends StatelessWidget {
             onPressed: () => context.go('/login'),
             style: TextButton.styleFrom(
               padding: EdgeInsets.symmetric(
-                horizontal: screenWidth < 600 ? 16 : 24,
-                vertical: screenWidth < 600 ? 8 : 16,
+                horizontal: isMobileWeb ? 12 : (screenWidth < 600 ? 16 : 24),
+                vertical: isVeryTallScreen ? 4 : (screenWidth < 600 ? 8 : 16),
               ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -115,7 +122,7 @@ class OnboardingActions extends StatelessWidget {
             child: Text(
               "onboarding.buttons.skip".tr(),
               style: TextStyle(
-                fontSize: screenWidth < 600 ? 18 : 24,
+                fontSize: isVeryTallScreen ? 14 : (screenWidth < 600 ? 18 : 24),
                 color: Colors.white,
               ),
             ),
@@ -133,14 +140,14 @@ class OnboardingActions extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             padding: EdgeInsets.zero,
             fixedSize: Size(
-              screenWidth < 600 ? 120 : 160, // Slightly wider
-              screenWidth < 600 ? 44 : 56, // Slightly taller
+              isMobileWeb ? 100 : (screenWidth < 600 ? 120 : 160),
+              isVeryTallScreen ? 38 : (screenWidth < 600 ? 44 : 56),
             ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12), // Rounder corners
             ),
             elevation: 8, // Add some shadow
-            shadowColor: const Color(0xFFD43AB6).withValues(alpha:0.5),
+            shadowColor: const Color(0xFFD43AB6).withValues(alpha: 0.5),
           ),
           child: Ink(
             decoration: BoxDecoration(
@@ -163,16 +170,18 @@ class OnboardingActions extends StatelessWidget {
                   Text(
                     "onboarding.buttons.next".tr(),
                     style: TextStyle(
-                      fontSize: screenWidth < 600 ? 16 : 18,
+                      fontSize: isVeryTallScreen
+                          ? 14
+                          : (screenWidth < 600 ? 16 : 18),
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                   Icon(
                     Icons.arrow_forward_rounded, // Rounded arrow
                     color: Colors.white,
-                    size: screenWidth < 600 ? 18 : 20,
+                    size: isVeryTallScreen ? 16 : (screenWidth < 600 ? 18 : 20),
                   ),
                 ],
               ),
