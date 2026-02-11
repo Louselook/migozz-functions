@@ -26,16 +26,16 @@ import 'core/services/ai/gemini_service.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
-  await configureDependencies();
-  await FirebaseConfig.initialize();
 
-  // Cargar .env si existe (en desarrollo). En producción usamos --dart-define
+  // Cargar .env ANTES de configureDependencies para que ApiConfig tenga los valores
   try {
     await dotenv.load(fileName: ".env");
   } catch (e) {
-    // .env no existe en producción, las variables vienen de --dart-define
     debugPrint('ℹ️ [Main] .env not found, using --dart-define variables');
   }
+
+  await configureDependencies();
+  await FirebaseConfig.initialize();
 
   // Register FCM background message handler ONCE globally
   // This MUST be done at the top level, not in a widget's initState
