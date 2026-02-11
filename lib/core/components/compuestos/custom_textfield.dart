@@ -11,6 +11,8 @@ class CustomTextField extends StatelessWidget {
   final TextInputType keyboardType;
   final void Function(String)? onSubmitted;
   final TextInputAction textInputAction;
+  final int? maxLines;
+  final int minLines;
 
   const CustomTextField({
     super.key,
@@ -23,6 +25,8 @@ class CustomTextField extends StatelessWidget {
     required this.keyboardType,
     this.onSubmitted,
     this.textInputAction = TextInputAction.newline,
+    this.maxLines = 1,
+    this.minLines = 1,
   });
 
   @override
@@ -40,6 +44,8 @@ class CustomTextField extends StatelessWidget {
         keyboardType: keyboardType,
         textInputAction: textInputAction,
         onSubmitted: onSubmitted,
+        maxLines: maxLines,
+        minLines: minLines,
         style: const TextStyle(
           color: AppColors.secondaryText,
           fontSize: 16,

@@ -1021,6 +1021,19 @@
         "audio": "Please use the app to send audio!",
         "image": "Please use the app to send images!"
       }
+    },
+    "dateHeader": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "days": {
+        "monday": "Monday",
+        "tuesday": "Tuesday",
+        "wednesday": "Wednesday",
+        "thursday": "Thursday",
+        "friday": "Friday",
+        "saturday": "Saturday",
+        "sunday": "Sunday"
+      }
     }
   },
   "notifications": {

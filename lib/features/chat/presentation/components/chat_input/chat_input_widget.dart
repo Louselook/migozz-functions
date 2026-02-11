@@ -622,17 +622,11 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
         controller: widget.controller,
         hintText: "chat.input.typeMessage".tr(),
         radius: 8,
-        keyboardType: widget.keyboardType,
-        textInputAction: TextInputAction.send,
-        onSubmitted: (value) {
-          // Cuando el usuario presiona Enter (o Send en el teclado), enviar si hay texto
-          if (value.trim().isNotEmpty) {
-            widget.onSend();
-            try {
-              widget.controller.clear();
-            } catch (_) {}
-          }
-        },
+        keyboardType: TextInputType.multiline,
+        textInputAction: TextInputAction.newline,
+        maxLines: null,
+        minLines: 1,
+        onSubmitted: null,
         // IA-08: Solo mostrar botón de adjuntar en móvil y si es válido para el step
         suffixIcon: !kIsWeb && _shouldShowAttachButton()
             ? IconButton(

@@ -809,6 +809,19 @@
         "audio": "¡Por favor usa la app para enviar audio!",
         "image": "¡Por favor usa la app para enviar imágenes!"
       }
+    },
+    "dateHeader": {
+      "today": "Hoy",
+      "yesterday": "Ayer",
+      "days": {
+        "monday": "lunes",
+        "tuesday": "martes",
+        "wednesday": "miércoles",
+        "thursday": "jueves",
+        "friday": "viernes",
+        "saturday": "sábado",
+        "sunday": "domingo"
+      }
     }
   },
   "notifications": {
