@@ -82,7 +82,9 @@
 			<string>fetch</string>
 			<string>remote-notification</string>
 		</array>
-		<key>FirebaseAppDelegateProxyEnabled</key>
+	<key>FirebaseAppDelegateProxyEnabled</key>
 		<false/>
+		<key>FlutterDeepLinkingEnabled</key>
+		<true/>
 	</dict>
 </plist>

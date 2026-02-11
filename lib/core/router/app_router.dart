@@ -32,6 +32,7 @@ import 'package:migozz_app/features/search/web/presentation/search_screen.dart'
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/notifications/presentation/notifications_list_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:migozz_app/features/profile/presentation/public_profile_screen.dart';
 
 Widget localizedBuilder(BuildContext context, Widget Function() screenBuilder) {
   final easy = EasyLocalization.of(context);
@@ -214,6 +215,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
 
               if (!snapshot.hasData || snapshot.data == null) {
                 return Scaffold(
+                  backgroundColor: Colors.black,
                   body: Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -221,12 +223,15 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
                         const Icon(
                           Icons.person_off,
                           size: 64,
-                          color: Colors.grey,
+                          color: Colors.white54,
                         ),
                         const SizedBox(height: 16),
                         Text(
                           'Usuario @$username no encontrado',
-                          style: const TextStyle(fontSize: 18),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            color: Colors.white,
+                          ),
                         ),
                         const SizedBox(height: 24),
                         ElevatedButton(
@@ -240,12 +245,8 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
               }
 
               final user = snapshot.data!;
-              final screenWidth = MediaQuery.of(context).size.width;
-
-              if (screenWidth >= 900) {
-                return web_profile.ProfileSearchScreen(user: user);
-              }
-              return MainNavigation(initialIndex: 0, targetUser: user);
+              // Usar siempre PublicProfileScreen para esta ruta pública
+              return PublicProfileScreen(user: user);
             },
           );
         },
