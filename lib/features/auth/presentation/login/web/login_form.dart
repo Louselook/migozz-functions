@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
@@ -243,8 +244,12 @@ class _LoginFormState extends State<LoginForm> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 googleButton(onPressed: _handleGoogleSignIn),
-                const SizedBox(width: 10),
-                appleButton(onPressed: _handleAppleSignIn),
+                // Apple Sign-In no está disponible en web debido a problemas de compatibilidad
+                // con sign_in_with_apple v7.0.1
+                if (!kIsWeb) ...[
+                  const SizedBox(width: 10),
+                  appleButton(onPressed: _handleAppleSignIn),
+                ],
               ],
             ),
             const SizedBox(height: 50),
