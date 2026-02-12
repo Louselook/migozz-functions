@@ -98,26 +98,33 @@ class AuthService {
     try {
       debugPrint('🔐 [AuthService] Iniciando Google Sign-In...');
 
-      // En v6.2.0, signIn() funciona en todas las plataformas (web, iOS, Android)
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-
-      if (googleUser == null) {
-        debugPrint('⚠️ [AuthService] Usuario canceló el login');
+      // En v7, se debe usar GoogleSignIn.instance
+      // authenticate() inicia el flujo interactivo
+      final GoogleSignInAccount googleUser;
+      try {
+        googleUser = await GoogleSignIn.instance.authenticate();
+      } catch (e) {
+        debugPrint(
+          '⚠️ [AuthService] Error o cancelación en Google Sign-In: $e',
+        );
+        // Si el usuario cancela, suele lanzar una excepción
         throw Exception('google_signin_cancelled');
       }
 
       debugPrint('✅ [AuthService] Usuario autenticado: ${googleUser.email}');
 
-      // Obtener los tokens de autenticación
+      // Obtener los tokens de autenticación (idToken)
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
 
       debugPrint('🔐 [AuthService] Tokens obtenidos');
 
       // Crear credencial para Firebase
+      // Nota: en v7, GoogleSignInAuthentication ya no tiene accessToken.
+      // Firebase acepta idToken sin accessToken.
       final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
+        accessToken: null,
       );
 
       debugPrint(
@@ -482,7 +489,7 @@ class AuthService {
   // SIGN OUT
   Future<void> signOut() async {
     try {
-      await GoogleSignIn().signOut();
+      await GoogleSignIn.instance.signOut();
     } catch (_) {}
     // Note: Apple Sign-In doesn't require explicit sign out
     await _auth.signOut();
