@@ -622,6 +622,7 @@
                 "cellPhone" : "Cell Phone",
                 "dateOfBirth" : "Date of birth",
                 "gender" : "Gender",
+                "bio" : "Bio",
                 "location" : "Location"
             },
             "genderOptions" : {

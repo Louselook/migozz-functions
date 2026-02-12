@@ -609,6 +609,7 @@
         "cellPhone": "Teléfono celular",
         "dateOfBirth": "Fecha de nacimiento",
         "gender": "Género",
+        "bio": "Biografía",
         "location": "Ubicación"
       },
       "genderOptions": {

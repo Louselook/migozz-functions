@@ -201,11 +201,11 @@ class ProfileInfoPanel extends StatelessWidget {
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(
-                              Icons.headphones,
-                              color: Colors.white70,
-                              size: 16,
-                            ),
+                            // const Icon(
+                            //   Icons.headphones,
+                            //   color: Colors.white70,
+                            //   size: 16,
+                            // ),
                             const SizedBox(width: 8),
                             Flexible(
                               child: Text(

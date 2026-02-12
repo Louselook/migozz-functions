@@ -8,6 +8,7 @@ class ProfileTextField extends StatelessWidget {
   final bool readOnly;
   final VoidCallback? onTap;
   final bool showArrow;
+  final int maxLines;
 
   const ProfileTextField({
     super.key,
@@ -18,6 +19,7 @@ class ProfileTextField extends StatelessWidget {
     this.readOnly = false,
     this.onTap,
     this.showArrow = true,
+    this.maxLines = 1,
   });
 
   @override
@@ -65,6 +67,7 @@ class ProfileTextField extends StatelessWidget {
             : TextFormField(
                 initialValue: initialValue,
                 keyboardType: keyboardType,
+                maxLines: maxLines,
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.9),
                   fontSize: isSmallScreen ? 14 : 15,
