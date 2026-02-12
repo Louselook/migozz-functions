@@ -96,45 +96,35 @@ class AuthService {
   // LOGIN con Google
   Future<AuthResult> loginWithGoogle() async {
     try {
-      final googleSignIn = GoogleSignIn.instance;
+      debugPrint('🔐 [AuthService] Iniciando Google Sign-In...');
 
-      // Inicializa: solo pasa clientId en web
-      final googleClientId = getEnvVar('GOOGLE_CLIENT_ID');
-      if (kIsWeb && googleClientId != null) {
-        await googleSignIn.initialize(clientId: googleClientId);
-      } else {
-        await googleSignIn.initialize();
+      // En v6.2.0, signIn() funciona en todas las plataformas (web, iOS, Android)
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+      if (googleUser == null) {
+        debugPrint('⚠️ [AuthService] Usuario canceló el login');
+        throw Exception('google_signin_cancelled');
       }
 
-      // 1) UI de login
-      final googleUser = await googleSignIn.authenticate();
+      debugPrint('✅ [AuthService] Usuario autenticado: ${googleUser.email}');
 
-      // 2) pedir autorización para scopes (devuelve accessToken si existe)
-      final authorization = await googleUser.authorizationClient
-          .authorizationForScopes([
-            'email',
-            'profile',
-            // 'openid' no garantiza idToken en todas las plataformas v7, pero no hace daño pedirlo.
-            'openid',
-          ]);
+      // Obtener los tokens de autenticación
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
 
-      if (authorization == null) throw Exception('authorization_failed');
+      debugPrint('🔐 [AuthService] Tokens obtenidos');
 
-      final String accessToken = authorization.accessToken;
-
-      debugPrint('🔐 accessToken length: ${accessToken.length}');
-
-      if (accessToken.isEmpty) {
-        throw Exception('no_access_token_obtained');
-      }
-
-      // 3) crear credential SOLO con accessToken (idToken no está disponible en v7)
+      // Crear credencial para Firebase
       final credential = GoogleAuthProvider.credential(
-        accessToken: accessToken,
-        // idToken: null,
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
       );
 
-      // 4) sign in en Firebase
+      debugPrint(
+        '🔐 [AuthService] Credential creado, iniciando sesión en Firebase...',
+      );
+
+      // Sign in en Firebase
       final userCredential = await _auth.signInWithCredential(credential);
       final user = userCredential.user;
       if (user == null) throw Exception('firebase_sign_in_failed');
@@ -492,7 +482,7 @@ class AuthService {
   // SIGN OUT
   Future<void> signOut() async {
     try {
-      await GoogleSignIn.instance.signOut();
+      await GoogleSignIn().signOut();
     } catch (_) {}
     // Note: Apple Sign-In doesn't require explicit sign out
     await _auth.signOut();

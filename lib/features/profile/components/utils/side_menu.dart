@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 
 class SideMenu extends StatelessWidget {
   final TutorialKeys? tutorialKeys;
@@ -164,6 +167,17 @@ class SideMenu extends StatelessWidget {
               ],
             ),
           ),
+          if (kIsWeb)
+            _MenuItem(
+              icon: Icons.logout,
+              label: 'Log Out',
+              isSelected: false,
+              isSmallScreen: isSmallScreen,
+              isMediumScreen: isMediumScreen,
+              onTap: () {
+                context.read<AuthCubit>().logout();
+              },
+            ),
 
           // Botón Create
           Padding(
