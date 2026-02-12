@@ -12,7 +12,7 @@ import 'package:migozz_app/core/config/api/api_config.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/services/media_service.dart';
-import 'package:migozz_app/features/profile/components/utils/Loader.dart';
+import 'package:migozz_app/features/profile/components/utils/loader.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 import 'package:http/http.dart' as http;
 
@@ -253,6 +253,7 @@ class _WebAddCustomLinkModalState extends State<WebAddCustomLinkModal> {
 
       if (widget.isRegister) {
         // --- Register Mode ---
+        // ignore: use_build_context_synchronously
         final registerCubit = context.read<RegisterCubit>();
         final current = List<Map<String, dynamic>>.from(
           registerCubit.state.socialEcosystem ?? [],
@@ -265,6 +266,7 @@ class _WebAddCustomLinkModalState extends State<WebAddCustomLinkModal> {
         }
       } else {
         // --- Edit Mode ---
+        // ignore: use_build_context_synchronously
         final editCubit = context.read<EditCubit>();
         final current = List<Map<String, dynamic>>.from(
           editCubit.state.socialEcosystem ?? [],

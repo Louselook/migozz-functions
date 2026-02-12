@@ -6,7 +6,7 @@ import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubi
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'add_contact_info_bottom_sheet.dart';
-import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
+import 'package:migozz_app/features/profile/components/utils/alert_general.dart';
 import 'section_percentage_header.dart';
 
 class ContactInfoSection extends StatelessWidget {
@@ -89,7 +89,11 @@ class ContactInfoSection extends StatelessWidget {
           final userId = authCubit.state.firebaseUser?.uid;
 
           if (userId == null) {
-            AlertGeneral.show(context, 4, message: 'edit.validations.errorUserLogin'.tr());
+            AlertGeneral.show(
+              context,
+              4,
+              message: 'edit.validations.errorUserLogin'.tr(),
+            );
             return;
           }
 
@@ -144,7 +148,8 @@ class ContactInfoSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Check if any contact info is filled
-    final hasAnyContact = (user.contactWebsite != null && user.contactWebsite!.isNotEmpty) ||
+    final hasAnyContact =
+        (user.contactWebsite != null && user.contactWebsite!.isNotEmpty) ||
         (user.contactPhone != null && user.contactPhone!.isNotEmpty) ||
         (user.contactEmail != null && user.contactEmail!.isNotEmpty);
 
@@ -224,7 +229,8 @@ class ContactInfoSection extends StatelessWidget {
           if (isOwnProfile && !hasAnyContact) ...[
             const SizedBox(height: 12),
             GestureDetector(
-              onTap: () => _addOrEditContactInfo(context, ContactType.email, null),
+              onTap: () =>
+                  _addOrEditContactInfo(context, ContactType.email, null),
               child: Text(
                 'profile.customization.contact.addCta'.tr(),
                 style: TextStyle(

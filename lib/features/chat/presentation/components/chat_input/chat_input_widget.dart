@@ -617,27 +617,36 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
           ),
         );
       },
-      child: CustomTextField(
-        key: const ValueKey('text_input'),
-        controller: widget.controller,
-        hintText: "chat.input.typeMessage".tr(),
-        radius: 8,
-        keyboardType: TextInputType.multiline,
-        textInputAction: TextInputAction.newline,
-        maxLines: null,
-        minLines: 1,
-        onSubmitted: null,
-        // IA-08: Solo mostrar botón de adjuntar en móvil y si es válido para el step
-        suffixIcon: !kIsWeb && _shouldShowAttachButton()
-            ? IconButton(
-                key: _attachButtonKey,
-                icon: Icon(
-                  _showAttachments ? Icons.close : Icons.attach_file,
-                  color: _showAttachments ? Colors.red : Colors.grey,
-                ),
-                onPressed: _toggleAttachments,
-              )
-            : null,
+      child: CallbackShortcuts(
+        bindings: {
+          const SingleActivator(LogicalKeyboardKey.enter): () {
+            if (widget.controller.text.trim().isNotEmpty) {
+              _handleMainButton();
+            }
+          },
+        },
+        child: CustomTextField(
+          key: const ValueKey('text_input'),
+          controller: widget.controller,
+          hintText: "chat.input.typeMessage".tr(),
+          radius: 8,
+          keyboardType: TextInputType.multiline,
+          textInputAction: TextInputAction.send,
+          maxLines: null,
+          minLines: 1,
+          onSubmitted: (_) => _handleMainButton(),
+          // IA-08: Solo mostrar botón de adjuntar en móvil y si es válido para el step
+          suffixIcon: !kIsWeb && _shouldShowAttachButton()
+              ? IconButton(
+                  key: _attachButtonKey,
+                  icon: Icon(
+                    _showAttachments ? Icons.close : Icons.attach_file,
+                    color: _showAttachments ? Colors.red : Colors.grey,
+                  ),
+                  onPressed: _toggleAttachments,
+                )
+              : null,
+        ),
       ),
     );
   }

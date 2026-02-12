@@ -15,8 +15,8 @@ import 'package:universal_io/io.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:universal_html/html.dart' as html;
 import 'dart:convert';
-import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
-import 'package:migozz_app/features/profile/components/utils/Loader.dart';
+import 'package:migozz_app/features/profile/components/utils/alert_general.dart';
+import 'package:migozz_app/features/profile/components/utils/loader.dart';
 
 /// Pantalla que muestra un QR y permite compartir el enlace del perfil
 /// de un usuario. Si no se pasa [userId], se usa el usuario logueado.
@@ -434,6 +434,7 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
                       _saveSelectedGradient(null);
                       _saveSelectedImage(null);
                       await _extractColorFromEmoji(emojiPath);
+                      // ignore: use_build_context_synchronously
                       Navigator.pop(context);
                     },
                     child: Container(

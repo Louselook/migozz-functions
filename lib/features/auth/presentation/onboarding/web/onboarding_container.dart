@@ -81,14 +81,32 @@ class OnboardingContainer extends StatelessWidget {
             ],
           );
         } else {
+          // Calcular alturas fijas basadas en el tamaño de pantalla
+          final aspectRatio = screenHeight / screenWidth;
+          final isVeryTallScreen =
+              aspectRatio > 2.0; // Pantallas tipo S25 Ultra
+
+          // Alturas fijas para mantener consistencia entre páginas
+          // Aumentadas para dar más espacio al contenido
+          final contentHeight = isVeryTallScreen
+              ? screenHeight * 0.32
+              : (screenHeight < 800
+                    ? screenHeight * 0.36
+                    : screenHeight * 0.34);
+
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Parte superior → contenido (40%)
-              Expanded(
-                flex: screenHeight < 800 ? 4 : 3,
+              // Parte superior → contenido con altura fija
+              SizedBox(
+                height: contentHeight,
                 child: Padding(
-                  padding: const EdgeInsets.all(20),
+                  padding: EdgeInsets.only(
+                    left: 20,
+                    right: 20,
+                    top: isVeryTallScreen ? 12 : 20,
+                    bottom: 8,
+                  ),
                   child: Opacity(
                     opacity: contentOpacity,
                     child: Transform.translate(
@@ -107,19 +125,15 @@ class OnboardingContainer extends StatelessWidget {
                 ),
               ),
 
-              // Parte inferior → imagen (60%)
+              // Parte inferior → imagen ocupa el resto
               Expanded(
-                flex: 6,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: OnboardingImage(
-                    data: data,
-                    isDesktop: false,
-                    screenWidth: screenWidth,
-                    screenHeight: screenHeight,
-                    delta: delta,
-                    t: t,
-                  ),
+                child: OnboardingImage(
+                  data: data,
+                  isDesktop: false,
+                  screenWidth: screenWidth,
+                  screenHeight: screenHeight,
+                  delta: delta,
+                  t: t,
                 ),
               ),
             ],

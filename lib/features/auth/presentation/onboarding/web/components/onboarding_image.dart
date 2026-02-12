@@ -28,10 +28,9 @@ class OnboardingImage extends StatelessWidget {
       final imageParallaxX = delta * 20;
       final imageScale = 0.97 + 0.03 * t;
 
-      return Container(
+      return SizedBox(
         width: imageWidth,
         height: screenHeight,
-        decoration: BoxDecoration(gradient: AppColors.verticalOnboarding),
         child: Transform.translate(
           offset: Offset(imageParallaxX, 0),
           child: Transform.scale(
@@ -39,55 +38,42 @@ class OnboardingImage extends StatelessWidget {
             alignment: Alignment.center,
             child: CachedOnboardingImage(
               imagePath: data.imagePath,
-              fit: BoxFit.fitHeight,
+              fit: BoxFit.cover,
             ),
           ),
         ),
       );
     } else {
-      return Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: AppColors.verticalOnboarding,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(30),
-            topRight: Radius.circular(30),
-          ),
+      return ClipRRect(
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
         ),
-        child: ClipRRect(
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(30),
-            topRight: Radius.circular(30),
-          ),
-          child: Stack(
-            children: [
-              // Imagen principal
-              Positioned.fill(
-                child: Align(
-                  alignment: Alignment.bottomCenter,
-                  child: CachedOnboardingImage(
-                    imagePath: data.imagePath,
-                    fit: BoxFit.contain,
-                    scale: screenHeight < 800 ? 1.5 : 1,
-                    alignment: Alignment.bottomCenter,
+        child: Stack(
+          children: [
+            // Imagen principal - ocupa todo el espacio
+            Positioned.fill(
+              child: CachedOnboardingImage(
+                imagePath: data.imagePath,
+                fit: BoxFit.cover,
+                scale: 1,
+                alignment: Alignment.bottomCenter,
+              ),
+            ),
+            // Efecto radial
+            Positioned.fill(
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment.bottomRight,
+                    radius: 0.6,
+                    colors: [AppColors.radialEffect, Colors.transparent],
+                    stops: [0, 1],
                   ),
                 ),
               ),
-              // Efecto radial
-              Positioned.fill(
-                child: Container(
-                  decoration: const BoxDecoration(
-                    gradient: RadialGradient(
-                      center: Alignment.bottomRight,
-                      radius: 0.6,
-                      colors: [AppColors.radialEffect, Colors.transparent],
-                      stops: [0, 1],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       );
     }

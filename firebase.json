@@ -37,7 +37,11 @@
     {
       "site": "migozz-e2a21",
       "public": "build/web",
-      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
       "redirects": [
         {
           "source": "/reservation",
@@ -51,11 +55,26 @@
         }
       ],
       "rewrites": [
-        { "source": "/.well-known/**", "destination": "/.well-known/assetlinks.json" },
-        { "source": "/u/**", "destination": "/index.html" },
-        { "source": "/terms-privacy", "destination": "/index.html" },
-        { "source": "/", "destination": "/index.html" },
-        { "source": "**", "destination": "/index.html" }
+        {
+          "source": "/.well-known/**",
+          "destination": "/.well-known/assetlinks.json"
+        },
+        {
+          "source": "/u/**",
+          "destination": "/index.html"
+        },
+        {
+          "source": "/terms-privacy",
+          "destination": "/index.html"
+        },
+        {
+          "source": "/",
+          "destination": "/index.html"
+        },
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
       ],
       "headers": [
         {

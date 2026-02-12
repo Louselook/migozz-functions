@@ -8,8 +8,8 @@ import 'package:migozz_app/core/utils/camera_permission_handler.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 import 'package:migozz_app/features/auth/services/media_service.dart';
-import 'package:migozz_app/features/profile/components/utils/Loader.dart';
-import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
+import 'package:migozz_app/features/profile/components/utils/loader.dart';
+import 'package:migozz_app/features/profile/components/utils/alert_general.dart';
 import 'components/image_upload_area.dart';
 
 class AddAnotherNetworkScreen extends StatefulWidget {
@@ -298,7 +298,9 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
       return;
     }
 
+    // ignore: use_build_context_synchronously
     final authCubit = context.read<AuthCubit>();
+    // ignore: use_build_context_synchronously
     final editCubit = context.read<EditCubit>();
     final userId = authCubit.state.firebaseUser?.uid;
     if (userId == null) {
@@ -390,6 +392,7 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
         message: 'profile.customization.customLink.saved'.tr(),
       );
       if (context.mounted) {
+        // ignore: use_build_context_synchronously
         Navigator.pop(context, 'done');
       }
     } catch (e) {

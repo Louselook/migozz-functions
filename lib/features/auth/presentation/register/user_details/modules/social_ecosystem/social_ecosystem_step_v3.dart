@@ -9,7 +9,7 @@ import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/regis
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/user_details_button.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
 import 'package:migozz_app/features/auth/services/add_networks/network_config.dart';
-import 'package:migozz_app/features/profile/components/utils/Loader.dart';
+import 'package:migozz_app/features/profile/components/utils/loader.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 import 'package:migozz_app/features/profile/presentation/add_another_network/mobile/add_another_network.dart';
 
@@ -156,18 +156,23 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
           debugPrint('✅ [V3] Auto-save completed successfully!');
 
           // Always hide the dialog
+          // ignore: use_build_context_synchronously
           if (Navigator.of(context).canPop()) {
+            // ignore: use_build_context_synchronously
             Navigator.of(context).pop();
           }
         } catch (e) {
           debugPrint('❌ [V3] Auto-save failed: $e');
 
           // Always hide the dialog
+          // ignore: use_build_context_synchronously
           if (Navigator.of(context).canPop()) {
+            // ignore: use_build_context_synchronously
             Navigator.of(context).pop();
           }
 
           if (context.mounted) {
+            // ignore: use_build_context_synchronously
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
@@ -227,7 +232,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     if (kIsWeb) {
       showDialog(
         context: context,
-        barrierColor: Colors.black.withValues(alpha:0.8),
+        barrierColor: Colors.black.withValues(alpha: 0.8),
         builder: (_) => BlocProvider.value(
           value: registerCubit,
           child: WebSocialNetworkInputModal(
@@ -398,6 +403,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
           debugPrint('🔵 [Edit Mode] Network removed, new ecosystem: $current');
 
           // Auto-save after removing
+          // ignore: use_build_context_synchronously
           final authCubit = context.read<AuthCubit>();
           final userId = authCubit.state.firebaseUser?.uid;
 
@@ -1061,42 +1067,42 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                 Positioned(
                   top: MediaQuery.of(context).padding.top + 8,
                   left: 16,
-                  child:  GestureDetector(
-    onTap: () {
-    // En modo registro, enviar código especial si no hay redes
-    if (widget.mode == MoreUserDetailsMode.register) {
-    final socialEcosystem =
-    context
-        .read<RegisterCubit>()
-        .state
-        .socialEcosystem ??
-    [];
-    if (socialEcosystem.isEmpty) {
-    Navigator.pop(context, 'back_no_socials');
-    } else {
-    Navigator.pop(context, 'done');
-    }
-    } else {
-    Navigator.pop(context);
-    }
-    },
-    child: Container(
-    padding: const EdgeInsets.all(8),
-    decoration: BoxDecoration(
-    color: Colors.black.withValues(alpha: 0.3),
-    borderRadius: BorderRadius.circular(12),
-    border: Border.all(
-    color: Colors.white.withValues(alpha: 0.2),
-    width: 1,
-    ),
-    ),
-    child: const Icon(
-    Icons.arrow_back,
-    color: Color(0xFFFFFFFF),
-    size: 32,
-    ),
-    ),
-    )
+                  child: GestureDetector(
+                    onTap: () {
+                      // En modo registro, enviar código especial si no hay redes
+                      if (widget.mode == MoreUserDetailsMode.register) {
+                        final socialEcosystem =
+                            context
+                                .read<RegisterCubit>()
+                                .state
+                                .socialEcosystem ??
+                            [];
+                        if (socialEcosystem.isEmpty) {
+                          Navigator.pop(context, 'back_no_socials');
+                        } else {
+                          Navigator.pop(context, 'done');
+                        }
+                      } else {
+                        Navigator.pop(context);
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.arrow_back,
+                        color: Color(0xFFFFFFFF),
+                        size: 32,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -1402,7 +1408,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
         if (kIsWeb) {
           await showDialog(
             context: context,
-            barrierColor: Colors.black.withValues(alpha:0.8),
+            barrierColor: Colors.black.withValues(alpha: 0.8),
             builder: (_) {
               if (isRegister) {
                 return BlocProvider.value(

@@ -118,6 +118,7 @@ class _AppGateState extends State<AppGate> {
       ),
     ).then((_) {
       // Se ejecuta cuando el diálogo se cierra (botón o tocar fuera)
+      // ignore: use_build_context_synchronously
       context.read<AuthCubit>().clearBannedState();
       if (mounted) context.go('/onboarding');
     });

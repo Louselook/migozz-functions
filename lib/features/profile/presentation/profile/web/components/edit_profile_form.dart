@@ -16,6 +16,7 @@ class EditProfileForm extends StatelessWidget {
         // Prepare values safely
         final fullName = user?.displayName ?? '';
         final nickname = user?.username ?? '';
+        final bio = user?.bio ?? '';
         final email = user?.email ?? '';
         final phone = user?.phone ?? '';
         final gender = user?.gender ?? '';
@@ -41,6 +42,12 @@ class EditProfileForm extends StatelessWidget {
               label: 'Nickname',
               icon: Icons.alternate_email,
               initialValue: nickname,
+            ),
+            ProfileTextField(
+              label: 'Bio',
+              icon: Icons.edit_note,
+              initialValue: bio,
+              maxLines: 3,
             ),
             ProfileTextField(
               label: 'Email',

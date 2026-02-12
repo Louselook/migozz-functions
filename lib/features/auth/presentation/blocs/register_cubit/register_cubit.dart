@@ -12,7 +12,7 @@ import 'package:migozz_app/features/auth/services/add_networks/network_config.da
 import 'package:migozz_app/features/auth/services/location_service.dart';
 import 'package:migozz_app/features/auth/services/media_service.dart';
 import 'package:migozz_app/features/auth/services/pre_register_service.dart';
-import 'package:migozz_app/features/profile/components/utils/Loader.dart';
+import 'package:migozz_app/features/profile/components/utils/loader.dart';
 import 'register_state.dart';
 
 class RegisterCubit extends Cubit<RegisterState> {
@@ -320,7 +320,9 @@ class RegisterCubit extends Cubit<RegisterState> {
             showProfileLoader(
               context,
               platform: config.displayName,
-              type: inEditMode ? LoaderType.socialAuth : LoaderType.registration,
+              type: inEditMode
+                  ? LoaderType.socialAuth
+                  : LoaderType.registration,
               onCancel: () {
                 debugPrint('❌ User cancelled connection');
                 userCancelled = true;
@@ -381,6 +383,7 @@ class RegisterCubit extends Cubit<RegisterState> {
       // El deeplink manejará la sincronización automáticamente
     } catch (e) {
       debugPrint('❌ Error en OAuth: $e');
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -622,7 +625,8 @@ class RegisterCubit extends Cubit<RegisterState> {
       final hasUsername = (state.username ?? '').trim().isNotEmpty;
       if (!hasUsername) missing.add('username');
 
-      final hasLocationData = state.location != null && !(state.location?.isEmpty ?? true);
+      final hasLocationData =
+          state.location != null && !(state.location?.isEmpty ?? true);
       if (!hasLocationData) missing.add('location');
 
       // Requirement: at least 1 social network

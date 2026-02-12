@@ -6,7 +6,7 @@ import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/custom_snackbar.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/services/add_networks/network_config.dart';
-import 'package:migozz_app/features/profile/components/utils/Loader.dart';
+import 'package:migozz_app/features/profile/components/utils/loader.dart';
 
 /// Step 2: Input usernames for all selected networks
 class SocialNetworkInputStep extends StatefulWidget {
@@ -186,8 +186,8 @@ class _SocialNetworkInputStepState extends State<SocialNetworkInputStep> {
       final delayPerMessage = networksToProcess <= 1
           ? 2000
           : networksToProcess == 2
-              ? 1000
-              : 700;
+          ? 1000
+          : 700;
 
       // Show loader ONCE before processing all networks
       if (mounted && networksToProcess > 0) {

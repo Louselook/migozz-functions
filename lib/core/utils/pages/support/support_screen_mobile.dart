@@ -3,8 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
-import 'package:migozz_app/features/profile/components/utils/Loader.dart';
+import 'package:migozz_app/features/profile/components/utils/alert_general.dart';
+import 'package:migozz_app/features/profile/components/utils/loader.dart';
 
 class SupportScreen extends StatefulWidget {
   const SupportScreen({super.key});

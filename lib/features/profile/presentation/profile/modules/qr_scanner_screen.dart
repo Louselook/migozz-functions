@@ -8,8 +8,8 @@ import 'package:migozz_app/features/profile/presentation/profile/mobile/profile_
     as mobile_profile;
 import 'package:migozz_app/features/profile/presentation/profile/web/profile_search_screen.dart'
     as web_profile;
-import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
-import 'package:migozz_app/features/profile/components/utils/Loader.dart';
+import 'package:migozz_app/features/profile/components/utils/alert_general.dart';
+import 'package:migozz_app/features/profile/components/utils/loader.dart';
 
 /// QR Scanner screen to scan user profile QR codes
 class QrScannerScreen extends StatefulWidget {

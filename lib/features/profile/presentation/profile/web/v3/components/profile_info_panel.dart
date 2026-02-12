@@ -201,11 +201,11 @@ class ProfileInfoPanel extends StatelessWidget {
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(
-                              Icons.headphones,
-                              color: Colors.white70,
-                              size: 16,
-                            ),
+                            // const Icon(
+                            //   Icons.headphones,
+                            //   color: Colors.white70,
+                            //   size: 16,
+                            // ),
                             const SizedBox(width: 8),
                             Flexible(
                               child: Text(
@@ -532,6 +532,7 @@ class _VoiceNoteButton extends StatelessWidget {
           await launchUrl(Uri.parse(url));
         } else {
           // Optional: Show snackbar or alert if URL is empty
+          // ignore: use_build_context_synchronously
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('profile.validations.emptyAudio'.tr())),
           );

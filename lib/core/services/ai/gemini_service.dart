@@ -1,8 +1,8 @@
 ﻿import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:migozz_app/core/config/api/api_config.dart';
 import 'package:migozz_app/core/services/ai/assistant_functions.dart';
 import 'package:migozz_app/core/services/ai/chat_validation_min.dart';
 import 'package:migozz_app/core/services/ai/migozz_context.dart';
@@ -219,7 +219,7 @@ class GeminiService {
   }
 
   void ensureConfigured() {
-    final apiKey = dotenv.env['GEMINI_API_KEY'];
+    final apiKey = getEnvVar('GEMINI_API_KEY');
     if (apiKey == null || apiKey.isEmpty) {
       if (kDebugMode) {
         debugPrint('GeminiService: GEMINI_API_KEY missing; AI text disabled.');
@@ -228,12 +228,12 @@ class GeminiService {
     }
     try {
       // Always re-read env, and rebuild model/session if config changed.
-      final envModel = dotenv.env['GEMINI_MODEL'];
+      final envModel = getEnvVar('GEMINI_MODEL');
       if (envModel != null && envModel.trim().isNotEmpty) {
         _modelName = envModel.trim();
       }
 
-      final envEnrich = dotenv.env['GEMINI_ENRICH'];
+      final envEnrich = getEnvVar('GEMINI_ENRICH');
       if (envEnrich != null) {
         final v = envEnrich.toLowerCase();
         _enrichEnabled = v == '1' || v == 'true' || v == 'yes';
@@ -241,17 +241,17 @@ class GeminiService {
         _enrichEnabled = false;
       }
 
-      final envAllowSwitch = dotenv.env['GEMINI_ALLOW_RUNTIME_SWITCH'];
+      final envAllowSwitch = getEnvVar('GEMINI_ALLOW_RUNTIME_SWITCH');
       if (envAllowSwitch != null) {
         final v = envAllowSwitch.toLowerCase();
         _allowRuntimeSwitch = v == '1' || v == 'true' || v == 'yes';
       }
-      final envTemp = dotenv.env['GEMINI_TEMPERATURE'];
+      final envTemp = getEnvVar('GEMINI_TEMPERATURE');
       if (envTemp != null) {
         final t = double.tryParse(envTemp);
         if (t != null) _temperature = t;
       }
-      final envMax = dotenv.env['GEMINI_MAX_TOKENS'];
+      final envMax = getEnvVar('GEMINI_MAX_TOKENS');
       if (envMax != null) {
         final m = int.tryParse(envMax);
         if (m != null) {
@@ -590,6 +590,86 @@ class GeminiService {
     final rcLang = registerCubit.state.language;
     if (rcLang != null && rcLang.isNotEmpty) {
       setLanguage(rcLang);
+    }
+
+    // ✅ MANEJO DE SALTOS AUTOMÁTICOS EN WEB (Voice/Avatar)
+    if (userInput == 'skipped_voice_web' || userInput == 'skipped_avatar_web') {
+      debugPrint('⏩ Web skip detected ($userInput) - avanzando paso...');
+      _currentQuestionIndex++;
+
+      if (_currentQuestionIndex >= questionFlow.length) {
+        return {
+          "text": registerCubit.state.language == 'Español'
+              ? "¡Registro completado! 🎉"
+              : "Registration complete! 🎉",
+          "options": [],
+          "step": "finished",
+          "keepTalk": false,
+        };
+      }
+
+      var nextQuestion = AssistantFunctions.getCurrentQuestion(
+        questionFlow,
+        _currentQuestionIndex,
+        registerCubit,
+      );
+
+      // Manejo de keepTalk y posibles nulls devueltos por getCurrentQuestion
+      while (nextQuestion == null || nextQuestion['keepTalk'] == true) {
+        if (nextQuestion == null) {
+          debugPrint(
+            '⚠️ getCurrentQuestion devolvió null en índice $_currentQuestionIndex (skip), finalizando.',
+          );
+          return {
+            "text": registerCubit.state.language == 'Español'
+                ? "¡Registro completado! 🎉"
+                : "Registration complete! 🎉",
+            "options": [],
+            "step": "finished",
+            "keepTalk": false,
+          };
+        }
+        debugPrint(
+          '⏩ Saltando mensaje keepTalk (web skip): ${questionFlow[_currentQuestionIndex]}',
+        );
+        _currentQuestionIndex++;
+        if (_currentQuestionIndex >= questionFlow.length) {
+          return {
+            "text": registerCubit.state.language == 'Español'
+                ? "¡Registro completado! 🎉"
+                : "Registration complete! 🎉",
+            "options": [],
+            "step": "finished",
+            "keepTalk": false,
+          };
+        }
+        nextQuestion = AssistantFunctions.getCurrentQuestion(
+          questionFlow,
+          _currentQuestionIndex,
+          registerCubit,
+        );
+      }
+      return await _prepareQuestion(nextQuestion, registerCubit);
+    }
+
+    // ✅ MANEJO DE SALTOS AUTOMÁTICOS EN WEB (Voice/Avatar)
+    if (userInput.isEmpty) {
+      // Si el input está vacío (por ejemplo, después de un auto-advance con clearInput),
+      // simplemente devolvemos la pregunta actual (o la siguiente si se incrementó índice).
+      // Esto previene que evaluateUserResponse falle con un error de validación.
+      debugPrint(
+        'ℹ️ [sendMessage] Input vacío detectado - retornando pregunta actual',
+      );
+
+      final currentQ = AssistantFunctions.getCurrentQuestion(
+        questionFlow,
+        _currentQuestionIndex,
+        registerCubit,
+      );
+
+      if (currentQ != null) {
+        return await _prepareQuestion(currentQ, registerCubit);
+      }
     }
 
     // ✅ MANEJO DE CONFIRMACIÓN DE USERNAME RESERVADO (pre-registro)
@@ -1354,7 +1434,7 @@ class GeminiService {
     }
 
     // ✅ Manejo especial para category: detectar retorno después de seleccionar categorías
-if (currentStepKey == 'category') {
+    if (currentStepKey == 'category') {
       final normalized = userInput.trim().toLowerCase();
 
       if (normalized == 'category_updated' ||
@@ -1362,10 +1442,12 @@ if (currentStepKey == 'category') {
           normalized == 'continue') {
         final isSpanish = registerCubit.state.language == 'Español';
 
-        debugPrint('✅ [category] Avanzando sin mensaje de confirmación redundante');
+        debugPrint(
+          '✅ [category] Avanzando sin mensaje de confirmación redundante',
+        );
 
         // 1. Eliminamos toda la lógica de feedbackMessage que ensuciaba el flujo
-        
+
         // Salir del modo repetición si estábamos en él
         if (_isInRepeatMode) {
           _currentQuestionIndex = _previousQuestionIndex;
@@ -1378,7 +1460,9 @@ if (currentStepKey == 'category') {
         // Verificar fin del flujo
         if (_currentQuestionIndex >= questionFlow.length) {
           return {
-            "text": isSpanish ? "¡Registro completado! 🎉" : "Registration complete! 🎉",
+            "text": isSpanish
+                ? "¡Registro completado! 🎉"
+                : "Registration complete! 🎉",
             "options": [],
             "step": "finished",
             "keepTalk": false,
@@ -1393,7 +1477,9 @@ if (currentStepKey == 'category') {
 
         if (nextQuestion == null) {
           return {
-            "text": isSpanish ? "¡Registro completado! 🎉" : "Registration complete! 🎉",
+            "text": isSpanish
+                ? "¡Registro completado! 🎉"
+                : "Registration complete! 🎉",
             "options": [],
             "step": "finished",
             "keepTalk": false,
@@ -1790,7 +1876,8 @@ if (currentStepKey == 'category') {
           "options": const <String>[],
           "step": 'regProgress.$currentStepKey',
           "keepTalk": true,
-          "explainAndRepeat": false,
+          "explainAndRepeat": true,
+          "clearInput": true,
         };
       }
       final processResult = await processBotResponse(

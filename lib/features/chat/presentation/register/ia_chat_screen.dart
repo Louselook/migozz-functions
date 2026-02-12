@@ -314,7 +314,10 @@ class _IaChatScreenState extends State<IaChatScreen> {
       customAppBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: PrimaryText("chat.assistant.title".tr()),
+        title: PrimaryText(
+          "chat.assistant.title".tr(),
+          fontSize: kIsWeb ? 55 : null,
+        ),
         centerTitle: true,
       ),
       customInput: ListenableBuilder(

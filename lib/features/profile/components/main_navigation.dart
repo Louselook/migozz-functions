@@ -13,7 +13,7 @@ import 'package:migozz_app/features/search/mobile/presentation/search_screen.dar
 // import 'package:migozz_app/features/tutorial/profile_tutorial_helper.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/tutorial/profile/profile_tutorial.dart';
-import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
+import 'package:migozz_app/features/profile/components/utils/alert_general.dart';
 import 'package:migozz_app/core/utils/platform_utils.dart';
 
 class MainNavigation extends StatefulWidget {

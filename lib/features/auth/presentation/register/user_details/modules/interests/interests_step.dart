@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
@@ -109,74 +110,87 @@ class _InterestsStepState extends State<InterestsStep> {
     return SafeArea(
       child: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w),
-              child: Column(
-                children: [
-                  // Margen superior dinámico
-                  SizedBox(height: isSmallDevice ? 10.h : 25.h),
+          : Center(
+              child: Container(
+                constraints: BoxConstraints(
+                  maxWidth: kIsWeb ? 900 : double.infinity,
+                ),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20.w),
+                  child: Column(
+                    children: [
+                      // Margen superior dinámico
+                      SizedBox(height: isSmallDevice ? 10.h : 25.h),
 
-                  PrimaryText(
-                    'interestSelect.choose'.tr(),
-                    fontSize: 22,
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 4.h),
-                  SecondaryText(
-                    'interestSelect.desc'.tr(),
-                    fontSize: 14,
-                    color: Colors.grey,
-                    textAlign: TextAlign.center,
-                  ),
+                      PrimaryText(
+                        'interestSelect.choose'.tr(),
+                        fontSize: 22,
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 4.h),
+                      SecondaryText(
+                        'interestSelect.desc'.tr(),
+                        fontSize: 14,
+                        color: Colors.grey,
+                        textAlign: TextAlign.center,
+                      ),
 
-                  // ESPACIO FLEXIBLE CENTRAL
-                  Expanded(
-                    child: Container(
-                      padding: EdgeInsets.symmetric(vertical: 10.h),
-                      alignment: Alignment.center,
-                      // FittedBox es la magia: si el Wrap es muy grande, lo escala hacia abajo
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxWidth: MediaQuery.of(context).size.width,
-                          ),
-                          child: Wrap(
-                            alignment: WrapAlignment.center,
-                            runAlignment: WrapAlignment.center,
-                            spacing: 8.w,
-                            runSpacing: 10.h,
-                            children: allInterests.map((interest) {
-                              return _interestChip(
-                                name: interest.getLocalizedName(
-                                  context.locale.languageCode,
-                                ),
-                                emoji: interest.emoji,
-                                selected: selectedInterests.contains(
-                                  interest.id,
-                                ),
-                                onTap: () {
-                                  setState(() {
-                                    selectedInterests.contains(interest.id)
-                                        ? selectedInterests.remove(interest.id)
-                                        : selectedInterests.add(interest.id);
-                                  });
-                                  _updateCubit();
-                                },
-                              );
-                            }).toList(),
+                      // ESPACIO FLEXIBLE CENTRAL
+                      Expanded(
+                        child: Container(
+                          padding: EdgeInsets.symmetric(vertical: 10.h),
+                          alignment: Alignment.center,
+                          // FittedBox es la magia: si el Wrap es muy grande, lo escala hacia abajo
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth: kIsWeb
+                                    ? 900
+                                    : MediaQuery.of(context).size.width,
+                              ),
+                              child: Wrap(
+                                alignment: WrapAlignment.center,
+                                runAlignment: WrapAlignment.center,
+                                spacing: kIsWeb ? 12 : 8.w,
+                                runSpacing: kIsWeb ? 16 : 10.h,
+                                children: allInterests.map((interest) {
+                                  return _interestChip(
+                                    name: interest.getLocalizedName(
+                                      context.locale.languageCode,
+                                    ),
+                                    emoji: interest.emoji,
+                                    selected: selectedInterests.contains(
+                                      interest.id,
+                                    ),
+                                    onTap: () {
+                                      setState(() {
+                                        selectedInterests.contains(interest.id)
+                                            ? selectedInterests.remove(
+                                                interest.id,
+                                              )
+                                            : selectedInterests.add(
+                                                interest.id,
+                                              );
+                                      });
+                                      _updateCubit();
+                                    },
+                                  );
+                                }).toList(),
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
 
-                  // BOTÓN SIEMPRE VISIBLE
-                  Padding(
-                    padding: EdgeInsets.only(bottom: 15.h, top: 10.h),
-                    child: _buildActionButton(),
+                      // BOTÓN SIEMPRE VISIBLE
+                      Padding(
+                        padding: EdgeInsets.only(bottom: 15.h, top: 10.h),
+                        child: _buildActionButton(),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
     );
@@ -197,7 +211,7 @@ class _InterestsStepState extends State<InterestsStep> {
       },
       child: Container(
         width: double.infinity,
-        height: 54.h,
+        height: kIsWeb ? 60 : 54.h,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             colors: [Color(0xFFF59A3C), Color(0xFFB646F6)],
@@ -209,7 +223,7 @@ class _InterestsStepState extends State<InterestsStep> {
             widget.mode == MoreUserDetailsMode.register ? 'Continue' : 'Save',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 18.sp,
+              fontSize: kIsWeb ? 20 : 18.sp,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -238,7 +252,10 @@ class _InterestsStepState extends State<InterestsStep> {
           borderRadius: BorderRadius.circular(20.r),
         ),
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+          padding: EdgeInsets.symmetric(
+            horizontal: kIsWeb ? 24 : 14.w,
+            vertical: kIsWeb ? 14 : 8.h,
+          ),
           decoration: BoxDecoration(
             color: const Color(0xFF1E1E1E),
             borderRadius: BorderRadius.circular(20.r),
@@ -247,13 +264,13 @@ class _InterestsStepState extends State<InterestsStep> {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (emoji.isNotEmpty)
-                Text(emoji, style: TextStyle(fontSize: 15.sp)),
+                Text(emoji, style: TextStyle(fontSize: kIsWeb ? 24 : 15.sp)),
               SizedBox(width: 4.w),
               Text(
                 name,
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 13.sp,
+                  fontSize: kIsWeb ? 16 : 13.sp,
                   fontWeight: selected ? FontWeight.bold : FontWeight.w500,
                 ),
               ),

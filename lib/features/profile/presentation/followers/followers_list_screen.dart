@@ -416,6 +416,7 @@ class _FollowersListScreenState extends State<FollowersListScreen>
     );
 
     if (confirmed == true) {
+      // ignore: use_build_context_synchronously
       final cubit = context.read<FollowerCubit>();
       if (isFollower) {
         await cubit.removeFollower(user.oderId);

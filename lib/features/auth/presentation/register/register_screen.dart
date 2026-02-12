@@ -1,4 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -148,9 +149,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           const SizedBox(height: 20),
 
                           // Welcome text
-                          PrimaryText("register.presentation.title".tr()),
+                          PrimaryText(
+                            "register.presentation.title".tr(),
+                            fontSize: kIsWeb ? 40 : null,
+                            textAlign: TextAlign.center,
+                          ),
                           const SizedBox(height: 3),
-                          SecondaryText("register.presentation.subtitle1".tr()),
+                          SecondaryText(
+                            "register.presentation.subtitle1".tr(),
+                            fontSize: kIsWeb ? 16 : 12,
+                            textAlign: TextAlign.center,
+                          ),
 
                           const SizedBox(height: 30),
 
