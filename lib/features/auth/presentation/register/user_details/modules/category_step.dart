@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/foundation.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
@@ -247,128 +248,132 @@ class _CategoryStepState extends State<CategoryStep> {
             const Positioned.fill(
               child: TintesGradients(child: SizedBox.expand()),
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 34),
-              child: Column(
-                children: [
-                  SizedBox(height: MediaQuery.of(context).size.height * 0.06),
-                  PrimaryText(
-                    'category.title'.tr(),
-                    fontSize: 22,
-                    textAlign: TextAlign.center,
-                  ),
-
-                  const SizedBox(height: 8),
-                  Expanded(
-                    child: isLoading
-                        ? const Center(child: CircularProgressIndicator())
-                        : groups.isEmpty
-                        ? const Center(
-                            child: SecondaryText(
-                              'No hay categorías disponibles',
-                              fontSize: 16,
-                            ),
-                          )
-                        : LayoutBuilder(
-                            builder: (context, constraints) {
-                              final langCode = context.locale.languageCode;
-                              final availableHeight = constraints.maxHeight;
-                              final availableWidth = constraints.maxWidth;
-
-                              final totalItems = groups.fold<int>(
-                                0,
-                                // ignore: avoid_types_as_parameter_names
-                                (sum, g) => sum + g.identities.length,
-                              );
-
-                              // Base: item ~110px ancho, ~42px alto
-                              const baseItemWidth = 110.0;
-                              const baseItemHeight = 42.0;
-                              const baseGap = 8.0;
-
-                              // Cuántos items caben por fila
-                              final itemsPerRow =
-                                  (availableWidth / (baseItemWidth + baseGap))
-                                      .floor()
-                                      .clamp(2, 5);
-                              final totalRows = (totalItems / itemsPerRow)
-                                  .ceil();
-
-                              // Altura necesaria vs disponible
-                              final neededHeight =
-                                  totalRows * (baseItemHeight + baseGap);
-                              final scaleFactor =
-                                  (availableHeight / neededHeight).clamp(
-                                    0.5,
-                                    1.0,
-                                  );
-
-                              final horizontalSpacing = 8.0 * scaleFactor;
-                              final verticalSpacing = 8.0 * scaleFactor;
-
-                              return Center(
-                                child: Wrap(
-                                  alignment: WrapAlignment.center,
-                                  runAlignment: WrapAlignment.spaceEvenly,
-                                  spacing: horizontalSpacing,
-                                  runSpacing: verticalSpacing,
-                                  children: [
-                                    for (final group in groups)
-                                      for (final identity in group.identities)
-                                        _identityButton(
-                                          identity.getLocalizedName(langCode),
-                                          iconNumber: identity.iconNumber,
-                                          selected: selectedCategories.contains(
-                                            identity.id,
-                                          ),
-                                          onTap: () =>
-                                              _selectIdentity(identity.id),
-                                          scaleFactor: scaleFactor,
-                                        ),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.only(
-                      top: MediaQuery.of(context).size.height * 0.01,
-                      bottom: MediaQuery.of(context).size.height * 0.02,
+            Center(
+              child: Container(
+                constraints: BoxConstraints(
+                  maxWidth: kIsWeb ? 600 : double.infinity,
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 34),
+                child: Column(
+                  children: [
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.06),
+                    PrimaryText(
+                      'category.title'.tr(),
+                      fontSize: 22,
+                      textAlign: TextAlign.center,
                     ),
-                    child: widget.mode == MoreUserDetailsMode.register
-                        ? GradientButton(
-                            width: double.infinity,
-                            radius: 19,
-                            onPressed: () {
-                              if (selectedCategories.isEmpty) {
-                                ScaffoldMessenger.of(context)
-                                  ..clearSnackBars()
-                                  ..showSnackBar(
-                                    SnackBar(
-                                      content: Text('category.required'.tr()),
-                                      backgroundColor: Colors.orange,
-                                      duration: const Duration(seconds: 3),
-                                    ),
-                                  );
-                                return;
-                              }
-                              _updateCubit();
-                              Navigator.of(context).pop('done');
-                            },
-                            child: const SecondaryText(
-                              'Continue',
-                              fontSize: 20,
+
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : groups.isEmpty
+                          ? const Center(
+                              child: SecondaryText(
+                                'No hay categorías disponibles',
+                                fontSize: 16,
+                              ),
+                            )
+                          : LayoutBuilder(
+                              builder: (context, constraints) {
+                                final langCode = context.locale.languageCode;
+                                final availableHeight = constraints.maxHeight;
+                                final availableWidth = constraints.maxWidth;
+
+                                final totalItems = groups.fold<int>(
+                                  0,
+                                  // ignore: avoid_types_as_parameter_names
+                                  (sum, g) => sum + g.identities.length,
+                                );
+
+                                // Base: item ~110px ancho, ~42px alto
+                                const baseItemWidth = 110.0;
+                                const baseItemHeight = 42.0;
+                                const baseGap = 8.0;
+
+                                // Cuántos items caben por fila
+                                final itemsPerRow =
+                                    (availableWidth / (baseItemWidth + baseGap))
+                                        .floor()
+                                        .clamp(2, 5);
+                                final totalRows = (totalItems / itemsPerRow)
+                                    .ceil();
+
+                                // Altura necesaria vs disponible
+                                final neededHeight =
+                                    totalRows * (baseItemHeight + baseGap);
+                                final scaleFactor =
+                                    (availableHeight / neededHeight).clamp(
+                                      0.5,
+                                      1.0,
+                                    );
+
+                                final horizontalSpacing = 8.0 * scaleFactor;
+                                final verticalSpacing = 8.0 * scaleFactor;
+
+                                return Center(
+                                  child: Wrap(
+                                    alignment: WrapAlignment.center,
+                                    runAlignment: WrapAlignment.spaceEvenly,
+                                    spacing: horizontalSpacing,
+                                    runSpacing: verticalSpacing,
+                                    children: [
+                                      for (final group in groups)
+                                        for (final identity in group.identities)
+                                          _identityButton(
+                                            identity.getLocalizedName(langCode),
+                                            iconNumber: identity.iconNumber,
+                                            selected: selectedCategories
+                                                .contains(identity.id),
+                                            onTap: () =>
+                                                _selectIdentity(identity.id),
+                                            scaleFactor: scaleFactor,
+                                          ),
+                                    ],
+                                  ),
+                                );
+                              },
                             ),
-                          )
-                        : userDetailsButton(
-                            controller: widget.controller,
-                            context: context,
-                            action: UserDetailsAction.next,
-                            mode: widget.mode,
-                          ),
-                  ),
-                ],
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(
+                        top: MediaQuery.of(context).size.height * 0.01,
+                        bottom: MediaQuery.of(context).size.height * 0.02,
+                      ),
+                      child: widget.mode == MoreUserDetailsMode.register
+                          ? GradientButton(
+                              width: double.infinity,
+                              radius: 19,
+                              onPressed: () {
+                                if (selectedCategories.isEmpty) {
+                                  ScaffoldMessenger.of(context)
+                                    ..clearSnackBars()
+                                    ..showSnackBar(
+                                      SnackBar(
+                                        content: Text('category.required'.tr()),
+                                        backgroundColor: Colors.orange,
+                                        duration: const Duration(seconds: 3),
+                                      ),
+                                    );
+                                  return;
+                                }
+                                _updateCubit();
+                                Navigator.of(context).pop('done');
+                              },
+                              child: const SecondaryText(
+                                'Continue',
+                                fontSize: 20,
+                              ),
+                            )
+                          : userDetailsButton(
+                              controller: widget.controller,
+                              context: context,
+                              action: UserDetailsAction.next,
+                              mode: widget.mode,
+                            ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -447,10 +452,7 @@ class _CategoryStepState extends State<CategoryStep> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              if (selected) ...[
-                SizedBox(width: 5 * scaleFactor),
-    
-              ],
+              if (selected) ...[SizedBox(width: 5 * scaleFactor)],
             ],
           ),
         ),

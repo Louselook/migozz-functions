@@ -496,6 +496,10 @@ class RegisterChatController extends GenericChatController {
 
       // Auto-avanzar si el bot lo indica (explainAndRepeat)
       if (botResponse["explainAndRepeat"] == true) {
+        if (botResponse["clearInput"] == true) {
+          _lastUserMessage = '';
+          debugPrint('🗑️ [RegisterChat] Input limpiado para explainAndRepeat');
+        }
         await Future.delayed(const Duration(milliseconds: 900));
         if (!isActive) return;
         await showNextBotMessage();
@@ -517,9 +521,8 @@ class RegisterChatController extends GenericChatController {
       final stepStr = botResponse["step"]?.toString() ?? '';
 
       // Si el bot indica que el flujo terminó, llamamos al callback de registro
-      if (stepStr == 'finished' || botResponse["action"] == 'complete_registration') {
-
-
+      if (stepStr == 'finished' ||
+          botResponse["action"] == 'complete_registration') {
         debugPrint(
           '🎯 [RegisterChat] Bot indica FIN del flujo, disparando registro final...',
         );
