@@ -26,7 +26,7 @@ class DeeplinkService {
 
     if (kIsWeb) {
       // 🌐 EN WEB: Solo manejar deeplinks de perfiles manualmente si es necesario
-      // GoRouter ya maneja automáticamente las rutas como /u/:username
+      // GoRouter ya maneja automáticamente las rutas como /:username
       _initializeWebDeeplinks(context);
     } else {
       // 📱 EN MOBILE: Usar MethodChannel para interceptar intents nativos

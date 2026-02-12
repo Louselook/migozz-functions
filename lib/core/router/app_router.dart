@@ -192,66 +192,6 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         },
       ),
 
-      // 🆕 Nueva ruta para manejar /u/:username (App Links y Web)
-      GoRoute(
-        path: '/u/:username',
-        builder: (context, state) {
-          final username = state.pathParameters['username'];
-
-          if (username == null || username.isEmpty) {
-            // Si no hay username, redirigir a home
-            return const Scaffold(
-              body: Center(child: Text('Usuario no encontrado')),
-            );
-          }
-
-          // Cargar el perfil del usuario usando el username
-          return FutureBuilder<UserDTO?>(
-            future: _loadUserByUsername(username),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const SplashScreen();
-              }
-
-              if (!snapshot.hasData || snapshot.data == null) {
-                return Scaffold(
-                  backgroundColor: Colors.black,
-                  body: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.person_off,
-                          size: 64,
-                          color: Colors.white54,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Usuario @$username no encontrado',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        ElevatedButton(
-                          onPressed: () => context.go('/'),
-                          child: const Text('Ir al inicio'),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }
-
-              final user = snapshot.data!;
-              // Usar siempre PublicProfileScreen para esta ruta pública
-              return PublicProfileScreen(user: user);
-            },
-          );
-        },
-      ),
-
       GoRoute(
         path: '/search',
         builder: (context, state) {
@@ -383,6 +323,65 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
           );
         },
       ),
+
+      // 🆕 Nueva ruta para manejar /:username (App Links y Web)
+      // ⚠️ IMPORTANTE: Esta ruta debe ir AL FINAL para no interceptar otras rutas
+      GoRoute(
+        path: '/:username',
+        builder: (context, state) {
+          final username = state.pathParameters['username'];
+
+          if (username == null || username.isEmpty) {
+            return const Scaffold(
+              body: Center(child: Text('Usuario no encontrado')),
+            );
+          }
+
+          // Cargar el perfil del usuario usando el username
+          return FutureBuilder<UserDTO?>(
+            future: _loadUserByUsername(username),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const SplashScreen();
+              }
+
+              if (!snapshot.hasData || snapshot.data == null) {
+                return Scaffold(
+                  backgroundColor: Colors.black,
+                  body: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.person_off,
+                          size: 64,
+                          color: Colors.white54,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Usuario @$username no encontrado',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton(
+                          onPressed: () => context.go('/'),
+                          child: const Text('Ir al inicio'),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              final user = snapshot.data!;
+              return PublicProfileScreen(user: user);
+            },
+          );
+        },
+      ),
     ],
     redirect: (context, state) {
       final localization = EasyLocalization.of(context);
@@ -429,9 +428,35 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
 
       final isPublic = publicRoutes.any((r) => routeMatches(goingTo, r));
 
-      // ✅ Permitir acceso público a perfiles /u/:username
-      if (goingTo.startsWith('/u/')) {
-        return null; // Permitir acceso sin autenticación
+      // ✅ Permitir acceso público a perfiles /:username
+      // Lógica: Si la ruta tiene 1 segmento y NO es una ruta reservada del sistema, es un perfil.
+      final pathSegments = Uri.parse(goingTo).pathSegments;
+      if (pathSegments.length == 1) {
+        final rootSegment = pathSegments.first;
+        final reservedRoots = {
+          'onboarding',
+          'login',
+          'register',
+          'profile',
+          'profile-view',
+          'search',
+          'edit-profile',
+          'policy-deleted',
+          'terms-privacy',
+          'support',
+          'complete-profile',
+          'ia-chat',
+          'stats',
+          'notifications',
+          'followers',
+          'chats',
+          'chat',
+          'splash', // por si acaso
+        };
+
+        if (!reservedRoots.contains(rootSegment)) {
+          return null; // Es un perfil de usuario (o 404), permitir acceso
+        }
       }
 
       // ✅ Permitir la ruta raíz para que se maneje su propio redirect
