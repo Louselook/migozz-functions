@@ -1,6 +1,9 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:google_sign_in_web/web_only.dart' as web;
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/core/components/compuestos/custom_textfield.dart';
@@ -15,6 +18,7 @@ import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubi
 import 'package:migozz_app/features/chat/presentation/register/components/chat_operation/functions/email_validation.dart';
 import 'package:migozz_app/core/components/compuestos/custom_snackbar.dart';
 import 'package:migozz_app/features/profile/components/utils/loader.dart';
+import 'dart:async';
 
 class LoginForm extends StatefulWidget {
   const LoginForm({super.key});
@@ -28,10 +32,47 @@ class _LoginFormState extends State<LoginForm> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   bool _isCheckingEmail = false;
+  StreamSubscription? _authEventsSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    if (kIsWeb) {
+      _initializeGoogleSignInWeb();
+    }
+  }
+
+  void _initializeGoogleSignInWeb() async {
+    final googleSignIn = GoogleSignIn.instance;
+
+    // Initialize with client ID
+    final googleClientId = const String.fromEnvironment('GOOGLE_CLIENT_ID', defaultValue: '');
+    if (googleClientId.isNotEmpty) {
+      await googleSignIn.initialize(clientId: googleClientId);
+    } else {
+      await googleSignIn.initialize();
+    }
+
+    // Listen to authentication events
+    _authEventsSubscription = googleSignIn.authenticationEvents.listen((event) {
+      // Extract user from event using pattern matching
+      final GoogleSignInAccount? user = switch (event) {
+        GoogleSignInAuthenticationEventSignIn() => event.user,
+        GoogleSignInAuthenticationEventSignOut() => null,
+      };
+
+      debugPrint('🔐 [LoginForm] Authentication event: ${user?.email}');
+      if (user != null) {
+        // User signed in via renderButton, now call the sign-in flow
+        _handleGoogleSignIn();
+      }
+    });
+  }
 
   @override
   void dispose() {
     _emailController.dispose();
+    _authEventsSubscription?.cancel();
     super.dispose();
   }
 
@@ -242,9 +283,18 @@ class _LoginFormState extends State<LoginForm> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                googleButton(onPressed: _handleGoogleSignIn),
-                const SizedBox(width: 10),
-                appleButton(onPressed: _handleAppleSignIn),
+                if (kIsWeb)
+                  // Web: Use Google's renderButton widget (required in v7.x)
+                  web.renderButton()
+                else
+                  // Mobile: Use custom button
+                  googleButton(onPressed: _handleGoogleSignIn),
+                // Apple Sign-In no está disponible en web debido a problemas de compatibilidad
+                // con sign_in_with_apple v7.0.1
+                if (!kIsWeb) ...[
+                  const SizedBox(width: 10),
+                  appleButton(onPressed: _handleAppleSignIn),
+                ],
               ],
             ),
             const SizedBox(height: 50),

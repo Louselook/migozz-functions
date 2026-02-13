@@ -96,45 +96,42 @@ class AuthService {
   // LOGIN con Google
   Future<AuthResult> loginWithGoogle() async {
     try {
-      final googleSignIn = GoogleSignIn.instance;
+      debugPrint('🔐 [AuthService] Iniciando Google Sign-In...');
 
-      // Inicializa: solo pasa clientId en web
-      final googleClientId = getEnvVar('GOOGLE_CLIENT_ID');
-      if (kIsWeb && googleClientId != null) {
-        await googleSignIn.initialize(clientId: googleClientId);
-      } else {
-        await googleSignIn.initialize();
+      // En v7, se debe usar GoogleSignIn.instance
+      // authenticate() inicia el flujo interactivo
+      final GoogleSignInAccount googleUser;
+      try {
+        googleUser = await GoogleSignIn.instance.authenticate();
+      } catch (e) {
+        debugPrint(
+          '⚠️ [AuthService] Error o cancelación en Google Sign-In: $e',
+        );
+        // Si el usuario cancela, suele lanzar una excepción
+        throw Exception('google_signin_cancelled');
       }
 
-      // 1) UI de login
-      final googleUser = await googleSignIn.authenticate();
+      debugPrint('✅ [AuthService] Usuario autenticado: ${googleUser.email}');
 
-      // 2) pedir autorización para scopes (devuelve accessToken si existe)
-      final authorization = await googleUser.authorizationClient
-          .authorizationForScopes([
-            'email',
-            'profile',
-            // 'openid' no garantiza idToken en todas las plataformas v7, pero no hace daño pedirlo.
-            'openid',
-          ]);
+      // Obtener los tokens de autenticación (idToken)
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
 
-      if (authorization == null) throw Exception('authorization_failed');
+      debugPrint('🔐 [AuthService] Tokens obtenidos');
 
-      final String accessToken = authorization.accessToken;
-
-      debugPrint('🔐 accessToken length: ${accessToken.length}');
-
-      if (accessToken.isEmpty) {
-        throw Exception('no_access_token_obtained');
-      }
-
-      // 3) crear credential SOLO con accessToken (idToken no está disponible en v7)
+      // Crear credencial para Firebase
+      // Nota: en v7, GoogleSignInAuthentication ya no tiene accessToken.
+      // Firebase acepta idToken sin accessToken.
       final credential = GoogleAuthProvider.credential(
-        accessToken: accessToken,
-        // idToken: null,
+        idToken: googleAuth.idToken,
+        accessToken: null,
       );
 
-      // 4) sign in en Firebase
+      debugPrint(
+        '🔐 [AuthService] Credential creado, iniciando sesión en Firebase...',
+      );
+
+      // Sign in en Firebase
       final userCredential = await _auth.signInWithCredential(credential);
       final user = userCredential.user;
       if (user == null) throw Exception('firebase_sign_in_failed');

@@ -28,6 +28,7 @@ class EditProfilePage extends StatefulWidget {
 class _EditProfilePageState extends State<EditProfilePage> {
   final nameCtrl = TextEditingController();
   final usernameCtrl = TextEditingController();
+  final bioCtrl = TextEditingController();
   final emailCtrl = TextEditingController();
   final phoneCtrl = TextEditingController();
   final genderCtrl = TextEditingController();
@@ -38,6 +39,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   void dispose() {
     nameCtrl.dispose();
     usernameCtrl.dispose();
+    bioCtrl.dispose();
     emailCtrl.dispose();
     phoneCtrl.dispose();
     genderCtrl.dispose();
@@ -67,6 +69,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       final data = {
         'displayName': nameCtrl.text.trim(),
         'username': usernameCtrl.text.trim(),
+        'bio': bioCtrl.text.trim(),
         'phone': phoneCtrl.text.trim(),
         'gender': genderCtrl.text.trim(),
         'birthDate': _dob != null ? Timestamp.fromDate(_dob!) : null,
@@ -199,6 +202,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           if (nameCtrl.text.isEmpty) {
             nameCtrl.text = user.displayName;
             usernameCtrl.text = user.username;
+            bioCtrl.text = user.bio ?? '';
             emailCtrl.text = user.email;
             phoneCtrl.text = user.phone ?? '';
             // genderCtrl.text = user.gender ?? ''; // Replaced by _selectedGender
@@ -427,6 +431,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ),
         const SizedBox(height: 16),
         _buildTextField(
+          hint: 'edit.presentation.fields.bio'.tr(),
+          controller: bioCtrl,
+          icon: Icons.edit_note,
+          maxLines: 3,
+        ),
+        const SizedBox(height: 16),
+        _buildTextField(
           hint: 'edit.presentation.fields.email'.tr(),
           controller: emailCtrl,
           icon: Icons.mail,
@@ -595,11 +606,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
     required IconData icon,
     bool readOnly = false,
     VoidCallback? onTap,
+    int maxLines = 1,
   }) {
     return TextField(
       controller: controller,
       readOnly: readOnly,
       onTap: onTap,
+      maxLines: maxLines,
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         hintText: hint,

@@ -44,6 +44,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
   final emailCtrl = TextEditingController();
   final phoneCtrl = TextEditingController();
   final genderCtrl = TextEditingController();
+  final bioCtrl = TextEditingController();
   final birthCtrl = TextEditingController();
   DateTime? _dob;
   String? _selectedGender;
@@ -59,6 +60,9 @@ class EditProfileScreenState extends State<EditProfileScreen> {
 
     // Check Username
     if (usernameCtrl.text.trim() != _initialUser!.username) return true;
+
+    // Check Bio
+    if (bioCtrl.text.trim() != (_initialUser!.bio ?? '')) return true;
 
     // Check Phone
     if (phoneCtrl.text.trim() != (_initialUser!.phone ?? '')) return true;
@@ -139,6 +143,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
     emailCtrl.dispose();
     phoneCtrl.dispose();
     genderCtrl.dispose();
+    bioCtrl.dispose();
     birthCtrl.dispose();
     super.dispose();
   }
@@ -164,6 +169,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
     final user = _initialUser!;
     nameCtrl.text = user.displayName;
     usernameCtrl.text = user.username;
+    bioCtrl.text = user.bio ?? '';
     // emailCtrl doesn't change
     phoneCtrl.text = user.phone ?? '';
     _selectedGender = _normalizeGender(user.gender);
@@ -258,6 +264,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
         'username': newUsername,
         'phone': phoneCtrl.text.trim(),
         'gender': genderCtrl.text.trim(),
+        'bio': bioCtrl.text.trim(),
         'birthDate': _dob != null ? Timestamp.fromDate(_dob!) : null,
       };
 
@@ -270,6 +277,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
           username: newUsername,
           phone: phoneCtrl.text.trim(),
           gender: genderCtrl.text.trim(),
+          bio: bioCtrl.text.trim(),
           birthDate: _dob,
         );
       }
@@ -535,6 +543,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                       _initialUser = user;
                       nameCtrl.text = user.displayName;
                       usernameCtrl.text = user.username;
+                      bioCtrl.text = user.bio ?? '';
                       emailCtrl.text = user.email;
                       phoneCtrl.text = user.phone ?? '';
                       _selectedGender = _normalizeGender(user.gender);
@@ -629,6 +638,13 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                                   controller: usernameCtrl,
                                   icon: Icons.alternate_email,
                                 ),
+                                ProfileField(
+                                  hint: 'edit.presentation.fields.bio'.tr(),
+                                  controller: bioCtrl,
+                                  icon: Icons.edit_note,
+                                  maxLines: 3,
+                                ),
+
                                 ProfileField(
                                   hint: 'edit.presentation.fields.email'.tr(),
                                   controller: emailCtrl,

@@ -592,6 +592,86 @@ class GeminiService {
       setLanguage(rcLang);
     }
 
+    // ✅ MANEJO DE SALTOS AUTOMÁTICOS EN WEB (Voice/Avatar)
+    if (userInput == 'skipped_voice_web' || userInput == 'skipped_avatar_web') {
+      debugPrint('⏩ Web skip detected ($userInput) - avanzando paso...');
+      _currentQuestionIndex++;
+
+      if (_currentQuestionIndex >= questionFlow.length) {
+        return {
+          "text": registerCubit.state.language == 'Español'
+              ? "¡Registro completado! 🎉"
+              : "Registration complete! 🎉",
+          "options": [],
+          "step": "finished",
+          "keepTalk": false,
+        };
+      }
+
+      var nextQuestion = AssistantFunctions.getCurrentQuestion(
+        questionFlow,
+        _currentQuestionIndex,
+        registerCubit,
+      );
+
+      // Manejo de keepTalk y posibles nulls devueltos por getCurrentQuestion
+      while (nextQuestion == null || nextQuestion['keepTalk'] == true) {
+        if (nextQuestion == null) {
+          debugPrint(
+            '⚠️ getCurrentQuestion devolvió null en índice $_currentQuestionIndex (skip), finalizando.',
+          );
+          return {
+            "text": registerCubit.state.language == 'Español'
+                ? "¡Registro completado! 🎉"
+                : "Registration complete! 🎉",
+            "options": [],
+            "step": "finished",
+            "keepTalk": false,
+          };
+        }
+        debugPrint(
+          '⏩ Saltando mensaje keepTalk (web skip): ${questionFlow[_currentQuestionIndex]}',
+        );
+        _currentQuestionIndex++;
+        if (_currentQuestionIndex >= questionFlow.length) {
+          return {
+            "text": registerCubit.state.language == 'Español'
+                ? "¡Registro completado! 🎉"
+                : "Registration complete! 🎉",
+            "options": [],
+            "step": "finished",
+            "keepTalk": false,
+          };
+        }
+        nextQuestion = AssistantFunctions.getCurrentQuestion(
+          questionFlow,
+          _currentQuestionIndex,
+          registerCubit,
+        );
+      }
+      return await _prepareQuestion(nextQuestion, registerCubit);
+    }
+
+    // ✅ MANEJO DE SALTOS AUTOMÁTICOS EN WEB (Voice/Avatar)
+    if (userInput.isEmpty) {
+      // Si el input está vacío (por ejemplo, después de un auto-advance con clearInput),
+      // simplemente devolvemos la pregunta actual (o la siguiente si se incrementó índice).
+      // Esto previene que evaluateUserResponse falle con un error de validación.
+      debugPrint(
+        'ℹ️ [sendMessage] Input vacío detectado - retornando pregunta actual',
+      );
+
+      final currentQ = AssistantFunctions.getCurrentQuestion(
+        questionFlow,
+        _currentQuestionIndex,
+        registerCubit,
+      );
+
+      if (currentQ != null) {
+        return await _prepareQuestion(currentQ, registerCubit);
+      }
+    }
+
     // ✅ MANEJO DE CONFIRMACIÓN DE USERNAME RESERVADO (pre-registro)
     if (_awaitingReservedUsernameConfirmation && userInput.trim().isNotEmpty) {
       final normalized = userInput.trim().toLowerCase();
@@ -1796,7 +1876,8 @@ class GeminiService {
           "options": const <String>[],
           "step": 'regProgress.$currentStepKey',
           "keepTalk": true,
-          "explainAndRepeat": false,
+          "explainAndRepeat": true,
+          "clearInput": true,
         };
       }
       final processResult = await processBotResponse(
