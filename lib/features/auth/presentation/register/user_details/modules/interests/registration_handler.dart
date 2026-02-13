@@ -55,7 +55,8 @@ class RegistrationHandler {
       if (s.username == null || (s.username as String).trim().isEmpty) {
         missing.add('username');
       }
-      if (s.location == null || (s.location?.isEmpty ?? true)) {
+      // 📍 Location is now OPTIONAL - user can deny permission and still complete registration
+      if (s.location == null) {
         missing.add('location');
       }
       if (s.socialEcosystem == null || s.socialEcosystem!.isEmpty) {
