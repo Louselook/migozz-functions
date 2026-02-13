@@ -53,7 +53,7 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
   final GlobalKey _screenshotKey = GlobalKey(); // Key for screenshot
 
   static const String _baseProfileUrl =
-      'https://migozz-e2a21.web.app/u'; // Cambia a tu dominio real
+      'https://migozz.com'; // Cambia a tu dominio real
 
   static const List<String> _emojiImages = [
     'assets/emojis/emoji_1.png',

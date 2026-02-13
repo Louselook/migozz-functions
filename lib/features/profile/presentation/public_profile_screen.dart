@@ -153,7 +153,7 @@ class PublicProfileScreen extends StatelessWidget {
             const Icon(Icons.download_rounded, color: Colors.white),
             const SizedBox(width: 10),
             const Text(
-              'Download Migos App', // Debería estar localizado
+              'Download Migozz App', // Debería estar localizado
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -181,7 +181,7 @@ class PublicProfileScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text(
-              "Download Migos to connect, chat, and see full profiles.",
+              "Download Migozz to connect, chat, and see full profiles.",
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.white70),
             ),
@@ -193,7 +193,7 @@ class PublicProfileScreen extends StatelessWidget {
                   icon: Icons.apple,
                   label: "App Store",
                   onTap: () => _launchURL(
-                    "https://apps.apple.com/app/id...",
+                    "https://apps.apple.com/us/app/migozz/id6502121020",
                   ), // Reemplazar con ID real
                 ),
                 _StoreButton(

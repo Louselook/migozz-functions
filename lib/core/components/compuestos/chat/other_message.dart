@@ -117,16 +117,7 @@ class OtherMessage extends StatelessWidget {
             ),
           ],
 
-          const SizedBox(height: 6),
 
-          // Hora
-          Align(
-            alignment: Alignment.bottomLeft,
-            child: Text(
-              time,
-              style: const TextStyle(color: Colors.grey, fontSize: 10),
-            ),
-          ),
         ],
       ),
     );
