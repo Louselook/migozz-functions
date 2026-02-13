@@ -1,3 +1,5 @@
+import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/assets_constants.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
@@ -192,15 +194,17 @@ class PublicProfileScreen extends StatelessWidget {
                 _StoreButton(
                   icon: Icons.apple,
                   label: "App Store",
-                  onTap: () => _launchURL(
+                  onTap: () => _openAppOrStore(
                     "https://apps.apple.com/us/app/migozz/id6502121020",
-                  ), // Reemplazar con ID real
+                    'ios',
+                  ),
                 ),
                 _StoreButton(
                   icon: Icons.android,
                   label: "Google Play",
-                  onTap: () => _launchURL(
+                  onTap: () => _openAppOrStore(
                     "https://play.google.com/store/apps/details?id=com.migozz.app",
+                    'android',
                   ),
                 ),
               ],
@@ -211,10 +215,52 @@ class PublicProfileScreen extends StatelessWidget {
     );
   }
 
+  /// Try to open the app if installed, otherwise redirect to store
+  Future<void> _openAppOrStore(String storeUrl, String platform) async {
+    // Don't try to open app on web
+    if (kIsWeb) {
+      _launchURL(storeUrl);
+      return;
+    }
+
+    // Define app scheme based on platform
+    String appScheme;
+    if (platform == 'ios') {
+      // Try to open the app using custom URL scheme
+      appScheme = 'migozz://';
+    } else {
+      // Android - try to open app using package name
+      appScheme = 'migozz://';
+    }
+
+    try {
+      final appUri = Uri.parse(appScheme);
+
+      // Try to launch the app
+      final canLaunch = await canLaunchUrl(appUri);
+
+      if (canLaunch) {
+        debugPrint('✅ App is installed, opening app...');
+        await launchUrl(
+          appUri,
+          mode: LaunchMode.externalApplication,
+        );
+      } else {
+        // App not installed, redirect to store
+        debugPrint('⚠️ App not installed, redirecting to store...');
+        _launchURL(storeUrl);
+      }
+    } catch (e) {
+      // If there's any error, fall back to store URL
+      debugPrint('❌ Error checking app installation: $e');
+      _launchURL(storeUrl);
+    }
+  }
+
   void _launchURL(String url) async {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
 
