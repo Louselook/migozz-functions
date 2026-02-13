@@ -6,6 +6,28 @@ import 'package:geolocator/geolocator.dart';
 import 'package:migozz_app/core/config/api/api_config.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/location_dto.dart';
 
+/// Reason why location detection failed.
+enum LocationFailReason {
+  serviceDisabled,
+  permissionDenied,
+  permissionDeniedForever,
+  coordsFailed,
+  apiFailed,
+  unknown,
+}
+
+/// Wrapper that carries either a successful [LocationDTO] or a [LocationFailReason].
+class LocationResult {
+  final LocationDTO? location;
+  final LocationFailReason? failReason;
+
+  const LocationResult.success(this.location) : failReason = null;
+  const LocationResult.failure(this.failReason) : location = null;
+
+  bool get isSuccess => location != null;
+  bool get isFailure => !isSuccess;
+}
+
 class LocationService {
   final loc.Location _location = loc.Location();
 
@@ -18,6 +40,159 @@ class LocationService {
     // Some providers may briefly return 0/0 right after permission grant.
     if (lat.abs() < 0.0001 && lon.abs() < 0.0001) return true;
     return false;
+  }
+
+  /// Like [initAndFetchAddress] but returns a [LocationResult] that carries
+  /// the specific [LocationFailReason] when it fails, so callers can show
+  /// context-appropriate messages (e.g. "open settings" when denied forever).
+  Future<LocationResult> fetchAddressWithReason({required String lang}) async {
+    double? lat;
+    double? lon;
+
+    try {
+      if (kIsWeb) {
+        bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+        if (!serviceEnabled) {
+          return const LocationResult.failure(
+            LocationFailReason.serviceDisabled,
+          );
+        }
+
+        LocationPermission permission = await Geolocator.checkPermission();
+        if (permission == LocationPermission.denied) {
+          permission = await Geolocator.requestPermission();
+          if (permission == LocationPermission.denied) {
+            return const LocationResult.failure(
+              LocationFailReason.permissionDenied,
+            );
+          }
+        }
+        if (permission == LocationPermission.deniedForever) {
+          return const LocationResult.failure(
+            LocationFailReason.permissionDeniedForever,
+          );
+        }
+
+        for (var attempt = 1; attempt <= _maxCoordAttempts; attempt++) {
+          final pos = await Geolocator.getCurrentPosition(
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.high,
+            ),
+          );
+          lat = pos.latitude;
+          lon = pos.longitude;
+          if (!_coordsLookInvalid(lat, lon)) break;
+          if (attempt < _maxCoordAttempts) await Future.delayed(_retryDelay);
+        }
+      } else {
+        // MÓVIL
+        bool serviceEnabled = await _location.serviceEnabled();
+        if (!serviceEnabled) {
+          serviceEnabled = await _location.requestService();
+          if (!serviceEnabled) {
+            return const LocationResult.failure(
+              LocationFailReason.serviceDisabled,
+            );
+          }
+        }
+
+        var perm = await _location.hasPermission();
+
+        if (perm == loc.PermissionStatus.deniedForever) {
+          return const LocationResult.failure(
+            LocationFailReason.permissionDeniedForever,
+          );
+        }
+
+        if (perm == loc.PermissionStatus.denied) {
+          perm = await _location.requestPermission();
+          if (perm == loc.PermissionStatus.deniedForever) {
+            return const LocationResult.failure(
+              LocationFailReason.permissionDeniedForever,
+            );
+          }
+          if (perm != loc.PermissionStatus.granted &&
+              perm != loc.PermissionStatus.grantedLimited) {
+            return const LocationResult.failure(
+              LocationFailReason.permissionDenied,
+            );
+          }
+        }
+
+        for (var attempt = 1; attempt <= _maxCoordAttempts; attempt++) {
+          final locationData = await _location.getLocation();
+          lat = locationData.latitude;
+          lon = locationData.longitude;
+          if (!_coordsLookInvalid(lat, lon)) break;
+          if (attempt < _maxCoordAttempts) await Future.delayed(_retryDelay);
+        }
+      }
+
+      if (_coordsLookInvalid(lat, lon)) {
+        return const LocationResult.failure(LocationFailReason.coordsFailed);
+      }
+
+      // Reverse geocode via backend API
+      final uri = Uri.parse(
+        "${ApiConfig.apiBase}/users/location?lat=$lat&lon=$lon&lang=${lang == 'es' ? 'es' : 'en'}",
+      );
+
+      Map<String, dynamic>? data;
+      for (var attempt = 1; attempt <= _maxApiAttempts; attempt++) {
+        final response = await http.get(uri);
+        if (response.statusCode != 200) {
+          if (attempt < _maxApiAttempts) {
+            await Future.delayed(_retryDelay);
+            continue;
+          }
+          return const LocationResult.failure(LocationFailReason.apiFailed);
+        }
+        if (!response.body.trim().startsWith('{')) {
+          if (attempt < _maxApiAttempts) {
+            await Future.delayed(_retryDelay);
+            continue;
+          }
+          return const LocationResult.failure(LocationFailReason.apiFailed);
+        }
+        final decoded = jsonDecode(response.body);
+        if (decoded is! Map<String, dynamic>) {
+          if (attempt < _maxApiAttempts) {
+            await Future.delayed(_retryDelay);
+            continue;
+          }
+          return const LocationResult.failure(LocationFailReason.apiFailed);
+        }
+        data = decoded;
+        final city = (data['city'] ?? '').toString().trim();
+        final country = (data['country'] ?? '').toString().trim();
+        if (city.isNotEmpty && country.isNotEmpty) break;
+        if (attempt < _maxApiAttempts) {
+          await Future.delayed(_retryDelay);
+          continue;
+        }
+      }
+
+      if (data == null) {
+        return const LocationResult.failure(LocationFailReason.apiFailed);
+      }
+
+      final dto = LocationDTO(
+        country: (data['country'] ?? '').toString(),
+        state: (data['state'] ?? '').toString(),
+        city: (data['city'] ?? '').toString(),
+        lat: lat!,
+        lng: lon!,
+      );
+
+      if (!dto.hasCityAndCountry) {
+        return const LocationResult.failure(LocationFailReason.apiFailed);
+      }
+
+      return LocationResult.success(dto);
+    } catch (e) {
+      debugPrint('❌ Error en LocationService.fetchAddressWithReason: $e');
+      return const LocationResult.failure(LocationFailReason.unknown);
+    }
   }
 
   Future<LocationDTO?> initAndFetchAddress({required String lang}) async {
@@ -67,16 +242,22 @@ class LocationService {
         }
       } else {
         // MÓVIL: usar paquete location
-        debugPrint('📍 [LocationService] Iniciando obtención de ubicación móvil...');
+        debugPrint(
+          '📍 [LocationService] Iniciando obtención de ubicación móvil...',
+        );
 
         bool serviceEnabled = await _location.serviceEnabled();
         debugPrint('📍 [LocationService] Servicio habilitado: $serviceEnabled');
 
         if (!serviceEnabled) {
           serviceEnabled = await _location.requestService();
-          debugPrint('📍 [LocationService] Servicio después de solicitar: $serviceEnabled');
+          debugPrint(
+            '📍 [LocationService] Servicio después de solicitar: $serviceEnabled',
+          );
           if (!serviceEnabled) {
-            debugPrint('❌ [LocationService] Servicio de ubicación no disponible');
+            debugPrint(
+              '❌ [LocationService] Servicio de ubicación no disponible',
+            );
             return null;
           }
         }
@@ -86,7 +267,9 @@ class LocationService {
 
         if (permissionGranted == loc.PermissionStatus.denied) {
           permissionGranted = await _location.requestPermission();
-          debugPrint('📍 [LocationService] Permiso después de solicitar: $permissionGranted');
+          debugPrint(
+            '📍 [LocationService] Permiso después de solicitar: $permissionGranted',
+          );
           if (permissionGranted != loc.PermissionStatus.granted) {
             debugPrint('❌ [LocationService] Permiso de ubicación denegado');
             return null;
@@ -113,7 +296,9 @@ class LocationService {
       }
 
       // Llamar a tu API
-      debugPrint('📍 [LocationService] Llamando API con lat=$lat, lon=$lon, lang=$lang');
+      debugPrint(
+        '📍 [LocationService] Llamando API con lat=$lat, lon=$lon, lang=$lang',
+      );
       final uri = Uri.parse(
         "${ApiConfig.apiBase}/users/location"
         "?lat=$lat"
@@ -190,7 +375,9 @@ class LocationService {
         lng: lon!,
       );
 
-      debugPrint('📍 [LocationService] LocationDTO creado: ${locationDto.displayName}');
+      debugPrint(
+        '📍 [LocationService] LocationDTO creado: ${locationDto.displayName}',
+      );
       // Si la API no pudo resolver ciudad/país, tratar como fallo.
       if (!locationDto.hasCityAndCountry) {
         debugPrint('❌ [LocationService] LocationDTO sin ciudad/país.');

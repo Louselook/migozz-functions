@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
-import 'package:migozz_app/features/auth/services/location_service.dart';
+import 'package:migozz_app/features/auth/data/domain/models/user/location_dto.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
+import 'package:migozz_app/features/profile/presentation/edit/components/edit_location_bottom_sheet.dart';
 import 'package:migozz_app/features/profile/presentation/edit/modules/edit_my_interest.dart';
 import 'package:migozz_app/features/profile/presentation/profile/web/components/edit_profile_background.dart';
 import 'package:migozz_app/features/profile/presentation/profile/web/components/edit_profile_image_section.dart';
@@ -97,53 +98,85 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   Future<void> _confirmAndChangeLocation(String email) async {
-    final svc = LocationService();
-    final newLocation = await svc.initAndFetchAddress(
-      lang: context.locale.languageCode == 'es' ? 'es' : 'en',
-    );
-    if (newLocation == null) {
-      if (!mounted) return;
+    final userId = context.read<AuthCubit>().state.firebaseUser?.uid;
+    if (userId == null) {
       AlertGeneral.show(
         context,
         4,
-        message: 'edit.validations.errorDetecLocation'.tr(),
+        message: 'edit.validations.errorUserLogin'.tr(),
       );
       return;
     }
 
-    if (!mounted) return;
-    final confirm = await showDialog<bool>(
+    final currentUser = context.read<AuthCubit>().state.userProfile;
+    final currentLocation = currentUser?.location ?? LocationDTO.empty();
+    final editCubit = context.read<EditCubit>();
+
+    await showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('edit.editLocation.title'.tr()),
-        content: Text(
-          "${"edit.editLocation.text1".tr()}"
-          "${newLocation.city}, ${newLocation.state}\n"
-          "${newLocation.country}\n\n"
-          "${"edit.editLocation.text4".tr()}",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text('buttons.cancel'.tr()),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text('buttons.confirm'.tr()),
-          ),
-        ],
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => EditLocationBottomSheet(
+        currentLocation: currentLocation,
+        onSave: (LocationDTO newLocation) async {
+          try {
+            await editCubit.saveUserProfileField(
+              userId: userId,
+              updatedFields: {'location': newLocation.toMap()},
+            );
+
+            if (mounted) {
+              AlertGeneral.show(
+                context,
+                1,
+                message: 'edit.validations.updateLocation'.tr(
+                  namedArgs: {
+                    'city': newLocation.city,
+                    'country': newLocation.country,
+                  },
+                ),
+              );
+            }
+          } catch (e) {
+            if (mounted) {
+              AlertGeneral.show(
+                context,
+                4,
+                message: 'edit.validations.errorUpdateLocation'.tr(
+                  namedArgs: {'error': e.toString()},
+                ),
+              );
+            }
+          }
+        },
+        onRemove: () async {
+          try {
+            await editCubit.saveUserProfileField(
+              userId: userId,
+              updatedFields: {'location': LocationDTO.empty().toMap()},
+            );
+
+            if (mounted) {
+              AlertGeneral.show(
+                context,
+                1,
+                message: 'edit.editLocation.locationRemoved'.tr(),
+              );
+            }
+          } catch (e) {
+            if (mounted) {
+              AlertGeneral.show(
+                context,
+                4,
+                message: 'edit.validations.errorUpdateLocation'.tr(
+                  namedArgs: {'error': e.toString()},
+                ),
+              );
+            }
+          }
+        },
       ),
     );
-
-    if (confirm == true && mounted) {
-      AlertGeneral.show(
-        context,
-        1,
-        message: "edit.validations.updateLocation".tr(
-          namedArgs: {'city': newLocation.city, 'country': newLocation.country},
-        ),
-      );
-    }
   }
 
   @override
