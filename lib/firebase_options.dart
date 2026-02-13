@@ -51,7 +51,7 @@ class DefaultFirebaseOptions {
     appId: '1:895592952324:web:9b8c3609b0109c70727b51',
     messagingSenderId: '895592952324',
     projectId: 'migozz-e2a21',
-    authDomain: 'migozz-e2a21.firebaseapp.com',
+    authDomain: 'migozz.com',
     databaseURL: 'https://migozz-e2a21-default-rtdb.firebaseio.com',
     storageBucket: 'migozz-e2a21.appspot.com', // ✅ corregido
     measurementId: 'G-BFN3GXRHXM',
