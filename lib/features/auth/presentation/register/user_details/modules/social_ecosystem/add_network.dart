@@ -58,6 +58,7 @@ class _AddNetworkBottomSheetState extends State<AddNetworkBottomSheet> {
           SnackBar(
             content: Text('addSocials.networkAuth.phoneInvalid'.tr()),
             backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 5),
           ),
         );
       }
@@ -249,6 +250,62 @@ class _AddNetworkBottomSheetState extends State<AddNetworkBottomSheet> {
 
     return Column(
       children: [
+        // Preview URL o ejemplo (Dinámico)
+        ValueListenableBuilder<TextEditingValue>(
+          valueListenable: _controller,
+          builder: (context, value, child) {
+            String exampleText = networkTexts['example']!;
+
+            // Lógica dinámica para mostrar la URL mientras el usuario escribe (solo si no es input de teléfono)
+            if (!isPhoneInput && exampleText.contains('http')) {
+              final inputText = value.text.trim();
+              if (inputText.isNotEmpty) {
+                // Si pega una URL completa, mostramos esa
+                if (inputText.toLowerCase().startsWith('http')) {
+                  exampleText = inputText;
+                } else {
+                  // Reemplazo dinámico del placeholder "usuario"/"username"
+                  final placeholder = context.locale.languageCode == 'es'
+                      ? 'usuario'
+                      : 'username';
+
+                  if (exampleText.contains(placeholder)) {
+                    exampleText = exampleText.replaceAll(
+                      placeholder,
+                      inputText,
+                    );
+                  } else {
+                    // Fallback: si no encuentra el placeholder, se añade al final de manera inteligente
+                    if (exampleText.endsWith('/')) {
+                      exampleText += inputText;
+                    } else {
+                      // Intenta encontrar el último segmento si la estructura es típica
+                      final lastSlash = exampleText.lastIndexOf('/');
+                      if (lastSlash != -1 &&
+                          lastSlash < exampleText.length - 1) {
+                        // Asumimos que lo que sigue al último slash es el placeholder si este no coincidió con "usuario"
+                        exampleText =
+                            exampleText.substring(0, lastSlash + 1) + inputText;
+                      } else {
+                        exampleText += '/$inputText';
+                      }
+                    }
+                  }
+                }
+              }
+            }
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 15),
+              child: Text(
+                exampleText,
+                style: const TextStyle(color: Colors.grey, fontSize: 13),
+                textAlign: TextAlign.center,
+              ),
+            );
+          },
+        ),
+
         // Phone input para WhatsApp y Telegram
         if (isPhoneInput)
           Container(
@@ -319,14 +376,6 @@ class _AddNetworkBottomSheetState extends State<AddNetworkBottomSheet> {
             ),
           ),
 
-        const SizedBox(height: 10),
-
-        // Preview URL o ejemplo
-        Text(
-          networkTexts['example']!,
-          style: const TextStyle(color: Colors.grey, fontSize: 12),
-          textAlign: TextAlign.center,
-        ),
         const SizedBox(height: 20),
 
         // Botón para volver si hay múltiples opciones
@@ -406,12 +455,19 @@ class _AddNetworkBottomSheetState extends State<AddNetworkBottomSheet> {
           'example': 'addSocials.networkAuth.examples.telegram'.tr(),
         };
 
+      case 'pinterest':
+        return {
+          'hint': 'addSocials.networkAuth.hints.pinterest'.tr(),
+          'example': 'addSocials.networkAuth.examples.pinterest'.tr(),
+        };
+
       default:
+        // Construcción manual para evitar problemas de interpolación con {platform}
+        final isEs = context.locale.languageCode == 'es';
+        final suffix = isEs ? 'usuario' : 'username';
         return {
           'hint': 'addSocials.networkAuth.hints.default'.tr(),
-          'example': 'addSocials.networkAuth.examples.default'.tr(
-            namedArgs: {'platform': name},
-          ),
+          'example': 'https://www.$name.com/$suffix',
         };
     }
   }

@@ -44,8 +44,7 @@ class SocialNetworks {
     // "facebook": NetworkAuthCapability.both,
     "facebook": NetworkAuthCapability.manual,
     "youtube": NetworkAuthCapability.manual,
-    "twitter": NetworkAuthCapability.oauth,
-    "x": NetworkAuthCapability.oauth,
+    "x": NetworkAuthCapability.oauth, // X (antes Twitter)
     "linkedin": NetworkAuthCapability.manual,
     "snapchat": NetworkAuthCapability.manual,
     "pinterest": NetworkAuthCapability.manual,
@@ -88,7 +87,7 @@ class SocialNetworks {
     "instagram": "Username or URL",
     "facebook": "Username or URL",
     "youtube": "Channel name or URL",
-    "twitter": "Username",
+    "x": "Username", // X (antes Twitter)
     "linkedin": "Profile URL",
     "snapchat": "Username",
     "pinterest": "Username",

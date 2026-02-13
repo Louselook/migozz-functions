@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -9,13 +8,18 @@ import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubi
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Global router reference for notification navigation
+GoRouter? _globalRouter;
+
 /// Widget that initializes notifications when user is authenticated
 class NotificationInitializer extends StatefulWidget {
   final Widget child;
+  final GoRouter router;
 
   const NotificationInitializer({
     super.key,
     required this.child,
+    required this.router,
   });
 
   @override
@@ -30,8 +34,19 @@ class _NotificationInitializerState extends State<NotificationInitializer> {
   void initState() {
     super.initState();
     debugPrint('🔔🔔🔔 [NotificationInitializer] initState called - Widget created!');
-    // Set up background message handler
-    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    // Set the global router reference
+    _globalRouter = widget.router;
+    debugPrint('✅ [NotificationInitializer] Global router set');
+    // Listen for app lifecycle changes to check for pending navigation
+    _setupAppLifecycleListener();
+  }
+
+  void _setupAppLifecycleListener() {
+    // Listen for app lifecycle changes to check for pending navigation when app comes to foreground
+    WidgetsBinding.instance.addObserver(_AppLifecycleObserver(
+      onResumed: _checkPendingNavigation,
+    ));
+    debugPrint('✅ [NotificationInitializer] App lifecycle listener registered');
   }
 
   @override
@@ -107,12 +122,45 @@ class _NotificationInitializerState extends State<NotificationInitializer> {
 
   void _handleNotificationTap(String senderId, String chatRoomId) {
     debugPrint('🔔 [NotificationInitializer] Notification tapped - sender: $senderId, room: $chatRoomId');
-    
-    // Navigate to chat screen
-    if (mounted) {
-      // Use go_router to navigate to the chat
-      // The route should be defined in your app_router.dart
-      context.push('/chat/$senderId');
+
+    // Use the global router reference
+    if (_globalRouter != null) {
+      try {
+        debugPrint('🔔 [NotificationInitializer] Using global router to navigate');
+
+        // First navigate to chats list
+        _globalRouter!.push('/chats');
+
+        // Then navigate to the specific chat after a short delay to ensure the chats screen is loaded
+        Future.delayed(const Duration(milliseconds: 300), () {
+          try {
+            _globalRouter!.push('/chat/$senderId');
+            debugPrint('✅ [NotificationInitializer] Successfully navigated to chat: $senderId');
+          } catch (e) {
+            debugPrint('❌ [NotificationInitializer] Error navigating to chat: $e');
+          }
+        });
+      } catch (e) {
+        debugPrint('❌ [NotificationInitializer] Error navigating to chats: $e');
+        debugPrint('⚠️ [NotificationInitializer] Storing navigation data for later');
+        _storeNavigationData(senderId, chatRoomId);
+      }
+    } else {
+      debugPrint('⚠️ [NotificationInitializer] Global router not available, storing navigation data');
+      _storeNavigationData(senderId, chatRoomId);
+    }
+  }
+
+  Future<void> _storeNavigationData(String senderId, String chatRoomId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('pending_notification_navigation', jsonEncode({
+        'senderId': senderId,
+        'chatRoomId': chatRoomId,
+      }));
+      debugPrint('🔔 [NotificationInitializer] Navigation data stored for later');
+    } catch (e) {
+      debugPrint('❌ [NotificationInitializer] Error storing navigation data: $e');
     }
   }
 
@@ -151,6 +199,23 @@ class _NotificationInitializerState extends State<NotificationInitializer> {
       },
       child: widget.child,
     );
+  }
+}
+
+/// Observer for app lifecycle changes
+class _AppLifecycleObserver extends WidgetsBindingObserver {
+  final Future<void> Function() onResumed;
+
+  _AppLifecycleObserver({required this.onResumed});
+
+  @override
+  Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
+    debugPrint('🔔 [AppLifecycleObserver] App lifecycle state changed: $state');
+
+    if (state == AppLifecycleState.resumed) {
+      debugPrint('🔔 [AppLifecycleObserver] App resumed - checking for pending navigation');
+      await onResumed();
+    }
   }
 }
 

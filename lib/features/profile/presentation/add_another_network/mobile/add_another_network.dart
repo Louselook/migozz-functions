@@ -8,12 +8,14 @@ import 'package:migozz_app/core/utils/camera_permission_handler.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 import 'package:migozz_app/features/auth/services/media_service.dart';
-import 'package:migozz_app/features/profile/components/utils/Loader.dart';
-import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
+import 'package:migozz_app/features/profile/components/utils/loader.dart';
+import 'package:migozz_app/features/profile/components/utils/alert_general.dart';
 import 'components/image_upload_area.dart';
 
 class AddAnotherNetworkScreen extends StatefulWidget {
-  const AddAnotherNetworkScreen({super.key});
+  final bool allowUnauthenticated;
+
+  const AddAnotherNetworkScreen({super.key, this.allowUnauthenticated = false});
 
   @override
   State<AddAnotherNetworkScreen> createState() =>
@@ -21,7 +23,9 @@ class AddAnotherNetworkScreen extends StatefulWidget {
 }
 
 class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
-  final TextEditingController _linkCtrl = TextEditingController(text: 'https://');
+  final TextEditingController _linkCtrl = TextEditingController(
+    text: 'https://',
+  );
 
   File? _pickedImage;
   String? _pickedImageUrl;
@@ -29,6 +33,8 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
   bool _isSaving = false;
   String? _error;
   DateTime? _loaderStart;
+
+  int _faviconRequestId = 0;
 
   @override
   void initState() {
@@ -38,6 +44,7 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
 
   @override
   void dispose() {
+    _faviconRequestId++; // invalidar callbacks async pendientes
     _linkCtrl.removeListener(_onLinkChanged);
     _linkCtrl.dispose();
     super.dispose();
@@ -51,6 +58,7 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
         _setFaviconFromDomain(domain);
       } else {
         if (_pickedImageUrl != null) {
+          if (!mounted) return;
           setState(() {
             _pickedImageUrl = null;
           });
@@ -106,6 +114,7 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
 
       await _validateAndSetImage(imagePath);
     } catch (e) {
+      if (!mounted) return;
       setState(
         () =>
             _error = '${'profile.customization.plataform.imageError'.tr()} $e',
@@ -124,6 +133,7 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
 
       await _validateAndSetImage(imagePath);
     } catch (e) {
+      if (!mounted) return;
       setState(
         () =>
             _error = '${'profile.customization.plataform.imageError'.tr()} $e',
@@ -143,20 +153,22 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
         lower.endsWith('.webp');
 
     if (!allowed) {
+      if (!mounted) return;
       setState(
-        () =>
-            _error = 'profile.customization.customLink.imageTypeNotAllowed'
-                .tr(),
+        () => _error = 'profile.customization.customLink.imageTypeNotAllowed'
+            .tr(),
       );
       return;
     }
     if (sizeBytes > 5 * 1024 * 1024) {
+      if (!mounted) return;
       setState(
         () => _error = 'profile.customization.customLink.imageTooLarge'.tr(),
       );
       return;
     }
 
+    if (!mounted) return;
     setState(() {
       _pickedImage = file;
       _pickedImageUrl = null;
@@ -166,11 +178,13 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
 
   Future<void> _showLoader({
     String? message,
+    LoaderType type = LoaderType.profileUpdate,
   }) async {
     _loaderStart = DateTime.now();
     showProfileLoader(
       context,
-      message: message ?? 'common.loading'.tr(),
+      message: message,
+      type: type,
       barrierDismissible: false,
     );
   }
@@ -194,7 +208,9 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
 
   String? _validateLink(String input) {
     final trimmed = input.trim();
-    if (trimmed.isEmpty) return 'profile.customization.customLink.validation.required'.tr();
+    if (trimmed.isEmpty) {
+      return 'profile.customization.customLink.validation.required'.tr();
+    }
     final uri = Uri.tryParse(trimmed);
     if (uri == null || !(uri.hasScheme && uri.host.isNotEmpty)) {
       return 'profile.customization.customLink.validation.invalidFormat'.tr();
@@ -253,7 +269,10 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
   }
 
   Future<void> _setFaviconFromDomain(String domain) async {
+    final requestId = ++_faviconRequestId;
     final url = await _resolveFavicon(domain);
+    if (!mounted) return;
+    if (requestId != _faviconRequestId) return;
     setState(() {
       _pickedImageUrl = url;
       _pickedImage = null;
@@ -266,23 +285,54 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
       _isSaving = true;
       _error = null;
     });
-    await _showLoader(message: 'common.saving'.tr());
+    await _showLoader();
 
     final linkError = _validateLink(_linkCtrl.text);
     if (linkError != null) {
       _error = linkError;
       await _ensureMinLoaderThenPop();
+      if (!mounted) return;
       setState(() => _isSaving = false);
+      if (!context.mounted) return;
       await AlertGeneral.show(context, 4, message: linkError);
       return;
     }
 
+    // ignore: use_build_context_synchronously
     final authCubit = context.read<AuthCubit>();
+    // ignore: use_build_context_synchronously
     final editCubit = context.read<EditCubit>();
     final userId = authCubit.state.firebaseUser?.uid;
     if (userId == null) {
+      if (widget.allowUnauthenticated) {
+        final link = _linkCtrl.text.trim();
+        final domain = _domainFromUrl(link);
+
+        String? iconUrl;
+        if (_applyIconFromLink) {
+          iconUrl = await _resolveFavicon(domain);
+        }
+
+        final data = <String, dynamic>{
+          'type': 'custom',
+          'domain': domain,
+          'url': link,
+          if (iconUrl != null) 'iconUrl': iconUrl,
+          'applyIconFromLink': _applyIconFromLink,
+        };
+
+        await _ensureMinLoaderThenPop();
+        if (!mounted) return;
+        setState(() => _isSaving = false);
+        if (!context.mounted) return;
+        Navigator.pop(context, data);
+        return;
+      }
+
       await _ensureMinLoaderThenPop();
+      if (!mounted) return;
       setState(() => _isSaving = false);
+      if (!context.mounted) return;
       await AlertGeneral.show(
         context,
         4,
@@ -298,6 +348,7 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
 
       if (_applyIconFromLink) {
         iconUrl = await _resolveFavicon(domain);
+        if (!mounted) return;
         setState(() => _pickedImageUrl = iconUrl);
       } else if (_pickedImage != null) {
         final service = UserMediaService();
@@ -331,19 +382,24 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
 
       if (!mounted) return;
       await _ensureMinLoaderThenPop();
+      if (!mounted) return;
       setState(() => _isSaving = false);
 
+      if (!context.mounted) return;
       await AlertGeneral.show(
         context,
         1,
         message: 'profile.customization.customLink.saved'.tr(),
       );
-      if (mounted) {
+      if (context.mounted) {
+        // ignore: use_build_context_synchronously
         Navigator.pop(context, 'done');
       }
     } catch (e) {
       await _ensureMinLoaderThenPop();
+      if (!mounted) return;
       setState(() => _isSaving = false);
+      if (!context.mounted) return;
       await AlertGeneral.show(
         context,
         4,
@@ -353,10 +409,20 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
   }
 
   Future<void> _deleteIfExists() async {
+    if (!mounted) return;
     final authCubit = context.read<AuthCubit>();
     final editCubit = context.read<EditCubit>();
     final userId = authCubit.state.firebaseUser?.uid;
-    if (userId == null) return;
+    if (userId == null) {
+      setState(() {
+        _pickedImage = null;
+        _pickedImageUrl = null;
+        _linkCtrl.clear();
+        _applyIconFromLink = false;
+        _error = null;
+      });
+      return;
+    }
 
     final linkError = _validateLink(_linkCtrl.text);
     if (linkError != null) {
@@ -467,8 +533,8 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
                       keyboardType: TextInputType.url,
                       style: const TextStyle(color: Colors.white),
                       decoration: InputDecoration(
-                        hintText:
-                            'profile.customization.customLink.linkHint'.tr(),
+                        hintText: 'profile.customization.customLink.linkHint'
+                            .tr(),
                         hintStyle: const TextStyle(color: Color(0xFFE0E0E0)),
                         filled: true,
                         fillColor: const Color(0xFF7C7480),
@@ -562,5 +628,3 @@ class _AddAnotherNetworkScreenState extends State<AddAnotherNetworkScreen> {
     );
   }
 }
-
-

@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:migozz_app/core/config/api/api_config.dart';
+import 'package:image_picker/image_picker.dart';
 
 enum MediaType { avatar, voice, video, document }
 
@@ -103,21 +104,37 @@ class UserMediaService {
   /// Método genérico para subir con UID directamente (si el usuario ya está registrado)
   Future<Map<MediaType, String>> uploadFiles({
     required String uid,
-    required Map<MediaType, File> files,
+    required Map<MediaType, dynamic> files,
   }) async {
     final urls = <MediaType, String>{};
 
     for (final entry in files.entries) {
       final file = entry.value;
+      http.MultipartFile multipartFile;
+
+      if (kIsWeb && file is XFile) {
+        final bytes = await file.readAsBytes();
+        multipartFile = http.MultipartFile.fromBytes(
+          'file',
+          bytes,
+          filename: file.name,
+        );
+      } else if (file is XFile) {
+        multipartFile = await http.MultipartFile.fromPath('file', file.path);
+      } else if (file is File) {
+        multipartFile = await http.MultipartFile.fromPath('file', file.path);
+      } else {
+        throw Exception('Unsupported file type: ${file.runtimeType}');
+      }
 
       final request = http.MultipartRequest(
         'POST',
         Uri.parse('${ApiConfig.apiBase}/users/upload-file'),
       );
 
-      request.files.add(await http.MultipartFile.fromPath('file', file.path));
+      request.files.add(multipartFile);
       request.fields['folder'] = entry.key.name;
-      request.fields['user_id'] = uid; // ahora usamos UID
+      request.fields['user_id'] = uid;
 
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);

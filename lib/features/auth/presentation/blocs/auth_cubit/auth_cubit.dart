@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/auth_result.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
@@ -15,11 +15,22 @@ class AuthCubit extends Cubit<AuthState> {
   late final StreamSubscription<User?> _authSub;
   StreamSubscription<DocumentSnapshot>? _userProfileSub; // ✅ Nuevo listener
 
+  // ✅ Bandera para evitar logout durante login en progreso
+  bool _isLoginInProgress = false;
+
+  // ✅ Bandera para mantener el estado de baneado
+  bool _isBannedStateActive = false;
+
   // ✅ Callback para limpiar otros cubits
   VoidCallback? onLogoutRequested;
 
   AuthCubit(this._authUseCases, this._userService)
     : super(const AuthState.checking()) {
+    // ✅ Asegurar persistencia explícita en Web al inicializar el Cubit
+    if (kIsWeb) {
+      FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
+    }
+
     _authSub = _authUseCases.authStateChanges.listen(
       (user) async {
         debugPrint('🔔 [AuthCubit] authStateChanges: ${user?.uid ?? "null"}');
@@ -30,6 +41,41 @@ class AuthCubit extends Cubit<AuthState> {
           );
 
           try {
+            // ✅ NUEVO: Verificar primero si el usuario existe en Firestore
+            final userDoc = await FirebaseFirestore.instance
+                .collection('users')
+                .doc(user.uid)
+                .get();
+
+            if (!userDoc.exists) {
+              // ✅ Si hay login en progreso, esperar a que termine
+              if (_isLoginInProgress) {
+                debugPrint(
+                  '⏳ [AuthCubit] Login en progreso, esperando creación de documento...',
+                );
+                return; // No hacer logout, el login creará el documento
+              }
+
+              debugPrint(
+                '⚠️ [AuthCubit] Usuario no existe en Firestore - fue eliminado',
+              );
+              await _handleUserDeleted();
+              return;
+            }
+
+            // ✅ NUEVO: Verificar si el usuario está baneado
+            final userData = userDoc.data();
+            if (userData != null) {
+              final isActive = userData['active'];
+              if (isActive == false || isActive == 0) {
+                debugPrint(
+                  '🚫 [AuthCubit] Usuario baneado - active: $isActive',
+                );
+                await _handleUserBanned();
+                return;
+              }
+            }
+
             final userProfile = await _loadUserProfileWithRetry(user.uid);
 
             emit(
@@ -58,12 +104,24 @@ class AuthCubit extends Cubit<AuthState> {
         } else {
           debugPrint('🔒 [AuthCubit] Usuario no autenticado');
           _cancelUserProfileListener(); // ✅ Cancelar listener si no hay usuario
+
+          // ✅ No cambiar estado si está en proceso de mostrar popup de baneado
+          if (_isBannedStateActive) {
+            debugPrint(
+              '🚫 [AuthCubit] Manteniendo estado userBanned para mostrar popup',
+            );
+            return;
+          }
+
           emit(const AuthState.notAuthenticated());
         }
       },
       onError: (err) {
         debugPrint('❌ [AuthCubit] authStateChanges error: $err');
-        emit(const AuthState.notAuthenticated());
+        // ✅ No cambiar estado si está mostrando popup de baneado
+        if (!_isBannedStateActive) {
+          emit(const AuthState.notAuthenticated());
+        }
       },
     );
   }
@@ -81,9 +139,35 @@ class AuthCubit extends Cubit<AuthState> {
         .snapshots()
         .listen(
           (snapshot) {
-            if (snapshot.exists && state.isAuthenticated) {
+            // ✅ NUEVO: Detectar si el usuario fue eliminado
+            if (!snapshot.exists) {
+              // ✅ Si hay login en progreso, ignorar (el documento se creará pronto)
+              if (_isLoginInProgress) {
+                debugPrint(
+                  '⏳ [AuthCubit] Login en progreso, ignorando snapshot vacío',
+                );
+                return;
+              }
+              debugPrint(
+                '⚠️ [AuthCubit] Usuario eliminado de Firestore - haciendo logout',
+              );
+              _handleUserDeleted();
+              return;
+            }
+
+            if (state.isAuthenticated) {
               final data = snapshot.data();
               if (data != null) {
+                // ✅ NUEVO: Verificar si el usuario fue baneado en tiempo real
+                final isActive = data['active'];
+                if (isActive == false || isActive == 0) {
+                  debugPrint(
+                    '🚫 [AuthCubit] Usuario baneado en tiempo real - active: $isActive',
+                  );
+                  _handleUserBanned();
+                  return;
+                }
+
                 final updatedProfile = UserDTO.fromMap(data);
 
                 debugPrint('✨ [AuthCubit] Perfil actualizado en tiempo real');
@@ -100,8 +184,62 @@ class AuthCubit extends Cubit<AuthState> {
           },
           onError: (error) {
             debugPrint('❌ [AuthCubit] Error en listener de perfil: $error');
+            // Si hay error de permisos, probablemente el usuario fue eliminado
+            if (error.toString().contains('PERMISSION_DENIED') ||
+                error.toString().contains('NOT_FOUND')) {
+              _handleUserDeleted();
+            }
           },
         );
+  }
+
+  /// ✅ Manejar cuando el usuario es eliminado (solo logout, puede registrarse de nuevo)
+  Future<void> _handleUserDeleted() async {
+    debugPrint('🗑️ [AuthCubit] Manejando usuario eliminado...');
+
+    // Cancelar el listener
+    _cancelUserProfileListener();
+
+    // Hacer logout de Firebase Auth
+    try {
+      await FirebaseAuth.instance.signOut();
+      debugPrint('✅ [AuthCubit] Logout completado después de eliminación');
+    } catch (e) {
+      debugPrint('❌ [AuthCubit] Error en logout: $e');
+    }
+
+    // Emitir estado de no autenticado
+    emit(const AuthState.notAuthenticated());
+  }
+
+  /// ✅ Manejar cuando el usuario es baneado (logout + emitir estado baneado)
+  Future<void> _handleUserBanned() async {
+    debugPrint('🚫 [AuthCubit] Manejando usuario baneado...');
+
+    // ✅ Activar bandera ANTES del signOut para evitar race condition
+    _isBannedStateActive = true;
+
+    // Cancelar el listener
+    _cancelUserProfileListener();
+
+    // ✅ Emitir estado de baneado PRIMERO
+    emit(const AuthState.userBanned());
+
+    // Hacer logout de Firebase Auth (esto disparará authStateChanges con null)
+    try {
+      await FirebaseAuth.instance.signOut();
+      debugPrint('✅ [AuthCubit] Logout completado después de baneo');
+    } catch (e) {
+      debugPrint('❌ [AuthCubit] Error en logout: $e');
+    }
+  }
+
+  /// ✅ Limpiar estado de baneado (llamar después de mostrar el popup)
+  void clearBannedState() {
+    _isBannedStateActive = false;
+    if (state.isBanned) {
+      emit(const AuthState.notAuthenticated());
+    }
   }
 
   /// ✅ Cancelar listener del perfil
@@ -139,35 +277,81 @@ class AuthCubit extends Cubit<AuthState> {
   Future<AuthResult> signInWithGoogle() async {
     try {
       debugPrint('🔐 [AuthCubit] Iniciando login con Google...');
+      _isLoginInProgress = true; // ✅ Marcar login en progreso
       final result = await _authUseCases.loginGoogle.run();
       debugPrint('✅ [AuthCubit] Login exitoso: ${result.user}');
+
+      // ✅ NUEVO: Forzar carga del perfil después del login exitoso
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null && result.user != null) {
+        debugPrint('🔄 [AuthCubit] Forzando carga de perfil post-login...');
+        // Pequeña espera para asegurar que Firestore tenga el documento
+        await Future.delayed(const Duration(milliseconds: 300));
+
+        final userProfile = await _loadUserProfileWithRetry(currentUser.uid);
+        emit(
+          AuthState.authenticated(
+            firebaseUser: currentUser,
+            userProfile: userProfile,
+          ),
+        );
+        _setupUserProfileListener(currentUser.uid);
+        debugPrint('✅ [AuthCubit] Estado authenticated emitido post-login');
+      }
+
       return result;
     } catch (e) {
       debugPrint('❌ [AuthCubit] Error en login con Google: $e');
       debugPrint('❌ [AuthCubit] Tipo de error: ${e.runtimeType}');
       rethrow;
+    } finally {
+      _isLoginInProgress = false; // ✅ Limpiar bandera
     }
   }
 
   Future<AuthResult> signInWithApple() async {
     try {
       debugPrint('🍎 [AuthCubit] Iniciando login con Apple...');
+      _isLoginInProgress = true; // ✅ Marcar login en progreso
       final result = await _authUseCases.loginApple.run();
       debugPrint('✅ [AuthCubit] Login exitoso: ${result.user}');
+
+      // ✅ NUEVO: Forzar carga del perfil después del login exitoso
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null && result.user != null) {
+        debugPrint('🔄 [AuthCubit] Forzando carga de perfil post-login...');
+        await Future.delayed(const Duration(milliseconds: 300));
+
+        final userProfile = await _loadUserProfileWithRetry(currentUser.uid);
+        emit(
+          AuthState.authenticated(
+            firebaseUser: currentUser,
+            userProfile: userProfile,
+          ),
+        );
+        _setupUserProfileListener(currentUser.uid);
+        debugPrint('✅ [AuthCubit] Estado authenticated emitido post-login');
+      }
+
       return result;
     } catch (e) {
       debugPrint('❌ [AuthCubit] Error en login con Apple: $e');
       debugPrint('❌ [AuthCubit] Tipo de error: ${e.runtimeType}');
       rethrow;
+    } finally {
+      _isLoginInProgress = false; // ✅ Limpiar bandera
     }
   }
 
   Future<AuthResult> login({required String email, required String otp}) async {
     try {
+      _isLoginInProgress = true; // ✅ Marcar login en progreso
       return await _authUseCases.login.run(email: email, otp: otp);
     } catch (e) {
       debugPrint('❌ [AuthCubit] Error en login: $e');
       rethrow;
+    } finally {
+      _isLoginInProgress = false; // ✅ Limpiar bandera
     }
   }
 
@@ -201,6 +385,26 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  /// Create Firebase Auth user ONLY (no Firestore document)
+  /// Used for pre-registered users whose document will be migrated
+  Future<String> createAuthUserOnly({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      debugPrint('🚀 [AuthCubit] Creando usuario Auth (solo Auth)...');
+      final uid = await _authUseCases.createAuthUser.run(
+        email: email,
+        password: password,
+      );
+      debugPrint('✅ [AuthCubit] Usuario Auth creado con UID: $uid');
+      return uid;
+    } catch (e) {
+      debugPrint('❌ [AuthCubit] Error creando usuario Auth: $e');
+      throw Exception('Error al crear usuario Auth: $e');
+    }
+  }
+
   /// ✅ Ahora es opcional - el listener se encarga automáticamente
   Future<void> refreshUserProfile() async {
     if (!state.isAuthenticated || state.firebaseUser == null) return;
@@ -226,7 +430,16 @@ class AuthCubit extends Cubit<AuthState> {
     if (currentProfile == null) return;
 
     final updatedProfile = currentProfile.copyWith(complete: value);
-    emit(state.copyWith(userProfile: updatedProfile, isLoadingProfile: false));
+    emit(
+      state.copyWith(
+        userProfile: updatedProfile,
+        isLoadingProfile: false,
+        hasSeenCompleteProfileDialog: true,
+      ),
+    );
+    debugPrint(
+      '✅ [AuthCubit] Perfil marcado como temporalmente completo - dialogo no se mostrará en esta sesión',
+    );
   }
 
   Future<void> updateProfileVersion(int version) async {

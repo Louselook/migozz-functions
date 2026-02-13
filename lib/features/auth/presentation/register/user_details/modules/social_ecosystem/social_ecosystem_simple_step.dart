@@ -51,13 +51,11 @@ class SocialEcosystemSimpleStep extends StatelessWidget {
     NetworkConfig config,
   ) async {
     final cubit = context.read<RegisterCubit>();
-    final current = List<Map<String, Map<String, dynamic>>>.from(
+    final current = List<Map<String, dynamic>>.from(
       cubit.state.socialEcosystem ?? [],
     );
 
-    final platformName = config.name.toLowerCase() == 'x'
-        ? 'twitter'
-        : config.name.toLowerCase();
+    final platformName = config.name.toLowerCase();
 
     final index = current.indexWhere((e) {
       final platformKey = e.keys.first.toLowerCase();
@@ -231,16 +229,13 @@ class SocialEcosystemSimpleStep extends StatelessWidget {
   }
 
   void _handleBackTap(BuildContext context) {
-    // ✅ Validate at least one network is added in register mode
+    // ✅ En modo registro, volver al chat con código especial si no hay redes
     final cubit = context.read<RegisterCubit>();
     final socialEcosystem = cubit.state.socialEcosystem ?? [];
 
     if (socialEcosystem.isEmpty) {
-      CustomSnackbar.show(
-        context: context,
-        message: 'addSocials.validation.atLeastOne'.tr(),
-        type: SnackbarType.warning,
-      );
+      // Volver al chat con código especial para preguntar si quiere cambiar datos
+      Navigator.of(context).pop('back_no_socials');
       return;
     }
 
@@ -255,13 +250,13 @@ class SocialEcosystemSimpleStep extends StatelessWidget {
           return;
         } else {
           if (Navigator.of(context).canPop()) {
-            Navigator.of(context).pop();
+            Navigator.of(context).pop('done');
             return;
           }
         }
       } else {
         if (Navigator.of(context).canPop()) {
-          Navigator.of(context).pop();
+          Navigator.of(context).pop('done');
           return;
         }
       }
@@ -278,20 +273,19 @@ class SocialEcosystemSimpleStep extends StatelessWidget {
     // ignore: deprecated_member_use
     return WillPopScope(
       onWillPop: () async {
-        // Prevent back navigation if no network is added
+        // Permitir volver al chat pero enviar código especial si no hay redes
         final cubit = context.read<RegisterCubit>();
         final socialEcosystem = cubit.state.socialEcosystem ?? [];
 
         if (socialEcosystem.isEmpty) {
-          CustomSnackbar.show(
-            context: context,
-            message: 'addSocials.validation.atLeastOne'.tr(),
-            type: SnackbarType.warning,
-          );
-          return false;
+          // Volver al chat con código especial para preguntar si quiere cambiar datos
+          Navigator.of(context).pop('back_no_socials');
+          return false; // Ya manejamos el pop manualmente
         }
 
-        return true;
+        // Tiene redes - volver normalmente con 'done'
+        Navigator.of(context).pop('done');
+        return false; // Ya manejamos el pop manualmente
       },
       child: SafeArea(
         top: false,

@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/core/components/compuestos/chat/chat_message_builder.dart';
@@ -230,6 +232,73 @@ class GenericChatScreenState extends State<GenericChatScreen> {
     return _chatInputKey.currentState?.micButtonKey;
   }
 
+  /// Determina si se debe mostrar un header de fecha/hora antes de un mensaje.
+  /// Se muestra cuando:
+  /// - Es el primer mensaje de la conversación, o
+  /// - Han pasado más de 2 horas desde el mensaje anterior.
+  bool _shouldShowDateHeader(List<Map<String, dynamic>> messages, int index) {
+    final message = messages[index];
+    final sentAt = message['sentAt'] as DateTime?;
+    if (sentAt == null) return false;
+
+    if (index == 0) return true;
+
+    final prevMessage = messages[index - 1];
+    final prevSentAt = prevMessage['sentAt'] as DateTime?;
+    if (prevSentAt == null) return true;
+
+    final difference = sentAt.difference(prevSentAt).abs();
+    return difference.inHours >= 2;
+  }
+
+  /// Formatea el texto del header de fecha/hora.
+  /// - Mismo día: "Hoy hora"
+  /// - Día anterior: "Ayer hora"
+  /// - 2+ días: nombre del día + hora
+  String _formatDateHeader(DateTime dateTime, BuildContext context) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final messageDate = DateTime(dateTime.year, dateTime.month, dateTime.day);
+    final difference = today.difference(messageDate).inDays;
+
+    // Formatear hora: 12:32 a.m. / p.m.
+    final hour = dateTime.hour % 12 == 0 ? 12 : dateTime.hour % 12;
+    final minute = dateTime.minute.toString().padLeft(2, '0');
+    final period = dateTime.hour < 12 ? 'a.m.' : 'p.m.';
+    final timeStr = '$hour:$minute $period';
+
+    if (difference == 0) {
+      final todayText = 'chat.dateHeader.today'.tr();
+      return '$todayText $timeStr';
+    } else if (difference == 1) {
+      final yesterdayText = 'chat.dateHeader.yesterday'.tr();
+      return '$yesterdayText $timeStr';
+    } else {
+      // Nombre del día de la semana usando traducciones
+      final dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+      final dayKey = dayKeys[dateTime.weekday - 1];
+      final dayName = 'chat.dateHeader.days.$dayKey'.tr();
+      return '$dayName $timeStr';
+    }
+  }
+
+  /// Construye el widget del header de fecha/hora.
+  Widget _buildDateHeader(String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Center(
+        child: Text(
+          text,
+          style: const TextStyle(
+            color: Colors.grey,
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.showLoading && !_isInitialized) {
@@ -270,75 +339,91 @@ class GenericChatScreenState extends State<GenericChatScreen> {
               centerTitle: true,
             ),
       body: SafeArea(
-        child: Column(
-          children: [
-            // Lista de mensajes
-            Expanded(
-              child: ListenableBuilder(
-                listenable: widget.chatController,
-                builder: (context, child) {
-                  final messages = widget.chatController.messages;
-                  return ListView.builder(
-                    controller: widget.chatController.scrollController,
-                    padding: const EdgeInsets.all(10),
-                    reverse: widget.reverseMessages,
-                    itemCount: messages.length,
-                    itemBuilder: (context, index) {
-                      // Invertir índice si reverse es true
-                      final messageIndex = widget.reverseMessages
-                          ? messages.length - 1 - index
-                          : index;
-                      final message = messages[messageIndex];
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: kIsWeb ? 800 : double.infinity,
+            ),
+            child: Column(
+              children: [
+                // Lista de mensajes
+                Expanded(
+                  child: ListenableBuilder(
+                    listenable: widget.chatController,
+                    builder: (context, child) {
+                      final messages = widget.chatController.messages;
+                      return ListView.builder(
+                        controller: widget.chatController.scrollController,
+                        padding: const EdgeInsets.all(10),
+                        reverse: widget.reverseMessages,
+                        itemCount: messages.length,
+                        itemBuilder: (context, index) {
+                          // Invertir índice si reverse es true
+                          final messageIndex = widget.reverseMessages
+                              ? messages.length - 1 - index
+                              : index;
+                          final message = messages[messageIndex];
 
-                      // Verificar si es último mensaje con opciones
-                      final isLastBotMsgWithOptions =
-                          widget.showSuggestions &&
-                          message["other"] == true &&
-                          (message["options"] != null &&
-                              (message["options"] as List).isNotEmpty) &&
-                          !messages
-                              .sublist(messageIndex + 1)
-                              .any(
-                                (m) =>
-                                    m["other"] == true &&
-                                    (m["options"] != null &&
-                                        (m["options"] as List).isNotEmpty),
-                              );
+                          // Verificar si es último mensaje con opciones
+                          final isLastBotMsgWithOptions =
+                              widget.showSuggestions &&
+                              message["other"] == true &&
+                              (message["options"] != null &&
+                                  (message["options"] as List).isNotEmpty) &&
+                              !messages
+                                  .sublist(messageIndex + 1)
+                                  .any(
+                                    (m) =>
+                                        m["other"] == true &&
+                                        (m["options"] != null &&
+                                            (m["options"] as List).isNotEmpty),
+                                  );
 
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ChatMessageBuilder.buildMessage(
-                            message,
-                            chatController: widget.passChatControllerToMessages
-                                ? widget.chatController
-                                : null,
-                            otherUserName: widget.otherUserName,
-                            otherUserAvatar: widget.otherUserAvatar,
-                          ),
-                          // Mostrar sugerencias si existe el builder
-                          if (isLastBotMsgWithOptions &&
-                              widget.suggestionBuilder != null)
-                            widget.suggestionBuilder!
-                          else if (isLastBotMsgWithOptions &&
-                              widget.onSugestionSelected != null)
-                            _buildDefaultSuggestions(
-                              List<String>.from(message["options"]),
-                            ),
-                        ],
+                          // Determinar si mostrar header de fecha/hora
+                          final showDateHeader = _shouldShowDateHeader(messages, messageIndex);
+                          final sentAt = message['sentAt'] as DateTime?;
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Header de fecha/hora centrado
+                              if (showDateHeader && sentAt != null)
+                                _buildDateHeader(_formatDateHeader(sentAt, context)),
+
+                              ChatMessageBuilder.buildMessage(
+                                message,
+                                chatController:
+                                    widget.passChatControllerToMessages
+                                    ? widget.chatController
+                                    : null,
+                                otherUserName: widget.otherUserName,
+                                otherUserAvatar: widget.otherUserAvatar,
+                              ),
+                              // Mostrar sugerencias si existe el builder
+                              if (isLastBotMsgWithOptions &&
+                                  widget.suggestionBuilder != null)
+                                widget.suggestionBuilder!
+                              else if (isLastBotMsgWithOptions &&
+                                  widget.onSugestionSelected != null)
+                                _buildDefaultSuggestions(
+                                  List<String>.from(message["options"]),
+                                ),
+                            ],
+                          );
+                        },
                       );
                     },
-                  );
-                },
-              ),
-            ),
+                  ),
+                ),
 
-            // Input personalizado o por defecto
-            if (widget.customInput != null)
-              widget.customInput!
-            else if (widget.showDefaultInput)
-              _buildDefaultInput(),
-          ],
+                // Input personalizado o por defecto
+                if (widget.customInput != null)
+                  widget.customInput!
+                else if (widget.showDefaultInput)
+                  _buildDefaultInput(),
+              ],
+            ),
+          ),
         ),
       ),
       // Botón flotante para scroll al bottom con contador

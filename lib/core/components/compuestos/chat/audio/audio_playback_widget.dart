@@ -1,10 +1,10 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
-import 'package:migozz_app/core/color.dart';
 
 class AudioPlaybackWidget extends StatefulWidget {
   const AudioPlaybackWidget({
@@ -27,36 +27,143 @@ class AudioPlaybackWidget extends StatefulWidget {
 }
 
 class _AudioPlaybackWidgetState extends State<AudioPlaybackWidget> {
-  late final PlayerController _player;
+  PlayerController? _player;
+  StreamSubscription<int>? _positionSub;
+  StreamSubscription<void>? _completionSub;
   Duration _max = Duration.zero;
+  Duration _current = Duration.zero;
   bool _isPlaying = false;
   bool _isPrepared = false;
   bool _isDownloading = false;
   bool _hasError = false;
+  bool _isSeeking = false; // Para saber si el usuario está arrastrando
+  String? _localPath; // Path local del audio (para reinicializar)
+  Key _waveformKey = UniqueKey(); // Key para forzar rebuild del waveform
   // Keep track of download cancelation
   http.Client? _httpClient;
+
+  bool _isDisposed = false;
+  bool _isResetting = false;
+  int _playerSeq = 0;
 
   @override
   void initState() {
     super.initState();
-    _player = PlayerController();
-    _player.onCurrentDurationChanged.listen((ms) {
-      if (!mounted) return;
+    _initPlayer();
+    _prepare();
+  }
+
+  void _disposePlayer() {
+    try {
+      _positionSub?.cancel();
+    } catch (_) {}
+    _positionSub = null;
+
+    try {
+      _completionSub?.cancel();
+    } catch (_) {}
+    _completionSub = null;
+
+    try {
+      _player?.dispose();
+    } catch (_) {}
+    _player = null;
+  }
+
+  void _wirePlayerListeners(int seq) {
+    final p = _player;
+    if (p == null) return;
+
+    // 🎵 Escuchar cambios de posición para sincronizar el waveform y tiempo actual
+    _positionSub = p.onCurrentDurationChanged.listen((ms) {
+      if (_isDisposed || !mounted || _isSeeking) return;
+      if (seq != _playerSeq) return;
+      setState(() {
+        _current = Duration(milliseconds: ms);
+      });
     });
 
-    _player.onCompletion.listen((_) {
-      if (!mounted) return;
+    _completionSub = p.onCompletion.listen((_) async {
+      if (_isDisposed || !mounted) return;
+      if (seq != _playerSeq) return;
+      if (_isResetting) return;
+      _isResetting = true;
+      try {
+        debugPrint('🔄 [AudioPlayback] Audio completado - reiniciando player');
+        await _resetPlayer();
+        if (!_isDisposed) {
+          widget.chatController?.onAudioFinished?.call();
+        }
+      } finally {
+        _isResetting = false;
+      }
+    });
+  }
+
+  void _initPlayer() {
+    _playerSeq++;
+    _disposePlayer();
+    _player = PlayerController();
+    _wirePlayerListeners(_playerSeq);
+  }
+
+  /// 🔄 Reinicia el player completamente para resetear el waveform visual
+  Future<void> _resetPlayer() async {
+    if (_localPath == null) return;
+    if (_isDisposed) return;
+
+    try {
+      final seqAtStart = _playerSeq;
+
+      // Pausar si está reproduciendo
+      if (_isPlaying) {
+        try {
+          await _player?.pausePlayer();
+        } catch (_) {}
+      }
+
+      if (_isDisposed || !mounted) return;
+      if (seqAtStart != _playerSeq) return;
+
+      // Disponer el player actual
+      _disposePlayer();
+
+      // Crear nuevo player
+      _playerSeq++;
+      final newSeq = _playerSeq;
+      _player = PlayerController();
+      _wirePlayerListeners(newSeq);
+
+      if (_isDisposed || !mounted) return;
+
+      // Re-preparar el player con el mismo archivo
+      final p = _player;
+      if (p == null) return;
+
+      await p.preparePlayer(
+        path: _localPath!,
+        shouldExtractWaveform: true,
+      );
+
+      if (_isDisposed || !mounted) return;
+      if (newSeq != _playerSeq) return;
+
       setState(() {
         _isPlaying = false;
+        _current = Duration.zero;
+        _isPrepared = true;
+        _waveformKey = UniqueKey(); // Forzar rebuild del widget waveform
       });
-      widget.chatController?.onAudioFinished?.call();
-    });
 
-    _prepare();
+      debugPrint('✅ [AudioPlayback] Player reiniciado correctamente');
+    } catch (e) {
+      debugPrint('❌ [AudioPlayback] Error reiniciando player: $e');
+    }
   }
 
   Future<void> _prepare() async {
     try {
+      final seqAtStart = _playerSeq;
       final src = widget.audioPath;
       String pathToPlay = src;
 
@@ -79,17 +186,29 @@ class _AudioPlaybackWidgetState extends State<AudioPlaybackWidget> {
         pathToPlay = file.path;
       }
 
+      if (_isDisposed || !mounted) return;
+      if (seqAtStart != _playerSeq) return;
+
+      // Guardar el path local para poder reinicializar después
+      _localPath = pathToPlay;
+
       // prepare player with local path
-      await _player.preparePlayer(
+      final p = _player;
+      if (p == null) return;
+      await p.preparePlayer(
         path: pathToPlay,
         shouldExtractWaveform: true,
       );
-      _max = Duration(milliseconds: _player.maxDuration);
-      if (!mounted) return;
+
+      if (_isDisposed || !mounted) return;
+      if (seqAtStart != _playerSeq) return;
+
+      _max = Duration(milliseconds: p.maxDuration);
       setState(() {
         _isPrepared = true;
         _isDownloading = false;
         _hasError = false;
+        _current = Duration.zero;
       });
     } catch (e, st) {
       debugPrint('❌ Audio prepare error: $e\n$st');
@@ -102,39 +221,112 @@ class _AudioPlaybackWidgetState extends State<AudioPlaybackWidget> {
   }
 
   Future<void> _togglePlayPause() async {
-    if (_hasError || !_isPrepared) return;
+    if (_hasError || !_isPrepared || _player == null || _isDisposed) return;
     if (_isPlaying) {
-      await _player.pausePlayer();
+      try {
+        await _player!.pausePlayer();
+      } catch (_) {
+        return;
+      }
       if (!mounted) return;
       setState(() => _isPlaying = false);
     } else {
-      await _player.startPlayer();
+      try {
+        await _player!.startPlayer();
+      } catch (_) {
+        return;
+      }
       if (!mounted) return;
       setState(() => _isPlaying = true);
     }
   }
 
+  /// 🎯 Seek a una posición específica del audio
+  Future<void> _seekTo(Duration position) async {
+    if (!_isPrepared || _hasError || _player == null || _isDisposed) return;
+
+    final clampedMs = position.inMilliseconds.clamp(0, _max.inMilliseconds);
+
+    try {
+      await _player!.seekTo(clampedMs);
+      if (!mounted) return;
+      setState(() {
+        _current = Duration(milliseconds: clampedMs);
+      });
+    } catch (e) {
+      debugPrint('❌ Seek error: $e');
+    }
+  }
+
+  /// 📍 Calcular posición del seek basado en la posición del toque
+  Duration _calculateSeekPosition(Offset localPosition, double width) {
+    if (_max == Duration.zero || width <= 0) return Duration.zero;
+
+    final ratio = (localPosition.dx / width).clamp(0.0, 1.0);
+    return Duration(milliseconds: (_max.inMilliseconds * ratio).round());
+  }
+
+  /// 🖐️ Inicio del arrastre (seek)
+  void _onSeekStart(Offset localPosition, double width) async {
+    if (!_isPrepared || _hasError || _player == null || _isDisposed) return;
+
+    _isSeeking = true;
+
+    // Siempre pausar al iniciar seek y mostrar icono de play
+    if (_isPlaying) {
+      try {
+        await _player!.pausePlayer();
+      } catch (_) {}
+    }
+    setState(() => _isPlaying = false);
+
+    final newPosition = _calculateSeekPosition(localPosition, width);
+    debugPrint('🔍 Seek a ${newPosition.inSeconds}s');
+    await _seekTo(newPosition);
+  }
+
+  /// 🖐️ Durante el arrastre (seek)
+  void _onSeekUpdate(Offset localPosition, double width) async {
+    if (_isDisposed) return;
+    if (!_isSeeking || !_isPrepared || _hasError || _player == null) return;
+
+    final newPosition = _calculateSeekPosition(localPosition, width);
+    debugPrint('🔍 Seek a ${newPosition.inSeconds}s');
+
+    // Actualizar la posición visual inmediatamente
+    setState(() {
+      _current = newPosition;
+    });
+
+    await _seekTo(newPosition);
+  }
+
+  /// 🖐️ Fin del arrastre (seek) - NO reanuda automáticamente, el usuario debe presionar play
+  void _onSeekEnd() {
+    _isSeeking = false;
+    // El usuario debe presionar play manualmente si quiere continuar
+  }
+
   @override
   void dispose() {
-    try {
-      _player.dispose();
-    } catch (_) {}
+    _isDisposed = true;
+    _disposePlayer();
     // cancel any pending http client
     try {
       _httpClient?.close();
     } catch (_) {}
-    // optional: delete temp file
-    // if (_localPath != null) File(_localPath!).delete().ignore();
     super.dispose();
   }
 
-  String get _formattedTime {
-    final total = _max;
-    final sec = total.inSeconds;
+  String _formatDuration(Duration d) {
+    final sec = d.inSeconds;
     final m = (sec ~/ 60).toString();
     final s = (sec % 60).toString().padLeft(2, '0');
     return '$m:$s';
   }
+
+  String get _formattedCurrentTime => _formatDuration(_current);
+  String get _formattedMaxTime => _formatDuration(_max);
 
   @override
   Widget build(BuildContext context) {
@@ -234,40 +426,75 @@ class _AudioPlaybackWidgetState extends State<AudioPlaybackWidget> {
                           "No se pudo cargar audio",
                           style: TextStyle(color: Colors.redAccent),
                         )
-                      : SizedBox(
-                          height: 36,
-                          child: _isPrepared
-                              ? AudioFileWaveforms(
-                                  playerController: _player,
-                                  waveformType: WaveformType.fitWidth,
-                                  size: const Size(double.infinity, 36),
-                                  playerWaveStyle: PlayerWaveStyle(
-                                    fixedWaveColor: const Color(0xFF555555),
-                                    liveWaveGradient:
-                                        LinearGradient(
-                                          colors:
-                                              AppColors.primaryGradient.colors,
-                                        ).createShader(
-                                          const Rect.fromLTWH(0, 0, 200, 24),
+                      : LayoutBuilder(
+                          builder: (context, constraints) {
+                            final waveWidth = constraints.maxWidth;
+                            return GestureDetector(
+                              onTapDown: (details) {
+                                _onSeekStart(details.localPosition, waveWidth);
+                              },
+                              onTapUp: (_) {
+                                _onSeekEnd();
+                              },
+                              onHorizontalDragStart: (details) {
+                                _onSeekStart(details.localPosition, waveWidth);
+                              },
+                              onHorizontalDragUpdate: (details) {
+                                _onSeekUpdate(details.localPosition, waveWidth);
+                              },
+                              onHorizontalDragEnd: (_) {
+                                _onSeekEnd();
+                              },
+                              onHorizontalDragCancel: () {
+                                _onSeekEnd();
+                              },
+                              child: Container(
+                                color: Colors.transparent,
+                                height: 36,
+                                child: (_isPrepared && _player != null)
+                                    ? AudioFileWaveforms(
+                                        key:
+                                            _waveformKey, // Key para forzar rebuild
+                                        playerController: _player!,
+                                        waveformType: WaveformType.fitWidth,
+                                        size: Size(waveWidth, 36),
+                                        enableSeekGesture:
+                                            false, // Manejamos seek manualmente
+                                        playerWaveStyle: PlayerWaveStyle(
+                                          fixedWaveColor: const Color(
+                                            0xFF555555,
+                                          ),
+                                          liveWaveColor: const Color(
+                                            0xFFDF48A5,
+                                          ),
+                                          seekLineColor: const Color(
+                                            0xFFDF48A5,
+                                          ),
+                                          seekLineThickness: 2.0,
+                                          showSeekLine: true,
+                                          waveThickness: 1.2,
+                                          spacing: 1.8,
+                                          showBottom: true,
+                                          showTop: true,
+                                          scaleFactor: 150.0,
+                                          waveCap: StrokeCap.round,
                                         ),
-                                    waveThickness: 1.2,
-                                    spacing: 1.8,
-                                    showBottom: true,
-                                    showTop: true,
-                                    scaleFactor: 150.0,
-                                    waveCap: StrokeCap.round,
-                                  ),
-                                )
-                              : const SizedBox.shrink(),
+                                      )
+                                    : const SizedBox.shrink(),
+                              ),
+                            );
+                          },
                         ),
                 ),
                 const SizedBox(width: 12),
                 Padding(
                   padding: const EdgeInsets.only(right: 10),
                   child: Text(
-                    _isPrepared ? _formattedTime : '--:--',
+                    _isPrepared
+                        ? '$_formattedCurrentTime / $_formattedMaxTime'
+                        : '--:--',
                     style: const TextStyle(
-                      fontSize: 12,
+                      fontSize: 11,
                       color: Color(0xFFAAAAAA),
                     ),
                   ),

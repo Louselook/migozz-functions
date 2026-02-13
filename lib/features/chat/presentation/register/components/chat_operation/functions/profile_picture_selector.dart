@@ -101,7 +101,12 @@ class ProfilePictureSelector extends StatelessWidget {
       SnackBar(
         content: Text(
           // Confirmation.
-          'register.validations.picConfirmation'.tr(),
+          'register.validations.picConfirmation'.tr(
+            namedArgs: {
+              'platform':
+                  photo['label'] ?? photo['platform'] ?? 'social platform',
+            },
+          ),
         ),
         duration: const Duration(seconds: 2),
         backgroundColor: Colors.green,

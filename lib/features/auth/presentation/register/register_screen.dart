@@ -1,5 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/logo.dart';
@@ -8,6 +10,7 @@ import 'package:migozz_app/core/components/compuestos/custom_textfield.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/features/auth/data/datasources/auth_service.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/chat/presentation/register/components/chat_operation/functions/email_validation.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -60,32 +63,45 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    // Verificar si el email ya existe
+    // Verificar si el email ya existe o es pre-registro
     setState(() {
       _isLoading = true;
     });
 
     try {
-      final authService = AuthService();
-      final exists = await authService.emailExists(email);
+      final registerCubit = context.read<RegisterCubit>();
+
+      // Primero verificar si es un pre-registro
+      final isPreRegistered = await registerCubit.checkPreRegister(email);
 
       if (!mounted) return;
+
+      // Si NO es pre-registro, verificar si el email ya existe como usuario real
+      if (!isPreRegistered) {
+        final authService = AuthService();
+        final exists = await authService.emailExists(email);
+
+        if (!mounted) return;
+
+        if (exists) {
+          setState(() {
+            _isLoading = false;
+          });
+          CustomSnackbar.show(
+            context: context,
+            message: "register.validations.registerEmail".tr(),
+            type: SnackbarType.error,
+            duration: const Duration(seconds: 4),
+          );
+          return;
+        }
+      }
 
       setState(() {
         _isLoading = false;
       });
 
-      if (exists) {
-        CustomSnackbar.show(
-          context: context,
-          message: "register.validations.registerEmail".tr(),
-          type: SnackbarType.error,
-          duration: const Duration(seconds: 4),
-        );
-        return;
-      }
-
-      // Email válido y disponible, navegar al chat de registro
+      // Navegar al chat de registro (el cubit ya tiene el username si era pre-registro)
       context.pushReplacement('/ia-chat', extra: email);
     } catch (e) {
       if (mounted) {
@@ -95,7 +111,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
         CustomSnackbar.show(
           context: context,
-          message: "Error verifying email: $e",
+          message: '${"register.validations.errorVerify".tr()}$e',
           type: SnackbarType.error,
           duration: const Duration(seconds: 4),
         );
@@ -133,9 +149,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           const SizedBox(height: 20),
 
                           // Welcome text
-                          PrimaryText("register.presentation.title".tr()),
+                          PrimaryText(
+                            "register.presentation.title".tr(),
+                            fontSize: kIsWeb ? 40 : null,
+                            textAlign: TextAlign.center,
+                          ),
                           const SizedBox(height: 3),
-                          SecondaryText("register.presentation.subtitle1".tr()),
+                          SecondaryText(
+                            "register.presentation.subtitle1".tr(),
+                            fontSize: kIsWeb ? 16 : 12,
+                            textAlign: TextAlign.center,
+                          ),
 
                           const SizedBox(height: 30),
 

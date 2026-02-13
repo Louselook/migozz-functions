@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -10,7 +11,12 @@ class LoginCubit extends Cubit<LoginState> {
   LoginCubit() : super(const LoginState());
 
   /// Enviar OTP al email (solo UI/UX, no autenticación)
-  Future<void> sendOTPLoginCubit(String email, {String? forcedOTP}) async {
+  /// [language] - Language code ('en' or 'es') for email content
+  Future<void> sendOTPLoginCubit(
+    String email, {
+    String? forcedOTP,
+    String language = 'en',
+  }) async {
     if (!state.isLoading) {
       emit(
         state.copyWith(
@@ -41,7 +47,7 @@ class LoginCubit extends Cubit<LoginState> {
       }
 
       // Flujo real: llamar al servicio que envía OTP
-      final result = await sendOTP(email: email);
+      final result = await sendOTP(email: email, language: language);
 
       if (result["sent"] == true) {
         debugPrint("✅ OTP enviado a $email: ${result["myOTP"]}");
@@ -57,7 +63,7 @@ class LoginCubit extends Cubit<LoginState> {
         emit(
           state.copyWith(
             isLoading: false,
-            errorMessageLogin: "Error al enviar OTP",
+            errorMessageLogin: "login.otp.errorSend".tr(),
             currentOTP: null,
           ),
         );
@@ -102,7 +108,7 @@ class LoginCubit extends Cubit<LoginState> {
       emit(
         state.copyWith(
           isLoading: false,
-          errorMessageOTP: "OTP incorrecto ❌",
+          errorMessageOTP: "login.otp.errorInvalid".tr(),
           otpErrorCount: state.otpErrorCount + 1,
         ),
       );
@@ -120,7 +126,7 @@ class LoginCubit extends Cubit<LoginState> {
         emit(
           state.copyWith(
             isLoading: false,
-            errorMessageOTP: result.message ?? "Error al cambiar contraseña",
+            errorMessageOTP: result.message ?? "login.otp.errorPassword".tr(),
             otpErrorCount: state.otpErrorCount + 1,
           ),
         );

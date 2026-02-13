@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
@@ -16,7 +18,6 @@ class ChatNavigationHandler {
     if (action == null) return;
 
     final cubit = context.read<RegisterCubit>();
-    
 
     switch (action) {
       case 0:
@@ -31,18 +32,37 @@ class ChatNavigationHandler {
           ),
         );
 
-        // Manejar retorno de redes sociales (delegado a handler específico)
-        if (result == 'done' && context.mounted) {
-          SocialEcosystemHandler.handleReturn(
-            context: context,
-            cubit: cubit,
-            chatController: chatController,
-          );
+        // Manejar retorno de redes sociales
+        if (context.mounted) {
+          final socialEcosystem = cubit.state.socialEcosystem ?? [];
+
+          if (socialEcosystem.isNotEmpty) {
+            // Tiene redes sociales - procesar normalmente
+            SocialEcosystemHandler.handleReturn(
+              context: context,
+              cubit: cubit,
+              chatController: chatController,
+            );
+          } else if (result == 'back_no_socials') {
+            // Usuario volvió sin redes sociales - preguntar si quiere cambiar algo
+            SocialEcosystemHandler.handleBackWithoutSocials(
+              context: context,
+              cubit: cubit,
+              chatController: chatController,
+            );
+          }
         }
         break;
 
       case 1:
-        // Otro paso (CategoryStep)
+        // CategoryStep - Selección de categorías
+        // Mostrar typing indicator mientras carga
+        chatController.showTypingIndicator(name: "Migozz");
+        // Dejar el mensaje del bot visible un momento antes de navegar.
+        await Future<void>.delayed(const Duration(milliseconds: 2200));
+        if (!context.mounted) return;
+        chatController.removeTypingIndicator();
+
         await Navigator.push(
           context,
           MaterialPageRoute(
@@ -52,10 +72,26 @@ class ChatNavigationHandler {
             ),
           ),
         );
+
+        // Al volver, mostrar typing mientras procesa
+        if (context.mounted) {
+          chatController.showTypingIndicator(name: "Migozz");
+          await Future<void>.delayed(const Duration(milliseconds: 2200));
+          chatController.removeTypingIndicator();
+          chatController.setLastUserMessageForBot('category_updated');
+          chatController.showNextBotMessage();
+        }
         break;
 
       case 2:
-        // Último paso (InterestsStep)
+        // InterestsStep - Selección de intereses
+        // Mostrar typing indicator mientras carga
+        chatController.showTypingIndicator(name: "Migozz");
+        // Dejar el mensaje del bot visible un momento antes de navegar.
+        await Future<void>.delayed(const Duration(milliseconds: 2200));
+        if (!context.mounted) return;
+        chatController.removeTypingIndicator();
+
         await Navigator.push(
           context,
           MaterialPageRoute(
@@ -65,6 +101,15 @@ class ChatNavigationHandler {
             ),
           ),
         );
+
+        // Al volver, mostrar typing mientras procesa
+        if (context.mounted) {
+          chatController.showTypingIndicator(name: "Migozz");
+          await Future<void>.delayed(const Duration(milliseconds: 2200));
+          chatController.removeTypingIndicator();
+          chatController.setLastUserMessageForBot('interests_updated');
+          chatController.showNextBotMessage();
+        }
         break;
 
       default:

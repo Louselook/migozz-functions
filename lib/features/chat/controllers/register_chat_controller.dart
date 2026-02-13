@@ -11,6 +11,7 @@ import 'package:migozz_app/features/chat/presentation/register/components/chat_o
 import 'package:migozz_app/features/auth/services/media_service.dart';
 import 'package:migozz_app/features/tutorial/avatar_register_tutorial.dart';
 import 'package:migozz_app/features/tutorial/voice_register_tutorial.dart';
+import 'package:migozz_app/features/chat/services/step_input_validator.dart';
 
 /// Controlador específico para el chat de registro con IA
 /// Extiende GenericChatController y agrega funcionalidad de Gemini AI
@@ -31,6 +32,10 @@ class RegisterChatController extends GenericChatController {
       VoiceNoteTutorialService();
   final AudioChatHandler _audioHandler = AudioChatHandler();
 
+  // IA-01 & IA-02: Step input validation
+  late final StepInputValidator _stepInputValidator;
+  StepInputValidator get stepInputValidator => _stepInputValidator;
+
   // Estado específico del registro
   bool _showPhoneInput = false;
   bool get showPhoneInput => _showPhoneInput;
@@ -38,9 +43,18 @@ class RegisterChatController extends GenericChatController {
   String? _lastUserMessage;
   String? get lastUserMessage => _lastUserMessage;
 
+  /// Sets the next input that will be sent to the AI on `showNextBotMessage()`.
+  /// Useful for navigation-based steps (eg. social ecosystem) where the user
+  /// doesn't type anything in chat but we still need to advance the flow.
+  void setLastUserMessageForBot(String message) {
+    _lastUserMessage = message;
+  }
+
   List<String> get currentSuggestions => _audioHandler.currentSuggestions;
 
-  RegisterChatController({required this.registerCubit, this.firebaseUid});
+  RegisterChatController({required this.registerCubit, this.firebaseUid}) {
+    _stepInputValidator = StepInputValidator(registerCubit: registerCubit);
+  }
 
   /// Inicializar el chat de registro con IA
   void initializeChat({
@@ -89,7 +103,7 @@ class RegisterChatController extends GenericChatController {
   }
 
   /// Maneja la respuesta del usuario para el paso de ubicación
-  /// Opciones: "Sí", "No", "Ubicación incorrecta"
+  /// Opciones: "Sí", "No"
   Future<void> handleLocationResponse(String userResponse) async {
     if (!isActive) return;
 
@@ -117,39 +131,35 @@ class RegisterChatController extends GenericChatController {
       _lastUserMessage = 'location_confirmed';
       await showNextBotMessage();
     } else if (normalizedResponse == 'no') {
-      // Usuario rechaza usar ubicación
-      debugPrint('📍 [RegisterChat] Usuario rechazó ubicación');
-      registerCubit.rejectLocation();
+      // En lugar de saltar ubicación, pedir ingreso manual.
+      debugPrint('📍 [RegisterChat] Usuario indicó que no es correcta');
 
       addOtherMessage(
         text: isSpanish
-            ? "Entendido, continuaremos sin una ubicación específica."
-            : "Understood, we'll continue without a specific location.",
+            ? "De acuerdo. Escribe tu ubicación manualmente como: País, Ciudad, Estado/Departamento.\nEj: Colombia, Medellín, Antioquia"
+            : "Okay. Type your location manually as: Country, City, State/Region.\nExample: Colombia, Medellin, Antioquia",
         name: "Migozz",
       );
 
       await Future.delayed(const Duration(milliseconds: 800));
       if (!isActive) return;
-      _lastUserMessage = 'location_rejected';
+      _lastUserMessage = 'no';
       await showNextBotMessage();
     } else if (normalizedResponse.contains('incorrecta') ||
         normalizedResponse.contains('incorrect') ||
-        normalizedResponse == 'ubicación incorrecta' ||
         normalizedResponse == 'incorrect location') {
-      // Usuario dice que la ubicación es incorrecta
-      debugPrint('📍 [RegisterChat] Usuario reportó ubicación incorrecta');
-      registerCubit.requestCorrectLocation();
+      // Aunque ya no mostramos esta opción, si el usuario lo escribe, dirigir a ingreso manual.
+      debugPrint('📍 [RegisterChat] Usuario escribió ubicación incorrecta');
 
       addOtherMessage(
         text: isSpanish
-            ? "Entendido. Por favor, ingresa tu ubicación manualmente o intenta detectarla nuevamente."
-            : "Understood. Please enter your location manually or try detecting it again.",
+            ? "Entendido. Escribe tu ubicación manualmente como: País, Ciudad, Estado/Departamento.\nEj: Colombia, Medellín, Antioquia"
+            : "Got it. Type your location manually as: Country, City, State/Region.\nExample: Colombia, Medellin, Antioquia",
         name: "Migozz",
       );
 
       await Future.delayed(const Duration(milliseconds: 800));
       if (!isActive) return;
-      _lastUserMessage = 'location_incorrect';
       await showNextBotMessage();
     } else {
       // Respuesta no válida
@@ -161,11 +171,9 @@ class RegisterChatController extends GenericChatController {
         "other": true,
         "type": MessageType.text,
         "text": isSpanish
-            ? "Por favor, selecciona una opción válida: Sí, No, o Ubicación incorrecta."
-            : "Please select a valid option: Yes, No, or Incorrect location.",
-        "options": isSpanish
-            ? ["Sí", "No", "Ubicación incorrecta"]
-            : ["Yes", "No", "Incorrect location"],
+            ? "Por favor, selecciona una opción válida: Sí o No."
+            : "Please select a valid option: Yes or No.",
+        "options": isSpanish ? ["Sí", "No"] : ["Yes", "No"],
         "name": "Migozz",
         "time": getTimeNow(),
       });
@@ -177,6 +185,22 @@ class RegisterChatController extends GenericChatController {
   /// Enviar audio del usuario
   Future<void> sendUserAudio(String audioPath) async {
     if (!isActive) return;
+
+    // IA-02: Validate audio input for current step
+    final (isValid, errorMsg) = _stepInputValidator.validateAudioInput();
+    if (!isValid && errorMsg != null) {
+      debugPrint('⚠️ [RegisterChat] Audio rejected: $errorMsg');
+      addMessage({
+        "other": true,
+        "type": MessageType.text,
+        "text": errorMsg,
+        "name": "Migozz",
+        "time": getTimeNow(),
+      });
+      if (isActive) notifyListeners();
+      return;
+    }
+
     await _audioHandler.sendUserAudio(
       audioPath: audioPath,
       registerCubit: registerCubit,
@@ -196,6 +220,21 @@ class RegisterChatController extends GenericChatController {
   /// Enviar foto de avatar
   Future<void> sendAvatarPhoto(String photoPath) async {
     if (!isActive) return;
+
+    // IA-01: Validate image input for current step
+    final (isValid, errorMsg) = _stepInputValidator.validateImageInput();
+    if (!isValid && errorMsg != null) {
+      debugPrint('⚠️ [RegisterChat] Image rejected: $errorMsg');
+      addMessage({
+        "other": true,
+        "type": MessageType.text,
+        "text": errorMsg,
+        "name": "Migozz",
+        "time": getTimeNow(),
+      });
+      if (isActive) notifyListeners();
+      return;
+    }
 
     debugPrint('📸 Foto de avatar recibida: $photoPath');
 
@@ -316,6 +355,23 @@ class RegisterChatController extends GenericChatController {
 
       removeTypingIndicator(); // Usar método heredado
 
+      // Si hay un mensaje de feedback (por ejemplo, después de categorías/intereses),
+      // mostrarlo primero
+      final feedbackMessage = botResponse["feedbackMessage"]?.toString();
+      if (feedbackMessage != null && feedbackMessage.isNotEmpty) {
+        addMessage({
+          "other": true,
+          "type": MessageType.text,
+          "text": feedbackMessage,
+          "options": const [],
+          "name": "Migozz",
+          "time": getTimeNow(),
+        });
+        // Pequeña pausa para que el usuario vea el feedback
+        await Future.delayed(const Duration(milliseconds: 600));
+        if (!isActive) return;
+      }
+
       // Protege campos que podrían ser null
       final botText = (botResponse["text"]?.toString() ?? '');
       // final botOptions = botResponse["options"] ?? [];
@@ -371,7 +427,6 @@ class RegisterChatController extends GenericChatController {
       final bool isOnAvatarStep = GeminiService.instance.isOnAvatarStep;
       final bool isOnVoiceNoteStep = GeminiService.instance.isOnVoiceNoteStep;
       final localOnShowAvatarTutorial = onShowAvatarTutorial;
-      final localOnShowVoiceNoteTutorial = onShowVoiceNoteTutorial;
       final localOnBotAction = onBotAction;
       final isWeb = kIsWeb;
       final isSpanish = registerCubit.state.language == 'Español';
@@ -422,8 +477,29 @@ class RegisterChatController extends GenericChatController {
 
       if (!isActive) return;
 
+      // Repetir la pregunta si se mostró explicación (WHY explanation) o Q&A general
+      if (botResponse["repeatQuestion"] == true) {
+        debugPrint('🔄 [RegisterChat] Volviendo a preguntar el mismo campo...');
+        // Limpiar input anterior si se indica
+        if (botResponse["clearInput"] == true) {
+          _lastUserMessage = '';
+          debugPrint(
+            '🗑️ [RegisterChat] Input limpiado para evitar re-procesar',
+          );
+        }
+        await Future.delayed(const Duration(milliseconds: 700));
+        if (!isActive) return;
+        // No incrementar índice, volver a mostrar la misma pregunta
+        await showNextBotMessage();
+        return;
+      }
+
       // Auto-avanzar si el bot lo indica (explainAndRepeat)
       if (botResponse["explainAndRepeat"] == true) {
+        if (botResponse["clearInput"] == true) {
+          _lastUserMessage = '';
+          debugPrint('🗑️ [RegisterChat] Input limpiado para explainAndRepeat');
+        }
         await Future.delayed(const Duration(milliseconds: 900));
         if (!isActive) return;
         await showNextBotMessage();
@@ -563,6 +639,7 @@ class RegisterChatController extends GenericChatController {
           registerCubit,
           onResetAudioUI: onResetAudioUI,
           addMessage: addMessage,
+          removeTyping: _removeTypingMessage,
           firebaseUid: firebaseUid,
         );
 
@@ -575,6 +652,16 @@ class RegisterChatController extends GenericChatController {
         if (!isActive) return;
         await showNextBotMessage();
       } else if (audioResponse == 'record') {
+        // El usuario descartó el audio: removemos el último bubble de audio del usuario
+        // para evitar que quede un mensaje que luego no pueda cargarse.
+        for (int i = messages.length - 1; i >= 0; i--) {
+          final m = messages[i];
+          if (m["other"] == false && m["type"] == MessageType.audio) {
+            messages.removeAt(i);
+            break;
+          }
+        }
+
         final recordMessage = _audioHandler.getRecordAgainMessage(
           registerCubit,
         );
@@ -587,6 +674,16 @@ class RegisterChatController extends GenericChatController {
 
     // Mensaje normal de texto
     _lastUserMessage = text;
+
+    // Limpiar chips (options/suggestions) del último mensaje del bot
+    // para evitar que se solapen con el nuevo mensaje del usuario.
+    for (final msg in messages.reversed) {
+      if (msg["other"] == true) {
+        if (msg["options"] != null) msg["options"] = [];
+        if (msg["suggestions"] != null) msg["suggestions"] = [];
+        break;
+      }
+    }
 
     addMessage({
       "other": false,
@@ -603,12 +700,14 @@ class RegisterChatController extends GenericChatController {
   /// Manejar selección de sugerencias (chips)
   void onSuggestionSelected(String suggestion) {
     if (!isActive) return;
+    debugPrint('🎯 [RegisterChat] Sugerencia seleccionada: $suggestion');
     sendTextMessage(suggestion);
 
     // Limpiar opciones del último mensaje del bot
     for (var msg in messages.reversed) {
       if (msg["other"] == true && msg["options"] != null) {
         msg["options"] = [];
+        msg["suggestions"] = []; // Limpiar sugerencias también
         break;
       }
     }

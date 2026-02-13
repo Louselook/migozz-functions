@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/features/auth/presentation/onboarding/shared/constant.dart';
 import 'package:migozz_app/features/auth/presentation/onboarding/web/onboarding_container.dart';
 
@@ -56,7 +57,7 @@ class OnboardingPageState extends State<OnboardingPage> {
     final pages = AppConstants.onboardingPages;
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.backgroundDark,
       body: !_imagesLoaded
           ? const Center(child: CircularProgressIndicator(color: Colors.white))
           : PageView.builder(

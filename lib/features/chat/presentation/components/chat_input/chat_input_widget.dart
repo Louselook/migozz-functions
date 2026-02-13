@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:intl_phone_field/country_picker_dialog.dart';
 import 'package:migozz_app/core/color.dart';
@@ -10,6 +11,7 @@ import 'package:migozz_app/core/components/compuestos/custom_textfield.dart';
 import 'package:migozz_app/core/components/compuestos/custom_tooltip.dart';
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:migozz_app/core/utils/camera_permission_handler.dart';
+import 'package:migozz_app/features/chat/services/step_input_validator.dart';
 import 'audio_recorder_manager.dart';
 import 'recording_display.dart';
 import 'audio_player_display.dart';
@@ -22,6 +24,10 @@ class ChatInputWidget extends StatefulWidget {
   final TextInputType keyboardType;
   final bool showPhoneInput;
 
+  /// IA-01 & IA-02: Support for registration mode with step validation
+  final StepInputValidator? stepInputValidator;
+  final bool isRegistrationMode;
+
   const ChatInputWidget({
     super.key,
     this.keyboardType = TextInputType.text,
@@ -30,6 +36,8 @@ class ChatInputWidget extends StatefulWidget {
     this.onSendAudio,
     this.onSendImage,
     this.showPhoneInput = false,
+    this.stepInputValidator,
+    this.isRegistrationMode = false,
   });
 
   @override
@@ -46,13 +54,26 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
   final GlobalKey _attachButtonKey = GlobalKey();
 
   String _completePhoneNumber = '';
+  String _phoneNationalNumber = '';
   bool _isPhoneValid = false;
 
   GlobalKey get attachButtonKey => _attachButtonKey;
   GlobalKey get micButtonKey => _micButtonKey;
 
   /// Called by external UI (eg. ia_chat_screen) when a suggestion requests camera.
-  Future<void> openCameraFromSuggestions({int imageQuality = 80}) async {
+  Future<void> openCameraFromSuggestions({int imageQuality = 85}) async {
+    // IA-01: Validate input type for registration mode
+    if (widget.isRegistrationMode && widget.stepInputValidator != null) {
+      final validator = widget.stepInputValidator!;
+      final (isValid, errorMsg) = validator.validateImageInput();
+      if (!isValid && errorMsg != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMsg), backgroundColor: Colors.orange),
+        );
+        return;
+      }
+    }
+
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -78,6 +99,7 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
       }
     } catch (e, st) {
       debugPrint('openCameraFromSuggestions error: $e\n$st');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('chat.input.photoError'.tr()),
@@ -88,7 +110,19 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
   }
 
   /// Called by external UI when a suggestion requests gallery.
-  Future<void> openGalleryFromSuggestions({int imageQuality = 80}) async {
+  Future<void> openGalleryFromSuggestions({int imageQuality = 85}) async {
+    // IA-01: Validate input type for registration mode
+    if (widget.isRegistrationMode && widget.stepInputValidator != null) {
+      final validator = widget.stepInputValidator!;
+      final (isValid, errorMsg) = validator.validateImageInput();
+      if (!isValid && errorMsg != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMsg), backgroundColor: Colors.orange),
+        );
+        return;
+      }
+    }
+
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -110,6 +144,7 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
       }
     } catch (e, st) {
       debugPrint('openGalleryFromSuggestions error: $e\n$st');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('chat.input.photoError'.tr()),
@@ -121,6 +156,18 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
 
   /// Called by external UI when a suggestion requests audio recording.
   Future<void> startRecordingFromSuggestions() async {
+    // IA-02: Validate audio input for registration mode
+    if (widget.isRegistrationMode && widget.stepInputValidator != null) {
+      final validator = widget.stepInputValidator!;
+      final (isValid, errorMsg) = validator.validateAudioInput();
+      if (!isValid && errorMsg != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMsg), backgroundColor: Colors.orange),
+        );
+        return;
+      }
+    }
+
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -148,6 +195,7 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
       }
     } catch (e, st) {
       debugPrint('startRecordingFromSuggestions error: $e\n$st');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('chat.input.audioError'.tr()),
@@ -188,6 +236,7 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
     if (widget.showPhoneInput) {
       setState(() {
         _completePhoneNumber = '';
+        _phoneNationalNumber = '';
         _isPhoneValid = false;
       });
     } else {
@@ -248,8 +297,16 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
             SnackBar(
               content: Text(
                 durationInSeconds < 1.0
-                    ? "register.validations.audioMinLimit".tr()
-                    : "register.validations.audioMaxLimit".tr(),
+                    ? "register.validations.audioMinLimit".tr(
+                        namedArgs: {
+                          'duration': durationInSeconds.toStringAsFixed(1),
+                        },
+                      )
+                    : "register.validations.audioMaxLimit".tr(
+                        namedArgs: {
+                          'duration': durationInSeconds.toStringAsFixed(1),
+                        },
+                      ),
               ),
               backgroundColor: Colors.orange,
             ),
@@ -323,6 +380,18 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
   }
 
   void _startRecordingPress() async {
+    // IA-02: Validate audio input for registration mode
+    if (widget.isRegistrationMode && widget.stepInputValidator != null) {
+      final validator = widget.stepInputValidator!;
+      final (isValid, errorMsg) = validator.validateAudioInput();
+      if (!isValid && errorMsg != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMsg), backgroundColor: Colors.orange),
+        );
+        return;
+      }
+    }
+
     // En web, no permitimos grabar (mostramos mensaje)
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -334,13 +403,40 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
       return;
     }
 
-    await _audioManager.startRecording();
-    setState(() {});
+    try {
+      await _audioManager.startRecording();
+      setState(() {});
+    } catch (e) {
+      debugPrint('❌ Error iniciando grabación: $e');
+      if (!mounted) return;
+
+      final isDenied = e.toString().contains('microphone_permission_denied');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isDenied
+                ? ("chat.input.microphonePermissionDenied".tr())
+                : ("chat.input.audioError".tr()),
+          ),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
   }
 
   void _stopRecordingRelease() async {
     if (kIsWeb) return;
     await _audioManager.stopRecording();
+
+    // En modo registro: al finalizar la grabación, enviar inmediatamente.
+    // Esto evita el flujo de "previsualizar (escuchar) -> enviar/borrar".
+    if (widget.isRegistrationMode && _audioManager.audioPath != null) {
+      await Future<void>.delayed(Duration.zero);
+      if (!mounted) return;
+      _handleSendAudio();
+      return;
+    }
+
     setState(() {});
   }
 
@@ -389,7 +485,10 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
 
   Widget _buildInputArea() {
     if (_audioManager.isRecording) {
-      return RecordingDisplay(duration: _audioManager.duration);
+      return RecordingDisplay(
+        duration: _audioManager.duration,
+        amplitude: _audioManager.currentAmplitude,
+      );
     }
 
     if (_audioManager.audioPath != null) {
@@ -398,6 +497,7 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
         duration: _audioManager.duration,
         maxDuration: _audioManager.maxDuration,
         isPlaying: _audioManager.isPlaying,
+        waveformKey: _audioManager.waveformKey, // Key para forzar rebuild
         onPlayPause: () async {
           if (_audioManager.isPlaying) {
             await _audioManager.stopPlaying();
@@ -453,10 +553,25 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
               color: Colors.white,
               fontSize: 15,
             ),
+            // Solo números
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(15),
+            ],
+            keyboardType: TextInputType.number,
             onChanged: (phone) {
               setState(() {
+                _phoneNationalNumber = phone.number;
                 _completePhoneNumber = phone.completeNumber;
                 _isPhoneValid = phone.number.length >= 4;
+              });
+            },
+            onCountryChanged: (country) {
+              setState(() {
+                if (_phoneNationalNumber.isNotEmpty) {
+                  _completePhoneNumber =
+                      '+${country.dialCode}$_phoneNationalNumber';
+                }
               });
             },
             onSubmitted: (value) {
@@ -469,7 +584,6 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
             dropdownDecoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
             ),
-            keyboardType: TextInputType.phone,
             disableLengthCheck: true,
             pickerDialogStyle: PickerDialogStyle(
               width: 350,
@@ -503,38 +617,66 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
           ),
         );
       },
-      child: CustomTextField(
-        key: const ValueKey('text_input'),
-        controller: widget.controller,
-        hintText: "chat.input.typeMessage".tr(),
-        radius: 8,
-        keyboardType: widget.keyboardType,
-        textInputAction: TextInputAction.send,
-        onSubmitted: (value) {
-          // Cuando el usuario presiona Enter (o Send en el teclado), enviar si hay texto
-          if (value.trim().isNotEmpty) {
-            widget.onSend();
-            try {
-              widget.controller.clear();
-            } catch (_) {}
-          }
+      child: CallbackShortcuts(
+        bindings: {
+          const SingleActivator(LogicalKeyboardKey.enter): () {
+            if (widget.controller.text.trim().isNotEmpty) {
+              _handleMainButton();
+            }
+          },
         },
-        // Solo mostrar botón de adjuntar en móvil
-        suffixIcon: !kIsWeb
-            ? IconButton(
-                key: _attachButtonKey,
-                icon: Icon(
-                  _showAttachments ? Icons.close : Icons.attach_file,
-                  color: _showAttachments ? Colors.red : Colors.grey,
-                ),
-                onPressed: _toggleAttachments,
-              )
-            : null,
+        child: CustomTextField(
+          key: const ValueKey('text_input'),
+          controller: widget.controller,
+          hintText: "chat.input.typeMessage".tr(),
+          radius: 8,
+          keyboardType: TextInputType.multiline,
+          textInputAction: TextInputAction.send,
+          maxLines: null,
+          minLines: 1,
+          onSubmitted: (_) => _handleMainButton(),
+          // IA-08: Solo mostrar botón de adjuntar en móvil y si es válido para el step
+          suffixIcon: !kIsWeb && _shouldShowAttachButton()
+              ? IconButton(
+                  key: _attachButtonKey,
+                  icon: Icon(
+                    _showAttachments ? Icons.close : Icons.attach_file,
+                    color: _showAttachments ? Colors.red : Colors.grey,
+                  ),
+                  onPressed: _toggleAttachments,
+                )
+              : null,
+        ),
       ),
     );
   }
 
+  /// IA-08: Determinar si el botón de adjuntar debe ser visible
+  bool _shouldShowAttachButton() {
+    // Si no estamos en modo registro, mostrar siempre (comportamiento normal)
+    if (!widget.isRegistrationMode) {
+      return true;
+    }
+
+    // En modo registro, solo mostrar si el step actual es de imagen
+    if (widget.stepInputValidator != null) {
+      return widget.stepInputValidator!.shouldShowAttachButton();
+    }
+
+    // Por defecto, no mostrar en modo registro si no hay validador
+    return false;
+  }
+
   void _showTooltip(BuildContext context, String message) {
+    // IA-02: En modo registro, mostrar tooltip solo si es apropiado para el step
+    if (widget.isRegistrationMode && widget.stepInputValidator != null) {
+      // No mostrar tooltip de grabación si no estamos en step de audio
+      if (message.contains("chat.input.holdToRecord") &&
+          !widget.stepInputValidator!.isOnAudioStep()) {
+        return;
+      }
+    }
+
     if (_tooltipEntry != null) {
       _tooltipEntry!.remove();
       _tooltipEntry = null;
@@ -642,6 +784,28 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
       );
     }
 
+    // IA-02: Check if microphone should be visible in registration mode
+    if (!_shouldShowMicrophone()) {
+      return SizedBox(
+        height: 48,
+        width: 50,
+        child: Tooltip(
+          message: widget.stepInputValidator?.getStepExpectationText() ?? '',
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.grey.shade700, Colors.grey.shade600],
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Center(
+              child: Icon(Icons.mic_off, color: Colors.grey.shade500, size: 24),
+            ),
+          ),
+        ),
+      );
+    }
+
     // Default: long-press recording (mobile) or tooltip (web)
     return Listener(
       onPointerDown: (_) {
@@ -656,7 +820,12 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
         if (_isLongPressValid) {
           _stopRecordingRelease();
         } else {
-          _showTooltip(context, "chat.input.holdToRecord".tr());
+          // IA-02: Show contextual tooltip message based on step
+          final tooltipMessage =
+              widget.isRegistrationMode && widget.stepInputValidator != null
+              ? widget.stepInputValidator!.getStepExpectationText()
+              : "chat.input.holdToRecord".tr();
+          _showTooltip(context, tooltipMessage);
         }
       },
       onPointerCancel: (_) {
@@ -676,5 +845,21 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
         child: Center(child: Icon(icon, color: Colors.white, size: 24)),
       ),
     );
+  }
+
+  /// IA-02: Determinar si el micrófono debe ser visible
+  bool _shouldShowMicrophone() {
+    // Si no estamos en modo registro, mostrar siempre (comportamiento normal)
+    if (!widget.isRegistrationMode) {
+      return true;
+    }
+
+    // En modo registro, solo mostrar si el step actual es de audio
+    if (widget.stepInputValidator != null) {
+      return widget.stepInputValidator!.shouldShowMicrophone();
+    }
+
+    // Por defecto, no mostrar en modo registro si no hay validador
+    return false;
   }
 }

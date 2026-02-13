@@ -24,7 +24,7 @@ void handleInstagram(String rawData, BuildContext context) {
     final normalized = normalizeInstagram(data);
 
     final registerCubit = context.read<RegisterCubit>();
-    final current = List<Map<String, Map<String, dynamic>>>.from(
+    final current = List<Map<String, dynamic>>.from(
       registerCubit.state.socialEcosystem ?? [],
     );
 

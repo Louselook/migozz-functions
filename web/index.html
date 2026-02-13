@@ -5,16 +5,13 @@
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="A new Flutter project.">
 
-  <meta
-    name="google-signin-client_id"
-    content="895592952324-4iu9ob4bo0ppn2hta6oi4qvfat3892p5.apps.googleusercontent.com"
-  />
+  <meta name="google-signin-client_id" content="895592952324-4iu9ob4bo0ppn2hta6oi4qvfat3892p5.apps.googleusercontent.com">
 
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="migozz_app">
+  <meta name="apple-mobile-web-app-title" content="Migozz">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
@@ -22,6 +19,17 @@
 
   <title>Migozz</title>
   <link rel="manifest" href="manifest.json">
+  
+  <!-- Google Identity Services SDK (required for google_sign_in v7.0.0 on web) -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  
+
+
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+  
+  
+  
+  
   <style id="splash-screen-style">
     html {
       height: 100%
@@ -41,6 +49,24 @@
       left: 50%;
       -ms-transform: translate(-50%, -50%);
       transform: translate(-50%, -50%);
+      max-width: 180px;
+      max-height: 180px;
+    }
+
+    /* Pantallas móviles pequeñas */
+    @media (max-width: 480px) {
+      .center {
+        max-width: 200px;
+        max-height: 200px;
+      }
+    }
+
+    /* Pantallas móviles altas (como S25 Ultra) */
+    @media (max-width: 500px) and (min-height: 700px) {
+      .center {
+        max-width: 200px;
+        max-height: 200px;
+      }
     }
 
     .contain {
@@ -87,12 +113,15 @@
       document.body.style.background = "transparent";
     }
   </script>
-  
-
-
-  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
 </head>
 <body>
+  <picture id="splash">
+      <source srcset="splash/img/light-1x.png 1x, splash/img/light-2x.png 2x, splash/img/light-3x.png 3x, splash/img/light-4x.png 4x" media="(prefers-color-scheme: light)">
+      <source srcset="splash/img/dark-1x.png 1x, splash/img/dark-2x.png 2x, splash/img/dark-3x.png 3x, splash/img/dark-4x.png 4x" media="(prefers-color-scheme: dark)">
+      <img class="center" aria-hidden="true" src="splash/img/light-1x.png" alt="">
+  </picture>
+  
+  
   <script src="flutter_bootstrap.js" async=""></script>
 
 

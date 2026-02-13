@@ -27,6 +27,14 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<String> createAuthUserOnly({
+    required String email,
+    required String password,
+  }) {
+    return authService.createAuthUserOnly(email: email, password: password);
+  }
+
+  @override
   Future<AuthResult> loginWithGoogle() {
     return authService.loginWithGoogle();
   }

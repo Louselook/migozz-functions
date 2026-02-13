@@ -65,19 +65,40 @@ class _IaChatScreenState extends State<IaChatScreen> {
     }
 
     _chatController.onRegistrationComplete = () async {
-      if (_isCompletingRegistration) return;
+      debugPrint('🎯 [IaChatScreen] onRegistrationComplete TRIGGERED');
+
+      if (_isCompletingRegistration) {
+        debugPrint(
+          '⚠️ [IaChatScreen] Already completing registration, skipping',
+        );
+        return;
+      }
       _isCompletingRegistration = true;
 
       final registerCubit = context.read<RegisterCubit>();
       final authCubit = context.read<AuthCubit>();
-      final isGoogleUser =
+      // Check if user is authenticated with a social provider (Google or Apple)
+      final isSocialAuthUser =
           authCubit.state.isAuthenticated &&
           authCubit.state.firebaseUser != null;
 
+      debugPrint('🎯 [IaChatScreen] email: ${registerCubit.state.email}');
+      debugPrint('🎯 [IaChatScreen] OTP: ${registerCubit.state.currentOTP}');
+      debugPrint(
+        '🎯 [IaChatScreen] isPreRegistered: ${registerCubit.state.isPreRegistered}',
+      );
+      debugPrint(
+        '🎯 [IaChatScreen] preOrderId: ${registerCubit.state.preOrderId}',
+      );
+
       try {
         await registerCubit.checkCompletion(
-          forGoogle: isGoogleUser,
-          uid: isGoogleUser ? authCubit.state.firebaseUser!.uid : null,
+          forGoogle: isSocialAuthUser,
+          uid: isSocialAuthUser ? authCubit.state.firebaseUser!.uid : null,
+        );
+
+        debugPrint(
+          '🎯 [IaChatScreen] isComplete after check: ${registerCubit.state.isComplete}',
         );
 
         if (!registerCubit.state.isComplete) {
@@ -94,8 +115,8 @@ class _IaChatScreenState extends State<IaChatScreen> {
           return;
         }
 
-        // ✅ NUEVA VALIDACIÓN: Solo validar email/OTP para usuarios NO autenticados
-        if (!isGoogleUser) {
+        // ✅ Solo validar email/OTP para usuarios NO autenticados con social provider
+        if (!isSocialAuthUser) {
           final email = registerCubit.state.email;
           final otp = registerCubit.state.currentOTP;
           if (email == null ||
@@ -118,10 +139,6 @@ class _IaChatScreenState extends State<IaChatScreen> {
 
         if (!mounted) return;
 
-        try {
-          LoadingOverlay.show(context);
-        } catch (_) {}
-
         await RegistrationHandler.completeRegistration(
           context: context,
           registerCubit: registerCubit,
@@ -129,10 +146,6 @@ class _IaChatScreenState extends State<IaChatScreen> {
         );
 
         if (!mounted) return;
-
-        try {
-          LoadingOverlay.hide(context);
-        } catch (_) {}
 
         if (!mounted) return;
         context.go('/profile');
@@ -178,6 +191,30 @@ class _IaChatScreenState extends State<IaChatScreen> {
   }
 
   void _handleNavigation(Map<String, dynamic> botResponse) {
+    final action = botResponse['action'];
+
+    // ✅ Allow bot-driven media actions (eg. user typed: "quiero tomar una foto")
+    // without requiring suggestion chip taps.
+    if (!kIsWeb && action is String) {
+      switch (action) {
+        case 'open_camera':
+          chatInputKey.currentState?.openCameraFromSuggestions();
+          return;
+        case 'open_gallery':
+          chatInputKey.currentState?.openGalleryFromSuggestions();
+          return;
+        case 'open_recorder':
+          chatInputKey.currentState?.startRecordingFromSuggestions();
+          return;
+        case 'use_profile_picture':
+          final imageUrl = botResponse['imageUrl']?.toString() ?? '';
+          if (imageUrl.isNotEmpty) {
+            _chatController.sendAvatarPhoto(imageUrl);
+          }
+          return;
+      }
+    }
+
     ChatNavigationHandler.handleBotAction(
       context: context,
       botResponse: botResponse,
@@ -231,7 +268,7 @@ class _IaChatScreenState extends State<IaChatScreen> {
   }
 
   void onSuggestionTap(dynamic option) async {
-    final result = handleSuggestion(option);
+    final result = AssistantFunctions.handleSuggestion(option);
     // Usa la instancia _chatController que ya creaste en initState
     switch (result.action) {
       case AssistantAction.openCamera:
@@ -277,7 +314,10 @@ class _IaChatScreenState extends State<IaChatScreen> {
       customAppBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: PrimaryText("chat.assistant.title".tr()),
+        title: PrimaryText(
+          "chat.assistant.title".tr(),
+          fontSize: kIsWeb ? 55 : null,
+        ),
         centerTitle: true,
       ),
       customInput: ListenableBuilder(
@@ -287,6 +327,9 @@ class _IaChatScreenState extends State<IaChatScreen> {
             key: chatInputKey,
             controller: _controller,
             showPhoneInput: _chatController.showPhoneInput,
+            // IA-01 & IA-02: Enable step validation in registration mode
+            isRegistrationMode: true,
+            stepInputValidator: _chatController.stepInputValidator,
             onSend: () {
               sendChat(
                 other: false,
@@ -374,9 +417,10 @@ class _IaChatScreenState extends State<IaChatScreen> {
                   try {
                     matched = rawOptions.firstWhere((o) {
                       if (o is String) return o == selectedLabel;
-                      if (o is Map)
+                      if (o is Map) {
                         return ((o['label'] ?? o['text'])?.toString() ?? '') ==
                             selectedLabel;
+                      }
                       return o.toString() == selectedLabel;
                     });
                   } catch (e) {

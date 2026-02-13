@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/profile/data/datasources/user_service.dart';
 part 'edit_cubit_state.dart';
@@ -80,8 +81,51 @@ class EditCubit extends Cubit<EditCubitState> {
 
       final Map<String, dynamic> updates = {};
 
+      Set<String> extractPlatforms(List<Map<String, dynamic>> socials) {
+        final out = <String>{};
+        for (final entry in socials) {
+          // Formato A: { platform: 'instagram', username: 'x', ... }
+          final p = entry['platform'];
+          if (p is String && p.trim().isNotEmpty) {
+            out.add(p.trim().toLowerCase());
+            continue;
+          }
+
+          // Formato B: { instagram: { ... } }
+          for (final k in entry.keys) {
+            if (k.trim().isNotEmpty) out.add(k.trim().toLowerCase());
+          }
+        }
+        return out;
+      }
+
       if (state.socialEcosystem != null) {
         updates['socialEcosystem'] = state.socialEcosystem;
+
+        // Mantener fechas de agregado por plataforma (para job por-red)
+        final currentProfile = _authCubit.state.userProfile;
+        final existingAdded =
+            currentProfile?.socialEcosystemAddedDates ?? <String, DateTime>{};
+
+        final oldPlatforms = currentProfile?.socialEcosystem != null
+            ? extractPlatforms(currentProfile!.socialEcosystem!)
+            : <String>{};
+        final newPlatforms = extractPlatforms(state.socialEcosystem!);
+
+        final Map<String, dynamic> nextAddedDates = {
+          for (final e in existingAdded.entries) e.key.toLowerCase(): e.value,
+        };
+
+        for (final platform in newPlatforms) {
+          if (nextAddedDates.containsKey(platform)) continue;
+          // Plataforma nueva -> timestamp server para que el backend compute días correctamente
+          nextAddedDates[platform] = FieldValue.serverTimestamp();
+        }
+
+        // Solo escribir si hubo cambios reales (nuevo agregado)
+        if (newPlatforms.difference(oldPlatforms).isNotEmpty) {
+          updates['socialEcosystemAddedDates'] = nextAddedDates;
+        }
       }
       if (state.category != null && state.category!.isNotEmpty) {
         updates['category'] = state.category;

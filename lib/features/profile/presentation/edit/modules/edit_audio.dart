@@ -234,7 +234,7 @@ class _EditRecordScreenState extends State<EditRecordScreen>
   }
 
   Future<void> _save() async {
-    if (_audioPath == null || _seconds < 5) {
+    if (_audioPath == null || _seconds < 1) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('edit.editAudio.minDuration'.tr()),

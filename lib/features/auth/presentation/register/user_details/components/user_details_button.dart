@@ -56,8 +56,7 @@ Widget userDetailsButton({
               return;
             }
 
-            // Hay redes sociales: limpiar y cerrar
-            cubit?.setSocialEcosystemEmty();
+            // Hay redes sociales: cerrar y conservar el estado
             context.pop('done');
           } else {
             // Modo edición: solo navegar a la página anterior

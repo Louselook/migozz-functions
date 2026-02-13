@@ -16,7 +16,7 @@ class _PublicationsContentState extends State<PublicationsContent> {
     'assets/images/ImageUno.webp',
     'assets/images/ImageTwo.webp',
     'assets/images/ImageThree.webp',
-    'assets/images/ImgPefil.webp',
+    'assets/images/avatar.webp',
     'assets/images/onboarding_1.webp',
     'assets/images/onboarding_2.webp',
     'assets/images/onboarding_3.webp',

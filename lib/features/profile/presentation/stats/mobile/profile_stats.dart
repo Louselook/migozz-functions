@@ -5,14 +5,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:migozz_app/core/assets_constants.dart';
+
+import 'package:migozz_app/core/components/atomics/network_list.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/social_ecosystem_step_v3.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
-// import 'package:migozz_app/features/profile/components/bottom_nav.dart';
 import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
+import 'package:migozz_app/features/profile/presentation/bloc/follower_cubit/follower_cubit.dart';
+import 'package:migozz_app/features/profile/presentation/followers/followers_list_screen.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 
 class ProfileStatsScreen extends StatefulWidget {
@@ -23,11 +25,11 @@ class ProfileStatsScreen extends StatefulWidget {
 }
 
 class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
-  DateTimeRange? selectedRange;
   bool _loading = true;
   // int _tab = 1;
 
   List<SocialStats> _socials = [];
+  String _overviewSelection = 'community';
   Map<String, int> _totalsGlobal = {};
 
   // Stream subscription para escuchar cambios en tiempo real
@@ -95,8 +97,40 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
       socials.add(SocialStats.fromMap(e.key, e.value));
     }
 
+    // Calculate global social totals (still useful for overview etc if needed, but top icons use profile stats)
     final globalTotals = _calculateTotals(socials);
     _calculateNetworkTotals(socials);
+
+    // Extract profile specific stats for top icons
+    // Defaults to 0 if not present
+    final int profileLikes = (data['likes'] ?? data['profileLikes'] ?? 0) is int
+        ? (data['likes'] ?? data['profileLikes'] ?? 0)
+        : int.tryParse(
+                (data['likes'] ?? data['profileLikes'] ?? 0).toString(),
+              ) ??
+              0;
+
+    final int unreadMessages =
+        (data['unreadMessages'] ?? data['unreadMessageCount'] ?? 0) is int
+        ? (data['unreadMessages'] ?? data['unreadMessageCount'] ?? 0)
+        : int.tryParse(
+                (data['unreadMessages'] ?? data['unreadMessageCount'] ?? 0)
+                    .toString(),
+              ) ??
+              0;
+
+    final int profileShares =
+        (data['shares'] ?? data['profileShares'] ?? 0) is int
+        ? (data['shares'] ?? data['profileShares'] ?? 0)
+        : int.tryParse(
+                (data['shares'] ?? data['profileShares'] ?? 0).toString(),
+              ) ??
+              0;
+
+    // Merge profile stats into totals map or use specific keys
+    globalTotals['profile_likes'] = profileLikes;
+    globalTotals['unread_messages'] = unreadMessages;
+    globalTotals['profile_shares'] = profileShares;
 
     setState(() {
       _socials = socials;
@@ -129,7 +163,8 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
 
       for (final entry in stats.entries) {
         final normalizedKey = normalizeStatKey(entry.key);
-        totals[normalizedKey] = (totals[normalizedKey] ?? 0) + entry.value;
+        totals[normalizedKey] =
+            (totals[normalizedKey] ?? 0) + (entry.value ?? 0);
       }
     }
 
@@ -156,34 +191,13 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
       final normalized = <String, int>{};
       for (final entry in stats.entries) {
         final key = normalizeStatKey(entry.key);
-        normalized[key] = (normalized[key] ?? 0) + entry.value;
+        normalized[key] = (normalized[key] ?? 0) + (entry.value ?? 0);
       }
 
       totalsByNetwork[s.name] = normalized;
     }
 
     return totalsByNetwork;
-  }
-
-  Future<void> _pickDateRange() async {
-    final now = DateTime.now();
-    final picked = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(1990),
-      lastDate: now,
-      initialDateRange:
-          selectedRange ??
-          DateTimeRange(start: now.subtract(const Duration(days: 7)), end: now),
-    );
-    if (picked != null) setState(() => selectedRange = picked);
-  }
-
-  String get rangeText {
-    if (selectedRange == null) {
-      return "stats.rangeText".tr();
-    }
-    final s = selectedRange!;
-    return "${s.start.day}/${s.start.month}/${s.start.year} → ${s.end.day}/${s.end.month}/${s.end.year}";
   }
 
   /// Navegar a edición de redes sociales
@@ -238,179 +252,707 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
       body: Stack(
         children: [
           TintesGradients(
-            child: Container(height: MediaQuery.of(context).size.height * 0.15),
+            child: Container(height: MediaQuery.of(context).size.height * 0.35),
           ),
           SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Center(
-                child: Column(
-                  children: [
-                    Text(
-                      "stats.title".tr(),
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Expanded(
-                      child: _loading
-                          ? const Center(
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                              ),
-                            )
-                          : _socials.isEmpty
-                          ? Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  "stats.noStats.notSocials".tr(),
-                                  style: const TextStyle(color: Colors.grey),
-                                  textAlign: TextAlign.center,
+            child: Column(
+              children: [
+                const SizedBox(height: 10),
+                Text(
+                  "stats.title".tr(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                Expanded(
+                  child: _loading
+                      ? const Center(
+                          child: CircularProgressIndicator(color: Colors.white),
+                        )
+                      : SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              // 1. Top Three Metrics
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20.0,
                                 ),
-                                const SizedBox(height: 12),
-                                ElevatedButton(
-                                  onPressed: _navigateToEditSocials,
-                                  child: Text("stats.noStats.addButton".tr()),
-                                ),
-                              ],
-                            )
-                          : Column(
-                              children: [
-                                Row(
+                                child: Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceAround,
                                   children: [
-                                    _Metric(
-                                      icon: Icons.favorite,
-                                      label:
-                                          '${_formatNum(_totalsGlobal['likes'] ?? 0)} ${'stats.metrics.likes'.tr()}',
+                                    BlocBuilder<FollowerCubit, FollowerState>(
+                                      builder: (context, followerState) {
+                                        final int migozzFollowers =
+                                            followerState.followersCount;
+                                        return _TopMetricItem(
+                                          iconWidget: Image.asset(
+                                            'assets/icons/Migozz_Icon.png',
+                                            width: 32,
+                                            height: 32,
+                                          ),
+                                          value: _formatNum(migozzFollowers),
+                                          // label: "stats.fieldLabels.followers"
+                                          //     .tr(),
+                                          onTap: () {
+                                            final authState = context
+                                                .read<AuthCubit>()
+                                                .state;
+                                            final user = authState.userProfile;
+                                            final userId =
+                                                authState.firebaseUser?.uid;
+                                            if (user != null &&
+                                                userId != null) {
+                                              Navigator.of(context).push(
+                                                MaterialPageRoute(
+                                                  builder: (_) =>
+                                                      FollowersListScreen(
+                                                        userId: userId,
+                                                        username: user.username,
+                                                        initialTab: 0,
+                                                      ),
+                                                ),
+                                              );
+                                            }
+                                          },
+                                        );
+                                      },
                                     ),
-                                    _Metric(
-                                      icon: Icons.reply,
-                                      label:
-                                          '${_formatNum(_totalsGlobal['shares'] ?? 0)} ${'stats.metrics.shares'.tr()}',
-                                    ),
-                                    _Metric(
-                                      icon: Icons.people,
-                                      label:
-                                          '${_formatNum(_totalsGlobal['followers'] ?? 0)} ${'stats.metrics.followers'.tr()}',
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 20),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.grey[800],
-                                        foregroundColor: Colors.white,
-                                      ),
-                                      onPressed: _pickDateRange,
-                                      child: Text("stats.date".tr()),
-                                    ),
-                                    Text(
-                                      rangeText,
-                                      style: const TextStyle(
-                                        color: Colors.grey,
-                                        fontSize: 15,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 20),
-                                _DataCard(
-                                  iconKey: 'global',
-                                  title: "stats.dataCardLabel.title".tr(),
-                                  rows: [
-                                    _RowData(
-                                      label: "stats.dataCardLabel.likes".tr(),
-                                      value: _formatNum(
-                                        _totalsGlobal['likes'] ?? 0,
-                                      ),
-                                    ),
-                                    _RowData(
-                                      label: "stats.dataCardLabel.shares".tr(),
-                                      value: _formatNum(
-                                        _totalsGlobal['shares'] ?? 0,
-                                      ),
-                                    ),
-                                    _RowData(
-                                      label: "stats.dataCardLabel.followers"
-                                          .tr(),
+                                    _TopMetricItem(
+                                      icon: Icons.public,
                                       value: _formatNum(
                                         _totalsGlobal['followers'] ?? 0,
                                       ),
                                     ),
+                                    BlocBuilder<FollowerCubit, FollowerState>(
+                                      builder: (context, followerState) {
+                                        return _TopMetricItem(
+                                          icon: Icons.person_add,
+                                          value: _formatNum(
+                                            followerState.followersCount +
+                                                (_totalsGlobal['followers'] ??
+                                                    0),
+                                          ),
+                                        );
+                                      },
+                                    ),
                                   ],
                                 ),
-                                const SizedBox(height: 16),
-                                Expanded(
-                                  child: ListView.builder(
-                                    physics: const BouncingScrollPhysics(),
-                                    itemCount: _socials.length,
-                                    itemBuilder: (context, i) {
-                                      final s = _socials[i];
-                                      final data = s.toJson();
-                                      final name = s.name;
+                              ),
 
-                                      final filteredEntries = data.entries
-                                          .where((e) {
-                                            final key = e.key.toLowerCase();
-                                            final value = e.value;
-                                            return value != null &&
-                                                value
-                                                    .toString()
-                                                    .trim()
-                                                    .isNotEmpty &&
-                                                value != 0 &&
-                                                key != "id" &&
-                                                key != "name" &&
-                                                key != "iconpath" &&
-                                                key != "label";
-                                          })
-                                          .toList();
+                              const SizedBox(height: 32),
 
-                                      return Padding(
-                                        padding: const EdgeInsets.only(
-                                          bottom: 12,
+                              // 2. Overview Card
+                              _OverviewCard(
+                                socials: _socials,
+                                selectedMode: _overviewSelection,
+                                onModeChanged: (val) {
+                                  if (val != null) {
+                                    debugPrint('🔄 Dropdown changed from $_overviewSelection to $val');
+                                    setState(() => _overviewSelection = val);
+                                  }
+                                },
+                              ),
+
+                              const SizedBox(height: 20),
+
+                              // 3. Individual Networks Logic
+                              if (_socials.isEmpty)
+                                Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const SizedBox(height: 40),
+                                      Icon(
+                                        Icons.analytics_outlined,
+                                        size: 60,
+                                        color: Colors.white.withValues(
+                                          alpha: 0.3,
                                         ),
-                                        child: _DataCard(
-                                          iconKey: name,
-                                          title: name,
-                                          rows: filteredEntries.map((e) {
-                                            final displayKey = _applyFieldRules(
-                                              e.key,
-                                            );
-                                            final formatted = _formatKey(
-                                              displayKey,
-                                            );
-                                            return _RowData(
-                                              label: "$formatted:",
-                                              value: e.value.toString(),
-                                            );
-                                          }).toList(),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        "stats.noStats.notSocials".tr(),
+                                        style: TextStyle(
+                                          color: Colors.white.withValues(
+                                            alpha: 0.7,
+                                          ),
+                                          fontSize: 16,
                                         ),
-                                      );
-                                    },
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      const SizedBox(height: 24),
+                                      _EditButton(
+                                        onTap: _navigateToEditSocials,
+                                        label: "stats.noStats.addButton".tr(),
+                                      ),
+                                    ],
                                   ),
+                                )
+                              else
+                                ..._socials.map(
+                                  (s) => _NetworkStatsCard(social: s),
                                 ),
-                              ],
-                            ),
-                    ),
-                  ],
+
+                              const SizedBox(height: 100),
+                            ],
+                          ),
+                        ),
                 ),
-              ),
+              ],
             ),
           ),
         ],
       ),
     );
+  }
+}
+
+// --- Helper Widgets ---
+
+class _TopMetricItem extends StatelessWidget {
+  final IconData? icon;
+  final Widget? iconWidget;
+  final String value;
+  // final String? label;
+  final VoidCallback? onTap;
+
+  const _TopMetricItem({
+    this.icon,
+    this.iconWidget,
+    required this.value,
+    // this.label,
+    this.onTap,
+  }) : assert(icon != null || iconWidget != null);
+
+  @override
+  Widget build(BuildContext context) {
+    final Widget resolvedIcon =
+        iconWidget ?? Icon(icon!, color: Colors.white, size: 32);
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          resolvedIcon,
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
+            ),
+          ),
+          // if (label != null) ...[
+          //   const SizedBox(height: 2),
+          //   Text(
+          //     label!,
+          //     style: TextStyle(
+          //       color: Colors.white.withValues(alpha: 0.7),
+          //       fontSize: 11,
+          //       fontWeight: FontWeight.w400,
+          //     ),
+          //   ),
+          // ],
+        ],
+      ),
+    );
+  }
+}
+
+class _OverviewCard extends StatelessWidget {
+  final List<SocialStats> socials;
+  final String selectedMode;
+  final ValueChanged<String?> onModeChanged;
+
+  const _OverviewCard({
+    required this.socials,
+    required this.selectedMode,
+    required this.onModeChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    SocialStats? findSocial(String name) {
+      try {
+        return socials.firstWhere(
+          (s) => s.name.toLowerCase().contains(name.toLowerCase()),
+        );
+      } catch (_) {
+        return null;
+      }
+    }
+
+    final instagram = findSocial('instagram');
+    final youtube = findSocial('youtube');
+    final tiktok = findSocial('tiktok');
+    final facebook = findSocial('facebook');
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.featured_play_list_outlined,
+                color: Colors.white70,
+                size: 26,
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                "Overview",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w400,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.04),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Community Dropdown
+                Container(
+                  height: 32,
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.1),
+                    ),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: selectedMode,
+                      onChanged: onModeChanged,
+                      isDense: true,
+                      icon: const Icon(
+                        Icons.keyboard_arrow_down,
+                        size: 16,
+                        color: Colors.white70,
+                      ),
+                      dropdownColor: const Color(0xFF2C2C2C),
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.9),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      items: [
+                        DropdownMenuItem(
+                          value: 'community',
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.public,
+                                size: 14,
+                                color: Colors.white70,
+                              ),
+                              const SizedBox(width: 6),
+                              Text("stats.overview.community".tr()),
+                            ],
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: 'migozz',
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Image.asset(
+                                'assets/icons/Migozz_Icon.png',
+                                width: 14,
+                                height: 14,
+                              ),
+                              const SizedBox(width: 6),
+                              Text("stats.overview.migozz".tr()),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                // Stats Grid
+                if (selectedMode == 'community')
+                  Builder(
+                    builder: (context) {
+                      final rows = <Widget>[];
+
+                      if (instagram != null) {
+                        rows.add(
+                          _SmallSocialRow(
+                            name: 'Instagram',
+                            count: instagram.followers ?? 0,
+                            iconPath:
+                                'assets/icons/social_networks/Instagram.svg',
+                          ),
+                        );
+                      }
+                      if (tiktok != null) {
+                        rows.add(
+                          _SmallSocialRow(
+                            name: 'Tiktok',
+                            count: tiktok.followers ?? 0,
+                            iconPath: 'assets/icons/social_networks/Tiktok.svg',
+                          ),
+                        );
+                      }
+                      if (youtube != null) {
+                        rows.add(
+                          _SmallSocialRow(
+                            name: 'Youtube',
+                            count:
+                                (youtube.followers ?? youtube.subscribers) ?? 0,
+                            iconPath:
+                                'assets/icons/social_networks/Youtube.svg',
+                          ),
+                        );
+                      }
+                      if (facebook != null) {
+                        rows.add(
+                          _SmallSocialRow(
+                            name: 'Facebook',
+                            count: facebook.followers ?? 0,
+                            iconPath:
+                                'assets/icons/social_networks/Facebook.svg',
+                          ),
+                        );
+                      }
+
+                      if (rows.isEmpty) {
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 20),
+                            child: Text(
+                              'stats.noData'.tr(),
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.5),
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+
+                      List<Widget> withSpacing(List<Widget> items) {
+                        return [
+                          for (int i = 0; i < items.length; i++) ...[
+                            items[i],
+                            if (i != items.length - 1)
+                              const SizedBox(height: 18),
+                          ],
+                        ];
+                      }
+
+                      final left = <Widget>[];
+                      final right = <Widget>[];
+                      for (int i = 0; i < rows.length; i++) {
+                        if (i.isEven) {
+                          left.add(rows[i]);
+                        } else {
+                          right.add(rows[i]);
+                        }
+                      }
+
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(child: Column(children: withSpacing(left))),
+                          const SizedBox(width: 24),
+                          Expanded(child: Column(children: withSpacing(right))),
+                        ],
+                      );
+                    },
+                  )
+                else
+                  // Migozz followers stats
+                  BlocBuilder<FollowerCubit, FollowerState>(
+                    builder: (context, followerState) {
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: _SmallSocialRow(
+                              name: 'stats.fieldLabels.followers'.tr(),
+                              count: followerState.followersCount,
+                              iconPath: 'assets/icons/Migozz_Icon.svg',
+                            ),
+                          ),
+                          const SizedBox(width: 24),
+                          Expanded(
+                            child: _SmallSocialRow(
+                              name: 'stats.fieldLabels.following'.tr(),
+                              count: followerState.followingCount,
+                              iconPath: 'assets/icons/Migozz_Icon.svg',
+                              isFollowing: true,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SmallSocialRow extends StatelessWidget {
+  final String name;
+  final int count;
+  final String iconPath;
+  final bool isFollowing;
+
+  const _SmallSocialRow({
+    required this.name,
+    required this.count,
+    required this.iconPath,
+    this.isFollowing = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        // Columna 1: Ícono de la red social (ancho fijo)
+        SizedBox(
+          width: 24,
+          child: SvgPicture.asset(
+            iconPath,
+            width: 20,
+            height: 20,
+            placeholderBuilder: (_) =>
+                const Icon(Icons.public, size: 20, color: Colors.white),
+          ),
+        ),
+        // Columna 2: Ícono de seguidores/siguiendo (ancho fijo)
+        SizedBox(
+          width: 24,
+          child: Icon(
+            isFollowing ? Icons.person_add_alt_1 : Icons.people_alt_outlined,
+            size: 18,
+            color: Colors.white.withValues(alpha: 0.7),
+          ),
+        ),
+        // Columna 3: Valor numérico
+        Expanded(
+          child: Text(
+            _formatNum(count),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _NetworkStatsCard extends StatelessWidget {
+  final SocialStats social;
+
+  const _NetworkStatsCard({required this.social});
+
+  @override
+  Widget build(BuildContext context) {
+    // Filter relevant stats (allow 0, filter nulls)
+    final data = social.toJson();
+    final filteredEntries = data.entries.where((e) {
+      final key = e.key.toLowerCase();
+      final value = e.value;
+      return value != null &&
+          value.toString().trim().isNotEmpty &&
+          !['id', 'name', 'iconpath', 'label'].contains(key);
+    }).toList();
+
+    if (filteredEntries.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                _buildColorfulIcon(social.name),
+                const SizedBox(width: 14),
+                // Capitalize and show network name
+                Text(
+                  social.name.capitalize(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: filteredEntries.length,
+              separatorBuilder: (ctx, i) => const SizedBox(height: 16),
+              itemBuilder: (ctx, i) {
+                final e = filteredEntries[i];
+                final displayKey = _applyFieldRules(e.key);
+                final formatted = _formatKey(displayKey);
+                final numValue = int.tryParse(e.value.toString()) ?? 0;
+
+                return Row(
+                  children: [
+                    _getStatIcon(displayKey),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        formatted,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      _formatNum(numValue),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildColorfulIcon(String name) {
+    String cleanName = name.capitalize();
+    if (name.toLowerCase() == 'tiktok') cleanName = 'Tiktok';
+    if (name.toLowerCase() == 'youtube') cleanName = 'Youtube';
+    if (name.toLowerCase() == 'facebook') cleanName = 'Facebook';
+    if (name.toLowerCase() == 'instagram') cleanName = 'Instagram';
+    if (name.toLowerCase() == 'twitter') cleanName = 'Twitter';
+
+    // Usar iconByLabel para obtener la ruta correcta, con fallback
+    final path =
+        iconByLabel[cleanName] ?? 'assets/icons/social_networks/Other.svg';
+
+    return SvgPicture.asset(
+      path,
+      width: 16,
+      height: 16,
+      placeholderBuilder: (_) =>
+          const Icon(Icons.public, color: Colors.white, size: 16),
+    );
+  }
+
+  Widget _getStatIcon(String key) {
+    IconData icon;
+    switch (key.toLowerCase()) {
+      case 'followers':
+        icon = Icons.person_add_outlined;
+        break;
+      case 'following':
+        icon = Icons.person_add_outlined;
+        break;
+      case 'likes':
+      case 'media':
+        // Map both Likes and Media to a Heart icon if that's what the design implies for engagement
+        icon = Icons.favorite;
+        break;
+      case 'shares':
+        icon = Icons.reply;
+        break;
+      case 'subscribers':
+        icon = Icons.subscriptions_outlined;
+        break;
+      default:
+        icon = Icons.analytics_outlined;
+    }
+    return Icon(icon, color: Colors.white70, size: 20);
+  }
+}
+
+class _EditButton extends StatelessWidget {
+  final VoidCallback onTap;
+  final String label;
+  const _EditButton({required this.onTap, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(30),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFB86BFF), Color(0xFFFF5F9A)],
+          ),
+          borderRadius: BorderRadius.circular(30),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+extension StringExtension on String {
+  String capitalize() {
+    if (isEmpty) return "";
+    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }
 
@@ -426,11 +968,21 @@ final Map<String, String> _fieldRules = {
   "likes_count": "likes",
   "favorites": "likes",
   "videos": "media",
+  "media_count": "media",
+  "mediacount": "media",
   "videoCount": "media",
 };
 
 // Formateadores
 String _formatKey(String key) {
+  final translationKey = 'stats.fieldLabels.$key';
+  final translated = translationKey.tr();
+
+  // Si existe traducción, usarla; si no, formatear el texto original
+  if (translated != translationKey) {
+    return translated;
+  }
+
   final formatted = key
       .replaceAll('_', ' ')
       .replaceAllMapped(RegExp(r'([a-z])([A-Z])'), (m) => '${m[1]} ${m[2]}')
@@ -454,12 +1006,10 @@ List<MapEntry<String, Map<String, dynamic>>> _parseEcosystem(
   if (ecosystem is List) {
     for (final item in ecosystem) {
       if (item is Map<String, dynamic>) {
-        // Nueva estructura: objeto directo con campo 'domain'
         if (item.containsKey('domain')) {
           final domain = item['domain'] as String;
           out.add(MapEntry(domain, item));
         } else {
-          // Estructura antigua: objeto anidado {domain: {data}}
           item.forEach((k, v) {
             if (v is Map<String, dynamic>) out.add(MapEntry(k, v));
           });
@@ -491,165 +1041,95 @@ List<MapEntry<String, Map<String, dynamic>>> _parseEcosystem(
 
 String _formatNum(int n) {
   if (n >= 1000000) {
-    return '${(n / 1000000).toStringAsFixed(2).replaceAll(RegExp(r'\.?0+$'), '')}M';
+    return '${(n / 1000000).toStringAsFixed(1).replaceAll(RegExp(r'\.?0+$'), '')} mill.';
   }
   if (n >= 1000) {
-    return '${(n / 1000).toStringAsFixed(1).replaceAll(RegExp(r'\.?0+$'), '')}K';
+    return '${(n / 1000).toStringAsFixed(1).replaceAll(RegExp(r'\.?0+$'), '')} mil';
   }
   return n.toString();
-}
-
-// Widgets auxiliares
-class _Metric extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  const _Metric({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) => Column(
-    children: [
-      Icon(icon, color: Colors.white, size: 28),
-      const SizedBox(height: 4),
-      Text(label, style: const TextStyle(color: Colors.white)),
-    ],
-  );
-}
-
-class _DataCard extends StatelessWidget {
-  final String title;
-  final String? iconKey; // clave lógica (instagram, twitter, etc)
-  final List<_RowData> rows;
-
-  const _DataCard({required this.title, required this.rows, this.iconKey});
-
-  @override
-  Widget build(BuildContext context) {
-    final String? iconPath = iconKey != null
-        ? SocialIconResolver.resolve(iconKey!)
-        : null;
-
-    return Card(
-      color: Colors.grey[900],
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                if (iconPath != null)
-                  SvgPicture.asset(iconPath, width: 22, height: 22),
-                if (iconPath != null) const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            ...rows,
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _RowData extends StatelessWidget {
-  final String label, value;
-  const _RowData({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 4),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: const TextStyle(color: Colors.grey)),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
-    ),
-  );
 }
 
 // Modelo SocialStats
 class SocialStats {
   final String name;
-  final int followers;
-  final int likes;
-  final int subscribers;
-  final int shares;
-  final int viewCount;
-  final int mediaCount;
-  final int followingCount;
+  final int? followers;
+  final int? likes;
+  final int? subscribers;
+  final int? shares;
+  final int? viewCount;
+  final int? mediaCount;
+  final int? followingCount;
 
   SocialStats({
     required this.name,
-    required this.subscribers,
-    required this.followers,
-    required this.likes,
-    required this.shares,
-    required this.viewCount,
-    required this.mediaCount,
-    required this.followingCount,
+    this.subscribers,
+    this.followers,
+    this.likes,
+    this.shares,
+    this.viewCount,
+    this.mediaCount,
+    this.followingCount,
   });
 
   factory SocialStats.fromMap(String name, Map<String, dynamic> data) {
-    int parse(dynamic v) {
-      if (v == null) return 0;
+    int? parse(dynamic v) {
+      if (v == null) return null;
       if (v is int) return v;
       if (v is double) return v.round();
-      return int.tryParse(v.toString().replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+      final str = v.toString().replaceAll(RegExp(r'[^0-9]'), '');
+      if (str.isEmpty) return null;
+      return int.tryParse(str);
     }
 
-    int extract(List<String> keys) {
+    int? extract(List<String> keys) {
       for (final k in keys) {
         if (data.containsKey(k)) return parse(data[k]);
       }
       for (final entry in data.entries) {
-        if (keys.any(
-          (k) => entry.key.toLowerCase().contains(k.toLowerCase()),
-        )) {
+        if (keys.any((k) => entry.key.toLowerCase() == k.toLowerCase()) ||
+            keys.any(
+              (k) => entry.key.toLowerCase().contains(k.toLowerCase()),
+            )) {
           return parse(entry.value);
         }
       }
-      return 0;
+      return null;
     }
 
     return SocialStats(
       name: name,
-      followers: extract(['followers']),
-      likes: extract(['likes']),
+      followers: extract(['followers', 'friends', 'fans']),
+      likes: extract(['likes', 'hearts', 'favorites']),
       shares: extract(['shares']),
-      viewCount: extract(['viewCount']),
-      mediaCount: extract(['mediaCount']),
-      subscribers: extract(['subscriberCount']),
-      followingCount: extract(['following']),
+      viewCount: extract(['viewCount', 'views']),
+      mediaCount: extract([
+        'mediaCount',
+        'media',
+        'videos',
+        'media_count',
+        'posts',
+        'post_count',
+      ]),
+      subscribers: extract(['subscriberCount', 'subscribers']),
+      followingCount: extract([
+        'following',
+        'followingCount',
+        'following_count',
+      ]),
     );
   }
 
   Map<String, dynamic> toJson() {
-    final base = <String, dynamic>{
+    return {
       'name': name,
       'followers': followers,
-      'likes': likes,
-      'shares': shares,
-      'viewCount': viewCount,
-      'mediaCount': mediaCount,
-      'following': followingCount,
-      'subscribersCount': subscribers,
+      // TODO: Descomentar cuando se necesiten estos datos para la version paga (usuarios premium)
+      // 'following': followingCount,
+      // 'subscribersCount': subscribers,
+      // 'likes': likes,
+      // 'shares': shares,
+      // 'viewCount': viewCount,
+      // 'mediaCount': mediaCount,
     };
-    return base;
   }
 }

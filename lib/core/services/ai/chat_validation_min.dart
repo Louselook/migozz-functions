@@ -1,7 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_state.dart';
+import 'package:migozz_app/features/auth/data/domain/models/user/location_dto.dart';
 import 'package:migozz_app/features/auth/services/send_otp.dart';
+import 'package:migozz_app/features/auth/services/media_service.dart';
+import 'package:migozz_app/features/profile/data/datasources/user_service.dart';
 
 Future<Map<String, dynamic>?> processBotResponse(
   Map<String, dynamic> resp, {
@@ -39,8 +42,26 @@ Future<Map<String, dynamic>?> processBotResponse(
 
     case RegisterStatusProgress.username:
       if (isValid == true && userResponse != null) {
-        registerCubit.setUsername(userResponse);
-        debugPrint('✅ Username guardado: $userResponse');
+        // Verificar si el username ya está en uso
+        final userService = UserService(UserMediaService());
+        final normalizedUsername = userResponse.trim().toLowerCase();
+        final isTaken = await userService.isUsernameTaken(normalizedUsername);
+
+        if (isTaken) {
+          debugPrint('⚠️ Username "$normalizedUsername" ya está en uso');
+          final isSpanish = registerCubit.state.language == 'Español';
+          return {
+            'error': true,
+            'message': isSpanish
+                ? 'El nombre de usuario "@$normalizedUsername" ya está en uso. Por favor elige otro.'
+                : 'The username "@$normalizedUsername" is already taken. Please choose another.',
+            'usernameTaken': true,
+            'step': 'regProgress.username',
+          };
+        }
+
+        registerCubit.setUsername(normalizedUsername);
+        debugPrint('✅ Username guardado: $normalizedUsername');
       }
       break;
 
@@ -50,6 +71,13 @@ Future<Map<String, dynamic>?> processBotResponse(
     //     debugPrint('✅ Género guardado: $userResponse');
     //   }
     //   break;
+
+    case RegisterStatusProgress.gender:
+      if (isValid == true && userResponse != null) {
+        registerCubit.setGender(userResponse);
+        debugPrint('✅ Género guardado: $userResponse');
+      }
+      break;
 
     // case RegisterStatusProgress.socialEcosystem:
     //   debugPrint('📱 Paso de redes sociales - se maneja en navigation handler');
@@ -64,6 +92,46 @@ Future<Map<String, dynamic>?> processBotResponse(
       debugPrint(
         '📍 [processBotResponse] emptyLocation: ${resp['emptyLocation']}',
       );
+
+      // Si es un prompt del bot para ingresar ubicación manual, no procesar como respuesta.
+      if (resp['manualLocationPrompt'] == true) {
+        debugPrint('📍 [processBotResponse] Manual location prompt (skip)');
+        return null;
+      }
+
+      // Si no hay validación ni flags, probablemente es una pregunta/prompt.
+      final hasAnyFlag =
+          resp['manualLocation'] == true ||
+          resp['confirmLocation'] == true ||
+          resp['emptyLocation'] == true;
+      if (isValid == null && !hasAnyFlag) {
+        debugPrint(
+          '📍 [processBotResponse] Location prompt without flags (skip)',
+        );
+        return null;
+      }
+
+      // Ubicación manual
+      if (resp['manualLocation'] == true && isValid == true) {
+        final country = (resp['country'] ?? '').toString().trim();
+        final state = (resp['state'] ?? '').toString().trim();
+        final city = (resp['city'] ?? '').toString().trim();
+        if (country.isNotEmpty && state.isNotEmpty && city.isNotEmpty) {
+          registerCubit.setLocation(
+            LocationDTO(
+              country: country,
+              state: state,
+              city: city,
+              lat: 0.0,
+              lng: 0.0,
+            ),
+          );
+          debugPrint('✅ Ubicación manual guardada: $city, $state, $country');
+          // Avanzar el progreso igual que cuando se confirma ubicación.
+          registerCubit.confirmLocation();
+          return null;
+        }
+      }
 
       // Opción 1: Usuario confirmó ubicación (Sí)
       if (resp['confirmLocation'] == true && isValid == true) {
@@ -92,13 +160,6 @@ Future<Map<String, dynamic>?> processBotResponse(
         );
         return null; // Sin errores, avanza al siguiente paso
       }
-      // Opción 3: Ubicación incorrecta o respuesta inválida
-      else if (isValid == false) {
-        debugPrint('⚠️ Ubicación incorrecta o respuesta inválida');
-        // El mensaje de error ya viene en resp['text'] desde _evaluateLocation
-        // GeminiService se encargará de mostrarlo
-        return null;
-      }
       // Caso inesperado
       else {
         debugPrint('⚠️ Caso de ubicación no manejado');
@@ -110,6 +171,45 @@ Future<Map<String, dynamic>?> processBotResponse(
               : "Invalid response. Please select an option.",
         };
       }
+
+    case RegisterStatusProgress.email:
+      if (isValid == true && userResponse != null) {
+        registerCubit.setEmail(userResponse.trim());
+        debugPrint('✅ Email guardado: $userResponse');
+        return null; // Sin errores, avanza al siguiente paso (sendOTP)
+      } else {
+        final isSpanish = registerCubit.state.language == 'Español';
+        return {
+          "error": true,
+          "message": isSpanish
+              ? "Por favor ingresa un correo electrónico válido."
+              : "Please enter a valid email address.",
+        };
+      }
+
+    case RegisterStatusProgress.emailReask:
+      if (isValid == true && userResponse != null) {
+        // Si el usuario escribió un nuevo email directamente
+        if (resp['newEmail'] == true) {
+          registerCubit.setEmail(userResponse.trim());
+          debugPrint('✅ Email actualizado desde emailReask: $userResponse');
+          return null;
+        }
+        // Si el usuario quiere cambiar (respuesta = "change")
+        if (resp['changeEmail'] == true || userResponse == 'change') {
+          debugPrint('📝 Usuario quiere cambiar email desde emailReask');
+          return {
+            "changeEmail": true,
+            "message": registerCubit.state.language == 'Español'
+                ? "De acuerdo, ingresa tu nuevo correo electrónico"
+                : "Okay, please enter your new email address",
+          };
+        }
+        // Si el usuario dice que está bien (respuesta = "keep")
+        debugPrint('✅ Email confirmado sin cambios desde emailReask');
+        return null;
+      }
+      break;
 
     case RegisterStatusProgress.sendOTP:
       // Caso 1: Usuario quiere cambiar email (dijo "No")
@@ -128,8 +228,17 @@ Future<Map<String, dynamic>?> processBotResponse(
         // Usuario confirmó el email
         if (registerCubit.state.email != null) {
           try {
-            debugPrint('📧 Enviando OTP a: ${registerCubit.state.email}');
-            final result = await sendOTP(email: registerCubit.state.email!);
+            // Convert language label to code: 'Español' -> 'es', otherwise 'en'
+            final langCode = registerCubit.state.language == 'Español'
+                ? 'es'
+                : 'en';
+            debugPrint(
+              '📧 Enviando OTP a: ${registerCubit.state.email} (lang: $langCode)',
+            );
+            final result = await sendOTP(
+              email: registerCubit.state.email!,
+              language: langCode,
+            );
 
             if (result['sent'] == true) {
               registerCubit.setCurrentOTP(result['myOTP']);
@@ -173,8 +282,8 @@ Future<Map<String, dynamic>?> processBotResponse(
         return {
           "emailChanged": true,
           "message": registerCubit.state.language == 'Español'
-              ? "¡Perfecto! Verificaremos tu nuevo correo."
-              : "Perfect! We'll verify your new email.",
+              ? "Email actualizado. Verificando..."
+              : "Email updated. Verifying...",
         };
       } else {
         // Email inválido
@@ -202,8 +311,17 @@ Future<Map<String, dynamic>?> processBotResponse(
           debugPrint('📧 Usuario solicitó reenviar código OTP');
           if (registerCubit.state.email != null) {
             try {
-              debugPrint('📧 Reenviando OTP a: ${registerCubit.state.email}');
-              final result = await sendOTP(email: registerCubit.state.email!);
+              // Convert language label to code: 'Español' -> 'es', otherwise 'en'
+              final langCode = registerCubit.state.language == 'Español'
+                  ? 'es'
+                  : 'en';
+              debugPrint(
+                '📧 Reenviando OTP a: ${registerCubit.state.email} (lang: $langCode)',
+              );
+              final result = await sendOTP(
+                email: registerCubit.state.email!,
+                language: langCode,
+              );
 
               if (result['sent'] == true) {
                 registerCubit.setCurrentOTP(result['myOTP']);
@@ -211,8 +329,8 @@ Future<Map<String, dynamic>?> processBotResponse(
                 return {
                   "otpResent": true,
                   "message": registerCubit.state.language == 'Español'
-                      ? "✅ Código reenviado a tu correo. Intenta nuevamente."
-                      : "✅ Code resent to your email. Try again.",
+                      ? "✅ Se ha reenviado un código de 6 dígitos a tu correo."
+                      : "✅ A 6-digit code has been resent to your email.",
                 };
               } else {
                 debugPrint('❌ Fallo al reenviar OTP');
@@ -271,11 +389,31 @@ Future<Map<String, dynamic>?> processBotResponse(
       }
       break;
 
+    case RegisterStatusProgress.socialEcosystem:
+      // Las redes sociales se manejan en el navigation handler
+      // Aquí solo validamos que el flujo avance correctamente
+      debugPrint('📱 [processBotResponse] Paso de redes sociales procesado');
+      if (userResponse != null && userResponse.isNotEmpty) {
+        debugPrint(
+          '📱 Respuesta del usuario en socialEcosystem: $userResponse',
+        );
+        // El ecosistema social se actualiza desde SocialNetworkCubit directamente
+        // No necesitamos hacer nada aquí excepto permitir que el flujo continúe
+      }
+      break;
+
     case RegisterStatusProgress.avatarUrl:
       // Las fotos se manejan en el controller/navigation handler
+      // Detectar si el usuario quiere usar una foto de red social específica
       if (userResponse != null && userResponse.isNotEmpty) {
-        registerCubit.setAvatarUrl(userResponse);
-        debugPrint('✅ Avatar guardado: $userResponse');
+        // Si es una URL, guardarla directamente
+        if (userResponse.startsWith('http')) {
+          registerCubit.setAvatarUrl(userResponse);
+          debugPrint('✅ Avatar URL guardada: $userResponse');
+        } else {
+          // Si no es URL, podría ser una selección de plataforma o archivo local
+          debugPrint('📸 Procesando respuesta de avatar: $userResponse');
+        }
       } else {
         debugPrint('⚠️ No se proporcionó avatar, continuando sin foto');
       }
@@ -334,11 +472,15 @@ RegisterStatusProgress _parseStep(String raw) {
   }
   if (raw.contains('username')) return RegisterStatusProgress.username;
   // if (raw.contains('gender')) return RegisterStatusProgress.gender;
-  // if (raw.contains('social') || raw.contains('ecosystem')) {
-  //   return RegisterStatusProgress.socialEcosystem;
-  // }
+  if (raw.contains('gender')) return RegisterStatusProgress.gender;
+
+  // Habilitar socialEcosystem y avatarUrl para que el flujo los maneje correctamente
+  if (raw.contains('socialecosystem') || raw.contains('social')) {
+    return RegisterStatusProgress.socialEcosystem;
+  }
   if (raw.contains('location')) return RegisterStatusProgress.location;
   if (raw.contains('sendotp')) return RegisterStatusProgress.sendOTP;
+  if (raw.contains('emailreask')) return RegisterStatusProgress.emailReask;
   if (raw.contains('emailchange')) return RegisterStatusProgress.emailChange;
 
   // IMPORTANTE: emailSuccess también mapea a emailVerification
@@ -349,7 +491,10 @@ RegisterStatusProgress _parseStep(String raw) {
     return RegisterStatusProgress.emailVerification;
   }
 
-  // if (raw.contains('avatar')) return RegisterStatusProgress.avatarUrl;
+  // Habilitar avatarUrl para manejar selección de fotos
+  if (raw.contains('avatarurl') || raw.contains('avatar')) {
+    return RegisterStatusProgress.avatarUrl;
+  }
   if (raw.contains('phone')) return RegisterStatusProgress.phone;
   if (raw.contains('voice')) return RegisterStatusProgress.voiceNoteUrl;
   if (raw.contains('done')) return RegisterStatusProgress.doneChat;

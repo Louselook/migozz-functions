@@ -1,25 +1,28 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
 // import 'package:migozz_app/features/tutorial/profile_tutorial_helper.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
-import 'package:migozz_app/features/profile/components/utils/Loader.dart';
+import 'package:migozz_app/features/tutorial/profile/profile_tutorial_keys.dart';
+import 'package:migozz_app/features/profile/components/utils/loader.dart';
 
 class ProfileWrapper extends StatefulWidget {
   final TutorialKeys tutorialKeys;
+  final ProfileTutorialKeys? profileTutorialKeys;
   final Widget Function(
     BuildContext context,
     AuthState authState,
     TutorialKeys tutorialKeys,
+    ProfileTutorialKeys? profileTutorialKeys,
   )
   builder;
 
   const ProfileWrapper({
     super.key,
     required this.tutorialKeys,
+    this.profileTutorialKeys,
     required this.builder,
   });
 
@@ -29,7 +32,6 @@ class ProfileWrapper extends StatefulWidget {
 
 class _ProfileWrapperState extends State<ProfileWrapper> {
   final tutorialKeys = TutorialKeys();
-  bool _hasNavigated = false;
   // bool _tutorialShown = false;
 
   @override
@@ -69,23 +71,8 @@ class _ProfileWrapperState extends State<ProfileWrapper> {
           );
         }
 
-        // Si el perfil NO está completo -> redirigir a /complete-profile (solo una vez)
-        if ((authState.userProfile?.complete == false) && !_hasNavigated) {
-          _hasNavigated = true;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            context.push('/complete-profile');
-          });
-
-          return Scaffold(
-            backgroundColor: Colors.black,
-            body: Center(
-              child: Text(
-                'profile.presentation.redirectCompleteProfile'.tr(),
-                style: const TextStyle(color: Colors.white),
-              ),
-            ),
-          );
-        }
+        // ✅ El router redirect manejará la lógica de /complete-profile
+        // No duplicamos aquí la redirección
 
         // Si perfil completo -> trigger tutorial si aplica (solo una vez)
         // if ((authState.userProfile?.complete ?? false) && !_tutorialShown) {
@@ -96,7 +83,12 @@ class _ProfileWrapperState extends State<ProfileWrapper> {
         // }
 
         // Si llegamos aquí, el perfil existe y está listo -> delegamos al builder
-        return widget.builder(context, authState, widget.tutorialKeys);
+        return widget.builder(
+          context,
+          authState,
+          widget.tutorialKeys,
+          widget.profileTutorialKeys,
+        );
       },
     );
   }

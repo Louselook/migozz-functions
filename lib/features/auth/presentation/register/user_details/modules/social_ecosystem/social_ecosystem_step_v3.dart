@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -11,16 +9,21 @@ import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/regis
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/user_details_button.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
 import 'package:migozz_app/features/auth/services/add_networks/network_config.dart';
-import 'package:migozz_app/features/profile/components/utils/Loader.dart';
+import 'package:migozz_app/features/profile/components/utils/loader.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 import 'package:migozz_app/features/profile/presentation/add_another_network/mobile/add_another_network.dart';
 
+import 'package:flutter/foundation.dart';
 import '../../../../../../../core/components/atomics/network_list.dart';
 import '../../../../../../../core/components/formart/text_formart.dart';
 import '../../../../../../profile/components/social_rail.dart';
 import '../../../../../../profile/presentation/profile/mobile/v3/components/profile_image_mobile_v3.dart';
 import '../../../../../../profile/presentation/profile/mobile/v3/components/social_circles_mobile_v3.dart';
 import '../../../../../data/domain/models/user/user_dto.dart';
+import 'social_network_input_step.dart';
+import 'web_add_custom_link_modal.dart';
+import 'web_social_ecosystem_modal.dart';
+import 'web_social_network_input_modal.dart';
 
 class SocialEcosystemStepV3 extends StatefulWidget {
   final PageController controller;
@@ -42,8 +45,8 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
-  // Track previous state to detect changes
-  int _previousSocialCount = 0;
+  // Track networks selected for batch adding (not yet connected)
+  final Set<String> _pendingSelections = {};
 
   // Categories for grouping platforms (based on available networks)
   final Map<String, List<String>> _categories = {
@@ -73,7 +76,6 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     if (widget.mode == MoreUserDetailsMode.edit) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _setupSyncCallback();
-        _setupAutoSave(); // Config auto-save from deeplink
       });
     }
   }
@@ -92,7 +94,6 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
           }
         }
         // Initialize previous count
-        _previousSocialCount = editState.socialEcosystem?.length ?? 0;
       });
     }
   }
@@ -145,7 +146,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
         if (context.mounted) {
           showProfileLoader(
             context,
-            message: 'common.saving'.tr(),
+            type: LoaderType.profileUpdate,
             onCancel: () {},
           );
         }
@@ -155,28 +156,23 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
           debugPrint('✅ [V3] Auto-save completed successfully!');
 
           // Always hide the dialog
+          // ignore: use_build_context_synchronously
           if (Navigator.of(context).canPop()) {
+            // ignore: use_build_context_synchronously
             Navigator.of(context).pop();
-          }
-
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('addSocials.messages.saved'.tr()),
-                backgroundColor: Colors.green,
-                duration: const Duration(seconds: 2),
-              ),
-            );
           }
         } catch (e) {
           debugPrint('❌ [V3] Auto-save failed: $e');
 
           // Always hide the dialog
+          // ignore: use_build_context_synchronously
           if (Navigator.of(context).canPop()) {
+            // ignore: use_build_context_synchronously
             Navigator.of(context).pop();
           }
 
           if (context.mounted) {
+            // ignore: use_build_context_synchronously
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
@@ -185,7 +181,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                   ),
                 ),
                 backgroundColor: Colors.red,
-                duration: const Duration(seconds: 2),
+                duration: const Duration(seconds: 5),
               ),
             );
           }
@@ -194,47 +190,85 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     };
   }
 
-  StreamSubscription? _editCubitSubscription;
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
-  // ✅ NUEVO: Configurar listener para auto-save
-  void _setupAutoSave() {
-    final editCubit = context.read<EditCubit>();
-    final authCubit = context.read<AuthCubit>();
+  /// Check if a network is pending selection (selected but not connected yet)
+  bool _isNetworkPending(NetworkConfig config) {
+    final platformName = config.name.toLowerCase();
+    return _pendingSelections.contains(platformName);
+  }
 
-    debugPrint('🔄 [V3] Setting up auto-save listener');
-
-    _editCubitSubscription?.cancel(); // seguridad
-
-    _editCubitSubscription = editCubit.stream.listen((editState) async {
-      final currentCount = editState.socialEcosystem?.length ?? 0;
-
-      if (currentCount != _previousSocialCount && editState.hasChanges) {
-        _previousSocialCount = currentCount;
-
-        final userId = authCubit.state.firebaseUser?.uid;
-        if (userId == null || !mounted) return;
-
-        showProfileLoader(
-          context,
-          message: 'common.saving'.tr(),
-          onCancel: () {},
-        );
-
-        try {
-          await editCubit.saveAllPendingChanges(userId);
-          if (mounted) Navigator.of(context).pop();
-        } catch (e) {
-          if (mounted) Navigator.of(context).pop();
-        }
+  /// Toggle pending selection for batch adding
+  void _togglePendingSelection(NetworkConfig config) {
+    final platformName = config.name.toLowerCase();
+    setState(() {
+      if (_pendingSelections.contains(platformName)) {
+        _pendingSelections.remove(platformName);
+      } else {
+        _pendingSelections.add(platformName);
       }
     });
   }
 
-  @override
-  void dispose() {
-    _editCubitSubscription?.cancel();
-    _searchController.dispose();
-    super.dispose();
+  /// Navigate to input step for all pending selections
+  void _handleAddPendingNetworks() {
+    if (_pendingSelections.isEmpty) return;
+
+    // Get the NetworkConfig for each selected network
+    final selectedConfigs = SocialNetworks.enabledNetworks.where((n) {
+      final name = n.name.toLowerCase();
+      return _pendingSelections.contains(name);
+    }).toList();
+
+    if (selectedConfigs.isEmpty) return;
+
+    final registerCubit = context.read<RegisterCubit>();
+
+    // Navigate to input step
+    if (kIsWeb) {
+      showDialog(
+        context: context,
+        barrierColor: Colors.black.withValues(alpha: 0.8),
+        builder: (_) => BlocProvider.value(
+          value: registerCubit,
+          child: WebSocialNetworkInputModal(
+            selectedNetworks: selectedConfigs,
+            onComplete: () {
+              Navigator.of(context).pop();
+              setState(() {
+                _pendingSelections.clear();
+              });
+            },
+            onBack: () => Navigator.of(context).pop(),
+          ),
+        ),
+      );
+    } else {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => BlocProvider.value(
+            value: registerCubit,
+            child: SocialNetworkInputStep(
+              selectedNetworks: selectedConfigs,
+              onComplete: () {
+                // Pop back and clear pending selections
+                Navigator.of(context).pop();
+                setState(() {
+                  _pendingSelections.clear();
+                });
+              },
+              onBack: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ),
+        ),
+      );
+    }
   }
 
   List<NetworkConfig> _getFilteredNetworks() {
@@ -275,15 +309,13 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
   }
 
   Future<void> _handleSocialTap(NetworkConfig config) async {
-    final platformName = config.name.toLowerCase() == 'x'
-        ? 'twitter'
-        : config.name.toLowerCase();
+    final platformName = config.name.toLowerCase();
 
     debugPrint('🔵 [_handleSocialTap] Tapped on: $platformName');
 
     if (widget.mode == MoreUserDetailsMode.register) {
       final cubit = context.read<RegisterCubit>();
-      final current = List<Map<String, Map<String, dynamic>>>.from(
+      final current = List<Map<String, dynamic>>.from(
         cubit.state.socialEcosystem ?? [],
       );
 
@@ -297,15 +329,11 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
       debugPrint('🔵 [Register Mode] Index found: $index');
 
       if (index == -1) {
+        // Network not connected - toggle pending selection for batch adding
         debugPrint(
-          '🔵 [Register Mode] Network not connected, opening bottom sheet',
+          '🔵 [Register Mode] Network not connected, toggling pending selection',
         );
-        await cubit.startSocialAuth(
-          context,
-          platformName,
-          config.iconPath,
-          inEditMode: false,
-        );
+        _togglePendingSelection(config);
       } else {
         debugPrint(
           '🔵 [Register Mode] Network already connected, showing edit dialog',
@@ -375,6 +403,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
           debugPrint('🔵 [Edit Mode] Network removed, new ecosystem: $current');
 
           // Auto-save after removing
+          // ignore: use_build_context_synchronously
           final authCubit = context.read<AuthCubit>();
           final userId = authCubit.state.firebaseUser?.uid;
 
@@ -385,7 +414,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
             if (mounted) {
               showProfileLoader(
                 context,
-                message: 'common.removing'.tr(),
+                type: LoaderType.profileUpdate,
                 onCancel: () {},
               );
             }
@@ -406,7 +435,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                       ),
                     ),
                     backgroundColor: Colors.green,
-                    duration: const Duration(seconds: 2),
+                    duration: const Duration(seconds: 5),
                   ),
                 );
               }
@@ -425,7 +454,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                       ),
                     ),
                     backgroundColor: Colors.red,
-                    duration: const Duration(seconds: 2),
+                    duration: const Duration(seconds: 5),
                   ),
                 );
               }
@@ -583,6 +612,125 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     return 'https://www.google.com/s2/favicons?domain=$domain&sz=128';
   }
 
+  String _normalizeDomain(String domain) {
+    final d = domain.trim().toLowerCase();
+    if (d.startsWith('www.')) return d.substring(4);
+    return d;
+  }
+
+  String _extractUsernameFromUrl(String url) {
+    final trimmed = url.trim();
+    if (trimmed.isEmpty) return '';
+    final normalized = trimmed.contains('://') ? trimmed : 'https://$trimmed';
+    final uri = Uri.tryParse(normalized);
+    if (uri == null) return '';
+    final segments = uri.pathSegments
+        .where((s) => s.trim().isNotEmpty)
+        .toList();
+    if (segments.isEmpty) return '';
+    var candidate = segments.last.trim();
+    if (candidate.startsWith('@')) candidate = candidate.substring(1);
+    return candidate;
+  }
+
+  List<Map<String, dynamic>> _getRegisterCustomLinks() {
+    if (widget.mode != MoreUserDetailsMode.register) return const [];
+    final ecosystem =
+        context.watch<RegisterCubit>().state.socialEcosystem ?? [];
+    final customItems = <Map<String, dynamic>>[];
+
+    for (final entry in ecosystem) {
+      // Nuevo schema (plano): {type: 'custom', domain, url, ...}
+      final type = entry['type']?.toString().toLowerCase();
+      if (type == 'custom') {
+        customItems.add(Map<String, dynamic>.from(entry));
+        continue;
+      }
+
+      // Compatibilidad hacia atrás (schema antiguo): {'custom': {...}}
+      if (!entry.containsKey('custom')) continue;
+      final data = entry['custom'];
+      if (data is Map) {
+        customItems.add(Map<String, dynamic>.from(data));
+      }
+    }
+    return customItems;
+  }
+
+  Widget _buildCustomLinkRow(Map<String, dynamic> data) {
+    final domain = _normalizeDomain(data['domain']?.toString() ?? '');
+    final url = data['url']?.toString() ?? '';
+    final username = _extractUsernameFromUrl(url);
+    final applyIconFromLink = data['applyIconFromLink'] == true;
+
+    // Icono solo si el usuario habilitó la opción.
+    final iconUrl = applyIconFromLink
+        ? (data['iconUrl']?.toString() ?? _faviconFromDomain(domain))
+        : '';
+
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.08),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          if (iconUrl.isNotEmpty) ...[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: Image.network(
+                iconUrl,
+                width: 20,
+                height: 20,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) =>
+                    const SizedBox(width: 20, height: 20),
+              ),
+            ),
+            const SizedBox(width: 10),
+          ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  domain.isEmpty ? 'Link' : domain,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                if (username.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    '@$username',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Colors.grey[400],
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // Ahora acepta username nullable y lo maneja defensivamente
   List<SocialLink> _buildSocialLinks(
     List<Map<String, dynamic>>? socialEcosystem,
@@ -657,6 +805,36 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
 
   @override
   Widget build(BuildContext context) {
+    if (kIsWeb) {
+      return Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Center(
+          child: BlocProvider.value(
+            value: context.read<RegisterCubit>(),
+            child: WebSocialEcosystemModal(
+              mode: widget.mode,
+              onContinue: () {
+                final registerState = context.read<RegisterCubit>().state;
+                final ecosystem = registerState.socialEcosystem ?? [];
+                if (ecosystem.isEmpty) {
+                  CustomSnackbar.show(
+                    context: context,
+                    message: 'addSocials.validation.atLeastOne'.tr(),
+                    type: SnackbarType.warning,
+                  );
+                  return;
+                }
+                widget.controller.nextPage(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                );
+              },
+            ),
+          ),
+        ),
+      );
+    }
+
     String normalizeUsername(String username) {
       if (username.isEmpty) return '';
       return username.startsWith('@') ? username : '@$username';
@@ -679,14 +857,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     // Get social ecosystem from the appropriate cubit based on mode
     final List<Map<String, dynamic>> socialEcosystem;
     if (widget.mode == MoreUserDetailsMode.register) {
-      // RegisterCubit has List<Map<String, Map<String, dynamic>>>
-      // Convert each item defensively to Map<String, dynamic>
-      final registerEcosystem =
+      // RegisterCubit ya usa List<Map<String, dynamic>> (schema unificado)
+      socialEcosystem =
           context.watch<RegisterCubit>().state.socialEcosystem ?? [];
-
-      socialEcosystem = registerEcosystem
-          .map((e) => Map<String, dynamic>.from(e))
-          .toList();
     } else {
       // EditCubit already has List<Map<String, dynamic>>
       socialEcosystem = context.watch<EditCubit>().state.socialEcosystem ?? [];
@@ -695,61 +868,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
     // Use the safe username variable (NO user! here)
     final socialLinks = _buildSocialLinks(socialEcosystem, rawUsername);
 
-    void _handleBackTap() {
-      // Si estamos en modo registro, intentamos navegar dentro del PageView.
-      if (widget.mode == MoreUserDetailsMode.register) {
-        // ✅ Validate at least one network is added before going back
-        final socialEcosystem =
-            context.read<RegisterCubit>().state.socialEcosystem ?? [];
-
-        if (socialEcosystem.isEmpty) {
-          CustomSnackbar.show(
-            context: context,
-            message: 'addSocials.validation.atLeastOne'.tr(),
-            type: SnackbarType.warning,
-          );
-          return;
-        }
-
-        try {
-          if (widget.controller.hasClients) {
-            // obtener página actual (puede ser decimal)
-            final currentPage =
-                (widget.controller.page ?? widget.controller.initialPage)
-                    .round();
-            if (currentPage > 0) {
-              widget.controller.previousPage(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOut,
-              );
-              return;
-            } else {
-              // Estamos en la primera página del PageView -> cerrar la ruta
-              if (Navigator.of(context).canPop()) {
-                Navigator.of(context).pop();
-                return;
-              }
-            }
-          } else {
-            // controller aún no está attached -> fallback a Navigator
-            if (Navigator.of(context).canPop()) {
-              Navigator.of(context).pop();
-              return;
-            }
-          }
-        } catch (e, st) {
-          debugPrint('[_handleBackTap] error: $e\n$st');
-          // fallback seguro
-          if (Navigator.of(context).canPop()) Navigator.of(context).pop();
-        }
-      } else {
-        // Modo edición: cerrar la ruta y volver al perfil
-        if (Navigator.of(context).canPop()) {
-          Navigator.of(context).pop();
-        }
-      }
-    }
-
+    // ignore: deprecated_member_use
     return WillPopScope(
       onWillPop: () async {
         // Si estamos en modo registro, validar que haya al menos una red social
@@ -776,6 +895,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
           child: Scaffold(
             backgroundColor: Colors.black,
             body: Stack(
+              clipBehavior: Clip.none,
               children: [
                 Positioned.fill(
                   child: Container(
@@ -788,22 +908,6 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                           Colors.black.withValues(alpha: 0.40),
                           Colors.black,
                         ],
-                      ),
-                    ),
-                  ),
-                ),
-
-                Positioned(
-                  top: MediaQuery.of(context).padding.top + 8,
-                  left: 0,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: GestureDetector(
-                      onTap: _handleBackTap,
-                      child: const Icon(
-                        Icons.arrow_back_ios,
-                        color: Colors.white,
-                        size: 24,
                       ),
                     ),
                   ),
@@ -947,19 +1051,94 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                             horizontal: 24,
                             vertical: 16,
                           ),
-                          child: userDetailsButton(
-                            cubit: context.read<RegisterCubit>(),
-                            controller: widget.controller,
-                            context: context,
-                            action: UserDetailsAction.back,
-                            mode: MoreUserDetailsMode.register,
-                          ),
+                          child: _pendingSelections.isNotEmpty
+                              ? _buildAddPendingButton()
+                              : userDetailsButton(
+                                  cubit: context.read<RegisterCubit>(),
+                                  controller: widget.controller,
+                                  context: context,
+                                  action: UserDetailsAction.back,
+                                  mode: MoreUserDetailsMode.register,
+                                ),
                         ),
                     ],
                   ),
                 ),
+                Positioned(
+                  top: MediaQuery.of(context).padding.top + 8,
+                  left: 16,
+                  child: GestureDetector(
+                    onTap: () {
+                      // En modo registro, enviar código especial si no hay redes
+                      if (widget.mode == MoreUserDetailsMode.register) {
+                        final socialEcosystem =
+                            context
+                                .read<RegisterCubit>()
+                                .state
+                                .socialEcosystem ??
+                            [];
+                        if (socialEcosystem.isEmpty) {
+                          Navigator.pop(context, 'back_no_socials');
+                        } else {
+                          Navigator.pop(context, 'done');
+                        }
+                      } else {
+                        Navigator.pop(context);
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.arrow_back,
+                        color: Color(0xFFFFFFFF),
+                        size: 32,
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Button to add pending network selections
+  Widget _buildAddPendingButton() {
+    return GestureDetector(
+      onTap: _handleAddPendingNetworks,
+      child: Container(
+        height: 56,
+        decoration: BoxDecoration(
+          gradient: AppColors.primaryGradient,
+          borderRadius: BorderRadius.circular(28),
+        ),
+        child: Center(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.add, color: Colors.white, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                'addSocials.addSelected'.tr(
+                  namedArgs: {'count': _pendingSelections.length.toString()},
+                ),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -1022,6 +1201,7 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
   }
 
   Widget _buildCategorizedGrid() {
+    final customLinks = _getRegisterCustomLinks();
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       children: [
@@ -1098,6 +1278,12 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                 itemCount: 1,
                 itemBuilder: (context, index) => _buildCustomLinkGridItem(),
               ),
+
+              // Lista de custom links (solo 3 campos: icono opcional, nombre y username)
+              if (customLinks.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                ...customLinks.map(_buildCustomLinkRow),
+              ],
             ],
           ),
         ),
@@ -1108,19 +1294,30 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
   }
 
   Widget _buildPlatformGridItem(NetworkConfig network, bool isSelected) {
+    // Check if this network is pending selection (only in register mode)
+    final isPending =
+        widget.mode == MoreUserDetailsMode.register &&
+        !isSelected &&
+        _isNetworkPending(network);
+
+    // Visual state: connected (isSelected) > pending (isPending) > default
+    final isHighlighted = isSelected || isPending;
+
     return GestureDetector(
       onTap: () => _handleSocialTap(network),
       child: Container(
         decoration: BoxDecoration(
-          color: isSelected
+          color: isHighlighted
               ? Colors.white.withValues(alpha: 0.1)
               : Colors.white.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isSelected
+            color: isPending
+                ? AppColors.primaryPink.withValues(alpha: 0.6)
+                : isSelected
                 ? Colors.white.withValues(alpha: 0.2)
                 : Colors.white.withValues(alpha: 0.08),
-            width: isSelected ? 1.5 : 1,
+            width: isHighlighted ? 1.5 : 1,
           ),
           boxShadow: [
             BoxShadow(
@@ -1147,6 +1344,23 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
             return Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
+                // Show checkmark for pending selections
+                if (isPending) ...[
+                  Container(
+                    width: iconSize * 0.6,
+                    height: iconSize * 0.6,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.primaryPink,
+                    ),
+                    child: Icon(
+                      Icons.check,
+                      color: Colors.white,
+                      size: iconSize * 0.4,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                ],
                 SvgPicture.asset(
                   network.iconPath,
                   width: iconSize,
@@ -1158,9 +1372,9 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                   child: Text(
                     network.displayName,
                     style: TextStyle(
-                      color: isSelected ? Colors.white : Colors.white70,
+                      color: isHighlighted ? Colors.white : Colors.white70,
                       fontSize: fontSize,
-                      fontWeight: isSelected
+                      fontWeight: isHighlighted
                           ? FontWeight.w600
                           : FontWeight.w500,
                     ),
@@ -1170,6 +1384,14 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
                     softWrap: false,
                   ),
                 ),
+                // Show connected indicator
+                if (isSelected) ...[
+                  Icon(
+                    Icons.check_circle,
+                    color: Colors.green,
+                    size: iconSize * 0.7,
+                  ),
+                ],
               ],
             );
           },
@@ -1181,16 +1403,96 @@ class _SocialEcosystemStepV3State extends State<SocialEcosystemStepV3> {
   Widget _buildCustomLinkGridItem() {
     return GestureDetector(
       onTap: () async {
+        final isRegister = widget.mode == MoreUserDetailsMode.register;
+
+        if (kIsWeb) {
+          await showDialog(
+            context: context,
+            barrierColor: Colors.black.withValues(alpha: 0.8),
+            builder: (_) {
+              if (isRegister) {
+                return BlocProvider.value(
+                  value: context.read<RegisterCubit>(),
+                  child: WebAddCustomLinkModal(
+                    onComplete: () {
+                      Navigator.pop(context, 'done');
+                    },
+                    onBack: () => Navigator.pop(context),
+                    isRegister: true,
+                  ),
+                );
+              } else {
+                return MultiBlocProvider(
+                  providers: [
+                    BlocProvider.value(value: context.read<EditCubit>()),
+                    BlocProvider.value(value: context.read<AuthCubit>()),
+                  ],
+                  child: WebAddCustomLinkModal(
+                    onComplete: () {
+                      Navigator.pop(context, 'done');
+                    },
+                    onBack: () => Navigator.pop(context),
+                    isRegister: false,
+                  ),
+                );
+              }
+            },
+          ).then((res) {
+            // WebAddCustomLinkModal handles saving internally, so we just need to know when it's done.
+            // But 'res' might be null if dismissed.
+            // We rely on 'onComplete' triggering callback or setState.
+            // However, the logic below expects 'result'.
+            // We can return 'done' from onComplete pop if we want uniformity.
+
+            // Actually, WebAddCustomLinkModal calls onComplete, inside we pop.
+            // We can pass result there.
+          });
+
+          // Since WebAddCustomLinkModal saves internally and updates Cubit,
+          // we might just need to refresh UI or show snackbar if needed.
+          // The code below handles 'result'.
+          // Let's adapt.
+          return; // Web modal handles its own feedback
+        }
+
         final result = await Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const AddAnotherNetworkScreen()),
+          MaterialPageRoute(
+            builder: (_) =>
+                AddAnotherNetworkScreen(allowUnauthenticated: isRegister),
+          ),
         );
-        if (result == 'done' && mounted) {
+
+        if (!mounted) return;
+
+        if (isRegister && result is Map) {
+          final data = Map<String, dynamic>.from(result);
+
+          final cubit = context.read<RegisterCubit>();
+          final current = List<Map<String, dynamic>>.from(
+            cubit.state.socialEcosystem ?? [],
+          );
+
+          // ✅ Unificar con EDIT: guardar custom como mapa plano
+          current.add(data);
+          cubit.setSocialEcosystem(current);
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('addSocials.customLink.updated'.tr()),
               backgroundColor: Colors.green,
-              duration: const Duration(seconds: 2),
+              duration: const Duration(seconds: 5),
+            ),
+          );
+          return;
+        }
+
+        if (result == 'done') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('addSocials.customLink.updated'.tr()),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 5),
             ),
           );
         }

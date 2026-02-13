@@ -11,6 +11,7 @@ class AudioPlayerDisplay extends StatelessWidget {
   final VoidCallback onPlayPause;
   final VoidCallback? onDelete;
   final void Function(Duration) onSeek;
+  final Key? waveformKey; // Key para forzar rebuild del waveform
 
   const AudioPlayerDisplay({
     super.key,
@@ -21,20 +22,13 @@ class AudioPlayerDisplay extends StatelessWidget {
     required this.onPlayPause,
     required this.onSeek,
     this.onDelete,
+    this.waveformKey,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Usar maxDuration del parámetro (viene de just_audio)
-    Duration effectiveMaxDuration = maxDuration;
-
-    // Solo como fallback usar playerController
-    if (effectiveMaxDuration == Duration.zero &&
-        playerController.maxDuration > 0) {
-      effectiveMaxDuration = Duration(
-        milliseconds: playerController.maxDuration,
-      );
-    }
+    // Preview now uses PlayerController (same as sent message widget).
+    final Duration effectiveMaxDuration = maxDuration;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -67,7 +61,7 @@ class AudioPlayerDisplay extends StatelessWidget {
 
               const SizedBox(width: 12),
 
-              // Waveform interactiva (SOLO visual - no reproduce audio)
+              // Waveform (same style/behavior as sent message widget)
               Expanded(
                 child: GestureDetector(
                   onHorizontalDragUpdate: (details) {
@@ -109,25 +103,36 @@ class AudioPlayerDisplay extends StatelessWidget {
                   child: Container(
                     color: Colors.transparent,
                     height: 36,
-                    child: AudioFileWaveforms(
-                      playerController: playerController,
-                      waveformType: WaveformType.fitWidth,
-                      size: const Size(double.infinity, 36),
-                      enableSeekGesture:
-                          false, // Deshabilitado para evitar conflictos
-                      playerWaveStyle: PlayerWaveStyle(
-                        fixedWaveColor: const Color(0xFF555555),
-                        liveWaveColor: const Color(0xFFDF48A5),
-                        seekLineColor: Colors.white,
-                        seekLineThickness: 2,
-                        showSeekLine: true,
-                        waveThickness: 1.8,
-                        spacing: 2.5,
-                        showBottom: true,
-                        showTop: true,
-                        scaleFactor: 150.0,
-                        waveCap: StrokeCap.round,
-                      ),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final waveSize = Size(
+                          constraints.maxWidth.isFinite
+                              ? constraints.maxWidth
+                              : 0,
+                          36,
+                        );
+
+                        return AudioFileWaveforms(
+                          key: waveformKey, // Key para forzar rebuild
+                          playerController: playerController,
+                          waveformType: WaveformType.fitWidth,
+                          size: waveSize,
+                          enableSeekGesture: false,
+                          playerWaveStyle: PlayerWaveStyle(
+                            fixedWaveColor: const Color(0xFF555555),
+                            liveWaveColor: const Color(0xFFDF48A5),
+                            seekLineColor: const Color(0xFFDF48A5),
+                            seekLineThickness: 2.0,
+                            showSeekLine: true,
+                            waveThickness: 1.2,
+                            spacing: 1.8,
+                            showBottom: true,
+                            showTop: true,
+                            scaleFactor: 150.0,
+                            waveCap: StrokeCap.round,
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),

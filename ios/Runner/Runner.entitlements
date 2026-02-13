@@ -3,10 +3,15 @@
 <plist version="1.0">
 <dict>
 	<key>aps-environment</key>
-	<string>development</string>
+	<string>production</string>
 	<key>com.apple.developer.applesignin</key>
 	<array>
 		<string>Default</string>
+	</array>
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:migozz-e2a21.web.app</string>
+		<string>applinks:migozz-e2a21.firebaseapp.com</string>
 	</array>
 </dict>
 </plist>

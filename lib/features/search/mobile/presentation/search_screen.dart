@@ -5,14 +5,18 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
 import 'package:migozz_app/features/profile/presentation/edit/modules/edit_my_interest.dart';
 import 'package:migozz_app/features/search/mobile/components/input_search.dart';
-import 'package:migozz_app/features/search/mobile/components/filter_search.dart';
+// import 'package:migozz_app/features/search/mobile/components/filter_search.dart';
 import 'package:migozz_app/features/search/mobile/components/result_search.dart';
 import 'package:migozz_app/features/search/mobile/components/suggested_reels.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 
 class SearchScreen extends StatefulWidget {
   final TutorialKeys tutorialKeys;
-  const SearchScreen({super.key, required this.tutorialKeys,});
+  const SearchScreen({super.key, required this.tutorialKeys});
+
+  /// Variable estática que indica si el usuario ya descartó el diálogo de intereses
+  /// durante esta sesión de la app. Se resetea al cerrar y volver a abrir la app.
+  static bool hasSkippedInterestsThisSession = false;
 
   @override
   State<SearchScreen> createState() => SearchScreenState();
@@ -38,6 +42,9 @@ class SearchScreenState extends State<SearchScreen> {
     if (_checkedInterests) return;
     _checkedInterests = true;
 
+    // Si el usuario ya descartó el diálogo de intereses en esta sesión, no mostrar
+    if (SearchScreen.hasSkippedInterestsThisSession) return;
+
     try {
       final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid == null) return; // usuario no logueado -> no forzar nada
@@ -47,13 +54,12 @@ class SearchScreenState extends State<SearchScreen> {
           .doc(uid)
           .get();
 
-
       final userInterests = doc.data()?['interests'] as Map<String, dynamic>?;
 
       final bool empty = _isInterestsEmpty(userInterests);
 
       if (!mounted) return; // protege el uso de context después del await
-      
+
       if (empty) {
         // Abrir pantalla de editar intereses y esperar resultado
         final _ = await Navigator.of(context).push(
@@ -62,20 +68,23 @@ class SearchScreenState extends State<SearchScreen> {
             fullscreenDialog: true,
           ),
         );
-        
 
         // Tras volver, re-chequeamos si ya puso intereses
         final doc2 = await FirebaseFirestore.instance
             .collection('users')
             .doc(uid)
             .get();
-        final userInterests2 = doc2.data()?['interests'] as Map<String, dynamic>?;
+        final userInterests2 =
+            doc2.data()?['interests'] as Map<String, dynamic>?;
         final bool nowHas = !_isInterestsEmpty(userInterests2);
 
-        if (!mounted) return; 
+        if (!mounted) return;
 
         if (!nowHas) {
-          // Si sigue vacío, avisamos y dejamos al usuario en search (puede salir a explorar igual)
+          // Si sigue vacío, marcar que ya descartó el diálogo en esta sesión
+          SearchScreen.hasSkippedInterestsThisSession = true;
+
+          // Avisamos y dejamos al usuario en search (puede salir a explorar igual)
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -131,13 +140,13 @@ class SearchScreenState extends State<SearchScreen> {
                   ),
 
                   // Filtros
-                  FilterSearch(topPadding: 0),
+                  // FilterSearch(topPadding: 0),
 
                   // Contenido dinámico (sin wrapper de pull-to-refresh)
                   Expanded(
                     child: _query.isEmpty
                         ? const SuggestedReels(
-                            topPadding: 0,
+                            topPadding: 20,
                           ) // Con pull-to-refresh interno
                         : ResultSearch(query: _query), // Sin pull-to-refresh
                   ),

@@ -6,8 +6,7 @@ final List<String> socials = [
   "Youtube",
   "Tiktok",
   "Facebook",
-  "X",
-  "Twitter",
+  "X", // Antes Twitter
   "Linkedin",
   "Threads",
   "Reddit",
@@ -52,7 +51,7 @@ final Map<String, String> iconByLabel = {
   "Linkedin": "assets/icons/social_networks/LinkedIn.svg",
   "Threads": "assets/icons/social_networks/Threads.svg",
   "Reddit": "assets/icons/social_networks/Reddit.svg",
-  "Pinterest": "assets/icons/social_networks/pinterest.svg",
+  "Pinterest": "assets/icons/social_networks/Pinterest.svg",
   "Snapchat": "assets/icons/social_networks/Snapchat.svg",
 
   // Streaming
@@ -77,9 +76,13 @@ final Map<String, String> iconByLabel = {
   "WooCommerce": "assets/icons/social_networks/WooCommerce.svg",
   "Etsy": "assets/icons/social_networks/Etsy.svg",
 
+  // Donaciones / Pagos
+  "Paypal": "assets/icons/social_networks/Paypal.svg",
+
   // Otros
   "Enlace": "assets/icons/social_networks/Enlace.svg",
   "Global": "assets/icons/Migozz_Icon.svg",
+  "Migozz": "assets/icons/Migozz_Icon.svg",
 };
 
 final Map<String, String> iconBlackByLabel = {
@@ -110,7 +113,7 @@ final Map<String, String> iconBlackByLabel = {
   // Messaging
   "Whatsapp": AssetsConstants.whatsappIcon,
   "Telegram": AssetsConstants.telegramIcon,
-  "Discord": "$AssetsConstants.socialBlackWhiteIcons/DiscordBlanco.svg",
+  "Discord": AssetsConstants.discordIcon,
 
   // Websites & Stores
   "Shopify": AssetsConstants.shopifyIcon,

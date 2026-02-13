@@ -5,8 +5,8 @@
       "onboardingTitle2": "Más conexiones. Mayor impacto",
       "onboardingTitle3": "Crea tu enlace inteligente y activa tu comunidad en segundos"
     },
-    "subtitles":{
-      "onboardingSubtitle1" : "Tu contenido. Tus reglas. Tu universo."
+    "subtitles": {
+      "onboardingSubtitle1": "Tu contenido. Tus reglas. Tu universo."
     },
     "descriptions": {
       "onboardingDescription1": "Centraliza todo lo que eres. Comparte al instante. Crece sin esfuerzo.",
@@ -18,6 +18,10 @@
       "next": "Siguiente",
       "getStarted": "Empecemos"
     }
+  },
+  "interestSelect": {
+    "choose": "Elige tus intereses",
+    "desc": "Selecciona todo aquello que te apasiona"
   },
   "login": {
     "validations": {
@@ -35,6 +39,11 @@
       "subtitle1": "Conecta tu comunidad",
       "inputText": "Ingresa tu correo",
       "buttonText": "Iniciar sesión",
+      "registration": {
+        "step1": "Creando tu cuenta...",
+        "step2": "Configurando tu perfil...",
+        "step3": "Casi listo..."
+      },
       "subtitle2": "O inicia sesión con",
       "bottomText": {
         "newUser": "¿NUEVO USUARIO?\n ",
@@ -42,6 +51,14 @@
         "agreement": "Al registrarte aceptas nuestros ",
         "terms": "Términos y condiciones"
       }
+    },
+    "otp": {
+      "title": "Ingresa el código OTP",
+      "subtitle": "El código OTP se ha enviado a {email}",
+      "resend": "Reenviar",
+      "errorSend": "Error al enviar OTP",
+      "errorInvalid": "OTP incorrecto ❌",
+      "errorPassword": "Error al cambiar contraseña"
     }
   },
   "register": {
@@ -49,9 +66,10 @@
       "emptyEmail": "El correo no puede estar vacío",
       "validationEmail": "Por favor ingrese un correo válido",
       "registerEmail": "Este correo ya está registrado",
-      "audioMinLimit": "El audio es muy corto (${durationInSeconds.toStringAsFixed(1)}s). Debe durar entre 1 y 10 segundos.",
-      "audioMaxLimit": "El audio es muy largo (${durationInSeconds.toStringAsFixed(1)}s). Debe durar entre 1 y 10 segundos.",
-      "picConfirmation": "La foto seleccionada de ${photo['label'] ?? photo['platform'] ?? 'red social'} se ha establecido como tu foto de perfil.",
+      "errorVerify": "Error al verificar el correo: ",
+      "audioMinLimit": "El audio es muy corto ({duration}s). Debe durar entre 1 y 10 segundos.",
+      "audioMaxLimit": "El audio es muy largo ({duration}s). Debe durar entre 1 y 10 segundos.",
+      "picConfirmation": "La foto seleccionada de {platform} se ha establecido como tu foto de perfil.",
       "avatarSkipped": "Paso de foto de perfil saltado",
       "audioSkipped": "Paso de nota de voz saltado"
     },
@@ -73,9 +91,9 @@
         "LoginReturn": "Inicia sesión"
       }
     },
-     "warnings":{
-        "profilePic": "Tip: Las fotos de redes son prácticas, pero si prefieres máxima resolución, te recomendamos subir una original desde tu galería."
-      }
+    "warnings": {
+      "profilePic": "Tip: Las fotos de redes son prácticas, pero si prefieres máxima resolución, te recomendamos subir una original desde tu galería."
+    }
   },
   "complete_profile": {
     "title": "Completa tu Perfil",
@@ -224,8 +242,27 @@
     }
   },
   "profile": {
+    "donation": {
+      "title": "¡Enviar Regalos! 🎁",
+      "message": "¡Estará disponible muy pronto!"
+    },
+    "sendGifts": {
+      "title": "Enviar Regalos",
+      "comingSoon": "Próximamente",
+      "ok": "OK",
+      "tooltipTitle": "¡Próximamente!",
+      "tooltipMessage": " 🚀 Estamos dando los últimos toques a las herramientas de monetización para tu ecosistema. Esta función estará disponible en la próxima actualización. ¡Prepárate para empezar a generar ingresos!"
+    },
+    "contact": {
+      "title": "Contactar a {}",
+      "sendEmail": "Enviar email",
+      "visitWebsite": "Visitar sitio web"
+    },
+    "share": "Compartir perfil",
+    "shareMessage": "¡Mira el perfil de {} en Migozz! {}",
+    "shareSubject": "Perfil de {} en Migozz",
     "chat": {
-      "filter": "Nuevo",
+      "filter": "+ DM",
       "search": "Buscar"
     },
     "design": {
@@ -262,7 +299,7 @@
     },
     "customization": {
       "uploadingProfilePicture": {
-        "title": "Subir",
+        "title": "Cambiar foto",
         "uploading": "Cargando",
         "success": "Foto de perfil actualizada exitosamente",
         "error": "Error al actualizar la foto de perfil:"
@@ -283,15 +320,15 @@
         "hint": "Cuéntale a la gente sobre ti...",
         "save": "Guardar biografía",
         "label": "Bio",
-        "success": "Biografia actualizada correctamente",
-        "errorUpdate": "Error al actualizar la biografia:"
+        "success": "Biografía actualizada correctamente",
+        "errorUpdate": "Error al actualizar la biografía:"
       },
       "links": {
         "title": "Enlaces destacados",
         "add": "+ Añadir enlace.",
         "successAdd": "Enlace añadido correctamente",
         "errorAdd": "Error al añadir el enlace:",
-        "emptyTitle": "Tu enlace esta vacio",
+        "emptyTitle": "Tu enlace está vacío",
         "emptySubtitle": "Añade al menos un enlace para comenzar",
         "maximumLinks": "Se permiten un máximo de 2 enlaces.",
         "sheetTitle": "Agregar enlace de sitio web",
@@ -315,13 +352,13 @@
         "infodeleted": "Información de contacto eliminada correctamente",
         "infoDeleteError": "Error al eliminar la información de contacto:",
         "sheetTitle": {
-          "add": "Agregar {{type}}",
-          "edit": "Editar {{type}}"
+          "add": "Agregar {type}",
+          "edit": "Editar {type}"
         },
         "sheetType": {
           "website": "Sitio web",
-          "phone": "Numero de telefono",
-          "email": "Correo electronico"
+          "phone": "Número de teléfono",
+          "email": "Correo electrónico"
         },
         "hints": {
           "website": "https://ejemplo.com",
@@ -331,8 +368,8 @@
         "validation": {
           "required": "Por favor ingresa un valor",
           "websiteFormat": "El sitio web debe comenzar con http:// o https://",
-          "emailFormat": "Ingresa un correo valido",
-          "phoneFormat": "Ingresa un numero de telefono valido"
+          "emailFormat": "Ingresa un correo válido",
+          "phoneFormat": "Ingresa un número de teléfono válido"
         }
       },
       "profileStrength": {
@@ -352,7 +389,7 @@
         "imageTooLarge": "La imagen supera 5MB",
         "validation": {
           "required": "El enlace es obligatorio",
-          "invalidFormat": "Formato de enlace invalido",
+          "invalidFormat": "Formato de enlace inválido",
           "invalidScheme": "El enlace debe iniciar con http/https"
         }
       }
@@ -364,11 +401,11 @@
       "redirectCompleteProfile": "Redirigiendo a completar perfil..."
     },
     "qrScanner": {
-      "title": "Escanear codigo QR",
-      "instruction": "Apunta tu camara a un codigo QR de Migozz",
-      "invalidFormat": "Formato de QR invalido",
+      "title": "Escanear código QR",
+      "instruction": "Apunta tu cámara a un código QR de Migozz",
+      "invalidFormat": "Formato de QR inválido",
       "userNotFound": "Usuario no encontrado",
-      "errorProcessing": "Error al procesar el codigo QR"
+      "errorProcessing": "Error al procesar el código QR"
     }
   },
   "search": {
@@ -404,15 +441,66 @@
       "followers": "Seguidores:"
     },
     "metrics": {
-      "likes": "me gusta",
-      "shares": "compartidos",
-      "followers": "seguidores"
-    }
+      "likes": "Me gusta",
+      "shares": "Compartidos",
+      "followers": "Seguidores"
+    },
+    "fieldLabels": {
+      "followers": "Seguidores",
+      "likes": "Me gusta",
+      "media": "Media",
+      "views": "Vistas",
+      "viewCount": "Vistas",
+      "shares": "Compartidos",
+      "following": "Siguiendo",
+      "subscribersCount": "Suscriptores",
+      "subscribers": "Suscriptores",
+      "hearts": "Me gusta",
+      "favorites": "Favoritos",
+      "videos": "Videos",
+      "videoCount": "Videos",
+      "likes_count": "Me gusta",
+      "mediaCount": "Media",
+      "friends": "Amigos",
+      "fans": "Fans",
+      "subscriber": "Suscriptor"
+    },
+    "overview": {
+      "community": "Comunidad",
+      "migozz": "Migozz"
+    },
+    "noData": "No hay datos disponibles"
   },
   "addSocials": {
     "addOtherNetworks": "Agregar otras redes",
+    "addSelected": "Agregar {count} redes",
     "validation": {
-      "atLeastOne": "Se requiere al menos una red social"
+      "atLeastOne": "Se requiere al menos una red social",
+      "selectAtLeastOne": "Selecciona al menos una red",
+      "enterAtLeastOne": "Ingresa usuario para al menos una red",
+      "invalidProfile": "No se pudo verificar el perfil de {platform}",
+      "noValidProfiles": "No se pudo validar ningún perfil"
+    },
+    "selection": {
+      "selectAtLeastOne": "Selecciona al menos una red para continuar"
+    },
+    "selectNetworks": {
+      "title": "Selecciona tus Redes",
+      "subtitle": "Elige qué plataformas agregar"
+    },
+    "inputStep": {
+      "title": "Conecta tus Perfiles",
+      "subtitle": "Ingresa tu usuario para cada red",
+      "connectYour": "Tu",
+      "placeholder": "Ingresa usuario",
+      "oauthSection": "Conectar con un clic",
+      "manualSection": "Ingresar manualmente",
+      "connectWith": "Conectar con {platform}",
+      "connected": "{platform} conectado ✓",
+      "oauthHint": "Toca para iniciar sesión"
+    },
+    "success": {
+      "networksAdded": "¡Redes agregadas exitosamente!"
     },
     "register": {
       "title": "Tu Ecosistema Social",
@@ -425,7 +513,7 @@
     "popUp": {
       "title": "Desvincular ",
       "subtitle": "¿Estás seguro que quieres desvincular ",
-      "yes": "Si",
+      "yes": "Sí",
       "no": "No"
     },
     "categories": {
@@ -482,6 +570,7 @@
         "facebook": "Ingresa usuario o enlace de Facebook",
         "whatsapp": "1234567890",
         "telegram": "1234567890",
+        "pinterest": "Ingresa usuario o enlace de Pinterest",
         "default": "Ingresa usuario o enlace"
       },
       "examples": {
@@ -492,7 +581,8 @@
         "facebook": "https://www.facebook.com/usuario",
         "whatsapp": "Ingresa tu número con código de país",
         "telegram": "Ingresa tu número con código de país",
-        "default": "https://www.{{platform}}.com/usuario"
+        "pinterest": "https://www.pinterest.com/usuario",
+        "default": "https://www.ejemplo.com/usuario"
       }
     }
   },
@@ -502,11 +592,12 @@
       "errorUpdateProfilePic": "Error al actualizar la foto: $e",
       "updateProfile": "Perfil actualizado con éxito",
       "errorUpdateProfile": "Error al guardar el perfil: $e",
+      "usernameTaken": "Este nombre de usuario ya está en uso. Por favor elige otro.",
       "detectLocation": "🔍 Detectando ubicación...",
       "errorDetecLocation": "❌ No se pudo obtener la ubicación actual",
       "errorUserLogin": "Error: usuario no ha iniciado sesión",
-      "updateLocation": "✅ Ubicación actualizada a ${newLocation.city}, ${newLocation.country}",
-      "errorUpdateLocation": "❌ Error al actualizar la ubicación: $e"
+      "updateLocation": "✅ Ubicación actualizada a {city}, {country}",
+      "errorUpdateLocation": "❌ Error al actualizar la ubicación: {error}"
     },
     "presentation": {
       "title": "Editar perfil",
@@ -518,7 +609,8 @@
         "cellPhone": "Teléfono celular",
         "dateOfBirth": "Fecha de nacimiento",
         "gender": "Género",
-        "location": "Ubicacion"
+        "bio": "Biografía",
+        "location": "Ubicación"
       },
       "genderOptions": {
         "male": "Masculino",
@@ -529,13 +621,15 @@
       "interest": "Editar mis intereses",
       "socials": "Editar redes sociales",
       "logOut": "Cerrar sesión",
+      "logOutConfirmation": "¿Estás seguro de que quieres cerrar sesión?",
+      "logOutLoading": "Cerrando sesión...",
       "loadingProfile": "Cargando perfil...",
-      "locationNotSet": "Ubicacion no establecida",
+      "locationNotSet": "Ubicación no establecida",
       "deleteAccount": {
         "title": "Eliminar cuenta",
-        "description": "?Seguro que quieres eliminar tu cuenta?\n\nEsta accion iniciara un proceso de eliminacion que puede tardar hasta 30 dias habiles en completarse. Durante este tiempo, todos tus datos se eliminaran de forma permanente y no se podran recuperar.",
+        "description": "¿Seguro que quieres eliminar tu cuenta?\n\nEsta acción iniciará un proceso de eliminación que puede tardar hasta 30 días hábiles en completarse. Durante este tiempo, todos tus datos se eliminarán de forma permanente y no se podrán recuperar.",
         "confirm": "Eliminar cuenta",
-        "submitted": "Solicitud de eliminacion enviada. Tus datos se eliminaran permanentemente en un maximo de 30 dias habiles."
+        "submitted": "Solicitud de eliminación enviada. Tus datos se eliminarán permanentemente en un máximo de 30 días hábiles."
       },
       "webRestriction": {
         "audio": "Usa la app para cambiar tu audio"
@@ -550,19 +644,31 @@
       "maxLimit": "Nota de voz: máximo 1–10 segundos.",
       "liste": "Escucha tu audio",
       "uploading": "Subiendo audio...",
-      "minDuration": "Graba al menos 5 segundos"
+      "minDuration": "Graba al menos 5 segundos",
+      "recorded": "Nota de voz grabada",
+      "noRecording": "Sin nota de voz aún",
+      "tapToRecord": "Toca para grabar"
     },
     "editLocation": {
       "text1": "Detectamos que estás en:\n\n",
-      "text2": "${newLocation.city}, ${newLocation.state}\n",
-      "text3": "${newLocation.country}\n\n",
+      "text2": "{city}, {state}\n",
+      "text3": "{country}\n\n",
       "text4": "¿Es correcto?",
       "title": "Confirmar ubicacion"
+    },
+    "unsavedChanges": {
+      "title": "Cambios sin guardar",
+      "message": "Tienes cambios sin guardar. ¿Deseas guardarlos?",
+      "discard": "Descartar",
+      "save": "Guardar"
     },
     "editInterest": {
       "title": "Editar mis intereses",
       "saveInterest": "Intereses guardados correctamente",
-      "errorSave": "Error al guardar intereses"
+      "errorSave": "Error al guardar intereses",
+      "noInterests": "Sin intereses aún",
+      "tapToAdd": "Toca para agregar intereses",
+      "addMore": "Agregar más"
     }
   },
   "share": {
@@ -586,7 +692,10 @@
     "delete": "Eliminar"
   },
   "category": {
-    "title": "Elige tu categoría",
+    "title": "Elige tu Perfil",
+    "subtitle": "Selecciona 1 categoría",
+    "maxSelection": "Solo puedes elegir 1 categoría.",
+    "required": "Por favor selecciona una categoría para continuar.",
     "model": "Modelo",
     "artist": "Artista",
     "publicFigure": "Figura pública",
@@ -635,6 +744,7 @@
       "searchCountry": "Buscar país",
       "photoError": "Error al seleccionar la foto. Por favor intenta de nuevo.",
       "audioError": "Error al iniciar la grabación de audio. Por favor intenta de nuevo.",
+      "microphonePermissionDenied": "Permiso de micrófono denegado. Puedes activarlo en Ajustes y volver a intentar.",
       "recordingStarted": "Grabación iniciada..."
     },
     "attachments": {
@@ -657,27 +767,35 @@
         "viewProfile": "Ver perfil",
         "deleteChat": "Eliminar chat",
         "block": "Bloquear",
-        "unblock": "Desbloquear"
+        "unblock": "Desbloquear",
+        "report": "Reportar"
       },
       "dialogs": {
         "deleteTitle": "¿Eliminar chat?",
         "deleteMessage": "El chat se eliminará solo para ti. El otro usuario podrá seguir viéndolo.",
-        "blockTitle": "¿Bloquear a {{name}}?",
-        "unblockTitle": "¿Desbloquear a {{name}}?",
+        "blockTitle": "¿Bloquear a {name}?",
+        "unblockTitle": "¿Desbloquear a {name}?",
         "blockMessage": "No recibirás mensajes de este usuario mientras esté bloqueado. El usuario no sabrá que lo bloqueaste.",
         "unblockMessage": "Volverás a recibir mensajes de este usuario.",
         "cancel": "Cancelar",
         "delete": "Eliminar",
         "block": "Bloquear",
-        "unblock": "Desbloquear"
+        "unblock": "Desbloquear",
+        "reportTitle": "Reportar a {name}",
+        "reportHint": "Describe el motivo de tu reporte...",
+        "reportSubmit": "Enviar Reporte",
+        "reportSuccess": "Reporte enviado correctamente",
+        "reportError": "Error al enviar reporte: "
       },
       "messages": {
         "sending": "Enviando...",
         "you": "Tú",
         "image": "Imagen",
         "chatDeleted": "Chat eliminado",
-        "userBlocked": "{{name}} ha sido bloqueado",
-        "userUnblocked": "{{name}} ha sido desbloqueado"
+        "userBlocked": "{name} ha sido bloqueado",
+        "userUnblocked": "{name} ha sido desbloqueado",
+        "youAreBlocked": "No puedes enviar mensajes a este usuario",
+        "unblockToChat": "Desbloquea para enviar mensajes"
       },
       "errors": {
         "sendMessage": "Error al enviar mensaje: ",
@@ -691,6 +809,19 @@
       "webRestrictions": {
         "audio": "¡Por favor usa la app para enviar audio!",
         "image": "¡Por favor usa la app para enviar imágenes!"
+      }
+    },
+    "dateHeader": {
+      "today": "Hoy",
+      "yesterday": "Ayer",
+      "days": {
+        "monday": "lunes",
+        "tuesday": "martes",
+        "wednesday": "miércoles",
+        "thursday": "jueves",
+        "friday": "viernes",
+        "saturday": "sábado",
+        "sunday": "domingo"
       }
     }
   },
@@ -713,6 +844,163 @@
     "removing": "Eliminando...",
     "loader": "Cargador",
     "unknown": "Desconocido",
-    "noData": "Sin datos"
+    "noData": "Sin datos",
+    "loader_sequence": {
+      "connecting": "Estableciendo conexión segura con {platform}...",
+      "validating": "Verificando tus credenciales de acceso...",
+      "syncing": "Sincronizando la información de tu perfil...",
+      "ready": "¡Proceso completado con éxito!",
+      "delay": "Estamos ultimando detalles para ti. ¡Ya casi estamos listos!"
+    },
+    "loader_sequences": {
+      "login": {
+        "step1": "Iniciando sesión en Migozz...",
+        "step2": "Verificando tus credenciales...",
+        "step3": "Preparando tu experiencia...",
+        "step4": "¡Bienvenido de nuevo!"
+      },
+      "registration": {
+        "step1": "SINCRONIZANDO\nVinculando tus cuentas de forma segura.",
+        "step2": "FUSIONANDO\nCentralizando tu huella digital.",
+        "step3": "VERIFICANDO\nAnalizando tu audiencia.",
+        "step4": "LISTO\nCanales en línea."
+      },
+      "createAccount": {
+        "step1": "Modo Sincronización\nTu identidad se está cargando en Migozz.",
+        "step2": "Construcción del Ecosistema Social\nTu ecosistema personal se está formando.",
+        "step3": "Verificación de Poder Completada\nEstructura limpia. Acceso asegurado.",
+        "step4": "Enlace Listo\nTu enlace exclusivo de Migozz se está cargando.\nUn enlace. Una identidad.",
+        "step5": "Estás en Vivo. Publícalo\nBienvenido a Migozz.\nTu ecosistema social está activo, poséelo, compártelo, hazlo crecer."
+      },
+      "profile_update": {
+        "step1": "Guardando tus cambios...",
+        "step2": "Actualizando tu perfil...",
+        "step3": "Sincronizando datos...",
+        "step4": "¡Perfil actualizado!"
+      },
+      "qr_scan": {
+        "step1": "Leyendo código QR...",
+        "step2": "Buscando tu usuario...",
+        "step3": "Obteniendo tu información...",
+        "step4": "¡Usuario encontrado!"
+      },
+      "social_auth": {
+        "step1": "SINCRONIZANDO\nVinculando tus cuentas de forma segura.",
+        "step2": "FUSIONANDO\nCentralizando tu huella digital.",
+        "step3": "VERIFICANDO\nAnalizando tu audiencia.",
+        "step4": "LISTO\nCanales en línea."
+      },
+      "logout": {
+        "step1": "Cerrando sesión...",
+        "step2": "Guardando preferencias...",
+        "step3": "Limpiando datos seguros...",
+        "step4": "¡Hasta pronto!"
+      }
+    }
+  },
+  "followers": {
+    "followers": "Seguidores",
+    "following": "Seguidos",
+    "follow": "Seguir",
+    "followBack": "Seguir también",
+    "unfollow": "Dejar de seguir",
+    "message": "Mensaje",
+    "search": "Buscar",
+    "cancel": "Cancelar",
+    "remove": "Eliminar",
+    "noFollowers": "Aún no tienes seguidores",
+    "noFollowing": "Aún no sigues a nadie",
+    "unfollowConfirmTitle": "¿Dejar de seguir?",
+    "unfollowConfirmMessage": "¿Estás seguro de que quieres dejar de seguir a este usuario?",
+    "removeFollowerTitle": "¿Eliminar seguidor?",
+    "removeFollowerMessage": "¿Estás seguro de que quieres eliminar a este usuario de tus seguidores?"
+  },
+  "tutorial": {
+    "skip": "Saltar",
+    "continue": "Continuar",
+    "skipTutorial": "Saltar tutorial",
+    "welcome": {
+      "title": "Bienvenido a Migozz",
+      "description": "Descubre tu nuevo ecosistema social. Te guiaremos por las funciones principales para que aproveches al máximo tu experiencia.",
+      "start": "Empezar",
+      "skip": "Saltar tutorial"
+    },
+    "profile": {
+      "home": {
+        "title": "El Inicio",
+        "description": "Accede a tu pantalla principal y recarga la información de tu perfil en cualquier momento."
+      },
+      "search": {
+        "title": "Descubre",
+        "description": "Busca a otros usuarios dentro de la aplicación y expande tu red de contactos."
+      },
+      "messages": {
+        "title": "Mantén el Contacto",
+        "description": "Accede a tus mensajes y conversaciones con otros usuarios dentro de la aplicación."
+      },
+      "stats": {
+        "title": "Parametriza tus Redes",
+        "description": "Visualiza las estadísticas de tus redes sociales y mira tu lista de seguidores dentro de la aplicación presionando el icono."
+      },
+      "settings": {
+        "title": "Edita tu Perfil",
+        "description": "Edita la información básica de tu usuario y gestiona la configuración de tu cuenta."
+      },
+      "linkedNetworks": {
+        "title": "Tu Propio Ecosistema",
+        "description": "Otros usuarios podrán visualizar y acceder a las redes vinculadas a tu ecosistema, ya sea presionando los iconos o las fotos de cada una."
+      },
+      "shareQr": {
+        "title": "Comparte",
+        "description": "Comparte tu código QR único con otros usuarios, ya sea descargando la imagen o enviándola mediante diversas redes sociales."
+      },
+      "community": {
+        "title": "Tus Seguidores",
+        "description": "Visualiza el total de seguidores de todas tus redes vinculadas en 'Comunidad'. Presiona para ver tus seguidores dentro de la aplicación."
+      },
+      "messagesHeader": {
+        "title": "Mantén el Contacto",
+        "description": "Accede rápidamente a tus mensajes e inicia conversaciones con otros usuarios."
+      },
+      "nameSection": {
+        "title": "Preséntate",
+        "description": "Los demás usuarios podrán ver tu nombre completo, tu apodo y escuchar tu audio de presentación."
+      },
+      "notifications": {
+        "title": "Tus Notificaciones",
+        "description": "Accede a las notificaciones de seguidores y mensajes. El contador muestra la cantidad de notificaciones pendientes."
+      },
+      "qrScanner": {
+        "title": "Conéctate",
+        "description": "Escanea el código QR de otros usuarios en cualquier momento para conectar con ellos al instante."
+      },
+      "editProfile": {
+        "title": "Personaliza tu Perfil",
+        "description": "Personaliza más aspectos de tu usuario agregando, editando o eliminando información y redes sociales de tu ecosistema."
+      }
+    },
+    "help": {
+      "title": "¿Necesitas Ayuda?",
+      "button": "Repetir Tutorial",
+      "confirmTitle": "¿Repetir Tutorial?",
+      "confirmMessage": "¿Quieres ver el tutorial de nuevo? Te guiaremos por las funciones principales de la aplicación.",
+      "confirmButton": "Sí, mostrar tutorial",
+      "cancelButton": "Cancelar"
+    },
+    "accountStatus": {
+      "deleted": {
+        "title": "Cuenta Eliminada",
+        "message": "Esta cuenta fue eliminada por el equipo de desarrollo."
+      },
+      "banned": {
+        "title": "Cuenta Suspendida",
+        "message": "Esta cuenta ha sido suspendida por infringir las reglas de la aplicación."
+      },
+      "bannedLogin": {
+        "title": "Cuenta Suspendida",
+        "message": "Este correo/cuenta ha sido suspendido por infringir las reglas de la aplicación. No puedes crear una nueva cuenta con este correo."
+      },
+      "button": "OK"
+    }
   }
 }

@@ -6,7 +6,9 @@ import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubi
 import 'package:migozz_app/features/auth/presentation/blocs/login_cubit/login_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
+import 'package:migozz_app/features/profile/presentation/bloc/follower_cubit/follower_cubit.dart';
 import 'package:migozz_app/features/profile/data/datasources/user_service.dart';
+import 'package:migozz_app/features/profile/data/datasources/follower_service.dart';
 import 'package:migozz_app/injection.dart';
 
 // ✅ Crear instancias de los cubits ANTES de los providers
@@ -14,6 +16,7 @@ final loginCubit = LoginCubit();
 final registerCubit = RegisterCubit(locator<LocationService>());
 final authCubit = AuthCubit(locator<AuthUseCases>(), locator<UserService>());
 late final EditCubit editCubit;
+late final FollowerCubit followerCubit;
 
 // ✅ Inicializar los cubits y configurar callbacks
 void initializeBlocProviders() {
@@ -28,17 +31,24 @@ void initializeBlocProviders() {
     debugPrint('🧹 [Logout] Limpiando EditCubit...');
     editCubit.reset();
 
+    debugPrint('🧹 [Logout] Limpiando FollowerCubit...');
+    followerCubit.reset();
+
     debugPrint('✅ [Logout] Todos los cubits limpiados');
   };
 
   // Crear EditCubit después de configurar el callback
   editCubit = EditCubit(locator<UserService>(), authCubit);
+
+  // Crear FollowerCubit
+  followerCubit = FollowerCubit(locator<FollowerService>());
 }
 
 /// Lista de providers globales de la app - ESTÁTICA, creada UNA SOLA VEZ
 final List<BlocProvider> blocProviders = [
-  BlocProvider<AuthCubit>(create: (_) => authCubit),
-  BlocProvider<LoginCubit>(create: (_) => loginCubit),
-  BlocProvider<RegisterCubit>(create: (_) => registerCubit),
-  BlocProvider<EditCubit>(create: (_) => editCubit),
+  BlocProvider<AuthCubit>.value(value: authCubit),
+  BlocProvider<LoginCubit>.value(value: loginCubit),
+  BlocProvider<RegisterCubit>.value(value: registerCubit),
+  BlocProvider<EditCubit>.value(value: editCubit),
+  BlocProvider<FollowerCubit>.value(value: followerCubit),
 ];

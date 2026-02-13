@@ -5,17 +5,21 @@ import 'dart:convert';
 
 import 'package:migozz_app/core/config/api/api_config.dart';
 
+/// Sends OTP to the specified email
+/// [email] - User's email address
+/// [language] - Language code for the email ('en' or 'es'). Defaults to 'en'
 Future<Map<String, dynamic>> sendOTP({
   required String email,
+  String language = 'en',
   String? myOTP,
 }) async {
-  debugPrint("correo: $email");
+  debugPrint("📧 Sending OTP to: $email (language: $language)");
 
   try {
     final response = await http.post(
       Uri.parse('${ApiConfig.apiBase}/otp/send'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email}),
+      body: jsonEncode({'email': email, 'language': language}),
     );
 
     if (response.statusCode == 200) {
@@ -24,7 +28,7 @@ Future<Map<String, dynamic>> sendOTP({
       return {"sent": true, "myOTP": myOTP};
     }
   } catch (e) {
-    debugPrint("Error: $e");
+    debugPrint("❌ Error sending OTP: $e");
   }
 
   return {"sent": false, "myOTP": null};

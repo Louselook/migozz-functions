@@ -1,60 +1,35 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:migozz_app/core/config/api/api_config.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/auth_result.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
-import 'package:migozz_app/features/auth/data/domain/models/user/location_dto.dart';
 import 'package:migozz_app/features/auth/services/media_service.dart';
+import 'package:migozz_app/features/auth/services/pre_register_service.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final UserMediaService _mediaService = UserMediaService();
+  final PreRegisterService _preRegisterService = PreRegisterService();
 
   // Stream de auth
-  Stream<User?> authStateChanges() => _auth.authStateChanges();
+  Stream<User?> authStateChanges() {
+    // Asegurar persistencia LOCAL habilitada en Web
+    if (kIsWeb) {
+      _auth.setPersistence(Persistence.LOCAL);
+    }
+    return _auth.authStateChanges();
+  }
 
   // Helper para obtener UserDTO
   Future<UserDTO?> _getUserFromFirestore(String uid) async {
     final doc = await _firestore.collection('users').doc(uid).get();
     if (!doc.exists || doc.data() == null) return null;
-    final data = doc.data()!;
-    return UserDTO(
-      email: data['email'] ?? '',
-      lang: data['lang'] ?? 'es',
-      displayName: data['displayName'] ?? '',
-      username: data['username'] ?? '',
-      gender: data['gender'] ?? '',
-      socialEcosystem: data['socialEcosystem'] != null
-          ? List<Map<String, dynamic>>.from((data['socialEcosystem'] as List))
-          : null,
-      location: data['location'] != null
-          ? LocationDTO.fromMap(Map<String, dynamic>.from(data['location']))
-          : LocationDTO(country: '', state: '', city: '', lat: 0, lng: 0),
-      avatarUrl: data['avatarUrl'],
-      phone: data['phone'],
-      voiceNoteUrl: data['voiceNoteUrl'],
-      category: data['category'] != null
-          ? List<String>.from(data['category'])
-          : null,
-      interests: data['interests'] != null
-          ? Map<String, List<String>>.from(
-              (data['interests'] as Map).map(
-                (k, v) => MapEntry(k.toString(), List<String>.from(v ?? [])),
-              ),
-            )
-          : <String, List<String>>{},
-      createdAt: data['createdAt'] != null
-          ? (data['createdAt'] as Timestamp).toDate()
-          : DateTime.now(),
-      updatedAt: data['updatedAt'] != null
-          ? (data['updatedAt'] as Timestamp).toDate()
-          : DateTime.now(),
-    );
+    return UserDTO.fromMap(Map<String, dynamic>.from(doc.data()!));
   }
 
   Future<UserDTO?> getCurrentUser() async {
@@ -74,68 +49,151 @@ class AuthService {
     return querySnapshot.docs.isNotEmpty;
   }
 
+  /// ✅ Verifica si un email está asociado a una cuenta baneada
+  /// Retorna: null si no existe o está activa, 'banned' si está baneada
+  Future<String?> checkEmailBanned(String email) async {
+    final querySnapshot = await _firestore
+        .collection('users')
+        .where('email', isEqualTo: email)
+        .limit(1)
+        .get();
+
+    if (querySnapshot.docs.isEmpty) return null;
+
+    final data = querySnapshot.docs.first.data();
+    final isActive = data['active'];
+
+    // Si active es false o 0, la cuenta está baneada
+    if (isActive == false || isActive == 0) {
+      return 'banned';
+    }
+
+    return null;
+  }
+
+  /// ✅ Verifica si un username está asociado a una cuenta baneada
+  /// Retorna: null si no existe o está activa, 'banned' si está baneada
+  Future<String?> checkUsernameBanned(String username) async {
+    final querySnapshot = await _firestore
+        .collection('users')
+        .where('username', isEqualTo: username.toLowerCase())
+        .limit(1)
+        .get();
+
+    if (querySnapshot.docs.isEmpty) return null;
+
+    final data = querySnapshot.docs.first.data();
+    final isActive = data['active'];
+
+    // Si active es false o 0, la cuenta está baneada
+    if (isActive == false || isActive == 0) {
+      return 'banned';
+    }
+
+    return null;
+  }
+
   // LOGIN con Google
   Future<AuthResult> loginWithGoogle() async {
     try {
-      final googleSignIn = GoogleSignIn.instance;
+      debugPrint('🔐 [AuthService] Iniciando Google Sign-In...');
 
-      // Inicializa: solo pasa clientId en web
-      if (kIsWeb && dotenv.env['GOOGLE_CLIENT_ID'] != null) {
-        await googleSignIn.initialize(clientId: dotenv.env['GOOGLE_CLIENT_ID']);
-      } else {
-        await googleSignIn.initialize();
+      // En v7, se debe usar GoogleSignIn.instance
+      // authenticate() inicia el flujo interactivo
+      final GoogleSignInAccount googleUser;
+      try {
+        googleUser = await GoogleSignIn.instance.authenticate();
+      } catch (e) {
+        debugPrint(
+          '⚠️ [AuthService] Error o cancelación en Google Sign-In: $e',
+        );
+        // Si el usuario cancela, suele lanzar una excepción
+        throw Exception('google_signin_cancelled');
       }
 
-      // 1) UI de login
-      final googleUser = await googleSignIn.authenticate();
+      debugPrint('✅ [AuthService] Usuario autenticado: ${googleUser.email}');
 
-      // 2) pedir autorización para scopes (devuelve accessToken si existe)
-      final authorization = await googleUser.authorizationClient
-          .authorizationForScopes([
-            'email',
-            'profile',
-            // 'openid' no garantiza idToken en todas las plataformas v7, pero no hace daño pedirlo.
-            'openid',
-          ]);
+      // Obtener los tokens de autenticación (idToken)
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
 
-      if (authorization == null) throw Exception('authorization_failed');
+      debugPrint('🔐 [AuthService] Tokens obtenidos');
 
-      final String accessToken = authorization.accessToken;
-
-      debugPrint('🔐 accessToken length: ${accessToken.length}');
-
-      if (accessToken.isEmpty) {
-        throw Exception('no_access_token_obtained');
-      }
-
-      // 3) crear credential SOLO con accessToken (idToken no está disponible en v7)
+      // Crear credencial para Firebase
+      // Nota: en v7, GoogleSignInAuthentication ya no tiene accessToken.
+      // Firebase acepta idToken sin accessToken.
       final credential = GoogleAuthProvider.credential(
-        accessToken: accessToken,
-        // idToken: null,
+        idToken: googleAuth.idToken,
+        accessToken: null,
       );
 
-      // 4) sign in en Firebase
+      debugPrint(
+        '🔐 [AuthService] Credential creado, iniciando sesión en Firebase...',
+      );
+
+      // Sign in en Firebase
       final userCredential = await _auth.signInWithCredential(credential);
       final user = userCredential.user;
       if (user == null) throw Exception('firebase_sign_in_failed');
 
-      // 5) lógica Firestore (tuya, igual que antes)
+      // 5) Verificar si este email tiene un pre-order
+      String? reservedUsername;
+      if (user.email != null) {
+        debugPrint(
+          '🔍 [AuthService] Verificando pre-order para: ${user.email}',
+        );
+        final preOrderData = await _preRegisterService.getPreRegisterByEmail(
+          user.email!,
+        );
+
+        if (preOrderData.isPreRegistered && preOrderData.preOrderId != null) {
+          debugPrint(
+            '📋 [AuthService] Pre-order encontrado: ${preOrderData.preOrderId}',
+          );
+          reservedUsername = preOrderData.username;
+
+          // Eliminar el pre-order para evitar conflictos
+          debugPrint('🗑️ [AuthService] Eliminando pre-order...');
+          final deleted = await _preRegisterService.deletePreOrder(
+            preOrderData.preOrderId!,
+          );
+          if (deleted) {
+            debugPrint('✅ [AuthService] Pre-order eliminado exitosamente');
+          } else {
+            debugPrint('⚠️ [AuthService] No se pudo eliminar pre-order');
+          }
+        }
+      }
+
+      // 6) lógica Firestore
       final docRef = _firestore.collection('users').doc(user.uid);
       final doc = await docRef.get();
       bool profileExists = doc.exists;
 
       if (!profileExists) {
+        // Usar el username reservado del pre-order si existe, sino generar uno
+        final username =
+            reservedUsername ??
+            (user.displayName ?? 'user').replaceAll(' ', '').toLowerCase();
+
+        debugPrint(
+          '📝 [AuthService] Creando documento con username: $username',
+        );
+        debugPrint(
+          '📝 [AuthService] isPreRegistered: ${reservedUsername != null}',
+        );
+
         final baseData = {
           'displayName': user.displayName ?? '',
           'email': user.email ?? '',
-          // 'avatarUrl': user.photoURL ?? '',
           'phone': user.phoneNumber ?? '',
-          'username': (user.displayName ?? 'user')
-              .replaceAll(' ', '')
-              .toLowerCase(),
+          'username': username,
           'createdAt': FieldValue.serverTimestamp(),
           'updatedAt': FieldValue.serverTimestamp(),
           'complete': false,
+          'isPreRegistered':
+              reservedUsername != null, // Marcar si viene de pre-order
+          'active': true, // ✅ Usuario activo por defecto
         };
         await docRef.set(baseData);
         profileExists = true;
@@ -179,6 +237,34 @@ class AuthService {
       final user = userCredential.user;
       if (user == null) throw Exception('firebase_sign_in_failed');
 
+      // Verificar si este email tiene un pre-order
+      String? reservedUsername;
+      final userEmail = user.email ?? appleCredential.email;
+      if (userEmail != null) {
+        debugPrint('🔍 [AuthService] Verificando pre-order para: $userEmail');
+        final preOrderData = await _preRegisterService.getPreRegisterByEmail(
+          userEmail,
+        );
+
+        if (preOrderData.isPreRegistered && preOrderData.preOrderId != null) {
+          debugPrint(
+            '📋 [AuthService] Pre-order encontrado: ${preOrderData.preOrderId}',
+          );
+          reservedUsername = preOrderData.username;
+
+          // Eliminar el pre-order para evitar conflictos
+          debugPrint('🗑️ [AuthService] Eliminando pre-order...');
+          final deleted = await _preRegisterService.deletePreOrder(
+            preOrderData.preOrderId!,
+          );
+          if (deleted) {
+            debugPrint('✅ [AuthService] Pre-order eliminado exitosamente');
+          } else {
+            debugPrint('⚠️ [AuthService] No se pudo eliminar pre-order');
+          }
+        }
+      }
+
       // Check if profile exists
       final docRef = _firestore.collection('users').doc(user.uid);
       final doc = await docRef.get();
@@ -194,17 +280,32 @@ class AuthService {
                   .trim();
         }
 
+        // Usar el username reservado del pre-order si existe, sino generar uno
+        final username =
+            reservedUsername ??
+            (displayName.isNotEmpty ? displayName : 'user')
+                .replaceAll(' ', '')
+                .toLowerCase();
+
+        debugPrint(
+          '📝 [AuthService] Creando documento con username: $username',
+        );
+        debugPrint(
+          '📝 [AuthService] isPreRegistered: ${reservedUsername != null}',
+        );
+
         final baseData = {
           'displayName': displayName,
-          'email': user.email ?? appleCredential.email ?? '',
+          'email': userEmail ?? '',
           'avatarUrl': user.photoURL ?? '',
           'phone': user.phoneNumber ?? '',
-          'username': (displayName.isNotEmpty ? displayName : 'user')
-              .replaceAll(' ', '')
-              .toLowerCase(),
+          'username': username,
           'createdAt': FieldValue.serverTimestamp(),
           'updatedAt': FieldValue.serverTimestamp(),
           'complete': false,
+          'isPreRegistered':
+              reservedUsername != null, // Marcar si viene de pre-order
+          'active': true, // ✅ Usuario activo por defecto
         };
         await docRef.set(baseData);
         profileExists = true;
@@ -263,12 +364,38 @@ class AuthService {
       debugPrint('🚀 [AuthService] Email: $email');
 
       // 1️⃣ Crear usuario
+      debugPrint('🔐 [AuthService] Llamando createUserWithEmailAndPassword...');
+      debugPrint('🔐 [AuthService] Password (OTP): $otp');
+
       final userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: otp,
       );
-      final uid = userCredential.user!.uid;
+
+      final user = userCredential.user;
+      if (user == null) {
+        debugPrint('❌ [AuthService] ERROR: userCredential.user es NULL');
+        throw Exception('Firebase no devolvió un usuario válido');
+      }
+
+      final uid = user.uid;
       debugPrint('✅ [AuthService] Usuario creado con UID: $uid');
+      debugPrint('✅ [AuthService] Email verificado: ${user.email}');
+      debugPrint('✅ [AuthService] Email del user: ${user.email}');
+      debugPrint('✅ [AuthService] isAnonymous: ${user.isAnonymous}');
+      debugPrint(
+        '✅ [AuthService] Provider: ${user.providerData.map((p) => p.providerId).toList()}',
+      );
+
+      // Verificar que el usuario sigue autenticado (sin reload para evitar sign-out)
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        debugPrint(
+          '❌ [AuthService] ERROR: currentUser es NULL después de crear',
+        );
+        throw Exception('Usuario desapareció después de crearlo');
+      }
+      debugPrint('✅ [AuthService] currentUser confirmado: ${currentUser.uid}');
 
       // 2️⃣ Guardar documento base
       final userToSave = userData.copyWith(
@@ -325,6 +452,34 @@ class AuthService {
     } on FirebaseAuthException catch (e) {
       debugPrint('❌ [AuthService] FirebaseAuthException: ${e.code}');
       throw Exception('Error en registro: ${e.code}');
+    } catch (e) {
+      debugPrint('❌ [AuthService] Error inesperado: $e');
+      throw Exception('Error inesperado: $e');
+    }
+  }
+
+  /// Create Firebase Auth user ONLY (no Firestore document)
+  /// Used for pre-registered users whose document will be migrated
+  Future<String> createAuthUserOnly({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      debugPrint('🚀 [AuthService] Creando usuario en Auth (solo Auth)...');
+      debugPrint('🚀 [AuthService] Email: $email');
+
+      final userCredential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      final uid = userCredential.user!.uid;
+      debugPrint('✅ [AuthService] Usuario Auth creado con UID: $uid');
+
+      return uid;
+    } on FirebaseAuthException catch (e) {
+      debugPrint('❌ [AuthService] FirebaseAuthException: ${e.code}');
+      throw Exception('Error creando usuario Auth: ${e.code}');
     } catch (e) {
       debugPrint('❌ [AuthService] Error inesperado: $e');
       throw Exception('Error inesperado: $e');

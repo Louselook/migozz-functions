@@ -1,6 +1,9 @@
-// lib/features/auth/presentation/login/web/login_form.dart
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:google_sign_in_web/web_only.dart' as web;
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/core/components/compuestos/custom_textfield.dart';
@@ -14,6 +17,8 @@ import 'package:migozz_app/features/auth/presentation/blocs/login_cubit/login_cu
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/chat/presentation/register/components/chat_operation/functions/email_validation.dart';
 import 'package:migozz_app/core/components/compuestos/custom_snackbar.dart';
+import 'package:migozz_app/features/profile/components/utils/loader.dart';
+import 'dart:async';
 
 class LoginForm extends StatefulWidget {
   const LoginForm({super.key});
@@ -27,10 +32,47 @@ class _LoginFormState extends State<LoginForm> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   bool _isCheckingEmail = false;
+  StreamSubscription? _authEventsSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    if (kIsWeb) {
+      _initializeGoogleSignInWeb();
+    }
+  }
+
+  void _initializeGoogleSignInWeb() async {
+    final googleSignIn = GoogleSignIn.instance;
+
+    // Initialize with client ID
+    final googleClientId = const String.fromEnvironment('GOOGLE_CLIENT_ID', defaultValue: '');
+    if (googleClientId.isNotEmpty) {
+      await googleSignIn.initialize(clientId: googleClientId);
+    } else {
+      await googleSignIn.initialize();
+    }
+
+    // Listen to authentication events
+    _authEventsSubscription = googleSignIn.authenticationEvents.listen((event) {
+      // Extract user from event using pattern matching
+      final GoogleSignInAccount? user = switch (event) {
+        GoogleSignInAuthenticationEventSignIn() => event.user,
+        GoogleSignInAuthenticationEventSignOut() => null,
+      };
+
+      debugPrint('🔐 [LoginForm] Authentication event: ${user?.email}');
+      if (user != null) {
+        // User signed in via renderButton, now call the sign-in flow
+        _handleGoogleSignIn();
+      }
+    });
+  }
 
   @override
   void dispose() {
     _emailController.dispose();
+    _authEventsSubscription?.cancel();
     super.dispose();
   }
 
@@ -41,7 +83,7 @@ class _LoginFormState extends State<LoginForm> {
     if (email.isEmpty) {
       CustomSnackbar.show(
         context: context,
-        message: "Email cannot be empty",
+        message: "login.validations.emptyEmail".tr(),
         type: SnackbarType.error,
       );
       return;
@@ -54,7 +96,7 @@ class _LoginFormState extends State<LoginForm> {
     if (!isValidEmail) {
       CustomSnackbar.show(
         context: context,
-        message: "Please enter a valid email",
+        message: "login.validations.invalidEmail".tr(),
         type: SnackbarType.error,
       );
       return;
@@ -65,6 +107,14 @@ class _LoginFormState extends State<LoginForm> {
 
     try {
       final authService = AuthService();
+
+      // ✅ NUEVO: Verificar si el email está baneado
+      final bannedStatus = await authService.checkEmailBanned(email);
+      if (bannedStatus == 'banned' && mounted) {
+        _showBannedDialog();
+        return;
+      }
+
       final exists = await authService.emailExists(email);
 
       if (!mounted) return;
@@ -72,8 +122,7 @@ class _LoginFormState extends State<LoginForm> {
       if (!exists) {
         CustomSnackbar.show(
           context: context,
-          message:
-              "This email is not registered. Please create an account first.",
+          message: "login.validations.notExistEmail".tr(),
           type: SnackbarType.error,
           duration: const Duration(seconds: 4),
         );
@@ -86,17 +135,24 @@ class _LoginFormState extends State<LoginForm> {
 
         // En vez de loguear directamente, inyectamos el OTP al LoginCubit
         // para que el flujo normal de OTP se dispare (y LoginWrapper navegue).
-        context.read<LoginCubit>().sendOTPLoginCubit(email, forcedOTP: testOtp);
+        context.read<LoginCubit>().sendOTPLoginCubit(
+          email,
+          forcedOTP: testOtp,
+          language: context.locale.languageCode,
+        );
 
         // Salimos: LoginWrapper escuchará currentOTP y hará la navegación.
         return;
       }
 
-      context.read<LoginCubit>().sendOTPLoginCubit(email);
+      context.read<LoginCubit>().sendOTPLoginCubit(
+        email,
+        language: context.locale.languageCode,
+      );
     } catch (e) {
       CustomSnackbar.show(
         context: context,
-        message: "Error verifying email: $e",
+        message: "${"login.validations.validationEmail".tr()}: $e",
         type: SnackbarType.error,
       );
     } finally {
@@ -104,9 +160,49 @@ class _LoginFormState extends State<LoginForm> {
     }
   }
 
+  /// ✅ NUEVO: Mostrar popup de cuenta baneada
+  void _showBannedDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E1E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.block_rounded, color: Colors.red, size: 28),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'tutorial.accountStatus.bannedLogin.title'.tr(),
+                style: const TextStyle(color: Colors.white, fontSize: 18),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'tutorial.accountStatus.bannedLogin.message'.tr(),
+          style: const TextStyle(color: Colors.grey, fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              'tutorial.accountStatus.button'.tr(),
+              style: const TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _handleGoogleSignIn() async {
     FocusScope.of(context).unfocus();
-    LoadingOverlay.show(context);
+    LoadingOverlay.show(context, type: LoaderType.login);
     try {
       final authCubit = context.read<AuthCubit>();
       await authCubit.signInWithGoogle();
@@ -115,7 +211,7 @@ class _LoginFormState extends State<LoginForm> {
       CustomSnackbar.show(
         // ignore: use_build_context_synchronously
         context: context,
-        message: 'Error al iniciar sesión con Google: $e',
+        message: '${"login.validations.errorGoogle".tr()} $e',
         type: SnackbarType.error,
       );
     } finally {
@@ -125,7 +221,7 @@ class _LoginFormState extends State<LoginForm> {
 
   Future<void> _handleAppleSignIn() async {
     FocusScope.of(context).unfocus();
-    LoadingOverlay.show(context);
+    LoadingOverlay.show(context, type: LoaderType.login);
     try {
       final authCubit = context.read<AuthCubit>();
       await authCubit.signInWithApple();
@@ -135,7 +231,7 @@ class _LoginFormState extends State<LoginForm> {
         CustomSnackbar.show(
           // ignore: use_build_context_synchronously
           context: context,
-          message: 'Error al iniciar sesión con Apple: $e',
+          message: '${"login.validations.errorApple".tr()} $e',
           type: SnackbarType.error,
         );
       }
@@ -155,7 +251,7 @@ class _LoginFormState extends State<LoginForm> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CustomTextField(
-              hintText: "Enter Email",
+              hintText: "login.presentation.inputText".tr(),
               prefixIcon: const Icon(
                 Icons.email,
                 color: AppColors.secondaryText,
@@ -174,19 +270,31 @@ class _LoginFormState extends State<LoginForm> {
               width: double.infinity,
               radius: 19,
               onPressed: _isCheckingEmail ? null : _handleEmailLoginCheck,
-              child: const SecondaryText('Login', fontSize: 20),
+              child: SecondaryText(
+                "login.presentation.buttonText".tr(),
+                fontSize: 20,
+              ),
             ),
 
             const SizedBox(height: 40),
-            const SecondaryText('Or login with', fontSize: 16),
+            SecondaryText("login.presentation.subtitle2".tr(), fontSize: 16),
             const SizedBox(height: 5),
 
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                googleButton(onPressed: _handleGoogleSignIn),
-                const SizedBox(width: 10),
-                appleButton(onPressed: _handleAppleSignIn),
+                if (kIsWeb)
+                  // Web: Use Google's renderButton widget (required in v7.x)
+                  web.renderButton()
+                else
+                  // Mobile: Use custom button
+                  googleButton(onPressed: _handleGoogleSignIn),
+                // Apple Sign-In no está disponible en web debido a problemas de compatibilidad
+                // con sign_in_with_apple v7.0.1
+                if (!kIsWeb) ...[
+                  const SizedBox(width: 10),
+                  appleButton(onPressed: _handleAppleSignIn),
+                ],
               ],
             ),
             const SizedBox(height: 50),

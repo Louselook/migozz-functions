@@ -2,6 +2,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/features/auth/presentation/onboarding/shared/onboarding_model.dart';
 import 'onboarding_progress_indicators.dart';
+import 'package:migozz_app/core/components/atomics/text.dart';
+import 'package:migozz_app/core/color.dart';
 import 'onboarding_actions.dart';
 
 class OnboardingContent extends StatelessWidget {
@@ -26,61 +28,130 @@ class OnboardingContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenSize = MediaQuery.of(context).size;
+    final aspectRatio = screenSize.height / screenSize.width;
+    final isVeryTallScreen = aspectRatio > 2.0; // Pantallas tipo S25 Ultra
+    final isMobileWeb = !isDesktop && screenSize.width < 500;
 
+    // Escala del texto basada en el ancho de pantalla - más compacto para móvil web
+    final double titleSize = isDesktop
+        ? (screenSize.width < 900 ? 32 : 40)
+        : (isVeryTallScreen ? 22 : (isMobileWeb ? 24 : 28));
+    final double textSize = isDesktop
+        ? (screenSize.width < 900 ? 16 : 18)
+        : (isVeryTallScreen ? 12 : (isMobileWeb ? 13 : 14));
+    final double spacing = isVeryTallScreen ? 6 : (isMobileWeb ? 8 : 16);
+
+    // Para móvil: layout con posiciones fijas
+    if (!isDesktop) {
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Área de texto con scroll si es necesario
+          Expanded(
+            child: SingleChildScrollView(
+              physics: const ClampingScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Título
+                  PrimaryText(
+                    data.titleKey.tr(),
+                    fontSize: titleSize,
+                    fontfamily: 'Inter',
+                    textAlign: TextAlign.start,
+                  ),
+                  SizedBox(height: spacing),
+                  // Subtítulo (si existe)
+                  if (data.subTitleKey != null &&
+                      data.subTitleKey!.isNotEmpty) ...[
+                    SecondaryText(
+                      data.subTitleKey!.tr(),
+                      textAlign: TextAlign.start,
+                      fontfamily: 'Inter',
+                      fontSize: textSize,
+                      color: AppColors.secondaryText,
+                    ),
+                    SizedBox(height: isVeryTallScreen ? 4 : 8),
+                  ],
+                  // Descripción
+                  SecondaryText(
+                    data.descriptionKey.tr(),
+                    textAlign: TextAlign.start,
+                    fontfamily: 'Inter',
+                    fontSize: textSize,
+                    color: AppColors.secondaryText.withValues(alpha: 0.7),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // Botones siempre en la parte inferior
+          Padding(
+            padding: EdgeInsets.only(top: isVeryTallScreen ? 8 : 12),
+            child: OnboardingActions(
+              controller: controller,
+              lastPage: lastPage,
+              isDesktop: isDesktop,
+              screenWidth: screenSize.width,
+            ),
+          ),
+        ],
+      );
+    }
+
+    // Desktop: layout original
     return Column(
-      mainAxisAlignment: isDesktop
-          ? MainAxisAlignment.center
-          : MainAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         // Progress indicators
         OnboardingProgressIndicators(
           currentIndex: currentPage,
           isDesktop: isDesktop,
         ),
+        SizedBox(height: 32),
 
         // Título
-        Padding(
-          padding: isDesktop
-              ? const EdgeInsets.symmetric(horizontal: 0)
-              : EdgeInsets.zero,
-          child: Text(
-            data.titleKey.tr(),
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: screenWidth < 600 ? 24 : (screenWidth < 900 ? 32 : 40),
-            ),
-          ),
+        PrimaryText(
+          data.titleKey.tr(),
+          fontSize: titleSize,
+          fontfamily: 'Inter',
+          textAlign: TextAlign.start,
         ),
 
-        SizedBox(height: screenWidth < 600 ? 8 : 12),
+        SizedBox(height: spacing),
+        // Subtítulo (si existe)
+        if (data.subTitleKey != null && data.subTitleKey!.isNotEmpty) ...[
+          SecondaryText(
+            data.subTitleKey!.tr(),
+            textAlign: TextAlign.start,
+            fontfamily: 'Inter',
+            fontSize: textSize,
+            color: AppColors.secondaryText,
+          ),
+          SizedBox(height: isVeryTallScreen ? 4 : 8),
+        ],
 
         // Descripción
-        Padding(
-          padding: isDesktop
-              ? const EdgeInsets.symmetric(horizontal: 0)
-              : EdgeInsets.zero,
-          child: Text(
-            data.descriptionKey.tr(),
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.7),
-              fontSize: screenWidth < 600 ? 16 : (screenWidth < 900 ? 20 : 24),
-            ),
-          ),
+        SecondaryText(
+          data.descriptionKey.tr(),
+          textAlign: TextAlign.start,
+          fontfamily: 'Inter',
+          fontSize: textSize,
+          color: AppColors.secondaryText.withValues(alpha: 0.7),
         ),
 
-        if (!isDesktop) const Spacer(),
-
-        SizedBox(height: isDesktop ? (screenWidth < 600 ? 40 : 107) : 20),
-
-        // Actions (Next / Skip / Get Started)
+        SizedBox(height: 48),
+        // Actions
         OnboardingActions(
           controller: controller,
           lastPage: lastPage,
           isDesktop: isDesktop,
-          screenWidth: screenWidth,
+          screenWidth: screenSize.width,
         ),
       ],
     );

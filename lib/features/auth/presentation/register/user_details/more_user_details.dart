@@ -1,11 +1,12 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/modules/category_step.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/interests/interests_step.dart';
-import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/social_ecosystem_simple_step.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/social_network_selection_step.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/social_ecosystem_step_v3.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 
@@ -112,19 +113,22 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
 
     if (widget.mode == MoreUserDetailsMode.register) {
       // In register mode, show simple or full view based on state
+      // pageIndicator: 0 = SocialEcosystem, 1 = Category, 2 = Interests
       if (_showFullSocialView) {
         // Full view with all categories and search
         steps = [
           SocialEcosystemStepV3(controller: pageController, mode: widget.mode),
+          CategoryStep(controller: pageController, mode: widget.mode),
           InterestsStep(controller: pageController, mode: widget.mode),
         ];
       } else {
-        // Simple view with main networks only
+        // Simple view with main networks only - Three-step flow
         steps = [
-          SocialEcosystemSimpleStep(
+          SocialNetworkSelectionStep(
             controller: pageController,
             onAddOtherNetworks: _navigateToFullSocialView,
           ),
+          CategoryStep(controller: pageController, mode: widget.mode),
           InterestsStep(controller: pageController, mode: widget.mode),
         ];
       }
@@ -132,27 +136,45 @@ class _MoreUserDetailsState extends State<MoreUserDetails> {
       // In edit mode, always show full v3 view
       steps = [
         SocialEcosystemStepV3(controller: pageController, mode: widget.mode),
+        CategoryStep(controller: pageController, mode: widget.mode),
         InterestsStep(controller: pageController, mode: widget.mode),
       ];
     }
 
+    // ignore: deprecated_member_use
     return WillPopScope(
       onWillPop: () async {
-        // Prevent back navigation in register mode if no social network is added
+        // En modo registro, validar según la página actual
         if (widget.mode == MoreUserDetailsMode.register) {
           final registerState = context.read<RegisterCubit>().state;
+          final currentPage = pageController.page?.round() ?? 0;
+
+          // Página 1 = CategoryStep - Verificar que tenga categoría seleccionada
+          if (currentPage == 1) {
+            final categories = registerState.category ?? [];
+            if (categories.isEmpty) {
+              // No permitir salir sin categoría
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('category.required'.tr()),
+                  backgroundColor: Colors.orange,
+                  duration: const Duration(seconds: 3),
+                ),
+              );
+              return false;
+            }
+          }
+
           final socialEcosystem = registerState.socialEcosystem ?? [];
 
           if (socialEcosystem.isEmpty) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('addSocials.validation.atLeastOne'.tr()),
-                backgroundColor: Colors.orange,
-                duration: const Duration(seconds: 2),
-              ),
-            );
-            return false;
+            // Volver al chat con código especial para preguntar si quiere cambiar datos
+            Navigator.of(context).pop('back_no_socials');
+            return false; // Ya manejamos el pop manualmente
           }
+          // Tiene redes - volver normalmente con 'done'
+          Navigator.of(context).pop('done');
+          return false;
         }
         return true;
       },

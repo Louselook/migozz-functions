@@ -13,7 +13,7 @@ import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
-import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
+import 'package:migozz_app/features/profile/components/utils/alert_general.dart';
 
 class SupportScreen extends StatefulWidget {
   const SupportScreen({super.key});
@@ -322,22 +322,24 @@ class _SupportScreenState extends State<SupportScreen> {
   Widget buildInfoCard() {
     // Reusable small widgets
     Widget heading(String text) => Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Text(text,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-              )),
-        );
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
 
     Widget paragraph(String text) => Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Text(
-            text,
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.9)),
-          ),
-        );
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Text(
+        text,
+        style: TextStyle(color: Colors.white.withValues(alpha: 0.9)),
+      ),
+    );
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -354,7 +356,8 @@ class _SupportScreenState extends State<SupportScreen> {
             children: [
               heading("Need help? You’re in the right place"),
               paragraph(
-                  "If you are experiencing issues or need assistance with the app, our team is available to help you resolve technical problems, account issues, and general questions about the platform."),
+                "If you are experiencing issues or need assistance with the app, our team is available to help you resolve technical problems, account issues, and general questions about the platform.",
+              ),
               heading("Contact Email"),
               paragraph("If you prefer to contact us by email, write to:"),
               Row(
@@ -362,14 +365,21 @@ class _SupportScreenState extends State<SupportScreen> {
                   const Icon(Icons.mail, color: Colors.white70, size: 16),
                   const SizedBox(width: 8),
                   InkWell(
-                    onTap: () => html.window.open('mailto:migozzoficial@gmail.com', '_self'),
-                    child: Text('migozzoficial@gmail.com',
-                        style: const TextStyle(
-                            color: Colors.white, decoration: TextDecoration.underline)),
+                    onTap: () => html.window.open(
+                      'mailto:migozzoficial@gmail.com',
+                      '_self',
+                    ),
+                    child: Text(
+                      'migozzoficial@gmail.com',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
                   ),
                 ],
               ),
-            ]
+            ],
           ),
         ),
       ),
@@ -452,10 +462,7 @@ class SupportInfoCard extends StatelessWidget {
               """),
 
             const SizedBox(height: 10),
-            PrimaryText(
-              "Thank you for using Migozz!",
-              color: Colors.white,
-            ),
+            PrimaryText("Thank you for using Migozz!", color: Colors.white),
             const SizedBox(height: 5),
             _text("""
               Our goal is to provide the best possible experience. If you need further assistance, feel free to reach out through the support form or email.
@@ -476,11 +483,7 @@ class SupportInfoCard extends StatelessWidget {
   Widget _text(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
-      child: SecondaryText(
-        text,
-        color: Colors.white.withValues(alpha: 0.8),
-      ),
+      child: SecondaryText(text, color: Colors.white.withValues(alpha: 0.8)),
     );
   }
 }
-

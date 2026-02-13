@@ -28,8 +28,19 @@ class UserDTO {
   final Map<String, List<String>> interests;
   final bool complete;
 
+  // Pre-registro: usuarios que reservaron username antes de registrarse
+  final bool isPreRegistered;
+
+  // Estado de la cuenta: true = activo, false = baneado
+  final bool active;
+
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  // 🆕 Timestamp de la última sincronización de redes sociales (cada 15 días)
+  final DateTime? lastSocialEcosystemSync;
+  // 🆕 Mapa para rastrear la fecha en que cada red social fue agregada
+  final Map<String, DateTime>? socialEcosystemAddedDates;
 
   UserDTO({
     required this.email,
@@ -52,8 +63,12 @@ class UserDTO {
     this.contactEmail,
     Map<String, List<String>>? interests,
     this.complete = true,
+    this.isPreRegistered = false,
+    this.active = true,
     DateTime? createdAt,
     DateTime? updatedAt,
+    this.lastSocialEcosystemSync,
+    this.socialEcosystemAddedDates,
   }) : username = username.trim().toLowerCase(),
        interests = interests ?? <String, List<String>>{},
        createdAt = createdAt ?? DateTime.now(),
@@ -80,8 +95,12 @@ class UserDTO {
     String? contactEmail,
     Map<String, List<String>>? interests,
     bool? complete,
+    bool? isPreRegistered,
+    bool? active,
     DateTime? createdAt,
     DateTime? updatedAt,
+    DateTime? lastSocialEcosystemSync,
+    Map<String, DateTime>? socialEcosystemAddedDates,
   }) {
     return UserDTO(
       email: email ?? this.email,
@@ -104,8 +123,14 @@ class UserDTO {
       contactEmail: contactEmail ?? this.contactEmail,
       interests: interests ?? this.interests,
       complete: complete ?? this.complete,
+      isPreRegistered: isPreRegistered ?? this.isPreRegistered,
+      active: active ?? this.active,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      lastSocialEcosystemSync:
+          lastSocialEcosystemSync ?? this.lastSocialEcosystemSync,
+      socialEcosystemAddedDates:
+          socialEcosystemAddedDates ?? this.socialEcosystemAddedDates,
     );
   }
 
@@ -131,8 +156,51 @@ class UserDTO {
       'contactEmail': contactEmail,
       'interests': interests,
       'complete': complete,
+      'isPreRegistered': isPreRegistered,
+      'active': active,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
+      'lastSocialEcosystemSync': lastSocialEcosystemSync != null
+          ? Timestamp.fromDate(lastSocialEcosystemSync!)
+          : null,
+      'socialEcosystemAddedDates': socialEcosystemAddedDates?.map(
+        (k, v) => MapEntry(k, Timestamp.fromDate(v)),
+      ),
+    };
+  }
+
+  /// Converts to a JSON-serializable map (no Timestamps, uses ISO strings)
+  /// Use this for HTTP API calls instead of toMap()
+  Map<String, dynamic> toJsonMap() {
+    return {
+      'email': email,
+      'lang': lang,
+      'displayName': displayName,
+      'username': username,
+      'gender': gender,
+      'bio': bio,
+      'birthDate': birthDate?.toIso8601String(),
+      'socialEcosystem': socialEcosystem,
+      'featuredLinks': featuredLinks,
+      'location': location.toMap(),
+      'avatarUrl': avatarUrl,
+      'phone': phone,
+      'voiceNoteUrl': voiceNoteUrl,
+      'category': category,
+      'profileVersion': profileVersion,
+      'contactWebsite': contactWebsite,
+      'contactPhone': contactPhone,
+      'contactEmail': contactEmail,
+      'interests': interests,
+      'complete': complete,
+      'isPreRegistered': isPreRegistered,
+      'active': active,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+      'lastSocialEcosystemSync': lastSocialEcosystemSync?.toIso8601String(),
+      'socialEcosystemAddedDates': socialEcosystemAddedDates?.map(
+        (k, v) => MapEntry(k, v.toIso8601String()),
+      ),
     };
   }
 
@@ -294,6 +362,28 @@ class UserDTO {
       complete = c != 0;
     }
 
+    // isPreRegistered defensivo
+    bool isPreRegistered = false;
+    final ipr = map['isPreRegistered'];
+    if (ipr is bool) {
+      isPreRegistered = ipr;
+    } else if (ipr is String) {
+      isPreRegistered = ipr.toLowerCase() == 'true';
+    } else if (ipr is num) {
+      isPreRegistered = ipr != 0;
+    }
+
+    // active defensivo (por defecto true para usuarios existentes)
+    bool active = true;
+    final act = map['active'];
+    if (act is bool) {
+      active = act;
+    } else if (act is String) {
+      active = act.toLowerCase() == 'true';
+    } else if (act is num) {
+      active = act != 0;
+    }
+
     // profileVersion defensivo
     int profileVersion = 1; // Por defecto versión 1
     final pv = map['profileVersion'];
@@ -307,6 +397,45 @@ class UserDTO {
     // Validar que esté entre 1 y 3
     if (profileVersion < 1 || profileVersion > 3) {
       profileVersion = 1;
+    }
+
+    // 🆕 lastSocialEcosystemSync defensivo
+    DateTime? lastSocialEcosystemSync;
+    final lses = map['lastSocialEcosystemSync'];
+    if (lses != null) {
+      if (lses is Timestamp) {
+        lastSocialEcosystemSync = lses.toDate();
+      } else if (lses is DateTime) {
+        lastSocialEcosystemSync = lses;
+      } else if (lses is String) {
+        lastSocialEcosystemSync = DateTime.tryParse(lses);
+      } else if (lses is int) {
+        lastSocialEcosystemSync = DateTime.fromMillisecondsSinceEpoch(lses);
+      }
+    }
+
+    // 🆕 socialEcosystemAddedDates defensivo
+    Map<String, DateTime>? socialEcosystemAddedDates;
+    final sead = map['socialEcosystemAddedDates'];
+    if (sead is Map) {
+      socialEcosystemAddedDates = {};
+      final rawDates = Map<String, dynamic>.from(sead);
+      rawDates.forEach((k, v) {
+        if (v is Timestamp) {
+          socialEcosystemAddedDates![k] = v.toDate();
+        } else if (v is DateTime) {
+          socialEcosystemAddedDates![k] = v;
+        } else if (v is String) {
+          final parsed = DateTime.tryParse(v);
+          if (parsed != null) {
+            socialEcosystemAddedDates![k] = parsed;
+          }
+        } else if (v is int) {
+          socialEcosystemAddedDates![k] = DateTime.fromMillisecondsSinceEpoch(
+            v,
+          );
+        }
+      });
     }
 
     return UserDTO(
@@ -330,8 +459,12 @@ class UserDTO {
       contactEmail: contactEmail,
       interests: interests,
       complete: complete,
+      isPreRegistered: isPreRegistered,
+      active: active,
       createdAt: createdAt,
       updatedAt: updatedAt,
+      lastSocialEcosystemSync: lastSocialEcosystemSync,
+      socialEcosystemAddedDates: socialEcosystemAddedDates,
     );
   }
 }

@@ -13,11 +13,11 @@ void handleTwitter(String queryString, BuildContext context) {
 
     // Guardar en el cubit
     final registerCubit = context.read<RegisterCubit>();
-    final current = List<Map<String, Map<String, dynamic>>>.from(
+    final current = List<Map<String, dynamic>>.from(
       registerCubit.state.socialEcosystem ?? [],
     );
 
-    current.add({'twitter': normalized});
+    current.add({'x': normalized});
     registerCubit.setSocialEcosystem(current);
 
     debugPrint("✅ Twitter conectado: $normalized");

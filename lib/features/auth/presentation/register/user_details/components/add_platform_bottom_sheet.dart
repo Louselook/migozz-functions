@@ -65,7 +65,7 @@ class _AddPlatformBottomSheetState extends State<AddPlatformBottomSheet> {
   Future<void> _pickImageFromCamera() async {
     try {
       final imagePath = await CameraPermissionHandler.openCamera(
-        imageQuality: 40,
+        imageQuality: 85,
         context: context,
       );
 
@@ -78,7 +78,9 @@ class _AddPlatformBottomSheetState extends State<AddPlatformBottomSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${'profile.customization.plataform.camera'.tr()} $e'),
+            content: Text(
+              '${'profile.customization.plataform.camera'.tr()} $e',
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -89,7 +91,7 @@ class _AddPlatformBottomSheetState extends State<AddPlatformBottomSheet> {
   Future<void> _pickImageFromGallery() async {
     try {
       final imagePath = await CameraPermissionHandler.openGallery(
-        imageQuality: 40,
+        imageQuality: 85,
         context: context,
       );
 
@@ -102,7 +104,9 @@ class _AddPlatformBottomSheetState extends State<AddPlatformBottomSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${'profile.customization.plataform.gallery'.tr()} $e'),
+            content: Text(
+              '${'profile.customization.plataform.gallery'.tr()} $e',
+            ),
             backgroundColor: Colors.red,
           ),
         );

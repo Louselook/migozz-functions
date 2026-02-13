@@ -2,6 +2,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:migozz_app/core/services/bot/list_queestions.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_state.dart';
 
 class AssistantFunctions {
   /// Helper para determinar si usar español basado en el estado del cubit
@@ -10,8 +11,152 @@ class AssistantFunctions {
     return cubit.state.language == 'Español';
   }
 
+  /// Detecta si el usuario menciona un campo específico que quiere cambiar
+  /// Retorna el nombre del campo si se detecta, null si no
+  static String? _detectFieldMention(String normalized) {
+    // Detectar menciones de campos específicos
+    // Orden importa: más específicos primero
+
+    // Username
+    if (normalized.contains('nombre de usuario') ||
+        normalized.contains('username') ||
+        normalized == 'my username' ||
+        normalized == 'mi usuario' ||
+        normalized.contains('apodo') ||
+        normalized.contains('nick')) {
+      return 'username';
+    }
+
+    // Full name
+    if (normalized.contains('nombre completo') ||
+        normalized.contains('mi nombre') ||
+        normalized.contains('full name') ||
+        normalized == 'my name' ||
+        normalized == 'name' ||
+        normalized == 'nombre') {
+      return 'fullName';
+    }
+
+    // Social ecosystem
+    if (normalized.contains('redes sociales') ||
+        normalized.contains('redes') ||
+        normalized.contains('social') ||
+        normalized == 'my socials' ||
+        normalized == 'mis redes') {
+      return 'socialEcosystem';
+    }
+
+    // Avatar/Photo
+    if (normalized.contains('foto') ||
+        normalized.contains('imagen') ||
+        normalized.contains('avatar') ||
+        normalized.contains('profile picture') ||
+        normalized.contains('picture') ||
+        normalized.contains('photo') ||
+        normalized == 'my photo' ||
+        normalized == 'mi foto') {
+      return 'avatarUrl';
+    }
+
+    // Email
+    if (normalized.contains('correo') ||
+        normalized.contains('email') ||
+        normalized == 'my email' ||
+        normalized == 'mi correo') {
+      return 'sendOTP';
+    }
+
+    // Location
+    /*
+    if (normalized.contains('ubicación') ||
+        normalized.contains('ubicacion') ||
+        normalized.contains('dirección') ||
+        normalized.contains('direccion') ||
+        normalized.contains('location') ||
+        normalized.contains('address') ||
+        normalized == 'my location' ||
+        normalized == 'mi ubicación' ||
+        normalized == 'mi ubicacion') {
+      return 'location';
+    }
+    */
+
+    // Phone
+    if (normalized.contains('teléfono') ||
+        normalized.contains('telefono') ||
+        normalized.contains('phone') ||
+        normalized.contains('número') ||
+        normalized.contains('numero') ||
+        normalized == 'my phone' ||
+        normalized == 'mi teléfono' ||
+        normalized == 'mi telefono') {
+      return 'phone';
+    }
+
+    // Voice note
+    if (normalized.contains('nota de voz') ||
+        normalized.contains('voice note') ||
+        normalized.contains('audio') ||
+        normalized.contains('grabación') ||
+        normalized.contains('grabacion') ||
+        normalized == 'my voice' ||
+        normalized == 'mi voz') {
+      return 'voiceNoteUrl';
+    }
+
+    return null;
+  }
+
+  /// Obtiene el nombre del campo en español para mensajes al usuario
+  static String _getFieldNameInSpanish(String fieldKey) {
+    switch (fieldKey) {
+      case 'fullName':
+        return 'nombre completo';
+      case 'username':
+        return 'nombre de usuario';
+      case 'location':
+        return 'ubicación';
+      case 'phone':
+        return 'teléfono';
+      case 'avatarUrl':
+        return 'foto de perfil';
+      case 'socialEcosystem':
+        return 'redes sociales';
+      case 'voiceNoteUrl':
+        return 'nota de voz';
+      case 'sendOTP':
+        return 'correo electrónico';
+      default:
+        return fieldKey;
+    }
+  }
+
+  /// Obtiene el nombre del campo en inglés para mensajes al usuario
+  static String _getFieldNameInEnglish(String fieldKey) {
+    switch (fieldKey) {
+      case 'fullName':
+        return 'full name';
+      case 'username':
+        return 'username';
+      case 'location':
+        return 'location';
+      case 'phone':
+        return 'phone number';
+      case 'avatarUrl':
+        return 'profile photo';
+      case 'socialEcosystem':
+        return 'social networks';
+      case 'voiceNoteUrl':
+        return 'voice note';
+      case 'sendOTP':
+        return 'email address';
+      default:
+        return fieldKey;
+    }
+  }
+
   /// Obtiene la pregunta actual del flujo
-  /// Ahora devuelve Map<String,dynamic>? de forma defensiva (puede ser null)
+  /// Ahora devuelve `Map<String, dynamic>?` de forma defensiva (puede ser null)
   static Map<String, dynamic>? getCurrentQuestion(
     List<String> questionFlow,
     int currentIndex,
@@ -76,16 +221,36 @@ class AssistantFunctions {
   ) {
     final normalized = userInput.trim().toLowerCase();
 
-    // 👇 Detección de preguntas del tipo "why/para qué/por qué"
+    // Normalización ligera para detectar preguntas tipo "por qué" aunque vengan
+    // sin signos o con variaciones comunes (porque/porqué/por que).
+    final normalizedPlain = normalized
+        .replaceAll(RegExp(r'[¿?¡!.,;:]'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+
+    // 👇 DETECCIÓN DE CAMBIOS DE RESPUESTAS ANTERIORES
+    final wantToChange = _detectChangeRequest(normalized, cubit);
+    if (wantToChange != null) {
+      return wantToChange;
+    }
+
+    // 👇 Detección de preguntas del tipo "why/para qué/por qué".
+    // Importante: muchos usuarios escriben "porque" (1 palabra) sin signos.
     final isWhy =
-        normalized == 'why' ||
-        normalized == 'why?' ||
-        normalized.contains('why ') ||
-        normalized.contains(' why') ||
-        normalized.contains('por qué') ||
-        normalized.contains('por que') ||
-        normalized.contains('para qué') ||
-        normalized.contains('para que');
+        normalizedPlain == 'why' ||
+        normalizedPlain.startsWith('why ') ||
+        normalizedPlain.endsWith(' why') ||
+        normalizedPlain.contains(' why ') ||
+        normalizedPlain.contains('por qué') ||
+        normalizedPlain.contains('por que') ||
+        normalizedPlain.contains('porqué') ||
+        normalizedPlain == 'porque' ||
+        normalizedPlain.startsWith('porque ') ||
+        normalizedPlain.contains(' para qué') ||
+        normalizedPlain.contains(' para que') ||
+        normalizedPlain.contains(' paraqué') ||
+        normalizedPlain == 'para que' ||
+        normalizedPlain == 'para qué';
 
     switch (stepKey) {
       case 'fullName':
@@ -100,18 +265,156 @@ class AssistantFunctions {
       case 'location':
         return _evaluateLocation(normalized, userInput, cubit);
 
+      // Paso interno: ingreso manual de ubicación (país/estado/ciudad)
+      case 'locationManual':
+        if (isWhy) {
+          return {
+            "step": "regProgress.location",
+            "valid": false,
+            "isWhy": true,
+            // Usar el contexto de 'location' (no 'locationManual')
+            "field": "location",
+            "userResponse": userInput.trim(),
+          };
+        }
+        return _evaluateManualLocation(userInput, cubit);
+
       case 'sendOTP': //  SEPARADO de emailVerification
         return _evaluateSendOTP(normalized, userInput);
+
+      case 'emailReask': // Re-preguntar email sin OTP
+        return _evaluateEmailReask(normalized, userInput);
 
       case 'emailChange': // NUEVO: Cambiar email
         return _evaluateEmailChange(normalized, userInput);
 
+      case 'emailVerification': // Validar código OTP (paso emailVerification)
       case 'otpInput': // AGREGADO: Validar código OTP
         return _evaluateOTP(normalized, userInput, cubit);
 
+      case 'voiceNoteUrl':
+        return _evaluateVoiceNoteUrl(normalized, userInput, cubit, isWhy);
+
+      case 'confirmCreateAccount':
+        final isSpanish = _getIsSpanish(cubit);
+        if (isWhy) {
+          return {
+            "step": "regProgress.confirmCreateAccount",
+            "valid": false,
+            "explainWhy": true,
+            "userResponse": userInput.trim(),
+          };
+        }
+
+        final n = normalizedPlain;
+
+        // PRIMERO: Detectar si el usuario menciona un campo específico para cambiar
+        // Esto permite respuestas como "my location", "mi foto", "username", etc.
+        final fieldMentions = _detectFieldMention(normalized);
+        if (fieldMentions != null) {
+          return {
+            "step": "regProgress.changeRequest",
+            "valid": false,
+            "changeRequest": true,
+            "targetField": fieldMentions,
+            "message": isSpanish
+                ? "Entendido. Vamos a actualizar tu ${_getFieldNameInSpanish(fieldMentions)}."
+                : "Got it. Let's update your ${_getFieldNameInEnglish(fieldMentions)}.",
+          };
+        }
+
+        // If user explicitly wants to change something, route to change flow.
+        final wantsChange =
+            n.contains('cambiar') ||
+            n.contains('change') ||
+            n.contains('editar') ||
+            n.contains('edit') ||
+            n.contains('modificar') ||
+            n.contains('update');
+        if (wantsChange) {
+          return {
+            "step": "regProgress.changeRequest",
+            "valid": false,
+            "changeRequest": true,
+            "message": isSpanish
+                ? "Perfecto. ¿Qué quieres cambiar? (por ejemplo: \"quiero cambiar mi username\")"
+                : "Got it. What would you like to change? (for example: \"I want to change my username\")",
+          };
+        }
+
+        final wantsCreate =
+            n == 'si' ||
+            n == 'sí' ||
+            n == 'yes' ||
+            n == 'ok' ||
+            n == 'okay' ||
+            n == 'vale' ||
+            n == 'listo' ||
+            n == 'todo listo' ||
+            n.contains('todo listo') ||
+            n.contains('ya') ||
+            n.contains('perfecto') ||
+            n.contains('dale') ||
+            n.contains('de una') ||
+            n.contains('continuar') ||
+            n.contains('continuemos') ||
+            n.contains('vamos') ||
+            n.contains('crear') ||
+            n.contains('crea') ||
+            n.contains('crear mi cuenta') ||
+            n.contains('create my account') ||
+            n.contains('crear cuenta') ||
+            n.contains('create account') ||
+            n.contains('all set') ||
+            n.contains('ready') ||
+            n.contains('go ahead') ||
+            n.contains('go to migozz') ||
+            n.contains('vamos a migozz') ||
+            n.contains('let\'s do it') ||
+            n.contains('lets do it');
+
+        if (wantsCreate) {
+          return {
+            "step": "regProgress.confirmCreateAccount",
+            "valid": true,
+            "userResponse": userInput.trim(),
+          };
+        }
+
+        // If user wants to update/change something
+        final wantsUpdate =
+            n.contains('actualizar') ||
+            n.contains('update') ||
+            n.contains('cambiar') ||
+            n.contains('change') ||
+            n.contains('editar') ||
+            n.contains('edit') ||
+            n.contains('modificar') ||
+            n.contains('corregir');
+
+        if (wantsUpdate) {
+          return {
+            "step": "regProgress.changeRequest",
+            "valid": false,
+            "changeRequest": true,
+            "message": isSpanish
+                ? "¿Qué información quieres actualizar?"
+                : "What information would you like to update?",
+          };
+        }
+
+        // Otherwise, keep the user on the confirmation question.
+        return {
+          "step": "regProgress.confirmCreateAccount",
+          "valid": false,
+          "userResponse": userInput.trim(),
+          "text": isSpanish
+              ? "¿Listo para crear tu cuenta? Responde: \"Sí, vamos a Migozz\" o \"Cambiar algo\"."
+              : "Ready to create your account? Reply: \"Yes, go to Migozz\" or \"Change something\".",
+        };
+
       case 'avatarUrl':
       case 'phone':
-      case 'voiceNoteUrl':
         return {
           "step": "regProgress.$stepKey",
           "valid": true,
@@ -129,11 +432,405 @@ class AssistantFunctions {
     }
   }
 
+  static Map<String, dynamic> _evaluateVoiceNoteUrl(
+    String normalized,
+    String original,
+    RegisterCubit cubit,
+    bool isWhy,
+  ) {
+    final isSpanish = _getIsSpanish(cubit);
+    final text = original.trim();
+
+    // Si el usuario pregunta "por qué/para qué/why", NO tomarlo como respuesta válida.
+    // Solo dar contexto y volver a pedir el audio.
+    if (isWhy) {
+      return {
+        "step": "regProgress.voiceNoteUrl",
+        "valid": false,
+        "explainWhy": true,
+        "userResponse": text,
+      };
+    }
+
+    // Permitir Skip explícito
+    if (normalized == 'skip') {
+      return {
+        "step": "regProgress.voiceNoteUrl",
+        "valid": true,
+        "userResponse": 'Skip',
+      };
+    }
+
+    // Si ya hay un archivo/audio confirmado en el cubit, aceptar.
+    // (Esto ocurre cuando el AudioChatHandler ya guardó el audio y el flujo avanza.)
+    final voiceFile = cubit.voiceNoteFile;
+    if (voiceFile != null) {
+      return {
+        "step": "regProgress.voiceNoteUrl",
+        "valid": true,
+        "userResponse": text,
+      };
+    }
+
+    // Si el usuario envía texto al azar (sin audio), no avanzar.
+    // Pedir que grabe/envíe la nota de voz.
+    return {
+      "step": "regProgress.voiceNoteUrl",
+      "valid": false,
+      "userResponse": text,
+      "text": isSpanish
+          ? 'Para continuar, graba una nota de voz (1-10s) manteniendo presionado el micrófono, o escribe "Skip" si deseas omitirla.'
+          : 'To continue, record a voice note (1-10s) by holding the microphone, or type "Skip" to skip it.',
+    };
+  }
+
+  static Map<String, dynamic> _evaluateManualLocation(
+    String original,
+    RegisterCubit cubit,
+  ) {
+    final isSpanish = _getIsSpanish(cubit);
+    final text = original.trim();
+
+    // Formatos soportados:
+    // 1) "Colombia, Antioquia, Medellín"
+    // 2) "País: Colombia, Estado: Antioquia, Ciudad: Medellín" (cualquier orden)
+    // 3) "Country: Colombia, State: Antioquia, City: Medellin"
+
+    String country = '';
+    String state = '';
+    String city = '';
+
+    final lower = text.toLowerCase();
+    final hasLabels =
+        lower.contains('país') ||
+        lower.contains('pais') ||
+        lower.contains('estado') ||
+        lower.contains('departamento') ||
+        lower.contains('ciudad') ||
+        lower.contains('country') ||
+        lower.contains('state') ||
+        lower.contains('city');
+
+    if (hasLabels) {
+      // Parse tipo "key: value" separado por comas
+      final parts = text.split(',');
+      for (final raw in parts) {
+        final p = raw.trim();
+        final idx = p.indexOf(':');
+        if (idx <= 0) continue;
+        final key = p.substring(0, idx).trim().toLowerCase();
+        final value = p.substring(idx + 1).trim();
+        if (value.isEmpty) continue;
+
+        if (key.contains('país') ||
+            key.contains('pais') ||
+            key.contains('country')) {
+          country = value;
+        } else if (key.contains('estado') ||
+            key.contains('departamento') ||
+            key.contains('state')) {
+          state = value;
+        } else if (key.contains('ciudad') || key.contains('city')) {
+          city = value;
+        }
+      }
+    } else {
+      // Parse simple por comas (según el prompt): Country, City, State
+      final parts = text
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+      if (parts.length >= 3) {
+        country = parts[0];
+        city = parts[1];
+        state = parts[2];
+      }
+    }
+
+    final hasMinimum =
+        country.isNotEmpty && state.isNotEmpty && city.isNotEmpty;
+    if (!hasMinimum) {
+      return {
+        "step": "regProgress.location",
+        "valid": false,
+        "manualLocation": true,
+        "userResponse": text,
+        "text": isSpanish
+            ? "Por favor ingresa tu ubicación como: País, Ciudad, Estado/Departamento.\nEj: Colombia, Medellín, Antioquia\n\nTambién puedes usar etiquetas: País: Colombia, Ciudad: Medellín, Estado: Antioquia"
+            : "Please enter your location as: Country, City, State/Region.\nExample: Colombia, Medellin, Antioquia\n\nYou can also use labels: Country: Colombia, City: Medellin, State: Antioquia",
+      };
+    }
+
+    return {
+      "step": "regProgress.location",
+      "valid": true,
+      "manualLocation": true,
+      "userResponse": text,
+      "country": country,
+      "state": state,
+      "city": city,
+    };
+  }
+
+  /// Detecta si el usuario quiere cambiar una respuesta anterior
+  /// Retorna un mapa con `"changeField"` si encuentra una solicitud de cambio
+  static Map<String, dynamic>? _detectChangeRequest(
+    String normalized,
+    RegisterCubit cubit,
+  ) {
+    // IMPORTANTE: Ignorar mensajes internos del sistema
+    // Estos son comandos internos, no entradas del usuario
+    const systemMessages = [
+      'socials_updated',
+      'avatar_selected',
+      'photo_uploaded',
+      'voice_recorded',
+      'skip',
+      'done',
+      'continue',
+      'next',
+    ];
+
+    if (systemMessages.contains(normalized)) {
+      return null;
+    }
+
+    final isSpanish = _getIsSpanish(cubit);
+
+    // Patrones para detectar cambios explícitos
+    final changePatterns = [
+      'me equivoque',
+      'me equivoqué',
+      'cometí un error',
+      'i made a mistake',
+      'wrong',
+      'incorrect',
+      'podemos cambiar',
+      'can we change',
+      'quiero cambiar',
+      'want to change',
+      'change my',
+      'cambiar mi',
+      'cambiar el',
+      'change the',
+      'volver atrás',
+      'go back',
+      'back',
+      'atrás',
+      'redo',
+      'rehacer',
+      'reset',
+      'otra vez',
+      'again',
+      'de nuevo',
+      'update my',
+      'actualizar mi',
+      'modificar mi',
+      'modify my',
+      'edit my',
+      'editar mi',
+    ];
+
+    final detectedExplicitChange = changePatterns.any(
+      (p) => normalized.contains(p),
+    );
+
+    // Detectar a QUÉ campo se refiere
+    // IMPORTANTE: Orden importa para evitar confusiones.
+    // Ej: "nombre de usuario" contiene "nombre" pero debe mapear a username.
+    String? targetField;
+
+    final wantsUsername =
+        normalized.contains('nombre de usuario') ||
+        normalized.contains('username') ||
+        normalized.contains('usuario') ||
+        normalized.contains('apodo') ||
+        normalized == 'my username' ||
+        normalized == 'mi usuario';
+
+    final wantsFullName =
+        normalized.contains('nombre completo') ||
+        normalized.contains('mi nombre') ||
+        normalized.contains('full name') ||
+        normalized == 'my name' ||
+        normalized == 'name' ||
+        normalized == 'nombre' ||
+        (normalized.contains('nombre') && !wantsUsername);
+
+    final wantsSocials =
+        normalized.contains('redes sociales') ||
+        normalized.contains('redes') ||
+        normalized.contains('social ecosystem') ||
+        normalized.contains('social networks') ||
+        normalized.contains('networks') ||
+        normalized.contains('social') ||
+        normalized.contains('instagram') ||
+        normalized.contains('tiktok') ||
+        normalized.contains('youtube') ||
+        normalized.contains('facebook') ||
+        normalized.contains('twitter') ||
+        normalized == 'my socials' ||
+        normalized == 'mis redes';
+
+    final wantsAvatar =
+        normalized.contains('foto') ||
+        normalized.contains('imagen') ||
+        normalized.contains('avatar') ||
+        normalized.contains('profile picture') ||
+        normalized.contains('picture') ||
+        normalized.contains('photo') ||
+        normalized == 'my photo' ||
+        normalized == 'mi foto';
+
+    final wantsEmail =
+        normalized.contains('correo') ||
+        normalized.contains('email') ||
+        normalized == 'my email' ||
+        normalized == 'mi correo';
+
+    final wantsLocation =
+        normalized.contains('ubicación') ||
+        normalized.contains('ubicacion') ||
+        normalized.contains('dirección') ||
+        normalized.contains('direccion') ||
+        normalized.contains('location') ||
+        normalized.contains('address') ||
+        normalized == 'my location' ||
+        normalized == 'mi ubicación' ||
+        normalized == 'mi ubicacion';
+
+    final wantsPhone =
+        normalized.contains('teléfono') ||
+        normalized.contains('telefono') ||
+        normalized.contains('phone') ||
+        normalized.contains('número') ||
+        normalized.contains('numero') ||
+        normalized == 'my phone' ||
+        normalized == 'mi teléfono' ||
+        normalized == 'mi telefono';
+
+    final wantsVoiceNote =
+        normalized.contains('nota de voz') ||
+        normalized.contains('voice note') ||
+        normalized.contains('audio') ||
+        normalized.contains('grabación') ||
+        normalized.contains('grabacion') ||
+        normalized == 'my voice' ||
+        normalized == 'mi voz';
+
+    final wantsCategory =
+        normalized.contains('categoría') ||
+        normalized.contains('categoria') ||
+        normalized.contains('category') ||
+        normalized.contains('categor') ||
+        normalized == 'my category' ||
+        normalized == 'mi categoría' ||
+        normalized == 'mi categoria';
+
+    final wantsInterests =
+        normalized.contains('interés') ||
+        normalized.contains('interes') ||
+        normalized.contains('interest') ||
+        normalized.contains('intereses') ||
+        normalized.contains('interests') ||
+        normalized == 'my interests' ||
+        normalized == 'mis intereses';
+
+    // Detectar si hay un campo específico mencionado
+    final hasFieldMention =
+        wantsUsername ||
+        wantsFullName ||
+        wantsSocials ||
+        wantsAvatar ||
+        wantsEmail ||
+        wantsLocation ||
+        wantsPhone ||
+        wantsVoiceNote ||
+        wantsCategory ||
+        wantsInterests;
+
+    // IMPORTANTE: Solo detectar cambio implícito (solo mencionar el campo)
+    // si el input es corto (< 25 chars) o empieza con "my"/"mi"
+    // Esto evita falsos positivos cuando el usuario está respondiendo normalmente
+    final isShortFieldMention =
+        hasFieldMention &&
+        (normalized.length < 25 ||
+            normalized.startsWith('my ') ||
+            normalized.startsWith('mi '));
+
+    // Si hay patrón de cambio explícito, siempre detectar
+    // Si es mención corta de campo, también detectar
+    final detectedChange = detectedExplicitChange || isShortFieldMention;
+
+    if (!detectedChange) return null;
+
+    if (wantsUsername) {
+      targetField = 'username';
+    } else if (wantsFullName) {
+      targetField = 'fullName';
+    } else if (wantsSocials) {
+      targetField = 'socialEcosystem';
+    } else if (wantsAvatar) {
+      targetField = 'avatarUrl';
+    } else if (wantsEmail) {
+      targetField = 'sendOTP';
+
+      // BLOQUEAR: Si el correo ya fue verificado, no permitir cambio
+      if (cubit.state.emailVerification == EmailVerification.success) {
+        return {
+          "step": "regProgress.changeRequest",
+          "valid": false,
+          "changeRequest": true,
+          "targetField": targetField,
+          "blocked": true,
+          "message": isSpanish
+              ? "⚠️ Tu correo ya ha sido verificado. No puedes cambiarlo de nuevo."
+              : "⚠️ Your email has already been verified. You cannot change it again.",
+        };
+      }
+    } else if (wantsLocation) {
+      targetField = 'location';
+    } else if (wantsPhone) {
+      targetField = 'phone';
+    } else if (wantsVoiceNote) {
+      targetField = 'voiceNoteUrl';
+    } else if (wantsCategory) {
+      targetField = 'category';
+    } else if (wantsInterests) {
+      targetField = 'interests';
+    }
+
+    return {
+      "step": "regProgress.changeRequest",
+      "valid": false, // No avanzamos hasta que se especifique qué cambiar
+      "changeRequest": true,
+      if (targetField != null) "targetField": targetField,
+      "message": isSpanish
+          ? "Entendido, podemos cambiar lo que necesites. ¿Qué información quieres actualizar?"
+          : "Understood! What would you like to update?",
+    };
+  }
+
   // Evaluación específica para sendOTP
   static Map<String, dynamic> _evaluateSendOTP(
     String normalized,
     String original,
   ) {
+    // Detectar preguntas "why"
+    final isWhy = _isWhyQuestion(
+      normalized,
+      false,
+    ); // Usar default false para detectar ambos idiomas
+    if (isWhy) {
+      return {
+        "step": "regProgress.sendOTP",
+        "valid": false,
+        "isWhy": true,
+        "field": "sendOTP",
+      };
+    }
+
     if (normalized.contains('si') ||
         normalized.contains('sí') ||
         normalized.contains('yes') ||
@@ -208,9 +905,16 @@ class AssistantFunctions {
         String locStr;
 
         // Manejo mejorado de ubicación
-        if (loc != null && !loc.isEmpty) {
-          // Si tiene ubicación válida, mostrarla
-          locStr = '${loc.city}, ${loc.country}';
+        if (loc != null && loc.hasCityAndCountry) {
+          // Si tiene ubicación válida, mostrarla (ciudad, estado, país)
+          final parts = <String>[];
+          final city = loc.city.trim();
+          final state = loc.state.trim();
+          final country = loc.country.trim();
+          if (city.isNotEmpty) parts.add(city);
+          if (state.isNotEmpty) parts.add(state);
+          if (country.isNotEmpty) parts.add(country);
+          locStr = parts.join(', ');
         } else {
           final isSpanish = _getIsSpanish(cubit);
           locStr = isSpanish ? 'tu ubicación' : 'your location';
@@ -242,6 +946,17 @@ class AssistantFunctions {
     String normalized,
     String original,
   ) {
+    // Detectar preguntas "why"
+    final isWhy = _isWhyQuestion(normalized, false);
+    if (isWhy) {
+      return {
+        "step": "regProgress.fullName",
+        "valid": false,
+        "isWhy": true,
+        "field": "fullName",
+      };
+    }
+
     final words = original
         .trim()
         .split(' ')
@@ -266,6 +981,44 @@ class AssistantFunctions {
     String normalized,
     String original,
   ) {
+    // Detectar preguntas "why" PRIMERO
+    final isWhy = _isWhyQuestion(normalized, false);
+    if (isWhy) {
+      return {
+        "step": "regProgress.username",
+        "valid": false,
+        "isWhy": true,
+        "field": "username",
+      };
+    }
+
+    // Detectar si el usuario pide más sugerencias
+    final wantsMoreSuggestions =
+        normalized.contains('recomiendame mas') ||
+        normalized.contains('recomendame mas') ||
+        normalized.contains('recommend more') ||
+        normalized.contains('give me more') ||
+        normalized.contains('otra') ||
+        normalized.contains('otro') ||
+        normalized.contains('mas sugerencias') ||
+        normalized.contains('mas') &&
+            (normalized.contains('nombre') || normalized.contains('usuario')) ||
+        normalized == 'otro' ||
+        normalized == 'otra' ||
+        normalized == 'mas' ||
+        normalized.contains('no me gusta') ||
+        normalized.contains('not happy') ||
+        normalized.contains('i dont like');
+
+    if (wantsMoreSuggestions) {
+      return {
+        "step": "regProgress.username",
+        "valid": false,
+        "userResponse": original.trim(),
+        "requestMoreSuggestions": true,
+      };
+    }
+
     if (original.trim().length >= 3 && !original.contains(' ')) {
       return {
         "step": "regProgress.username",
@@ -284,7 +1037,16 @@ class AssistantFunctions {
     String normalized,
     String original,
   ) {
-    final validGenders = ['hombre', 'mujer', 'otro', 'male', 'female', 'other'];
+    final validGenders = [
+      'hombre',
+      'mujer',
+      'prefiero no decir',
+      'male',
+      'female',
+      'rather not say',
+      'otro',
+      'other',
+    ];
 
     if (validGenders.any((g) => normalized.contains(g))) {
       return {
@@ -300,6 +1062,58 @@ class AssistantFunctions {
     };
   }
 
+  /// Evaluación para el paso de re-preguntar email (sin OTP)
+  static Map<String, dynamic> _evaluateEmailReask(
+    String normalized,
+    String original,
+  ) {
+    // Si el usuario dice que está bien, continuar
+    if (normalized.contains('no') ||
+        normalized.contains('está bien') ||
+        normalized.contains('esta bien') ||
+        normalized.contains('it\'s fine') ||
+        normalized.contains('its fine') ||
+        normalized.contains('fine') ||
+        normalized.contains('correcto') ||
+        normalized.contains('correct')) {
+      return {
+        "step": "regProgress.emailReask",
+        "valid": true,
+        "userResponse": "keep",
+      };
+    }
+    // Si el usuario quiere cambiar
+    if (normalized.contains('si') ||
+        normalized.contains('sí') ||
+        normalized.contains('yes') ||
+        normalized.contains('cambiar') ||
+        normalized.contains('change')) {
+      return {
+        "step": "regProgress.emailReask",
+        "valid": true,
+        "userResponse": "change",
+        "changeEmail": true,
+      };
+    }
+    // Si el usuario escribe un email directamente
+    final emailRegex = RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+    );
+    if (emailRegex.hasMatch(original.trim())) {
+      return {
+        "step": "regProgress.emailReask",
+        "valid": true,
+        "userResponse": original.trim(),
+        "newEmail": true,
+      };
+    }
+    return {
+      "step": "regProgress.emailReask",
+      "valid": false,
+      "userResponse": original.trim(),
+    };
+  }
+
   // ACTUALIZADO: Evaluación de ubicación con 3 opciones
   static Map<String, dynamic> _evaluateLocation(
     String normalized,
@@ -307,6 +1121,18 @@ class AssistantFunctions {
     RegisterCubit cubit,
   ) {
     final isSpanish = _getIsSpanish(cubit);
+
+    // IMPORTANTE: Detectar preguntas "why" ANTES de validar respuestas
+    final isWhy = _isWhyQuestion(normalized, isSpanish);
+    if (isWhy) {
+      return {
+        "step": "regProgress.location",
+        "valid": false,
+        "isWhy": true, // Flag para gemini_service que lance explicación
+        "userResponse": original.trim(),
+        "field": "location",
+      };
+    }
 
     // Opción 1: Usuario confirma ubicación (Sí)
     if (normalized == 'sí' ||
@@ -325,27 +1151,22 @@ class AssistantFunctions {
     if (normalized == 'no') {
       return {
         "step": "regProgress.location",
-        "valid": true, //  IMPORTANTE: Es válido rechazar
-        "userResponse": "No",
-        "emptyLocation": true, //  Bandera para ubicación vacía
+        // En vez de saltar el paso, pedimos ubicación manual.
+        "valid": false,
+        "userResponse": original.trim(),
+        "manualLocationRequest": true,
       };
     }
 
     // Opción 3: Usuario reporta ubicación incorrecta
     if (normalized.contains('incorrecta') ||
         normalized.contains('incorrect') ||
-        normalized == 'ubicación incorrecta' ||
         normalized == 'incorrect location') {
       return {
         "step": "regProgress.location",
-        "valid": false, //  No es válido, debe reintentar
+        "valid": false,
         "userResponse": original.trim(),
-        "text": isSpanish
-            ? "Entendido. Por favor, ingresa tu ubicación manualmente o intenta detectarla nuevamente."
-            : "Understood. Please enter your location manually or try detecting it again.",
-        "options": isSpanish
-            ? ["Sí", "No", "Ubicación incorrecta"]
-            : ["Yes", "No", "Incorrect location"],
+        "manualLocationRequest": true,
       };
     }
 
@@ -355,11 +1176,9 @@ class AssistantFunctions {
       "valid": false,
       "userResponse": original.trim(),
       "text": isSpanish
-          ? "Por favor, selecciona una opción válida: Sí, No, o Ubicación incorrecta."
-          : "Please select a valid option: Yes, No, or Incorrect location.",
-      "options": isSpanish
-          ? ["Sí", "No", "Ubicación incorrecta"]
-          : ["Yes", "No", "Incorrect location"],
+          ? "Por favor, selecciona una opción válida: Sí o No."
+          : "Please select a valid option: Yes or No.",
+      "options": isSpanish ? ["Sí", "No"] : ["Yes", "No"],
     };
   }
 
@@ -368,7 +1187,55 @@ class AssistantFunctions {
     String original,
     RegisterCubit cubit,
   ) {
-    // Detectar si el usuario quiere reenviar código
+    final isSpanish = _getIsSpanish(cubit);
+
+    // Detectar preguntas "why" PRIMERO
+    final isWhy = _isWhyQuestion(normalized, isSpanish);
+    if (isWhy) {
+      return {
+        "step": "regProgress.emailVerification",
+        "valid": false,
+        "isWhy": true,
+        "field": "sendOTP", // OTP es parte del proceso de sendOTP
+      };
+    }
+
+    // BLOQUEAR: Si el correo ya fue verificado, no permitir reenvío
+    if (cubit.state.emailVerification == EmailVerification.success) {
+      // Detectar si el usuario quiere reenviar código
+      if (normalized.contains('reenviar') ||
+          normalized.contains('resend') ||
+          normalized.contains('send again') ||
+          normalized.contains('enviar de nuevo')) {
+        return {
+          "step": "regProgress.emailVerification",
+          "valid": false,
+          "userResponse": original.trim(),
+          "blocked": true,
+          "message": isSpanish
+              ? "⚠️ Tu correo ya ha sido verificado. No puedes reenviar otro código."
+              : "⚠️ Your email has already been verified. You cannot resend another code.",
+        };
+      }
+
+      // Detectar si el usuario quiere cambiar correo
+      if (normalized.contains('cambiar correo') ||
+          normalized.contains('change email') ||
+          normalized.contains('different email') ||
+          normalized.contains('otro correo')) {
+        return {
+          "step": "regProgress.emailVerification",
+          "valid": false,
+          "userResponse": original.trim(),
+          "blocked": true,
+          "message": isSpanish
+              ? "⚠️ Tu correo ya ha sido verificado. No puedes cambiarlo de nuevo."
+              : "⚠️ Your email has already been verified. You cannot change it again.",
+        };
+      }
+    }
+
+    // Detectar si el usuario quiere reenviar código (si aún NO está verificado)
     if (normalized.contains('reenviar') ||
         normalized.contains('resend') ||
         normalized.contains('send again') ||
@@ -381,7 +1248,7 @@ class AssistantFunctions {
       };
     }
 
-    // Detectar si el usuario quiere cambiar correo
+    // Detectar si el usuario quiere cambiar correo (si aún NO está verificado)
     if (normalized.contains('cambiar correo') ||
         normalized.contains('change email') ||
         normalized.contains('different email') ||
@@ -414,8 +1281,27 @@ class AssistantFunctions {
     final pictureCards = <Map<String, String>>[];
 
     for (final platform in platforms) {
-      final key = platform.keys.first;
-      final data = platform[key] as Map<String, dynamic>;
+      if (platform.isEmpty) continue;
+
+      // Custom links use flat schema and don't provide profile pictures.
+      final type = platform['type']?.toString().toLowerCase();
+      if (type == 'custom') continue;
+
+      // Expected schema for social networks: {'instagram': {...}}, {'twitter': {...}}, etc.
+      // Be defensive in case maps contain unexpected extra keys.
+      MapEntry<dynamic, dynamic>? firstMapEntry;
+      for (final entry in platform.entries) {
+        if (entry.value is Map) {
+          firstMapEntry = entry;
+          break;
+        }
+      }
+      if (firstMapEntry == null) continue;
+
+      final key = firstMapEntry.key.toString();
+      final raw = firstMapEntry.value;
+      if (raw is! Map) continue;
+      final data = Map<String, dynamic>.from(raw);
 
       final possibleKeys = [
         "profile_image_url",
@@ -449,6 +1335,190 @@ class AssistantFunctions {
 
     return pictureCards;
   }
+
+  /// Process a single option (from list_questions). This returns an AssistantResult
+  /// that the UI (ia_chat_screen) will interpret and execute.
+  /// - `option` can be either a String or a Map with keys "label" and/or "action".
+  static AssistantResult handleSuggestion(dynamic option) {
+    try {
+      if (option == null) return AssistantResult.unknown();
+
+      String? action;
+      String? label;
+
+      if (option is String) {
+        label = option;
+      } else if (option is Map<String, dynamic>) {
+        label = (option['label'] as String?) ?? (option['text'] as String?);
+        action = option['action'] as String?;
+      } else if (option is Map<String, String>) {
+        label = option['label'];
+        action = option['action'];
+      }
+
+      // Use explicit action first (recommended)
+      switch (action) {
+        case 'send_text':
+          // Force treating this option as plain text (even if label contains
+          // words like "grabar/record" that would otherwise infer open_recorder).
+          if ((label ?? '').isNotEmpty) return AssistantResult.sendText(label!);
+          return AssistantResult.unknown();
+        case 'open_camera':
+          return AssistantResult.openCamera();
+        case 'open_gallery':
+          return AssistantResult.openGallery();
+        case 'open_recorder':
+          return AssistantResult.openRecorder();
+        case 'skip':
+          return AssistantResult.skip();
+      }
+
+      // Fallback: try to infer from label (only as last resort)
+      final normalized = (label ?? '').toLowerCase();
+      if (normalized.contains('camera') ||
+          normalized.contains('take photo') ||
+          normalized.contains('tomar foto')) {
+        return AssistantResult.openCamera();
+      }
+      if (normalized.contains('gallery') ||
+          normalized.contains('choose') ||
+          normalized.contains('galería')) {
+        return AssistantResult.openGallery();
+      }
+      if (normalized.contains('recorder') ||
+          normalized.contains('audio') ||
+          normalized.contains('grabar')) {
+        return AssistantResult.openRecorder();
+      }
+      if (normalized.contains('skip') || normalized.contains('saltar')) {
+        return AssistantResult.skip();
+      }
+
+      // Default: send label as text
+      if ((label ?? '').isNotEmpty) {
+        return AssistantResult.sendText(label!);
+      }
+
+      return AssistantResult.unknown();
+    } catch (e, st) {
+      debugPrint('assistant_functions.handleSuggestion error: $e\n$st');
+      return AssistantResult.unknown();
+    }
+  }
+
+  /// Detecta si el usuario está haciendo una pregunta "Why/Por qué/Para qué"
+  /// Válido para cualquier idioma
+  /// Más robusto: normaliza espacios, signos y acentos
+  /// Maneja variaciones incompletas como "para qu" (sin la 'e' final)
+  static bool _isWhyQuestion(String normalized, bool isSpanish) {
+    // Normalizar: remover espacios extras, acentos y signos de puntuación
+    final clean = normalized
+        .replaceAll(RegExp(r'\s+'), ' ') // Múltiples espacios a uno
+        .replaceAll(RegExp(r'[¿?!¡]'), '') // Remover signos de puntuación
+        .replaceAll(RegExp(r'[áàä]'), 'a') // Normalizar acentos
+        .replaceAll(RegExp(r'[éè]'), 'e')
+        .replaceAll(RegExp(r'[í]'), 'i')
+        .replaceAll(RegExp(r'[ó]'), 'o')
+        .replaceAll(RegExp(r'[ú]'), 'u')
+        .trim()
+        .toLowerCase();
+
+    // Patrones en inglés
+    if (clean == 'why' ||
+        clean.startsWith('why ') ||
+        clean.endsWith(' why') ||
+        clean.contains(' why ') ||
+        clean.startsWith('why')) {
+      return true;
+    }
+
+    // Patrones en español - MÚLTIPLES VARIACIONES
+    // Detecta: "por qué", "por que", "porqué", "porque"
+    // También: "para qué", "para que", "paraque"
+    // Y variaciones incompletas: "por qu", "para qu", etc.
+    if (
+    // Variaciones completas
+    clean.contains('por que') ||
+        clean.contains('para que') ||
+        clean.contains('porque') ||
+        clean.contains('porqu') || // "porqué", "porque", "porqu?"
+        clean.contains('paraq') || // "paraqué", "paraque", "paraq?"
+        // Patrones de inicio
+        clean.startsWith('por q') ||
+        clean.startsWith('para q') ||
+        clean.startsWith('que') ||
+        // Exactos
+        clean == 'por que' ||
+        clean == 'para que' ||
+        clean == 'porque' ||
+        clean == 'porqu' ||
+        clean == 'paraq') {
+      return true;
+    }
+
+    return false;
+  }
+
+  /// Genera sugerencias dinámicas de nombre de usuario basadas en el nombre completo
+  /// Genera 3 variantes sin mayúsculas, pegadas, con números
+  /// Ejemplo: "Juan Esteban Arenilla Buendía" -> ["jeab12", "juanesteban", "juan031"]
+  static List<String> generateUsernameSuggestions(String fullName) {
+    if (fullName.trim().isEmpty) return [];
+
+    // Limpiar y normalizar el nombre (remover acentos)
+    final cleanName = fullName
+        .toLowerCase()
+        .replaceAll(RegExp(r'[áàäâ]'), 'a')
+        .replaceAll(RegExp(r'[éèëê]'), 'e')
+        .replaceAll(RegExp(r'[íìïî]'), 'i')
+        .replaceAll(RegExp(r'[óòöô]'), 'o')
+        .replaceAll(RegExp(r'[úùüû]'), 'u')
+        .replaceAll(RegExp(r'[ñ]'), 'n')
+        .trim();
+
+    // Extraer palabras
+    final words = cleanName.split(RegExp(r'\s+'));
+    final suggestions = <String>[];
+
+    // Sugerencia 1: Primeras letras + número aleatorio (ejemplo: jeab12)
+    if (words.isNotEmpty && words.length >= 2) {
+      final initials = words.map((w) => w[0]).join('');
+      final randomNum = (DateTime.now().millisecond % 100).toString().padLeft(
+        2,
+        '0',
+      );
+      suggestions.add('$initials$randomNum');
+    }
+
+    // Sugerencia 2: Primeras dos palabras pegadas (ejemplo: juanesteban)
+    if (words.isNotEmpty && words.length >= 2) {
+      final combined = words.sublist(0, 2).join('');
+      if (combined.length >= 3) {
+        suggestions.add(combined);
+      }
+    }
+
+    // Sugerencia 3: Primera palabra + número (ejemplo: juan031)
+    if (words.isNotEmpty) {
+      final firstName = words[0];
+      final randomNum = (DateTime.now().millisecond % 1000).toString().padLeft(
+        3,
+        '0',
+      );
+      suggestions.add('$firstName$randomNum');
+    }
+
+    // Si no hay suficientes sugerencias únicas, generar más
+    while (suggestions.length < 3 && words.isNotEmpty) {
+      final randomNum = (DateTime.now().millisecond % 10000).toString();
+      final suggestion = '${words.join('')}${randomNum.substring(0, 2)}';
+      if (!suggestions.contains(suggestion)) {
+        suggestions.add(suggestion);
+      }
+    }
+
+    return suggestions.take(3).toList();
+  }
 }
 
 /// High-level actions emitted by assistant when a suggestion is chosen.
@@ -478,69 +1548,4 @@ class AssistantResult {
       AssistantResult(AssistantAction.sendText, payload: text);
   factory AssistantResult.skip() => AssistantResult(AssistantAction.skip);
   factory AssistantResult.unknown() => AssistantResult(AssistantAction.unknown);
-}
-
-/// Process a single option (from list_questions). This returns an AssistantResult
-/// that the UI (ia_chat_screen) will interpret and execute.
-/// - `option` can be either a String or a Map with keys "label" and/or "action".
-AssistantResult handleSuggestion(dynamic option) {
-  try {
-    if (option == null) return AssistantResult.unknown();
-
-    String? action;
-    String? label;
-
-    if (option is String) {
-      label = option;
-    } else if (option is Map<String, dynamic>) {
-      label = (option['label'] as String?) ?? (option['text'] as String?);
-      action = option['action'] as String?;
-    } else if (option is Map<String, String>) {
-      label = option['label'];
-      action = option['action'];
-    }
-
-    // Use explicit action first (recommended)
-    switch (action) {
-      case 'open_camera':
-        return AssistantResult.openCamera();
-      case 'open_gallery':
-        return AssistantResult.openGallery();
-      case 'open_recorder':
-        return AssistantResult.openRecorder();
-      case 'skip':
-        return AssistantResult.skip();
-    }
-
-    // Fallback: try to infer from label (only as last resort)
-    final normalized = (label ?? '').toLowerCase();
-    if (normalized.contains('camera') ||
-        normalized.contains('take photo') ||
-        normalized.contains('tomar foto')) {
-      return AssistantResult.openCamera();
-    }
-    if (normalized.contains('gallery') ||
-        normalized.contains('choose') ||
-        normalized.contains('galería')) {
-      return AssistantResult.openGallery();
-    }
-    if (normalized.contains('recorder') ||
-        normalized.contains('audio') ||
-        normalized.contains('grabar')) {
-      return AssistantResult.openRecorder();
-    }
-    if (normalized.contains('skip') || normalized.contains('saltar')) {
-      return AssistantResult.skip();
-    }
-
-    // Default: send label as text
-    if ((label ?? '').isNotEmpty) {
-      return AssistantResult.sendText(label!);
-    }
-
-    return AssistantResult.unknown();
-  } catch (e, st) {
-    debugPrint('assistant_functions.handleSuggestion error: $e\n$st');
-    return AssistantResult.unknown();
-  }
 }

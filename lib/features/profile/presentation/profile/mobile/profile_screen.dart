@@ -9,6 +9,8 @@ import 'package:migozz_app/features/chat/presentation/user/list/chats_list_scree
 import 'package:migozz_app/features/chat/presentation/user/user_chat_screen.dart';
 import 'package:migozz_app/features/profile/components/info_user_profile.dart';
 import 'package:migozz_app/features/profile/components/social_rail.dart';
+import 'package:migozz_app/features/profile/data/datasources/follower_service.dart';
+import 'package:migozz_app/features/profile/presentation/bloc/follower_cubit/follower_cubit.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/components/profile_top_actions.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/profile_image_mobile_v3.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/social_circles_mobile_v3.dart';
@@ -16,15 +18,22 @@ import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/compo
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/profile_screen_v3_edit.dart';
 import 'package:migozz_app/features/profile/presentation/profile/modules/qr_scanner_screen.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
+import 'package:migozz_app/features/tutorial/profile/profile_tutorial_keys.dart';
 
 class MobileProfileContent extends StatefulWidget {
   final UserDTO user;
   final TutorialKeys tutorialKeys;
+  final ProfileTutorialKeys? profileTutorialKeys;
+
+  /// UID del usuario target (opcional, se busca por email si no se proporciona)
+  final String? targetUserId;
 
   const MobileProfileContent({
     super.key,
     required this.user,
     required this.tutorialKeys,
+    this.profileTutorialKeys,
+    this.targetUserId,
   });
 
   @override
@@ -32,6 +41,59 @@ class MobileProfileContent extends StatefulWidget {
 }
 
 class _MobileProfileContentState extends State<MobileProfileContent> {
+  /// UID del usuario que estamos viendo (se carga async si no se proporcionó)
+  String? _resolvedTargetUserId;
+
+  @override
+  void initState() {
+    super.initState();
+    _resolveTargetUserId();
+  }
+
+  /// Resuelve el UID del usuario target
+  Future<void> _resolveTargetUserId() async {
+    // Si ya tenemos el uid, usarlo
+    if (widget.targetUserId != null && widget.targetUserId!.isNotEmpty) {
+      setState(() {
+        _resolvedTargetUserId = widget.targetUserId;
+      });
+      return;
+    }
+
+    // Verificar si es el perfil propio
+    final authState = context.read<AuthCubit>().state;
+    final currentUserEmail = authState.userProfile?.email ?? '';
+    final isOwnProfile = widget.user.email == currentUserEmail;
+
+    if (isOwnProfile) {
+      // Para perfil propio, usar el uid del usuario autenticado
+      setState(() {
+        _resolvedTargetUserId = authState.firebaseUser?.uid;
+      });
+      return;
+    }
+
+    // Buscar el uid por email del target user
+    setState(() {});
+
+    try {
+      context.read<FollowerCubit>();
+      // Acceder al servicio para buscar el uid
+      final followerService = FollowerService();
+      final uid = await followerService.getUserIdByEmail(widget.user.email);
+      if (mounted) {
+        setState(() {
+          _resolvedTargetUserId = uid;
+        });
+      }
+    } catch (e) {
+      debugPrint('❌ [MobileProfileContent] Error resolviendo UID: $e');
+      if (mounted) {
+        setState(() {});
+      }
+    }
+  }
+
   // Detectar si podemos hacer pop o si debemos navegar a home
   bool _canPop() {
     // Verificar si hay historial de navegación
@@ -70,12 +132,33 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
     // Determinar si es el perfil del usuario autenticado
     final authState = context.watch<AuthCubit>().state;
     final currentUserEmail = authState.userProfile?.email ?? '';
+    final currentUserId = authState.firebaseUser?.uid; // UID del usuario actual
     final isOwnProfile = user.email == currentUserEmail;
 
+    // Obtener seguidores de la app para sumar al community count
+    final followerState = context.watch<FollowerCubit>().state;
+    final appFollowers = isOwnProfile ? followerState.followersCount : 0;
+
     // Recuperamos los seguidores y redes desde el perfil
-    final totalFollowers = _calculateTotalFollowers(user.socialEcosystem);
+    final socialFollowers = _calculateTotalFollowers(user.socialEcosystem);
     final socialLinks = _buildSocialLinks(user.socialEcosystem, user.username);
+    // Extraer URL de donación (PayPal)
+    final donationUrl = _extractDonationUrl(user.socialEcosystem);
+    // Para el cambio de número al tocar "community" solo se debe mostrar:
+    // - Community (por defecto)
+    // - Seguidores de Migozz (la propia plataforma)
+    final socialNetworksData = <SocialNetworkData>[
+      SocialNetworkData(
+        name: 'Migozz',
+        followers: appFollowers,
+        iconPath:
+            iconByLabel['Migozz'] ?? 'assets/icons/social_networks/Other.svg',
+      ),
+    ];
     final bool hasSocials = socialLinks.isNotEmpty;
+    final double socialsImageBottom = size.height * 0.43;
+    final double socialsTopSpacer = size.height * 0.33;
+    final totalFollowers = socialFollowers + appFollowers;
 
     return PopScope(
       canPop: false,
@@ -114,8 +197,11 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                 top: 0,
                 left: 0,
                 right: 0,
-                bottom: size.height * 0.09,
-                child: ProfileImageMobileV3(avatarUrl: avatarUrl, size: size),
+                bottom: socialsImageBottom,
+                child: ProfileImageMobileV3(
+                  avatarUrl: avatarUrl,
+                  size: Size(size.width, size.height - socialsImageBottom),
+                ),
               ),
 
             // 3A) SIN REDES -> profilhero: card flotante abajo (no scroll)
@@ -133,15 +219,24 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                     ),
                     child: _InfoCardGlass(
                       child: InfoUserProfile(
-                        name: name.isNotEmpty ? name : 'profile.presentation.emptyName'.tr(),
+                        name: name.isNotEmpty
+                            ? name
+                            : 'profile.presentation.emptyName'.tr(),
                         displayName: username,
                         comunityCount: totalFollowers.toString(),
                         nameComunity: 'profile.presentation.community'.tr(),
                         voiceNoteUrl: voiceNoteUrl,
                         bio: user.bio,
+                        donationUrl: donationUrl,
                         tutorialKeys: widget.tutorialKeys,
+                        profileTutorialKeys: widget.profileTutorialKeys,
                         isOwnProfile: isOwnProfile,
                         userId: user.email,
+                        socialNetworks: socialNetworksData,
+                        contactEmail: isOwnProfile ? null : user.contactEmail,
+                        contactWebsite: isOwnProfile
+                            ? null
+                            : user.contactWebsite,
                         onMessageTap: () {
                           if (!isOwnProfile) {
                             Navigator.push(
@@ -175,25 +270,30 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                 ),
               ),
 
-            // 3B) CON REDES -> miti-miti: empujamos contenido con un spacer igual a mitad de pantalla
+            // 3B) CON REDES -> Estructura como SocialEcosystemStepV3:
+            // foto fija + info fija + scroll solo en la sección de redes
             if (hasSocials)
-              SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
+              SafeArea(
                 child: Column(
                   children: [
-                    // Espacio para la imagen (60% de altura - 80px para superposición)
-                    SizedBox(height: size.height * 0.38),
-                    // Info del usuario
+                    SizedBox(height: socialsTopSpacer),
                     InfoUserProfile(
-                      name: name.isNotEmpty ? name : 'profile.presentation.emptyName'.tr(),
+                      name: name.isNotEmpty
+                          ? name
+                          : 'profile.presentation.emptyName'.tr(),
                       displayName: username,
                       comunityCount: totalFollowers.toString(),
                       nameComunity: 'profile.presentation.community'.tr(),
                       voiceNoteUrl: voiceNoteUrl,
                       bio: user.bio,
+                      donationUrl: donationUrl,
                       tutorialKeys: widget.tutorialKeys,
+                      profileTutorialKeys: widget.profileTutorialKeys,
                       isOwnProfile: isOwnProfile,
                       userId: user.email,
+                      socialNetworks: socialNetworksData,
+                      contactEmail: isOwnProfile ? null : user.contactEmail,
+                      contactWebsite: isOwnProfile ? null : user.contactWebsite,
                       onMessageTap: () {
                         debugPrint("pulsado el chat");
                         if (!isOwnProfile) {
@@ -223,15 +323,24 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                         }
                       },
                     ),
-                    // Iconos circulares de redes sociales
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8, bottom: 0),
-                      child: SocialCirclesMobileV3(links: socialLinks),
+                    Expanded(
+                      key: widget.profileTutorialKeys?.linkedNetworksKey,
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        child: Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8, bottom: 0),
+                              child: SocialCirclesMobileV3(links: socialLinks),
+                            ),
+                            SocialProfilePhotosGrid(
+                              socialEcosystem: user.socialEcosystem,
+                            ),
+                            const SizedBox(height: 100),
+                          ],
+                        ),
+                      ),
                     ),
-                    // Grid de fotos de perfil de redes sociales
-                    SocialProfilePhotosGrid(
-                      socialEcosystem: user.socialEcosystem,
-                    ),SizedBox(height: 100),
                   ],
                 ),
               ),
@@ -245,6 +354,9 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                 child: ProfileTopActions(
                   isOwnProfile: isOwnProfile,
                   profilePercentage: _calculateProfileStrength(user),
+                  targetUserId: isOwnProfile ? null : _resolvedTargetUserId,
+                  currentUserId: isOwnProfile ? null : currentUserId,
+                  profileTutorialKeys: widget.profileTutorialKeys,
                   onMenuTap: () {
                     if (isOwnProfile) {
                       Navigator.push(
@@ -475,6 +587,39 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
 
     return strength;
   }
+
+  /// Extract donation URL (PayPal) from social ecosystem
+  String? _extractDonationUrl(List<Map<String, dynamic>>? socialEcosystem) {
+    if (socialEcosystem == null || socialEcosystem.isEmpty) return null;
+
+    for (final social in socialEcosystem) {
+      // Check for custom type with paypal domain
+      final type = social['type']?.toString().toLowerCase();
+      if (type == 'custom') {
+        final url = social['url']?.toString() ?? '';
+        final domain = social['domain']?.toString().toLowerCase() ?? '';
+        if (domain.contains('paypal') || url.toLowerCase().contains('paypal')) {
+          return url;
+        }
+        continue;
+      }
+
+      // Check for direct paypal entry
+      for (final entry in social.entries) {
+        final platform = entry.key.toLowerCase();
+        if (platform == 'paypal') {
+          final data = entry.value;
+          if (data is Map<String, dynamic>) {
+            return data['url']?.toString();
+          } else if (data is String && data.isNotEmpty) {
+            // If it's just a string URL
+            return data;
+          }
+        }
+      }
+    }
+    return null;
+  }
 }
 
 class _InfoCardGlass extends StatelessWidget {
@@ -496,5 +641,3 @@ class _InfoCardGlass extends StatelessWidget {
     );
   }
 }
-
-

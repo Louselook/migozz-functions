@@ -8,8 +8,8 @@ import 'package:migozz_app/features/profile/presentation/profile/mobile/profile_
     as mobile_profile;
 import 'package:migozz_app/features/profile/presentation/profile/web/profile_search_screen.dart'
     as web_profile;
-import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
-import 'package:migozz_app/features/profile/components/utils/Loader.dart';
+import 'package:migozz_app/features/profile/components/utils/alert_general.dart';
+import 'package:migozz_app/features/profile/components/utils/loader.dart';
 
 /// QR Scanner screen to scan user profile QR codes
 class QrScannerScreen extends StatefulWidget {
@@ -37,7 +37,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     try {
       final uri = Uri.parse(url);
       final pathSegments = uri.pathSegments;
-      
+
       // Look for username in path segments
       // Expected patterns:
       // - https://migozz.com/profile/username
@@ -49,7 +49,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
           return username.toLowerCase();
         }
       }
-      
+
       return null;
     } catch (e) {
       debugPrint('Error parsing URL: $e');
@@ -101,7 +101,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     try {
       // Extract username from URL
       final username = _extractUsername(code);
-      
+
       if (username == null) {
         _showError('profile.qrScanner.invalidFormat'.tr());
         setState(() {
@@ -111,10 +111,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
       }
 
       if (mounted) {
-        showProfileLoader(
-          context,
-          message: 'edit.presentation.loadingProfile'.tr(),
-        );
+        showProfileLoader(context, type: LoaderType.qrScan);
       }
 
       // Fetch user data
@@ -137,7 +134,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
       if (mounted) {
         // Close scanner screen
         Navigator.pop(context);
-        
+
         // Navigate to profile based on screen size
         final screenWidth = MediaQuery.of(context).size.width;
         if (screenWidth >= 900) {
@@ -151,7 +148,10 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => mobile_profile.ProfileSearchScreen(user: user, tutorialKeys: TutorialKeys(),),
+              builder: (context) => mobile_profile.ProfileSearchScreen(
+                user: user,
+                tutorialKeys: TutorialKeys(),
+              ),
             ),
           );
         }
@@ -167,7 +167,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
 
   void _showError(String message) {
     if (!mounted) return;
-    
+
     AlertGeneral.show(context, 4, message: message);
   }
 
@@ -212,13 +212,10 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
               }
             },
           ),
-          
+
           // Overlay with scanning frame
-          CustomPaint(
-            painter: ScannerOverlayPainter(),
-            child: Container(),
-          ),
-          
+          CustomPaint(painter: ScannerOverlayPainter(), child: Container()),
+
           // Instructions
           Positioned(
             bottom: 100,

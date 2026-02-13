@@ -13,8 +13,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
 import 'package:migozz_app/features/profile/presentation/profile/web/components/edit_profile_options.dart';
-import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
-import 'package:migozz_app/features/profile/components/utils/Loader.dart';
+import 'package:migozz_app/features/profile/components/utils/alert_general.dart';
+import 'package:migozz_app/features/profile/components/utils/loader.dart';
+import 'package:migozz_app/core/color.dart';
+import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -26,6 +28,7 @@ class EditProfilePage extends StatefulWidget {
 class _EditProfilePageState extends State<EditProfilePage> {
   final nameCtrl = TextEditingController();
   final usernameCtrl = TextEditingController();
+  final bioCtrl = TextEditingController();
   final emailCtrl = TextEditingController();
   final phoneCtrl = TextEditingController();
   final genderCtrl = TextEditingController();
@@ -36,6 +39,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   void dispose() {
     nameCtrl.dispose();
     usernameCtrl.dispose();
+    bioCtrl.dispose();
     emailCtrl.dispose();
     phoneCtrl.dispose();
     genderCtrl.dispose();
@@ -65,6 +69,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       final data = {
         'displayName': nameCtrl.text.trim(),
         'username': usernameCtrl.text.trim(),
+        'bio': bioCtrl.text.trim(),
         'phone': phoneCtrl.text.trim(),
         'gender': genderCtrl.text.trim(),
         'birthDate': _dob != null ? Timestamp.fromDate(_dob!) : null,
@@ -77,6 +82,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           context,
           1,
           message: 'edit.validations.updateProfile'.tr(),
+          autoDismissAfter: const Duration(seconds: 1),
         );
       }
     } catch (e) {
@@ -133,10 +139,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
       AlertGeneral.show(
         context,
         1,
-        message: "edit.validations.updateLocation"
-            .tr()
-            .replaceAll("\${newLocation.city}", newLocation.city)
-            .replaceAll("\${newLocation.country}", newLocation.country),
+        message: "edit.validations.updateLocation".tr(
+          namedArgs: {'city': newLocation.city, 'country': newLocation.country},
+        ),
       );
     }
   }
@@ -197,9 +202,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
           if (nameCtrl.text.isEmpty) {
             nameCtrl.text = user.displayName;
             usernameCtrl.text = user.username;
+            bioCtrl.text = user.bio ?? '';
             emailCtrl.text = user.email;
             phoneCtrl.text = user.phone ?? '';
-            genderCtrl.text = user.gender ?? '';
+            // genderCtrl.text = user.gender ?? ''; // Replaced by _selectedGender
+            _selectedGender = _normalizeGender(user.gender);
+            genderCtrl.text = _selectedGender ?? (user.gender ?? '');
 
             if (user.birthDate != null) {
               _dob = user.birthDate;
@@ -224,7 +232,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       padding: EdgeInsets.only(
                         left: isSmallScreen ? 20 : 40,
                         right: isSmallScreen ? 20 : 40,
-                        top: isSmallScreen ? 150 : 200,
+                        top: isSmallScreen ? 30 : 70,
                         bottom: 20,
                       ),
                       child: isMobile
@@ -236,7 +244,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                   authState,
                                 ),
                                 const SizedBox(height: 30),
-                                _buildRightColumn(context, authState, user),
+                                _buildRightColumn(
+                                  context,
+                                  authState,
+                                  user,
+                                  isSmallScreen,
+                                ),
                               ],
                             )
                           : Row(
@@ -253,6 +266,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                     context,
                                     authState,
                                     user,
+                                    isSmallScreen,
                                   ),
                                 ),
                               ],
@@ -294,28 +308,112 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
         return SizedBox(
           width: containerWidth,
-          child: EditProfileImageSection(
-            isSmallScreen: isSmallScreen,
-            imageSize: imageSize,
-            avatarUrl: imageProfile,
-            onDeleteAccount: () {},
-            onSave: () => _saveProfile(authState.firebaseUser!.uid),
+          child: Column(
+            children: [
+              EditProfileImageSection(
+                isSmallScreen: isSmallScreen,
+                imageSize: imageSize,
+                avatarUrl: imageProfile,
+                onEditImage: () async {
+                  await context.read<EditCubit>().changeAvatar(
+                    authState.firebaseUser!.uid,
+                    context,
+                  );
+                },
+              ),
+              const SizedBox(height: 30),
+              EditProfileOptions(
+                onEditRecord: () {
+                  AlertGeneral.show(
+                    context,
+                    2,
+                    message: "edit.presentation.webRestriction.audio".tr(),
+                  );
+                },
+                onEditInterest: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const EditInterestsScreen(),
+                  ),
+                ),
+                onEditSocials: () {
+                  final userId = authState.firebaseUser?.uid;
+                  if (userId == null) {
+                    AlertGeneral.show(
+                      context,
+                      4,
+                      message: 'edit.validations.errorUserLogin'.tr(),
+                    );
+                    return;
+                  }
+
+                  final editCubit = context.read<EditCubit>();
+                  editCubit.setEditItem(EditItem.socialEcosystem);
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => BlocProvider.value(
+                        value: editCubit,
+                        child: MoreUserDetails(
+                          pageIndicator: 0,
+                          mode: MoreUserDetailsMode.edit,
+                          userId: userId,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
         );
       },
     );
   }
 
+  String? _selectedGender;
+
+  String? _normalizeGender(String? raw) {
+    if (raw == null) return null;
+    final value = raw.trim().toLowerCase();
+    if (value.isEmpty) return null;
+    switch (value) {
+      case 'male':
+      case 'masculino':
+      case 'm':
+        return 'male';
+      case 'female':
+      case 'famale':
+      case 'femenino':
+      case 'f':
+        return 'female';
+      default:
+        return 'male'; // Default fallback if needed, or null
+    }
+  }
+
   Widget _buildRightColumn(
     BuildContext context,
     AuthState authState,
     dynamic user,
+    bool isSmallScreen,
   ) {
-    final userId = authState.firebaseUser?.uid;
     final formattedLocation = [
       if (user.location.city.isNotEmpty) user.location.city,
       if (user.location.country.isNotEmpty) user.location.country,
     ].join(', ');
+
+    // Initialize gender if not already set (re-run on build is okay as long as text field logic handles it, but let's be careful.
+    // Actually, in the original code, initialization happens once in the BlocBuilder:
+    // if (nameCtrl.text.isEmpty) { ... }
+    // We should allow that block to initialize _selectedGender too.
+
+    // Define options
+    final genderOptions = <String, String>{
+      'male': 'edit.presentation.genderOptions.male'.tr(),
+      'female': 'edit.presentation.genderOptions.female'.tr(),
+    };
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -330,6 +428,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
           hint: 'edit.presentation.fields.nickname'.tr(),
           controller: usernameCtrl,
           icon: Icons.alternate_email,
+        ),
+        const SizedBox(height: 16),
+        _buildTextField(
+          hint: 'edit.presentation.fields.bio'.tr(),
+          controller: bioCtrl,
+          icon: Icons.edit_note,
+          maxLines: 3,
         ),
         const SizedBox(height: 16),
         _buildTextField(
@@ -353,11 +458,57 @@ class _EditProfilePageState extends State<EditProfilePage> {
           onTap: _pickBirthday,
         ),
         const SizedBox(height: 16),
-        _buildTextField(
-          hint: 'edit.presentation.fields.gender'.tr(),
-          controller: genderCtrl,
-          icon: Icons.transgender,
+
+        // Gender Dropdown
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1A1A1A),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.5),
+                offset: const Offset(0, 4),
+                blurRadius: 8,
+              ),
+            ],
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.05),
+              width: 1,
+            ),
+          ),
+          child: DropdownButtonFormField<String>(
+            initialValue: _selectedGender,
+            icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey.shade400),
+            dropdownColor: const Color(0xFF1A1A1A),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w500,
+            ),
+            decoration: InputDecoration(
+              prefixIcon: Icon(Icons.transgender, color: Colors.grey.shade400),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(vertical: 14),
+            ),
+            hint: Text(
+              'edit.presentation.fields.gender'.tr(),
+              style: TextStyle(color: Colors.grey.shade600),
+            ),
+            items: genderOptions.entries.map((entry) {
+              return DropdownMenuItem<String>(
+                value: entry.key,
+                child: Text(entry.value),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                _selectedGender = value;
+                genderCtrl.text = value ?? '';
+              });
+            },
+          ),
         ),
+
         const SizedBox(height: 16),
         _buildTextField(
           hint: formattedLocation.isNotEmpty
@@ -367,9 +518,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
           readOnly: true,
           onTap: () => _confirmAndChangeLocation(user.email),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 24),
 
-        // Botón Logout centrado y con el mismo tamaño que los inputs
+        // Premium Logout Button
         Center(
           child: SizedBox(
             width: double.infinity,
@@ -380,10 +531,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
               icon: const Icon(Icons.logout, color: Colors.white),
               label: Text(
                 'edit.presentation.logOut'.tr(),
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
                 ),
               ),
               style: ElevatedButton.styleFrom(
@@ -397,46 +549,52 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ),
         ),
 
-        const SizedBox(height: 30),
-        EditProfileOptions(
-          onEditRecord: () {
-            AlertGeneral.show(
-              context,
-              2,
-              message: "edit.presentation.webRestriction.audio".tr(),
-            );
-          },
-          onEditInterest: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const EditInterestsScreen()),
+        const SizedBox(height: 20),
+
+        // Botón Save
+        GradientButton(
+          onPressed: () => _saveProfile(authState.firebaseUser!.uid),
+          width: double.infinity,
+          height: isSmallScreen ? 48 : 54,
+          radius: 10,
+          child: Text(
+            'buttons.save'.tr(),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: isSmallScreen ? 13 : 14,
+              fontWeight: FontWeight.w600,
+            ),
           ),
-          onEditSocials: () {
-            if (userId == null) {
-              AlertGeneral.show(
-                context,
-                4,
-                message: 'edit.validations.errorUserLogin'.tr(),
-              );
-              return;
-            }
+        ),
 
-            final editCubit = context.read<EditCubit>();
-            editCubit.setEditItem(EditItem.socialEcosystem);
+        const SizedBox(height: 12),
 
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => BlocProvider.value(
-                  value: editCubit,
-                  child: MoreUserDetails(
-                    pageIndicator: 0,
-                    mode: MoreUserDetailsMode.edit,
-                    userId: userId,
-                  ),
+        // Botón Delete Account
+        GradientButton(
+          onPressed: () {},
+          width: double.infinity,
+          height: isSmallScreen ? 48 : 54,
+          radius: 10,
+          gradient: AppColors.verticalOrangeRed,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.delete_outline,
+                color: Colors.white,
+                size: isSmallScreen ? 18 : 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'edit.presentation.deleteAccount.title'.tr(),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: isSmallScreen ? 13 : 14,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-            );
-          },
+            ],
+          ),
         ),
       ],
     );
@@ -448,11 +606,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
     required IconData icon,
     bool readOnly = false,
     VoidCallback? onTap,
+    int maxLines = 1,
   }) {
     return TextField(
       controller: controller,
       readOnly: readOnly,
       onTap: onTap,
+      maxLines: maxLines,
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         hintText: hint,

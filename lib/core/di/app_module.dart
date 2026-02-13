@@ -2,6 +2,7 @@ import 'package:injectable/injectable.dart';
 import 'package:migozz_app/features/auth/data/datasources/auth_service.dart';
 import 'package:migozz_app/features/auth/data/domain/repository/auth_repository.dart';
 import 'package:migozz_app/features/auth/data/domain/use_cases/auth_use_cases.dart';
+import 'package:migozz_app/features/auth/data/domain/use_cases/create_auth_user_use_case.dart';
 import 'package:migozz_app/features/auth/data/domain/use_cases/get_current_user_use_case.dart';
 import 'package:migozz_app/features/auth/data/domain/use_cases/login_google_use_case.dart';
 import 'package:migozz_app/features/auth/data/domain/use_cases/login_apple_use_case.dart';
@@ -12,6 +13,7 @@ import 'package:migozz_app/features/auth/data/repository/auth_repository_impl.da
 import 'package:migozz_app/features/auth/services/media_service.dart';
 import 'package:migozz_app/features/auth/services/location_service.dart';
 import 'package:migozz_app/features/profile/data/datasources/user_service.dart';
+import 'package:migozz_app/features/profile/data/datasources/follower_service.dart';
 import 'package:migozz_app/features/profile/data/domain/repository/user_repository.dart';
 import 'package:migozz_app/features/profile/data/domain/use_cases/change_avatar_use_case.dart';
 import 'package:migozz_app/features/profile/data/domain/use_cases/update_user_profile_use_case.dart';
@@ -30,6 +32,7 @@ abstract class AppModule {
   AuthUseCases get authUseCases => AuthUseCases(
     login: LoginUseCase(authRepository),
     register: RegisterUseCase(authRepository),
+    createAuthUser: CreateAuthUserUseCase(authRepository),
     loginGoogle: LoginGoogleUseCase(authRepository),
     loginApple: LoginAppleUseCase(authRepository),
     signout: SignOutUseCase(authRepository),
@@ -46,6 +49,9 @@ abstract class AppModule {
 
   @lazySingleton
   UserService get userService => UserService(userMediaService);
+
+  @lazySingleton
+  FollowerService get followerService => FollowerService();
 
   @lazySingleton
   UserRepository get userRepository => UserRepositoryImpl(userService);

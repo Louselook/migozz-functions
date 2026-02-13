@@ -6,6 +6,7 @@ import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/features/profile/components/draggable_social_rail.dart';
 import 'package:migozz_app/features/profile/components/utils/side_menu.dart';
 import 'package:migozz_app/features/profile/presentation/profile/web/components/profile_background_gradients.dart';
+import 'package:migozz_app/features/profile/presentation/stats/web/components/web_date_range_picker_modal.dart';
 
 class WebProfileStats extends StatefulWidget {
   final UserDTO user;
@@ -84,27 +85,30 @@ class _WebProfileStatsState extends State<WebProfileStats> {
 
   Future<void> _pickDateRange() async {
     final now = DateTime.now();
-    final picked = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(1990),
-      lastDate: now,
+    final picked = await showWebDateRangePicker(
+      context,
       initialDateRange:
           selectedRange ??
           DateTimeRange(start: now.subtract(const Duration(days: 7)), end: now),
     );
+
     if (picked != null) setState(() => selectedRange = picked);
   }
 
   String get rangeText {
     if (selectedRange == null) return "No seleccionado";
     final s = selectedRange!;
-    return "${s.start.day}/${s.start.month}/${s.start.year} → ${s.end.day}/${s.end.month}/${s.end.year}";
+    // Format: "17 ene - 28 ene" to match image style mostly, but let's stick to what we had or improve
+    // Use standard numeric for now: 17/1/2025
+    return "${s.start.day}/${s.start.month}/${s.start.year} - ${s.end.day}/${s.end.month}/${s.end.year}";
   }
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final isSmall = size.width < 700;
+    final isSmall = size.width < 900;
+
+    // Social Rail params
     final socialItemSize = isSmall ? 35.0 : 45.0;
     final socialIconSize = isSmall ? 30.0 : 40.0;
     final socialRailWidth = socialItemSize + 16;
@@ -117,13 +121,19 @@ class _WebProfileStatsState extends State<WebProfileStats> {
     );
 
     final leftMenuWidth = isSmall ? 80.0 : 100.0;
-    final totalFollowers = _totalsGlobal['followers'] ?? 0;
+
+    // Totals calculations
+    final totalLikes = _totalsGlobal['likes'] ?? 0;
+    final totalComments = _totalsGlobal['comments'] ?? 0;
+    final totalShares = _totalsGlobal['shares'] ?? 0;
 
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
         children: [
           const ProfileBackgroundGradients(),
+
+          // Main Content
           Positioned(
             left: leftMenuWidth,
             right: 0,
@@ -133,146 +143,177 @@ class _WebProfileStatsState extends State<WebProfileStats> {
                 ? const Center(
                     child: CircularProgressIndicator(color: Colors.white),
                   )
-                : _socials.isEmpty
-                ? const Center(
-                    child: Text(
-                      "No tienes redes conectadas.",
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  )
                 : SafeArea(
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 600),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 30,
-                          ),
-                          child: SingleChildScrollView(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                const Text(
-                                  'My Stats',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 30),
-                                // Métricas principales (como mobile)
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
-                                  children: [
-                                    _Metric(
-                                      icon: Icons.favorite,
-                                      label:
-                                          '${_formatNum(_totalsGlobal['likes'] ?? 0)} Likes',
-                                    ),
-                                    _Metric(
-                                      icon: Icons.reply,
-                                      label:
-                                          '${_formatNum(_totalsGlobal['shares'] ?? 0)} Shares',
-                                    ),
-                                    _Metric(
-                                      icon: Icons.people,
-                                      label:
-                                          '${_formatNum(totalFollowers)} Followers',
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 40),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.grey[800],
-                                        foregroundColor: Colors.white,
-                                      ),
-                                      onPressed: _pickDateRange,
-                                      child: const Text("Select date"),
-                                    ),
-                                    const SizedBox(width: 20),
-                                    Text(
-                                      rangeText,
-                                      style: const TextStyle(
-                                        color: Colors.grey,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 40),
-                                _DataCard(
-                                  title: "Overview",
-                                  rows: [
-                                    _RowData(
-                                      label: "Likes:",
-                                      value: _formatNum(
-                                        _totalsGlobal['likes'] ?? 0,
-                                      ),
-                                    ),
-                                    _RowData(
-                                      label: "Shares:",
-                                      value: _formatNum(
-                                        _totalsGlobal['shares'] ?? 0,
-                                      ),
-                                    ),
-                                    _RowData(
-                                      label: "Followers:",
-                                      value: _formatNum(totalFollowers),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 24),
-                                // Redes individuales
-                                ..._socials.map((s) {
-                                  final data = s.toJson();
-                                  final name = s.name;
-                                  final filteredEntries = data.entries.where((
-                                    e,
-                                  ) {
-                                    final key = e.key.toLowerCase();
-                                    final value = e.value;
-                                    return value != null &&
-                                        value.toString().trim().isNotEmpty &&
-                                        value != 0 &&
-                                        key != "id" &&
-                                        key != "name" &&
-                                        key != "iconpath" &&
-                                        key != "label";
-                                  }).toList();
-
-                                  return Padding(
-                                    padding: const EdgeInsets.only(bottom: 16),
-                                    child: _DataCard(
-                                      title: name,
-                                      image:
-                                          "assets/icons/social_networks/mini_icon_${name.toLowerCase()}.svg",
-                                      rows: filteredEntries
-                                          .map(
-                                            (e) => _RowData(
-                                              label: _formatKey(e.key),
-                                              value: e.value.toString(),
-                                            ),
-                                          )
-                                          .toList(),
-                                    ),
-                                  );
-                                }),
-                              ],
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(40),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          // Title
+                          const Text(
+                            'My Stats',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 32,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
-                        ),
+                          const SizedBox(height: 50),
+
+                          // Top Metrics Row
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _MetricItem(
+                                icon: Icons.favorite,
+                                value: _formatNum(totalLikes),
+                                // label: "Likes",
+                              ),
+                              const SizedBox(width: 80),
+                              _MetricItem(
+                                icon: Icons.chat_bubble,
+                                value: _formatNum(totalComments),
+                                // label: "Comments",
+                              ),
+                              const SizedBox(width: 80),
+                              _MetricItem(
+                                icon: Icons.reply,
+                                value: _formatNum(totalShares),
+                                // label: "Shares",
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 60),
+
+                          // Date Filter Row
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.3),
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 8,
+                                ),
+                                child: InkWell(
+                                  onTap: _pickDateRange,
+                                  borderRadius: BorderRadius.circular(30),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: const [
+                                      Text(
+                                        "Últimos 30 días",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      SizedBox(width: 8),
+                                      Icon(
+                                        Icons.arrow_drop_down,
+                                        color: Colors.white,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 20),
+                              Text(
+                                rangeText,
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 50),
+
+                          // Stats Cards (Overview + Followers + Others)
+                          Wrap(
+                            spacing: 24,
+                            runSpacing: 24,
+                            alignment: WrapAlignment.center,
+                            children: [
+                              // Overview Card
+                              _StatsCard(
+                                title: "Overview",
+                                icon: Icons.receipt_long,
+                                width: 350,
+                                child: Column(
+                                  children: [
+                                    _StatRow(
+                                      icon: Icons.favorite,
+                                      label: "Likes:",
+                                      value: _formatNum(totalLikes).replaceAll(
+                                        'k',
+                                        ',000',
+                                      ), // Rough adjustments for visual preference
+                                    ),
+                                    _StatRow(
+                                      icon: Icons.chat_bubble,
+                                      label: "Coments:",
+                                      value: _formatNum(totalComments),
+                                    ),
+                                    _StatRow(
+                                      icon: Icons.near_me,
+                                      label: "Shared:",
+                                      value: _formatNum(totalShares),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              // Followers Card (Aggregated)
+                              _StatsCard(
+                                title: "Followers",
+                                icon: Icons.person_add_alt_1,
+                                width: 350,
+                                child: Column(
+                                  children:
+                                      _socials
+                                          .take(4)
+                                          .map(
+                                            (s) => _StatRow(
+                                              imagePath:
+                                                  "assets/icons/social_networks/mini_icon_${s.name.toLowerCase()}.svg",
+                                              label: s.name,
+                                              value: _formatNum(s.followers),
+                                              showArrow: true,
+                                            ),
+                                          )
+                                          .toList()
+                                        ..add(
+                                          _StatRow(
+                                            icon: Icons.public,
+                                            label: "All",
+                                            value: _formatNum(
+                                              _totalsGlobal['followers'] ?? 0,
+                                            ),
+                                            showArrow: true,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                   ),
           ),
+
+          // Side Menu
           const Positioned(left: 0, top: 0, bottom: 0, child: SideMenu()),
+
+          // Draggable Rail
           DraggableSocialRail(
             key: ValueKey('social_rail_${size.width}'),
             initialPosition: initialSocialPosition,
@@ -300,19 +341,9 @@ final Map<String, String> _fieldRules = {
   "videoCount": "media",
 };
 
-String _formatKey(String key) {
-  final formatted = key
-      .replaceAll('_', ' ')
-      .replaceAllMapped(RegExp(r'([a-z])([A-Z])'), (m) => '${m[1]} ${m[2]}')
-      .trim();
-  return formatted.isNotEmpty
-      ? formatted[0].toUpperCase() + formatted.substring(1)
-      : key;
-}
-
 String _formatNum(int n) {
-  if (n >= 1000000) return '${(n / 1000000).toStringAsFixed(2)}M';
-  if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)}K';
+  if (n >= 1000000) return '${(n / 1000000).toStringAsFixed(1)} mill.';
+  if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)} mil';
   return n.toString();
 }
 
@@ -395,93 +426,149 @@ class SocialStats {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'name': name,
-      'followers': followers,
-      'likes': likes,
-      'shares': shares,
-      'viewCount': viewCount,
-      'mediaCount': mediaCount,
-      'following': followingCount,
-      'subscribersCount': subscribers,
-    };
+    return {'name': name, 'followers': followers};
   }
 }
 
-class _Metric extends StatelessWidget {
+class _MetricItem extends StatelessWidget {
   final IconData icon;
-  final String label;
-  const _Metric({required this.icon, required this.label});
+  final String value;
+
+  const _MetricItem({required this.icon, required this.value});
+
   @override
-  Widget build(BuildContext context) => Column(
-    children: [
-      Icon(icon, color: Colors.white, size: 28),
-      const SizedBox(height: 6),
-      Text(label, style: const TextStyle(color: Colors.white)),
-    ],
-  );
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: Colors.white, size: 48),
+        const SizedBox(height: 12),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+      ],
+    );
+  }
 }
 
-class _DataCard extends StatelessWidget {
+class _StatsCard extends StatelessWidget {
   final String title;
-  final String? image;
-  final List<_RowData> rows;
-  const _DataCard({required this.title, required this.rows, this.image});
+  final IconData? icon;
+  final Widget child;
+  final double width;
+
+  const _StatsCard({
+    required this.title,
+    this.icon,
+    required this.child,
+    this.width = 300,
+  });
+
   @override
-  Widget build(BuildContext context) => Card(
-    color: Colors.grey[900],
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    margin: EdgeInsets.zero,
-    child: Padding(
-      padding: const EdgeInsets.all(16),
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E1E1E),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              if (image != null && image!.isNotEmpty)
-                Image.asset(
-                  image!,
-                  width: 22,
-                  height: 22,
-                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                ),
-              if (image != null && image!.isNotEmpty) const SizedBox(width: 8),
+              if (icon != null) ...[
+                Icon(icon, color: Colors.white70, size: 22),
+                const SizedBox(width: 8),
+              ],
               Text(
                 title,
                 style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+                  color: Colors.white70,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w400,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          ...rows,
+          const SizedBox(height: 20),
+          child,
         ],
       ),
-    ),
-  );
+    );
+  }
 }
 
-class _RowData extends StatelessWidget {
-  final String label, value;
-  const _RowData({required this.label, required this.value});
+class _StatRow extends StatelessWidget {
+  final IconData? icon;
+  final String? imagePath;
+  final String label;
+  final String value;
+  final bool showArrow;
+
+  const _StatRow({
+    this.icon,
+    this.imagePath,
+    required this.label,
+    required this.value,
+    this.showArrow = false,
+  });
+
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 4),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: const TextStyle(color: Colors.grey)),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w500,
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        children: [
+          // Icon or Image
+          if (imagePath != null)
+            Image.asset(
+              imagePath!,
+              width: 16,
+              height: 16,
+              errorBuilder: (_, __, ___) =>
+                  const Icon(Icons.link, color: Colors.white, size: 16),
+            )
+          else if (icon != null)
+            Icon(icon, color: Colors.white, size: 16)
+          else
+            const SizedBox(width: 16),
+
+          const SizedBox(width: 12),
+
+          // Label
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(color: Colors.white, fontSize: 14),
+            ),
           ),
-        ),
-      ],
-    ),
-  );
+
+          // Value
+          Text(
+            value,
+            style: const TextStyle(color: Colors.white, fontSize: 14),
+          ),
+
+          if (showArrow) ...[
+            const SizedBox(width: 8),
+            const Icon(Icons.chevron_right, color: Colors.white, size: 16),
+          ],
+        ],
+      ),
+    );
+  }
 }

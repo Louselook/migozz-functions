@@ -88,7 +88,7 @@ class _ProfileImageV2 extends StatelessWidget {
     final bool isNetworkImage =
         avatarUrl != null &&
         (avatarUrl!.startsWith('http://') || avatarUrl!.startsWith('https://'));
-    final String fallbackAsset = 'assets/images/ImgPefil.webp';
+    final String fallbackAsset = 'assets/images/avatar.webp';
 
     return Container(
       width: imageSize,

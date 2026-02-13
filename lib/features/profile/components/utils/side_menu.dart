@@ -1,10 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 
 class SideMenu extends StatelessWidget {
   final TutorialKeys? tutorialKeys;
-  const SideMenu({super.key, this.tutorialKeys});
+  final VoidCallback? onChatTap;
+  final bool isChatOpen;
+  final int unreadCount;
+
+  const SideMenu({
+    super.key,
+    this.tutorialKeys,
+    this.onChatTap,
+    this.isChatOpen = false,
+    this.unreadCount = 0,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -70,6 +83,26 @@ class SideMenu extends StatelessWidget {
           Expanded(
             child: Column(
               children: [
+                // _MenuItem(
+                //   icon: Icons.home,
+                //   label: 'Home',
+                //   isSelected: currentRoute == '/home' || currentRoute == '/',
+                //   isSmallScreen: isSmallScreen,
+                //   isMediumScreen: isMediumScreen,
+                //   onTap: () {
+                //     context.go('/home');
+                //   },
+                // ),
+                _MenuItem(
+                  icon: Icons.search,
+                  label: 'Search',
+                  isSelected: currentRoute == '/search',
+                  isSmallScreen: isSmallScreen,
+                  isMediumScreen: isMediumScreen,
+                  onTap: () {
+                    context.go('/search');
+                  },
+                ),
                 _MenuItem(
                   icon: Icons.person_outline,
                   label: 'Profile',
@@ -85,15 +118,30 @@ class SideMenu extends StatelessWidget {
                   },
                 ),
                 _MenuItem(
-                  icon: Icons.link,
-                  label: 'Feed',
-                  isSelected: currentRoute.contains('feed'),
+                  icon: Icons.chat_bubble_outline,
+                  label: 'Chat',
+                  isSelected: isChatOpen,
                   isSmallScreen: isSmallScreen,
                   isMediumScreen: isMediumScreen,
+                  badgeCount: unreadCount,
                   onTap: () {
-                    context.go('/feed');
+                    if (onChatTap != null) {
+                      onChatTap!();
+                    } else {
+                      context.go('/chats');
+                    }
                   },
                 ),
+                // _MenuItem(
+                //   icon: Icons.link,
+                //   label: 'Feed',
+                //   isSelected: currentRoute.contains('feed'),
+                //   isSmallScreen: isSmallScreen,
+                //   isMediumScreen: isMediumScreen,
+                //   onTap: () {
+                //     context.go('/feed');
+                //   },
+                // ),
                 _MenuItem(
                   icon: Icons.bar_chart,
                   label: 'My Stats',
@@ -119,6 +167,17 @@ class SideMenu extends StatelessWidget {
               ],
             ),
           ),
+          if (kIsWeb)
+            _MenuItem(
+              icon: Icons.logout,
+              label: 'Log Out',
+              isSelected: false,
+              isSmallScreen: isSmallScreen,
+              isMediumScreen: isMediumScreen,
+              onTap: () {
+                context.read<AuthCubit>().logout();
+              },
+            ),
 
           // Botón Create
           Padding(
@@ -185,6 +244,7 @@ class _MenuItem extends StatelessWidget {
   final bool isMediumScreen;
   final VoidCallback onTap;
   final GlobalKey? tutorialKey;
+  final int badgeCount;
 
   const _MenuItem({
     required this.icon,
@@ -194,6 +254,7 @@ class _MenuItem extends StatelessWidget {
     required this.isMediumScreen,
     required this.onTap,
     this.tutorialKey,
+    this.badgeCount = 0,
   });
 
   @override
@@ -235,10 +296,42 @@ class _MenuItem extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              color: isSelected ? const Color(0xFFFF0050) : Colors.white70,
-              size: iconSize,
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(
+                  icon,
+                  color: isSelected ? const Color(0xFFFF0050) : Colors.white70,
+                  size: iconSize,
+                ),
+                if (badgeCount > 0)
+                  Positioned(
+                    right: -4,
+                    top: -4,
+                    child: Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFF0050),
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 14,
+                        minHeight: 14,
+                      ),
+                      child: Center(
+                        child: Text(
+                          badgeCount > 9 ? '9+' : badgeCount.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                            height: 1.0,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
             SizedBox(height: spacing),
             Text(

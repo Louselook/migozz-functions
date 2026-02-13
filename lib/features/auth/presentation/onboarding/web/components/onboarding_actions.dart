@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -17,6 +18,11 @@ class OnboardingActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final aspectRatio = screenHeight / screenWidth;
+    final isVeryTallScreen = aspectRatio > 2.0;
+    final isMobileWeb = !isDesktop && screenWidth < 500;
+
     if (lastPage) {
       return SizedBox(
         width: isDesktop ? null : double.infinity,
@@ -25,8 +31,8 @@ class OnboardingActions extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             padding: EdgeInsets.zero,
             fixedSize: Size(
-              screenWidth < 600 ? 200 : 260,
-              screenWidth < 600 ? 40 : 50,
+              screenWidth < 500 ? 180 : (screenWidth < 600 ? 200 : 260),
+              isVeryTallScreen ? 36 : (screenWidth < 600 ? 40 : 50),
             ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
@@ -51,9 +57,11 @@ class OnboardingActions extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Get Started',
+                    "onboarding.buttons.getStarted".tr(),
                     style: TextStyle(
-                      fontSize: screenWidth < 600 ? 18 : 24,
+                      fontSize: isVeryTallScreen
+                          ? 14
+                          : (screenWidth < 600 ? 18 : 24),
                       color: Colors.white,
                     ),
                   ),
@@ -61,7 +69,7 @@ class OnboardingActions extends StatelessWidget {
                   Icon(
                     Icons.arrow_forward_ios,
                     color: Colors.white,
-                    size: screenWidth < 600 ? 16 : 24,
+                    size: isVeryTallScreen ? 14 : (screenWidth < 600 ? 16 : 24),
                   ),
                 ],
               ),
@@ -76,25 +84,50 @@ class OnboardingActions extends StatelessWidget {
           ? MainAxisAlignment.start
           : MainAxisAlignment.spaceBetween,
       children: [
-        TextButton(
-          onPressed: () => context.go('/login'),
-          style: TextButton.styleFrom(
-            padding: EdgeInsets.symmetric(
-              horizontal: screenWidth < 600 ? 16 : 50,
-              vertical: screenWidth < 600 ? 8 : 23,
+        if (isDesktop) ...[
+          // Desktop: Skip button on the left of Next button, grouped
+          TextButton(
+            onPressed: () => context.go('/login'),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+            child: Text(
+              "onboarding.buttons.skip".tr(),
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.white.withValues(
+                  alpha: 0.7,
+                ), // Slightly dimmer for secondary action
+              ),
             ),
           ),
-          child: Text(
-            "Skip",
-            style: TextStyle(
-              fontSize: screenWidth < 600 ? 18 : 24,
-              color: Colors.white,
+          const SizedBox(width: 24), // Spacing between Skip and Next
+        ],
+
+        if (!isDesktop)
+          TextButton(
+            onPressed: () => context.go('/login'),
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.symmetric(
+                horizontal: isMobileWeb ? 12 : (screenWidth < 600 ? 16 : 24),
+                vertical: isVeryTallScreen ? 4 : (screenWidth < 600 ? 8 : 16),
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: Text(
+              "onboarding.buttons.skip".tr(),
+              style: TextStyle(
+                fontSize: isVeryTallScreen ? 14 : (screenWidth < 600 ? 18 : 24),
+                color: Colors.white,
+              ),
             ),
           ),
-        ),
+
         ElevatedButton(
           onPressed: () {
             if (controller.hasClients) {
@@ -107,12 +140,14 @@ class OnboardingActions extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             padding: EdgeInsets.zero,
             fixedSize: Size(
-              screenWidth < 600 ? 90 : 116,
-              screenWidth < 600 ? 40 : 50,
+              isMobileWeb ? 100 : (screenWidth < 600 ? 120 : 160),
+              isVeryTallScreen ? 38 : (screenWidth < 600 ? 44 : 56),
             ),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(12), // Rounder corners
             ),
+            elevation: 8, // Add some shadow
+            shadowColor: const Color(0xFFD43AB6).withValues(alpha: 0.5),
           ),
           child: Ink(
             decoration: BoxDecoration(
@@ -125,7 +160,7 @@ class OnboardingActions extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Container(
               alignment: Alignment.center,
@@ -133,17 +168,20 @@ class OnboardingActions extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Next',
+                    "onboarding.buttons.next".tr(),
                     style: TextStyle(
-                      fontSize: screenWidth < 600 ? 18 : 24,
+                      fontSize: isVeryTallScreen
+                          ? 14
+                          : (screenWidth < 600 ? 16 : 18),
+                      fontWeight: FontWeight.w600,
                       color: Colors.white,
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                   Icon(
-                    Icons.arrow_forward_ios,
+                    Icons.arrow_forward_rounded, // Rounded arrow
                     color: Colors.white,
-                    size: screenWidth < 600 ? 16 : 24,
+                    size: isVeryTallScreen ? 16 : (screenWidth < 600 ? 18 : 20),
                   ),
                 ],
               ),

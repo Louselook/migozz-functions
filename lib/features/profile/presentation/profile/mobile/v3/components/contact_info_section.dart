@@ -6,16 +6,21 @@ import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubi
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'add_contact_info_bottom_sheet.dart';
-import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
+import 'package:migozz_app/features/profile/components/utils/alert_general.dart';
+import 'section_percentage_header.dart';
 
 class ContactInfoSection extends StatelessWidget {
   final bool isOwnProfile;
   final UserDTO user;
+  final int sectionPercentage;
+  final bool isCompleted;
 
   const ContactInfoSection({
     super.key,
     required this.isOwnProfile,
     required this.user,
+    this.sectionPercentage = 0,
+    this.isCompleted = false,
   });
 
   String _getFieldName(ContactType type) {
@@ -84,7 +89,11 @@ class ContactInfoSection extends StatelessWidget {
           final userId = authCubit.state.firebaseUser?.uid;
 
           if (userId == null) {
-            AlertGeneral.show(context, 4, message: 'edit.validations.errorUserLogin'.tr());
+            AlertGeneral.show(
+              context,
+              4,
+              message: 'edit.validations.errorUserLogin'.tr(),
+            );
             return;
           }
 
@@ -139,7 +148,8 @@ class ContactInfoSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Check if any contact info is filled
-    final hasAnyContact = (user.contactWebsite != null && user.contactWebsite!.isNotEmpty) ||
+    final hasAnyContact =
+        (user.contactWebsite != null && user.contactWebsite!.isNotEmpty) ||
         (user.contactPhone != null && user.contactPhone!.isNotEmpty) ||
         (user.contactEmail != null && user.contactEmail!.isNotEmpty);
 
@@ -157,36 +167,28 @@ class ContactInfoSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'profile.customization.contact.title'.tr(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
+          SectionPercentageHeader(
+            title: 'profile.customization.contact.title'.tr(),
+            percentage: sectionPercentage,
+            isCompleted: isCompleted,
+            trailing: GestureDetector(
+              onTap: () {
+                // TODO: Toggle visibility
+                debugPrint('Toggle contact info visibility');
+              },
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
+                  color: Colors.white10,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.remove_red_eye_outlined,
+                  color: Colors.white70,
+                  size: 12,
                 ),
               ),
-              GestureDetector(
-                onTap: () {
-                  // TODO: Toggle visibility
-                  debugPrint('Toggle contact info visibility');
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    color: Colors.white10,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.remove_red_eye_outlined,
-                    color: Colors.white70,
-                    size: 12,
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
           const SizedBox(height: 4),
           Text(
@@ -227,7 +229,8 @@ class ContactInfoSection extends StatelessWidget {
           if (isOwnProfile && !hasAnyContact) ...[
             const SizedBox(height: 12),
             GestureDetector(
-              onTap: () => _addOrEditContactInfo(context, ContactType.email, null),
+              onTap: () =>
+                  _addOrEditContactInfo(context, ContactType.email, null),
               child: Text(
                 'profile.customization.contact.addCta'.tr(),
                 style: TextStyle(

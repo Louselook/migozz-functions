@@ -1,10 +1,30 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
-import 'package:migozz_app/features/auth/presentation/register/user_details/components/interest_section_model.dart';
+
+/// Modelo de interés (igual que en interests_step.dart)
+class Interest {
+  final String id;
+  final Map<String, String> name;
+  final String emoji;
+  final int order;
+  final String status;
+
+  Interest({
+    required this.id,
+    required this.name,
+    required this.emoji,
+    required this.order,
+    required this.status,
+  });
+
+  String getLocalizedName(String languageCode) =>
+      name[languageCode] ?? name['en'] ?? id;
+}
 
 class EditInterestsScreen extends StatefulWidget {
   const EditInterestsScreen({super.key});
@@ -13,10 +33,9 @@ class EditInterestsScreen extends StatefulWidget {
   State<EditInterestsScreen> createState() => _EditInterestsScreenState();
 }
 
-class _EditInterestsScreenState extends State<EditInterestsScreen>
-    with TickerProviderStateMixin {
+class _EditInterestsScreenState extends State<EditInterestsScreen> {
   Set<String> selectedInterests = {};
-  List<InterestSectionModel> sections = [];
+  List<Interest> allInterests = [];
   bool isLoading = true;
 
   @override
@@ -27,37 +46,37 @@ class _EditInterestsScreenState extends State<EditInterestsScreen>
 
   Future<void> fetchCollection() async {
     try {
-      setState(() {
-        isLoading = true;
-      });
+      setState(() => isLoading = true);
 
-      // Cargar catálogo
-      final catalogSnapshot = await FirebaseFirestore.instance
-          .collection('interests_catalog')
+      // Cargar catálogo desde interests_catalog_new (igual que interests_step)
+      final snapshot = await FirebaseFirestore.instance
+          .collection('interests_catalog_new')
           .get();
 
-      final List<InterestSectionModel> fetchedSections = [];
-      for (var doc in catalogSnapshot.docs) {
+      final List<Interest> fetchedInterests = [];
+      for (final doc in snapshot.docs) {
         final data = doc.data();
-        data.forEach((categoryTitle, categoryOptions) {
-          if (categoryOptions is List) {
-            fetchedSections.add(
-              InterestSectionModel(
-                title: categoryTitle,
-                options: List<String>.from(categoryOptions),
-                expanded: false,
-              ),
-            );
-          }
-        });
+        if (data['status'] != 'active') continue;
+        fetchedInterests.add(
+          Interest(
+            id: doc.id,
+            name: data['name'] is Map
+                ? Map<String, String>.from(data['name'])
+                : {'en': data['name'], 'es': data['name']},
+            emoji: data['emoji']?.toString() ?? '',
+            order: data['order'] ?? 0,
+            status: data['status'] ?? 'active',
+          ),
+        );
       }
+      fetchedInterests.sort((a, b) => a.order.compareTo(b.order));
 
       // Obtener UID actual
       final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid == null) {
         debugPrint('No user logged in');
         setState(() {
-          sections = fetchedSections;
+          allInterests = fetchedInterests;
           isLoading = false;
         });
         return;
@@ -73,83 +92,63 @@ class _EditInterestsScreenState extends State<EditInterestsScreen>
       final userInterests =
           userData?['interests'] as Map<String, dynamic>? ?? {};
 
-      // Convertir el mapa a un set plano
+      // Convertir el mapa a un set plano de IDs
       final selected = userInterests.values
           .expand((value) => List<String>.from(value))
           .toSet();
 
-      // Expandir las secciones donde el usuario tenga algo seleccionado
-      for (final section in fetchedSections) {
-        if (userInterests[section.title] != null) {
-          section.expanded = true;
-        }
-      }
-
-      // Actualizar el estado
       setState(() {
-        sections = fetchedSections;
+        allInterests = fetchedInterests;
         selectedInterests = selected;
         isLoading = false;
       });
     } catch (e) {
       debugPrint('Error loading interests: $e');
-      setState(() {
-        isLoading = false;
-      });
+      setState(() => isLoading = false);
     }
   }
 
-  // helper para actualizar Firestore (llamado al guardar)
+  // Helper para actualizar Firestore (llamado al guardar)
   Future<void> _saveInterests() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('edit.validations.errorUserLogin'.tr()),
-          ),
+          SnackBar(content: Text('edit.validations.errorUserLogin'.tr())),
         );
       }
       return;
     }
 
-    final selectedBySection = <String, List<String>>{};
-    for (final section in sections) {
-      final picked = section.options
-          .where((o) => selectedInterests.contains(o))
-          .toList();
-      if (picked.isNotEmpty) {
-        selectedBySection[section.title] = picked;
-      }
-    }
+    // Guardar como mapa con clave 'interests' igual que interests_step
+    final res = {'interests': selectedInterests.toList()};
 
     try {
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(uid)
-            .update({'interests': selectedBySection});
-        if (context.mounted) {
-      if(mounted){
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('edit.editInterest.saveInterest'.tr())),
-          );
-          Navigator.pop(context, "done");
-        }
+      await FirebaseFirestore.instance.collection('users').doc(uid).update({
+        'interests': res,
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('edit.editInterest.saveInterest'.tr())),
+        );
+        Navigator.pop(context, "done");
       }
     } catch (e) {
-      if(mounted){ 
+      if (mounted) {
         debugPrint('Error saving interests: $e');
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('edit.editInterest.errorSave'.tr())),
-          );
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('edit.editInterest.errorSave'.tr())),
+        );
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final double screenHeight = MediaQuery.of(context).size.height;
+    final bool isSmallDevice = screenHeight < 750;
+
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
       appBar: AppBar(
@@ -158,222 +157,156 @@ class _EditInterestsScreenState extends State<EditInterestsScreen>
         leading: const BackButton(color: Colors.white),
         title: Text(
           "edit.editInterest.title".tr(),
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          child: Column(
-            children: [
-              Expanded(
-                child: isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : Scrollbar(
-                        thumbVisibility: true,
-                        child: ListView.builder(
-                          itemCount: sections.length,
-                          itemBuilder: (context, index) {
-                            final section = sections[index];
-                            return _buildSection(section, index);
-                          },
-                        ),
-                      ),
-              ),
+        child: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20.w),
+                child: Column(
+                  children: [
+                    // Margen superior dinámico
+                    SizedBox(height: isSmallDevice ? 10.h : 25.h),
 
-              // Save button (gradient)
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _saveInterests,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                    PrimaryText(
+                      'interestSelect.choose'.tr(),
+                      fontSize: 22,
+                      textAlign: TextAlign.center,
                     ),
-                    backgroundColor: Colors.transparent,
-                    foregroundColor: Colors.white,
-                    shadowColor: Colors.transparent,
-                  ),
-                  child: Ink(
-                    decoration: BoxDecoration(
-                      gradient: AppColors.primaryGradient,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.35),
-                          offset: const Offset(0, 6),
-                          blurRadius: 18,
+                    SizedBox(height: 4.h),
+                    SecondaryText(
+                      'interestSelect.desc'.tr(),
+                      fontSize: 14,
+                      color: Colors.grey,
+                      textAlign: TextAlign.center,
+                    ),
+
+                    // ESPACIO FLEXIBLE CENTRAL
+                    Expanded(
+                      child: Container(
+                        padding: EdgeInsets.symmetric(vertical: 10.h),
+                        alignment: Alignment.center,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxWidth: MediaQuery.of(context).size.width,
+                            ),
+                            child: Wrap(
+                              alignment: WrapAlignment.center,
+                              runAlignment: WrapAlignment.center,
+                              spacing: 8.w,
+                              runSpacing: 10.h,
+                              children: allInterests.map((interest) {
+                                return _interestChip(
+                                  name: interest.getLocalizedName(
+                                    context.locale.languageCode,
+                                  ),
+                                  emoji: interest.emoji,
+                                  selected: selectedInterests.contains(
+                                    interest.id,
+                                  ),
+                                  onTap: () {
+                                    setState(() {
+                                      selectedInterests.contains(interest.id)
+                                          ? selectedInterests.remove(
+                                              interest.id,
+                                            )
+                                          : selectedInterests.add(interest.id);
+                                    });
+                                  },
+                                );
+                              }).toList(),
+                            ),
+                          ),
                         ),
-                      ],
-                    ),
-                    child: Container(
-                      alignment: Alignment.center,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      child: Text(
-                        "buttons.save".tr(),
-                        style: const TextStyle(fontSize: 18),
                       ),
                     ),
-                  ),
+
+                    // BOTÓN SIEMPRE VISIBLE
+                    Padding(
+                      padding: EdgeInsets.only(bottom: 15.h, top: 10.h),
+                      child: _buildActionButton(),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 16),
-            ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton() {
+    return GestureDetector(
+      onTap: _saveInterests,
+      child: Container(
+        width: double.infinity,
+        height: 54.h,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFF59A3C), Color(0xFFB646F6)],
+          ),
+          borderRadius: BorderRadius.circular(28.r),
+        ),
+        child: Center(
+          child: Text(
+            'buttons.save'.tr(),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18.sp,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildSection(InterestSectionModel section, int index) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Título de la sección (clickeable)
-        GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () {
-            setState(() {
-              section.expanded = !section.expanded;
-            });
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6),
-            child: Row(
-              children: [
-                // botón redondo con imagen (placeholder). Reemplazá el asset por tu PNG.
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      section.expanded = !section.expanded;
-                    });
-                  },
-                  child: Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: AppColors.backgroundDark,
-                      shape: BoxShape.circle,
-                      // pequeño borde para que se note sobre el fondo
-                      border: Border.all(color: Colors.white10),
-                    ),
-                    child: ClipOval(
-                      child: Image.asset(
-                        'assets/icons/Migozz_Icon.svg',
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, err, stack) =>
-                            Icon(section.expanded ? Icons.expand_less : Icons.add,
-                                color: Colors.white, size: 18),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 14),
-                SecondaryText(section.title, fontSize: 18),
-                const Spacer(),
-                if (section.options.any((o) => selectedInterests.contains(o)))
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white10,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: SecondaryText(
-                      '${section.options.where((o) => selectedInterests.contains(o)).length}',
-                      fontSize: 14,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-
-        // Animated expand/collapse con fade + size
-        AnimatedSize(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 250),
-            child: section.expanded
-                ? Padding(
-                    key: ValueKey('expanded_$index'),
-                    padding: const EdgeInsets.only(top: 8, bottom: 16),
-                    child: LayoutBuilder(builder: (context, constraints) {
-                      // Grid de 4 columnas. Ajusté childAspectRatio para campos más grandes.
-                      return GridView.count(
-                        crossAxisCount: 4,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        mainAxisSpacing: 8,
-                        crossAxisSpacing: 8,
-                        childAspectRatio: 2.4,
-                        children: section.options.map((opt) {
-                          final selected = selectedInterests.contains(opt);
-                          return _optionGridItem(
-                            label: opt,
-                            selected: selected,
-                            onTap: () {
-                              setState(() {
-                                if (selected) {
-                                  selectedInterests.remove(opt);
-                                } else {
-                                  selectedInterests.add(opt);
-                                }
-                              });
-                            },
-                          );
-                        }).toList(),
-                      );
-                    }),
-                  )
-                : const SizedBox.shrink(key: ValueKey('collapsed')),
-          ),
-        ),
-        const SizedBox(height: 12),
-      ],
-    );
-  }
-
-  Widget _optionGridItem({
-    required String label,
-    bool selected = false,
+  Widget _interestChip({
+    required String name,
+    required String emoji,
+    required bool selected,
     required VoidCallback onTap,
   }) {
-    // estilos según mock: fondo gris oscuro, texto blanco; borde cambia al seleccionar
-    final bgColor = const Color(0xFF1E1E1E); // gris muy oscuro para los fields
-    final borderColor = selected ? const Color(0xFFB646F6) : Colors.transparent;
-    final textColor = Colors.white;
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeInOut,
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(6), // muy poco redondeado
-        border: Border.all(width: 2, color: borderColor),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(6),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(6),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                label,
-                overflow: TextOverflow.ellipsis,
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(1.5),
+        decoration: BoxDecoration(
+          gradient: selected
+              ? const LinearGradient(
+                  colors: [Color(0xFFF59A3C), Color(0xFFB646F6)],
+                )
+              : null,
+          borderRadius: BorderRadius.circular(20.r),
+        ),
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1E1E1E),
+            borderRadius: BorderRadius.circular(20.r),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (emoji.isNotEmpty)
+                Text(emoji, style: TextStyle(fontSize: 15.sp)),
+              SizedBox(width: 4.w),
+              Text(
+                name,
                 style: TextStyle(
-                  color: textColor,
-                  fontSize: 11, // texto un poco más pequeño
-                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                  fontSize: 13.sp,
+                  fontWeight: selected ? FontWeight.bold : FontWeight.w500,
                 ),
               ),
-            ),
+            ],
           ),
         ),
       ),

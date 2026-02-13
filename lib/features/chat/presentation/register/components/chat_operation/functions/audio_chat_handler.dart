@@ -107,6 +107,12 @@ class AudioChatHandler {
         ? ["Sí, conservar", "No, grabar otro"]
         : ["Yes, keep it", "No, record again"];
 
+    // Para evitar inferencias no deseadas (ej: "grabar" => open_recorder),
+    // mandamos rawOptions como mapas con action send_text.
+    final rawOptions = currentSuggestions
+      .map((label) => {"label": label, "action": "send_text"})
+      .toList(growable: false);
+
     // Mostrar mensaje de confirmación
     addMessage({
       "other": true,
@@ -114,7 +120,10 @@ class AudioChatHandler {
       "text": isSpanish
           ? "¿Quieres conservar este audio? 🎤"
           : "Do you want to keep this audio? 🎤",
+      // options: labels (para render default si hace falta)
       "options": currentSuggestions,
+      // rawOptions: objetos con action explícita (para SuggestionChips)
+      "rawOptions": rawOptions,
       "name": "Migozz",
       "time": getTimeNow(),
     });
@@ -171,6 +180,7 @@ class AudioChatHandler {
     RegisterCubit registerCubit, {
     VoidCallback? onResetAudioUI,
     Function(Map<String, dynamic>)? addMessage,
+    VoidCallback? removeTyping,
     String? firebaseUid, // Agregar este parámetro
   }) async {
     if (_permanentAudioPath == null) {
@@ -211,16 +221,9 @@ class AudioChatHandler {
         registerCubit.setVoiceNoteUrl(voiceUrl);
         registerCubit.setVoiceNoteFile(audioFile);
 
-        if (addMessage != null) {
-          final isSpanish = registerCubit.state.language == 'Español';
-          addMessage({
-            "other": true,
-            "type": MessageType.text,
-            "text": isSpanish ? "✅ Audio guardado" : "✅ Audio saved",
-            "name": "Migozz",
-            "time": getTimeNow(),
-          });
-        }
+        // Remove typing indicator without showing "Audio saved" message
+        // Just proceed to next step directly
+        removeTyping?.call();
       } else {
         debugPrint('❌ No se obtuvo URL del audio');
         if (addMessage != null) {
@@ -305,12 +308,22 @@ class AudioChatHandler {
   /// Obtener mensaje para grabar de nuevo
   Map<String, dynamic> getRecordAgainMessage(RegisterCubit registerCubit) {
     final isSpanish = registerCubit.state.language == 'Español';
+    final rawOptions = [
+      {
+        "label": isSpanish ? "Saltar" : "Skip",
+        "action": "skip",
+      },
+    ];
     return {
       "other": true,
       "type": MessageType.text,
       "text": isSpanish
-          ? "De acuerdo, por favor graba tu nota de voz nuevamente. 🎤"
-          : "Alright, please record your voice note again. 🎤",
+          ? "Entiendo. Por favor graba un nuevo audio, o también puedes saltar este paso."
+          : "Got it. Please record a new audio, or you can also skip this step.",
+      // Mantener sugerencia de skip sin iniciar grabación automática.
+      // En español mostramos "Saltar" (se normaliza a Skip en UI), en inglés "Skip".
+      "options": [isSpanish ? "Saltar" : "Skip"],
+      "rawOptions": rawOptions,
       "time": getTimeNow(),
     };
   }
