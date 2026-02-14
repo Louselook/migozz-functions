@@ -275,7 +275,15 @@ class GenericChatScreenState extends State<GenericChatScreen> {
       return '$yesterdayText $timeStr';
     } else {
       // Nombre del día de la semana usando traducciones
-      final dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+      final dayKeys = [
+        'monday',
+        'tuesday',
+        'wednesday',
+        'thursday',
+        'friday',
+        'saturday',
+        'sunday',
+      ];
       final dayKey = dayKeys[dateTime.weekday - 1];
       final dayName = 'chat.dateHeader.days.$dayKey'.tr();
       return '$dayName $timeStr';
@@ -380,7 +388,10 @@ class GenericChatScreenState extends State<GenericChatScreen> {
                                   );
 
                           // Determinar si mostrar header de fecha/hora
-                          final showDateHeader = _shouldShowDateHeader(messages, messageIndex);
+                          final showDateHeader = _shouldShowDateHeader(
+                            messages,
+                            messageIndex,
+                          );
                           final sentAt = message['sentAt'] as DateTime?;
 
                           return Column(
@@ -388,7 +399,9 @@ class GenericChatScreenState extends State<GenericChatScreen> {
                             children: [
                               // Header de fecha/hora centrado
                               if (showDateHeader && sentAt != null)
-                                _buildDateHeader(_formatDateHeader(sentAt, context)),
+                                _buildDateHeader(
+                                  _formatDateHeader(sentAt, context),
+                                ),
 
                               ChatMessageBuilder.buildMessage(
                                 message,
