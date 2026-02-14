@@ -8,6 +8,7 @@ class WebNetworkImage extends StatefulWidget {
   final BoxFit fit;
   final Widget? errorWidget;
   final Widget? loadingBuilder;
+  final double borderRadius;
 
   const WebNetworkImage({
     super.key,
@@ -15,6 +16,7 @@ class WebNetworkImage extends StatefulWidget {
     this.fit = BoxFit.cover,
     this.errorWidget,
     this.loadingBuilder,
+    this.borderRadius = 0,
   });
 
   @override
@@ -38,11 +40,19 @@ class _WebNetworkImageState extends State<WebNetworkImage> {
     // ignore: undefined_prefixed_name
     ui_web.platformViewRegistry.registerViewFactory(viewId, (int viewId) {
       final img = html.ImageElement();
-      img.src = widget.imageUrl;
+      // Use a CORS proxy to bypass restriction
+      // We use wsrv.nl which is a reliable open source image proxy
+      final proxyUrl =
+          'https://wsrv.nl/?url=${Uri.encodeComponent(widget.imageUrl)}';
+
+      img.src = proxyUrl;
       img.style.width = '100%';
       img.style.height = '100%';
       img.style.objectFit = _mapBoxFit(widget.fit);
+      // Prevent referrer leakage which can also cause blocking
+      img.referrerPolicy = 'no-referrer';
       img.style.border = 'none';
+      img.style.borderRadius = '${widget.borderRadius}px';
 
       // Handle error to switch to error widget if needed?
       // HtmlElementView doesn't easily notify Flutter of errors.

@@ -13,6 +13,7 @@ import 'package:migozz_app/features/profile/components/social_rail.dart';
 import 'package:migozz_app/features/profile/components/utils/alert_general.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/follower_cubit/follower_cubit.dart';
 import 'package:migozz_app/features/profile/presentation/profile/modules/share_profile.dart';
+import 'package:migozz_app/core/components/atomics/web_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Modelo para representar una red social con sus seguidores (web)
@@ -20,11 +21,13 @@ class WebSocialNetworkData {
   final String name;
   final int followers;
   final String? iconPath;
+  final String? imageUrl;
 
   const WebSocialNetworkData({
     required this.name,
     required this.followers,
     this.iconPath,
+    this.imageUrl,
   });
 }
 
@@ -163,9 +166,36 @@ class _ProfileInfoPanelState extends State<ProfileInfoPanel>
         name: 'Migozz',
         followers: _appFollowers,
         iconPath: 'assets/icons/social_networks/Other.svg',
+        imageUrl: widget.user.avatarUrl,
       ),
     ];
+
+    for (final link in widget.socialLinks) {
+      data.add(
+        WebSocialNetworkData(
+          name: _getPlatformName(link.url),
+          followers: link.followers ?? 0,
+          iconPath: link.asset,
+          imageUrl: link.profileImageUrl,
+        ),
+      );
+    }
     return data;
+  }
+
+  String _getPlatformName(Uri url) {
+    final host = url.host.toLowerCase();
+    if (host.contains('instagram')) return 'Instagram';
+    if (host.contains('tiktok')) return 'TikTok';
+    if (host.contains('facebook')) return 'Facebook';
+    if (host.contains('youtube')) return 'YouTube';
+    if (host.contains('twitter') || host.contains('x.com')) return 'X';
+    if (host.contains('linkedin')) return 'LinkedIn';
+    if (host.contains('pinterest')) return 'Pinterest';
+    if (host.contains('spotify')) return 'Spotify';
+    if (host.contains('telegram')) return 'Telegram';
+    if (host.contains('whatsapp')) return 'WhatsApp';
+    return 'Social';
   }
 
   void _onCommunityTap() {
@@ -355,18 +385,33 @@ class _ProfileInfoPanelState extends State<ProfileInfoPanel>
       }
     } catch (_) {}
 
+    // Determine background image based on selected social network
+    String? bgImage = avatarUrl;
+    if (_currentSocialIndex != -1) {
+      final networks = _buildSocialNetworksData();
+      if (_currentSocialIndex < networks.length) {
+        final net = networks[_currentSocialIndex];
+        // If the social network has a linked profile image, use it.
+        // Otherwise keep the main avatar.
+        if (net.imageUrl != null && net.imageUrl!.isNotEmpty) {
+          bgImage = net.imageUrl!;
+        }
+      }
+    }
+    final bool hasBgImage = bgImage != null && bgImage.isNotEmpty;
+
     return Container(
       decoration: const BoxDecoration(color: Colors.black),
       child: Stack(
         fit: StackFit.expand,
         children: [
           // --- BACKGROUND LAYER ---
-          if (hasAvatar)
+          if (hasBgImage)
             Positioned.fill(
-              child: Image.network(
-                avatarUrl,
+              child: WebNetworkImage(
+                imageUrl: bgImage, // Fixed lint: removed !
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(color: Colors.black),
+                errorWidget: Container(color: Colors.black),
               ),
             )
           else

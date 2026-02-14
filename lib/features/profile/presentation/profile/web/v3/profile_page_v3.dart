@@ -1,13 +1,16 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
-import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/social_circles_mobile_v3.dart';
-import 'package:migozz_app/features/profile/components/social_rail.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/profile/components/utils/side_menu.dart';
+import 'package:migozz_app/features/profile/components/social_rail.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:migozz_app/core/components/atomics/network_list.dart';
+import 'package:migozz_app/core/components/atomics/web_network_image.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
+import 'package:migozz_app/features/profile/presentation/profile/web/v3/components/profile_info_panel.dart';
+import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 
 class WebProfileContentV3 extends StatelessWidget {
   final UserDTO user;
@@ -45,95 +48,27 @@ class WebProfileContentV3 extends StatelessWidget {
                       // Left Panel: Profile Preview (Avatar + Socials)
                       Expanded(
                         flex: 5,
-                        child: Container(
-                          color: Colors.black,
-                          child: Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              // Avatar background
-                              if (user.avatarUrl != null &&
-                                  user.avatarUrl!.isNotEmpty)
-                                Image.network(
-                                  user.avatarUrl!,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) =>
-                                      Container(color: Colors.grey[900]),
-                                )
-                              else
-                                Container(
-                                  decoration: const BoxDecoration(
-                                    gradient: RadialGradient(
-                                      colors: [Color(0xFF9036c4), Colors.black],
-                                      radius: 1.2,
-                                    ),
-                                  ),
-                                ),
+                        child: Builder(
+                          builder: (context) {
+                            final authState = context.watch<AuthCubit>().state;
+                            final currentUser = authState.userProfile;
+                            final isOwn =
+                                currentUser?.username == user.username;
 
-                              // Dark Overlay gradient
-                              Container(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
-                                    colors: [
-                                      Colors.transparent,
-                                      Colors.black.withValues(alpha: 0.9),
-                                    ],
-                                    stops: const [0.4, 1.0],
-                                  ),
-                                ),
-                              ),
+                            final totalFollowers = socialLinks.fold<int>(
+                              0,
+                              (sum, link) => sum + (link.followers ?? 0),
+                            );
 
-                              // Content in Left Panel
-                              Padding(
-                                padding: const EdgeInsets.all(24.0),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    // Name
-                                    Text(
-                                      user.displayName.isNotEmpty
-                                          ? user.displayName
-                                          : user.username,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 32,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      '@${user.username}',
-                                      style: const TextStyle(
-                                        color: Colors.white70,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 32),
-
-                                    // Social Circles
-                                    SocialCirclesMobileV3(links: socialLinks),
-                                    const SizedBox(height: 48),
-                                  ],
-                                ),
-                              ),
-
-                              // Back Button
-                              Positioned(
-                                top: 20,
-                                left: 20,
-                                child: IconButton(
-                                  icon: const Icon(
-                                    Icons.arrow_back,
-                                    color: Colors.white,
-                                    size: 30,
-                                  ),
-                                  onPressed: () => context.pop(),
-                                ),
-                              ),
-                            ],
-                          ),
+                            return ProfileInfoPanel(
+                              user: user,
+                              socialLinks: socialLinks,
+                              communityCount: totalFollowers.toString(),
+                              isOwnProfile: isOwn,
+                              currentUserId: currentUser?.email,
+                              targetUserId: user.email,
+                            );
+                          },
                         ),
                       ),
 
@@ -147,119 +82,18 @@ class WebProfileContentV3 extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Bio Section
-                                if (user.bio != null &&
-                                    user.bio!.trim().isNotEmpty)
-                                  _buildSection(
-                                    title: 'profile.customization.bio.label'
-                                        .tr(),
-                                    child: Text(
-                                      user.bio!,
-                                      style: const TextStyle(
-                                        color: Colors.white70,
-                                        fontSize: 16,
-                                        height: 1.5,
-                                      ),
+                                // Social Highlights (New)
+                                if (socialLinks.any(
+                                  (link) =>
+                                      link.profileImageUrl != null &&
+                                      link.profileImageUrl!.isNotEmpty,
+                                ))
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 40),
+                                    child: _SocialHighlightsSection(
+                                      links: socialLinks,
                                     ),
                                   ),
-
-                                // Featured Links
-                                if (user.featuredLinks != null &&
-                                    user.featuredLinks!.isNotEmpty)
-                                  _buildSection(
-                                    title: 'profile.customization.links.label'
-                                        .tr(),
-                                    child: Column(
-                                      children: user.featuredLinks!.map((link) {
-                                        return Padding(
-                                          padding: const EdgeInsets.only(
-                                            bottom: 12,
-                                          ),
-                                          child: _FeaturedLinkTile(link: link),
-                                        );
-                                      }).toList(),
-                                    ),
-                                  ),
-
-                                // Contact Info
-                                if (_hasContactInfo(user))
-                                  _buildSection(
-                                    title: 'profile.customization.contact.label'
-                                        .tr(),
-                                    child: Column(
-                                      children: [
-                                        if (user.contactEmail != null &&
-                                            user.contactEmail!.isNotEmpty)
-                                          _ContactTile(
-                                            icon: Icons.email_outlined,
-                                            value: user.contactEmail!,
-                                            onTap: () => _launchUri(
-                                              Uri(
-                                                scheme: 'mailto',
-                                                path: user.contactEmail,
-                                              ),
-                                            ),
-                                          ),
-                                        if (user.contactWebsite != null &&
-                                            user.contactWebsite!.isNotEmpty)
-                                          _ContactTile(
-                                            icon: Icons.language,
-                                            value: user.contactWebsite!,
-                                            onTap: () => _launchUri(
-                                              Uri.parse(
-                                                user.contactWebsite!.startsWith(
-                                                      'http',
-                                                    )
-                                                    ? user.contactWebsite!
-                                                    : 'https://${user.contactWebsite}',
-                                              ),
-                                            ),
-                                          ),
-                                        if (user.contactPhone != null &&
-                                            user.contactPhone!.isNotEmpty)
-                                          _ContactTile(
-                                            icon: Icons.phone_outlined,
-                                            value: user.contactPhone!,
-                                            onTap:
-                                                () {}, // Phone launching might depend on device
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-
-                                // Interests
-                                if (user.interests.isNotEmpty)
-                                  _buildSection(
-                                    title:
-                                        'profile.customization.interests.label'
-                                            .tr(),
-                                    child: Wrap(
-                                      spacing: 8,
-                                      runSpacing: 8,
-                                      children: user.interests.values
-                                          .expand((e) => e)
-                                          .map((interest) {
-                                            return Chip(
-                                              label: Text(
-                                                interest,
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                ),
-                                              ),
-                                              backgroundColor: Colors.white
-                                                  .withValues(alpha: 0.1),
-                                              side: BorderSide.none,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                              ),
-                                            );
-                                          })
-                                          .toList(),
-                                    ),
-                                  ),
-
-                                const SizedBox(height: 100),
                               ],
                             ),
                           ),
@@ -283,41 +117,6 @@ class WebProfileContentV3 extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  Widget _buildSection({required String title, required Widget child}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title.toUpperCase(),
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.5),
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.2,
-          ),
-        ),
-        const SizedBox(height: 16),
-        child,
-        const SizedBox(height: 40),
-      ],
-    );
-  }
-
-  bool _hasContactInfo(UserDTO user) =>
-      (user.contactWebsite != null && user.contactWebsite!.isNotEmpty) ||
-      (user.contactPhone != null && user.contactPhone!.isNotEmpty) ||
-      (user.contactEmail != null && user.contactEmail!.isNotEmpty);
-
-  Future<void> _launchUri(Uri uri) async {
-    try {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      }
-    } catch (e) {
-      debugPrint('Error launching URI: $e');
-    }
   }
 
   // --- Helper Methods for Social Links (Copied/Adapted from Edit) ---
@@ -359,11 +158,17 @@ class WebProfileContentV3 extends StatelessWidget {
         int? followers;
         int? shares;
         String? customUrl;
+        String? profileImageUrl;
 
         if (data is Map<String, dynamic>) {
           followers = _parseIntFromDynamic(data['followers']);
           shares = _parseIntFromDynamic(data['shares']);
           customUrl = data['url']?.toString();
+          profileImageUrl =
+              data['profileImageUrl']?.toString() ??
+              data['profile_image_url']?.toString() ??
+              data['imageUrl']?.toString() ??
+              data['avatar']?.toString();
         }
 
         final socialInfo = _getSocialInfo(platform, cleanUsername, customUrl);
@@ -374,6 +179,7 @@ class WebProfileContentV3 extends StatelessWidget {
               url: Uri.parse(socialInfo['url']!),
               followers: followers,
               shares: shares,
+              profileImageUrl: profileImageUrl,
             ),
           );
         }
@@ -446,93 +252,119 @@ class WebProfileContentV3 extends StatelessWidget {
   }
 }
 
-class _FeaturedLinkTile extends StatelessWidget {
-  final Map<String, dynamic> link;
+class _SocialHighlightsSection extends StatelessWidget {
+  final List<SocialLink> links;
 
-  const _FeaturedLinkTile({required this.link});
+  const _SocialHighlightsSection({required this.links});
 
   @override
   Widget build(BuildContext context) {
-    final title = link['title'] ?? '';
-    final url = link['url'] ?? '';
+    // Filter links with images
+    final imageLinks = links
+        .where(
+          (l) => l.profileImageUrl != null && l.profileImageUrl!.isNotEmpty,
+        )
+        .toList();
 
-    return DataContainer(
-      padding: const EdgeInsets.all(16),
-      child: InkWell(
-        onTap: () async {
-          final uri = Uri.parse(url.startsWith('http') ? url : 'https://\$url');
-          if (await canLaunchUrl(uri)) {
-            await launchUrl(uri, mode: LaunchMode.externalApplication);
-          }
+    if (imageLinks.isEmpty) return const SizedBox.shrink();
+
+    return SizedBox(
+      height: 200,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: imageLinks.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 16),
+        itemBuilder: (context, index) {
+          final link = imageLinks[index];
+          return _HighlightCard(link: link);
         },
-        child: Row(
-          children: [
-            const Icon(Icons.link, color: Colors.white70),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  if (url.isNotEmpty)
-                    Text(
-                      url,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.5),
-                        fontSize: 12,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                ],
-              ),
-            ),
-            const Icon(Icons.open_in_new, color: Colors.white38, size: 16),
-          ],
-        ),
       ),
     );
   }
 }
 
-class _ContactTile extends StatelessWidget {
-  final IconData icon;
-  final String value;
-  final VoidCallback onTap;
+class _HighlightCard extends StatelessWidget {
+  final SocialLink link;
 
-  const _ContactTile({
-    required this.icon,
-    required this.value,
-    required this.onTap,
-  });
+  const _HighlightCard({required this.link});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-          child: Row(
-            children: [
-              Icon(icon, color: Colors.white70, size: 20),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(value, style: const TextStyle(color: Colors.white)),
+    return InkWell(
+      onTap: () async {
+        if (await canLaunchUrl(link.url)) {
+          await launchUrl(link.url, mode: LaunchMode.externalApplication);
+        }
+      },
+      child: Container(
+        width: 320,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          color: const Color(0xFF1A1A1A),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            // Image Layer
+            // Image Layer
+            Positioned.fill(
+              child: WebNetworkImage(
+                imageUrl: link.profileImageUrl!,
+                fit: BoxFit.cover,
+                borderRadius: 16,
+                errorWidget: Container(
+                  color: Colors.white.withValues(alpha: 0.05),
+                  child: const Center(
+                    child: Icon(Icons.broken_image, color: Colors.white24),
+                  ),
+                ),
               ),
-            ],
-          ),
+            ),
+            // Dark Gradient Overlay
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.6),
+                    ],
+                    stops: const [0.6, 1.0],
+                  ),
+                ),
+              ),
+            ),
+            // Social Icon
+            Positioned(right: 12, bottom: 12, child: _buildIcon(link.asset)),
+          ],
         ),
       ),
     );
+  }
+
+  Widget _buildIcon(String asset) {
+    // Check if asset is URL or local SVG
+    if (asset.startsWith('http')) {
+      return SizedBox(
+        width: 28,
+        height: 28,
+        child: WebNetworkImage(
+          imageUrl: asset,
+          fit: BoxFit.contain,
+          errorWidget: const Icon(Icons.link, color: Colors.white),
+        ),
+      );
+    }
+    return SvgPicture.asset(asset, width: 28, height: 28);
   }
 }
 
