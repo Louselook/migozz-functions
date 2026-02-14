@@ -1,4 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -36,7 +37,7 @@ import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/notifications/presentation/notifications_list_screen.dart';
 import 'package:migozz_app/features/notifications/presentation/web/web_notifications_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:migozz_app/features/profile/presentation/public_profile_screen.dart';
+// PublicProfileScreen removed — profiles always use ProfileSearchScreen/MainNavigation
 import 'package:migozz_app/features/profile/presentation/followers/web/web_followers_screen.dart';
 import 'package:migozz_app/features/chat/presentation/user/list/web_chat_screen.dart';
 
@@ -191,8 +192,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
           if (user == null) {
             return ProfileEntry(tutorialKeys: TutorialKeys());
           }
-          final screenWidth = MediaQuery.of(context).size.width;
-          if (screenWidth >= 900) {
+          if (kIsWeb) {
             return web_profile.ProfileSearchScreen(user: user);
           }
           return MainNavigation(initialIndex: 0, targetUser: user);
@@ -414,8 +414,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
                 );
               }
               final user = snapshot.data!;
-              final screenWidth = MediaQuery.of(context).size.width;
-              if (screenWidth >= 900) {
+              if (kIsWeb) {
                 return web_profile.ProfileSearchScreen(user: user);
               }
               return MainNavigation(initialIndex: 0, targetUser: user);
@@ -477,11 +476,10 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
               }
 
               final user = snapshot.data!;
-              final screenWidth = MediaQuery.of(context).size.width;
-              if (screenWidth >= 900) {
+              if (kIsWeb) {
                 return web_profile.ProfileSearchScreen(user: user);
               }
-              return PublicProfileScreen(user: user);
+              return MainNavigation(initialIndex: 0, targetUser: user);
             },
           );
         },

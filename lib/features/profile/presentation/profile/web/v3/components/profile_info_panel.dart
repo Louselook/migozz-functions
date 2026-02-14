@@ -38,6 +38,7 @@ class ProfileInfoPanel extends StatefulWidget {
   final bool isOwnProfile;
   final String? currentUserId;
   final String? targetUserId;
+  final bool isAuthenticated;
 
   final int unreadCount;
   final VoidCallback? onNotificationTap;
@@ -51,6 +52,7 @@ class ProfileInfoPanel extends StatefulWidget {
     this.isOwnProfile = false,
     this.currentUserId,
     this.targetUserId,
+    this.isAuthenticated = true,
     this.unreadCount = 0,
     this.onNotificationTap,
     this.onMessageTap,
@@ -257,6 +259,10 @@ class _ProfileInfoPanelState extends State<ProfileInfoPanel>
   // ─── GIFT/DONATION ───
 
   void _onGiftTap() {
+    if (!widget.isAuthenticated) {
+      _showLoginPrompt();
+      return;
+    }
     if (widget.isOwnProfile) {
       debugPrint('💰 [DONATION] Click desde MI CUENTA (web)');
     } else {
@@ -356,12 +362,112 @@ class _ProfileInfoPanelState extends State<ProfileInfoPanel>
   // ─── MESSAGE ───
 
   void _onMessageTap() {
+    if (!widget.isAuthenticated) {
+      _showLoginPrompt();
+      return;
+    }
     if (widget.onMessageTap != null) {
       widget.onMessageTap!();
     } else {
       // Default: navigate to chats page
       context.go('/chats');
     }
+  }
+
+  // ─── LOGIN PROMPT ───
+
+  void _showLoginPrompt() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            width: 360,
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1A1A1A),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.08),
+                width: 1,
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.lock_outline, color: Colors.white70, size: 48),
+                const SizedBox(height: 16),
+                const Text(
+                  'Join Migozz',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Log in or sign up to follow, chat and send gifts.',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    fontSize: 15,
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          Navigator.of(ctx).pop();
+                          context.go('/register');
+                        },
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Colors.white24),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          'Sign Up',
+                          style: TextStyle(color: Colors.white, fontSize: 15),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(ctx).pop();
+                          context.go('/login');
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFF0050),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          'Log In',
+                          style: TextStyle(color: Colors.white, fontSize: 15),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   // ─── BUILD ───
@@ -598,8 +704,9 @@ class _ProfileInfoPanelState extends State<ProfileInfoPanel>
             ),
           ),
 
-          // ─── FOLLOW BUTTON (other users) ───
+          // ─── FOLLOW BUTTON (other users — authenticated) ───
           if (!widget.isOwnProfile &&
+              widget.isAuthenticated &&
               widget.currentUserId != null &&
               widget.targetUserId != null)
             Positioned(
@@ -608,6 +715,36 @@ class _ProfileInfoPanelState extends State<ProfileInfoPanel>
               child: FollowButton(
                 targetUserId: widget.targetUserId!,
                 currentUserId: widget.currentUserId!,
+              ),
+            ),
+
+          // ─── FOLLOW BUTTON (not authenticated — shows login prompt) ───
+          if (!widget.isOwnProfile && !widget.isAuthenticated)
+            Positioned(
+              top: 40,
+              right: 24,
+              child: GestureDetector(
+                onTap: _showLoginPrompt,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFF0050), Color(0xFFFF6B9D)],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    'Follow',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
               ),
             ),
 
