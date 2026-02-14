@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
 import 'package:migozz_app/features/chat/presentation/user/list/chats_list_screen.dart';
 import 'package:migozz_app/features/profile/components/bottom_nav.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/follower_cubit/follower_cubit.dart';
@@ -237,6 +238,23 @@ class _MainNavigationState extends State<MainNavigation> {
   @override
   Widget build(BuildContext context) {
     final isViewingOtherProfile = widget.targetUser != null;
+
+    // Check if user is authenticated
+    final authState = context.watch<AuthCubit>().state;
+    final isAuthenticated =
+        authState.status == AuthStatus.authenticated &&
+        authState.userProfile != null;
+
+    // When not authenticated and viewing another profile, only show that profile
+    if (isViewingOtherProfile && !isAuthenticated) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: ProfileSearchScreen(
+          user: widget.targetUser!,
+          tutorialKeys: _tutorialKeys,
+        ),
+      );
+    }
 
     final screens = [
       isViewingOtherProfile

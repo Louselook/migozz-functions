@@ -83,7 +83,11 @@ class _WebProfileContentV3State extends State<WebProfileContentV3> {
       builder: (context, authState) {
         final currentUserEmail = authState.userProfile?.email ?? '';
         final currentUserId = authState.firebaseUser?.uid ?? '';
-        final isOwnProfile = widget.user.email == currentUserEmail;
+        final isAuthenticated =
+            authState.status == AuthStatus.authenticated &&
+            authState.userProfile != null;
+        final isOwnProfile =
+            isAuthenticated && widget.user.email == currentUserEmail;
 
         final isProfileComplete = isOwnProfile
             ? (authState.userProfile?.complete ?? true)
@@ -124,6 +128,7 @@ class _WebProfileContentV3State extends State<WebProfileContentV3> {
                                       socialLinks: socialLinks,
                                       communityCount: totalFollowers.toString(),
                                       isOwnProfile: isOwnProfile,
+                                      isAuthenticated: isAuthenticated,
                                       currentUserId: isOwnProfile
                                           ? null
                                           : currentUserId,
@@ -136,7 +141,9 @@ class _WebProfileContentV3State extends State<WebProfileContentV3> {
                                       onNotificationTap: isOwnProfile
                                           ? _toggleChat
                                           : null,
-                                      onMessageTap: _toggleChat,
+                                      onMessageTap: isAuthenticated
+                                          ? _toggleChat
+                                          : null,
                                     ),
                                   ),
                                   ProfileMediaGrid(
@@ -160,6 +167,7 @@ class _WebProfileContentV3State extends State<WebProfileContentV3> {
                                     socialLinks: socialLinks,
                                     communityCount: totalFollowers.toString(),
                                     isOwnProfile: isOwnProfile,
+                                    isAuthenticated: isAuthenticated,
                                     currentUserId: isOwnProfile
                                         ? null
                                         : currentUserId,
@@ -170,7 +178,9 @@ class _WebProfileContentV3State extends State<WebProfileContentV3> {
                                     onNotificationTap: isOwnProfile
                                         ? _toggleChat
                                         : null,
-                                    onMessageTap: _toggleChat,
+                                    onMessageTap: isAuthenticated
+                                        ? _toggleChat
+                                        : null,
                                   ),
                                 ),
 
@@ -196,14 +206,15 @@ class _WebProfileContentV3State extends State<WebProfileContentV3> {
                     width: leftMenuWidth,
                     child: SideMenu(
                       tutorialKeys: widget.tutorialKeys,
-                      onChatTap: _toggleChat,
+                      onChatTap: isAuthenticated ? _toggleChat : null,
                       isChatOpen: _isChatOpen,
                       unreadCount: unreadCount,
+                      isAuthenticated: isAuthenticated,
                     ),
                   ),
 
-                  // Chat Panel
-                  if (_isChatOpen)
+                  // Chat Panel (only for authenticated users)
+                  if (_isChatOpen && isAuthenticated)
                     Positioned(
                       right: 0,
                       top: 0,

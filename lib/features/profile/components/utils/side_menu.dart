@@ -11,6 +11,7 @@ class SideMenu extends StatelessWidget {
   final VoidCallback? onChatTap;
   final bool isChatOpen;
   final int unreadCount;
+  final bool isAuthenticated;
 
   const SideMenu({
     super.key,
@@ -18,6 +19,7 @@ class SideMenu extends StatelessWidget {
     this.onChatTap,
     this.isChatOpen = false,
     this.unreadCount = 0,
+    this.isAuthenticated = true,
   });
 
   @override
@@ -82,104 +84,110 @@ class SideMenu extends StatelessWidget {
 
           // Menú items
           Expanded(
-            child: Column(
-              children: [
-                // _MenuItem(
-                //   icon: Icons.home,
-                //   label: 'Home',
-                //   isSelected: currentRoute == '/home' || currentRoute == '/',
-                //   isSmallScreen: isSmallScreen,
-                //   isMediumScreen: isMediumScreen,
-                //   onTap: () {
-                //     context.go('/home');
-                //   },
-                // ),
-                _MenuItem(
-                  icon: Icons.search,
-                  label: 'Search',
-                  isSelected: currentRoute == '/search',
-                  isSmallScreen: isSmallScreen,
-                  isMediumScreen: isMediumScreen,
-                  onTap: () {
-                    context.go('/search');
-                  },
-                ),
-                _MenuItem(
-                  icon: Icons.person_outline,
-                  label: 'Profile',
-                  isSelected:
-                      currentRoute == '/profile' ||
-                      currentRoute == '/' ||
-                      currentRoute.contains('profile'),
-                  isSmallScreen: isSmallScreen,
-                  isMediumScreen: isMediumScreen,
-                  tutorialKey: tutorialKeys?.profileScreenKey,
-                  onTap: () {
-                    context.go('/profile');
-                  },
-                ),
-                _MenuItem(
-                  icon: Icons.chat_bubble_outline,
-                  label: 'Chat',
-                  isSelected: isChatOpen,
-                  isSmallScreen: isSmallScreen,
-                  isMediumScreen: isMediumScreen,
-                  badgeCount: unreadCount,
-                  onTap: () {
-                    if (onChatTap != null) {
-                      onChatTap!();
-                    } else {
-                      context.go('/chats');
-                    }
-                  },
-                ),
-                // _MenuItem(
-                //   icon: Icons.link,
-                //   label: 'Feed',
-                //   isSelected: currentRoute.contains('feed'),
-                //   isSmallScreen: isSmallScreen,
-                //   isMediumScreen: isMediumScreen,
-                //   onTap: () {
-                //     context.go('/feed');
-                //   },
-                // ),
-                _MenuItem(
-                  icon: Icons.notifications_outlined,
-                  label: 'Notifications',
-                  isSelected: currentRoute.contains('notifications'),
-                  isSmallScreen: isSmallScreen,
-                  isMediumScreen: isMediumScreen,
-                  onTap: () {
-                    context.go('/notifications');
-                  },
-                ),
-                // Followers removed — visible in Stats page
-                _MenuItem(
-                  icon: Icons.bar_chart,
-                  label: 'My Stats',
-                  isSelected: currentRoute.contains('stats'),
-                  isSmallScreen: isSmallScreen,
-                  isMediumScreen: isMediumScreen,
-                  tutorialKey: tutorialKeys?.statScreenKey,
-                  onTap: () {
-                    context.go('/stats');
-                  },
-                ),
-                _MenuItem(
-                  icon: Icons.settings,
-                  label: 'Configuration',
-                  isSelected: currentRoute.contains('edit-profile'),
-                  isSmallScreen: isSmallScreen,
-                  isMediumScreen: isMediumScreen,
-                  tutorialKey: tutorialKeys?.editScreenKey,
-                  onTap: () {
-                    context.go('/edit-profile');
-                  },
-                ),
-              ],
-            ),
+            child: isAuthenticated
+                ? Column(
+                    children: [
+                      _MenuItem(
+                        icon: Icons.search,
+                        label: 'Search',
+                        isSelected: currentRoute == '/search',
+                        isSmallScreen: isSmallScreen,
+                        isMediumScreen: isMediumScreen,
+                        onTap: () {
+                          context.go('/search');
+                        },
+                      ),
+                      _MenuItem(
+                        icon: Icons.person_outline,
+                        label: 'Profile',
+                        isSelected:
+                            currentRoute == '/profile' ||
+                            currentRoute == '/' ||
+                            currentRoute.contains('profile'),
+                        isSmallScreen: isSmallScreen,
+                        isMediumScreen: isMediumScreen,
+                        tutorialKey: tutorialKeys?.profileScreenKey,
+                        onTap: () {
+                          context.go('/profile');
+                        },
+                      ),
+                      _MenuItem(
+                        icon: Icons.chat_bubble_outline,
+                        label: 'Chat',
+                        isSelected: isChatOpen,
+                        isSmallScreen: isSmallScreen,
+                        isMediumScreen: isMediumScreen,
+                        badgeCount: unreadCount,
+                        onTap: () {
+                          if (onChatTap != null) {
+                            onChatTap!();
+                          } else {
+                            context.go('/chats');
+                          }
+                        },
+                      ),
+                      _MenuItem(
+                        icon: Icons.notifications_outlined,
+                        label: 'Notifications',
+                        isSelected: currentRoute.contains('notifications'),
+                        isSmallScreen: isSmallScreen,
+                        isMediumScreen: isMediumScreen,
+                        onTap: () {
+                          context.go('/notifications');
+                        },
+                      ),
+                      // Followers removed — visible in Stats page
+                      _MenuItem(
+                        icon: Icons.bar_chart,
+                        label: 'My Stats',
+                        isSelected: currentRoute.contains('stats'),
+                        isSmallScreen: isSmallScreen,
+                        isMediumScreen: isMediumScreen,
+                        tutorialKey: tutorialKeys?.statScreenKey,
+                        onTap: () {
+                          context.go('/stats');
+                        },
+                      ),
+                      _MenuItem(
+                        icon: Icons.settings,
+                        label: 'Configuration',
+                        isSelected: currentRoute.contains('edit-profile'),
+                        isSmallScreen: isSmallScreen,
+                        isMediumScreen: isMediumScreen,
+                        tutorialKey: tutorialKeys?.editScreenKey,
+                        onTap: () {
+                          context.go('/edit-profile');
+                        },
+                      ),
+                    ],
+                  )
+                : Column(
+                    children: [
+                      const SizedBox(height: 20),
+                      _MenuItem(
+                        icon: Icons.login,
+                        label: 'Log In',
+                        isSelected: false,
+                        isSmallScreen: isSmallScreen,
+                        isMediumScreen: isMediumScreen,
+                        onTap: () {
+                          context.go('/login');
+                        },
+                      ),
+                      _MenuItem(
+                        icon: Icons.person_add_outlined,
+                        label: 'Sign Up',
+                        isSelected: false,
+                        isSmallScreen: isSmallScreen,
+                        isMediumScreen: isMediumScreen,
+                        onTap: () {
+                          context.go('/register');
+                        },
+                      ),
+                    ],
+                  ),
           ),
-          if (kIsWeb)
+          if (kIsWeb && isAuthenticated)
             _MenuItem(
               icon: Icons.logout,
               label: 'Log Out',
@@ -191,70 +199,73 @@ class SideMenu extends StatelessWidget {
               },
             ),
 
-          // Botón Create
-          Padding(
-            padding: EdgeInsets.only(bottom: isSmallScreen ? 20.0 : 30.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: createButtonSize,
-                  height: createButtonSize,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [Color(0xFFFF0050), Color(0xFFFF6B9D)],
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFFF0050).withValues(alpha: 0.4),
-                        blurRadius: 15,
-                        spreadRadius: 2,
+          // Botón Create — solo para usuarios autenticados
+          if (isAuthenticated)
+            Padding(
+              padding: EdgeInsets.only(bottom: isSmallScreen ? 20.0 : 30.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: createButtonSize,
+                    height: createButtonSize,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFFFF0050), Color(0xFFFF6B9D)],
                       ),
-                    ],
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (ctx) => Dialog(
-                            backgroundColor: Colors.transparent,
-                            child: WebAddCustomLinkModal(
-                              onComplete: () {
-                                Navigator.of(ctx).pop();
-                              },
-                              onBack: () {
-                                Navigator.of(ctx).pop();
-                              },
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFFF0050).withValues(alpha: 0.4),
+                          blurRadius: 15,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            builder: (ctx) => Dialog(
+                              backgroundColor: Colors.transparent,
+                              child: WebAddCustomLinkModal(
+                                onComplete: () {
+                                  Navigator.of(ctx).pop();
+                                },
+                                onBack: () {
+                                  Navigator.of(ctx).pop();
+                                },
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                      borderRadius: BorderRadius.circular(createButtonSize / 2),
-                      child: Icon(
-                        Icons.arrow_upward,
-                        color: Colors.white,
-                        size: createIconSize,
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(
+                          createButtonSize / 2,
+                        ),
+                        child: Icon(
+                          Icons.arrow_upward,
+                          color: Colors.white,
+                          size: createIconSize,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                SizedBox(height: isSmallScreen ? 6.0 : 8.0),
-                Text(
-                  'Create',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: createFontSize,
-                    fontWeight: FontWeight.w500,
+                  SizedBox(height: isSmallScreen ? 6.0 : 8.0),
+                  Text(
+                    'Create',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: createFontSize,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
         ],
       ),
     );

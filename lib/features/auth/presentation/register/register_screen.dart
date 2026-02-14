@@ -1,5 +1,4 @@
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -119,118 +118,153 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
+  // ── Logo section (reutilizable en mobile / desktop) ──
+  Widget _buildLogoSection(double logoSize) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Logo(width: logoSize, height: logoSize),
+        const SizedBox(height: 20),
+        PrimaryText(
+          "register.presentation.title".tr(),
+          fontSize: 22,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 8),
+        SecondaryText(
+          "register.presentation.subtitle1".tr(),
+          fontSize: 14,
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  // ── Formulario de registro ──
+  Widget _buildRegisterForm() {
+    return Form(
+      key: _formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Email input
+          CustomTextField(
+            hintText: "register.presentation.inputText".tr(),
+            prefixIcon: const Icon(
+              Icons.email_outlined,
+              color: AppColors.secondaryText,
+            ),
+            controller: _emailController,
+            keyboardType: TextInputType.emailAddress,
+            onSubmitted: (_) => _handleRegister(),
+          ),
+          const SizedBox(height: 35),
+
+          // Register button
+          GradientButton(
+            width: double.infinity,
+            radius: 19,
+            onPressed: _isLoading ? null : _handleRegister,
+            child: _isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : SecondaryText(
+                    "register.presentation.buttonText".tr(),
+                    fontSize: 17,
+                  ),
+          ),
+          const SizedBox(height: 24),
+
+          // Link to login
+          RichText(
+            textAlign: TextAlign.center,
+            text: TextSpan(
+              style: const TextStyle(fontSize: 13, color: Colors.grey),
+              children: [
+                TextSpan(text: "register.presentation.bottonText.login".tr()),
+                gradientTextSpan(
+                  "register.presentation.bottonText.LoginReturn".tr(),
+                  onTap: () {
+                    context.go('/login');
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Layout móvil (columna) ──
+  Widget _buildMobileLayout(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final logoSize = (width * 0.35).clamp(120.0, 180.0);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildLogoSection(logoSize),
+          const SizedBox(height: 40),
+          _buildRegisterForm(),
+        ],
+      ),
+    );
+  }
+
+  // ── Layout desktop / web (logo izquierda, formulario derecha) ──
+  Widget _buildDesktopLayout(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final formWidth = (width * 0.28).clamp(340.0, 420.0);
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Flexible(
+            flex: 2,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: _buildLogoSection(250),
+            ),
+          ),
+          const SizedBox(width: 32),
+          SizedBox(width: formWidth, child: _buildRegisterForm()),
+          const SizedBox(width: 32),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final double screenHeight = MediaQuery.of(context).size.height;
-
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
       resizeToAvoidBottomInset: false,
       body: SafeArea(
-        child: Stack(
-          children: [
-            // Contenido principal centrado
-            Center(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isMobile = constraints.maxWidth < 600;
+
+            return Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.only(bottom: 200),
-                child: ConstrainedBox(
-                  // ESTE ancho es lo que hace que se vea igual al login
-                  constraints: const BoxConstraints(maxWidth: 430),
-                  child: Padding(
-                    // mismo padding horizontal que en LoginForm
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Logo
-                          Logo(),
-                          const SizedBox(height: 20),
-
-                          // Welcome text
-                          PrimaryText(
-                            "register.presentation.title".tr(),
-                            fontSize: kIsWeb ? 40 : null,
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 3),
-                          SecondaryText(
-                            "register.presentation.subtitle1".tr(),
-                            fontSize: kIsWeb ? 16 : 12,
-                            textAlign: TextAlign.center,
-                          ),
-
-                          const SizedBox(height: 30),
-
-                          // Email input
-                          CustomTextField(
-                            hintText: "register.presentation.inputText".tr(),
-                            prefixIcon: const Icon(
-                              Icons.email_outlined,
-                              color: AppColors.secondaryText,
-                            ),
-                            controller: _emailController,
-                            keyboardType: TextInputType.emailAddress,
-                            onSubmitted: (_) => _handleRegister(),
-                          ),
-
-                          const SizedBox(height: 35),
-
-                          // Register button
-                          GradientButton(
-                            width: double.infinity,
-                            radius: 19,
-                            onPressed: _isLoading ? null : _handleRegister,
-                            child: _isLoading
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : SecondaryText(
-                                    "register.presentation.buttonText".tr(),
-                                    fontSize: 17, //  igual tamaño que en Login
-                                  ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+                child: isMobile
+                    ? _buildMobileLayout(context)
+                    : _buildDesktopLayout(context),
               ),
-            ),
-
-            // Link abajo fijo
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: EdgeInsets.only(
-                  bottom: screenHeight < 800 ? 130 : 220,
-                ),
-                child: RichText(
-                  textAlign: TextAlign.center,
-                  text: TextSpan(
-                    style: const TextStyle(fontSize: 13, color: Colors.grey),
-                    children: [
-                      TextSpan(
-                        text: "register.presentation.bottonText.login".tr(),
-                      ),
-                      gradientTextSpan(
-                        "register.presentation.bottonText.LoginReturn".tr(),
-                        onTap: () {
-                          context.go('/login');
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
