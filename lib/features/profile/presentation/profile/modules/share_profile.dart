@@ -259,7 +259,7 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
   }
 
   String _buildUrl(String username) =>
-      '$_baseProfileUrl/${username.toLowerCase()}';
+      '$_baseProfileUrl/u/${username.toLowerCase()}';
 
   Future<void> _shareProfile(_ProfileData data) async {
     try {

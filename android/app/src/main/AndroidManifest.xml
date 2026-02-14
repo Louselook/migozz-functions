@@ -62,6 +62,15 @@
                 <data android:scheme="https" android:host="migozz-e2a21.firebaseapp.com" android:pathPrefix="/u/"/>
             </intent-filter>
 
+            <!-- migozz.com -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="migozz.com" android:pathPrefix="/u/"/>
+            </intent-filter>
+
+
            <!-- Deeplinks para redes sociales -->
            <!-- Spotify -->
             <intent-filter>
