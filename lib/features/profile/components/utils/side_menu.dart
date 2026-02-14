@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:flutter/foundation.dart';
+import 'package:migozz_app/features/auth/presentation/register/user_details/modules/social_ecosystem/web_add_custom_link_modal.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 
@@ -143,6 +144,17 @@ class SideMenu extends StatelessWidget {
                 //   },
                 // ),
                 _MenuItem(
+                  icon: Icons.notifications_outlined,
+                  label: 'Notifications',
+                  isSelected: currentRoute.contains('notifications'),
+                  isSmallScreen: isSmallScreen,
+                  isMediumScreen: isMediumScreen,
+                  onTap: () {
+                    context.go('/notifications');
+                  },
+                ),
+                // Followers removed — visible in Stats page
+                _MenuItem(
                   icon: Icons.bar_chart,
                   label: 'My Stats',
                   isSelected: currentRoute.contains('stats'),
@@ -207,7 +219,20 @@ class SideMenu extends StatelessWidget {
                     color: Colors.transparent,
                     child: InkWell(
                       onTap: () {
-                        context.go('/create');
+                        showDialog(
+                          context: context,
+                          builder: (ctx) => Dialog(
+                            backgroundColor: Colors.transparent,
+                            child: WebAddCustomLinkModal(
+                              onComplete: () {
+                                Navigator.of(ctx).pop();
+                              },
+                              onBack: () {
+                                Navigator.of(ctx).pop();
+                              },
+                            ),
+                          ),
+                        );
                       },
                       borderRadius: BorderRadius.circular(createButtonSize / 2),
                       child: Icon(

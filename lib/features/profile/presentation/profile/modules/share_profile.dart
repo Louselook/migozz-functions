@@ -281,8 +281,18 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
       );
 
       if (kIsWeb) {
-        // For web, just share the text with link
-        Share.share(shareMessage, subject: shareSubject);
+        // Web: Copy link to clipboard (Share API requires direct user gesture)
+        await Clipboard.setData(ClipboardData(text: data.link));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('share.copied'.tr()),
+              backgroundColor: const Color(0xFF2C2C2C),
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
       } else {
         // Mobile: Save to temp directory and share with image
         final directory = await getApplicationDocumentsDirectory();
@@ -300,15 +310,29 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
       }
     } catch (e) {
       debugPrint('Error sharing profile: $e');
-      // Fallback to text-only share
-      Share.share(
-        'share.title'.tr(
-          namedArgs: {'displayName': data.displayName, 'link': data.link},
-        ),
-        subject: 'share.subject'.tr(
-          namedArgs: {'displayName': data.displayName},
-        ),
-      );
+      // Fallback: copy link to clipboard on web, text share on mobile
+      if (kIsWeb) {
+        await Clipboard.setData(ClipboardData(text: data.link));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('share.copied'.tr()),
+              backgroundColor: const Color(0xFF2C2C2C),
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      } else {
+        Share.share(
+          'share.title'.tr(
+            namedArgs: {'displayName': data.displayName, 'link': data.link},
+          ),
+          subject: 'share.subject'.tr(
+            namedArgs: {'displayName': data.displayName},
+          ),
+        );
+      }
     }
   }
 

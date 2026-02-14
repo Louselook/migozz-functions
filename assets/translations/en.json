@@ -470,7 +470,8 @@
           "mediaCount": "Media",
           "friends": "Friends",
           "fans": "Fans",
-          "subscriber": "Subscriber"
+          "subscriber": "Subscriber",
+          "all": "Total"
         },
         "overview": {
             "community": "Community",
@@ -713,7 +714,8 @@
             "image": "Image",
             "default": "Default",
             "chooseImage": "Choose Image"
-        }
+        },
+        "copied": "Link copied to clipboard!"
     },
     "common": {
         "loading": "Loading...",
