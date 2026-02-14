@@ -1,18 +1,11 @@
 import 'dart:async';
-import 'dart:io';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/services/notifications/active_chat_manager.dart';
-import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/features/chat/controllers/user_chat_controller.dart';
 import 'package:migozz_app/features/chat/data/datasources/chat_service.dart';
 import 'package:migozz_app/features/chat/data/datasources/message_adapter.dart';
-import 'package:migozz_app/features/chat/data/domain/models/chat_model.dart';
 import 'package:migozz_app/features/chat/presentation/components/chat_input/chat_input_widget.dart';
 import 'package:migozz_app/features/chat/presentation/components/generic_chat_screen.dart';
 

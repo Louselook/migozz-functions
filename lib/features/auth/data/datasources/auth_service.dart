@@ -122,7 +122,7 @@ class AuthService {
 
       // Obtener los tokens de autenticación (idToken)
       final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
+          googleUser.authentication;
 
       debugPrint('🔐 [AuthService] Tokens obtenidos');
 

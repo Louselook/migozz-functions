@@ -142,6 +142,7 @@ class _WebNotificationsScreenState extends State<WebNotificationsScreen> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final isMobileWidth = size.width < 600;
     final isSmallScreen = size.width < 900;
     final leftMenuWidth = isSmallScreen ? 80.0 : 100.0;
     final unreadCount = _notifications.where((n) => !n.isRead).length;
@@ -153,7 +154,7 @@ class _WebNotificationsScreenState extends State<WebNotificationsScreen> {
           // Main content area
           Positioned.fill(
             child: Padding(
-              padding: EdgeInsets.only(left: leftMenuWidth),
+              padding: EdgeInsets.only(left: isMobileWidth ? 0 : leftMenuWidth),
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 800),
@@ -168,14 +169,15 @@ class _WebNotificationsScreenState extends State<WebNotificationsScreen> {
               ),
             ),
           ),
-          // Side Menu
-          Positioned(
-            left: 0,
-            top: 0,
-            bottom: 0,
-            width: leftMenuWidth,
-            child: const SideMenu(),
-          ),
+          // Side Menu (hidden on mobile width)
+          if (!isMobileWidth)
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: leftMenuWidth,
+              child: const SideMenu(),
+            ),
         ],
       ),
     );

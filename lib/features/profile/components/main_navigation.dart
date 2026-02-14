@@ -280,22 +280,33 @@ class _MainNavigationState extends State<MainNavigation> {
 
     return Scaffold(
       extendBody: true,
-      body: Stack(
-        children: [
-          IndexedStack(index: _currentIndex, children: screens),
-          if (PlatformUtils.isWeb) const FloatingChatWidget(),
-        ],
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isMobileWidth = constraints.maxWidth < 600;
+          return Stack(
+            children: [
+              IndexedStack(index: _currentIndex, children: screens),
+              if (PlatformUtils.isWeb && !isMobileWidth)
+                const FloatingChatWidget(),
+            ],
+          );
+        },
       ),
-      bottomNavigationBar: PlatformUtils.isWeb
-          ? null
-          : GradientBottomNav(
-              currentIndex: _currentIndex,
-              onItemSelected: _onItemSelected,
-              onCenterTap: _onCenterTap,
-              onProfileUpdated: _onProfileUpdated,
-              tutorialKeys: _tutorialKeys,
-              profileTutorialKeys: _profileTutorialKeys,
-            ),
+      bottomNavigationBar: LayoutBuilder(
+        builder: (context, constraints) {
+          final showBottomNav = !PlatformUtils.isWeb ||
+              MediaQuery.of(context).size.width < 600;
+          if (!showBottomNav) return const SizedBox.shrink();
+          return GradientBottomNav(
+            currentIndex: _currentIndex,
+            onItemSelected: _onItemSelected,
+            onCenterTap: _onCenterTap,
+            onProfileUpdated: _onProfileUpdated,
+            tutorialKeys: _tutorialKeys,
+            profileTutorialKeys: _profileTutorialKeys,
+          );
+        },
+      ),
     );
   }
 }

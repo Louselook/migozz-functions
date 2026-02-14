@@ -51,6 +51,7 @@ class _WebChatScreenState extends State<WebChatScreen>
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final isMobileWidth = size.width < 600;
     final isSmallScreen = size.width < 900;
     final leftMenuWidth = isSmallScreen ? 80.0 : 100.0;
 
@@ -60,37 +61,91 @@ class _WebChatScreenState extends State<WebChatScreen>
         children: [
           Positioned.fill(
             child: Padding(
-              padding: EdgeInsets.only(left: leftMenuWidth),
+              padding: EdgeInsets.only(left: isMobileWidth ? 0 : leftMenuWidth),
+              child: isMobileWidth
+                  ? _buildMobileLayout()
+                  : Row(
+                      children: [
+                        // Chat list panel
+                        SizedBox(width: 360, child: _buildChatListPanel()),
+                        // Divider
+                        Container(
+                          width: 1,
+                          color: Colors.white.withValues(alpha: 0.1),
+                        ),
+                        // Conversation panel
+                        Expanded(
+                          child: _selectedChatUserId != null
+                              ? _buildConversationPanel()
+                              : _buildEmptyConversation(),
+                        ),
+                      ],
+                    ),
+            ),
+          ),
+          // Side Menu (hidden on mobile width)
+          if (!isMobileWidth)
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: leftMenuWidth,
+              child: const SideMenu(),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Mobile layout: show chat list OR conversation, not both
+  Widget _buildMobileLayout() {
+    if (_selectedChatUserId != null) {
+      return Column(
+        children: [
+          // Back button header
+          Container(
+            padding: const EdgeInsets.fromLTRB(8, 12, 16, 8),
+            color: const Color(0xFF1C1C1E),
+            child: SafeArea(
+              bottom: false,
               child: Row(
                 children: [
-                  // Chat list panel
-                  SizedBox(width: 360, child: _buildChatListPanel()),
-                  // Divider
-                  Container(
-                    width: 1,
-                    color: Colors.white.withValues(alpha: 0.1),
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    onPressed: () => setState(() {
+                      _selectedChatUserId = null;
+                      _selectedChatUserName = null;
+                      _selectedChatUserAvatar = null;
+                    }),
                   ),
-                  // Conversation panel
+                  if (_selectedChatUserAvatar != null &&
+                      _selectedChatUserAvatar!.isNotEmpty)
+                    CircleAvatar(
+                      radius: 16,
+                      backgroundImage:
+                          NetworkImage(_selectedChatUserAvatar!),
+                    ),
+                  const SizedBox(width: 10),
                   Expanded(
-                    child: _selectedChatUserId != null
-                        ? _buildConversationPanel()
-                        : _buildEmptyConversation(),
+                    child: Text(
+                      _selectedChatUserName ?? '',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
               ),
             ),
           ),
-          // Side Menu
-          Positioned(
-            left: 0,
-            top: 0,
-            bottom: 0,
-            width: leftMenuWidth,
-            child: const SideMenu(),
-          ),
+          Expanded(child: _buildConversationPanel()),
         ],
-      ),
-    );
+      );
+    }
+    return _buildChatListPanel();
   }
 
   Widget _buildChatListPanel() {

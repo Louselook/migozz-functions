@@ -311,6 +311,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final isMobileWidth = screenWidth < 600;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -318,14 +319,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
         children: [
           _buildBackground(),
 
-          // SideMenu
-          const Positioned(top: 0, bottom: 0, left: 0, child: SideMenu()),
+          // SideMenu (hidden on mobile width)
+          if (!isMobileWidth)
+            const Positioned(top: 0, bottom: 0, left: 0, child: SideMenu()),
 
           // Main content
           Positioned(
             top: 0,
             bottom: 0,
-            left: 70,
+            left: isMobileWidth ? 0 : 70,
             right: 0,
             child: BlocBuilder<AuthCubit, AuthState>(
               builder: (context, authState) {
@@ -364,7 +366,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   }
                 }
 
-                final contentWidth = (screenWidth - 70).clamp(400.0, 900.0);
+                final contentWidth = isMobileWidth
+                    ? screenWidth
+                    : (screenWidth - 70).clamp(400.0, 900.0);
 
                 return Center(
                   child: SizedBox(
@@ -731,7 +735,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
             ),
             child: DropdownButtonFormField<String>(
-              value: _selectedGender,
+              initialValue: _selectedGender,
               icon: Icon(
                 Icons.keyboard_arrow_down,
                 color: Colors.grey.shade400,

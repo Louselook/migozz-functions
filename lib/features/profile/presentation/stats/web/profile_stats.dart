@@ -134,6 +134,7 @@ class _WebProfileStatsState extends State<WebProfileStats> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final isMobileWidth = size.width < 600;
     final isSmall = size.width < 900;
     final leftMenuWidth = isSmall ? 80.0 : 100.0;
 
@@ -145,7 +146,7 @@ class _WebProfileStatsState extends State<WebProfileStats> {
 
           // Main content
           Positioned(
-            left: leftMenuWidth,
+            left: isMobileWidth ? 0 : leftMenuWidth,
             right: 0,
             top: 0,
             bottom: 0,
@@ -160,7 +161,7 @@ class _WebProfileStatsState extends State<WebProfileStats> {
                         child: SingleChildScrollView(
                           physics: const BouncingScrollPhysics(),
                           padding: EdgeInsets.symmetric(
-                            horizontal: isSmall ? 20 : 40,
+                            horizontal: isMobileWidth ? 16 : (isSmall ? 20 : 40),
                             vertical: 30,
                           ),
                           child: Column(
@@ -170,9 +171,9 @@ class _WebProfileStatsState extends State<WebProfileStats> {
                               Center(
                                 child: Text(
                                   'stats.title'.tr(),
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: Colors.white,
-                                    fontSize: 28,
+                                    fontSize: isMobileWidth ? 22 : 28,
                                     fontWeight: FontWeight.bold,
                                     letterSpacing: 0.5,
                                   ),
@@ -181,12 +182,12 @@ class _WebProfileStatsState extends State<WebProfileStats> {
                               const SizedBox(height: 36),
 
                               // 1. Top Three Metrics (matches mobile)
-                              _buildTopMetrics(isSmall),
+                              _buildTopMetrics(isSmall || isMobileWidth),
                               const SizedBox(height: 40),
 
                               // 2. Overview + Followers side by side (desktop)
                               //    or stacked (small)
-                              if (isSmall) ...[
+                              if (isSmall || isMobileWidth) ...[
                                 _buildOverviewCard(),
                                 const SizedBox(height: 20),
                                 _buildFollowersCard(),
@@ -211,7 +212,7 @@ class _WebProfileStatsState extends State<WebProfileStats> {
                               if (_socials.isEmpty)
                                 _buildNoSocialsPlaceholder()
                               else
-                                _buildNetworkCards(isSmall),
+                                _buildNetworkCards(isSmall || isMobileWidth),
 
                               const SizedBox(height: 60),
                             ],
@@ -222,8 +223,9 @@ class _WebProfileStatsState extends State<WebProfileStats> {
                   ),
           ),
 
-          // Side Menu
-          const Positioned(left: 0, top: 0, bottom: 0, child: SideMenu()),
+          // Side Menu (hidden on mobile width)
+          if (!isMobileWidth)
+            const Positioned(left: 0, top: 0, bottom: 0, child: SideMenu()),
         ],
       ),
     );

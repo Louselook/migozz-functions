@@ -141,12 +141,24 @@ class _SocialBoxItemState extends State<_SocialBoxItem> {
               ? Matrix4.translationValues(0, -3, 0)
               : Matrix4.identity(),
           child: Center(
-            child: SvgPicture.asset(
-              widget.link.asset,
-              width: widget.boxSize * 0.5,
-              height: widget.boxSize * 0.5,
-              fit: BoxFit.contain,
-            ),
+            child: widget.link.asset.startsWith('http')
+                ? Image.network(
+                    widget.link.asset,
+                    width: widget.boxSize * 0.5,
+                    height: widget.boxSize * 0.5,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => Icon(
+                      Icons.link,
+                      color: Colors.white.withValues(alpha: 0.7),
+                      size: widget.boxSize * 0.4,
+                    ),
+                  )
+                : SvgPicture.asset(
+                    widget.link.asset,
+                    width: widget.boxSize * 0.5,
+                    height: widget.boxSize * 0.5,
+                    fit: BoxFit.contain,
+                  ),
           ),
         ),
       ),

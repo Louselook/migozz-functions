@@ -25,12 +25,69 @@ class WebProfileContentV3 extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final isMobileWidth = size.width < 600;
     final isSmallScreen = size.width < 900;
     final leftMenuWidth = isSmallScreen ? 80.0 : 100.0;
 
     // Build social links for the V3 social circles component
     final socialLinks = _buildSocialLinks(user.socialEcosystem, user.username);
 
+    // ── Mobile-like layout for narrow screens ──
+    if (isMobileWidth) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: Builder(
+          builder: (context) {
+            final authState = context.watch<AuthCubit>().state;
+            final currentUser = authState.userProfile;
+            final isOwn = currentUser?.username == user.username;
+            final totalFollowers = socialLinks.fold<int>(
+              0,
+              (sum, link) => sum + (link.followers ?? 0),
+            );
+
+            return SingleChildScrollView(
+              child: Column(
+                children: [
+                  // Profile info panel — takes ~55% of screen height
+                  SizedBox(
+                    height: size.height * 0.65,
+                    child: ProfileInfoPanel(
+                      user: user,
+                      socialLinks: socialLinks,
+                      communityCount: totalFollowers.toString(),
+                      isOwnProfile: isOwn,
+                      currentUserId: currentUser?.email,
+                      targetUserId: user.email,
+                      isMobileLayout: true,
+                    ),
+                  ),
+
+                  // Social Highlights below
+                  if (socialLinks.any(
+                    (link) =>
+                        link.profileImageUrl != null &&
+                        link.profileImageUrl!.isNotEmpty,
+                  ))
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
+                      child: _SocialHighlightsSection(links: socialLinks),
+                    ),
+
+                  // Bottom spacing for bottom nav bar
+                  const SizedBox(height: 80),
+                ],
+              ),
+            );
+          },
+        ),
+      );
+    }
+
+    // ── Desktop/tablet two-column layout ──
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
@@ -197,7 +254,7 @@ class WebProfileContentV3 extends StatelessWidget {
 
   String _faviconFromDomain(String domain) {
     if (domain.isEmpty) return '';
-    return 'https://www.google.com/s2/favicons?domain=\$domain&sz=128';
+    return 'https://www.google.com/s2/favicons?domain=$domain&sz=128';
   }
 
   Map<String, String>? _getSocialInfo(
@@ -214,35 +271,35 @@ class WebProfileContentV3 extends StatelessWidget {
     String url;
     switch (platform) {
       case 'tiktok':
-        url = customUrl ?? 'https://www.tiktok.com/@\$username';
+        url = customUrl ?? 'https://www.tiktok.com/@$username';
         break;
       case 'instagram':
-        url = customUrl ?? 'https://www.instagram.com/\$username';
+        url = customUrl ?? 'https://www.instagram.com/$username';
         break;
       case 'x':
       case 'twitter':
-        url = customUrl ?? 'https://x.com/\$username';
+        url = customUrl ?? 'https://x.com/$username';
         break;
       case 'facebook':
-        url = customUrl ?? 'https://www.facebook.com/\$username';
+        url = customUrl ?? 'https://www.facebook.com/$username';
         break;
       case 'pinterest':
-        url = customUrl ?? 'https://www.pinterest.com/\$username';
+        url = customUrl ?? 'https://www.pinterest.com/$username';
         break;
       case 'youtube':
-        url = customUrl ?? 'https://www.youtube.com/@\$username';
+        url = customUrl ?? 'https://www.youtube.com/@$username';
         break;
       case 'telegram':
-        url = customUrl ?? 'https://t.me/\$username';
+        url = customUrl ?? 'https://t.me/$username';
         break;
       case 'whatsapp':
-        url = customUrl ?? 'https://wa.me/\$username';
+        url = customUrl ?? 'https://wa.me/$username';
         break;
       case 'spotify':
-        url = customUrl ?? 'https://open.spotify.com/user/\$username';
+        url = customUrl ?? 'https://open.spotify.com/user/$username';
         break;
       case 'linkedin':
-        url = customUrl ?? 'https://www.linkedin.com/in/\$username';
+        url = customUrl ?? 'https://www.linkedin.com/in/$username';
         break;
       default:
         url = customUrl ?? '';
@@ -268,17 +325,12 @@ class _SocialHighlightsSection extends StatelessWidget {
 
     if (imageLinks.isEmpty) return const SizedBox.shrink();
 
-    return SizedBox(
-      height: 200,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: imageLinks.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 16),
-        itemBuilder: (context, index) {
-          final link = imageLinks[index];
-          return _HighlightCard(link: link);
-        },
-      ),
+    return Wrap(
+      spacing: 16,
+      runSpacing: 16,
+      children: imageLinks
+          .map((link) => _HighlightCard(link: link))
+          .toList(),
     );
   }
 }
@@ -290,6 +342,10 @@ class _HighlightCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobileWidth = screenWidth < 600;
+    final cardWidth = isMobileWidth ? (screenWidth - 48) : 320.0; // 48 = padding
+
     return InkWell(
       onTap: () async {
         if (await canLaunchUrl(link.url)) {
@@ -297,7 +353,8 @@ class _HighlightCard extends StatelessWidget {
         }
       },
       child: Container(
-        width: 320,
+        width: cardWidth,
+        height: 200,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           color: const Color(0xFF1A1A1A),

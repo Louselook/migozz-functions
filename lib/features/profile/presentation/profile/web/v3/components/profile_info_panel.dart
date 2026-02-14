@@ -39,6 +39,7 @@ class ProfileInfoPanel extends StatefulWidget {
   final String? currentUserId;
   final String? targetUserId;
   final bool isAuthenticated;
+  final bool isMobileLayout;
 
   final int unreadCount;
   final VoidCallback? onNotificationTap;
@@ -53,6 +54,7 @@ class ProfileInfoPanel extends StatefulWidget {
     this.currentUserId,
     this.targetUserId,
     this.isAuthenticated = true,
+    this.isMobileLayout = false,
     this.unreadCount = 0,
     this.onNotificationTap,
     this.onMessageTap,
@@ -573,9 +575,9 @@ class _ProfileInfoPanelState extends State<ProfileInfoPanel>
 
           // --- CONTENT LAYER ---
           Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 24.0,
-              vertical: 30.0,
+            padding: EdgeInsets.symmetric(
+              horizontal: widget.isMobileLayout ? 16.0 : 24.0,
+              vertical: widget.isMobileLayout ? 20.0 : 30.0,
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -590,7 +592,7 @@ class _ProfileInfoPanelState extends State<ProfileInfoPanel>
                   '@${widget.user.username}',
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.8),
-                    fontSize: 16,
+                    fontSize: widget.isMobileLayout ? 14 : 16,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -608,33 +610,37 @@ class _ProfileInfoPanelState extends State<ProfileInfoPanel>
                 const SizedBox(height: 16),
 
                 // ─── SOCIAL ICONS ROW ───
-                SizedBox(
-                  height: 40,
-                  child: Center(
-                    child: ListView.separated(
-                      shrinkWrap: true,
-                      scrollDirection: Axis.horizontal,
-                      itemCount: widget.socialLinks.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 16),
-                      itemBuilder: (context, index) {
-                        final link = widget.socialLinks[index];
-                        return MouseRegion(
-                          cursor: SystemMouseCursors.click,
-                          child: GestureDetector(
-                            onTap: () => launchUrl(
-                              link.url,
-                              mode: LaunchMode.externalApplication,
-                            ),
-                            child: SvgPicture.asset(
-                              link.asset,
-                              width: 32,
-                              height: 32,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: widget.isMobileLayout ? 12 : 16,
+                  runSpacing: widget.isMobileLayout ? 8 : 12,
+                  children: widget.socialLinks.map((link) {
+                    final iconSize = widget.isMobileLayout ? 28.0 : 32.0;
+                    return MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: GestureDetector(
+                        onTap: () => launchUrl(
+                          link.url,
+                          mode: LaunchMode.externalApplication,
+                        ),
+                        child: link.asset.startsWith('http')
+                            ? Image.network(
+                                link.asset,
+                                width: iconSize,
+                                height: iconSize,
+                                fit: BoxFit.contain,
+                                errorBuilder: (_, __, ___) =>
+                                    Icon(Icons.link,
+                                        color: Colors.white, size: iconSize - 4),
+                              )
+                            : SvgPicture.asset(
+                                link.asset,
+                                width: iconSize,
+                                height: iconSize,
+                              ),
+                      ),
+                    );
+                  }).toList(),
                 ),
               ],
             ),
@@ -822,9 +828,9 @@ class _ProfileInfoPanelState extends State<ProfileInfoPanel>
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
-                fontSize: 32,
+                fontSize: widget.isMobileLayout ? 24 : 32,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.5,
                 height: 1.1,
@@ -962,7 +968,9 @@ class _ProfileInfoPanelState extends State<ProfileInfoPanel>
 
     return Container(
       constraints: BoxConstraints(
-        maxWidth: MediaQuery.of(context).size.width * 0.5,
+        maxWidth: widget.isMobileLayout
+            ? MediaQuery.of(context).size.width * 0.85
+            : MediaQuery.of(context).size.width * 0.5,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
