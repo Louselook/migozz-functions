@@ -945,7 +945,9 @@
       "sentText": "Enviar",
       "withdraw": "Retirar",
       "textEmpty1": "Tu historial está vacío.",
-      "textEmpty2": "¿Listo para comenzar?"
+      "textEmpty2": "¿Listo para comenzar?",
+      "paymentText": "Método",
+      "methodText": "de pago"
     }
   }
 }

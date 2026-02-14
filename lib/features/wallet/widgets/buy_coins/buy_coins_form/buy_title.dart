@@ -44,9 +44,9 @@ class BuyTitle extends StatelessWidget {
             style: TextStyle(
               color: Color(0xFFFFFFFF),
               fontSize: 26,
-              fontWeight: FontWeight.w500,
+
             ),
-            "wallet.buyText".tr(),
+            text.title,
           );
         }),
       ],

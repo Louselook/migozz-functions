@@ -42,12 +42,16 @@ class AssetsConstants {
       '$socialBlackWhiteIcons/WrnsitePerNegro.svg';
 
   //Wallet and transfer
+ 
   static const String depositIcon = '$icons/deposit.svg';
   static const String sentIcon = '$icons/fund_transfer.svg';
   static const String walletBuy = '$icons/wallet_buy.svg';
   static const String walletUp = '$icons/wallet_up.svg';
   static const String walletDown = '$icons/wallet_down.svg';
   static const String walletEmpty = '$icons/wallet_empty.svg';
+  static const String walletVisa = '$icons/visa.svg';
+  static const String walletMaster = '$icons/master_card.svg';
+  static const String walletMethods = '$icons/cards_banner.svg';
 }
 
 class SocialIconResolver {

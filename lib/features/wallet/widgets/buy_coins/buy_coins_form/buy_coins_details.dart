@@ -43,7 +43,8 @@ class BuyCoinsDetails extends StatelessWidget {
   const BuyCoinsDetails({super.key});
 
   void _handleContinue(BuildContext context){
-    context.read<BuyCoinsCubit>().nextStep(() => const BuyCoinsState.paymentMethod(10)); 
+    final cubit = context.read<BuyCoinsCubit>();
+    cubit.nextStep(() => BuyCoinsState.paymentMethod(cubit.state.total ?? 0)); 
   }
 
   @override

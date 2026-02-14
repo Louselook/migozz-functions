@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class WalletGradientButton extends StatelessWidget{
   final VoidCallback action;
   final String text;
-  const WalletGradientButton({super.key, required this.action, required this.text});
+  final double? fontSize;
+  const WalletGradientButton({super.key, required this.action, required this.text, this.fontSize});
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +41,7 @@ class WalletGradientButton extends StatelessWidget{
               text,
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 12,
+                fontSize: fontSize ?? 12.sp,
                 fontWeight: FontWeight.w400,
               ),
             ),

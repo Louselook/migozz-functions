@@ -8,90 +8,72 @@ import 'package:migozz_app/features/wallet/widgets/wallet_actions.dart';
 import 'package:migozz_app/features/wallet/widgets/wallet_balance.dart';
 import 'package:migozz_app/features/wallet/widgets/history/wallet_history_wrapper.dart';
 
-class GradientText extends StatelessWidget {
-  final String text;
-  final double size;
-
-  const GradientText({super.key, required this.text, required this.size});
-
-  @override
-  Widget build(BuildContext context) {
-    return ShaderMask(
-      blendMode: BlendMode.srcIn,
-      shaderCallback: (Rect bounds) {
-        return const LinearGradient(
-          colors: [Color(0xFF9022BA), Color(0xFFDC44AA)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ).createShader(bounds);
-      },
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: size,
-          fontWeight: FontWeight.bold,
-          color: Colors
-              .white, // El color base debe ser blanco para que el degradado brille
-        ),
-      ),
-    );
-  }
-}
-
 class WalletScreen extends StatelessWidget {
   const WalletScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final bottomGradientHeight = size.height;
+    final screenSize = MediaQuery.of(context).size;
+    final isShortDevice = screenSize.height < 850;
 
-    return (Scaffold(
+    return Scaffold(
       body: Stack(
         children: [
           Container(color: const Color.fromARGB(237, 0, 0, 0)),
-          TintesGradients(child: Container(height: bottomGradientHeight)),
+          TintesGradients(child: SizedBox.expand()), 
           SafeArea(
             child: Padding(
-              padding: EdgeInsetsGeometry.all(16),
-              child: Column(
-                children: [
-                  SizedBox(height: 60),
-                  SizedBox(
-                    width: double.infinity,
-                    child: Text(
-                      "wallet.mainTitle".tr(),
-                      style: TextStyle(
-                        color: Color(0xFFFFFFFF),
-                        fontWeight: FontWeight.w500,
-                      ),
-                      textAlign: TextAlign.center,
-                      textScaler: TextScaler.linear(1.7),
-                    ),
-                  ),
-                  SizedBox(height: 20),
-
-                  BlocBuilder<WalletCubit, WalletState>(
-                    builder: (context, state) {
-                      return (Expanded(
-                        child: Column(
-                          children: [
-                            WalletBalance(),
-                            SizedBox(height: 20),
-                            WalletActions(),
-                            SizedBox(height: 30),
-                            WalletHistory(),
-                          ],
+              padding: EdgeInsets.symmetric(
+                horizontal: screenSize.width * 0.05, 
+                vertical: 10
+              ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return Column(
+                    children: [
+                      SizedBox(height: isShortDevice ? 0 : 40),
+                      
+                      Text(
+                        "wallet.mainTitle".tr(),
+                        style: TextStyle(
+                          color: Color(0xFFFFFFFF),
+                          fontWeight: FontWeight.w600,
+                          fontSize: constraints.maxWidth * 0.07, 
                         ),
-                      ));
-                    },
-                  ),
-                ],
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      
+                      SizedBox(height: constraints.maxHeight * 0.03),
+
+                      Expanded(
+                        child: BlocBuilder<WalletCubit, WalletState>(
+                          builder: (context, state) {
+                            return SingleChildScrollView(
+                              physics: const BouncingScrollPhysics(),
+                              child: Column(
+                                children: [
+                                  WalletBalance(),
+                                  SizedBox(height: 20),
+                                  WalletActions(),
+                                  SizedBox(height: 30),
+                                  WalletHistory(),
+                                  SizedBox(height: 20),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
         ],
       ),
-    ));
+    );
   }
 }

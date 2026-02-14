@@ -1096,6 +1096,8 @@
     "sentText": "Sent",
     "withdraw": "Withdraw",
     "textEmpty1": "Your history is empty.",
-    "textEmpty2": "Ready to begin?"
+    "textEmpty2": "Ready to begin?",
+    "paymentText": "Payment",
+    "methodText": "method"
   }
 }
