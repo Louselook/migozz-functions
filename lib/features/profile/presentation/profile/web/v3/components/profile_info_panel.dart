@@ -420,7 +420,7 @@ class ProfileInfoPanel extends StatelessWidget {
                       onTap: () {
                         // Action to edit profile
                         // Assuming we can context.go or push to edit profile
-                        context.go('/settings');
+                        context.go('/edit-profile-sections');
                       },
                     ),
                   ],

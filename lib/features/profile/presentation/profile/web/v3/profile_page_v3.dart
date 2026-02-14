@@ -10,7 +10,7 @@ import 'package:migozz_app/features/profile/components/utils/side_menu.dart';
 import 'package:migozz_app/features/profile/presentation/profile/web/v3/components/profile_info_panel.dart';
 import 'package:migozz_app/features/profile/presentation/profile/web/v3/components/profile_media_grid.dart';
 import 'package:migozz_app/features/profile/presentation/profile/web/v3/components/web_complete_profile_modal.dart';
-import 'package:migozz_app/features/chat/presentation/user/list/web_chat_list_widget.dart';
+import 'package:migozz_app/features/chat/presentation/web/web_chat_controller.dart';
 import 'package:migozz_app/features/chat/data/datasources/chat_service.dart';
 
 class WebProfileContentV3 extends StatefulWidget {
@@ -28,19 +28,10 @@ class WebProfileContentV3 extends StatefulWidget {
 }
 
 class _WebProfileContentV3State extends State<WebProfileContentV3> {
-  bool _isChatOpen = false;
   final ChatService _chatService = ChatService();
 
   void _toggleChat() {
-    setState(() {
-      _isChatOpen = !_isChatOpen;
-    });
-  }
-
-  void _closeChat() {
-    setState(() {
-      _isChatOpen = false;
-    });
+    WebChatController().toggle();
   }
 
   @override
@@ -163,39 +154,11 @@ class _WebProfileContentV3State extends State<WebProfileContentV3> {
                     child: SideMenu(
                       tutorialKeys: widget.tutorialKeys,
                       onChatTap: _toggleChat,
-                      isChatOpen: _isChatOpen,
+                      isChatOpen:
+                          false, // Or bind to GlobalChatController if we want highlighting
                       unreadCount: unreadCount,
                     ),
                   ),
-
-                  // Chat Panel
-                  if (_isChatOpen)
-                    Positioned(
-                      right: 0,
-                      top: 0,
-                      bottom: 0,
-                      width: 350,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1C1C1E),
-                          border: const Border(
-                            left: BorderSide(color: Colors.white12),
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha:0.5),
-                              blurRadius: 20,
-                              offset: const Offset(-5, 0),
-                            ),
-                          ],
-                        ),
-                        child: WebChatListWidget(
-                          username: widget.user.username.replaceFirst('@', ''),
-                          currentUserId: currentUserEmail,
-                          onClose: _closeChat,
-                        ),
-                      ),
-                    ),
 
                   // Complete Profile Modal Overlay
                   if (showCompleteModal)

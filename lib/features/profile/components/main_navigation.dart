@@ -15,6 +15,7 @@ import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/tutorial/profile/profile_tutorial.dart';
 import 'package:migozz_app/features/profile/components/utils/alert_general.dart';
 import 'package:migozz_app/core/utils/platform_utils.dart';
+import 'package:migozz_app/features/chat/presentation/web/floating_chat_widget.dart';
 
 class MainNavigation extends StatefulWidget {
   final TutorialKeys? tutorialKeys;
@@ -261,7 +262,12 @@ class _MainNavigationState extends State<MainNavigation> {
 
     return Scaffold(
       extendBody: true,
-      body: IndexedStack(index: _currentIndex, children: screens),
+      body: Stack(
+        children: [
+          IndexedStack(index: _currentIndex, children: screens),
+          if (PlatformUtils.isWeb) const FloatingChatWidget(),
+        ],
+      ),
       bottomNavigationBar: PlatformUtils.isWeb
           ? null
           : GradientBottomNav(
