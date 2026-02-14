@@ -714,7 +714,8 @@
             "image": "Image",
             "default": "Default",
             "chooseImage": "Choose Image"
-        }
+        },
+        "copied": "Link copied to clipboard!"
     },
     "common": {
         "loading": "Loading...",

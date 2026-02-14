@@ -703,7 +703,8 @@
       "image": "Imagen",
       "default": "Predeterminado",
       "chooseImage": "Elegir imagen"
-    }
+    },
+    "copied": "¡Enlace copiado al portapapeles!"
   },
   "buttons": {
     "confirm": "Confirmar",

@@ -83,7 +83,11 @@ class _WebNotificationsScreenState extends State<WebNotificationsScreen> {
       if (doc.exists && mounted) {
         final userData = doc.data()!;
         final user = UserDTO.fromMap(userData);
-        context.push('/profile-view', extra: user);
+        if (user.username.isNotEmpty) {
+          context.go('/u/${user.username}');
+        } else {
+          context.push('/profile-view', extra: user);
+        }
       }
     } catch (e) {
       debugPrint('❌ Error loading user profile: $e');

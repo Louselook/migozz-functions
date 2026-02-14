@@ -357,6 +357,63 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         },
       ),
 
+      // 🆕 Ruta /u/:username — formato de links compartidos (migozz.com/u/natch)
+      GoRoute(
+        path: '/u/:username',
+        builder: (context, state) {
+          final username = state.pathParameters['username'];
+          if (username == null || username.isEmpty) {
+            return const Scaffold(
+              body: Center(child: Text('Usuario no encontrado')),
+            );
+          }
+          return FutureBuilder<UserDTO?>(
+            future: _loadUserByUsername(username),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const SplashScreen();
+              }
+              if (!snapshot.hasData || snapshot.data == null) {
+                return Scaffold(
+                  backgroundColor: Colors.black,
+                  body: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.person_off,
+                          size: 64,
+                          color: Colors.white54,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Usuario @$username no encontrado',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton(
+                          onPressed: () => context.go('/'),
+                          child: const Text('Ir al inicio'),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+              final user = snapshot.data!;
+              final screenWidth = MediaQuery.of(context).size.width;
+              if (screenWidth >= 900) {
+                return web_profile.ProfileSearchScreen(user: user);
+              }
+              return MainNavigation(initialIndex: 0, targetUser: user);
+            },
+          );
+        },
+      ),
+
       // 🆕 Nueva ruta para manejar /:username (App Links y Web)
       // ⚠️ IMPORTANTE: Esta ruta debe ir AL FINAL para no interceptar otras rutas
       GoRoute(
@@ -410,6 +467,10 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
               }
 
               final user = snapshot.data!;
+              final screenWidth = MediaQuery.of(context).size.width;
+              if (screenWidth >= 900) {
+                return web_profile.ProfileSearchScreen(user: user);
+              }
               return PublicProfileScreen(user: user);
             },
           );
@@ -461,9 +522,14 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
 
       final isPublic = publicRoutes.any((r) => routeMatches(goingTo, r));
 
+      // ✅ Permitir acceso público a perfiles /u/:username
+      final pathSegments = Uri.parse(goingTo).pathSegments;
+      if (pathSegments.length == 2 && pathSegments.first == 'u') {
+        return null; // Es /u/:username — permitir acceso público
+      }
+
       // ✅ Permitir acceso público a perfiles /:username
       // Lógica: Si la ruta tiene 1 segmento y NO es una ruta reservada del sistema, es un perfil.
-      final pathSegments = Uri.parse(goingTo).pathSegments;
       if (pathSegments.length == 1) {
         final rootSegment = pathSegments.first;
         final reservedRoots = {
@@ -573,6 +639,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
           '/chat',
           '/chats',
           '/followers',
+          '/u',
         };
 
         final allowed =

@@ -21,7 +21,11 @@ class SuggestionCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            context.push('/profile-view', extra: user);
+            if (user.username.isNotEmpty) {
+              context.go('/u/${user.username}');
+            } else {
+              context.push('/profile-view', extra: user);
+            }
           },
           child: Stack(
             fit: StackFit.expand,
