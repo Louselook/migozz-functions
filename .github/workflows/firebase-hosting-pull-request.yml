@@ -30,7 +30,12 @@ jobs:
         run: flutter pub get
 
       - name: Build web
-        run: flutter build web --dart-define=API_MIGOZZ=${{ secrets.API_MIGOZZ }} --dart-define=API_FUNCTIONS=${{ secrets.API_FUNCTIONS }} --dart-define=GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} --dart-define=GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+        env:
+          API_MIGOZZ: ${{ secrets.API_MIGOZZ }}
+          API_FUNCTIONS: ${{ secrets.API_FUNCTIONS }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+        run: flutter build web "--dart-define=API_MIGOZZ=$API_MIGOZZ" "--dart-define=API_FUNCTIONS=$API_FUNCTIONS" "--dart-define=GEMINI_API_KEY=$GEMINI_API_KEY" "--dart-define=GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID"
 
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
