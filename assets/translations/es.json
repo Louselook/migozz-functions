@@ -463,7 +463,8 @@
       "mediaCount": "Media",
       "friends": "Amigos",
       "fans": "Fans",
-      "subscriber": "Suscriptor"
+      "subscriber": "Suscriptor",
+      "all": "Total"
     },
     "overview": {
       "community": "Comunidad",

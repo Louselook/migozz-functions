@@ -15,6 +15,8 @@ import 'package:migozz_app/features/auth/presentation/register/register_screen.d
 import 'package:migozz_app/features/profile/components/main_navigation.dart';
 import 'package:migozz_app/features/profile/presentation/edit/web/edit_profile_page.dart'
     show EditProfilePage;
+import 'package:migozz_app/features/profile/presentation/edit/web/web_visual_edit_page.dart'
+    show WebVisualEditPage;
 import 'package:migozz_app/features/profile/presentation/profile/modules/complete_profile.dart';
 import 'package:migozz_app/features/chat/presentation/register/ia_chat_screen.dart';
 import 'package:migozz_app/features/chat/presentation/user/user_chat_screen.dart';
@@ -31,8 +33,11 @@ import 'package:migozz_app/features/search/web/presentation/search_screen.dart'
     as web_search;
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/notifications/presentation/notifications_list_screen.dart';
+import 'package:migozz_app/features/notifications/presentation/web/web_notifications_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:migozz_app/features/profile/presentation/public_profile_screen.dart';
+import 'package:migozz_app/features/profile/presentation/followers/web/web_followers_screen.dart';
+import 'package:migozz_app/features/chat/presentation/user/list/web_chat_screen.dart';
 
 Widget localizedBuilder(BuildContext context, Widget Function() screenBuilder) {
   final easy = EasyLocalization.of(context);
@@ -208,6 +213,10 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         builder: (context, state) => const EditProfilePage(),
       ),
       GoRoute(
+        path: '/visual-edit',
+        builder: (context, state) => const WebVisualEditPage(),
+      ),
+      GoRoute(
         path: '/policy-deleted',
         name: 'policyDeleted',
         builder: (context, state) => const DataDeletionScreen(),
@@ -251,7 +260,13 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       GoRoute(
         path: '/notifications',
         name: 'notifications',
-        builder: (context, state) => const NotificationsListScreen(),
+        builder: (context, state) {
+          final screenWidth = MediaQuery.of(context).size.width;
+          if (screenWidth >= 900) {
+            return const WebNotificationsScreen();
+          }
+          return const NotificationsListScreen();
+        },
       ),
       GoRoute(
         path: '/followers/:userId',
@@ -265,6 +280,15 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
           );
           final tab =
               int.tryParse(state.uri.queryParameters['tab'] ?? '0') ?? 0;
+
+          final screenWidth = MediaQuery.of(context).size.width;
+          if (screenWidth >= 900) {
+            return WebFollowersScreen(
+              userId: userId,
+              username: username,
+              initialTab: tab,
+            );
+          }
 
           return FollowersListScreen(
             userId: userId,
@@ -286,6 +310,14 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
 
           final currentUserEmail = currentUser.email;
           final currentUsername = (currentUser.username).replaceFirst('@', '');
+
+          final screenWidth = MediaQuery.of(context).size.width;
+          if (screenWidth >= 900) {
+            return WebChatScreen(
+              username: currentUsername,
+              currentUserId: currentUserEmail,
+            );
+          }
 
           return ChatsListScreen(
             username: currentUsername,
@@ -442,6 +474,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
           'profile-view',
           'search',
           'edit-profile',
+          'visual-edit',
           'policy-deleted',
           'terms-privacy',
           'support',
@@ -533,10 +566,13 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
           '/profile',
           '/profile-view',
           '/edit-profile',
+          '/visual-edit',
           '/stats',
           '/search',
           '/notifications',
           '/chat',
+          '/chats',
+          '/followers',
         };
 
         final allowed =

@@ -12,6 +12,7 @@ import 'package:migozz_app/features/profile/presentation/profile/web/v3/componen
 import 'package:migozz_app/features/profile/presentation/profile/web/v3/components/web_complete_profile_modal.dart';
 import 'package:migozz_app/features/chat/presentation/user/list/web_chat_list_widget.dart';
 import 'package:migozz_app/features/chat/data/datasources/chat_service.dart';
+import 'package:migozz_app/features/profile/data/datasources/follower_service.dart';
 
 class WebProfileContentV3 extends StatefulWidget {
   final UserDTO user;
@@ -30,6 +31,24 @@ class WebProfileContentV3 extends StatefulWidget {
 class _WebProfileContentV3State extends State<WebProfileContentV3> {
   bool _isChatOpen = false;
   final ChatService _chatService = ChatService();
+  String? _resolvedTargetUserId;
+
+  @override
+  void initState() {
+    super.initState();
+    _resolveTargetUserId();
+  }
+
+  Future<void> _resolveTargetUserId() async {
+    try {
+      final uid = await FollowerService().getUserIdByEmail(widget.user.email);
+      if (mounted && uid != null) {
+        setState(() => _resolvedTargetUserId = uid);
+      }
+    } catch (e) {
+      debugPrint('Error resolving target UID: $e');
+    }
+  }
 
   void _toggleChat() {
     setState(() {
@@ -63,6 +82,7 @@ class _WebProfileContentV3State extends State<WebProfileContentV3> {
     return BlocBuilder<AuthCubit, AuthState>(
       builder: (context, authState) {
         final currentUserEmail = authState.userProfile?.email ?? '';
+        final currentUserId = authState.firebaseUser?.uid ?? '';
         final isOwnProfile = widget.user.email == currentUserEmail;
 
         final isProfileComplete = isOwnProfile
@@ -104,12 +124,19 @@ class _WebProfileContentV3State extends State<WebProfileContentV3> {
                                       socialLinks: socialLinks,
                                       communityCount: totalFollowers.toString(),
                                       isOwnProfile: isOwnProfile,
+                                      currentUserId: isOwnProfile
+                                          ? null
+                                          : currentUserId,
+                                      targetUserId: isOwnProfile
+                                          ? null
+                                          : _resolvedTargetUserId,
                                       unreadCount: isOwnProfile
                                           ? unreadCount
                                           : 0,
                                       onNotificationTap: isOwnProfile
                                           ? _toggleChat
                                           : null,
+                                      onMessageTap: _toggleChat,
                                     ),
                                   ),
                                   ProfileMediaGrid(
@@ -133,10 +160,17 @@ class _WebProfileContentV3State extends State<WebProfileContentV3> {
                                     socialLinks: socialLinks,
                                     communityCount: totalFollowers.toString(),
                                     isOwnProfile: isOwnProfile,
+                                    currentUserId: isOwnProfile
+                                        ? null
+                                        : currentUserId,
+                                    targetUserId: isOwnProfile
+                                        ? null
+                                        : _resolvedTargetUserId,
                                     unreadCount: isOwnProfile ? unreadCount : 0,
                                     onNotificationTap: isOwnProfile
                                         ? _toggleChat
                                         : null,
+                                    onMessageTap: _toggleChat,
                                   ),
                                 ),
 
@@ -183,7 +217,7 @@ class _WebProfileContentV3State extends State<WebProfileContentV3> {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha:0.5),
+                              color: Colors.black.withValues(alpha: 0.5),
                               blurRadius: 20,
                               offset: const Offset(-5, 0),
                             ),

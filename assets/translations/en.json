@@ -470,7 +470,8 @@
           "mediaCount": "Media",
           "friends": "Friends",
           "fans": "Fans",
-          "subscriber": "Subscriber"
+          "subscriber": "Subscriber",
+          "all": "Total"
         },
         "overview": {
             "community": "Community",
