@@ -90,88 +90,92 @@ class WebProfileContentV3 extends StatelessWidget {
     // ── Desktop/tablet two-column layout ──
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          // Main Content
-          Positioned.fill(
-            child: Row(
-              children: [
-                SizedBox(width: leftMenuWidth), // Spacer for side menu
+      body: Builder(
+        builder: (context) {
+          final authState = context.watch<AuthCubit>().state;
+          final currentUser = authState.userProfile;
+          final isAuthenticated = currentUser != null;
+          final isOwn = currentUser?.username == user.username;
 
-                Expanded(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Left Panel: Profile Preview (Avatar + Socials)
-                      Expanded(
-                        flex: 5,
-                        child: Builder(
-                          builder: (context) {
-                            final authState = context.watch<AuthCubit>().state;
-                            final currentUser = authState.userProfile;
-                            final isOwn =
-                                currentUser?.username == user.username;
+          final totalFollowers = socialLinks.fold<int>(
+            0,
+            (sum, link) => sum + (link.followers ?? 0),
+          );
 
-                            final totalFollowers = socialLinks.fold<int>(
-                              0,
-                              (sum, link) => sum + (link.followers ?? 0),
-                            );
+          return Stack(
+            children: [
+              // Main Content
+              Positioned.fill(
+                child: Row(
+                  children: [
+                    SizedBox(width: leftMenuWidth), // Spacer for side menu
 
-                            return ProfileInfoPanel(
+                    Expanded(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Left Panel: Profile Preview (Avatar + Socials)
+                          Expanded(
+                            flex: 5,
+                            child: ProfileInfoPanel(
                               user: user,
                               socialLinks: socialLinks,
                               communityCount: totalFollowers.toString(),
                               isOwnProfile: isOwn,
                               currentUserId: currentUser?.email,
                               targetUserId: user.email,
-                            );
-                          },
-                        ),
-                      ),
-
-                      // Right Panel: Details (Bio, Links, etc.)
-                      Expanded(
-                        flex: 7,
-                        child: Container(
-                          color: const Color(0xFF0A0A0A),
-                          child: SingleChildScrollView(
-                            padding: const EdgeInsets.all(40),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Social Highlights (New)
-                                if (socialLinks.any(
-                                  (link) =>
-                                      link.profileImageUrl != null &&
-                                      link.profileImageUrl!.isNotEmpty,
-                                ))
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: 40),
-                                    child: _SocialHighlightsSection(
-                                      links: socialLinks,
-                                    ),
-                                  ),
-                              ],
                             ),
                           ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
 
-          // Side Menu Overlay
-          Positioned(
-            left: 0,
-            top: 0,
-            bottom: 0,
-            width: leftMenuWidth,
-            child: SideMenu(tutorialKeys: tutorialKeys),
-          ),
-        ],
+                          // Right Panel: Details (Bio, Links, etc.)
+                          Expanded(
+                            flex: 7,
+                            child: Container(
+                              color: const Color(0xFF0A0A0A),
+                              child: SingleChildScrollView(
+                                padding: const EdgeInsets.all(40),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Social Highlights (New)
+                                    if (socialLinks.any(
+                                      (link) =>
+                                          link.profileImageUrl != null &&
+                                          link.profileImageUrl!.isNotEmpty,
+                                    ))
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.only(bottom: 40),
+                                        child: _SocialHighlightsSection(
+                                          links: socialLinks,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Side Menu Overlay
+              Positioned(
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: leftMenuWidth,
+                child: SideMenu(
+                  tutorialKeys: tutorialKeys,
+                  isAuthenticated: isAuthenticated,
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
