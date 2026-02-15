@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:migozz_app/app_initializer.dart';
@@ -23,7 +24,11 @@ import 'core/services/ai/gemini_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
+  Stripe.publishableKey = dotenv.env['STRIPE_PK'] ?? "";
+
   await EasyLocalization.ensureInitialized();
+  await Stripe.instance.applySettings();
   await configureDependencies();
   await FirebaseConfig.initialize();
   await dotenv.load(fileName: ".env");

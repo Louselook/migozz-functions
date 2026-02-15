@@ -7,7 +7,7 @@ import 'package:migozz_app/features/wallet/cubit/wallet_cubit/wallet_cubit.dart'
 import 'package:migozz_app/features/wallet/model/buy_coins_model.dart';
 
 class BuyCoinsCubit extends Cubit<BuyCoinsState> {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
   final WalletCubit walletCubit;
   final ConversionCubit conversionCubit;
 

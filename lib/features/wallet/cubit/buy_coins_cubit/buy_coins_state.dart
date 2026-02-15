@@ -27,7 +27,7 @@ class BuyCoinsState extends Equatable {
   const BuyCoinsState.paymentMethod(double data)
       : status = BuyCoinsStatus.paymentMethod,
         amount = data,
-        total = 0,
+        total = data,
         selectedMethod = null,
         errorMessage = null;
 

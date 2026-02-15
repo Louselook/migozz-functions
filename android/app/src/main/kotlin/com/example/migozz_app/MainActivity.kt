@@ -3,10 +3,12 @@ package com.migozz.migozzApp
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import io.flutter.embedding.android.FlutterActivity
+// 1. CAMBIO: Importamos FlutterFragmentActivity en lugar de FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.plugin.common.MethodChannel
 
-class MainActivity: FlutterActivity() {
+// 2. CAMBIO: La clase ahora hereda de FlutterFragmentActivity
+class MainActivity: FlutterFragmentActivity() {
 
     private val CHANNEL = "socialAuth"
     private val DEEPLINK_CHANNEL = "profileDeeplink"

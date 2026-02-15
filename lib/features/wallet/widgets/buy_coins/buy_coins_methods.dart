@@ -5,14 +5,26 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:migozz_app/core/assets_constants.dart';
 import 'package:migozz_app/features/wallet/cubit/buy_coins_cubit/buy_coins_cubit.dart';
-import 'package:migozz_app/features/wallet/cubit/buy_coins_cubit/buy_coins_state.dart';
 import 'package:migozz_app/features/wallet/cubit/conversion_cubit/conversion_cubit.dart';
+import 'package:migozz_app/features/wallet/cubit/wallet_cubit/wallet_cubit.dart';
 import 'package:migozz_app/features/wallet/widgets/buy_coins/buy_coins_form/buy_title.dart';
 import 'package:migozz_app/features/wallet/widgets/history/gradient_button.dart';
 import 'package:migozz_app/features/wallet/widgets/wallet_styles.dart';
 
+//Nota Igor: Los métodos de pago ya estan guardados en el conversion_state.dart aquí solo se mapean
+//Note Igor: The payment methods are already saved in conversion_state.dart; they are only mapped here.
+
 class BuyCoinsMethods extends StatelessWidget {
   const BuyCoinsMethods({super.key});
+
+
+  //Params for stripePayment(double amount, callBack: function to execute when payment is successfull)
+  void _handleBuyCoins (BuildContext context){
+    final amount = context.read<BuyCoinsCubit>().state.total;
+    context.read<WalletCubit>().stripePayment(amount, () => 
+      debugPrint("Payment successfull")
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -89,7 +101,7 @@ class BuyCoinsMethods extends StatelessWidget {
               right: 0,
               child: WalletGradientButton(
                 fontSize: 14,
-                action: () => context.read<BuyCoinsCubit>().nextStep(() => BuyCoinsState.successfull()),
+                action: () => _handleBuyCoins(context),
                 text: "Pay now",
               ),
             ),

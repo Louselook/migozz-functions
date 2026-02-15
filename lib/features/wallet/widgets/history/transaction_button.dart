@@ -13,7 +13,7 @@ class TransactionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        context.goNamed(route);
+        context.pushNamed(route);
       },
       child: Container(
         width: 70,
