@@ -52,7 +52,6 @@ dependencies:
   google_sign_in: ^7.2.0 # necesario para el inicio con google (v6.2.0 tiene soporte completo para web)
   url_strategy: ^0.3.0 # Elimina los numerales en las rutas
   firebase_auth: ^5.1.4 # para auth
-  google_sign_in_web: ^1.1.0 # Explicit web support (compatible with google_sign_in ^7.0)
 
   cloud_functions: ^5.6.2
   firebase_dynamic_links: ^6.1.10

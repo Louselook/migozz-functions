@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/components/atomics/network_list.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
 import 'package:migozz_app/features/chat/presentation/user/list/chats_list_screen.dart';
 import 'package:migozz_app/features/chat/presentation/user/user_chat_screen.dart';
 import 'package:migozz_app/features/profile/components/info_user_profile.dart';
@@ -134,6 +135,9 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
     final currentUserEmail = authState.userProfile?.email ?? '';
     final currentUserId = authState.firebaseUser?.uid; // UID del usuario actual
     final isOwnProfile = user.email == currentUserEmail;
+    final isAuthenticated =
+        authState.status == AuthStatus.authenticated &&
+        authState.userProfile != null;
 
     // Obtener seguidores de la app para sumar al community count
     final followerState = context.watch<FollowerCubit>().state;
@@ -231,6 +235,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                         tutorialKeys: widget.tutorialKeys,
                         profileTutorialKeys: widget.profileTutorialKeys,
                         isOwnProfile: isOwnProfile,
+                        isAuthenticated: isAuthenticated,
                         userId: user.email,
                         socialNetworks: socialNetworksData,
                         contactEmail: isOwnProfile ? null : user.contactEmail,
@@ -290,6 +295,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                       tutorialKeys: widget.tutorialKeys,
                       profileTutorialKeys: widget.profileTutorialKeys,
                       isOwnProfile: isOwnProfile,
+                      isAuthenticated: isAuthenticated,
                       userId: user.email,
                       socialNetworks: socialNetworksData,
                       contactEmail: isOwnProfile ? null : user.contactEmail,
@@ -353,6 +359,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
               child: SafeArea(
                 child: ProfileTopActions(
                   isOwnProfile: isOwnProfile,
+                  isAuthenticated: isAuthenticated,
                   profilePercentage: _calculateProfileStrength(user),
                   targetUserId: isOwnProfile ? null : _resolvedTargetUserId,
                   currentUserId: isOwnProfile ? null : currentUserId,

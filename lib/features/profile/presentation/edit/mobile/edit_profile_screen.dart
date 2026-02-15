@@ -10,10 +10,11 @@ import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
-import 'package:migozz_app/features/auth/services/location_service.dart';
+import 'package:migozz_app/features/auth/data/domain/models/user/location_dto.dart';
 import 'package:migozz_app/features/auth/services/media_service.dart';
 import 'package:migozz_app/features/profile/data/datasources/user_service.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
+import 'package:migozz_app/features/profile/presentation/edit/components/edit_location_bottom_sheet.dart';
 import 'package:migozz_app/features/profile/presentation/edit/components/profile_field.dart';
 import 'package:migozz_app/features/profile/presentation/edit/components/profile_option_button.dart';
 // import 'package:migozz_app/features/profile/presentation/edit/modules/edit_audio.dart';
@@ -304,111 +305,92 @@ class EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Future<void> _confirmAndChangeLocation(String email) async {
-    final svc = LocationService();
-
-    if (mounted) {
-      AlertGeneral.show(
-        context,
-        2,
-        message: "edit.validations.detectLocation".tr(),
-      );
-    }
-
-    final newLocation = await svc.initAndFetchAddress(
-      lang: context.locale.languageCode == 'es' ? 'es' : 'en',
-    );
-
-    if (newLocation == null) {
-      if (!mounted) return;
+    final userId = context.read<AuthCubit>().state.firebaseUser?.uid;
+    if (userId == null) {
       AlertGeneral.show(
         context,
         4,
-        message: "edit.validations.errorDetecLocation".tr(),
+        message: 'edit.validations.errorUserLogin'.tr(),
       );
       return;
     }
 
-    if (!mounted) return;
-    final confirm = await showDialog<bool>(
+    final currentUser = context.read<AuthCubit>().state.userProfile;
+    final currentLocation = currentUser?.location ?? LocationDTO.empty();
+    final editCubit = context.read<EditCubit>();
+
+    await showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('buttons.confirm'.tr()),
-        content: Text(
-          "${"edit.editLocation.text1".tr()}"
-          "${"edit.editLocation.text2".tr(namedArgs: {'city': newLocation.city, 'state': newLocation.state})}"
-          "${"edit.editLocation.text3".tr(namedArgs: {'country': newLocation.country})}"
-          "${"edit.editLocation.text4".tr()}",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text('buttons.cancel'.tr()),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text('buttons.confirm'.tr()),
-          ),
-        ],
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => EditLocationBottomSheet(
+        currentLocation: currentLocation,
+        onSave: (LocationDTO newLocation) async {
+          try {
+            debugPrint('💾 [EditProfile] Guardando ubicación en Firestore...');
+            debugPrint('   • UserId: $userId');
+            debugPrint('   • Data: ${newLocation.toMap()}');
+
+            await editCubit.saveUserProfileField(
+              userId: userId,
+              updatedFields: {'location': newLocation.toMap()},
+            );
+
+            debugPrint('✅ [EditProfile] Ubicación guardada exitosamente');
+
+            if (mounted) {
+              AlertGeneral.show(
+                context,
+                1,
+                message: 'edit.validations.updateLocation'.tr(
+                  namedArgs: {
+                    'city': newLocation.city,
+                    'country': newLocation.country,
+                  },
+                ),
+              );
+            }
+          } catch (e) {
+            debugPrint('❌ [EditProfile] Error guardando ubicación: $e');
+            if (mounted) {
+              AlertGeneral.show(
+                context,
+                4,
+                message: 'edit.validations.errorUpdateLocation'.tr(
+                  namedArgs: {'error': e.toString()},
+                ),
+              );
+            }
+          }
+        },
+        onRemove: () async {
+          try {
+            await editCubit.saveUserProfileField(
+              userId: userId,
+              updatedFields: {'location': LocationDTO.empty().toMap()},
+            );
+
+            if (mounted) {
+              AlertGeneral.show(
+                context,
+                1,
+                message: 'edit.editLocation.locationRemoved'.tr(),
+              );
+            }
+          } catch (e) {
+            if (mounted) {
+              AlertGeneral.show(
+                context,
+                4,
+                message: 'edit.validations.errorUpdateLocation'.tr(
+                  namedArgs: {'error': e.toString()},
+                ),
+              );
+            }
+          }
+        },
       ),
     );
-
-    if (confirm == true) {
-      if (!mounted) return;
-
-      try {
-        final editCubit = context.read<EditCubit>();
-        final userId = context.read<AuthCubit>().state.firebaseUser?.uid;
-
-        if (userId == null) {
-          AlertGeneral.show(
-            context,
-            4,
-            message: 'edit.validations.errorUserLogin'.tr(),
-          );
-          return;
-        }
-
-        final locationData = {'location': newLocation.toMap()};
-
-        debugPrint('💾 [EditProfile] Guardando ubicación en Firestore...');
-        debugPrint('   • UserId: $userId');
-        debugPrint('   • Data: $locationData');
-
-        await editCubit.saveUserProfileField(
-          userId: userId,
-          updatedFields: locationData,
-        );
-
-        if (!mounted) return;
-
-        debugPrint('✅ [EditProfile] Ubicación guardada exitosamente');
-
-        AlertGeneral.show(
-          context,
-          1,
-          message: 'edit.validations.updateLocation'.tr(
-            namedArgs: {
-              'city': newLocation.city,
-              'country': newLocation.country,
-            },
-          ),
-        );
-      } catch (e) {
-        if (!mounted) return;
-
-        debugPrint('❌ [EditProfile] Error guardando ubicación: $e');
-
-        AlertGeneral.show(
-          context,
-          4,
-          message: "edit.validations.errorUpdateLocation".tr(
-            namedArgs: {'error': e.toString()},
-          ),
-        );
-      }
-    } else {
-      debugPrint('🚫 [EditProfile] Usuario canceló el cambio de ubicación');
-    }
   }
 
   String? _normalizeGender(String? raw) {

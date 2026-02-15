@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:migozz_app/core/assets_constants.dart';
 import 'package:migozz_app/core/color.dart';
@@ -40,6 +41,7 @@ class InfoUserProfile extends StatefulWidget {
   final VoidCallback? onMessageTap;
   final String? contactEmail;
   final String? contactWebsite;
+  final bool isAuthenticated;
 
   /// URL para donación (PayPal, etc.)
   final String? donationUrl;
@@ -62,6 +64,7 @@ class InfoUserProfile extends StatefulWidget {
     this.onMessageTap,
     this.contactEmail,
     this.contactWebsite,
+    this.isAuthenticated = true,
     this.donationUrl,
     this.socialNetworks = const [],
   });
@@ -514,7 +517,9 @@ class _InfoUserProfileState extends State<InfoUserProfile>
                 // Ícono de mensaje
                 GestureDetector(
                   key: widget.profileTutorialKeys?.messagesHeaderKey,
-                  onTap: widget.onMessageTap,
+                  onTap: widget.isAuthenticated
+                      ? widget.onMessageTap
+                      : () => _showLoginPrompt(context),
                   child: Image.asset(
                     AssetsConstants.inboxIcon,
                     width: 20,
@@ -525,7 +530,9 @@ class _InfoUserProfileState extends State<InfoUserProfile>
                 const SizedBox(width: 8),
                 // Ícono de donación (regalo)
                 GestureDetector(
-                  onTap: () => _showDonationComingSoonDialog(context),
+                  onTap: () => widget.isAuthenticated
+                      ? _showDonationComingSoonDialog(context)
+                      : _showLoginPrompt(context),
                   child: SvgPicture.asset(
                     'assets/icons/Gift_Icon.svg',
                     width: 22,
@@ -627,6 +634,100 @@ class _InfoUserProfileState extends State<InfoUserProfile>
           ),
         ),
       ),
+    );
+  }
+
+  void _showLoginPrompt(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            width: 340,
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1A1A1A),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.08),
+                width: 1,
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.lock_outline, color: Colors.white70, size: 48),
+                const SizedBox(height: 16),
+                const Text(
+                  'Join Migozz',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Log in or sign up to follow, chat and send gifts.',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    fontSize: 15,
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          Navigator.of(ctx).pop();
+                          context.go('/register');
+                        },
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Colors.white24),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          'Sign Up',
+                          style: TextStyle(color: Colors.white, fontSize: 15),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(ctx).pop();
+                          context.go('/login');
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFF0050),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          'Log In',
+                          style: TextStyle(color: Colors.white, fontSize: 15),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

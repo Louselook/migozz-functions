@@ -17,7 +17,10 @@ class WebChatListWidget extends StatefulWidget {
     required this.username,
     required this.currentUserId,
     this.onClose,
+    this.onChatSelected,
   });
+
+  final Function(ChatPreview)? onChatSelected;
 
   @override
   State<WebChatListWidget> createState() => _WebChatListWidgetState();
@@ -122,9 +125,12 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
                   ),
                 ),
                 if (widget.onClose != null)
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
-                    onPressed: widget.onClose,
+                  MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white),
+                      onPressed: widget.onClose,
+                    ),
                   ),
               ],
             ),
@@ -274,19 +280,23 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
         return ChatListItem(
           chat: chat,
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => UserChatScreen(
-                  otherUserId: chat.userId,
-                  otherUserName: chat.displayName,
-                  otherUserAvatar: chat.avatarUrl,
-                  currentUserId: widget.currentUserId,
+            if (widget.onChatSelected != null) {
+              widget.onChatSelected!(chat);
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => UserChatScreen(
+                    otherUserId: chat.userId,
+                    otherUserName: chat.displayName,
+                    otherUserAvatar: chat.avatarUrl,
+                    currentUserId: widget.currentUserId,
+                  ),
                 ),
-              ),
-            ).then((_) {
-              if (mounted) setState(() {});
-            });
+              ).then((_) {
+                if (mounted) setState(() {});
+              });
+            }
           },
         );
       },

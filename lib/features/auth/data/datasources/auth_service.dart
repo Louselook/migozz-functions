@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:migozz_app/core/config/api/api_config.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/auth_result.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
@@ -98,6 +97,14 @@ class AuthService {
     try {
       debugPrint('🔐 [AuthService] Iniciando Google Sign-In...');
 
+      // En v7, se debe inicializar con serverClientId en Android
+      if (!kIsWeb) {
+        await GoogleSignIn.instance.initialize(
+          serverClientId:
+              '895592952324-4iu9ob4bo0ppn2hta6oi4qvfat3892p5.apps.googleusercontent.com',
+        );
+      }
+
       // En v7, se debe usar GoogleSignIn.instance
       // authenticate() inicia el flujo interactivo
       final GoogleSignInAccount googleUser;
@@ -115,7 +122,7 @@ class AuthService {
 
       // Obtener los tokens de autenticación (idToken)
       final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
+          googleUser.authentication;
 
       debugPrint('🔐 [AuthService] Tokens obtenidos');
 

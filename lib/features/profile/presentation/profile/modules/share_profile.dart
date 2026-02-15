@@ -53,7 +53,7 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
   final GlobalKey _screenshotKey = GlobalKey(); // Key for screenshot
 
   static const String _baseProfileUrl =
-      'https://migozz-e2a21.web.app/u'; // Cambia a tu dominio real
+      'https://migozz.com'; // Cambia a tu dominio real
 
   static const List<String> _emojiImages = [
     'assets/emojis/emoji_1.png',
@@ -259,7 +259,7 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
   }
 
   String _buildUrl(String username) =>
-      '$_baseProfileUrl/${username.toLowerCase()}';
+      '$_baseProfileUrl/u/${username.toLowerCase()}';
 
   Future<void> _shareProfile(_ProfileData data) async {
     try {
@@ -281,8 +281,18 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
       );
 
       if (kIsWeb) {
-        // For web, just share the text with link
-        Share.share(shareMessage, subject: shareSubject);
+        // Web: Copy link to clipboard (Share API requires direct user gesture)
+        await Clipboard.setData(ClipboardData(text: data.link));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('share.copied'.tr()),
+              backgroundColor: const Color(0xFF2C2C2C),
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
       } else {
         // Mobile: Save to temp directory and share with image
         final directory = await getApplicationDocumentsDirectory();
@@ -300,15 +310,29 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
       }
     } catch (e) {
       debugPrint('Error sharing profile: $e');
-      // Fallback to text-only share
-      Share.share(
-        'share.title'.tr(
-          namedArgs: {'displayName': data.displayName, 'link': data.link},
-        ),
-        subject: 'share.subject'.tr(
-          namedArgs: {'displayName': data.displayName},
-        ),
-      );
+      // Fallback: copy link to clipboard on web, text share on mobile
+      if (kIsWeb) {
+        await Clipboard.setData(ClipboardData(text: data.link));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('share.copied'.tr()),
+              backgroundColor: const Color(0xFF2C2C2C),
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      } else {
+        Share.share(
+          'share.title'.tr(
+            namedArgs: {'displayName': data.displayName, 'link': data.link},
+          ),
+          subject: 'share.subject'.tr(
+            namedArgs: {'displayName': data.displayName},
+          ),
+        );
+      }
     }
   }
 

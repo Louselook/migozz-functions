@@ -354,8 +354,8 @@ class _OtpFieldsState extends State<_OtpFields> {
         final hasValue = widget.controllers[index].text.isNotEmpty;
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 4),
-          width: 48,
-          height: 56,
+          width: 40,
+          height: 50,
           child: KeyboardListener(
             focusNode: FocusNode(), // Dummy focus node para KeyboardListener
             onKeyEvent: (event) {

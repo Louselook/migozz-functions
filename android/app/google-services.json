@@ -15,11 +15,27 @@
       },
       "oauth_client": [
         {
+          "client_id": "895592952324-5oido6tjq5svn7j4c9da0p8bq0ln54lb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.migozz.migozzApp",
+            "certificate_hash": "6a3016674b8ff46254a0e7cbbcf497937289a767"
+          }
+        },
+        {
           "client_id": "895592952324-qc4k1srsffvu22rlsd1rarggtmgprpsl.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.migozz.migozzApp",
             "certificate_hash": "3e510a8bcc0f80386dc0a4bfba4cb70fb3c679cb"
+          }
+        },
+        {
+          "client_id": "895592952324-vr1c004e92gtona1m1kpsgc7k331a8ne.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.migozz.migozzApp",
+            "certificate_hash": "224533f98dee085dde99141fc8c2e4b8100a92d6"
           }
         },
         {
@@ -40,10 +56,10 @@
               "client_type": 3
             },
             {
-              "client_id": "895592952324-as49khg1fbfm3jllms7nskqd06ht7jto.apps.googleusercontent.com",
+              "client_id": "895592952324-9com24km36qtr9pcpv6752qkgmf4otn3.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.example.migozzApp"
+                "bundle_id": "com.migozz.app"
               }
             }
           ]

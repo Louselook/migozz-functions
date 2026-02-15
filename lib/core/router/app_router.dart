@@ -1,4 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -13,8 +14,11 @@ import 'package:migozz_app/features/auth/presentation/login/login_entry.dart';
 import 'package:migozz_app/features/auth/presentation/onboarding/onboarding_entry.dart';
 import 'package:migozz_app/features/auth/presentation/register/register_screen.dart';
 import 'package:migozz_app/features/profile/components/main_navigation.dart';
+import 'package:migozz_app/features/profile/presentation/profile/web/v3/profile_page_v3_edit.dart';
 import 'package:migozz_app/features/profile/presentation/edit/web/edit_profile_page.dart'
     show EditProfilePage;
+import 'package:migozz_app/features/profile/presentation/edit/web/web_visual_edit_page.dart'
+    show WebVisualEditPage;
 import 'package:migozz_app/features/profile/presentation/profile/modules/complete_profile.dart';
 import 'package:migozz_app/features/chat/presentation/register/ia_chat_screen.dart';
 import 'package:migozz_app/features/chat/presentation/user/user_chat_screen.dart';
@@ -31,8 +35,11 @@ import 'package:migozz_app/features/search/web/presentation/search_screen.dart'
     as web_search;
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/notifications/presentation/notifications_list_screen.dart';
+import 'package:migozz_app/features/notifications/presentation/web/web_notifications_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:migozz_app/features/profile/presentation/public_profile_screen.dart';
+// PublicProfileScreen removed — profiles always use ProfileSearchScreen/MainNavigation
+import 'package:migozz_app/features/profile/presentation/followers/web/web_followers_screen.dart';
+import 'package:migozz_app/features/chat/presentation/user/list/web_chat_screen.dart';
 
 Widget localizedBuilder(BuildContext context, Widget Function() screenBuilder) {
   final easy = EasyLocalization.of(context);
@@ -185,8 +192,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
           if (user == null) {
             return ProfileEntry(tutorialKeys: TutorialKeys());
           }
-          final screenWidth = MediaQuery.of(context).size.width;
-          if (screenWidth >= 900) {
+          if (kIsWeb) {
             return web_profile.ProfileSearchScreen(user: user);
           }
           return MainNavigation(initialIndex: 0, targetUser: user);
@@ -206,6 +212,10 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       GoRoute(
         path: '/edit-profile',
         builder: (context, state) => const EditProfilePage(),
+      ),
+      GoRoute(
+        path: '/visual-edit',
+        builder: (context, state) => const WebVisualEditPage(),
       ),
       GoRoute(
         path: '/policy-deleted',
@@ -251,7 +261,13 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       GoRoute(
         path: '/notifications',
         name: 'notifications',
-        builder: (context, state) => const NotificationsListScreen(),
+        builder: (context, state) {
+          final screenWidth = MediaQuery.of(context).size.width;
+          if (screenWidth >= 900) {
+            return const WebNotificationsScreen();
+          }
+          return const NotificationsListScreen();
+        },
       ),
       GoRoute(
         path: '/followers/:userId',
@@ -265,6 +281,15 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
           );
           final tab =
               int.tryParse(state.uri.queryParameters['tab'] ?? '0') ?? 0;
+
+          final screenWidth = MediaQuery.of(context).size.width;
+          if (screenWidth >= 900) {
+            return WebFollowersScreen(
+              userId: userId,
+              username: username,
+              initialTab: tab,
+            );
+          }
 
           return FollowersListScreen(
             userId: userId,
@@ -286,6 +311,14 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
 
           final currentUserEmail = currentUser.email;
           final currentUsername = (currentUser.username).replaceFirst('@', '');
+
+          final screenWidth = MediaQuery.of(context).size.width;
+          if (screenWidth >= 900) {
+            return WebChatScreen(
+              username: currentUsername,
+              currentUserId: currentUserEmail,
+            );
+          }
 
           return ChatsListScreen(
             username: currentUsername,
@@ -320,6 +353,71 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
                 otherUserAvatar: otherUserAvatar,
                 currentUserId: currentUserId,
               );
+            },
+          );
+        },
+      ),
+
+      GoRoute(
+        path: '/edit-profile-sections',
+        builder: (context, state) {
+          final authState = context.read<AuthCubit>().state;
+          final user = authState.userProfile;
+          if (user == null) return const SplashScreen();
+          return WebProfileContentV3Edit(user: user);
+        },
+      ),
+      // 🆕 Ruta /u/:username — formato de links compartidos (migozz.com/u/natch)
+      GoRoute(
+        path: '/u/:username',
+        builder: (context, state) {
+          final username = state.pathParameters['username'];
+          if (username == null || username.isEmpty) {
+            return const Scaffold(
+              body: Center(child: Text('Usuario no encontrado')),
+            );
+          }
+          return FutureBuilder<UserDTO?>(
+            future: _loadUserByUsername(username),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const SplashScreen();
+              }
+              if (!snapshot.hasData || snapshot.data == null) {
+                return Scaffold(
+                  backgroundColor: Colors.black,
+                  body: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.person_off,
+                          size: 64,
+                          color: Colors.white54,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Usuario @$username no encontrado',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton(
+                          onPressed: () => context.go('/'),
+                          child: const Text('Ir al inicio'),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+              final user = snapshot.data!;
+              if (kIsWeb) {
+                return web_profile.ProfileSearchScreen(user: user);
+              }
+              return MainNavigation(initialIndex: 0, targetUser: user);
             },
           );
         },
@@ -378,7 +476,10 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
               }
 
               final user = snapshot.data!;
-              return PublicProfileScreen(user: user);
+              if (kIsWeb) {
+                return web_profile.ProfileSearchScreen(user: user);
+              }
+              return MainNavigation(initialIndex: 0, targetUser: user);
             },
           );
         },
@@ -429,9 +530,14 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
 
       final isPublic = publicRoutes.any((r) => routeMatches(goingTo, r));
 
+      // ✅ Permitir acceso público a perfiles /u/:username
+      final pathSegments = Uri.parse(goingTo).pathSegments;
+      if (pathSegments.length == 2 && pathSegments.first == 'u') {
+        return null; // Es /u/:username — permitir acceso público
+      }
+
       // ✅ Permitir acceso público a perfiles /:username
       // Lógica: Si la ruta tiene 1 segmento y NO es una ruta reservada del sistema, es un perfil.
-      final pathSegments = Uri.parse(goingTo).pathSegments;
       if (pathSegments.length == 1) {
         final rootSegment = pathSegments.first;
         final reservedRoots = {
@@ -442,6 +548,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
           'profile-view',
           'search',
           'edit-profile',
+          'visual-edit',
           'policy-deleted',
           'terms-privacy',
           'support',
@@ -533,10 +640,14 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
           '/profile',
           '/profile-view',
           '/edit-profile',
+          '/visual-edit',
           '/stats',
           '/search',
           '/notifications',
           '/chat',
+          '/chats',
+          '/followers',
+          '/u',
         };
 
         final allowed =

@@ -625,8 +625,10 @@ class RegisterCubit extends Cubit<RegisterState> {
       final hasUsername = (state.username ?? '').trim().isNotEmpty;
       if (!hasUsername) missing.add('username');
 
-      final hasLocationData =
-          state.location != null && !(state.location?.isEmpty ?? true);
+      // 📍 Location is now OPTIONAL - user can deny permission and still complete registration
+      // Only add to missing if location is explicitly null (not set at all)
+      // Empty location (from denied permission) is acceptable
+      final hasLocationData = state.location != null;
       if (!hasLocationData) missing.add('location');
 
       // Requirement: at least 1 social network

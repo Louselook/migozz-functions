@@ -32,6 +32,7 @@ class MainActivity: FlutterActivity() {
                 if (data.scheme == "https" && 
                     (data.host == "migozz-e2a21.web.app" || 
                     data.host == "migozz-e2a21.firebaseapp.com" ||
+                    data.host == "migozz.com" ||
                     data.host == "www.migozz-e2a21.web.app") &&
                     data.pathSegments.size >= 2 && 
                     data.pathSegments[0] == "u") {
