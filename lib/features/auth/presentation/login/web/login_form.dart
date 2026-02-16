@@ -1,9 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:google_sign_in_web/web_only.dart' as web;
+import 'package:migozz_app/core/assets_constants.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/core/components/compuestos/custom_textfield.dart';
@@ -15,6 +17,7 @@ import 'package:migozz_app/features/auth/components/apple_button.dart';
 import 'package:migozz_app/features/auth/data/datasources/auth_service.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/login_cubit/login_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/widgets/web_custom_google_button.dart';
 import 'package:migozz_app/features/chat/presentation/register/components/chat_operation/functions/email_validation.dart';
 import 'package:migozz_app/core/components/compuestos/custom_snackbar.dart';
 import 'package:migozz_app/features/profile/components/utils/loader.dart';
@@ -46,7 +49,10 @@ class _LoginFormState extends State<LoginForm> {
     final googleSignIn = GoogleSignIn.instance;
 
     // Initialize with client ID
-    final googleClientId = const String.fromEnvironment('GOOGLE_CLIENT_ID', defaultValue: '');
+    final googleClientId = const String.fromEnvironment(
+      'GOOGLE_CLIENT_ID',
+      defaultValue: '',
+    );
     if (googleClientId.isNotEmpty) {
       await googleSignIn.initialize(clientId: googleClientId);
     } else {
@@ -219,6 +225,25 @@ class _LoginFormState extends State<LoginForm> {
     }
   }
 
+  Future<void> _webGoogleSignIn() async {
+    FocusScope.of(context).unfocus();
+    LoadingOverlay.show(context, type: LoaderType.login);
+    try {
+      final authCubit = context.read<AuthCubit>();
+      await authCubit.webGoogleSignIn();
+    } catch (e) {
+      debugPrint('error: $e');
+      CustomSnackbar.show(
+        // ignore: use_build_context_synchronously
+        context: context,
+        message: '${"login.validations.errorGoogle".tr()} $e',
+        type: SnackbarType.error,
+      );
+    } finally {
+      if (mounted) LoadingOverlay.hide(context);
+    }
+  }
+
   Future<void> _handleAppleSignIn() async {
     FocusScope.of(context).unfocus();
     LoadingOverlay.show(context, type: LoaderType.login);
@@ -242,10 +267,12 @@ class _LoginFormState extends State<LoginForm> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isMobile = MediaQuery.of(context).size.width < 600;
+
     return Form(
       key: _formKey,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 10),
         child: Column(
           mainAxisSize: MainAxisSize.min, //  importante para mobile
           mainAxisAlignment: MainAxisAlignment.center,
@@ -278,26 +305,25 @@ class _LoginFormState extends State<LoginForm> {
 
             const SizedBox(height: 40),
             SecondaryText("login.presentation.subtitle2".tr(), fontSize: 16),
-            const SizedBox(height: 5),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            const SizedBox(height: 20),
+            
+            Flex(
+              direction: isMobile ? Axis.vertical : Axis.horizontal,
+              spacing: 10,
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: isMobile
+                  ? CrossAxisAlignment.stretch
+                  : CrossAxisAlignment.center,
               children: [
-                if (kIsWeb)
-                  // Web: Use Google's renderButton widget (required in v7.x)
-                  SizedBox(
-                    height: 40,
-                    child: web.renderButton()
-                  )
-                else
-                  // Mobile: Use custom button
-                  googleButton(onPressed: _handleGoogleSignIn),
-                // Apple Sign-In no está disponible en web debido a problemas de compatibilidad
-                // con sign_in_with_apple v7.0.1
-                if (!kIsWeb) ...[
-                  const SizedBox(width: 10),
-                  appleButton(onPressed: _handleAppleSignIn),
-                ],
+                //Google
+                WebCustomGoogleButton(onPress: _webGoogleSignIn),
+
+                //Apple
+                WebCustomGoogleButton(
+                  onPress: () => {},
+                  text: 'login.presentation.apple'.tr(),
+                  icon: AssetsConstants.appleIcon,
+                ),
               ],
             ),
             const SizedBox(height: 50),

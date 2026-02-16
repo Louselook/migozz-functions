@@ -40,6 +40,10 @@ class AssetsConstants {
   static const String discordIcon = '$socialBlackWhiteIcons/DiscordNegro.svg';
   static const String wrnsitePerIcon =
       '$socialBlackWhiteIcons/WrnsitePerNegro.svg';
+
+  static const String googleIcon = '$icons/login_google.svg';
+  static const String appleIcon = '$icons/login_apple.svg';
+
 }
 
 class SocialIconResolver {
