@@ -285,7 +285,10 @@ class _LoginFormState extends State<LoginForm> {
               children: [
                 if (kIsWeb)
                   // Web: Use Google's renderButton widget (required in v7.x)
-                  web.renderButton()
+                  SizedBox(
+                    height: 40,
+                    child: web.renderButton()
+                  )
                 else
                   // Mobile: Use custom button
                   googleButton(onPressed: _handleGoogleSignIn),

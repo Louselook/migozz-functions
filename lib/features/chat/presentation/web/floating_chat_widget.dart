@@ -164,8 +164,9 @@ class _FloatingChatWidgetState extends State<FloatingChatWidget> {
     return StreamBuilder<int>(
       stream: _chatService.getTotalUnreadCountStream(_currentUserId!),
       builder: (context, snapshot) {
-        if (!snapshot.hasData || snapshot.data == 0)
+        if (!snapshot.hasData || snapshot.data == 0) {
           return const SizedBox.shrink();
+        }
         return Container(
           margin: const EdgeInsets.only(left: 8),
           padding: const EdgeInsets.all(6),
@@ -198,8 +199,9 @@ class _FloatingChatWidgetState extends State<FloatingChatWidget> {
   }
 
   Widget _buildChatDetail() {
-    if (_activeChat == null || _currentUserId == null)
+    if (_activeChat == null || _currentUserId == null) {
       return const SizedBox.shrink();
+    }
 
     return WebUserChatScreen(
       otherUserId: _activeChat!.userId,
