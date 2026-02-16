@@ -7,6 +7,7 @@ import 'package:migozz_app/core/assets_constants.dart';
 import 'package:migozz_app/features/wallet/cubit/buy_coins_cubit/buy_coins_cubit.dart';
 import 'package:migozz_app/features/wallet/cubit/conversion_cubit/conversion_cubit.dart';
 import 'package:migozz_app/features/wallet/cubit/wallet_cubit/wallet_cubit.dart';
+import 'package:migozz_app/features/wallet/model/payment_model.dart';
 import 'package:migozz_app/features/wallet/widgets/buy_coins/buy_coins_form/buy_title.dart';
 import 'package:migozz_app/features/wallet/widgets/history/gradient_button.dart';
 import 'package:migozz_app/features/wallet/widgets/wallet_styles.dart';
@@ -19,10 +20,23 @@ class BuyCoinsMethods extends StatelessWidget {
 
 
   //Params for stripePayment(double amount, callBack: function to execute when payment is successfull)
+
   void _handleBuyCoins (BuildContext context){
     final amount = context.read<BuyCoinsCubit>().state.total;
-    context.read<WalletCubit>().stripePayment(amount, () => 
-      debugPrint("Payment successfull")
+    
+    context.read<WalletCubit>().stripePayment(
+      data: PaymentModel(
+        amount: amount,
+        transactionType: 1, 
+      ), 
+
+      onNext: (){
+        debugPrint("Payment completed");
+      },
+
+      onError: (){
+        debugPrint("Error during transaction");
+      }
     );
   }
 

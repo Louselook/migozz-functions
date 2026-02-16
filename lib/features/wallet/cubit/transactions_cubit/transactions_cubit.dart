@@ -24,7 +24,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
   //create the snapshot with the wallet id provided
   void _activateTransactionsSnapshot() {
     emit(TransactionsState.loading());
-    debugPrint("Getting wallet transactions");
+    debugPrint("Getting wallet transactions $walletId");
     // close previous connection
     _transactionsSubscription?.cancel();
 

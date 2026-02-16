@@ -13,8 +13,11 @@ class WalletHistory extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final walletCubit = context.read<WalletCubit>();
-    final walletId = walletCubit.state.walletData?.id;
+    final walletId = context.watch<WalletCubit>().state.walletData?.id;
+
+    if(walletId == null){
+      return WalletHistoryLoading();
+    }
 
     return BlocProvider(
       create: (context) => TransactionsCubit(walletId: walletId),

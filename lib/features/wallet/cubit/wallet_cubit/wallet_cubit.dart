@@ -5,6 +5,7 @@ import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubi
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
 import 'package:migozz_app/features/wallet/cubit/wallet_cubit/wallet_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:migozz_app/features/wallet/model/payment_model.dart';
 import 'package:migozz_app/features/wallet/model/wallet_model.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
@@ -64,12 +65,22 @@ class WalletCubit extends Cubit<WalletState> {
   }
 
   //Initilialize the payment
-  Future<void> stripePayment(double? amount, VoidCallback? onNext) async {
-    debugPrint("Amount before send: ${amount?.toInt()}");
+  Future<void> stripePayment({PaymentModel? data, VoidCallback? onNext, VoidCallback? onError}) async {
+    if(data?.amount == null){
+      onError != null ? onError() : "";
+      return;
+    }
+
+    debugPrint("Amount before send: ${data?.amount?.toInt()}");
+
     try {
       final result = await FirebaseFunctions.instanceFor(region: 'us-central1')
           .httpsCallable('createStripePayment')
-          .call({'amount': amount?.toInt(), 'currency': 'usd'});
+          .call({
+            'amount': data?.amount?.toInt(),
+            'transactionType': data?.transactionType,
+            'wallet': state.walletData?.id
+          });
 
       final clientSecret = result.data['clientSecret'];
 
@@ -88,7 +99,7 @@ class WalletCubit extends Cubit<WalletState> {
       if(onNext != null){
         onNext();
       }
-      
+
     } on FirebaseFunctionsException catch (e) {
       debugPrint("Código: ${e.code}");
       debugPrint("Mensaje: ${e.message}");

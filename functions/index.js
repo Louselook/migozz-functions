@@ -11,7 +11,7 @@ const { getFirestore } = require("firebase-admin/firestore");
 const { getMessaging } = require("firebase-admin/messaging");
 const { transactionsController } = require("./src/transactions");
 const { asociateWalletToNewUser } = require("./src/wallet");
-const { createStripePayment } = require("./src/payments/stripe");
+const { createStripePayment, stripeWebhook } = require("./src/payments/stripe");
 
 // Initialize Firebase Admin
 initializeApp();
@@ -283,3 +283,4 @@ exports.transactionsController = transactionsController
 exports.asociateWalletToNewUser = asociateWalletToNewUser
 //PAYMENTS
 exports.createStripePayment = createStripePayment
+exports.stripeWebhook = stripeWebhook
