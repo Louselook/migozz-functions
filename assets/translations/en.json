@@ -36,6 +36,8 @@
         "inputText": "Enter Email",
         "buttonText": "Login",
         "subtitle2": "Or login with",
+        "google": "Sign in with Google",
+        "apple": "Sign in with Apple",
         "bottomText": {
           "newUser": "NEW USER?\n",
           "register": "REGISTER HERE!",
@@ -90,7 +92,9 @@
   "termsPrivacy": {
     "header": "Terms & Privacy",
     "button": {
-      "backToLogin": "Back to Login"
+      "backToLogin": "Back to Login",
+      "accept": "I Accept",
+      "decline": "Decline"
     },
     "terms": {
       "title": "Terms of Service",
@@ -1058,7 +1062,14 @@
         "saturday": "Saturday",
         "sunday": "Sunday"
       }
-    }
+    },
+    "title": "Messages",
+    "search": "Search",
+    "active": "Active",
+    "new": "New",
+    "noChats": "No chats yet",
+    "selectConversation": "Select a conversation",
+    "selectConversationDesc": "Choose a chat from the list to start"
   },
   "notifications": {
     "title": "Notifications",
@@ -1071,7 +1082,14 @@
       "message": "Are you sure you want to delete all notifications?",
       "cancel": "Cancel",
       "confirm": "Delete all"
-    }
+    },
+    "filter": {
+      "all": "All",
+      "unread": "Unread",
+      "follows": "Follows",
+      "messages": "Messages"
+    },
+    "markAllRead": "Mark all as read"
   },
   "followers": {
     "followers": "Followers",
@@ -1177,6 +1195,28 @@
       },
       "button": "OK"
     }
+  },
+  "web": {
+    "menu": {
+      "search": "Search",
+      "profile": "Profile",
+      "chat": "Chat",
+      "notifications": "Notifications",
+      "stats": "My Stats",
+      "configuration": "Configuration",
+      "login": "Log In",
+      "signup": "Sign Up",
+      "logout": "Log Out",
+      "create": "Create"
+    },
+    "chat": {
+      "title": "Messages",
+      "tab_chat": "Chat",
+      "no_messages": "No messages yet",
+      "no_new_messages": "No new messages",
+      "error_oops": "Oops! Something went wrong",
+      "no_results": "No results found",
+      "new_message": "New chat"
+    }
   }
 }
-

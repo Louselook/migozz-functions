@@ -39,6 +39,8 @@
       "subtitle1": "Conecta tu comunidad",
       "inputText": "Ingresa tu correo",
       "buttonText": "Iniciar sesión",
+      "google": "Ingresar con Google",
+      "apple": "Ingresar con Apple",
       "registration": {
         "step1": "Creando tu cuenta...",
         "step2": "Configurando tu perfil...",
@@ -106,7 +108,9 @@
   "termsPrivacy": {
     "header": "Términos y Privacidad",
     "button": {
-      "backToLogin": "Volver al inicio de sesión"
+      "backToLogin": "Volver al inicio de sesión",
+      "accept": "Acepto",
+      "decline": "No acepto"
     },
     "terms": {
       "title": "Términos del Servicio",
@@ -846,7 +850,14 @@
         "saturday": "sábado",
         "sunday": "domingo"
       }
-    }
+    },
+    "title": "Mensajes",
+    "search": "Buscar",
+    "active": "Activos",
+    "new": "Nuevos",
+    "noChats": "No hay chats",
+    "selectConversation": "Selecciona una conversación",
+    "selectConversationDesc": "Elige un chat de la lista para comenzar"
   },
   "notifications": {
     "title": "Notificaciones",
@@ -859,7 +870,14 @@
       "message": "¿Estás seguro de que quieres eliminar todas las notificaciones?",
       "cancel": "Cancelar",
       "confirm": "Eliminar todo"
-    }
+    },
+    "filter": {
+      "all": "Todas",
+      "unread": "No leídas",
+      "follows": "Seguidores",
+      "messages": "Mensajes"
+    },
+    "markAllRead": "Marcar todas como leídas"
   },
   "common": {
     "loading": "Cargando...",
@@ -1024,6 +1042,29 @@
         "message": "Este correo/cuenta ha sido suspendido por infringir las reglas de la aplicación. No puedes crear una nueva cuenta con este correo."
       },
       "button": "OK"
+    }
+  },
+  "web": {
+    "menu": {
+      "search": "Buscar",
+      "profile": "Perfil",
+      "chat": "Chat",
+      "notifications": "Notificaciones",
+      "stats": "Estadísticas",
+      "configuration": "Configuración",
+      "login": "Iniciar Sesión",
+      "signup": "Registrarse",
+      "logout": "Cerrar Sesión",
+      "create": "Crear"
+    },
+    "chat": {
+      "title": "Mensajes",
+      "tab_chat": "Chat",
+      "no_messages": "No hay mensajes",
+      "no_new_messages": "No hay mensajes nuevos",
+      "error_oops": "¡Ups! Algo salió mal",
+      "no_results": "No se encontraron resultados",
+      "new_message": "Nuevo chat"
     }
   }
 }

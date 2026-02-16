@@ -62,9 +62,14 @@ class _WebFollowersScreenState extends State<WebFollowersScreen>
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final isMobileWidth = size.width < 600;
-    final isSmallScreen = size.width < 900;
-    final leftMenuWidth = isSmallScreen ? 80.0 : 100.0;
+
+    final isMenuSmall = size.width < 600;
+    final isMenuMedium = size.width >= 600 && size.width < 1200;
+    final leftMenuWidth = isMenuSmall
+        ? 95.0
+        : isMenuMedium
+        ? 110.0
+        : 140.0;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -73,7 +78,7 @@ class _WebFollowersScreenState extends State<WebFollowersScreen>
           // Main content
           Positioned.fill(
             child: Padding(
-              padding: EdgeInsets.only(left: isMobileWidth ? 0 : leftMenuWidth),
+              padding: EdgeInsets.only(left: leftMenuWidth),
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 900),
@@ -100,15 +105,14 @@ class _WebFollowersScreenState extends State<WebFollowersScreen>
               ),
             ),
           ),
-          // Side Menu (hidden on mobile width)
-          if (!isMobileWidth)
-            Positioned(
-              left: 0,
-              top: 0,
-              bottom: 0,
-              width: leftMenuWidth,
-              child: const SideMenu(),
-            ),
+          // Side Menu
+          Positioned(
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: leftMenuWidth,
+            child: const SideMenu(),
+          ),
         ],
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:flutter/foundation.dart';
@@ -33,10 +34,10 @@ class SideMenu extends StatelessWidget {
 
     // Responsive configs
     final menuWidth = isSmallScreen
-        ? 90.0
+        ? 95.0
         : isMediumScreen
-        ? 100.0
-        : 150.0;
+        ? 110.0
+        : 140.0;
 
     final borderRadius = isSmallScreen ? 15.0 : 20.0;
 
@@ -89,7 +90,7 @@ class SideMenu extends StatelessWidget {
                     children: [
                       _MenuItem(
                         icon: Icons.search,
-                        label: 'Search',
+                        label: 'web.menu.search'.tr(),
                         isSelected: currentRoute == '/search',
                         isSmallScreen: isSmallScreen,
                         isMediumScreen: isMediumScreen,
@@ -99,7 +100,7 @@ class SideMenu extends StatelessWidget {
                       ),
                       _MenuItem(
                         icon: Icons.person_outline,
-                        label: 'Profile',
+                        label: 'web.menu.profile'.tr(),
                         isSelected:
                             currentRoute == '/profile' ||
                             currentRoute == '/' ||
@@ -113,7 +114,7 @@ class SideMenu extends StatelessWidget {
                       ),
                       _MenuItem(
                         icon: Icons.chat_bubble_outline,
-                        label: 'Chat',
+                        label: 'web.menu.chat'.tr(),
                         isSelected: isChatOpen,
                         isSmallScreen: isSmallScreen,
                         isMediumScreen: isMediumScreen,
@@ -128,7 +129,7 @@ class SideMenu extends StatelessWidget {
                       ),
                       _MenuItem(
                         icon: Icons.notifications_outlined,
-                        label: 'Notifications',
+                        label: 'web.menu.notifications'.tr(),
                         isSelected: currentRoute.contains('notifications'),
                         isSmallScreen: isSmallScreen,
                         isMediumScreen: isMediumScreen,
@@ -139,7 +140,7 @@ class SideMenu extends StatelessWidget {
                       // Followers removed — visible in Stats page
                       _MenuItem(
                         icon: Icons.bar_chart,
-                        label: 'My Stats',
+                        label: 'web.menu.stats'.tr(),
                         isSelected: currentRoute.contains('stats'),
                         isSmallScreen: isSmallScreen,
                         isMediumScreen: isMediumScreen,
@@ -150,7 +151,7 @@ class SideMenu extends StatelessWidget {
                       ),
                       _MenuItem(
                         icon: Icons.settings,
-                        label: 'Configuration',
+                        label: 'web.menu.configuration'.tr(),
                         isSelected: currentRoute.contains('edit-profile'),
                         isSmallScreen: isSmallScreen,
                         isMediumScreen: isMediumScreen,
@@ -166,7 +167,7 @@ class SideMenu extends StatelessWidget {
                       const SizedBox(height: 20),
                       _MenuItem(
                         icon: Icons.login,
-                        label: 'Log In',
+                        label: 'web.menu.login'.tr(),
                         isSelected: false,
                         isSmallScreen: isSmallScreen,
                         isMediumScreen: isMediumScreen,
@@ -176,7 +177,7 @@ class SideMenu extends StatelessWidget {
                       ),
                       _MenuItem(
                         icon: Icons.person_add_outlined,
-                        label: 'Sign Up',
+                        label: 'web.menu.signup'.tr(),
                         isSelected: false,
                         isSmallScreen: isSmallScreen,
                         isMediumScreen: isMediumScreen,
@@ -190,7 +191,7 @@ class SideMenu extends StatelessWidget {
           if (kIsWeb && isAuthenticated)
             _MenuItem(
               icon: Icons.logout,
-              label: 'Log Out',
+              label: 'web.menu.logout'.tr(),
               isSelected: false,
               isSmallScreen: isSmallScreen,
               isMediumScreen: isMediumScreen,
@@ -256,7 +257,7 @@ class SideMenu extends StatelessWidget {
                   ),
                   SizedBox(height: isSmallScreen ? 6.0 : 8.0),
                   Text(
-                    'Create',
+                    "web.menu.create".tr(),
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: createFontSize,

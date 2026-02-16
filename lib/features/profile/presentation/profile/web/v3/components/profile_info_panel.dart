@@ -573,11 +573,30 @@ class _ProfileInfoPanelState extends State<ProfileInfoPanel>
             ),
           ),
 
+          // --- HORIZONTAL FADE OVERLAY (SIDES) ---
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [
+                    Colors.black,
+                    Colors.transparent,
+                    Colors.transparent,
+                    Colors.black,
+                  ],
+                  stops: const [0.0, 0.15, 0.85, 1.0],
+                ),
+              ),
+            ),
+          ),
+
           // --- CONTENT LAYER ---
           Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: widget.isMobileLayout ? 16.0 : 24.0,
-              vertical: widget.isMobileLayout ? 20.0 : 30.0,
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 30.0,
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -592,7 +611,7 @@ class _ProfileInfoPanelState extends State<ProfileInfoPanel>
                   '@${widget.user.username}',
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.8),
-                    fontSize: widget.isMobileLayout ? 14 : 16,
+                    fontSize: 16,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -629,9 +648,11 @@ class _ProfileInfoPanelState extends State<ProfileInfoPanel>
                                 width: iconSize,
                                 height: iconSize,
                                 fit: BoxFit.contain,
-                                errorBuilder: (_, __, ___) =>
-                                    Icon(Icons.link,
-                                        color: Colors.white, size: iconSize - 4),
+                                errorBuilder: (_, __, ___) => Icon(
+                                  Icons.link,
+                                  color: Colors.white,
+                                  size: iconSize - 4,
+                                ),
                               )
                             : SvgPicture.asset(
                                 link.asset,
@@ -828,9 +849,9 @@ class _ProfileInfoPanelState extends State<ProfileInfoPanel>
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.white,
-                fontSize: widget.isMobileLayout ? 24 : 32,
+                fontSize: 32,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.5,
                 height: 1.1,
@@ -968,9 +989,7 @@ class _ProfileInfoPanelState extends State<ProfileInfoPanel>
 
     return Container(
       constraints: BoxConstraints(
-        maxWidth: widget.isMobileLayout
-            ? MediaQuery.of(context).size.width * 0.85
-            : MediaQuery.of(context).size.width * 0.5,
+        maxWidth: MediaQuery.of(context).size.width * 0.5,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(

@@ -242,6 +242,9 @@ class RegisterCubit extends Cubit<RegisterState> {
   void setInterests(Map<String, List<String>> interests) =>
       emit(state.copyWith(interests: interests));
 
+  void setTermsAccepted(bool accepted) =>
+      emit(state.copyWith(termsAccepted: accepted));
+
   void setCurrentOTP(String currentOTP) => emit(
     state.copyWith(
       currentOTP: currentOTP,

@@ -131,13 +131,17 @@ class _WebProfileContentV3EditState extends State<WebProfileContentV3Edit> {
       interests: authCubit.state.userProfile?.interests,
     );
 
+    // Seed RegisterCubit with current socials so it knows about existing networks
+    final registerCubit = context.read<RegisterCubit>();
+    registerCubit.updateSocialEcosystemOnly(currentSocials);
+
     await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (newContext) => MultiBlocProvider(
           providers: [
             BlocProvider.value(value: editCubit),
-            BlocProvider.value(value: context.read<RegisterCubit>()),
+            BlocProvider.value(value: registerCubit),
             BlocProvider.value(value: authCubit),
           ],
           child: SocialEcosystemStepV3(
@@ -231,7 +235,7 @@ class _WebProfileContentV3EditState extends State<WebProfileContentV3Edit> {
 
   String _faviconFromDomain(String domain) {
     if (domain.isEmpty) return '';
-    return 'https://www.google.com/s2/favicons?domain=$domain&sz=128';
+    return 'https://www.google.com/s2/favicons?domain=\$domain&sz=128';
   }
 
   Map<String, String>? _getSocialInfo(
@@ -248,35 +252,35 @@ class _WebProfileContentV3EditState extends State<WebProfileContentV3Edit> {
     String url;
     switch (platform) {
       case 'tiktok':
-        url = customUrl ?? 'https://www.tiktok.com/@$username';
+        url = customUrl ?? 'https://www.tiktok.com/@\$username';
         break;
       case 'instagram':
-        url = customUrl ?? 'https://www.instagram.com/$username';
+        url = customUrl ?? 'https://www.instagram.com/\$username';
         break;
       case 'x':
       case 'twitter':
-        url = customUrl ?? 'https://x.com/$username';
+        url = customUrl ?? 'https://x.com/\$username';
         break;
       case 'facebook':
-        url = customUrl ?? 'https://www.facebook.com/$username';
+        url = customUrl ?? 'https://www.facebook.com/\$username';
         break;
       case 'pinterest':
-        url = customUrl ?? 'https://www.pinterest.com/$username';
+        url = customUrl ?? 'https://www.pinterest.com/\$username';
         break;
       case 'youtube':
-        url = customUrl ?? 'https://www.youtube.com/@$username';
+        url = customUrl ?? 'https://www.youtube.com/@\$username';
         break;
       case 'telegram':
-        url = customUrl ?? 'https://t.me/$username';
+        url = customUrl ?? 'https://t.me/\$username';
         break;
       case 'whatsapp':
-        url = customUrl ?? 'https://wa.me/$username';
+        url = customUrl ?? 'https://wa.me/\$username';
         break;
       case 'spotify':
-        url = customUrl ?? 'https://open.spotify.com/user/$username';
+        url = customUrl ?? 'https://open.spotify.com/user/\$username';
         break;
       case 'linkedin':
-        url = customUrl ?? 'https://www.linkedin.com/in/$username';
+        url = customUrl ?? 'https://www.linkedin.com/in/\$username';
         break;
       default:
         url = customUrl ?? '';
@@ -289,8 +293,12 @@ class _WebProfileContentV3EditState extends State<WebProfileContentV3Edit> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isMobileWidth = size.width < 600;
-    final isSmallScreen = size.width < 900;
-    final leftMenuWidth = isSmallScreen ? 80.0 : 100.0;
+    final isMediumScreen = size.width >= 600 && size.width < 1200;
+    final leftMenuWidth = isMobileWidth
+        ? 95.0
+        : isMediumScreen
+        ? 110.0
+        : 140.0;
 
     // Use Watchers
     final authState = context.watch<AuthCubit>().state;
@@ -377,8 +385,11 @@ class _WebProfileContentV3EditState extends State<WebProfileContentV3Edit> {
                                       ),
                                     )
                                   else
-                                    const Icon(Icons.camera_alt,
-                                        color: Colors.white, size: 16),
+                                    const Icon(
+                                      Icons.camera_alt,
+                                      color: Colors.white,
+                                      size: 16,
+                                    ),
                                   const SizedBox(width: 6),
                                   const Text(
                                     'Profile Pic',
@@ -411,8 +422,11 @@ class _WebProfileContentV3EditState extends State<WebProfileContentV3Edit> {
                       top: 20,
                       left: 12,
                       child: IconButton(
-                        icon: const Icon(Icons.arrow_back,
-                            color: Colors.white, size: 26),
+                        icon: const Icon(
+                          Icons.arrow_back,
+                          color: Colors.white,
+                          size: 26,
+                        ),
                         onPressed: () => context.go('/profile'),
                       ),
                     ),
@@ -424,7 +438,9 @@ class _WebProfileContentV3EditState extends State<WebProfileContentV3Edit> {
               Container(
                 color: const Color(0xFF0A0A0A),
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 24),
+                  horizontal: 16,
+                  vertical: 24,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

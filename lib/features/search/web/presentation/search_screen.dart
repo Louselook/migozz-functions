@@ -22,13 +22,16 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final isMobileWidth = size.width < 600;
     final bottomGradientHeight = size.height * 0.22;
-    final sideMenuWidth = isMobileWidth ? 0.0 : 100.0;
+    final isSmallScreen = size.width < 600;
+    final isMediumScreen = size.width >= 600 && size.width < 1200;
+    final sideMenuWidth = isSmallScreen
+        ? 95.0
+        : isMediumScreen
+        ? 110.0
+        : 140.0;
     final availableWidth = size.width - sideMenuWidth;
-    final horizontalPadding = isMobileWidth
-        ? 16.0
-        : availableWidth * 0.15;
+    final horizontalPadding = availableWidth * 0.15;
 
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 18, 18, 18),
@@ -38,9 +41,8 @@ class _SearchScreenState extends State<SearchScreen> {
           _buildTopGradient(size),
           // Gradiente inferior
           BottomGradient(height: bottomGradientHeight),
-          // Menú lateral izquierdo (hidden on mobile width)
-          if (!isMobileWidth)
-            const Positioned(left: 0, top: 0, bottom: 0, child: SideMenu()),
+          // Menú lateral izquierdo
+          const Positioned(left: 0, top: 0, bottom: 0, child: SideMenu()),
           // Contenido principal
           SearchContentContainer(
             sideMenuWidth: sideMenuWidth,

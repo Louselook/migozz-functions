@@ -6,6 +6,7 @@ import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/regis
 import 'package:migozz_app/features/chat/controllers/register_chat_controller.dart';
 import 'package:migozz_app/features/chat/presentation/register/components/chat_operation/functions/social_ecosystem_handler.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
+import 'package:migozz_app/core/utils/pages/terms_registration_screen.dart';
 
 /// Maneja las acciones que el bot indica en su respuesta
 class ChatNavigationHandler {
@@ -108,6 +109,32 @@ class ChatNavigationHandler {
           await Future<void>.delayed(const Duration(milliseconds: 2200));
           chatController.removeTypingIndicator();
           chatController.setLastUserMessageForBot('interests_updated');
+          chatController.showNextBotMessage();
+        }
+        break;
+
+      case 3:
+        // TermsAndConditions - Aceptar términos y condiciones
+        chatController.showTypingIndicator(name: "Migozz");
+        await Future<void>.delayed(const Duration(milliseconds: 1500));
+        if (!context.mounted) return;
+        chatController.removeTypingIndicator();
+
+        final accepted = await Navigator.push<bool>(
+          context,
+          MaterialPageRoute(builder: (_) => const TermsRegistrationScreen()),
+        );
+
+        if (context.mounted) {
+          chatController.showTypingIndicator(name: "Migozz");
+          await Future<void>.delayed(const Duration(milliseconds: 1500));
+          chatController.removeTypingIndicator();
+
+          if (accepted == true) {
+            chatController.setLastUserMessageForBot('terms_accepted');
+          } else {
+            chatController.setLastUserMessageForBot('terms_declined');
+          }
           chatController.showNextBotMessage();
         }
         break;
