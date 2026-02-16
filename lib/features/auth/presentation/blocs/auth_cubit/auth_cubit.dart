@@ -274,6 +274,50 @@ class AuthCubit extends Cubit<AuthState> {
     return null;
   }
 
+  //Igor Note: New flow for web and custom google button
+  //Igor Nota: Flujo nuevo para que funcione en la web y podamos usar botones personalizados
+  Future<AuthResult> webGoogleSignIn() async {
+    try {
+      _isLoginInProgress = true;
+
+      final googleProvider = GoogleAuthProvider()
+        ..setCustomParameters({'prompt': 'select_account'});
+
+      final UserCredential userCredential = await FirebaseAuth.instance
+          .signInWithPopup(googleProvider);
+
+      final currentUser = userCredential.user;
+
+      if (currentUser != null) {
+        debugPrint(
+          '🔄 [AuthCubit] Usuario obtenido: ${currentUser.email}. Cargando perfil...',
+        );
+
+        final userProfile = await _loadUserProfileWithRetry(currentUser.uid);
+
+        emit(
+          AuthState.authenticated(
+            firebaseUser: currentUser,
+            userProfile: userProfile,
+          ),
+        );
+
+        _setupUserProfileListener(currentUser.uid);
+      }
+
+      return AuthResult(
+        credential: userCredential,
+        user: null,
+        profileExists: true,
+      );
+    } catch (e) {
+      debugPrint('❌ [AuthCubit] Error en Web Login: $e');
+      rethrow;
+    } finally {
+      _isLoginInProgress = false;
+    }
+  }
+
   Future<AuthResult> signInWithGoogle() async {
     try {
       debugPrint('🔐 [AuthCubit] Iniciando login con Google...');

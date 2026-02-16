@@ -36,6 +36,8 @@
         "inputText": "Enter Email",
         "buttonText": "Login",
         "subtitle2": "Or login with",
+        "google": "Sign in with Google",
+        "apple": "Sign in with Apple",
         "bottomText": {
           "newUser": "NEW USER?\n",
           "register": "REGISTER HERE!",

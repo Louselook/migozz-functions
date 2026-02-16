@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:google_sign_in_web/web_only.dart' as web;
+import 'package:migozz_app/core/assets_constants.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/core/components/compuestos/custom_textfield.dart';
@@ -15,6 +16,7 @@ import 'package:migozz_app/features/auth/components/apple_button.dart';
 import 'package:migozz_app/features/auth/data/datasources/auth_service.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/login_cubit/login_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/widgets/web_custom_google_button.dart';
 import 'package:migozz_app/features/chat/presentation/register/components/chat_operation/functions/email_validation.dart';
 import 'package:migozz_app/core/components/compuestos/custom_snackbar.dart';
 import 'package:migozz_app/features/profile/components/utils/loader.dart';
@@ -46,7 +48,10 @@ class _LoginFormState extends State<LoginForm> {
     final googleSignIn = GoogleSignIn.instance;
 
     // Initialize with client ID
-    final googleClientId = const String.fromEnvironment('GOOGLE_CLIENT_ID', defaultValue: '');
+    final googleClientId = const String.fromEnvironment(
+      'GOOGLE_CLIENT_ID',
+      defaultValue: '',
+    );
     if (googleClientId.isNotEmpty) {
       await googleSignIn.initialize(clientId: googleClientId);
     } else {
@@ -219,6 +224,25 @@ class _LoginFormState extends State<LoginForm> {
     }
   }
 
+  Future<void> _webGoogleSignIn() async {
+    FocusScope.of(context).unfocus();
+    LoadingOverlay.show(context, type: LoaderType.login);
+    try {
+      final authCubit = context.read<AuthCubit>();
+      await authCubit.webGoogleSignIn();
+    } catch (e) {
+      debugPrint('error: $e');
+      CustomSnackbar.show(
+        // ignore: use_build_context_synchronously
+        context: context,
+        message: '${"login.validations.errorGoogle".tr()} $e',
+        type: SnackbarType.error,
+      );
+    } finally {
+      if (mounted) LoadingOverlay.hide(context);
+    }
+  }
+
   Future<void> _handleAppleSignIn() async {
     FocusScope.of(context).unfocus();
     LoadingOverlay.show(context, type: LoaderType.login);
@@ -284,11 +308,19 @@ class _LoginFormState extends State<LoginForm> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (kIsWeb)
-                  // Web: Use Google's renderButton widget (required in v7.x)
-                  SizedBox(
-                    height: 40,
-                    child: web.renderButton()
-                  )
+                  // 
+                  Row(
+                    spacing: 10,
+                    children: [
+                      //Google
+                    WebCustomGoogleButton(onPress: _webGoogleSignIn,),
+                      //Apple
+                    WebCustomGoogleButton(
+                      onPress: () => {}, 
+                      text: 'login.presentation.apple'.tr(), 
+                      icon: AssetsConstants.appleIcon,
+                    )
+                  ],)
                 else
                   // Mobile: Use custom button
                   googleButton(onPressed: _handleGoogleSignIn),

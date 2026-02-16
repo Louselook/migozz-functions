@@ -39,6 +39,8 @@
       "subtitle1": "Conecta tu comunidad",
       "inputText": "Ingresa tu correo",
       "buttonText": "Iniciar sesión",
+      "google": "Ingresar con Google",
+      "apple": "Ingresar con Apple",
       "registration": {
         "step1": "Creando tu cuenta...",
         "step2": "Configurando tu perfil...",
