@@ -272,7 +272,7 @@ class _LoginFormState extends State<LoginForm> {
     return Form(
       key: _formKey,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 10),
         child: Column(
           mainAxisSize: MainAxisSize.min, //  importante para mobile
           mainAxisAlignment: MainAxisAlignment.center,
@@ -305,7 +305,7 @@ class _LoginFormState extends State<LoginForm> {
 
             const SizedBox(height: 40),
             SecondaryText("login.presentation.subtitle2".tr(), fontSize: 16),
-            const SizedBox(height: 5),
+            const SizedBox(height: 20),
             
             Flex(
               direction: isMobile ? Axis.vertical : Axis.horizontal,
