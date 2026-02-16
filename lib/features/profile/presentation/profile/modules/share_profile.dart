@@ -263,75 +263,81 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
 
   Future<void> _shareProfile(_ProfileData data) async {
     try {
-      // Capture the screenshot
-      RenderRepaintBoundary boundary =
-          _screenshotKey.currentContext!.findRenderObject()
-              as RenderRepaintBoundary;
-      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
-      ByteData? byteData = await image.toByteData(
-        format: ui.ImageByteFormat.png,
-      );
-      Uint8List pngBytes = byteData!.buffer.asUint8List();
+      final boundary =
+      _screenshotKey.currentContext!.findRenderObject()
+      as RenderRepaintBoundary;
+
+      final image = await boundary.toImage(pixelRatio: 3.0);
+      final byteData =
+      await image.toByteData(format: ui.ImageByteFormat.png);
+
+      if (byteData == null) {
+        throw Exception("Failed to convert image to bytes");
+      }
+
+      final pngBytes = byteData.buffer.asUint8List();
 
       final shareMessage = 'share.title'.tr(
-        namedArgs: {'displayName': data.displayName, 'link': data.link},
+        namedArgs: {
+          'displayName': data.displayName,
+          'link': data.link,
+        },
       );
+
       final shareSubject = 'share.subject'.tr(
         namedArgs: {'displayName': data.displayName},
       );
 
+      // 🔥 Create XFile differently for web vs mobile
       if (kIsWeb) {
-        // Web: Copy link to clipboard (Share API requires direct user gesture)
-        await Clipboard.setData(ClipboardData(text: data.link));
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('share.copied'.tr()),
-              backgroundColor: const Color(0xFF2C2C2C),
-              behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 2),
-            ),
-          );
-        }
-      } else {
-        // Mobile: Save to temp directory and share with image
-        final directory = await getApplicationDocumentsDirectory();
-        final timestamp = DateTime.now().millisecondsSinceEpoch;
-        final imagePath = '${directory.path}/migozz_qr_share_$timestamp.png';
-        final imageFile = File(imagePath);
-        await imageFile.writeAsBytes(pngBytes);
+        // Web: share using in-memory file
+        final xFile = XFile.fromData(
+          pngBytes,
+          mimeType: 'image/png',
+          name: 'migozz_profile.png',
+        );
 
-        // Share the image with message
         await Share.shareXFiles(
-          [XFile(imagePath)],
+          [xFile],
+          text: shareMessage,
+          subject: shareSubject,
+        );
+      } else {
+        // Mobile (Android + iOS): save temp file
+        final directory = await getTemporaryDirectory();
+        final filePath =
+            '${directory.path}/migozz_share_${DateTime.now().millisecondsSinceEpoch}.png';
+
+        final file = File(filePath);
+        await file.writeAsBytes(pngBytes);
+
+        await Share.shareXFiles(
+          [XFile(filePath)],
           text: shareMessage,
           subject: shareSubject,
         );
       }
     } catch (e) {
       debugPrint('Error sharing profile: $e');
-      // Fallback: copy link to clipboard on web, text share on mobile
-      if (kIsWeb) {
-        await Clipboard.setData(ClipboardData(text: data.link));
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('share.copied'.tr()),
-              backgroundColor: const Color(0xFF2C2C2C),
-              behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 2),
-            ),
-          );
-        }
-      } else {
-        Share.share(
-          'share.title'.tr(
-            namedArgs: {'displayName': data.displayName, 'link': data.link},
-          ),
-          subject: 'share.subject'.tr(
-            namedArgs: {'displayName': data.displayName},
-          ),
+
+      // ✅ Safe fallback (all platforms)
+      try {
+        await Share.share(
+          data.link,
+          subject: data.displayName,
         );
+      } catch (_) {
+        if (kIsWeb) {
+          await Clipboard.setData(ClipboardData(text: data.link));
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Link copied to clipboard'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        }
       }
     }
   }
