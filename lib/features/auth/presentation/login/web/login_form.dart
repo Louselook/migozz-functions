@@ -63,7 +63,9 @@ class _LoginFormState extends State<LoginForm> {
 
       debugPrint('🔐 [LoginForm] Authentication event: ${user?.email}');
       if (user != null) {
-        // User signed in via renderButton, now call the sign-in flow
+        // Almacenar el account del evento para que loginWithGoogle() lo use
+        // en vez de llamar authenticate() (no soportado en web v7)
+        AuthService.setPendingGoogleAccount(user);
         _handleGoogleSignIn();
       }
     });

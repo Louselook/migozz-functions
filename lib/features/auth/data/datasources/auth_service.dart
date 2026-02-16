@@ -15,6 +15,18 @@ class AuthService {
   final UserMediaService _mediaService = UserMediaService();
   final PreRegisterService _preRegisterService = PreRegisterService();
 
+  /// En web con google_sign_in v7, authenticate() no está soportado.
+  /// El sign-in se maneja via renderButton() + authenticationEvents.
+  /// Este campo almacena el GoogleSignInAccount del evento para usarlo
+  /// en loginWithGoogle() sin llamar authenticate() de nuevo.
+  static GoogleSignInAccount? _pendingGoogleAccount;
+
+  /// Llamar desde el listener de authenticationEvents en web
+  /// antes de invocar loginWithGoogle().
+  static void setPendingGoogleAccount(GoogleSignInAccount account) {
+    _pendingGoogleAccount = account;
+  }
+
   // Stream de auth
   Stream<User?> authStateChanges() {
     // Asegurar persistencia LOCAL habilitada en Web
@@ -105,11 +117,29 @@ class AuthService {
         );
       }
 
-      // En v7, se debe usar GoogleSignIn.instance
-      // authenticate() inicia el flujo interactivo
+      // En v7, authenticate() inicia el flujo interactivo en mobile.
+      // En web, authenticate() NO está soportado — el sign-in viene de
+      // renderButton() y llega via authenticationEvents. Usamos el account
+      // almacenado en _pendingGoogleAccount.
       final GoogleSignInAccount googleUser;
       try {
-        googleUser = await GoogleSignIn.instance.authenticate();
+        if (kIsWeb) {
+          final pending = _pendingGoogleAccount;
+          _pendingGoogleAccount = null; // Limpiar después de usar
+          if (pending != null) {
+            debugPrint('🔐 [AuthService] Web: usando cuenta de renderButton/GSI');
+            googleUser = pending;
+          } else if (GoogleSignIn.instance.supportsAuthenticate()) {
+            debugPrint('🔐 [AuthService] Web: intentando authenticate()...');
+            googleUser = await GoogleSignIn.instance.authenticate();
+          } else {
+            debugPrint('⚠️ [AuthService] Web: authenticate() no soportado y no hay cuenta pendiente');
+            throw Exception('google_signin_cancelled');
+          }
+        } else {
+          // Mobile: authenticate() inicia el flujo interactivo
+          googleUser = await GoogleSignIn.instance.authenticate();
+        }
       } catch (e) {
         debugPrint(
           '⚠️ [AuthService] Error o cancelación en Google Sign-In: $e',

@@ -118,6 +118,7 @@ class ProfileTutorialHelper {
       if (autoRetries > 0 && context.mounted) {
         Future.delayed(const Duration(milliseconds: 900), () {
           if (!context.mounted) return;
+          
           triggerProfileTutorial(
             context,
             keys,
