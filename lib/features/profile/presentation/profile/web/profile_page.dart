@@ -36,7 +36,12 @@ class WebProfileContent extends StatelessWidget {
       size.width - socialRailWidth - socialPadding,
       (size.height - socialRailHeight) / 2,
     );
-    final leftMenuWidth = isSmallScreen ? 80.0 : 100.0;
+    final isMediumScreen = size.width >= 600 && size.width < 1200;
+    final leftMenuWidth = isSmallScreen
+        ? 95.0
+        : isMediumScreen
+        ? 110.0
+        : 140.0;
 
     // Calcular seguidores totales desde socialEcosystem
     final totalFollowers = _calculateTotalFollowers(user.socialEcosystem);

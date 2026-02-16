@@ -285,6 +285,14 @@ class _WebVisualEditPageState extends State<WebVisualEditPage> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
 
+    final isMenuSmall = screenWidth < 600;
+    final isMenuMedium = screenWidth >= 600 && screenWidth < 1200;
+    final sideMenuWidth = isMenuSmall
+        ? 95.0
+        : isMenuMedium
+        ? 110.0
+        : 140.0;
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
@@ -298,7 +306,7 @@ class _WebVisualEditPageState extends State<WebVisualEditPage> {
           Positioned(
             top: 0,
             bottom: 0,
-            left: 70,
+            left: sideMenuWidth,
             right: 0,
             child: BlocBuilder<AuthCubit, AuthState>(
               builder: (context, authState) {
@@ -328,7 +336,10 @@ class _WebVisualEditPageState extends State<WebVisualEditPage> {
                   user.username,
                 );
 
-                final contentWidth = (screenWidth - 70).clamp(400.0, 900.0);
+                final contentWidth = (screenWidth - sideMenuWidth).clamp(
+                  400.0,
+                  900.0,
+                );
 
                 return Center(
                   child: SizedBox(

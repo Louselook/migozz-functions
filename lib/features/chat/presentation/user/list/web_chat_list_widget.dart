@@ -67,7 +67,7 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
         displayName: userData['displayName'] ?? 'Usuario',
         username: userData['userName'] ?? userData['username'] ?? 'user',
         avatarUrl: userData['avatarUrl'],
-        lastMessage: chatRoom.lastMessage ?? 'Nuevo chat',
+        lastMessage: chatRoom.lastMessage ?? 'web.chat.new_message'.tr(),
         timeAgo: _formatTime(chatRoom.lastMessageTime),
         isVerified: userData['isVerified'] ?? false,
         isOnline: false,
@@ -116,8 +116,8 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Messages',
+                Text(
+                  'web.chat.title'.tr(),
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 20,
@@ -165,14 +165,16 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
         }
         if (snapshot.hasError) {
           return _buildEmptyState(
-            'Oops! Algo salió mal',
+            'web.chat.error_oops'.tr(),
             icon: Icons.error_outline,
           );
         }
         final chatRooms = snapshot.data ?? [];
         if (chatRooms.isEmpty) {
           return _buildEmptyState(
-            isActive ? 'No messages yet' : 'No new messages',
+            isActive
+                ? 'web.chat.no_messages'.tr()
+                : 'web.chat.no_new_messages'.tr(),
           );
         }
 
@@ -201,7 +203,7 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
                   .toList(),
             );
             if (filteredChats.isEmpty) {
-              return _buildEmptyState('No results found');
+              return _buildEmptyState('web.chat.no_results'.tr());
             }
             return _buildChatList(filteredChats);
           },
@@ -221,7 +223,7 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
         controller: _searchController,
         style: const TextStyle(color: Colors.white),
         decoration: InputDecoration(
-          hintText: "profile.chat.search".tr(),
+          hintText: 'profile.chat.search'.tr(),
           hintStyle: TextStyle(color: Colors.grey[600]),
           prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
           border: InputBorder.none,
@@ -261,8 +263,8 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
                   fontWeight: FontWeight.w600,
                 ),
                 tabs: [
-                  Tab(child: Center(child: Text('Chat'))),
-                  Tab(child: Center(child: Text("profile.chat.filter".tr()))),
+                  Tab(child: Center(child: Text('web.chat.tab_chat'.tr()))),
+                  Tab(child: Center(child: Text('profile.chat.filter'.tr()))),
                 ],
               ),
             ),

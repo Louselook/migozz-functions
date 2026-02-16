@@ -25,12 +25,69 @@ class WebProfileContentV3 extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final isSmallScreen = size.width < 900;
-    final leftMenuWidth = isSmallScreen ? 80.0 : 100.0;
+    final isMobileWidth = size.width < 600;
+    final isMenuMedium = size.width >= 600 && size.width < 1200;
+    final leftMenuWidth = isMenuMedium ? 110.0 : 140.0;
 
     // Build social links for the V3 social circles component
     final socialLinks = _buildSocialLinks(user.socialEcosystem, user.username);
 
+    // ── Mobile-like layout for narrow screens ──
+    if (isMobileWidth) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: Builder(
+          builder: (context) {
+            final authState = context.watch<AuthCubit>().state;
+            final currentUser = authState.userProfile;
+            final isOwn = currentUser?.username == user.username;
+            final totalFollowers = socialLinks.fold<int>(
+              0,
+              (sum, link) => sum + (link.followers ?? 0),
+            );
+
+            return SingleChildScrollView(
+              child: Column(
+                children: [
+                  // Profile info panel — takes ~55% of screen height
+                  SizedBox(
+                    height: size.height * 0.65,
+                    child: ProfileInfoPanel(
+                      user: user,
+                      socialLinks: socialLinks,
+                      communityCount: totalFollowers.toString(),
+                      isOwnProfile: isOwn,
+                      currentUserId: currentUser?.email,
+                      targetUserId: user.email,
+                      isMobileLayout: true,
+                    ),
+                  ),
+
+                  // Social Highlights below
+                  if (socialLinks.any(
+                    (link) =>
+                        link.profileImageUrl != null &&
+                        link.profileImageUrl!.isNotEmpty,
+                  ))
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
+                      child: _SocialHighlightsSection(links: socialLinks),
+                    ),
+
+                  // Bottom spacing for bottom nav bar
+                  const SizedBox(height: 80),
+                ],
+              ),
+            );
+          },
+        ),
+      );
+    }
+
+    // ── Desktop/tablet Single-column layout ──
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
@@ -42,64 +99,67 @@ class WebProfileContentV3 extends StatelessWidget {
                 SizedBox(width: leftMenuWidth), // Spacer for side menu
 
                 Expanded(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Left Panel: Profile Preview (Avatar + Socials)
-                      Expanded(
-                        flex: 5,
-                        child: Builder(
-                          builder: (context) {
-                            final authState = context.watch<AuthCubit>().state;
-                            final currentUser = authState.userProfile;
-                            final isOwn =
-                                currentUser?.username == user.username;
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        // Profile Info Panel (Header)
+                        SizedBox(
+                          height: size.height * 0.65,
+                          child: Align(
+                            alignment: Alignment.topCenter,
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 1000),
+                              child: SizedBox(
+                                width: double.infinity,
+                                height: double.infinity,
+                                child: Builder(
+                                  builder: (context) {
+                                    final authState = context
+                                        .watch<AuthCubit>()
+                                        .state;
+                                    final currentUser = authState.userProfile;
+                                    final isOwn =
+                                        currentUser?.username == user.username;
 
-                            final totalFollowers = socialLinks.fold<int>(
-                              0,
-                              (sum, link) => sum + (link.followers ?? 0),
-                            );
+                                    final totalFollowers = socialLinks
+                                        .fold<int>(
+                                          0,
+                                          (sum, link) =>
+                                              sum + (link.followers ?? 0),
+                                        );
 
-                            return ProfileInfoPanel(
-                              user: user,
-                              socialLinks: socialLinks,
-                              communityCount: totalFollowers.toString(),
-                              isOwnProfile: isOwn,
-                              currentUserId: currentUser?.email,
-                              targetUserId: user.email,
-                            );
-                          },
-                        ),
-                      ),
-
-                      // Right Panel: Details (Bio, Links, etc.)
-                      Expanded(
-                        flex: 7,
-                        child: Container(
-                          color: const Color(0xFF0A0A0A),
-                          child: SingleChildScrollView(
-                            padding: const EdgeInsets.all(40),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Social Highlights (New)
-                                if (socialLinks.any(
-                                  (link) =>
-                                      link.profileImageUrl != null &&
-                                      link.profileImageUrl!.isNotEmpty,
-                                ))
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: 40),
-                                    child: _SocialHighlightsSection(
-                                      links: socialLinks,
-                                    ),
-                                  ),
-                              ],
+                                    return ProfileInfoPanel(
+                                      user: user,
+                                      socialLinks: socialLinks,
+                                      communityCount: totalFollowers.toString(),
+                                      isOwnProfile: isOwn,
+                                      currentUserId: currentUser?.email,
+                                    );
+                                  },
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+
+                        // Social Highlights (Grid)
+                        if (socialLinks.any(
+                          (link) =>
+                              link.profileImageUrl != null &&
+                              link.profileImageUrl!.isNotEmpty,
+                        ))
+                          Container(
+                            constraints: const BoxConstraints(maxWidth: 1200),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 40,
+                              vertical: 40,
+                            ),
+                            child: _SocialHighlightsSection(links: socialLinks),
+                          ),
+
+                        const SizedBox(height: 100),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -268,17 +328,11 @@ class _SocialHighlightsSection extends StatelessWidget {
 
     if (imageLinks.isEmpty) return const SizedBox.shrink();
 
-    return SizedBox(
-      height: 200,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: imageLinks.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 16),
-        itemBuilder: (context, index) {
-          final link = imageLinks[index];
-          return _HighlightCard(link: link);
-        },
-      ),
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      alignment: WrapAlignment.center,
+      children: imageLinks.map((link) => _HighlightCard(link: link)).toList(),
     );
   }
 }
@@ -290,6 +344,12 @@ class _HighlightCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobileWidth = screenWidth < 600;
+    final cardWidth = isMobileWidth
+        ? (screenWidth - 48)
+        : 180.0; // More square width
+
     return InkWell(
       onTap: () async {
         if (await canLaunchUrl(link.url)) {
@@ -297,7 +357,8 @@ class _HighlightCard extends StatelessWidget {
         }
       },
       child: Container(
-        width: 320,
+        width: cardWidth,
+        height: isMobileWidth ? cardWidth * 0.9 : 180.0, // Almost square height
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           color: const Color(0xFF1A1A1A),

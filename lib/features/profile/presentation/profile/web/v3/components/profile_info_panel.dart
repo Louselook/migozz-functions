@@ -39,6 +39,7 @@ class ProfileInfoPanel extends StatefulWidget {
   final String? currentUserId;
   final String? targetUserId;
   final bool isAuthenticated;
+  final bool isMobileLayout;
 
   final int unreadCount;
   final VoidCallback? onNotificationTap;
@@ -53,6 +54,7 @@ class ProfileInfoPanel extends StatefulWidget {
     this.currentUserId,
     this.targetUserId,
     this.isAuthenticated = true,
+    this.isMobileLayout = false,
     this.unreadCount = 0,
     this.onNotificationTap,
     this.onMessageTap,
@@ -571,6 +573,25 @@ class _ProfileInfoPanelState extends State<ProfileInfoPanel>
             ),
           ),
 
+          // --- HORIZONTAL FADE OVERLAY (SIDES) ---
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [
+                    Colors.black,
+                    Colors.transparent,
+                    Colors.transparent,
+                    Colors.black,
+                  ],
+                  stops: const [0.0, 0.15, 0.85, 1.0],
+                ),
+              ),
+            ),
+          ),
+
           // --- CONTENT LAYER ---
           Padding(
             padding: const EdgeInsets.symmetric(
@@ -608,33 +629,39 @@ class _ProfileInfoPanelState extends State<ProfileInfoPanel>
                 const SizedBox(height: 16),
 
                 // ─── SOCIAL ICONS ROW ───
-                SizedBox(
-                  height: 40,
-                  child: Center(
-                    child: ListView.separated(
-                      shrinkWrap: true,
-                      scrollDirection: Axis.horizontal,
-                      itemCount: widget.socialLinks.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 16),
-                      itemBuilder: (context, index) {
-                        final link = widget.socialLinks[index];
-                        return MouseRegion(
-                          cursor: SystemMouseCursors.click,
-                          child: GestureDetector(
-                            onTap: () => launchUrl(
-                              link.url,
-                              mode: LaunchMode.externalApplication,
-                            ),
-                            child: SvgPicture.asset(
-                              link.asset,
-                              width: 32,
-                              height: 32,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: widget.isMobileLayout ? 12 : 16,
+                  runSpacing: widget.isMobileLayout ? 8 : 12,
+                  children: widget.socialLinks.map((link) {
+                    final iconSize = widget.isMobileLayout ? 28.0 : 32.0;
+                    return MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: GestureDetector(
+                        onTap: () => launchUrl(
+                          link.url,
+                          mode: LaunchMode.externalApplication,
+                        ),
+                        child: link.asset.startsWith('http')
+                            ? Image.network(
+                                link.asset,
+                                width: iconSize,
+                                height: iconSize,
+                                fit: BoxFit.contain,
+                                errorBuilder: (_, __, ___) => Icon(
+                                  Icons.link,
+                                  color: Colors.white,
+                                  size: iconSize - 4,
+                                ),
+                              )
+                            : SvgPicture.asset(
+                                link.asset,
+                                width: iconSize,
+                                height: iconSize,
+                              ),
+                      ),
+                    );
+                  }).toList(),
                 ),
               ],
             ),

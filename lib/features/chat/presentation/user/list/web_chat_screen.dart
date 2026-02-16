@@ -51,8 +51,13 @@ class _WebChatScreenState extends State<WebChatScreen>
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final isSmallScreen = size.width < 900;
-    final leftMenuWidth = isSmallScreen ? 80.0 : 100.0;
+    final isMenuSmall = size.width < 600;
+    final isMenuMedium = size.width >= 600 && size.width < 1200;
+    final leftMenuWidth = isMenuSmall
+        ? 95.0
+        : isMenuMedium
+        ? 110.0
+        : 140.0;
 
     return Scaffold(
       backgroundColor: Colors.black,
