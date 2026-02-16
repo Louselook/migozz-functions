@@ -1,7 +1,4 @@
-import 'dart:math';
-import 'dart:ui_web' as ui_web;
 import 'package:flutter/material.dart';
-import 'package:universal_html/html.dart' as html;
 
 class WebNetworkImage extends StatelessWidget {
   final String imageUrl;
@@ -32,8 +29,7 @@ class WebNetworkImage extends StatelessWidget {
               const Center(child: CircularProgressIndicator());
         },
         errorBuilder: (context, error, stackTrace) {
-          return errorWidget ??
-              Container(color: Colors.black);
+          return errorWidget ?? Container(color: Colors.black);
         },
       ),
     );
