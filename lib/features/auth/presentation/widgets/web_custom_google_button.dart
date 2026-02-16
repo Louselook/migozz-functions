@@ -22,6 +22,7 @@ class WebCustomGoogleButton extends StatelessWidget {
       ),
       onPressed: onPress,
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         spacing: 10,
         children: [
           SizedBox(

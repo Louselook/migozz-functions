@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -266,6 +267,8 @@ class _LoginFormState extends State<LoginForm> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isMobile = MediaQuery.of(context).size.width < 600;
+
     return Form(
       key: _formKey,
       child: Padding(
@@ -303,33 +306,24 @@ class _LoginFormState extends State<LoginForm> {
             const SizedBox(height: 40),
             SecondaryText("login.presentation.subtitle2".tr(), fontSize: 16),
             const SizedBox(height: 5),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            
+            Flex(
+              direction: isMobile ? Axis.vertical : Axis.horizontal,
+              spacing: 10,
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: isMobile
+                  ? CrossAxisAlignment.stretch
+                  : CrossAxisAlignment.center,
               children: [
-                if (kIsWeb)
-                  // 
-                  Row(
-                    spacing: 10,
-                    children: [
-                      //Google
-                    WebCustomGoogleButton(onPress: _webGoogleSignIn,),
-                      //Apple
-                    WebCustomGoogleButton(
-                      onPress: () => {}, 
-                      text: 'login.presentation.apple'.tr(), 
-                      icon: AssetsConstants.appleIcon,
-                    )
-                  ],)
-                else
-                  // Mobile: Use custom button
-                  googleButton(onPressed: _handleGoogleSignIn),
-                // Apple Sign-In no está disponible en web debido a problemas de compatibilidad
-                // con sign_in_with_apple v7.0.1
-                if (!kIsWeb) ...[
-                  const SizedBox(width: 10),
-                  appleButton(onPressed: _handleAppleSignIn),
-                ],
+                //Google
+                WebCustomGoogleButton(onPress: _webGoogleSignIn),
+
+                //Apple
+                WebCustomGoogleButton(
+                  onPress: () => {},
+                  text: 'login.presentation.apple'.tr(),
+                  icon: AssetsConstants.appleIcon,
+                ),
               ],
             ),
             const SizedBox(height: 50),
