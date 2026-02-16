@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:migozz_app/core/assets_constants.dart';
 import 'package:migozz_app/features/wallet/cubit/buy_coins_cubit/buy_coins_cubit.dart';
+import 'package:migozz_app/features/wallet/cubit/buy_coins_cubit/buy_coins_state.dart';
 import 'package:migozz_app/features/wallet/cubit/conversion_cubit/conversion_cubit.dart';
 import 'package:migozz_app/features/wallet/cubit/wallet_cubit/wallet_cubit.dart';
 import 'package:migozz_app/features/wallet/model/payment_model.dart';
@@ -18,25 +19,28 @@ import 'package:migozz_app/features/wallet/widgets/wallet_styles.dart';
 class BuyCoinsMethods extends StatelessWidget {
   const BuyCoinsMethods({super.key});
 
-
   //Params for stripePayment(double amount, callBack: function to execute when payment is successfull)
 
-  void _handleBuyCoins (BuildContext context){
-    final amount = context.read<BuyCoinsCubit>().state.total;
-    
+  void _handleBuyCoins(BuildContext context) {
+    final buyCubit = context.read<BuyCoinsCubit>();
+    buyCubit.setLoading(true);
+
+    final amount = buyCubit.state.total;
+
     context.read<WalletCubit>().stripePayment(
       data: PaymentModel(
         amount: amount,
-        transactionType: 1, 
-      ), 
+        transactionType: 1,
+        method: buyCubit.state.selectedMethod ?? 1,
+      ),
 
-      onNext: (){
-        debugPrint("Payment completed");
+      onNext: () {
+        buyCubit.nextStep(() => BuyCoinsState.successfull(total: amount ?? 0));
       },
 
-      onError: (){
-        debugPrint("Error during transaction");
-      }
+      onError: () {
+        buyCubit.nextStep(() => BuyCoinsState.failed());
+      },
     );
   }
 
@@ -49,17 +53,20 @@ class BuyCoinsMethods extends StatelessWidget {
     final double screenHeight = MediaQuery.of(context).size.height;
 
     return SizedBox(
-      height: screenHeight * 0.8, 
+      height: screenHeight * 0.8,
       child: Stack(
         children: [
           Positioned.fill(
             child: SingleChildScrollView(
-              padding: EdgeInsets.only(bottom: 100.h), 
+              padding: EdgeInsets.only(bottom: 100.h),
               child: Column(
                 children: [
                   BuyTitle(
                     texts: [
-                      TitleModel(title: "wallet.paymentText".tr(), gradient: true),
+                      TitleModel(
+                        title: "wallet.paymentText".tr(),
+                        gradient: true,
+                      ),
                       TitleModel(title: "wallet.methodText".tr()),
                     ],
                   ),
@@ -70,18 +77,27 @@ class BuyCoinsMethods extends StatelessWidget {
                       padding: EdgeInsets.only(bottom: 15.h),
                       child: GestureDetector(
                         onTap: method.active
-                            ? () => context.read<BuyCoinsCubit>().selectMethod(method.id)
+                            ? () => context.read<BuyCoinsCubit>().selectMethod(
+                                method.id,
+                              )
                             : null,
                         child: Container(
                           width: double.infinity,
-                          decoration: WalletBoxStyles().containerBackground.copyWith(
-                            border: isSelected && method.active
-                                ? Border.all(color: const Color(0xFFDC44AA), width: 2)
-                                : !method.active
+                          decoration: WalletBoxStyles().containerBackground
+                              .copyWith(
+                                border: isSelected && method.active
+                                    ? Border.all(
+                                        color: const Color(0xFFDC44AA),
+                                        width: 2,
+                                      )
+                                    : !method.active
                                     ? Border.all(color: const Color(0xFFFF0000))
                                     : null,
+                              ),
+                          padding: EdgeInsets.symmetric(
+                            vertical: 30.h,
+                            horizontal: 20.w,
                           ),
-                          padding: EdgeInsets.symmetric(vertical: 30.h, horizontal: 20.w),
                           child: Column(
                             spacing: 20,
                             children: [
@@ -90,9 +106,13 @@ class BuyCoinsMethods extends StatelessWidget {
                                 height: 50.h,
                               ),
                               Text(
-                                method.active ? method.name : "Temporarily Unavailable",
+                                method.active
+                                    ? method.name
+                                    : "Temporarily Unavailable",
                                 style: TextStyle(
-                                  color: method.active ? Colors.white : const Color(0xFFA51A40),
+                                  color: method.active
+                                      ? Colors.white
+                                      : const Color(0xFFA51A40),
                                   fontSize: 14.sp,
                                 ),
                               ),
@@ -107,17 +127,22 @@ class BuyCoinsMethods extends StatelessWidget {
             ),
           ),
 
-
           if (buyState.selectedMethod != null)
             Positioned(
               bottom: 20.h,
               left: 0,
               right: 0,
-              child: WalletGradientButton(
-                fontSize: 14,
-                action: () => _handleBuyCoins(context),
-                text: "Pay now",
-              ),
+              child: buyState.loadingPayment
+                  ? 
+                    Center(child: CircularProgressIndicator(
+                      color: Color(0xFFDC44AA),
+                      strokeWidth: 5.0,
+                    ))
+                  : WalletGradientButton(
+                      fontSize: 14,
+                      action: () => _handleBuyCoins(context),
+                      text: "Pay now",
+                    ),
             ),
         ],
       ),

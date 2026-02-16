@@ -52,6 +52,8 @@ class AssetsConstants {
   static const String walletVisa = '$icons/visa.svg';
   static const String walletMaster = '$icons/master_card.svg';
   static const String walletMethods = '$icons/cards_banner.svg';
+  static const String buySuccess = '$icons/buy_success.svg';
+  static const String buyFailed = '$icons/buy_failed.svg';
 }
 
 class SocialIconResolver {

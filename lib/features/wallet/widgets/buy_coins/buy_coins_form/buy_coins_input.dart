@@ -15,21 +15,36 @@ class _BuyCoinsInputState extends State<BuyCoinsInput> {
   final TextEditingController _controller = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    final currentAmount = context.read<BuyCoinsCubit>().state.amount;
+    if (currentAmount != null && currentAmount > 0) {
+      _controller.text = currentAmount.toStringAsFixed(0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final buyCoinsCubit = context.read<BuyCoinsCubit>();
 
     return BlocListener<BuyCoinsCubit, BuyCoinsState>(
-      listenWhen: (prev, curr) => prev.amount != curr.amount,
       listener: (context, state) {
-        if (_controller.text != state.amount.toString()) {
-          _controller.text = state.amount!.toStringAsFixed(0);
+        final stateText = state.amount?.toStringAsFixed(0) ?? "";
+        
+        if (_controller.text != stateText) {
+          _controller.text = stateText;
 
           _controller.selection = TextSelection.fromPosition(
             TextPosition(offset: _controller.text.length),
           );
         }
       },
-
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
         decoration: WalletBoxStyles().containerBackground,
@@ -69,7 +84,7 @@ class _BuyCoinsInputState extends State<BuyCoinsInput> {
                   border: InputBorder.none,
                   hintText: "0",
                   hintStyle: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.3),
+                    color: Colors.white.withAlpha(80),
                   ),
                 ),
               ),

@@ -79,7 +79,8 @@ class WalletCubit extends Cubit<WalletState> {
           .call({
             'amount': data?.amount?.toInt(),
             'transactionType': data?.transactionType,
-            'wallet': state.walletData?.id
+            'wallet': state.walletData?.id,
+            'method': data?.method
           });
 
       final clientSecret = result.data['clientSecret'];

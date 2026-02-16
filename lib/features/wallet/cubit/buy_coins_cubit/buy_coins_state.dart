@@ -8,6 +8,7 @@ class BuyCoinsState extends Equatable {
   final double? total;
   final String? errorMessage;
   final int? selectedMethod;
+  final bool loadingPayment;
 
   const BuyCoinsState({
     required this.status,
@@ -15,44 +16,48 @@ class BuyCoinsState extends Equatable {
     this.total,
     this.selectedMethod,
     this.errorMessage,
+    required this.loadingPayment
   });
 
-  const BuyCoinsState.initial()
+  const BuyCoinsState.initial({double this.total = 0, double this.amount = 0})
       : status = BuyCoinsStatus.initial,
-        amount = 0,
-        total = 0,
         selectedMethod = null,
+        loadingPayment = false,
         errorMessage = null;
 
-  const BuyCoinsState.paymentMethod(double data)
+  const BuyCoinsState.paymentMethod({double totalValue = 0, double? amount})
       : status = BuyCoinsStatus.paymentMethod,
-        amount = data,
-        total = data,
+        amount = amount ?? totalValue,
+        total = totalValue,
         selectedMethod = null,
+        loadingPayment = false,
         errorMessage = null;
 
-  const BuyCoinsState.successfull()
+  const BuyCoinsState.successfull({double this.total = 0})
       : status = BuyCoinsStatus.successfull,
         amount = null,
-        total = null,
+        loadingPayment = false,
         selectedMethod = null,
         errorMessage = null;
 
-  const BuyCoinsState.failed(String message)
+  const BuyCoinsState.failed()
       : status = BuyCoinsStatus.failed,
         total = null,
         amount = null,
+        loadingPayment = false,
         selectedMethod = null,
-        errorMessage = message;
+        errorMessage = null;
 
   BuyCoinsState copyWith({
     BuyCoinsStatus? status,
     double? amount,
     double? total,
     String? errorMessage,
-    int? selectedMethod
+    int? selectedMethod,
+    bool? loadingPayment
   }) {
     return BuyCoinsState(
+      loadingPayment: loadingPayment ?? this.loadingPayment,
       status: status ?? this.status,
       selectedMethod: selectedMethod ?? this.selectedMethod,
       amount: amount ?? this.amount,
@@ -67,5 +72,5 @@ class BuyCoinsState extends Equatable {
   bool get successfull => status == BuyCoinsStatus.successfull;
 
   @override
-  List<Object?> get props => [status, amount, errorMessage, selectedMethod];
+  List<Object?> get props => [status, amount, errorMessage, selectedMethod, loadingPayment];
 }

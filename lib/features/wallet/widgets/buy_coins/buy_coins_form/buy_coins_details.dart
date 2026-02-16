@@ -44,13 +44,13 @@ class BuyCoinsDetails extends StatelessWidget {
 
   void _handleContinue(BuildContext context){
     final cubit = context.read<BuyCoinsCubit>();
-    cubit.nextStep(() => BuyCoinsState.paymentMethod(cubit.state.total ?? 0)); 
+    cubit.nextStep(() => BuyCoinsState.paymentMethod(totalValue: cubit.state.total ?? 0, amount: cubit.state.amount)); 
   }
 
   @override
   Widget build(BuildContext context) {
-    final buyCoinsState = context.read<BuyCoinsCubit>().state;
-    final conversion = context.read<ConversionCubit>().state.conversion;
+    final buyCoinsState = context.watch<BuyCoinsCubit>().state;
+    final conversion = context.watch<ConversionCubit>().state.conversion;
 
     return Container(
       width: double.infinity,
