@@ -90,7 +90,9 @@
   "termsPrivacy": {
     "header": "Terms & Privacy",
     "button": {
-      "backToLogin": "Back to Login"
+      "backToLogin": "Back to Login",
+      "accept": "I Accept",
+      "decline": "Decline"
     },
     "terms": {
       "title": "Terms of Service",

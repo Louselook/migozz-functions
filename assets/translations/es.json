@@ -106,7 +106,9 @@
   "termsPrivacy": {
     "header": "Términos y Privacidad",
     "button": {
-      "backToLogin": "Volver al inicio de sesión"
+      "backToLogin": "Volver al inicio de sesión",
+      "accept": "Acepto",
+      "decline": "No acepto"
     },
     "terms": {
       "title": "Términos del Servicio",

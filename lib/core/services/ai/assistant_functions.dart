@@ -295,6 +295,31 @@ class AssistantFunctions {
       case 'voiceNoteUrl':
         return _evaluateVoiceNoteUrl(normalized, userInput, cubit, isWhy);
 
+      case 'termsAndConditions':
+        // Este paso se maneja vía navegación (action: 3)
+        // Las respuestas 'terms_accepted' y 'terms_declined' se procesan en GeminiService
+        final n = userInput.trim().toLowerCase();
+        if (n == 'terms_accepted') {
+          return {
+            "step": "regProgress.termsAndConditions",
+            "valid": true,
+            "userResponse": "terms_accepted",
+          };
+        }
+        if (n == 'terms_declined') {
+          return {
+            "step": "regProgress.termsAndConditions",
+            "valid": false,
+            "userResponse": "terms_declined",
+          };
+        }
+        // Si el usuario escribe algo en lugar de usar el botón
+        return {
+          "step": "regProgress.termsAndConditions",
+          "valid": false,
+          "userResponse": userInput.trim(),
+        };
+
       case 'confirmCreateAccount':
         final isSpanish = _getIsSpanish(cubit);
         if (isWhy) {
