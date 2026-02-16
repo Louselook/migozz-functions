@@ -26,8 +26,8 @@ class WebProfileContentV3 extends StatelessWidget {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isMobileWidth = size.width < 600;
-    final isSmallScreen = size.width < 900;
-    final leftMenuWidth = isSmallScreen ? 80.0 : 100.0;
+    final isMenuMedium = size.width >= 600 && size.width < 1200;
+    final leftMenuWidth = isMenuMedium ? 110.0 : 140.0;
 
     // Build social links for the V3 social circles component
     final socialLinks = _buildSocialLinks(user.socialEcosystem, user.username);
@@ -87,7 +87,7 @@ class WebProfileContentV3 extends StatelessWidget {
       );
     }
 
-    // ── Desktop/tablet two-column layout ──
+    // ── Desktop/tablet Single-column layout ──
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
@@ -99,64 +99,67 @@ class WebProfileContentV3 extends StatelessWidget {
                 SizedBox(width: leftMenuWidth), // Spacer for side menu
 
                 Expanded(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Left Panel: Profile Preview (Avatar + Socials)
-                      Expanded(
-                        flex: 5,
-                        child: Builder(
-                          builder: (context) {
-                            final authState = context.watch<AuthCubit>().state;
-                            final currentUser = authState.userProfile;
-                            final isOwn =
-                                currentUser?.username == user.username;
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        // Profile Info Panel (Header)
+                        SizedBox(
+                          height: size.height * 0.65,
+                          child: Align(
+                            alignment: Alignment.topCenter,
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 1000),
+                              child: SizedBox(
+                                width: double.infinity,
+                                height: double.infinity,
+                                child: Builder(
+                                  builder: (context) {
+                                    final authState = context
+                                        .watch<AuthCubit>()
+                                        .state;
+                                    final currentUser = authState.userProfile;
+                                    final isOwn =
+                                        currentUser?.username == user.username;
 
-                            final totalFollowers = socialLinks.fold<int>(
-                              0,
-                              (sum, link) => sum + (link.followers ?? 0),
-                            );
+                                    final totalFollowers = socialLinks
+                                        .fold<int>(
+                                          0,
+                                          (sum, link) =>
+                                              sum + (link.followers ?? 0),
+                                        );
 
-                            return ProfileInfoPanel(
-                              user: user,
-                              socialLinks: socialLinks,
-                              communityCount: totalFollowers.toString(),
-                              isOwnProfile: isOwn,
-                              currentUserId: currentUser?.email,
-                              targetUserId: user.email,
-                            );
-                          },
-                        ),
-                      ),
-
-                      // Right Panel: Details (Bio, Links, etc.)
-                      Expanded(
-                        flex: 7,
-                        child: Container(
-                          color: const Color(0xFF0A0A0A),
-                          child: SingleChildScrollView(
-                            padding: const EdgeInsets.all(40),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Social Highlights (New)
-                                if (socialLinks.any(
-                                  (link) =>
-                                      link.profileImageUrl != null &&
-                                      link.profileImageUrl!.isNotEmpty,
-                                ))
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: 40),
-                                    child: _SocialHighlightsSection(
-                                      links: socialLinks,
-                                    ),
-                                  ),
-                              ],
+                                    return ProfileInfoPanel(
+                                      user: user,
+                                      socialLinks: socialLinks,
+                                      communityCount: totalFollowers.toString(),
+                                      isOwnProfile: isOwn,
+                                      currentUserId: currentUser?.email,
+                                    );
+                                  },
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+
+                        // Social Highlights (Grid)
+                        if (socialLinks.any(
+                          (link) =>
+                              link.profileImageUrl != null &&
+                              link.profileImageUrl!.isNotEmpty,
+                        ))
+                          Container(
+                            constraints: const BoxConstraints(maxWidth: 1200),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 40,
+                              vertical: 40,
+                            ),
+                            child: _SocialHighlightsSection(links: socialLinks),
+                          ),
+
+                        const SizedBox(height: 100),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -254,7 +257,7 @@ class WebProfileContentV3 extends StatelessWidget {
 
   String _faviconFromDomain(String domain) {
     if (domain.isEmpty) return '';
-    return 'https://www.google.com/s2/favicons?domain=$domain&sz=128';
+    return 'https://www.google.com/s2/favicons?domain=\$domain&sz=128';
   }
 
   Map<String, String>? _getSocialInfo(
@@ -271,35 +274,35 @@ class WebProfileContentV3 extends StatelessWidget {
     String url;
     switch (platform) {
       case 'tiktok':
-        url = customUrl ?? 'https://www.tiktok.com/@$username';
+        url = customUrl ?? 'https://www.tiktok.com/@\$username';
         break;
       case 'instagram':
-        url = customUrl ?? 'https://www.instagram.com/$username';
+        url = customUrl ?? 'https://www.instagram.com/\$username';
         break;
       case 'x':
       case 'twitter':
-        url = customUrl ?? 'https://x.com/$username';
+        url = customUrl ?? 'https://x.com/\$username';
         break;
       case 'facebook':
-        url = customUrl ?? 'https://www.facebook.com/$username';
+        url = customUrl ?? 'https://www.facebook.com/\$username';
         break;
       case 'pinterest':
-        url = customUrl ?? 'https://www.pinterest.com/$username';
+        url = customUrl ?? 'https://www.pinterest.com/\$username';
         break;
       case 'youtube':
-        url = customUrl ?? 'https://www.youtube.com/@$username';
+        url = customUrl ?? 'https://www.youtube.com/@\$username';
         break;
       case 'telegram':
-        url = customUrl ?? 'https://t.me/$username';
+        url = customUrl ?? 'https://t.me/\$username';
         break;
       case 'whatsapp':
-        url = customUrl ?? 'https://wa.me/$username';
+        url = customUrl ?? 'https://wa.me/\$username';
         break;
       case 'spotify':
-        url = customUrl ?? 'https://open.spotify.com/user/$username';
+        url = customUrl ?? 'https://open.spotify.com/user/\$username';
         break;
       case 'linkedin':
-        url = customUrl ?? 'https://www.linkedin.com/in/$username';
+        url = customUrl ?? 'https://www.linkedin.com/in/\$username';
         break;
       default:
         url = customUrl ?? '';
@@ -326,11 +329,10 @@ class _SocialHighlightsSection extends StatelessWidget {
     if (imageLinks.isEmpty) return const SizedBox.shrink();
 
     return Wrap(
-      spacing: 16,
-      runSpacing: 16,
-      children: imageLinks
-          .map((link) => _HighlightCard(link: link))
-          .toList(),
+      spacing: 8,
+      runSpacing: 8,
+      alignment: WrapAlignment.center,
+      children: imageLinks.map((link) => _HighlightCard(link: link)).toList(),
     );
   }
 }
@@ -344,7 +346,9 @@ class _HighlightCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobileWidth = screenWidth < 600;
-    final cardWidth = isMobileWidth ? (screenWidth - 48) : 320.0; // 48 = padding
+    final cardWidth = isMobileWidth
+        ? (screenWidth - 48)
+        : 180.0; // More square width
 
     return InkWell(
       onTap: () async {
@@ -354,7 +358,7 @@ class _HighlightCard extends StatelessWidget {
       },
       child: Container(
         width: cardWidth,
-        height: 200,
+        height: isMobileWidth ? cardWidth * 0.9 : 180.0, // Almost square height
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           color: const Color(0xFF1A1A1A),
