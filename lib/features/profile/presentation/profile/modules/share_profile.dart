@@ -264,12 +264,11 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
   Future<void> _shareProfile(_ProfileData data) async {
     try {
       final boundary =
-      _screenshotKey.currentContext!.findRenderObject()
-      as RenderRepaintBoundary;
+          _screenshotKey.currentContext!.findRenderObject()
+              as RenderRepaintBoundary;
 
       final image = await boundary.toImage(pixelRatio: 3.0);
-      final byteData =
-      await image.toByteData(format: ui.ImageByteFormat.png);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
 
       if (byteData == null) {
         throw Exception("Failed to convert image to bytes");
@@ -278,10 +277,7 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
       final pngBytes = byteData.buffer.asUint8List();
 
       final shareMessage = 'share.title'.tr(
-        namedArgs: {
-          'displayName': data.displayName,
-          'link': data.link,
-        },
+        namedArgs: {'displayName': data.displayName, 'link': data.link},
       );
 
       final shareSubject = 'share.subject'.tr(
@@ -322,10 +318,7 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
 
       // ✅ Safe fallback (all platforms)
       try {
-        await Share.share(
-          data.link,
-          subject: data.displayName,
-        );
+        await Share.share(data.link, subject: data.displayName);
       } catch (_) {
         if (kIsWeb) {
           await Clipboard.setData(ClipboardData(text: data.link));
@@ -971,68 +964,56 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
                                       ),
                                       // Center logo
                                       Positioned(
-                                        top: 17,
-                                        right: 17,
+                                        top: 28,
+                                        left: 28,
                                         child: Container(
-                                          width: 45,
-                                          height: 45,
+                                          width: 30,
+                                          height: 30,
 
                                           decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            border: Border.all(
-                                              color: _qrColor,
-                                              width: 2,
-                                            ),
+                                            color: _qrColor,
                                           ),
                                           child: Image.asset(
                                             'assets/icons/Migozz_Icon.png',
                                             width: 35,
                                             height: 35,
-                                            color: _qrColor,
+                                            color: Colors.white,
                                           ),
                                         ),
                                       ),
                                       Positioned(
-                                        top: 17,
-                                        left: 17,
+                                        bottom: 28,
+                                        left: 28,
                                         child: Container(
-                                          width: 45,
-                                          height: 45,
+                                          width: 30,
+                                          height: 30,
 
                                           decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            border: Border.all(
-                                              color: _qrColor,
-                                              width: 2,
-                                            ),
+                                            color: _qrColor,
                                           ),
                                           child: Image.asset(
                                             'assets/icons/Migozz_Icon.png',
                                             width: 35,
                                             height: 35,
-                                            color: _qrColor,
+                                            color: Colors.white,
                                           ),
                                         ),
                                       ),
                                       Positioned(
-                                        bottom: 17,
-                                        left: 17,
+                                        top: 28,
+                                        right: 28,
                                         child: Container(
-                                          width: 45,
-                                          height: 45,
+                                          width: 30,
+                                          height: 30,
 
                                           decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            border: Border.all(
-                                              color: _qrColor,
-                                              width: 2,
-                                            ),
+                                            color: _qrColor,
                                           ),
                                           child: Image.asset(
                                             'assets/icons/Migozz_Icon.png',
                                             width: 35,
                                             height: 35,
-                                            color: _qrColor,
+                                            color: Colors.white,
                                           ),
                                         ),
                                       ),
