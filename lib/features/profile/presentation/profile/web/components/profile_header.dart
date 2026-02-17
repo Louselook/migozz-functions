@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:migozz_app/core/utils/image_proxy_helper.dart';
 import 'package:migozz_app/features/profile/components/info_user_profile.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 
@@ -111,7 +112,7 @@ class _ProfileImage extends StatelessWidget {
         borderRadius: BorderRadius.circular(27),
         child: isNetworkImage
             ? Image.network(
-                avatarUrl!,
+                ImageProxyHelper.getProxiedUrl(avatarUrl!),
                 fit: BoxFit.cover,
                 loadingBuilder: (context, child, loadingProgress) {
                   if (loadingProgress == null) return child;

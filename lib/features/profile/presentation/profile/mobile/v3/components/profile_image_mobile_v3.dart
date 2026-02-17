@@ -6,6 +6,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:migozz_app/core/assets_constants.dart';
+import 'package:migozz_app/core/utils/image_proxy_helper.dart';
 
 class ProfileImageMobileV3 extends StatelessWidget {
   final String? avatarUrl;
@@ -128,7 +129,7 @@ class ProfileImageMobileV3 extends StatelessWidget {
         // Imagen real SOLO si existe
         if (hasAvatar)
           CachedNetworkImage(
-            imageUrl: avatarUrl!,
+            imageUrl: ImageProxyHelper.getProxiedUrl(avatarUrl!),
             fit: BoxFit.cover,
             errorWidget: (_, __, ___) => _buildPlaceholderOverlay(effectiveSize),
           ),

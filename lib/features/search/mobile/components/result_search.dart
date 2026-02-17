@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
+import 'package:migozz_app/core/utils/image_proxy_helper.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/location_dto.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 
@@ -290,7 +291,7 @@ class _ResultSearchState extends State<ResultSearch> {
                       child: ClipRSuperellipse(
                         child: avatar != null && avatar.isNotEmpty
                             ? CachedNetworkImage(
-                                imageUrl: avatar,
+                                imageUrl: ImageProxyHelper.getProxiedUrl(avatar),
                                 fit: BoxFit.cover,
                                 placeholder: (context, url) => Center(
                                   child: SizedBox(

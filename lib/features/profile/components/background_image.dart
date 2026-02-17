@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui' as ui;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:migozz_app/core/utils/image_proxy_helper.dart';
 import 'package:migozz_app/features/profile/components/info_user_profile.dart';
 // import 'package:migozz_app/features/profile/components/scroll_sheet.dart';
 import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
@@ -269,7 +270,7 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
       ]),
       child: avatarUrl != null && avatarUrl!.isNotEmpty
           ? CachedNetworkImage(
-                imageUrl: avatarUrl!,
+                imageUrl: ImageProxyHelper.getProxiedUrl(avatarUrl!),
               fit: BoxFit.cover,
              errorWidget: (context, url, error) => Image.asset(
                   "assets/images/profileBackground.webp",

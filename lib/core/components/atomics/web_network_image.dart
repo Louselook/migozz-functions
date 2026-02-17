@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:migozz_app/core/utils/image_proxy_helper.dart';
 
 class WebNetworkImage extends StatelessWidget {
   final String imageUrl;
@@ -21,7 +22,7 @@ class WebNetworkImage extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),
       child: Image.network(
-        imageUrl,
+        ImageProxyHelper.getProxiedUrl(imageUrl),
         fit: fit,
         loadingBuilder: (context, child, progress) {
           if (progress == null) return child;
