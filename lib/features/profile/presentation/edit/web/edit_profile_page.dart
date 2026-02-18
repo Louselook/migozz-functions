@@ -704,13 +704,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             icon: Icons.alternate_email,
             hint: 'edit.presentation.fields.nickname'.tr(),
           ),
-          const SizedBox(height: 14),
-          _buildFormField(
-            controller: bioCtrl,
-            icon: Icons.edit_note,
-            hint: 'edit.presentation.fields.bio'.tr(),
-            maxLines: 3,
-          ),
+
           const SizedBox(height: 14),
           _buildFormField(
             controller: emailCtrl,
