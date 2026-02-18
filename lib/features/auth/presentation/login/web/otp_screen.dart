@@ -210,14 +210,14 @@ class _OtpScreenState extends State<OtpScreen> {
                                     fit: BoxFit.contain,
                                   ),
                                   const SizedBox(height: 32),
-                                  const PrimaryText(
-                                    'Verify Your Identity',
+                                  PrimaryText(
+                                    tr("login.otp.verifyIdentity"),
                                     color: Colors.white,
                                     fontSize: 28,
                                   ),
                                   const SizedBox(height: 8),
-                                  const SecondaryText(
-                                    'Enter the code sent to your email',
+                                  SecondaryText(
+                                    tr("login.otp.enterCodeHint"),
                                     color: Colors.white70,
                                     fontSize: 16,
                                   ),
@@ -243,14 +243,17 @@ class _OtpScreenState extends State<OtpScreen> {
                               mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const PrimaryText(
-                                  'Enter OTP Code',
+                                PrimaryText(
+                                  tr("login.otp.title"),
                                   color: AppColors.backgroundDark,
                                   fontSize: 36,
                                 ),
                                 const SizedBox(height: 12),
                                 SecondaryText(
-                                  'OTP code has been sent to ${widget.email}',
+                                  tr(
+                                    "login.otp.subtitle",
+                                    namedArgs: {'email': widget.email},
+                                  ),
                                   color: AppColors.greyBackground,
                                   fontSize: 14,
                                 ),
@@ -290,8 +293,8 @@ class _OtpScreenState extends State<OtpScreen> {
                                           .colors
                                           .first,
                                     ),
-                                    child: const Text(
-                                      'Verify',
+                                    child: Text(
+                                      tr("login.otp.verifyButton"),
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 18,
@@ -353,13 +356,16 @@ class _OtpScreenState extends State<OtpScreen> {
                                 // Espacio para el botón de volver
                                 const SizedBox(height: 40),
                                 PrimaryText(
-                                  'Enter OTP Code',
+                                  tr("login.otp.title"),
                                   color: AppColors.backgroundDark,
                                   fontSize: isCompact ? 28 : 36,
                                 ),
                                 SizedBox(height: isCompact ? 4 : 8),
                                 SecondaryText(
-                                  'OTP code has been sent to ${widget.email}',
+                                  tr(
+                                    "login.otp.subtitle",
+                                    namedArgs: {'email': widget.email},
+                                  ),
                                   color: AppColors.greyBackground,
                                   fontSize: isCompact ? 11 : 13,
                                 ),
@@ -439,7 +445,7 @@ class _OtpScreenState extends State<OtpScreen> {
                                             .first,
                                       ),
                                       child: Text(
-                                        'Verify',
+                                        tr("login.otp.verifyButton"),
                                         style: TextStyle(
                                           color: Colors.white,
                                           fontSize: isCompact ? 16 : 18,
@@ -508,7 +514,7 @@ class _OtpScreenState extends State<OtpScreen> {
               language: context.locale.languageCode,
             ),
             child: SecondaryText(
-              'Resend',
+              tr("login.otp.resend"),
               color: isDesktop ? Colors.white70 : AppColors.greyBackground,
               fontSize: isCompact ? 12 : 13,
             ),
@@ -551,7 +557,7 @@ class _OtpScreenState extends State<OtpScreen> {
             language: context.locale.languageCode,
           ),
           child: SecondaryText(
-            'Resend',
+            tr("login.otp.resend"),
             color: isDesktop ? Colors.white70 : AppColors.greyBackground,
             fontSize: 14,
           ),

@@ -64,7 +64,8 @@ class LoginCubit extends Cubit<LoginState> {
           state.copyWith(
             isLoading: false,
             errorMessageLogin: "login.otp.errorSend".tr(),
-            currentOTP: null,
+            // No limpiar OTP anterior si falla el reenvío
+            // currentOTP: null,
           ),
         );
       }
@@ -73,7 +74,8 @@ class LoginCubit extends Cubit<LoginState> {
         state.copyWith(
           isLoading: false,
           errorMessageLogin: e.toString(),
-          currentOTP: null,
+          // No limpiar OTP anterior si falla el reenvío
+          // currentOTP: null,
         ),
       );
     }
