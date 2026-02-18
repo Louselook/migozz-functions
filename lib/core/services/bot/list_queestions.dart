@@ -51,8 +51,8 @@ final Map<String, Map<String, dynamic>> questionsEs = {
   },
 
   "location": {
-    "text": "Detecté que estás en {location}. ¿Es correcto?",
-    "options": ["Sí", "No"],
+    "text": "¿Te gustaría agregar tu ubicación?",
+    "options": ["Yes", "Rather not say"],
     "step": "regProgress.location",
     "keepTalk": false,
   },
@@ -221,8 +221,8 @@ final Map<String, Map<String, dynamic>> questionsEn = {
   },
 
   "location": {
-    "text": "Looks like you're in {location}. Is that right?",
-    "options": ["Yes", "No"],
+    "text": "Would you like to add your location?",
+    "options": ["Yes", "Rather not say"],
     "step": "regProgress.location",
     "keepTalk": false,
   },

@@ -1139,7 +1139,7 @@ class AssistantFunctions {
     };
   }
 
-  // ACTUALIZADO: Evaluación de ubicación con 3 opciones
+  // ACTUALIZADO: Evaluación de ubicación con nuevas opciones
   static Map<String, dynamic> _evaluateLocation(
     String normalized,
     String original,
@@ -1159,39 +1159,29 @@ class AssistantFunctions {
       };
     }
 
-    // Opción 1: Usuario confirma ubicación (Sí)
-    if (normalized == 'sí' ||
-        normalized == 'si' ||
-        normalized == 'yes' ||
-        normalized.contains('correcto')) {
+    // Opción 1: Usuario acepta agregar ubicación (Yes)
+    if (normalized == 'yes' || normalized == 'sí' || normalized == 'si') {
       return {
         "step": "regProgress.location",
         "valid": true,
-        "userResponse": "Sí",
-        "confirmLocation": true, //  Bandera para confirmar
+        "userResponse": "Yes",
+        "confirmLocation":
+            true, // Bandera para procesar ubicación automáticamente
       };
     }
 
-    // Opción 2: Usuario rechaza usar ubicación (No)
-    if (normalized == 'no') {
+    // Opción 2: Usuario rechaza agregar ubicación (Rather not say)
+    if (normalized == 'rather not say' ||
+        normalized.contains('rather not') ||
+        normalized.contains('rather') ||
+        normalized == 'no' ||
+        normalized == 'no, thanks' ||
+        normalized == 'skip') {
       return {
         "step": "regProgress.location",
-        // En vez de saltar el paso, pedimos ubicación manual.
-        "valid": false,
-        "userResponse": original.trim(),
-        "manualLocationRequest": true,
-      };
-    }
-
-    // Opción 3: Usuario reporta ubicación incorrecta
-    if (normalized.contains('incorrecta') ||
-        normalized.contains('incorrect') ||
-        normalized == 'incorrect location') {
-      return {
-        "step": "regProgress.location",
-        "valid": false,
-        "userResponse": original.trim(),
-        "manualLocationRequest": true,
+        "valid": true,
+        "userResponse": "Rather not say",
+        "skipLocation": true, // Bandera para omitir ubicación y continuar
       };
     }
 
@@ -1200,10 +1190,8 @@ class AssistantFunctions {
       "step": "regProgress.location",
       "valid": false,
       "userResponse": original.trim(),
-      "text": isSpanish
-          ? "Por favor, selecciona una opción válida: Sí o No."
-          : "Please select a valid option: Yes or No.",
-      "options": isSpanish ? ["Sí", "No"] : ["Yes", "No"],
+      "text": "Please select: Yes or Rather not say",
+      "options": ["Yes", "Rather not say"],
     };
   }
 

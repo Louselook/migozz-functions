@@ -133,26 +133,40 @@ Future<Map<String, dynamic>?> processBotResponse(
         }
       }
 
-      // Opción 1: Usuario confirmó ubicación (Sí)
+      // Opción 1: Usuario aceptó agregar ubicación (Yes)
       if (resp['confirmLocation'] == true && isValid == true) {
-        if (registerCubit.state.location != null) {
+        debugPrint(
+          '📍 Usuario aceptó agregar ubicación - procesando automáticamente',
+        );
+        // Procesar ubicación automáticamente
+        final language = registerCubit.state.language ?? 'English';
+        final langCode = language == 'Español' ? 'es' : 'en';
+        await registerCubit.fetchLocation(langCode);
+
+        // Verificar si la ubicación se obtuvo correctamente
+        if (registerCubit.state.location != null &&
+            registerCubit.state.location!.hasCityAndCountry) {
           registerCubit.confirmLocation();
           debugPrint(
-            '✅ Ubicación confirmada: ${registerCubit.state.location!.city}, ${registerCubit.state.location!.country}',
+            '✅ Ubicación obtenida y confirmada: ${registerCubit.state.location!.city}, ${registerCubit.state.location!.country}',
           );
           return null; // Sin errores, avanza al siguiente paso
         } else {
-          debugPrint('⚠️ No hay ubicación para confirmar');
-          final isSpanish = registerCubit.state.language == 'Español';
-          return {
-            "error": true,
-            "message": isSpanish
-                ? "No pudimos detectar tu ubicación. Intenta nuevamente."
-                : "We couldn't detect your location. Please try again.",
-          };
+          debugPrint('⚠️ No se pudo obtener la ubicación automáticamente');
+          // Aún así continuar sin ubicación
+          registerCubit.rejectLocation();
+          return null;
         }
       }
-      // Opción 2: Usuario rechazó usar ubicación (No)
+      // Opción 2: Usuario rechazó agregar ubicación (Rather not say)
+      else if (resp['skipLocation'] == true && isValid == true) {
+        registerCubit.rejectLocation();
+        debugPrint(
+          '✅ Usuario eligió "Rather not say" - continuando sin ubicación',
+        );
+        return null; // Sin errores, avanza al siguiente paso
+      }
+      // Opción 3: Ubicación manual (heredado)
       else if (resp['emptyLocation'] == true && isValid == true) {
         registerCubit.rejectLocation();
         debugPrint(

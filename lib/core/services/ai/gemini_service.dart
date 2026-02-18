@@ -329,7 +329,8 @@ class GeminiService {
     'category', // 4 - Categoría/tipo de perfil
     'interests', // 5 - Intereses
     'gender', // 6 - Género
-    //'location', // 7 - Ubicación
+    'location', // 7 - Ubicación
+
     'voiceNoteUrl',
     'socialEcosystem',
     'avatarUrl',
@@ -350,7 +351,7 @@ class GeminiService {
     'category', // 0 - Categoría/tipo de perfil
     'interests', // 1 - Intereses
     'gender', // 2 - Género
-    //'location', // 4 - Ubicación
+    'location', // 4 - Ubicación
     'voiceNoteUrl',
     'socialEcosystem',
     'avatarUrl',
