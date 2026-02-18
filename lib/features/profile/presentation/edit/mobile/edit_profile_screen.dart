@@ -620,12 +620,6 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                                   controller: usernameCtrl,
                                   icon: Icons.alternate_email,
                                 ),
-                                ProfileField(
-                                  hint: 'edit.presentation.fields.bio'.tr(),
-                                  controller: bioCtrl,
-                                  icon: Icons.edit_note,
-                                  maxLines: 3,
-                                ),
 
                                 ProfileField(
                                   hint: 'edit.presentation.fields.email'.tr(),
