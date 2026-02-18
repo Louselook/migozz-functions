@@ -38,6 +38,7 @@
         "subtitle2": "Or login with",
         "google": "Sign in with Google",
         "apple": "Sign in with Apple",
+        "supportHint": "If you have any errors, please report it here",
         "bottomText": {
           "newUser": "NEW USER?\n",
           "register": "REGISTER HERE!",
@@ -46,8 +47,11 @@
         }
       },
       "otp": {
-        "title": "Enter OTP Code",
-        "subtitle": "OTP code has been sent to {email}",
+        "title": "Enter Verification Code",
+        "subtitle": "Verification code has been sent to {email}",
+        "verifyIdentity": "Verify Your Identity",
+        "enterCodeHint": "Enter the code sent to your email",
+        "verifyButton": "Verify ",
         "resend": "Resend",
         "errorSend": "Error sending OTP",
         "errorInvalid": "Incorrect OTP ❌",

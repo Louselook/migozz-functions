@@ -47,6 +47,7 @@
         "step3": "Casi listo..."
       },
       "subtitle2": "O inicia sesión con",
+      "supportHint": "Si tienes algún error, por favor repórtalo aquí",
       "bottomText": {
         "newUser": "¿NUEVO USUARIO?\n ",
         "register": "¡REGÍSTRATE AQUÍ!",
@@ -55,8 +56,11 @@
       }
     },
     "otp": {
-      "title": "Ingresa el código OTP",
-      "subtitle": "El código OTP se ha enviado a {email}",
+      "title": "Ingresa el código de verificación",
+      "subtitle": "El código de verificación se ha enviado a {email}",
+      "verifyIdentity": "Verifica tu identidad",
+      "enterCodeHint": "Ingresa el código enviado a tu correo",
+      "verifyButton": "Verificar ",
       "resend": "Reenviar",
       "errorSend": "Error al enviar OTP",
       "errorInvalid": "OTP incorrecto ❌",
