@@ -38,7 +38,7 @@ class _WebChatScreenState extends State<WebChatScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 7, vsync: this);
   }
 
   @override
@@ -170,13 +170,19 @@ class _WebChatScreenState extends State<WebChatScreen>
             ),
             child: TabBar(
               controller: _tabController,
+              isScrollable: true,
               indicatorColor: AppColors.primaryPink,
               labelColor: Colors.white,
               unselectedLabelColor: Colors.white54,
               dividerColor: Colors.transparent,
               tabs: [
-                Tab(text: 'chat.active'.tr()),
-                Tab(text: 'chat.new'.tr()),
+                Tab(text: 'web.chat.tab_chat'.tr()),
+                Tab(text: 'profile.chat.filter'.tr()),
+                Tab(text: 'Prime'),
+                Tab(text: 'VIP'),
+                Tab(text: 'Biz'),
+                Tab(text: 'AI'),
+                Tab(text: 'Spam'),
               ],
             ),
           ),
@@ -184,7 +190,15 @@ class _WebChatScreenState extends State<WebChatScreen>
           Expanded(
             child: TabBarView(
               controller: _tabController,
-              children: [_buildActiveChatsList(), _buildNewChatsList()],
+              children: [
+                _buildActiveChatsList(),
+                _buildNewChatsList(),
+                _buildComingSoon(),
+                _buildComingSoon(),
+                _buildComingSoon(),
+                _buildComingSoon(),
+                _buildComingSoon(),
+              ],
             ),
           ),
         ],
@@ -344,6 +358,30 @@ class _WebChatScreenState extends State<WebChatScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildComingSoon() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.construction,
+            size: 48,
+            color: Colors.white.withValues(alpha: 0.2),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'profile.sendGifts.comingSoon'.tr(),
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.5),
+              fontSize: 14,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }
