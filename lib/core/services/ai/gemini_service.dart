@@ -673,7 +673,11 @@ class GeminiService {
     if (s.gender != null && s.gender!.isNotEmpty) {
       lines.add('${isSpanish ? '⚧ Género' : '⚧ Gender'}: ${s.gender}');
     }
-    if (s.location != null && s.location!.hasData) {
+    // Solo mostrar ubicación si NO está vacía (el usuario NO eligió "Rather not say")
+    if (s.location != null &&
+        s.location!.hasData &&
+        s.location!.hasCityAndCountry &&
+        !s.location!.isEmpty) {
       final loc = s.location!;
       final locationStr = [
         loc.city,
@@ -2669,8 +2673,18 @@ class GeminiService {
     // 🎉 Si estamos en confirmCreateAccount, mostrar el resumen completo de datos
     if (currentStepKey == 'confirmCreateAccount') {
       debugPrint('📋 [_prepareQuestion] Mostrando resumen final de datos');
-      final lang = registerCubit.state.language ?? "en";
-      await registerCubit.fetchLocation(lang);
+      // NO volver a obtener ubicación si el usuario la rechazó (LocationDTO.empty)
+      // Solo obtener si aún no tiene datos válidos y no fue rechazada explícitamente
+      final currentLoc = registerCubit.state.location;
+      final locationWasSkipped = currentLoc != null && currentLoc.isEmpty;
+      if (!locationWasSkipped) {
+        final lang = registerCubit.state.language ?? "en";
+        await registerCubit.fetchLocation(lang);
+      } else {
+        debugPrint(
+          '📍 [_prepareQuestion] Ubicación omitida por el usuario - no se vuelve a obtener',
+        );
+      }
 
       return _buildFinalConfirmationMessage(registerCubit);
     }
