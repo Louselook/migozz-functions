@@ -74,7 +74,10 @@ class WebProfileContentV3 extends StatelessWidget {
                         horizontal: 16,
                         vertical: 16,
                       ),
-                      child: _SocialHighlightsSection(links: socialLinks),
+                      child: _SocialHighlightsSection(
+                        links: socialLinks,
+                        fallbackImageUrl: user.avatarUrl,
+                      ),
                     ),
 
                   // Bottom spacing for bottom nav bar
@@ -154,7 +157,10 @@ class WebProfileContentV3 extends StatelessWidget {
                               horizontal: 40,
                               vertical: 40,
                             ),
-                            child: _SocialHighlightsSection(links: socialLinks),
+                            child: _SocialHighlightsSection(
+                              links: socialLinks,
+                              fallbackImageUrl: user.avatarUrl,
+                            ),
                           ),
 
                         const SizedBox(height: 100),
@@ -314,8 +320,9 @@ class WebProfileContentV3 extends StatelessWidget {
 
 class _SocialHighlightsSection extends StatelessWidget {
   final List<SocialLink> links;
+  final String? fallbackImageUrl;
 
-  const _SocialHighlightsSection({required this.links});
+  const _SocialHighlightsSection({required this.links, this.fallbackImageUrl});
 
   @override
   Widget build(BuildContext context) {
@@ -332,15 +339,21 @@ class _SocialHighlightsSection extends StatelessWidget {
       spacing: 8,
       runSpacing: 8,
       alignment: WrapAlignment.center,
-      children: imageLinks.map((link) => _HighlightCard(link: link)).toList(),
+      children: imageLinks
+          .map(
+            (link) =>
+                _HighlightCard(link: link, fallbackImageUrl: fallbackImageUrl),
+          )
+          .toList(),
     );
   }
 }
 
 class _HighlightCard extends StatelessWidget {
   final SocialLink link;
+  final String? fallbackImageUrl;
 
-  const _HighlightCard({required this.link});
+  const _HighlightCard({required this.link, this.fallbackImageUrl});
 
   @override
   Widget build(BuildContext context) {
@@ -379,12 +392,15 @@ class _HighlightCard extends StatelessWidget {
                 imageUrl: link.profileImageUrl!,
                 fit: BoxFit.cover,
                 borderRadius: 16,
-                errorWidget: Container(
-                  color: Colors.white.withValues(alpha: 0.05),
-                  child: const Center(
-                    child: Icon(Icons.broken_image, color: Colors.white24),
-                  ),
-                ),
+                errorWidget:
+                    (fallbackImageUrl != null && fallbackImageUrl!.isNotEmpty)
+                    ? WebNetworkImage(
+                        imageUrl: fallbackImageUrl!,
+                        fit: BoxFit.cover,
+                        borderRadius: 16,
+                        errorWidget: _buildErrorPlaceholder(),
+                      )
+                    : _buildErrorPlaceholder(),
               ),
             ),
             // Dark Gradient Overlay
@@ -426,6 +442,22 @@ class _HighlightCard extends StatelessWidget {
       );
     }
     return SvgPicture.asset(asset, width: 28, height: 28);
+  }
+
+  Widget _buildErrorPlaceholder() {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1A1A),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Center(
+        child: Icon(
+          Icons.image_not_supported_outlined,
+          color: Colors.white.withValues(alpha: 0.1),
+          size: 40,
+        ),
+      ),
+    );
   }
 }
 

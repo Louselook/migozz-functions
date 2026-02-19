@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 class ImageProxyHelper {
   /// Proxy service to bypass CORS restrictions on web
   static const String _proxyUrl = 'https://images.weserv.nl/';
-  
+
   /// Get the appropriate image URL based on platform
   /// For web: uses proxy to avoid CORS issues
   /// For mobile: returns original URL (unchanged)
@@ -26,13 +26,13 @@ class ImageProxyHelper {
 
     return imageUrl;
   }
-  
+
   /// Check if URL needs proxy (external URLs like Instagram, Facebook, etc.)
   static bool _needsProxy(String url) {
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
       return false; // Not a network URL
     }
-    
+
     // List of domains that typically have CORS issues
     final corsRestrictedDomains = [
       'cdninstagram.com',
@@ -43,12 +43,19 @@ class ImageProxyHelper {
       'twimg.com',
       'twitter.com',
       'x.com',
+      'licdn.com', // LinkedIn
+      'linkedin.com',
+      'pinimg.com', // Pinterest
+      'tiktokcdn.com', // TikTok
+      'whatsapp.net', // WhatsApp
+      'ytimg.com', // YouTube thumbnails
+      'lh3.googleusercontent.com', // Google profile images
     ];
-    
+
     final lowerUrl = url.toLowerCase();
     return corsRestrictedDomains.any((domain) => lowerUrl.contains(domain));
   }
-  
+
   /// Get proxied URL with additional options
   /// [width] - resize width
   /// [height] - resize height
@@ -62,15 +69,14 @@ class ImageProxyHelper {
     if (!kIsWeb || !_needsProxy(imageUrl)) {
       return imageUrl;
     }
-    
+
     final params = <String>[];
     params.add('url=${Uri.encodeComponent(imageUrl)}');
-    
+
     if (width != null) params.add('w=$width');
     if (height != null) params.add('h=$height');
     if (fit != null) params.add('fit=$fit');
-    
+
     return '$_proxyUrl?${params.join('&')}';
   }
 }
-

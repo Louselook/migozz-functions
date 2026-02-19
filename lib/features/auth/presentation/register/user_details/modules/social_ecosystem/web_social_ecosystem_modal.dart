@@ -148,7 +148,7 @@ class _WebSocialEcosystemModalState extends State<WebSocialEcosystemModal> {
     if (index == -1) {
       await showDialog(
         context: context,
-        barrierColor: Colors.black.withValues(alpha:0.8),
+        barrierColor: Colors.black.withValues(alpha: 0.8),
         builder: (context) => BlocProvider.value(
           value: context
               .read<
@@ -238,7 +238,7 @@ class _WebSocialEcosystemModalState extends State<WebSocialEcosystemModal> {
   ) {
     return showDialog<bool>(
       context: context,
-      barrierColor: Colors.black.withValues(alpha:0.8),
+      barrierColor: Colors.black.withValues(alpha: 0.8),
       builder: (dialogContext) => Dialog(
         backgroundColor: Colors.transparent,
         child: Container(
@@ -251,7 +251,7 @@ class _WebSocialEcosystemModalState extends State<WebSocialEcosystemModal> {
               colors: [Color(0xFF2D1B3D), Color(0xFF1A0F2E)],
             ),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white.withValues(alpha:0.1)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -292,7 +292,7 @@ class _WebSocialEcosystemModalState extends State<WebSocialEcosystemModal> {
                       child: Container(
                         height: 40,
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha:0.1),
+                          color: Colors.white.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: Colors.white.withValues(alpha: 0.1),
@@ -354,10 +354,10 @@ class _WebSocialEcosystemModalState extends State<WebSocialEcosystemModal> {
           decoration: BoxDecoration(
             color: const Color(0xFF151515),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white.withValues(alpha:0.1)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha:0.5),
+                color: Colors.black.withValues(alpha: 0.5),
                 blurRadius: 30,
                 offset: const Offset(0, 10),
               ),
@@ -373,7 +373,7 @@ class _WebSocialEcosystemModalState extends State<WebSocialEcosystemModal> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: AppColors.primaryPink.withValues(alpha:0.1),
+                        color: AppColors.primaryPink.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(Icons.link, color: AppColors.primaryPink),
@@ -395,7 +395,7 @@ class _WebSocialEcosystemModalState extends State<WebSocialEcosystemModal> {
                           Text(
                             'addSocials.register.subtitle'.tr(),
                             style: TextStyle(
-                              color: Colors.white.withValues(alpha:0.5),
+                              color: Colors.white.withValues(alpha: 0.5),
                               fontSize: 12,
                             ),
                           ),
@@ -412,7 +412,7 @@ class _WebSocialEcosystemModalState extends State<WebSocialEcosystemModal> {
                 ),
               ),
 
-              Divider(height: 1, color: Colors.white.withValues(alpha:0.1)),
+              Divider(height: 1, color: Colors.white.withValues(alpha: 0.1)),
 
               // Search
               Padding(
@@ -424,16 +424,16 @@ class _WebSocialEcosystemModalState extends State<WebSocialEcosystemModal> {
                     isDense: true,
                     hintText: 'addSocials.search.hint'.tr(),
                     hintStyle: TextStyle(
-                      color: Colors.white.withValues(alpha:0.3),
+                      color: Colors.white.withValues(alpha: 0.3),
                       fontSize: 13,
                     ),
                     prefixIcon: Icon(
                       Icons.search,
-                      color: Colors.white.withValues(alpha:0.3),
+                      color: Colors.white.withValues(alpha: 0.3),
                       size: 20,
                     ),
                     filled: true,
-                    fillColor: Colors.white.withValues(alpha:0.05),
+                    fillColor: Colors.white.withValues(alpha: 0.05),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
@@ -480,7 +480,7 @@ class _WebSocialEcosystemModalState extends State<WebSocialEcosystemModal> {
                         borderRadius: BorderRadius.circular(25),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.primaryPink.withValues(alpha:0.4),
+                            color: AppColors.primaryPink.withValues(alpha: 0.4),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -514,7 +514,7 @@ class _WebSocialEcosystemModalState extends State<WebSocialEcosystemModal> {
           padding: const EdgeInsets.all(32),
           child: Text(
             'addSocials.search.noResults'.tr(),
-            style: TextStyle(color: Colors.white.withValues(alpha:0.5)),
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
           ),
         ),
       );
@@ -621,13 +621,13 @@ class _WebSocialEcosystemModalState extends State<WebSocialEcosystemModal> {
         child: Container(
           decoration: BoxDecoration(
             color: isSelected
-                ? Colors.white.withValues(alpha:0.12)
-                : Colors.white.withValues(alpha:0.04),
+                ? Colors.white.withValues(alpha: 0.12)
+                : Colors.white.withValues(alpha: 0.04),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: isSelected
-                  ? Colors.green.withValues(alpha:0.3)
-                  : Colors.white.withValues(alpha:0.08),
+                  ? Colors.green.withValues(alpha: 0.3)
+                  : Colors.white.withValues(alpha: 0.08),
             ),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
@@ -650,7 +650,7 @@ class _WebSocialEcosystemModalState extends State<WebSocialEcosystemModal> {
                       style: TextStyle(
                         color: isSelected
                             ? Colors.white
-                            : Colors.white.withValues(alpha:0.8),
+                            : Colors.white.withValues(alpha: 0.8),
                         fontWeight: isSelected
                             ? FontWeight.w600
                             : FontWeight.w500,
@@ -682,7 +682,7 @@ class _WebSocialEcosystemModalState extends State<WebSocialEcosystemModal> {
         onTap: () async {
           await showDialog(
             context: context,
-            barrierColor: Colors.black.withValues(alpha:0.8),
+            barrierColor: Colors.black.withValues(alpha: 0.8),
             builder: (dialogContext) {
               if (widget.mode == MoreUserDetailsMode.register) {
                 return BlocProvider.value(
@@ -719,9 +719,9 @@ class _WebSocialEcosystemModalState extends State<WebSocialEcosystemModal> {
         },
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha:0.04),
+            color: Colors.white.withValues(alpha: 0.04),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.white.withValues(alpha:0.08)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           child: LayoutBuilder(
@@ -743,7 +743,7 @@ class _WebSocialEcosystemModalState extends State<WebSocialEcosystemModal> {
                     child: Text(
                       'addSocials.customLink.newLabel'.tr(),
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha:0.8),
+                        color: Colors.white.withValues(alpha: 0.8),
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
@@ -767,7 +767,7 @@ class _WebSocialEcosystemModalState extends State<WebSocialEcosystemModal> {
       padding: const EdgeInsets.all(8),
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha:0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
