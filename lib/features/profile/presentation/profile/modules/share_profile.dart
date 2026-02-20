@@ -299,27 +299,68 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
           subject: shareSubject,
         );
       } else {
-        // Mobile (Android + iOS): save temp file
+        // Mobile (Android + iOS): save temp file with proper handling
         final directory = await getTemporaryDirectory();
-        final filePath =
-            '${directory.path}/migozz_share_${DateTime.now().millisecondsSinceEpoch}.png';
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        final filePath = '${directory.path}/migozz_share_$timestamp.png';
 
         final file = File(filePath);
-        await file.writeAsBytes(pngBytes);
+        await file.writeAsBytes(pngBytes, flush: true);
 
-        await Share.shareXFiles(
+        // Verify file was written successfully
+        if (!await file.exists()) {
+          throw Exception("Failed to save file");
+        }
+
+        debugPrint('📱 Sharing file from: $filePath');
+        debugPrint('📱 File size: ${await file.length()} bytes');
+
+        // Get the render box for sharePositionOrigin (required for iPad)
+        final box = context.findRenderObject() as RenderBox?;
+        final sharePositionOrigin = box != null
+            ? box.localToGlobal(Offset.zero) & box.size
+            : null;
+
+        // Share with proper configuration for iOS
+        final result = await Share.shareXFiles(
           [XFile(filePath)],
           text: shareMessage,
           subject: shareSubject,
+          sharePositionOrigin: sharePositionOrigin,
         );
+
+        debugPrint('📱 Share result: ${result.status}');
+
+        // Clean up the temp file after a delay (iOS needs time to read it)
+        Future.delayed(const Duration(seconds: 5), () {
+          try {
+            if (file.existsSync()) {
+              file.deleteSync();
+              debugPrint('🗑️ Cleaned up temp file');
+            }
+          } catch (e) {
+            debugPrint('⚠️ Could not delete temp file: $e');
+          }
+        });
       }
-    } catch (e) {
-      debugPrint('Error sharing profile: $e');
+    } catch (e, stackTrace) {
+      debugPrint('❌ Error sharing profile: $e');
+      debugPrint('Stack trace: $stackTrace');
 
       // ✅ Safe fallback (all platforms)
       try {
-        await Share.share(data.link, subject: data.displayName);
-      } catch (_) {
+        final box = context.findRenderObject() as RenderBox?;
+        final sharePositionOrigin = box != null
+            ? box.localToGlobal(Offset.zero) & box.size
+            : null;
+
+        await Share.share(
+          data.link,
+          subject: data.displayName,
+          sharePositionOrigin: sharePositionOrigin,
+        );
+      } catch (fallbackError) {
+        debugPrint('❌ Fallback share also failed: $fallbackError');
         if (kIsWeb) {
           await Clipboard.setData(ClipboardData(text: data.link));
           if (mounted) {
@@ -327,6 +368,17 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
               const SnackBar(
                 content: Text('Link copied to clipboard'),
                 duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        } else {
+          // Show error on mobile
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('share.error'.tr()),
+                duration: const Duration(seconds: 2),
+                backgroundColor: Colors.red,
               ),
             );
           }
@@ -803,7 +855,15 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
         final timestamp = DateTime.now().millisecondsSinceEpoch;
         final imagePath = '${directory.path}/migozz_qr_$timestamp.png';
         final imageFile = File(imagePath);
-        await imageFile.writeAsBytes(pngBytes);
+        await imageFile.writeAsBytes(pngBytes, flush: true);
+
+        // Verify file was written successfully
+        if (!await imageFile.exists()) {
+          throw Exception("Failed to save QR code file");
+        }
+
+        debugPrint('📱 QR Code saved to: $imagePath');
+        debugPrint('📱 File size: ${await imageFile.length()} bytes');
 
         // Try to save to Downloads folder (Android/iOS)
         try {
@@ -821,22 +881,44 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
             final downloadPath =
                 '${downloadsDir.path}/migozz_qr_$timestamp.png';
             final downloadFile = File(downloadPath);
-            await downloadFile.writeAsBytes(pngBytes);
+            await downloadFile.writeAsBytes(pngBytes, flush: true);
             debugPrint('Saved to: $downloadPath');
           }
         } catch (e) {
           debugPrint('Could not save to downloads: $e');
         }
 
-        // Share the image
-        await Share.shareXFiles([
-          XFile(imagePath),
-        ], text: 'Check out my Migozz profile!');
+        // Get the render box for sharePositionOrigin (required for iPad)
+        final box = context.findRenderObject() as RenderBox?;
+        final sharePositionOrigin = box != null
+            ? box.localToGlobal(Offset.zero) & box.size
+            : null;
+
+        // Share the image with proper iOS support
+        final result = await Share.shareXFiles(
+          [XFile(imagePath)],
+          text: 'Check out my Migozz profile!',
+          sharePositionOrigin: sharePositionOrigin,
+        );
+
+        debugPrint('📱 Share result: ${result.status}');
 
         // Show success message
         if (mounted) {
           AlertGeneral.show(context, 1, message: 'QR Code saved and shared!');
         }
+
+        // Clean up the temp file after a delay (iOS needs time to read it)
+        Future.delayed(const Duration(seconds: 5), () {
+          try {
+            if (imageFile.existsSync()) {
+              imageFile.deleteSync();
+              debugPrint('🗑️ Cleaned up QR temp file');
+            }
+          } catch (e) {
+            debugPrint('⚠️ Could not delete QR temp file: $e');
+          }
+        });
       }
     } catch (e) {
       debugPrint('Error capturing screenshot: $e');
