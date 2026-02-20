@@ -36,11 +36,11 @@ class OnboardingContent extends StatelessWidget {
     // Escala del texto basada en el ancho de pantalla - más compacto para móvil web
     final double titleSize = isDesktop
         ? (screenSize.width < 900 ? 32 : 40)
-        : (isVeryTallScreen ? 22 : (isMobileWeb ? 24 : 28));
+        : (isVeryTallScreen ? 16 : (isMobileWeb ? 20 : 23));
     final double textSize = isDesktop
         ? (screenSize.width < 900 ? 16 : 18)
-        : (isVeryTallScreen ? 12 : (isMobileWeb ? 13 : 14));
-    final double spacing = isVeryTallScreen ? 6 : (isMobileWeb ? 8 : 16);
+        : (isVeryTallScreen ? 11 : (isMobileWeb ? 11 : 12));
+    final double spacing = isVeryTallScreen ? 4 : (isMobileWeb ? 6 : 14);
 
     // Para móvil: layout con posiciones fijas
     if (!isDesktop) {

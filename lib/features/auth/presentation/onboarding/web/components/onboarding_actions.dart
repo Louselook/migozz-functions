@@ -60,8 +60,8 @@ class OnboardingActions extends StatelessWidget {
                     "onboarding.buttons.getStarted".tr(),
                     style: TextStyle(
                       fontSize: isVeryTallScreen
-                          ? 14
-                          : (screenWidth < 600 ? 18 : 24),
+                          ? 12
+                          : (screenWidth < 600 ? 14 : 18),
                       color: Colors.white,
                     ),
                   ),
@@ -69,7 +69,7 @@ class OnboardingActions extends StatelessWidget {
                   Icon(
                     Icons.arrow_forward_ios,
                     color: Colors.white,
-                    size: isVeryTallScreen ? 14 : (screenWidth < 600 ? 16 : 24),
+                    size: isVeryTallScreen ? 12 : (screenWidth < 600 ? 14 : 20),
                   ),
                 ],
               ),
@@ -122,7 +122,7 @@ class OnboardingActions extends StatelessWidget {
             child: Text(
               "onboarding.buttons.skip".tr(),
               style: TextStyle(
-                fontSize: isVeryTallScreen ? 14 : (screenWidth < 600 ? 18 : 24),
+                fontSize: isVeryTallScreen ? 12 : (screenWidth < 600 ? 16 : 20),
                 color: Colors.white,
               ),
             ),
@@ -171,8 +171,8 @@ class OnboardingActions extends StatelessWidget {
                     "onboarding.buttons.next".tr(),
                     style: TextStyle(
                       fontSize: isVeryTallScreen
-                          ? 14
-                          : (screenWidth < 600 ? 16 : 18),
+                          ? 12
+                          : (screenWidth < 600 ? 14 : 16),
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
                     ),
@@ -181,7 +181,7 @@ class OnboardingActions extends StatelessWidget {
                   Icon(
                     Icons.arrow_forward_rounded, // Rounded arrow
                     color: Colors.white,
-                    size: isVeryTallScreen ? 16 : (screenWidth < 600 ? 18 : 20),
+                    size: isVeryTallScreen ? 12 : (screenWidth < 600 ? 14 : 20),
                   ),
                 ],
               ),
