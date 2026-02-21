@@ -1226,5 +1226,72 @@
       "no_results": "No results found",
       "new_message": "New chat"
     }
+  },
+  "landing": {
+    "welcome_title": "YOUR FIRST AI|ECOSYSTEM",
+    "welcome_subtitle": "Migozz is the ultimate AI-powered social ecosystem that connects, centralizes, and monetizes your entire digital presence.",
+    "more_info_title": "THE PROBLEM WE'RE SOLVING",
+    "migozz_solution_label": "Migozz Solution: ",
+    "problems": [
+      {
+        "title": "How do I connect all my Socials",
+        "problem": "Fans struggle to find creators on new platforms after an account is lost.",
+        "solution": "Smart linking ensures your followers always know where to find you, no matter what platform you're on."
+      },
+      {
+        "title": "User's Don't own their data",
+        "problem": "Platforms control your audience, so if you're banned, you lose your followers.",
+        "solution": "We give you full ownership of your follower data, so you always have access to your community."
+      },
+      {
+        "title": "How Many Followers do you really have?",
+        "problem": "Fans don't always realize you're active on multiple platforms.",
+        "solution": "Migozz seamlessly connects your followers across all platforms, making it easy for them to stay engaged."
+      },
+      {
+        "title": "Wasting too much time posting",
+        "problem": "Manually uploading content across different social media accounts takes too long.",
+        "solution": "One-click cross-posting lets you share content everywhere instantly, saving you time."
+      },
+      {
+        "title": "Unfair Account Suspensions",
+        "problem": "Accounts can be suspended without warning, leaving creators with no way to recover.",
+        "solution": "We provide backup and recovery options, ensuring you never lose access to your audience or content."
+      },
+      {
+        "title": "Platforms are charging too much",
+        "problem": "Big platforms take a large percentage of a creator's income.",
+        "solution": "We charge lower fees so you keep more of the money you earn."
+      }
+    ],
+    "join_title": "JOIN MIGOZZ!",
+    "join_subtitle_one": "Create your AI Social Ecosystem!",
+    "join_subtitle_two": "Receive Gifts & Monetize.",
+    "username_placeholder": "yourname",
+    "email_placeholder": "Enter your email",
+    "claim_btn": "Check Availability",
+    "pre_save_btn": "Pre-Save",
+    "security_note_part_1": "Safe. Free. Hassle-free.",
+    "security_note_part_2": "",
+    "slide_1_title": "VIEW YOUR GLOBAL IMPACT IN ONE PLACE",
+    "slide_1_text": "Visualize the total number of your followers across all your platforms. Migozz shows you the true power of your community.",
+    "slide_2_title": "GROW YOUR INFLUENCE EVERYWHERE",
+    "slide_2_text": "Your followers can follow you on other networks directly from Migozz. You decide how and where to connect.",
+    "slide_3_title": "YOUR IMPACT IS REWARDED.",
+    "slide_3_text": "Receive gifts for your influence and participation. The more you grow, the more rewards you unlock.",
+    "whatsapp_btn": "Join our WhatsApp channel",
+    "alerts": {
+      "enter_username": "Please enter a username.",
+      "username_taken": "The username '{username}' is already taken.",
+      "username_available": "The username '{username}' is available!",
+      "check_user_error": "An error occurred while checking the username.",
+      "enter_email": "Please enter your email address.",
+      "invalid_email": "Please enter a valid email address.",
+      "username_taken_late": "The username '{username}' has already been taken.",
+      "email_registered": "The email address is already registered.",
+      "verification_sent": "A verification email has been sent.",
+      "registration_error": "Could not complete registration. Please try again.",
+      "process_error": "An error occurred while processing your request."
+    }
   }
 }

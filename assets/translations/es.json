@@ -1074,5 +1074,72 @@
       "no_results": "No se encontraron resultados",
       "new_message": "Nuevo chat"
     }
+  },
+  "landing": {
+    "welcome_title": "TU PRIMER|ECOSISTEMA IA",
+    "welcome_subtitle": "Migozz es el ecosistema social definitivo impulsado por IA que conecta, centraliza y monetiza toda tu presencia digital.",
+    "more_info_title": "EL PROBLEMA QUE RESOLVEMOS",
+    "migozz_solution_label": "Solución Migozz: ",
+    "problems": [
+      {
+        "title": "¿Cómo conecto todas mis redes?",
+        "problem": "Los fans luchan por encontrar creadores en nuevas plataformas cuando se pierde una cuenta.",
+        "solution": "Los enlaces inteligentes aseguran que tus seguidores siempre sepan dónde encontrarte, sin importar la plataforma."
+      },
+      {
+        "title": "Los usuarios no son dueños de sus datos",
+        "problem": "Las plataformas controlan tu audiencia, así que si te banean, pierdes a tus seguidores.",
+        "solution": "Te damos la propiedad total de los datos de tus seguidores, para que siempre tengas acceso a tu comunidad."
+      },
+      {
+        "title": "¿Cuántos seguidores tienes realmente?",
+        "problem": "Los fans no siempre se dan cuenta de que estás activo en múltiples plataformas.",
+        "solution": "Migozz conecta a la perfección a tus seguidores en todas las plataformas, facilitando que se mantengan comprometidos."
+      },
+      {
+        "title": "Perdiendo demasiado tiempo publicando",
+        "problem": "Subir contenido manualmente en diferentes cuentas de redes sociales lleva demasiado tiempo.",
+        "solution": "La publicación cruzada con un clic te permite compartir contenido en todas partes al instante, ahorrándote tiempo."
+      },
+      {
+        "title": "Suspensiones de cuenta injustas",
+        "problem": "Las cuentas pueden ser suspendidas sin previo aviso, dejando a los creadores sin forma de recuperarse.",
+        "solution": "Proporcionamos opciones de respaldo y recuperación, asegurando que nunca pierdas el acceso a tu audiencia o contenido."
+      },
+      {
+        "title": "Las plataformas cobran demasiado",
+        "problem": "Las grandes plataformas toman un gran porcentaje de los ingresos de un creador.",
+        "solution": "Cobramos tarifas más bajas para que te quedes con más dinero del que ganas."
+      }
+    ],
+    "join_title": "¡ÚNETE A MIGOZZ!",
+    "join_subtitle_one": "¡Crea tu Ecosistema Social con IA!",
+    "join_subtitle_two": "Recibe Regalos y Monetiza.",
+    "username_placeholder": "tunombre",
+    "email_placeholder": "Ingresa tu correo",
+    "claim_btn": "Verificar Disponibilidad",
+    "pre_save_btn": "Pre-Guardar",
+    "security_note_part_1": "Seguro. Gratis. Sin complicaciones.",
+    "security_note_part_2": "",
+    "slide_1_title": "MIRA TU IMPACTO GLOBAL EN UN SOLO LUGAR",
+    "slide_1_text": "Visualiza el número total de tus seguidores en todas tus plataformas. Migozz te muestra el verdadero poder de tu comunidad.",
+    "slide_2_title": "HAZ CRECER TU INFLUENCIA EN TODAS PARTES",
+    "slide_2_text": "Tus seguidores pueden seguirte en otras redes directamente desde Migozz. Tú decides cómo y dónde conectar.",
+    "slide_3_title": "TU IMPACTO ES RECOMPENSADO.",
+    "slide_3_text": "Recibe regalos por tu influencia y participación. Cuanto más creces, más recompensas desbloqueas.",
+    "whatsapp_btn": "Únete a nuestro canal de WhatsApp",
+    "alerts": {
+      "enter_username": "Por favor, ingresa un nombre de usuario.",
+      "username_taken": "El nombre de usuario '{username}' ya está en uso.",
+      "username_available": "¡El nombre de usuario '{username}' está disponible!",
+      "check_user_error": "Ocurrió un error al verificar el nombre de usuario.",
+      "enter_email": "Por favor, ingresa tu correo electrónico.",
+      "invalid_email": "Por favor, ingresa un correo electrónico válido.",
+      "username_taken_late": "El nombre de usuario '{username}' ya ha sido tomado.",
+      "email_registered": "El correo electrónico ya está registrado.",
+      "verification_sent": "Se ha enviado un correo de verificación.",
+      "registration_error": "No se pudo completar el registro. Inténtalo de nuevo.",
+      "process_error": "Ocurrió un error al procesar tu solicitud."
+    }
   }
 }
