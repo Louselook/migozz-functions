@@ -40,6 +40,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 // PublicProfileScreen removed — profiles always use ProfileSearchScreen/MainNavigation
 import 'package:migozz_app/features/profile/presentation/followers/web/web_followers_screen.dart';
 import 'package:migozz_app/features/chat/presentation/user/list/web_chat_screen.dart';
+import 'package:migozz_app/features/landing/landing_page.dart';
 
 Widget localizedBuilder(BuildContext context, Widget Function() screenBuilder) {
   final easy = EasyLocalization.of(context);
@@ -166,8 +167,13 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
 
       GoRoute(
         path: '/onboarding',
-        builder: (context, state) =>
-            localizedBuilder(context, () => const OnboardingEntry()),
+        builder: (context, state) {
+          // On web, show landing page instead of onboarding
+          if (kIsWeb) {
+            return localizedBuilder(context, () => const LandingPage());
+          }
+          return localizedBuilder(context, () => const OnboardingEntry());
+        },
       ),
       GoRoute(
         path: '/login',
@@ -631,8 +637,8 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
           return null;
         }
 
-        // ✅ Redirect to profile if authenticated user tries to access onboarding or login
-        if (goingTo == '/onboarding' || goingTo == '/login') {
+        // ✅ Redirect to profile if authenticated user tries to access onboarding, login, or landing
+        if (goingTo == '/onboarding' || goingTo == '/login' || goingTo == '/landing') {
           return '/profile';
         }
 
