@@ -242,27 +242,6 @@ class _LoginFormState extends State<LoginForm> {
     }
   }
 
-  Future<void> _handleAppleSignIn() async {
-    FocusScope.of(context).unfocus();
-    LoadingOverlay.show(context, type: LoaderType.login);
-    try {
-      final authCubit = context.read<AuthCubit>();
-      await authCubit.signInWithApple();
-    } catch (e) {
-      debugPrint('error: $e');
-      if (!e.toString().contains('cancelled_by_user')) {
-        CustomSnackbar.show(
-          // ignore: use_build_context_synchronously
-          context: context,
-          message: '${"login.validations.errorApple".tr()} $e',
-          type: SnackbarType.error,
-        );
-      }
-    } finally {
-      if (mounted) LoadingOverlay.hide(context);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final bool isMobile = MediaQuery.of(context).size.width < 600;
@@ -304,7 +283,7 @@ class _LoginFormState extends State<LoginForm> {
             const SizedBox(height: 40),
             SecondaryText("login.presentation.subtitle2".tr(), fontSize: 16),
             const SizedBox(height: 20),
-            
+
             Flex(
               direction: isMobile ? Axis.vertical : Axis.horizontal,
               spacing: 10,

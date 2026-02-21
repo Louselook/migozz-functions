@@ -224,18 +224,6 @@ class _WebUserChatScreenState extends State<WebUserChatScreen>
     }
   }
 
-  Future<void> _deleteChat() async {
-    try {
-      await _chatService.deleteChatForUser(
-        chatRoomId: _chatRoomId,
-        userId: widget.currentUserId,
-      );
-      widget.onBack(); // Return to list
-    } catch (e) {
-      debugPrint('Error deleting chat: $e');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     if (!_isInitialized) {

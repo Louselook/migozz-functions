@@ -316,6 +316,7 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
         debugPrint('📱 File size: ${await file.length()} bytes');
 
         // Get the render box for sharePositionOrigin (required for iPad)
+        // ignore: use_build_context_synchronously
         final box = context.findRenderObject() as RenderBox?;
         final sharePositionOrigin = box != null
             ? box.localToGlobal(Offset.zero) & box.size
@@ -349,6 +350,7 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
 
       // ✅ Safe fallback (all platforms)
       try {
+        // ignore: use_build_context_synchronously
         final box = context.findRenderObject() as RenderBox?;
         final sharePositionOrigin = box != null
             ? box.localToGlobal(Offset.zero) & box.size
@@ -889,6 +891,7 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
         }
 
         // Get the render box for sharePositionOrigin (required for iPad)
+        // ignore: use_build_context_synchronously
         final box = context.findRenderObject() as RenderBox?;
         final sharePositionOrigin = box != null
             ? box.localToGlobal(Offset.zero) & box.size
