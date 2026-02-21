@@ -79,7 +79,12 @@ class _AppGateState extends State<AppGate> {
       if (authStatus == AuthStatus.authenticated) {
         if (mounted) context.go('/profile');
       } else if (authStatus == AuthStatus.notAuthenticated) {
-        if (mounted) context.go('/onboarding');
+        // On web, stay at '/' to show LandingPage without changing URL
+        if (kIsWeb) {
+          if (mounted) setState(() {});
+        } else {
+          if (mounted) context.go('/onboarding');
+        }
       } else if (authStatus == AuthStatus.userBanned) {
         _showBannedDialog();
       }
@@ -144,17 +149,34 @@ class _AppGateState extends State<AppGate> {
           );
           context.go('/profile');
         } else if (state.status == AuthStatus.notAuthenticated && mounted) {
-          debugPrint(
-            '🔐 [AppGate] Auth resolved: notAuthenticated → going to /onboarding',
-          );
-          context.go('/onboarding');
+          if (kIsWeb) {
+            debugPrint(
+              '🔐 [AppGate] Auth resolved: notAuthenticated → showing LandingPage at /',
+            );
+            setState(() {});
+          } else {
+            debugPrint(
+              '🔐 [AppGate] Auth resolved: notAuthenticated → going to /onboarding',
+            );
+            context.go('/onboarding');
+          }
         } else if (state.status == AuthStatus.userBanned && mounted) {
           debugPrint('🚫 [AppGate] Auth resolved: userBanned → showing popup');
           _showBannedDialog();
         }
       },
-      child: const SplashScreen(),
+      child: _buildGateChild(),
     );
+  }
+
+  Widget _buildGateChild() {
+    if (kIsWeb) {
+      final authCubit = context.read<AuthCubit>();
+      if (authCubit.state.status == AuthStatus.notAuthenticated) {
+        return const LandingPage();
+      }
+    }
+    return const SplashScreen();
   }
 }
 

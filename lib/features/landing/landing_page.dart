@@ -74,40 +74,39 @@ class _LandingPageState extends State<LandingPage> {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Decorative SVG logo pattern across background
+          // Decorative repeating Migozz icon pattern collage
           Positioned.fill(
-            child: Opacity(
-              opacity: 0.12,
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final logoSize = isMobile ? 60.0 : 90.0;
-                  final cols = (constraints.maxWidth / logoSize).ceil() + 1;
-                  final rows = (constraints.maxHeight / logoSize).ceil() + 1;
-                  return Stack(
-                    children: List.generate(rows * cols, (index) {
-                      final row = index ~/ cols;
-                      final col = index % cols;
-                      final offsetX = col * logoSize + (row.isOdd ? logoSize * 0.5 : 0);
-                      final offsetY = row * logoSize;
-                      return Positioned(
-                        left: offsetX - logoSize * 0.25,
-                        top: offsetY - logoSize * 0.25,
-                        child: Transform.rotate(
-                          angle: (row + col) * 0.3,
-                          child: SvgPicture.asset(
-                            'assets/icons/Migozz_SinFONDO.svg',
-                            width: logoSize,
-                            height: logoSize,
-                            colorFilter: const ColorFilter.mode(
-                              Colors.white,
-                              BlendMode.srcIn,
+            child: ClipRect(
+              child: Opacity(
+                opacity: 0.18,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final iconSize = isMobile ? 70.0 : 100.0;
+                    final cols = (constraints.maxWidth / iconSize).ceil() + 2;
+                    final rows = (constraints.maxHeight / iconSize).ceil() + 2;
+                    return Stack(
+                      children: List.generate(rows * cols, (index) {
+                        final row = index ~/ cols;
+                        final col = index % cols;
+                        final offsetX = col * iconSize + (row.isOdd ? iconSize * 0.5 : 0) - iconSize * 0.5;
+                        final offsetY = row * iconSize - iconSize * 0.5;
+                        final rotation = ((row + col) % 4) * 0.25 - 0.25;
+                        return Positioned(
+                          left: offsetX,
+                          top: offsetY,
+                          child: Transform.rotate(
+                            angle: rotation,
+                            child: Image.asset(
+                              'assets/migozz_icon/MigozzVector.png',
+                              width: iconSize,
+                              height: iconSize,
                             ),
                           ),
-                        ),
-                      );
-                    }),
-                  );
-                },
+                        );
+                      }),
+                    );
+                  },
+                ),
               ),
             ),
           ),
@@ -344,11 +343,12 @@ class _LandingPageState extends State<LandingPage> {
       ),
       color: _bgColor,
       child: Stack(
+        clipBehavior: Clip.none,
         children: [
           // Purple blob left
           Positioned(
-            left: -60,
-            top: -20,
+            left: 0,
+            top: 0,
             child: Container(
               width: 180,
               height: 180,
@@ -365,8 +365,8 @@ class _LandingPageState extends State<LandingPage> {
           ),
           // Purple blob right
           Positioned(
-            right: -60,
-            bottom: -20,
+            right: 0,
+            bottom: 0,
             child: Container(
               width: 180,
               height: 180,
@@ -385,13 +385,12 @@ class _LandingPageState extends State<LandingPage> {
           SizedBox(
             width: double.infinity,
             child: Column(
-              crossAxisAlignment:
-                  isMobile ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
               // First line white
               Text(
                 'WELCOME TO THE REVOLUTION',
-                textAlign: isMobile ? TextAlign.center : TextAlign.left,
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: isMobile ? 20 : 32,
                   fontWeight: FontWeight.w900,
@@ -402,7 +401,7 @@ class _LandingPageState extends State<LandingPage> {
               ),
               // Second line: gradient + emoji
               Wrap(
-                alignment: isMobile ? WrapAlignment.center : WrapAlignment.start,
+                alignment: WrapAlignment.center,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   ShaderMask(
@@ -431,7 +430,7 @@ class _LandingPageState extends State<LandingPage> {
               // Description
               Text(
                 'All these people have already secured their username to\nexperience the full potential of our AI ecosystem.',
-                textAlign: isMobile ? TextAlign.center : TextAlign.left,
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: isMobile ? 12 : 15,
@@ -507,198 +506,12 @@ class _LandingPageState extends State<LandingPage> {
     final w = MediaQuery.of(context).size.width;
     final isMobile = w < 600;
 
-    return Container(
+    return Image.asset(
+      'assets/images/landing/Create_Your_AI_Social_Ecosystem.png',
       width: double.infinity,
-      constraints: BoxConstraints(minHeight: isMobile ? 400 : 500),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [_hotPink, Color(0xFFAB47BC)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-      ),
-      child: Stack(
-        children: [
-          // Background image (people with phones)
-          Positioned.fill(
-            child: Opacity(
-              opacity: 0.55,
-              child: Image.asset(
-                'assets/images/landing/Create_Your_AI_Social_Ecosystem.png',
-                fit: BoxFit.cover,
-                alignment: Alignment.center,
-                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-              ),
-            ),
-          ),
-          // Content overlay
-          Padding(
-            padding: EdgeInsets.symmetric(
-              vertical: isMobile ? 40 : 56,
-              horizontal: isMobile ? 16 : 48,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Title — centered
-                Text(
-                  'CREATE YOUR AI SOCIAL ECOSYSTEM!',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: isMobile ? 22 : 36,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                    fontFamily: 'Inter',
-                    shadows: const [
-                      Shadow(
-                        color: Colors.black38,
-                        blurRadius: 10,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: isMobile ? 20 : 24),
-                // Migozz.com pill
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Text(
-                    'Migozz.com',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      color: _hotPink,
-                      fontFamily: 'Inter',
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                // Tag lines
-                _tagLineText('Too Many Apps', isMobile),
-                _tagLineText('Too Many Link', isMobile),
-                _tagLineText('Too Much noise', isMobile),
-                SizedBox(height: isMobile ? 24 : 40),
-                // Play button — center
-                Container(
-                    width: isMobile ? 64 : 80,
-                    height: isMobile ? 64 : 80,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: _hotPink.withValues(alpha: 0.5),
-                        width: 3,
-                      ),
-                    ),
-                    child: Icon(
-                      Icons.play_arrow,
-                      color: _hotPink,
-                      size: isMobile ? 36 : 44,
-                    ),
-                ),
-                SizedBox(height: isMobile ? 24 : 40),
-                // Social network icons
-                _buildSocialIconsRow(isMobile),
-              ],
-            ),
-          ),
-          // Link icon bottom right
-          Positioned(
-            right: 16,
-            bottom: 16,
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: _purple.withValues(alpha: 0.8),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Icons.link, color: Colors.white, size: 22),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _tagLineText(String text, bool isMobile) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 2),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: isMobile ? 20 : 28,
-          fontWeight: FontWeight.w900,
-          color: Colors.white,
-          fontFamily: 'Inter',
-          shadows: const [
-            Shadow(
-              color: Colors.black26,
-              blurRadius: 6,
-              offset: Offset(0, 1),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSocialIconsRow(bool isMobile) {
-    final icons = [
-      'assets/icons/social_networks/Facebook.svg',
-      'assets/icons/social_networks/Instagram.svg',
-      'assets/icons/social_networks/Tiktok.svg',
-      'assets/icons/social_networks/Youtube.svg',
-      'assets/icons/social_networks/Spotify.svg',
-      'assets/icons/social_networks/pinterest.svg',
-    ];
-
-    final size = isMobile ? 40.0 : 50.0;
-
-    return Wrap(
-      spacing: isMobile ? 8 : 12,
-      runSpacing: 8,
-      alignment: WrapAlignment.center,
-      children: [
-        ...icons.map((path) => _socialIcon(path, size)),
-        // Globe / website icon
-        Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            color: _hotPink,
-            borderRadius: BorderRadius.circular(size / 4),
-          ),
-          child: Icon(
-            Icons.language,
-            color: Colors.white,
-            size: size * 0.5,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _socialIcon(String assetPath, double size) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(size / 4),
-        child: SvgPicture.asset(
-          assetPath,
-          width: size,
-          height: size,
-          fit: BoxFit.contain,
-        ),
-      ),
+      fit: BoxFit.fitWidth,
+      alignment: Alignment.center,
+      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
     );
   }
 
@@ -711,33 +524,36 @@ class _LandingPageState extends State<LandingPage> {
 
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(
-        vertical: isMobile ? 40 : 64,
-        horizontal: isMobile ? 16 : 48,
-      ),
       color: _bgColor,
       child: Stack(
         children: [
-          // Faint phone screenshots background
+          // Phone screenshots background — fills entire section edge-to-edge
           Positioned.fill(
             child: Opacity(
-              opacity: 0.08,
+              opacity: 0.35,
               child: Image.asset(
                 'assets/images/landing/Migozz_background_phone.png',
                 fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
                 errorBuilder: (_, __, ___) => const SizedBox.shrink(),
               ),
             ),
           ),
-          SizedBox(
+          // Content with padding on top of bg
+          Padding(
+            padding: EdgeInsets.symmetric(
+              vertical: isMobile ? 40 : 64,
+              horizontal: isMobile ? 16 : 48,
+            ),
+            child: SizedBox(
             width: double.infinity,
             child: Column(
-              crossAxisAlignment:
-                  isMobile ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
               Text(
                 'YOUR FIRST AI',
-                textAlign: isMobile ? TextAlign.center : TextAlign.left,
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: isMobile ? 26 : 36,
                   fontWeight: FontWeight.w900,
@@ -747,7 +563,7 @@ class _LandingPageState extends State<LandingPage> {
               ),
               Text(
                 'ECOSYSTEM',
-                textAlign: isMobile ? TextAlign.center : TextAlign.left,
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: isMobile ? 32 : 44,
                   fontWeight: FontWeight.w900,
@@ -759,7 +575,7 @@ class _LandingPageState extends State<LandingPage> {
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 600),
                 child: RichText(
-                  textAlign: isMobile ? TextAlign.center : TextAlign.left,
+                  textAlign: TextAlign.center,
                   text: TextSpan(
                     style: TextStyle(
                       fontSize: isMobile ? 14 : 16,
@@ -821,6 +637,7 @@ class _LandingPageState extends State<LandingPage> {
                 ),
               ),
             ],
+          ),
           ),
           ),
         ],
