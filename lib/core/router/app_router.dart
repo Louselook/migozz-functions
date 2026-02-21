@@ -190,10 +190,6 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
       GoRoute(
         path: '/onboarding',
         builder: (context, state) {
-          // On web, show landing page instead of onboarding
-          if (kIsWeb) {
-            return localizedBuilder(context, () => const LandingPage());
-          }
           return localizedBuilder(context, () => const OnboardingEntry());
         },
       ),
@@ -660,7 +656,9 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         }
 
         // ✅ Redirect to profile if authenticated user tries to access onboarding, login, or landing
-        if (goingTo == '/onboarding' || goingTo == '/login' || goingTo == '/landing') {
+        if (goingTo == '/onboarding' ||
+            goingTo == '/login' ||
+            goingTo == '/landing') {
           return '/profile';
         }
 

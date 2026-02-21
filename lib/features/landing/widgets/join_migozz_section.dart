@@ -327,68 +327,75 @@ class _JoinMigozzSectionState extends State<JoinMigozzSection> {
                     // Pre-Save button
                     SizedBox(
                       width: double.infinity,
-                      child: Container(
-                        constraints: const BoxConstraints(maxWidth: 500),
-                        decoration: BoxDecoration(
-                          gradient: (_isUsernameAvailable && !_isLoading)
-                              ? const LinearGradient(
-                                  colors: [
-                                    Color(0xFFFF9564),
-                                    Color(0xFF9E1B9F),
-                                  ],
-                                )
-                              : null,
-                          color: (!_isUsernameAvailable || _isLoading)
-                              ? Colors.grey.shade300
-                              : null,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: _isUsernameAvailable
-                              ? [
-                                  BoxShadow(
-                                    color: const Color(
-                                      0xFF9E1B9F,
-                                    ).withValues(alpha: 0.4),
-                                    blurRadius: 25,
-                                    offset: const Offset(0, 10),
-                                  ),
-                                ]
-                              : null,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isMobile ? 16 : 0,
                         ),
-                        child: ElevatedButton(
-                          onPressed:
-                              (_isUsernameAvailable &&
-                                  !(_showEmailInput && _isLoading))
-                              ? _handlePreSave
-                              : null,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            shadowColor: Colors.transparent,
-                            disabledBackgroundColor: Colors.transparent,
-                            foregroundColor: Colors.white,
-                            disabledForegroundColor: Colors.white70,
-                            padding: EdgeInsets.symmetric(
-                              vertical: isMobile ? 16 : 20,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
+                        child: Container(
+                          constraints: BoxConstraints(
+                            maxWidth: isMobile ? double.infinity : 550,
                           ),
-                          child: (_showEmailInput && _isLoading)
-                              ? const SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 3,
-                                    color: Colors.white,
+                          decoration: BoxDecoration(
+                            gradient: (_isUsernameAvailable && !_isLoading)
+                                ? const LinearGradient(
+                                    colors: [
+                                      Color(0xFFFF9564),
+                                      Color(0xFF9E1B9F),
+                                    ],
+                                  )
+                                : null,
+                            color: (!_isUsernameAvailable || _isLoading)
+                                ? Colors.grey.shade300
+                                : null,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: _isUsernameAvailable
+                                ? [
+                                    BoxShadow(
+                                      color: const Color(
+                                        0xFF9E1B9F,
+                                      ).withValues(alpha: 0.4),
+                                      blurRadius: 25,
+                                      offset: const Offset(0, 10),
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                          child: ElevatedButton(
+                            onPressed:
+                                (_isUsernameAvailable &&
+                                    !(_showEmailInput && _isLoading))
+                                ? _handlePreSave
+                                : null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              disabledBackgroundColor: Colors.transparent,
+                              foregroundColor: Colors.white,
+                              disabledForegroundColor: Colors.white70,
+                              padding: EdgeInsets.symmetric(
+                                vertical: isMobile ? 16 : 20,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: (_showEmailInput && _isLoading)
+                                ? const SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 3,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : Text(
+                                    'landing.pre_save_btn'.tr(),
+                                    style: TextStyle(
+                                      fontSize: isMobile ? 20 : 28,
+                                      fontWeight: FontWeight.w800,
+                                    ),
                                   ),
-                                )
-                              : Text(
-                                  'landing.pre_save_btn'.tr(),
-                                  style: TextStyle(
-                                    fontSize: isMobile ? 20 : 28,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
+                          ),
                         ),
                       ),
                     ),
@@ -478,8 +485,8 @@ class _JoinMigozzSectionState extends State<JoinMigozzSection> {
       children: [
         // Migozz icon box
         Container(
-          width: 40,
-          height: 40,
+          width: 44,
+          height: 44,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               colors: [Color(0xFF841595), Color(0xFFE02E8A)],
@@ -492,8 +499,8 @@ class _JoinMigozzSectionState extends State<JoinMigozzSection> {
             borderRadius: BorderRadius.circular(8),
             child: Image.asset(
               'assets/migozz_icon/Migozz512.png',
-              width: 40,
-              height: 40,
+              width: 44,
+              height: 44,
               fit: BoxFit.contain,
             ),
           ),
