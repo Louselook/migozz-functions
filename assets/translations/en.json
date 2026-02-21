@@ -263,7 +263,11 @@
         "shareSubject": "{}'s profile on Migozz",
         "chat": {
             "filter":"+ DM",
-            "search":"Search"
+            "search":"Search",
+            "vip": "VIP",
+            "prime": "Prime",
+            "ia": "IA",
+            "comingSoon": "This feature will come soon"
         },
         "design":{
             "buttonText": "Design",

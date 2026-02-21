@@ -736,7 +736,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
             ),
             child: DropdownButtonFormField<String>(
-              value: _selectedGender,
+              initialValue: _selectedGender,
               icon: Icon(
                 Icons.keyboard_arrow_down,
                 color: Colors.grey.shade400,
