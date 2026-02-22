@@ -148,19 +148,30 @@ class _EmbedVideoSectionState extends State<EmbedVideoSection> {
                           ),
                           // Subtle dark scrim
                           Container(color: Colors.black.withValues(alpha: 0.3)),
-                          // Play button
+                          // Play button — magenta circle with white ring
                           Center(
                             child: Container(
-                              width: 80,
-                              height: 80,
+                              width: 90,
+                              height: 90,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Colors.red.shade700,
+                                color: const Color(0xFFD43AB6),
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.3),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
                               ),
                               child: const Icon(
                                 Icons.play_arrow,
                                 color: Colors.white,
-                                size: 48,
+                                size: 50,
                               ),
                             ),
                           ),
@@ -184,16 +195,29 @@ class _EmbedVideoSectionState extends State<EmbedVideoSection> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Container(
-                                width: 80,
-                                height: 80,
+                                width: 90,
+                                height: 90,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Colors.red.shade700,
+                                  color: const Color(0xFFD43AB6),
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 5,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.3,
+                                      ),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
                                 ),
                                 child: const Icon(
                                   Icons.replay,
                                   color: Colors.white,
-                                  size: 48,
+                                  size: 50,
                                 ),
                               ),
                               const SizedBox(height: 12),

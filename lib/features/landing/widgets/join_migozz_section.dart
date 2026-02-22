@@ -236,7 +236,7 @@ class _JoinMigozzSectionState extends State<JoinMigozzSection> {
         Container(
           width: double.infinity,
           constraints: BoxConstraints(
-            minHeight: screenHeight * 0.7, // 70vh like React original
+            minHeight: screenHeight, // 100vh
           ),
           decoration: const BoxDecoration(
             image: DecorationImage(
