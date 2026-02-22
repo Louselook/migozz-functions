@@ -249,174 +249,184 @@ class _JoinMigozzSectionState extends State<JoinMigozzSection> {
           child: Container(
             // Dark overlay
             color: Colors.black.withValues(alpha: 0.4),
-            padding: EdgeInsets.symmetric(
-              vertical: isMobile ? 80 : 100,
-              horizontal: isMobile ? 16 : 32,
-            ),
-            child: Center(
-              child: Container(
-                constraints: BoxConstraints(
-                  maxWidth: isMobile ? double.infinity : 800,
-                ),
-                padding: EdgeInsets.all(isMobile ? 24 : 48),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.3),
-                      blurRadius: 40,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Title — Bebas Neue with gradient
-                    ShaderMask(
-                      shaderCallback: (bounds) => const LinearGradient(
-                        colors: [Color(0xFFD43AB6), Color(0xFF9321BD)],
-                      ).createShader(bounds),
-                      child: Text(
-                        'landing.join_title'.tr(),
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: isMobile ? 36 : 60,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                          fontFamily: 'Bebas Neue',
-                          height: 1.1,
-                        ),
+            child: Stack(
+              children: [
+                // Decorative MigozzVector images scattered in background
+                ..._buildDecorativeVectors(isMobile),
+                // Main content
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    vertical: isMobile ? 80 : 100,
+                    horizontal: isMobile ? 16 : 32,
+                  ),
+                  child: Center(
+                    child: Container(
+                      constraints: BoxConstraints(
+                        maxWidth: isMobile ? double.infinity : 800,
                       ),
-                    ),
-                    SizedBox(height: isMobile ? 10 : 14),
-                    // Subtitle — Poppins
-                    Text(
-                      'landing.join_subtitle_one'.tr(),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: isMobile ? 14 : 18,
-                        color: const Color(0xFF444444),
-                        fontWeight: FontWeight.w500,
-                        fontFamily: 'Poppins',
-                        height: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'landing.join_subtitle_two'.tr(),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: isMobile ? 14 : 18,
-                        color: const Color(0xFF444444),
-                        fontWeight: FontWeight.w500,
-                        fontFamily: 'Poppins',
-                        height: 1.4,
-                      ),
-                    ),
-                    SizedBox(height: isMobile ? 24 : 32),
-
-                    // Input section
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                      child: !_showEmailInput
-                          ? _buildUsernameInput(isMobile)
-                          : _buildEmailInput(isMobile),
-                    ),
-
-                    SizedBox(height: isMobile ? 20 : 32),
-
-                    // Pre-Save button — ligeramente más estrecho que el input
-                    Center(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isMobile ? 32 : 150,
-                        ),
-                        child: Container(
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            gradient: (_isUsernameAvailable && !_isLoading)
-                                ? const LinearGradient(
-                                    colors: [
-                                      Color(0xFFD43AB6),
-                                      Color(0xFF9321BD),
-                                    ],
-                                  )
-                                : null,
-                            color: (!_isUsernameAvailable || _isLoading)
-                                ? Colors.grey.shade300
-                                : null,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: _isUsernameAvailable
-                                ? [
-                                    BoxShadow(
-                                      color: const Color(
-                                        0xFF9E1B9F,
-                                      ).withValues(alpha: 0.3),
-                                      blurRadius: 20,
-                                      offset: const Offset(0, 8),
-                                    ),
-                                  ]
-                                : null,
+                      padding: EdgeInsets.all(isMobile ? 24 : 48),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: 40,
+                            offset: const Offset(0, 10),
                           ),
-                          child: ElevatedButton(
-                            onPressed:
-                                (_isUsernameAvailable &&
-                                    !(_showEmailInput && _isLoading))
-                                ? _handlePreSave
-                                : null,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              shadowColor: Colors.transparent,
-                              disabledBackgroundColor: Colors.transparent,
-                              foregroundColor: Colors.white,
-                              disabledForegroundColor: Colors.white70,
-                              padding: EdgeInsets.symmetric(
-                                vertical: isMobile ? 14 : 18,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Title — Bebas Neue with gradient
+                          ShaderMask(
+                            shaderCallback: (bounds) => const LinearGradient(
+                              colors: [Color(0xFFD43AB6), Color(0xFF9321BD)],
+                            ).createShader(bounds),
+                            child: Text(
+                              'landing.join_title'.tr(),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: isMobile ? 36 : 60,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                                fontFamily: 'Bebas Neue',
+                                height: 1.1,
                               ),
                             ),
-                            child: (_showEmailInput && _isLoading)
-                                ? const SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 3,
-                                      color: Colors.white,
+                          ),
+                          SizedBox(height: isMobile ? 10 : 14),
+                          // Subtitle — Poppins
+                          Text(
+                            'landing.join_subtitle_one'.tr(),
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: isMobile ? 14 : 18,
+                              color: const Color(0xFF444444),
+                              fontWeight: FontWeight.w500,
+                              fontFamily: 'Poppins',
+                              height: 1.4,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'landing.join_subtitle_two'.tr(),
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: isMobile ? 14 : 18,
+                              color: const Color(0xFF444444),
+                              fontWeight: FontWeight.w500,
+                              fontFamily: 'Poppins',
+                              height: 1.4,
+                            ),
+                          ),
+                          SizedBox(height: isMobile ? 24 : 32),
+
+                          // Input section
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 300),
+                            child: !_showEmailInput
+                                ? _buildUsernameInput(isMobile)
+                                : _buildEmailInput(isMobile),
+                          ),
+
+                          SizedBox(height: isMobile ? 20 : 32),
+
+                          // Pre-Save button — ligeramente más estrecho que el input
+                          Center(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: isMobile ? 32 : 150,
+                              ),
+                              child: Container(
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  gradient:
+                                      (_isUsernameAvailable && !_isLoading)
+                                      ? const LinearGradient(
+                                          colors: [
+                                            Color(0xFFD43AB6),
+                                            Color(0xFF9321BD),
+                                          ],
+                                        )
+                                      : null,
+                                  color: (!_isUsernameAvailable || _isLoading)
+                                      ? Colors.grey.shade300
+                                      : null,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: _isUsernameAvailable
+                                      ? [
+                                          BoxShadow(
+                                            color: const Color(
+                                              0xFF9E1B9F,
+                                            ).withValues(alpha: 0.3),
+                                            blurRadius: 20,
+                                            offset: const Offset(0, 8),
+                                          ),
+                                        ]
+                                      : null,
+                                ),
+                                child: ElevatedButton(
+                                  onPressed:
+                                      (_isUsernameAvailable &&
+                                          !(_showEmailInput && _isLoading))
+                                      ? _handlePreSave
+                                      : null,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.transparent,
+                                    shadowColor: Colors.transparent,
+                                    disabledBackgroundColor: Colors.transparent,
+                                    foregroundColor: Colors.white,
+                                    disabledForegroundColor: Colors.white70,
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: isMobile ? 14 : 18,
                                     ),
-                                  )
-                                : Text(
-                                    'landing.pre_save_btn'.tr(),
-                                    style: TextStyle(
-                                      fontSize: isMobile ? 18 : 24,
-                                      fontWeight: FontWeight.w700,
-                                      fontFamily: 'Poppins',
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(30),
                                     ),
                                   ),
+                                  child: (_showEmailInput && _isLoading)
+                                      ? const SizedBox(
+                                          width: 24,
+                                          height: 24,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 3,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : Text(
+                                          'landing.pre_save_btn'.tr(),
+                                          style: TextStyle(
+                                            fontSize: isMobile ? 18 : 24,
+                                            fontWeight: FontWeight.w700,
+                                            fontFamily: 'Poppins',
+                                          ),
+                                        ),
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
+
+                          SizedBox(height: isMobile ? 16 : 24),
+
+                          // Security note — Poppins
+                          Text(
+                            'landing.security_note_part_1'.tr(),
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: isMobile ? 13 : 16,
+                              color: const Color(0xFF555555),
+                              fontWeight: FontWeight.w500,
+                              fontFamily: 'Poppins',
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-
-                    SizedBox(height: isMobile ? 16 : 24),
-
-                    // Security note — Poppins
-                    Text(
-                      'landing.security_note_part_1'.tr(),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: isMobile ? 13 : 16,
-                        color: const Color(0xFF555555),
-                        fontWeight: FontWeight.w500,
-                        fontFamily: 'Poppins',
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ),
@@ -437,6 +447,82 @@ class _JoinMigozzSectionState extends State<JoinMigozzSection> {
           ),
       ],
     );
+  }
+
+  /// Builds scattered decorative MigozzVector.png images for the background
+  List<Widget> _buildDecorativeVectors(bool isMobile) {
+    const vectorPath = 'assets/images/landing/MigozzVector.png';
+    final double baseSize = isMobile ? 120 : 220;
+
+    // Each item: (top%, left%, sizeFactor, rotationDegrees, opacity)
+    // Large, semi-transparent vectors like the Figma design
+    final positions = <List<double>>[
+      // Top-left area
+      [-0.05, -0.05, 1.4, -15, 0.25],
+      [0.05, 0.12, 0.9, 25, 0.22],
+      // Top-right area
+      [-0.02, 0.80, 1.6, 20, 0.24],
+      [0.10, 0.65, 0.8, -35, 0.20],
+      // Left side
+      [0.30, -0.04, 1.3, 10, 0.23],
+      [0.55, 0.02, 1.0, 40, 0.21],
+      // Right side
+      [0.25, 0.88, 1.1, -25, 0.24],
+      [0.50, 0.82, 1.5, -10, 0.22],
+      // Bottom-left
+      [0.75, -0.02, 1.2, 35, 0.23],
+      [0.88, 0.10, 0.85, -20, 0.21],
+      // Bottom-right
+      [0.70, 0.85, 1.0, 15, 0.25],
+      // Bottom center area
+      [0.85, 0.40, 0.9, 50, 0.20],
+      // Top center (edges only)
+      [0.02, 0.38, 0.7, -45, 0.18],
+    ];
+
+    return positions.map((p) {
+      final top = p[0];
+      final left = p[1];
+      final sizeFactor = p[2];
+      final rotation = p[3] * 3.14159 / 180;
+      final opacity = p[4];
+      final size = baseSize * sizeFactor;
+
+      return Positioned(
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        child: IgnorePointer(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return Stack(
+                children: [
+                  Positioned(
+                    top: constraints.maxHeight * top,
+                    left: constraints.maxWidth * left,
+                    child: Transform.rotate(
+                      angle: rotation,
+                      child: Opacity(
+                        opacity: opacity,
+                        child: Image.asset(
+                          vectorPath,
+                          width: size,
+                          height: size,
+                          fit: BoxFit.contain,
+                          color: Colors.white,
+                          colorBlendMode: BlendMode.srcIn,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+      );
+    }).toList();
   }
 
   Widget _buildUsernameInput(bool isMobile) {
