@@ -6,6 +6,7 @@ import 'widgets/welcome_section.dart';
 import 'widgets/slide_example_section.dart';
 import 'widgets/more_info_section.dart';
 import 'widgets/social_networks_footer.dart';
+import 'widgets/revolution_section.dart';
 
 class LandingPage extends StatelessWidget {
   const LandingPage({super.key});
@@ -20,6 +21,7 @@ class LandingPage extends StatelessWidget {
             child: Column(
               children: const [
                 JoinMigozzSection(),
+                RevolutionSection(),
                 EmbedVideoSection(),
                 WelcomeSection(),
                 SlideExampleSection(),
