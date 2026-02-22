@@ -458,29 +458,17 @@ class _JoinMigozzSectionState extends State<JoinMigozzSection> {
     final double baseSize = isMobile ? 120 : 220;
 
     // Each item: (top%, left%, sizeFactor, rotationDegrees, opacity)
-    // Large, semi-transparent vectors like the Figma design
+    // Large, semi-transparent vectors positioned in organized pairs (left/right)
     final positions = <List<double>>[
-      // Top-left area
-      [-0.05, -0.05, 1.4, -15, 0.25],
-      [0.05, 0.12, 0.9, 25, 0.22],
-      // Top-right area
-      [-0.02, 0.80, 1.6, 20, 0.24],
-      [0.10, 0.65, 0.8, -35, 0.20],
-      // Left side
-      [0.30, -0.04, 1.3, 10, 0.23],
-      [0.55, 0.02, 1.0, 40, 0.21],
-      // Right side
-      [0.25, 0.88, 1.1, -25, 0.24],
-      [0.50, 0.82, 1.5, -10, 0.22],
-      // Bottom-left
-      [0.75, -0.02, 1.2, 35, 0.23],
-      [0.88, 0.10, 0.85, -20, 0.21],
-      // Bottom-right
-      [0.70, 0.85, 1.0, 15, 0.25],
-      // Bottom center area
-      [0.85, 0.40, 0.9, 50, 0.20],
-      // Top center (edges only)
-      [0.02, 0.38, 0.7, -45, 0.18],
+      // Top pair
+      [-0.05, 0.01, 1.8, 0, 0.35],
+      [-0.01, 0.75, 1.6, 16, 0.34],
+      // Middle pair
+      [0.33, -0.02, 1.9, 15, 0.33],
+      [0.28, 0.76, 1.7, -5, 0.34],
+      // Bottom pair
+      [0.65, -0.05, 1.9, 10, 0.33],
+      [0.6, 0.75, 1.8, 15, 0.35],
     ];
 
     return positions.map((p) {
