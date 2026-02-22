@@ -1,188 +1,233 @@
-import 'dart:convert';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_svg/flutter_svg.dart';
 
 /// More info section — Problems & Solutions grid.
-/// Updated design inspired by landing_page2.
+/// Black header bar + white content area matching the landing_page2 design.
 class MoreInfoSection extends StatelessWidget {
   const MoreInfoSection({super.key});
 
   static const _hotPink = Color(0xFFE91E8B);
 
-  /// Reads the problems array directly from the translation JSON file
-  /// because easy_localization does not support array-index key resolution.
-  Future<List<_ProblemItem>> _loadProblems(String langCode) async {
-    final path = 'assets/translations/$langCode.json';
-    try {
-      final jsonStr = await rootBundle.loadString(path);
-      final data = jsonDecode(jsonStr) as Map<String, dynamic>;
-      final landing = data['landing'] as Map<String, dynamic>?;
-      if (landing == null) return [];
-      final problemsList = landing['problems'] as List<dynamic>?;
-      if (problemsList == null) return [];
-      return problemsList.map((item) {
-        final map = item as Map<String, dynamic>;
-        return _ProblemItem(
-          title: (map['title'] ?? '') as String,
-          problem: (map['problem'] ?? '') as String,
-          solution: (map['solution'] ?? '') as String,
-        );
-      }).toList();
-    } catch (e) {
-      debugPrint('⚠️ [MoreInfoSection] Error loading problems: $e');
-      return [];
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
     final isMobile = w < 600;
-    final langCode = context.locale.languageCode;
 
-    return FutureBuilder<List<_ProblemItem>>(
-      future: _loadProblems(langCode),
-      builder: (context, snapshot) {
-        final problems = snapshot.data ?? [];
+    final solutionLabel = 'landing.migozz_solution_label'.tr();
 
-        return Container(
+    // Build the list of problem cards from keyed translations (0–9).
+    final problems = <_ProblemCard>[];
+    for (int i = 0; i < 10; i++) {
+      final title = 'landing.problem_${i}_title'.tr();
+      if (title == 'landing.problem_${i}_title') continue;
+      problems.add(
+        _ProblemCard(
+          title: title,
+          subtitle: 'landing.problem_${i}_problem'.tr(),
+          solutionTitle: solutionLabel,
+          solution: 'landing.problem_${i}_solution'.tr(),
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        // ── Black header bar with gradient text ────────────
+        Container(
           width: double.infinity,
-          color: Colors.white,
-          padding: EdgeInsets.only(
-            top: isMobile ? 40 : 56,
-            bottom: isMobile ? 40 : 56,
-            left: isMobile ? 20 : 48,
-            right: isMobile ? 20 : 48,
+          color: Colors.black,
+          padding: EdgeInsets.symmetric(
+            vertical: isMobile ? 20 : 28,
+            horizontal: isMobile ? 20 : 48,
           ),
-          child: Column(
-            children: [
-              // Title
-              Text(
-                'landing.more_info_title'.tr(),
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: isMobile ? 24 : 32,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.black,
-                  fontFamily: 'Bebas Neue',
-                ),
+          child: ShaderMask(
+            shaderCallback: (bounds) => const LinearGradient(
+              colors: [Color(0xFFD43AB6), Color(0xFF9321BD)],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ).createShader(bounds),
+            child: Text(
+              'landing.more_info_title'.tr(),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: isMobile ? 31 : 67,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+                fontFamily: 'Bebas Neue',
+                letterSpacing: 2,
               ),
-              const SizedBox(height: 40),
-              // Cards — 2 columns on desktop, 1 on mobile
-              if (problems.isNotEmpty)
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    if (constraints.maxWidth > 700) {
-                      // Desktop: 2-column grid
-                      return Wrap(
-                        spacing: 24,
-                        runSpacing: 24,
-                        children: problems.map((p) {
-                          final cardWidth = (constraints.maxWidth - 24) / 2;
-                          return SizedBox(
-                            width: cardWidth,
-                            child: _buildProblemCard(p),
-                          );
-                        }).toList(),
-                      );
-                    }
-                    // Mobile: single column
-                    return Column(
-                      children: problems.map((p) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 24),
-                          child: _buildProblemCard(p),
-                        );
-                      }).toList(),
-                    );
-                  },
-                ),
-            ],
+            ),
           ),
-        );
-      },
+        ),
+
+        // ── White content area with problem cards ──
+        LayoutBuilder(
+          builder: (context, outerConstraints) {
+            final screenH = MediaQuery.of(context).size.height;
+            return Container(
+              width: double.infinity,
+              constraints: BoxConstraints(minHeight: screenH),
+              color: Colors.white,
+              padding: EdgeInsets.only(
+                top: isMobile ? 20 : 28,
+                bottom: isMobile ? 20 : 28,
+                left: isMobile ? 20 : 80,
+                right: isMobile ? 20 : 80,
+              ),
+              child: problems.isNotEmpty
+                  ? LayoutBuilder(
+                      builder: (context, constraints) {
+                        if (constraints.maxWidth > 700) {
+                          return Wrap(
+                            spacing: 64,
+                            runSpacing: 8,
+                            children: problems.map((card) {
+                              final cardWidth = (constraints.maxWidth - 64) / 2;
+                              return ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  maxWidth: cardWidth,
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.only(
+                                    bottom: 12,
+                                    right: 30,
+                                    left: 30,
+                                  ),
+                                  child: _buildProblemCard(card, isMobile),
+                                ),
+                              );
+                            }).toList(),
+                          );
+                        }
+                        return Column(
+                          children: problems.map((card) {
+                            return Padding(
+                              padding: const EdgeInsets.only(
+                                bottom: 12,
+                                right: 24,
+                                left: 24,
+                              ),
+                              child: _buildProblemCard(card, isMobile),
+                            );
+                          }).toList(),
+                        );
+                      },
+                    )
+                  : const SizedBox.shrink(),
+            );
+          },
+        ),
+      ],
     );
   }
 
-  Widget _buildProblemCard(_ProblemItem item) {
-    final solutionLabel = 'landing.migozz_solution_label'.tr();
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Question mark icon
-          SvgPicture.asset(
-            'assets/images/landing/Ask_icons.svg',
-            width: 36,
-            height: 36,
-            colorFilter: const ColorFilter.mode(_hotPink, BlendMode.srcIn),
-          ),
-          const SizedBox(height: 10),
-          // Title (pink, underlined)
-          Text(
-            item.title,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              color: _hotPink,
-              fontFamily: 'Bebas Neue',
-              height: 1.3,
-              decoration: TextDecoration.underline,
-              decorationColor: _hotPink,
+  Widget _buildProblemCard(_ProblemCard card, bool isMobile) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Icon + Title in a row
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SvgPicture.asset(
+              'assets/images/landing/Ask_icons.svg',
+              width: 36,
+              height: 36,
+              colorFilter: const ColorFilter.mode(_hotPink, BlendMode.srcIn),
             ),
-          ),
-          const SizedBox(height: 6),
-          // Subtitle
-          Text(
-            item.problem,
-            style: const TextStyle(
-              fontSize: 16,
+            const SizedBox(width: 10),
+            Expanded(
+              child: ShaderMask(
+                shaderCallback: (bounds) => const LinearGradient(
+                  colors: [Color(0xFFD43AB6), Color(0xFF9321BD)],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ).createShader(bounds),
+                child: Text(
+                  card.title,
+                  style: TextStyle(
+                    fontSize: isMobile ? 25 : 30,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    fontFamily: 'Poppins',
+                    height: 1.2,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        // Problem description
+        Padding(
+          padding: const EdgeInsets.only(left: 46),
+          child: Text(
+            card.subtitle,
+            style: TextStyle(
+              fontSize: isMobile ? 10 : 15,
               color: Colors.black87,
-              fontFamily: 'Bebas Neue',
+              fontFamily: 'Poppins',
               height: 1.4,
             ),
           ),
-          const SizedBox(height: 8),
-          // Solution
-          RichText(
+        ),
+        const SizedBox(height: 2),
+        // Solution
+        Padding(
+          padding: const EdgeInsets.only(left: 46),
+          child: RichText(
             text: TextSpan(
-              style: const TextStyle(
-                fontSize: 12,
+              style: TextStyle(
+                fontSize: isMobile ? 10 : 15,
                 color: Colors.black87,
-                fontFamily: 'Bebas Neue',
+                fontFamily: 'Poppins',
                 height: 1.4,
               ),
               children: [
-                TextSpan(
-                  text: '$solutionLabel ',
-                  style: const TextStyle(
-                    color: _hotPink,
-                    fontWeight: FontWeight.bold,
+                WidgetSpan(
+                  alignment: PlaceholderAlignment.baseline,
+                  baseline: TextBaseline.alphabetic,
+                  child: ShaderMask(
+                    shaderCallback: (bounds) => const LinearGradient(
+                      colors: [Color(0xFFD43AB6), Color(0xFF9321BD)],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ).createShader(bounds),
+                    child: Text(
+                      card.solutionTitle,
+                      style: TextStyle(
+                        fontSize: isMobile ? 10 : 15,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        fontFamily: 'Poppins',
+                        height: 1.4,
+                      ),
+                    ),
                   ),
                 ),
-                TextSpan(text: item.solution),
+                TextSpan(text: card.solution),
               ],
             ),
           ),
-        ],
-      ),
+        ),
+        SizedBox(height: 40),
+      ],
     );
   }
 }
 
-class _ProblemItem {
+class _ProblemCard {
   final String title;
-  final String problem;
+  final String subtitle;
+  final String solutionTitle;
   final String solution;
 
-  _ProblemItem({
+  const _ProblemCard({
     required this.title,
-    required this.problem,
+    required this.subtitle,
+    required this.solutionTitle,
     required this.solution,
   });
 }
