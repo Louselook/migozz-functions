@@ -20,12 +20,12 @@ class SocialNetworksFooter extends StatelessWidget {
     _SocialLink(
       'Instagram',
       'assets/icons/social_networks/Instagram.svg',
-      'https://www.instagram.com/migozzofficial/',
+      'https://www.instagram.com/migozzglobal',
     ),
     _SocialLink(
       'Facebook',
       'assets/icons/social_networks/Facebook.svg',
-      'https://www.facebook.com/profile.php?id=61581724792864',
+      'https://www.facebook.com/share/187VJfa99Z/',
     ),
     _SocialLink(
       'YouTube',
