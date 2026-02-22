@@ -28,10 +28,10 @@ class LandingPage extends StatelessWidget {
               ],
             ),
           ),
-          // Floating "Log in" button — bottom-right corner
+          // "Log in" tab — right side, lower area
           Positioned(
-            right: 16,
-            bottom: 24,
+            right: 0,
+            bottom: MediaQuery.of(context).size.height * 0.18,
             child: _LoginFloatingButton(onTap: () => context.go('/onboarding')),
           ),
         ],
@@ -53,19 +53,23 @@ class _LoginFloatingButton extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFFFF8C00), Color(0xFFFF4500)],
+              colors: [Color(0xFFEC8D37), Color(0xFFD4548A), Color(0xFF601E71)],
+              stops: [0.0, 0.38, 1.0],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(16),
+              bottomLeft: Radius.circular(16),
+            ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.35),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
@@ -77,16 +81,19 @@ class _LoginFloatingButton extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 11,
+                  fontSize: 13,
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.w500,
                   height: 1.2,
                 ),
               ),
-              SizedBox(height: 2),
+              SizedBox(height: 4),
               Text(
                 'Log in',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 16,
+                  fontSize: 20,
+                  fontFamily: 'Poppins',
                   fontWeight: FontWeight.w800,
                 ),
               ),
