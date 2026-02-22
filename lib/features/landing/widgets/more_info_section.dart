@@ -16,9 +16,11 @@ class MoreInfoSection extends StatelessWidget {
 
     final solutionLabel = 'landing.migozz_solution_label'.tr();
 
-    // Build the list of problem cards from keyed translations (0–9).
+    // Build the list of problem cards — only the 8 shown in the Figma design.
+    // Order: left column (0,2,4,8) / right column (5,6,7,9) → interleaved.
+    const problemIndices = [0, 5, 2, 6, 4, 7, 8, 9];
     final problems = <_ProblemCard>[];
-    for (int i = 0; i < 10; i++) {
+    for (final i in problemIndices) {
       final title = 'landing.problem_${i}_title'.tr();
       if (title == 'landing.problem_${i}_title') continue;
       problems.add(
