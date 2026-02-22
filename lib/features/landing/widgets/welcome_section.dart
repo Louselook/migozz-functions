@@ -7,7 +7,6 @@ class WelcomeSection extends StatelessWidget {
   const WelcomeSection({super.key});
 
   static const _bgColor = Color(0xFF0D0D0D);
-  static const _hotPink = Color(0xFFE91E8B);
 
   @override
   Widget build(BuildContext context) {
@@ -66,21 +65,30 @@ class WelcomeSection extends StatelessWidget {
           mainText,
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: isMobile ? 26 : 36,
+            fontSize: isMobile ? 43 : 95,
             fontWeight: FontWeight.w900,
             color: Colors.white,
             fontFamily: 'Bebas Neue',
+            height: 1.0,
           ),
         ),
         if (highlightText.isNotEmpty)
-          Text(
-            highlightText,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: isMobile ? 32 : 44,
-              fontWeight: FontWeight.w900,
-              color: _hotPink,
-              fontFamily: 'Bebas Neue',
+          ShaderMask(
+            shaderCallback: (bounds) => const LinearGradient(
+              colors: [Color(0xFFD43AB6), Color(0xFF9321BD)],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ).createShader(bounds),
+            child: Text(
+              highlightText,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: isMobile ? 52 : 95,
+                fontWeight: FontWeight.w900,
+                color: Colors.white, // ShaderMask needs white base
+                fontFamily: 'Bebas Neue',
+                height: 1.0,
+              ),
             ),
           ),
       ],
@@ -89,15 +97,16 @@ class WelcomeSection extends StatelessWidget {
 
   Widget _buildSubtitle(bool isMobile) {
     return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 600),
+      constraints: const BoxConstraints(maxWidth: 700),
       child: Text(
         'landing.welcome_subtitle'.tr(),
         textAlign: TextAlign.center,
         style: TextStyle(
-          fontSize: isMobile ? 14 : 16,
-          color: Colors.white70,
-          fontFamily: 'Bebas Neue',
-          height: 1.7,
+          fontSize: isMobile ? 14 : 30,
+          color: Colors.white,
+          fontFamily: 'Poppins',
+          fontWeight: FontWeight.w500,
+          height: 1.5,
         ),
       ),
     );
