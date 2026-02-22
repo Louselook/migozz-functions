@@ -1228,42 +1228,34 @@
     }
   },
   "landing": {
+    "banner_available": "The username @{username} is available!",
+    "revolution_title_1": "WELCOME TO THE REVOLUTION",
+    "revolution_title_2": "OF YOUR DIGITAL PRESENCE!",
+    "revolution_description": "All these people have already secured their username to\nexperience the full potential of our AI ecosystem.",
+    "revolution_cta": "Don't miss out, reserve yours now!",
+    "registered_users": "Registered users",
     "welcome_title": "YOUR FIRST AI|ECOSYSTEM",
     "welcome_subtitle": "Migozz is the ultimate AI-powered social ecosystem that connects, centralizes, and monetizes your entire digital presence.",
     "more_info_title": "THE PROBLEM WE'RE SOLVING",
     "migozz_solution_label": "Migozz Solution: ",
-    "problems": [
-      {
-        "title": "How do I connect all my Socials",
-        "problem": "Fans struggle to find creators on new platforms after an account is lost.",
-        "solution": "Smart linking ensures your followers always know where to find you, no matter what platform you're on."
-      },
-      {
-        "title": "User's Don't own their data",
-        "problem": "Platforms control your audience, so if you're banned, you lose your followers.",
-        "solution": "We give you full ownership of your follower data, so you always have access to your community."
-      },
-      {
-        "title": "How Many Followers do you really have?",
-        "problem": "Fans don't always realize you're active on multiple platforms.",
-        "solution": "Migozz seamlessly connects your followers across all platforms, making it easy for them to stay engaged."
-      },
-      {
-        "title": "Wasting too much time posting",
-        "problem": "Manually uploading content across different social media accounts takes too long.",
-        "solution": "One-click cross-posting lets you share content everywhere instantly, saving you time."
-      },
-      {
-        "title": "Unfair Account Suspensions",
-        "problem": "Accounts can be suspended without warning, leaving creators with no way to recover.",
-        "solution": "We provide backup and recovery options, ensuring you never lose access to your audience or content."
-      },
-      {
-        "title": "Platforms are charging too much",
-        "problem": "Big platforms take a large percentage of a creator's income.",
-        "solution": "We charge lower fees so you keep more of the money you earn."
-      }
-    ],
+    "problem_0_title": "How do I connect all my Socials",
+    "problem_0_problem": "Fans struggle to find creators on new platforms after an account is lost.",
+    "problem_0_solution": "Smart linking ensures your followers always know where to find you, no matter what platform you're on.",
+    "problem_1_title": "User's Don't own their data",
+    "problem_1_problem": "Platforms control your audience, so if you're banned, you lose your followers.",
+    "problem_1_solution": "We give you full ownership of your follower data, so you always have access to your community.",
+    "problem_2_title": "How Many Followers do you really have?",
+    "problem_2_problem": "Fans don't always realize you're active on multiple platforms.",
+    "problem_2_solution": "Migozz seamlessly connects your followers across all platforms, making it easy for them to stay engaged.",
+    "problem_3_title": "Wasting too much time posting",
+    "problem_3_problem": "Manually uploading content across different social media accounts takes too long.",
+    "problem_3_solution": "One-click cross-posting lets you share content everywhere instantly, saving you time.",
+    "problem_4_title": "Unfair Account Suspensions",
+    "problem_4_problem": "Accounts can be suspended without warning, leaving creators with no way to recover.",
+    "problem_4_solution": "We provide backup and recovery options, ensuring you never lose access to your audience or content.",
+    "problem_5_title": "Platforms are charging too much",
+    "problem_5_problem": "Big platforms take a large percentage of a creator's income.",
+    "problem_5_solution": "We charge lower fees so you keep more of the money you earn.",
     "join_title": "JOIN MIGOZZ!",
     "join_subtitle_one": "Create your AI Social Ecosystem!",
     "join_subtitle_two": "Receive Gifts & Monetize.",

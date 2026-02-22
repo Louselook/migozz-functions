@@ -1076,42 +1076,34 @@
     }
   },
   "landing": {
+    "banner_available": "¡El nombre de usuario @{username} está disponible!",
+    "revolution_title_1": "BIENVENIDO A LA REVOLUCIÓN",
+    "revolution_title_2": "DE TU PRESENCIA DIGITAL!",
+    "revolution_description": "Todas estas personas ya han asegurado su nombre de usuario para\nexperimentar todo el potencial de nuestro ecosistema de IA.",
+    "revolution_cta": "¡No te lo pierdas, reserva el tuyo ahora!",
+    "registered_users": "Usuarios registrados",
     "welcome_title": "TU PRIMER|ECOSISTEMA IA",
     "welcome_subtitle": "Migozz es el ecosistema social definitivo impulsado por IA que conecta, centraliza y monetiza toda tu presencia digital.",
     "more_info_title": "EL PROBLEMA QUE RESOLVEMOS",
     "migozz_solution_label": "Solución Migozz: ",
-    "problems": [
-      {
-        "title": "¿Cómo conecto todas mis redes?",
-        "problem": "Los fans luchan por encontrar creadores en nuevas plataformas cuando se pierde una cuenta.",
-        "solution": "Los enlaces inteligentes aseguran que tus seguidores siempre sepan dónde encontrarte, sin importar la plataforma."
-      },
-      {
-        "title": "Los usuarios no son dueños de sus datos",
-        "problem": "Las plataformas controlan tu audiencia, así que si te banean, pierdes a tus seguidores.",
-        "solution": "Te damos la propiedad total de los datos de tus seguidores, para que siempre tengas acceso a tu comunidad."
-      },
-      {
-        "title": "¿Cuántos seguidores tienes realmente?",
-        "problem": "Los fans no siempre se dan cuenta de que estás activo en múltiples plataformas.",
-        "solution": "Migozz conecta a la perfección a tus seguidores en todas las plataformas, facilitando que se mantengan comprometidos."
-      },
-      {
-        "title": "Perdiendo demasiado tiempo publicando",
-        "problem": "Subir contenido manualmente en diferentes cuentas de redes sociales lleva demasiado tiempo.",
-        "solution": "La publicación cruzada con un clic te permite compartir contenido en todas partes al instante, ahorrándote tiempo."
-      },
-      {
-        "title": "Suspensiones de cuenta injustas",
-        "problem": "Las cuentas pueden ser suspendidas sin previo aviso, dejando a los creadores sin forma de recuperarse.",
-        "solution": "Proporcionamos opciones de respaldo y recuperación, asegurando que nunca pierdas el acceso a tu audiencia o contenido."
-      },
-      {
-        "title": "Las plataformas cobran demasiado",
-        "problem": "Las grandes plataformas toman un gran porcentaje de los ingresos de un creador.",
-        "solution": "Cobramos tarifas más bajas para que te quedes con más dinero del que ganas."
-      }
-    ],
+    "problem_0_title": "¿Cómo conecto todas mis redes?",
+    "problem_0_problem": "Los fans luchan por encontrar creadores en nuevas plataformas cuando se pierde una cuenta.",
+    "problem_0_solution": "Los enlaces inteligentes aseguran que tus seguidores siempre sepan dónde encontrarte, sin importar la plataforma.",
+    "problem_1_title": "Los usuarios no son dueños de sus datos",
+    "problem_1_problem": "Las plataformas controlan tu audiencia, así que si te banean, pierdes a tus seguidores.",
+    "problem_1_solution": "Te damos la propiedad total de los datos de tus seguidores, para que siempre tengas acceso a tu comunidad.",
+    "problem_2_title": "¿Cuántos seguidores tienes realmente?",
+    "problem_2_problem": "Los fans no siempre se dan cuenta de que estás activo en múltiples plataformas.",
+    "problem_2_solution": "Migozz conecta a la perfección a tus seguidores en todas las plataformas, facilitando que se mantengan comprometidos.",
+    "problem_3_title": "Perdiendo demasiado tiempo publicando",
+    "problem_3_problem": "Subir contenido manualmente en diferentes cuentas de redes sociales lleva demasiado tiempo.",
+    "problem_3_solution": "La publicación cruzada con un clic te permite compartir contenido en todas partes al instante, ahorrándote tiempo.",
+    "problem_4_title": "Suspensiones de cuenta injustas",
+    "problem_4_problem": "Las cuentas pueden ser suspendidas sin previo aviso, dejando a los creadores sin forma de recuperarse.",
+    "problem_4_solution": "Proporcionamos opciones de respaldo y recuperación, asegurando que nunca pierdas el acceso a tu audiencia o contenido.",
+    "problem_5_title": "Las plataformas cobran demasiado",
+    "problem_5_problem": "Las grandes plataformas toman un gran porcentaje de los ingresos de un creador.",
+    "problem_5_solution": "Cobramos tarifas más bajas para que te quedes con más dinero del que ganas.",
     "join_title": "¡ÚNETE A MIGOZZ!",
     "join_subtitle_one": "¡Crea tu Ecosistema Social con IA!",
     "join_subtitle_two": "Recibe Regalos y Monetiza.",
