@@ -235,9 +235,7 @@ class _JoinMigozzSectionState extends State<JoinMigozzSection> {
       children: [
         Container(
           width: double.infinity,
-          constraints: BoxConstraints(
-            minHeight: screenHeight, // 100vh
-          ),
+          constraints: BoxConstraints(minHeight: screenHeight),
           decoration: const BoxDecoration(
             image: DecorationImage(
               image: AssetImage(
@@ -255,16 +253,21 @@ class _JoinMigozzSectionState extends State<JoinMigozzSection> {
                 ..._buildDecorativeVectors(isMobile),
                 // Main content
                 Padding(
-                  padding: EdgeInsets.symmetric(
-                    vertical: isMobile ? 80 : 100,
-                    horizontal: isMobile ? 16 : 32,
+                  padding: EdgeInsets.only(
+                    top: isMobile ? 80 : 120,
+                    bottom: isMobile ? 40 : 60,
+                    left: isMobile ? 16 : 32,
+                    right: isMobile ? 16 : 32,
                   ),
                   child: Center(
                     child: Container(
                       constraints: BoxConstraints(
-                        maxWidth: isMobile ? double.infinity : 800,
+                        maxWidth: isMobile ? double.infinity : 750,
                       ),
-                      padding: EdgeInsets.all(isMobile ? 24 : 48),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isMobile ? 24 : 40,
+                        vertical: isMobile ? 40 : 64,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -331,7 +334,7 @@ class _JoinMigozzSectionState extends State<JoinMigozzSection> {
                                 : _buildEmailInput(isMobile),
                           ),
 
-                          SizedBox(height: isMobile ? 20 : 32),
+                          SizedBox(height: isMobile ? 32 : 48),
 
                           // Pre-Save button — ligeramente más estrecho que el input
                           Center(
