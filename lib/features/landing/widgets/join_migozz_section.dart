@@ -273,7 +273,7 @@ class _JoinMigozzSectionState extends State<JoinMigozzSection> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Title with gradient
+                    // Title — Bebas Neue with gradient
                     ShaderMask(
                       shaderCallback: (bounds) => const LinearGradient(
                         colors: [Color(0xFFD43AB6), Color(0xFF9321BD)],
@@ -282,23 +282,25 @@ class _JoinMigozzSectionState extends State<JoinMigozzSection> {
                         'landing.join_title'.tr(),
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: isMobile ? 32 : 56,
+                          fontSize: isMobile ? 36 : 60,
                           fontWeight: FontWeight.w900,
                           color: Colors.white,
                           fontFamily: 'Bebas Neue',
-                          letterSpacing: -1,
+                          height: 1.1,
                         ),
                       ),
                     ),
-                    SizedBox(height: isMobile ? 8 : 4),
+                    SizedBox(height: isMobile ? 10 : 14),
+                    // Subtitle — Poppins
                     Text(
                       'landing.join_subtitle_one'.tr(),
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: isMobile ? 15 : 21,
-                        color: const Color(0xFF333333),
-                        fontWeight: FontWeight.w800,
-                        fontFamily: 'Bebas Neue',
+                        fontSize: isMobile ? 14 : 18,
+                        color: const Color(0xFF444444),
+                        fontWeight: FontWeight.w500,
+                        fontFamily: 'Poppins',
+                        height: 1.4,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -306,10 +308,11 @@ class _JoinMigozzSectionState extends State<JoinMigozzSection> {
                       'landing.join_subtitle_two'.tr(),
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: isMobile ? 15 : 21,
-                        color: const Color(0xFF333333),
-                        fontWeight: FontWeight.w800,
-                        fontFamily: 'Bebas Neue',
+                        fontSize: isMobile ? 14 : 18,
+                        color: const Color(0xFF444444),
+                        fontWeight: FontWeight.w500,
+                        fontFamily: 'Poppins',
+                        height: 1.4,
                       ),
                     ),
                     SizedBox(height: isMobile ? 24 : 32),
@@ -324,23 +327,20 @@ class _JoinMigozzSectionState extends State<JoinMigozzSection> {
 
                     SizedBox(height: isMobile ? 20 : 32),
 
-                    // Pre-Save button
-                    SizedBox(
-                      width: double.infinity,
+                    // Pre-Save button — ligeramente más estrecho que el input
+                    Center(
                       child: Padding(
                         padding: EdgeInsets.symmetric(
-                          horizontal: isMobile ? 16 : 0,
+                          horizontal: isMobile ? 32 : 150,
                         ),
                         child: Container(
-                          constraints: BoxConstraints(
-                            maxWidth: isMobile ? double.infinity : 550,
-                          ),
+                          width: double.infinity,
                           decoration: BoxDecoration(
                             gradient: (_isUsernameAvailable && !_isLoading)
                                 ? const LinearGradient(
                                     colors: [
-                                      Color(0xFFFF9564),
-                                      Color(0xFF9E1B9F),
+                                      Color(0xFFD43AB6),
+                                      Color(0xFF9321BD),
                                     ],
                                   )
                                 : null,
@@ -353,9 +353,9 @@ class _JoinMigozzSectionState extends State<JoinMigozzSection> {
                                     BoxShadow(
                                       color: const Color(
                                         0xFF9E1B9F,
-                                      ).withValues(alpha: 0.4),
-                                      blurRadius: 25,
-                                      offset: const Offset(0, 10),
+                                      ).withValues(alpha: 0.3),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 8),
                                     ),
                                   ]
                                 : null,
@@ -373,10 +373,10 @@ class _JoinMigozzSectionState extends State<JoinMigozzSection> {
                               foregroundColor: Colors.white,
                               disabledForegroundColor: Colors.white70,
                               padding: EdgeInsets.symmetric(
-                                vertical: isMobile ? 16 : 20,
+                                vertical: isMobile ? 14 : 18,
                               ),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(30),
                               ),
                             ),
                             child: (_showEmailInput && _isLoading)
@@ -391,8 +391,9 @@ class _JoinMigozzSectionState extends State<JoinMigozzSection> {
                                 : Text(
                                     'landing.pre_save_btn'.tr(),
                                     style: TextStyle(
-                                      fontSize: isMobile ? 20 : 28,
-                                      fontWeight: FontWeight.w800,
+                                      fontSize: isMobile ? 18 : 24,
+                                      fontWeight: FontWeight.w700,
+                                      fontFamily: 'Poppins',
                                     ),
                                   ),
                           ),
@@ -402,14 +403,15 @@ class _JoinMigozzSectionState extends State<JoinMigozzSection> {
 
                     SizedBox(height: isMobile ? 16 : 24),
 
-                    // Security note
+                    // Security note — Poppins
                     Text(
                       'landing.security_note_part_1'.tr(),
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: isMobile ? 15 : 21,
-                        color: const Color(0xFF333333),
-                        fontWeight: FontWeight.w700,
+                        fontSize: isMobile ? 13 : 16,
+                        color: const Color(0xFF555555),
+                        fontWeight: FontWeight.w500,
+                        fontFamily: 'Poppins',
                       ),
                     ),
                   ],
@@ -511,8 +513,9 @@ class _JoinMigozzSectionState extends State<JoinMigozzSection> {
           'migozz.com/',
           style: TextStyle(
             color: Color(0xFF4B5563),
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w600,
             fontSize: 17,
+            fontFamily: 'Poppins',
           ),
         ),
         Expanded(
@@ -522,13 +525,15 @@ class _JoinMigozzSectionState extends State<JoinMigozzSection> {
             style: const TextStyle(
               color: Color(0xFF4B5563),
               fontSize: 17,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w400,
+              fontFamily: 'Poppins',
             ),
             decoration: InputDecoration(
               hintText: 'landing.username_placeholder'.tr(),
               hintStyle: const TextStyle(
                 color: Color(0xFF9CA3AF),
                 fontWeight: FontWeight.w400,
+                fontFamily: 'Poppins',
               ),
               border: InputBorder.none,
               isDense: true,
@@ -559,8 +564,9 @@ class _JoinMigozzSectionState extends State<JoinMigozzSection> {
                 'migozz.com/',
                 style: TextStyle(
                   color: Color(0xFF4B5563),
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w600,
                   fontSize: 16,
+                  fontFamily: 'Poppins',
                 ),
               ),
               Expanded(
@@ -570,13 +576,15 @@ class _JoinMigozzSectionState extends State<JoinMigozzSection> {
                   style: const TextStyle(
                     color: Color(0xFF4B5563),
                     fontSize: 16,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w400,
+                    fontFamily: 'Poppins',
                   ),
                   decoration: InputDecoration(
                     hintText: 'landing.username_placeholder'.tr(),
                     hintStyle: const TextStyle(
                       color: Color(0xFF9CA3AF),
                       fontWeight: FontWeight.w400,
+                      fontFamily: 'Poppins',
                     ),
                     border: InputBorder.none,
                     isDense: true,
@@ -641,8 +649,9 @@ class _JoinMigozzSectionState extends State<JoinMigozzSection> {
                       label,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
                         fontSize: 13,
+                        fontFamily: 'Poppins',
                       ),
                     ),
             ),

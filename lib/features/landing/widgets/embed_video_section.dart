@@ -27,6 +27,8 @@ class _EmbedVideoSectionState extends State<EmbedVideoSection> {
   bool _iframeRegistered = false;
   html.IFrameElement? _iframe;
   bool _isPlaying = false;
+  bool _videoEnded = false;
+  Function(html.Event)? _messageListener;
 
   String _getVideoId(BuildContext context) {
     final locale = context.locale.languageCode;
@@ -54,13 +56,61 @@ class _EmbedVideoSectionState extends State<EmbedVideoSection> {
   }
 
   void _playVideo(String videoId) {
-    if (_isPlaying) return;
+    if (_isPlaying && !_videoEnded) return;
     // Set the src with autoplay so it starts immediately on click
     _iframe?.src =
         'https://www.youtube.com/embed/$videoId'
         '?rel=0&modestbranding=1&playsinline=1'
         '&autoplay=1&enablejsapi=1';
-    setState(() => _isPlaying = true);
+    setState(() {
+      _isPlaying = true;
+      _videoEnded = false;
+    });
+    _listenForVideoEnd();
+  }
+
+  void _listenForVideoEnd() {
+    // Remove previous listener if any
+    if (_messageListener != null) {
+      html.window.removeEventListener('message', _messageListener);
+    }
+    _messageListener = (html.Event event) {
+      if (event is html.MessageEvent) {
+        try {
+          final data = event.data;
+          if (data is String && data.contains('"info":0')) {
+            // YouTube player state 0 = ended
+            if (mounted) setState(() => _videoEnded = true);
+          }
+        } catch (_) {}
+      }
+    };
+    html.window.addEventListener('message', _messageListener);
+
+    // Also send a "listening" command to enable events from the iframe
+    Future.delayed(const Duration(milliseconds: 500), () {
+      _iframe?.contentWindow?.postMessage('{"event":"listening","id":1}', '*');
+      // Subscribe to onStateChange
+      _iframe?.contentWindow?.postMessage(
+        '{"event":"command","func":"addEventListener","args":["onStateChange"]}',
+        '*',
+      );
+    });
+  }
+
+  void _replayVideo(String videoId) {
+    setState(() {
+      _isPlaying = false;
+      _videoEnded = false;
+    });
+  }
+
+  @override
+  void dispose() {
+    if (_messageListener != null) {
+      html.window.removeEventListener('message', _messageListener);
+    }
+    super.dispose();
   }
 
   @override
@@ -115,6 +165,51 @@ class _EmbedVideoSectionState extends State<EmbedVideoSection> {
                             ),
                           ),
                         ],
+                      ),
+                    ),
+                  ),
+                ),
+
+              // Replay overlay (shown when video ends)
+              if (_videoEnded)
+                Positioned.fill(
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: GestureDetector(
+                      onTap: () => _replayVideo(videoId),
+                      child: Container(
+                        color: Colors.black.withValues(alpha: 0.7),
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 80,
+                                height: 80,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.red.shade700,
+                                ),
+                                child: const Icon(
+                                  Icons.replay,
+                                  color: Colors.white,
+                                  size: 48,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              const Text(
+                                'Replay',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: 'Bebas Neue',
+                                  letterSpacing: 2,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),
