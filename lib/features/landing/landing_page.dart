@@ -7,16 +7,13 @@ import 'widgets/slide_example_section.dart';
 import 'widgets/more_info_section.dart';
 import 'widgets/social_networks_footer.dart';
 
-/// Landing page shown only for web users who are not authenticated.
-/// Fully functional — migrated from the React LandingMigozz project.
-/// Uses the same API endpoints (API_MIGOZZ) for pre-registration.
 class LandingPage extends StatelessWidget {
   const LandingPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF242424),
+      backgroundColor: const Color(0xFF0D0D0D),
       body: Stack(
         children: [
           SingleChildScrollView(

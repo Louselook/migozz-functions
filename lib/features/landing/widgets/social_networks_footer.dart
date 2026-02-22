@@ -4,9 +4,12 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Social networks footer — social icons + WhatsApp button.
-/// Mirrors the React SocialNetworks component.
+/// Updated design inspired by landing_page2.
 class SocialNetworksFooter extends StatelessWidget {
   const SocialNetworksFooter({super.key});
+
+  static const _hotPink = Color(0xFFE91E8B);
+  static const _deepPurple = Color(0xFF7B1FA2);
 
   static const _socialLinks = [
     _SocialLink(
@@ -31,6 +34,9 @@ class SocialNetworksFooter extends StatelessWidget {
     ),
   ];
 
+  static const _whatsAppUrl =
+      'https://whatsapp.com/channel/0029VbBjViR9cDDRkiw8Wj3C';
+
   Future<void> _openUrl(String url) async {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
@@ -41,47 +47,44 @@ class SocialNetworksFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
-    final isMobile = w < 768;
+    final isMobile = w < 500;
 
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFFC238BD), Color(0xFF681C99)],
+          colors: [_hotPink, _deepPurple],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
         ),
       ),
       padding: EdgeInsets.symmetric(
-        vertical: isMobile ? 40 : 30,
-        horizontal: 20,
+        vertical: isMobile ? 24 : 32,
+        horizontal: isMobile ? 16 : 24,
       ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 900),
-          child: isMobile
-              ? Column(
-                  children: [
-                    _buildSocialIcons(isMobile),
-                    const SizedBox(height: 30),
-                    _buildWhatsAppButton(isMobile),
-                  ],
-                )
-              : Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildSocialIcons(isMobile),
-                    const SizedBox(width: 40),
-                    _buildWhatsAppButton(isMobile),
-                  ],
-                ),
-        ),
-      ),
+      child: isMobile
+          ? Column(
+              children: [
+                _buildSocialIcons(),
+                const SizedBox(height: 16),
+                _buildWhatsAppButton(),
+              ],
+            )
+          : Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildSocialIcons(),
+                const SizedBox(width: 32),
+                _buildWhatsAppButton(),
+              ],
+            ),
     );
   }
 
-  Widget _buildSocialIcons(bool isMobile) {
+  Widget _buildSocialIcons() {
     return Wrap(
-      spacing: isMobile ? 10 : 15,
-      runSpacing: 10,
+      spacing: 12,
+      runSpacing: 8,
       alignment: WrapAlignment.center,
       children: _socialLinks.map((social) {
         return MouseRegion(
@@ -89,13 +92,9 @@ class SocialNetworksFooter extends StatelessWidget {
           child: GestureDetector(
             onTap: () => _openUrl(social.url),
             child: SizedBox(
-              width: isMobile ? 40 : 50,
-              height: isMobile ? 40 : 50,
-              child: SvgPicture.asset(
-                social.iconPath,
-                width: isMobile ? 40 : 50,
-                height: isMobile ? 40 : 50,
-              ),
+              width: 36,
+              height: 36,
+              child: SvgPicture.asset(social.iconPath, width: 36, height: 36),
             ),
           ),
         );
@@ -103,43 +102,37 @@ class SocialNetworksFooter extends StatelessWidget {
     );
   }
 
-  Widget _buildWhatsAppButton(bool isMobile) {
+  Widget _buildWhatsAppButton() {
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
-        onTap: () => _openUrl('https://whatsapp.com'),
+        onTap: () => _openUrl(_whatsAppUrl),
         child: Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: isMobile ? 20 : 30,
-            vertical: isMobile ? 8 : 12,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           decoration: BoxDecoration(
-            color: const Color(0xFF6B218D),
-            borderRadius: BorderRadius.circular(50),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 15,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            color: const Color(0xFF25D366),
+            borderRadius: BorderRadius.circular(24),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               SvgPicture.asset(
                 'assets/icons/social_networks/WhatsApp.svg',
-                width: isMobile ? 30 : 36,
-                height: isMobile ? 30 : 36,
+                width: 22,
+                height: 22,
+                colorFilter: const ColorFilter.mode(
+                  Colors.white,
+                  BlendMode.srcIn,
+                ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 8),
               Text(
                 'landing.whatsapp_btn'.tr(),
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                  fontSize: isMobile ? 14 : 16,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  fontFamily: 'Bebas Neue',
                 ),
               ),
             ],

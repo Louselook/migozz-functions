@@ -1,56 +1,64 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-/// Welcome section — "YOUR FIRST AI ECOSYSTEM" with background image.
-/// Mirrors the React Welcome component.
+/// Welcome section — "YOUR FIRST AI ECOSYSTEM" with phone screenshots background.
+/// Updated design inspired by landing_page2.
 class WelcomeSection extends StatelessWidget {
   const WelcomeSection({super.key});
+
+  static const _bgColor = Color(0xFF0D0D0D);
+  static const _hotPink = Color(0xFFE91E8B);
 
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
-    final isMobile = w < 768;
-
-    final screenHeight = MediaQuery.of(context).size.height;
+    final isMobile = w < 600;
 
     return Container(
       width: double.infinity,
-      constraints: BoxConstraints(
-        minHeight: screenHeight * 0.5, // 50vh like React original
-      ),
-      decoration: const BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('assets/images/landing/fondoHome.webp'),
-          fit: BoxFit.cover,
-          alignment: Alignment.center,
-        ),
-        color: Colors.black,
-      ),
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Title with highlight
-              _buildTitle(isMobile),
-              const SizedBox(height: 32),
-              // Subtitle
-              _buildSubtitle(isMobile),
-            ],
+      color: _bgColor,
+      child: Stack(
+        children: [
+          // Phone screenshots background — fills entire section edge-to-edge
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.35,
+              child: Image.asset(
+                'assets/images/landing/Migozz_background_phone.png',
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
+                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+              ),
+            ),
           ),
-        ),
+          // Content with padding on top of bg
+          Padding(
+            padding: EdgeInsets.symmetric(
+              vertical: isMobile ? 40 : 64,
+              horizontal: isMobile ? 16 : 48,
+            ),
+            child: SizedBox(
+              width: double.infinity,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  _buildTitle(isMobile),
+                  const SizedBox(height: 20),
+                  _buildSubtitle(isMobile),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildTitle(bool isMobile) {
-    // Parse the title to handle the highlight span
-    // Original: "YOUR FIRST AI<br /><span class="highlight">ECOSYSTEM</span>"
-    // We'll split into two parts
-    final titleParts = 'landing.welcome_title'.tr().split('|');
-    final mainText = titleParts.isNotEmpty ? titleParts[0] : '';
-    final highlightText = titleParts.length > 1 ? titleParts[1] : '';
+    final parts = 'landing.welcome_title'.tr().split('|');
+    final mainText = parts.isNotEmpty ? parts[0] : '';
+    final highlightText = parts.length > 1 ? parts[1] : '';
 
     return Column(
       children: [
@@ -58,12 +66,10 @@ class WelcomeSection extends StatelessWidget {
           mainText,
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontFamily: 'Oswald',
-            fontSize: isMobile ? 32 : 96,
-            fontWeight: FontWeight.w700,
+            fontSize: isMobile ? 26 : 36,
+            fontWeight: FontWeight.w900,
             color: Colors.white,
-            height: 0.9,
-            letterSpacing: 1,
+            fontFamily: 'Bebas Neue',
           ),
         ),
         if (highlightText.isNotEmpty)
@@ -71,12 +77,10 @@ class WelcomeSection extends StatelessWidget {
             highlightText,
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontFamily: 'Oswald',
-              fontSize: isMobile ? 32 : 96,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFFD43AB6),
-              height: 0.9,
-              letterSpacing: 1,
+              fontSize: isMobile ? 32 : 44,
+              fontWeight: FontWeight.w900,
+              color: _hotPink,
+              fontFamily: 'Bebas Neue',
             ),
           ),
       ],
@@ -85,15 +89,15 @@ class WelcomeSection extends StatelessWidget {
 
   Widget _buildSubtitle(bool isMobile) {
     return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 800),
+      constraints: const BoxConstraints(maxWidth: 600),
       child: Text(
         'landing.welcome_subtitle'.tr(),
         textAlign: TextAlign.center,
         style: TextStyle(
-          fontSize: isMobile ? 16 : 24,
-          color: const Color(0xFFE0E0E0),
-          height: 1.4,
-          fontWeight: FontWeight.w400,
+          fontSize: isMobile ? 14 : 16,
+          color: Colors.white70,
+          fontFamily: 'Bebas Neue',
+          height: 1.7,
         ),
       ),
     );
