@@ -140,10 +140,10 @@ class _WebProfileStatsState extends State<WebProfileStats> {
     final isMenuSmall = size.width < 600;
     final isMenuMedium = size.width >= 600 && size.width < 1200;
     final leftMenuWidth = isMenuSmall
-        ? 95.0
+        ? 60.0
         : isMenuMedium
-        ? 110.0
-        : 140.0;
+        ? 70.0
+        : 80.0;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -168,7 +168,9 @@ class _WebProfileStatsState extends State<WebProfileStats> {
                         child: SingleChildScrollView(
                           physics: const BouncingScrollPhysics(),
                           padding: EdgeInsets.symmetric(
-                            horizontal: isMobileWidth ? 16 : (isSmall ? 20 : 40),
+                            horizontal: isMobileWidth
+                                ? 16
+                                : (isSmall ? 20 : 40),
                             vertical: 30,
                           ),
                           child: Column(

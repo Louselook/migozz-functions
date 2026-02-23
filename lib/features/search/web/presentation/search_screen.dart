@@ -26,10 +26,10 @@ class _SearchScreenState extends State<SearchScreen> {
     final isSmallScreen = size.width < 600;
     final isMediumScreen = size.width >= 600 && size.width < 1200;
     final sideMenuWidth = isSmallScreen
-        ? 95.0
+        ? 60.0
         : isMediumScreen
-        ? 110.0
-        : 140.0;
+        ? 70.0
+        : 80.0;
     final availableWidth = size.width - sideMenuWidth;
     final horizontalPadding = availableWidth * 0.15;
 

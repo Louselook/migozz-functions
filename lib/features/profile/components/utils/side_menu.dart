@@ -12,7 +12,9 @@ class SideMenu extends StatelessWidget {
   final VoidCallback? onChatTap;
   final bool isChatOpen;
   final int unreadCount;
-  final bool isAuthenticated;
+
+  /// If null, auto-detects from [AuthCubit].
+  final bool? isAuthenticated;
 
   const SideMenu({
     super.key,
@@ -20,11 +22,15 @@ class SideMenu extends StatelessWidget {
     this.onChatTap,
     this.isChatOpen = false,
     this.unreadCount = 0,
-    this.isAuthenticated = true,
+    this.isAuthenticated,
   });
 
   @override
   Widget build(BuildContext context) {
+    // Auto-detect auth state when not explicitly provided
+    final isAuth =
+        isAuthenticated ?? context.watch<AuthCubit>().state.isAuthenticated;
+
     final size = MediaQuery.of(context).size;
     final isSmallScreen = size.width < 600;
     final isMediumScreen = size.width >= 600 && size.width < 1200;
@@ -34,58 +40,39 @@ class SideMenu extends StatelessWidget {
 
     // Responsive configs
     final menuWidth = isSmallScreen
-        ? 95.0
+        ? 60.0
         : isMediumScreen
-        ? 110.0
-        : 140.0;
-
-    final borderRadius = isSmallScreen ? 15.0 : 20.0;
+        ? 70.0
+        : 80.0;
 
     final createButtonSize = isSmallScreen
-        ? 56.0
+        ? 46.0
         : isMediumScreen
-        ? 60.0
-        : 64.0;
+        ? 50.0
+        : 54.0;
 
     final createIconSize = isSmallScreen
-        ? 28.0
+        ? 24.0
         : isMediumScreen
-        ? 30.0
-        : 32.0;
+        ? 26.0
+        : 28.0;
 
     final createFontSize = isSmallScreen
-        ? 10.0
+        ? 9.0
         : isMediumScreen
-        ? 11.0
-        : 12.0;
+        ? 10.0
+        : 11.0;
 
     return Container(
       width: menuWidth,
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.85),
-        borderRadius: BorderRadius.only(
-          topRight: Radius.circular(borderRadius),
-          bottomRight: Radius.circular(borderRadius),
-        ),
-        border: Border(
-          right: BorderSide(
-            color: const Color.fromARGB(
-              209,
-              255,
-              255,
-              255,
-            ).withValues(alpha: 0.6),
-            width: isSmallScreen ? 1.5 : 2.0,
-          ),
-        ),
-      ),
+      decoration: const BoxDecoration(color: Color(0xFF1B1B1B)),
       child: Column(
         children: [
-          SizedBox(height: isSmallScreen ? 15.0 : 20.0),
+          SizedBox(height: isSmallScreen ? 10.0 : 14.0),
 
           // Menú items
           Expanded(
-            child: isAuthenticated
+            child: isAuth
                 ? Column(
                     children: [
                       _MenuItem(
@@ -188,7 +175,7 @@ class SideMenu extends StatelessWidget {
                     ],
                   ),
           ),
-          if (kIsWeb && isAuthenticated)
+          if (kIsWeb && isAuth)
             _MenuItem(
               icon: Icons.logout,
               label: 'web.menu.logout'.tr(),
@@ -201,9 +188,9 @@ class SideMenu extends StatelessWidget {
             ),
 
           // Botón Create — solo para usuarios autenticados
-          if (isAuthenticated)
+          if (isAuth)
             Padding(
-              padding: EdgeInsets.only(bottom: isSmallScreen ? 20.0 : 30.0),
+              padding: EdgeInsets.only(bottom: isSmallScreen ? 14.0 : 20.0),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -297,30 +284,30 @@ class _MenuItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final iconSize = isSmallScreen
-        ? 24.0
+        ? 20.0
         : isMediumScreen
-        ? 26.0
-        : 28.0;
+        ? 22.0
+        : 24.0;
 
     final fontSize = isSmallScreen
-        ? 9.0
-        : isMediumScreen
-        ? 10.0
-        : 11.0;
-
-    final verticalPadding = isSmallScreen
-        ? 12.0
-        : isMediumScreen
-        ? 14.0
-        : 16.0;
-
-    final horizontalPadding = isSmallScreen
         ? 8.0
         : isMediumScreen
-        ? 10.0
-        : 12.0;
+        ? 9.0
+        : 10.0;
 
-    final spacing = isSmallScreen ? 4.0 : 6.0;
+    final verticalPadding = isSmallScreen
+        ? 10.0
+        : isMediumScreen
+        ? 12.0
+        : 14.0;
+
+    final horizontalPadding = isSmallScreen
+        ? 7.0
+        : isMediumScreen
+        ? 9.0
+        : 11.0;
+
+    final spacing = isSmallScreen ? 3.5 : 5.0;
 
     return InkWell(
       key: tutorialKey,

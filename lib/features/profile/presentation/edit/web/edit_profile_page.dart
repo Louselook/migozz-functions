@@ -315,10 +315,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final isMenuSmall = screenWidth < 600;
     final isMenuMedium = screenWidth >= 600 && screenWidth < 1200;
     final sideMenuWidth = isMenuSmall
-        ? 95.0
+        ? 60.0
         : isMenuMedium
-        ? 110.0
-        : 140.0;
+        ? 70.0
+        : 80.0;
 
     return Scaffold(
       backgroundColor: Colors.black,

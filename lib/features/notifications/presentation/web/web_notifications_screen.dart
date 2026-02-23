@@ -145,10 +145,10 @@ class _WebNotificationsScreenState extends State<WebNotificationsScreen> {
     final isMenuSmall = size.width < 600;
     final isMenuMedium = size.width >= 600 && size.width < 1200;
     final leftMenuWidth = isMenuSmall
-        ? 95.0
+        ? 60.0
         : isMenuMedium
-        ? 110.0
-        : 140.0;
+        ? 70.0
+        : 80.0;
     final unreadCount = _notifications.where((n) => !n.isRead).length;
 
     return Scaffold(

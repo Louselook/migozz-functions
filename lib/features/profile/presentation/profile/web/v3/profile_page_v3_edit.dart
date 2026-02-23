@@ -295,10 +295,10 @@ class _WebProfileContentV3EditState extends State<WebProfileContentV3Edit> {
     final isMobileWidth = size.width < 600;
     final isMediumScreen = size.width >= 600 && size.width < 1200;
     final leftMenuWidth = isMobileWidth
-        ? 95.0
+        ? 60.0
         : isMediumScreen
-        ? 110.0
-        : 140.0;
+        ? 70.0
+        : 80.0;
 
     // Use Watchers
     final authState = context.watch<AuthCubit>().state;

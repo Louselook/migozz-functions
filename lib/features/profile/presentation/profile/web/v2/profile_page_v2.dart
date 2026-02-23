@@ -29,10 +29,10 @@ class WebProfileContentV2 extends StatelessWidget {
     final isSmallScreen = size.width < 600;
     final isMenuMedium = size.width >= 600 && size.width < 1200;
     final leftMenuWidth = isSmallScreen
-        ? 95.0
+        ? 60.0
         : isMenuMedium
-        ? 110.0
-        : 140.0;
+        ? 70.0
+        : 80.0;
 
     // Calcular seguidores totales desde socialEcosystem
     final totalFollowers = _calculateTotalFollowers(user.socialEcosystem);

@@ -27,7 +27,7 @@ class WebProfileContentV3 extends StatelessWidget {
     final size = MediaQuery.of(context).size;
     final isMobileWidth = size.width < 600;
     final isMenuMedium = size.width >= 600 && size.width < 1200;
-    final leftMenuWidth = isMenuMedium ? 110.0 : 140.0;
+    final leftMenuWidth = isMenuMedium ? 70.0 : 80.0;
 
     // Build social links for the V3 social circles component
     final socialLinks = _buildSocialLinks(user.socialEcosystem, user.username);
