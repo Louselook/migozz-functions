@@ -113,6 +113,51 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   late final GoRouter _router;
 
+  static const Set<String> _reservedRootSegments = {
+    'onboarding',
+    'login',
+    'register',
+    'profile',
+    'profile-view',
+    'search',
+    'edit-profile',
+    'visual-edit',
+    'policy-deleted',
+    'terms-privacy',
+    'support',
+    'complete-profile',
+    'ia-chat',
+    'stats',
+    'notifications',
+    'followers',
+    'chats',
+    'chat',
+    'splash',
+    'u',
+    'link',
+  };
+
+  bool _shouldNavigateToInitialLocation(String rawPath) {
+    final normalized = rawPath.trim();
+    if (normalized.isEmpty || normalized == '/') return false;
+
+    final segments = Uri.parse(normalized).pathSegments;
+    if (segments.isEmpty) return false;
+
+    // /u/:username public profile link
+    if (segments.length == 2 && segments.first == 'u') {
+      return segments[1].isNotEmpty;
+    }
+
+    // /:username public profile link
+    if (segments.length == 1) {
+      final root = segments.first.toLowerCase();
+      return root.isNotEmpty && !_reservedRootSegments.contains(root);
+    }
+
+    return false;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -134,9 +179,11 @@ class _MyAppState extends State<MyApp> {
       try {
         final initialLocation = Uri.base.path;
 
-        if (initialLocation.isNotEmpty && initialLocation != "/") {
+        if (_shouldNavigateToInitialLocation(initialLocation)) {
           debugPrint("➡️ Deep link detectado: $initialLocation");
           _router.go(initialLocation);
+        } else {
+          debugPrint("ℹ️ Deep link inicial ignorado: $initialLocation");
         }
       } catch (e, st) {
         debugPrint("⚠️ Error al navegar al deep link inicial: $e\n$st");

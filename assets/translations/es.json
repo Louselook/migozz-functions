@@ -331,6 +331,18 @@
         "success": "Biografía actualizada correctamente",
         "errorUpdate": "Error al actualizar la biografía:"
       },
+      "plataform": {
+        "title": "Agregar nueva plataforma",
+        "image": "Seleccionar origen de imagen",
+        "imageError": "Error al seleccionar imagen:",
+        "addName": "Agregar nombre de plataforma",
+        "addUsername": "Agregar tu nombre de usuario",
+        "addLogo": "Agregar logo de plataforma",
+        "addTapLogo": "Toca para agregar logo",
+        "addLink": "Agregar enlace de tu perfil",
+        "camera": "Cámara",
+        "gallery": "Galería"
+      },
       "links": {
         "title": "Enlaces destacados",
         "add": "+ Añadir enlace.",
