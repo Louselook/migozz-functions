@@ -583,6 +583,7 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
           'chats',
           'chat',
           'splash', // por si acaso
+          'link', // reserved from mobile startup/deeplink placeholder
         };
 
         if (!reservedRoots.contains(rootSegment)) {
