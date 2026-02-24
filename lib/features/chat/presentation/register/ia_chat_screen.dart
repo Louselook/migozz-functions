@@ -139,10 +139,6 @@ class _IaChatScreenState extends State<IaChatScreen> {
 
         if (!mounted) return;
 
-        try {
-          LoadingOverlay.show(context);
-        } catch (_) {}
-
         await RegistrationHandler.completeRegistration(
           context: context,
           registerCubit: registerCubit,
@@ -150,10 +146,6 @@ class _IaChatScreenState extends State<IaChatScreen> {
         );
 
         if (!mounted) return;
-
-        try {
-          LoadingOverlay.hide(context);
-        } catch (_) {}
 
         if (!mounted) return;
         context.go('/profile');
@@ -322,7 +314,10 @@ class _IaChatScreenState extends State<IaChatScreen> {
       customAppBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: PrimaryText("chat.assistant.title".tr()),
+        title: PrimaryText(
+          "chat.assistant.title".tr(),
+          fontSize: kIsWeb ? 55 : null,
+        ),
         centerTitle: true,
       ),
       customInput: ListenableBuilder(

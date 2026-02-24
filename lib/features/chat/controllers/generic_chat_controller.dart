@@ -55,6 +55,7 @@ class GenericChatController extends ChangeNotifier {
       "type": MessageType.text,
       "text": text,
       "time": getTimeNow(),
+      "sentAt": DateTime.now(),
       "userId": userId,
     });
 

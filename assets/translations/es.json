@@ -19,6 +19,10 @@
       "getStarted": "Empecemos"
     }
   },
+  "interestSelect": {
+    "choose": "Elige tus intereses",
+    "desc": "Selecciona todo aquello que te apasiona"
+  },
   "login": {
     "validations": {
       "emptyEmail": "El correo no puede estar vacío",
@@ -35,7 +39,15 @@
       "subtitle1": "Conecta tu comunidad",
       "inputText": "Ingresa tu correo",
       "buttonText": "Iniciar sesión",
+      "google": "Ingresar con Google",
+      "apple": "Ingresar con Apple",
+      "registration": {
+        "step1": "Creando tu cuenta...",
+        "step2": "Configurando tu perfil...",
+        "step3": "Casi listo..."
+      },
       "subtitle2": "O inicia sesión con",
+      "supportHint": "Si tienes algún error, por favor repórtalo aquí",
       "bottomText": {
         "newUser": "¿NUEVO USUARIO?\n ",
         "register": "¡REGÍSTRATE AQUÍ!",
@@ -44,8 +56,11 @@
       }
     },
     "otp": {
-      "title": "Ingresa el código OTP",
-      "subtitle": "El código OTP se ha enviado a {email}",
+      "title": "Ingresa el código de verificación",
+      "subtitle": "El código de verificación se ha enviado a {email}",
+      "verifyIdentity": "Verifica tu identidad",
+      "enterCodeHint": "Ingresa el código enviado a tu correo",
+      "verifyButton": "Verificar ",
       "resend": "Reenviar",
       "errorSend": "Error al enviar OTP",
       "errorInvalid": "OTP incorrecto ❌",
@@ -97,7 +112,9 @@
   "termsPrivacy": {
     "header": "Términos y Privacidad",
     "button": {
-      "backToLogin": "Volver al inicio de sesión"
+      "backToLogin": "Volver al inicio de sesión",
+      "accept": "Acepto",
+      "decline": "No acepto"
     },
     "terms": {
       "title": "Términos del Servicio",
@@ -233,6 +250,17 @@
     }
   },
   "profile": {
+    "donation": {
+      "title": "¡Enviar Regalos! 🎁",
+      "message": "¡Estará disponible muy pronto!"
+    },
+    "sendGifts": {
+      "title": "Enviar Regalos",
+      "comingSoon": "Próximamente",
+      "ok": "OK",
+      "tooltipTitle": "¡Próximamente!",
+      "tooltipMessage": " 🚀 Estamos dando los últimos toques a las herramientas de monetización para tu ecosistema. Esta función estará disponible en la próxima actualización. ¡Prepárate para empezar a generar ingresos!"
+    },
     "contact": {
       "title": "Contactar a {}",
       "sendEmail": "Enviar email",
@@ -242,8 +270,12 @@
     "shareMessage": "¡Mira el perfil de {} en Migozz! {}",
     "shareSubject": "Perfil de {} en Migozz",
     "chat": {
-      "filter": "Nuevo",
-      "search": "Buscar"
+      "filter": "+ DM",
+      "search": "Buscar",
+      "vip": "VIP",
+      "prime": "Prime",
+      "ia": "IA",
+      "comingSoon": "Esta función estará disponible pronto"
     },
     "design": {
       "buttonText": "Diseño",
@@ -279,7 +311,7 @@
     },
     "customization": {
       "uploadingProfilePicture": {
-        "title": "Subir",
+        "title": "Cambiar foto",
         "uploading": "Cargando",
         "success": "Foto de perfil actualizada exitosamente",
         "error": "Error al actualizar la foto de perfil:"
@@ -302,6 +334,18 @@
         "label": "Bio",
         "success": "Biografía actualizada correctamente",
         "errorUpdate": "Error al actualizar la biografía:"
+      },
+      "plataform": {
+        "title": "Agregar nueva plataforma",
+        "image": "Seleccionar origen de imagen",
+        "imageError": "Error al seleccionar imagen:",
+        "addName": "Agregar nombre de plataforma",
+        "addUsername": "Agregar tu nombre de usuario",
+        "addLogo": "Agregar logo de plataforma",
+        "addTapLogo": "Toca para agregar logo",
+        "addLink": "Agregar enlace de tu perfil",
+        "camera": "Cámara",
+        "gallery": "Galería"
       },
       "links": {
         "title": "Enlaces destacados",
@@ -443,7 +487,8 @@
       "mediaCount": "Media",
       "friends": "Amigos",
       "fans": "Fans",
-      "subscriber": "Suscriptor"
+      "subscriber": "Suscriptor",
+      "all": "Total"
     },
     "overview": {
       "community": "Comunidad",
@@ -572,6 +617,7 @@
       "errorUpdateProfilePic": "Error al actualizar la foto: $e",
       "updateProfile": "Perfil actualizado con éxito",
       "errorUpdateProfile": "Error al guardar el perfil: $e",
+      "usernameTaken": "Este nombre de usuario ya está en uso. Por favor elige otro.",
       "detectLocation": "🔍 Detectando ubicación...",
       "errorDetecLocation": "❌ No se pudo obtener la ubicación actual",
       "errorUserLogin": "Error: usuario no ha iniciado sesión",
@@ -588,6 +634,7 @@
         "cellPhone": "Teléfono celular",
         "dateOfBirth": "Fecha de nacimiento",
         "gender": "Género",
+        "bio": "Biografía",
         "location": "Ubicación"
       },
       "genderOptions": {
@@ -632,7 +679,28 @@
       "text2": "{city}, {state}\n",
       "text3": "{country}\n\n",
       "text4": "¿Es correcto?",
-      "title": "Confirmar ubicacion"
+      "title": "Confirmar ubicación",
+      "sheetTitle": "Actualizar ubicación",
+      "sheetSubtitle": "Elige cómo quieres establecer tu ubicación",
+      "autoDetect": "Detectar automáticamente",
+      "autoDetectDesc": "Usar GPS para detectar tu ubicación actual",
+      "manualEntry": "Ingresar manualmente",
+      "manualEntryDesc": "Escribe tu ciudad, estado y país",
+      "manualTitle": "Ingresa tu ubicación",
+      "cityHint": "Ciudad",
+      "stateHint": "Estado / Provincia",
+      "countryHint": "País",
+      "cityRequired": "La ciudad es obligatoria",
+      "countryRequired": "El país es obligatorio",
+      "detecting": "Detectando tu ubicación...",
+      "permissionDenied": "Permiso de ubicación denegado. Puedes ingresar tu ubicación manualmente o intentar de nuevo.",
+      "permissionDeniedForever": "El permiso de ubicación fue denegado permanentemente. Habilítalo en la configuración de tu dispositivo, o ingresa tu ubicación manualmente.",
+      "serviceDisabled": "Los servicios de ubicación están desactivados. Actívalos o ingresa tu ubicación manualmente.",
+      "errorDetecting": "No se pudo detectar la ubicación. Puedes intentar de nuevo o ingresarla manualmente.",
+      "removeLocation": "Eliminar ubicación",
+      "removeLocationConfirm": "¿Estás seguro de que deseas eliminar tu ubicación?",
+      "locationRemoved": "Ubicación eliminada correctamente",
+      "openSettings": "Abrir Configuración"
     },
     "unsavedChanges": {
       "title": "Cambios sin guardar",
@@ -659,7 +727,8 @@
       "image": "Imagen",
       "default": "Predeterminado",
       "chooseImage": "Elegir imagen"
-    }
+    },
+    "copied": "¡Enlace copiado al portapapeles!"
   },
   "buttons": {
     "confirm": "Confirmar",
@@ -670,7 +739,10 @@
     "delete": "Eliminar"
   },
   "category": {
-    "title": "Elige tu categoría",
+    "title": "Elige tu Perfil",
+    "subtitle": "Selecciona 1 categoría",
+    "maxSelection": "Solo puedes elegir 1 categoría.",
+    "required": "Por favor selecciona una categoría para continuar.",
     "model": "Modelo",
     "artist": "Artista",
     "publicFigure": "Figura pública",
@@ -785,7 +857,27 @@
         "audio": "¡Por favor usa la app para enviar audio!",
         "image": "¡Por favor usa la app para enviar imágenes!"
       }
-    }
+    },
+    "dateHeader": {
+      "today": "Hoy",
+      "yesterday": "Ayer",
+      "days": {
+        "monday": "lunes",
+        "tuesday": "martes",
+        "wednesday": "miércoles",
+        "thursday": "jueves",
+        "friday": "viernes",
+        "saturday": "sábado",
+        "sunday": "domingo"
+      }
+    },
+    "title": "Mensajes",
+    "search": "Buscar",
+    "active": "Activos",
+    "new": "Nuevos",
+    "noChats": "No hay chats",
+    "selectConversation": "Selecciona una conversación",
+    "selectConversationDesc": "Elige un chat de la lista para comenzar"
   },
   "notifications": {
     "title": "Notificaciones",
@@ -798,7 +890,14 @@
       "message": "¿Estás seguro de que quieres eliminar todas las notificaciones?",
       "cancel": "Cancelar",
       "confirm": "Eliminar todo"
-    }
+    },
+    "filter": {
+      "all": "Todas",
+      "unread": "No leídas",
+      "follows": "Seguidores",
+      "messages": "Mensajes"
+    },
+    "markAllRead": "Marcar todas como leídas"
   },
   "common": {
     "loading": "Cargando...",
@@ -821,6 +920,19 @@
         "step3": "Preparando tu experiencia...",
         "step4": "¡Bienvenido de nuevo!"
       },
+      "registration": {
+        "step1": "SINCRONIZANDO\nVinculando tus cuentas de forma segura.",
+        "step2": "FUSIONANDO\nCentralizando tu huella digital.",
+        "step3": "VERIFICANDO\nAnalizando tu audiencia.",
+        "step4": "LISTO\nCanales en línea."
+      },
+      "createAccount": {
+        "step1": "Modo Sincronización\nTu identidad se está cargando en Migozz.",
+        "step2": "Construcción del Ecosistema Social\nTu ecosistema personal se está formando.",
+        "step3": "Verificación de Poder Completada\nEstructura limpia. Acceso asegurado.",
+        "step4": "Enlace Listo\nTu enlace exclusivo de Migozz se está cargando.\nUn enlace. Una identidad.",
+        "step5": "Estás en Vivo. Publícalo\nBienvenido a Migozz.\nTu ecosistema social está activo, poséelo, compártelo, hazlo crecer."
+      },
       "profile_update": {
         "step1": "Guardando tus cambios...",
         "step2": "Actualizando tu perfil...",
@@ -834,10 +946,10 @@
         "step4": "¡Usuario encontrado!"
       },
       "social_auth": {
-        "step1": "Conectando con {platform}...",
-        "step2": "Extrayendo la información de tu perfil...",
-        "step3": "Añadiendo tu contenido al ecosistema Migozz...",
-        "step4": "¡Listo! Tus redes ahora están unificadas"
+        "step1": "SINCRONIZANDO\nVinculando tus cuentas de forma segura.",
+        "step2": "FUSIONANDO\nCentralizando tu huella digital.",
+        "step3": "VERIFICANDO\nAnalizando tu audiencia.",
+        "step4": "LISTO\nCanales en línea."
       },
       "logout": {
         "step1": "Cerrando sesión...",
@@ -866,6 +978,8 @@
   },
   "tutorial": {
     "skip": "Saltar",
+    "continue": "Continuar",
+    "skipTutorial": "Saltar tutorial",
     "welcome": {
       "title": "Bienvenido a Migozz",
       "description": "Descubre tu nuevo ecosistema social. Te guiaremos por las funciones principales para que aproveches al máximo tu experiencia.",
@@ -933,6 +1047,115 @@
       "confirmMessage": "¿Quieres ver el tutorial de nuevo? Te guiaremos por las funciones principales de la aplicación.",
       "confirmButton": "Sí, mostrar tutorial",
       "cancelButton": "Cancelar"
+    },
+    "accountStatus": {
+      "deleted": {
+        "title": "Cuenta Eliminada",
+        "message": "Esta cuenta fue eliminada por el equipo de desarrollo."
+      },
+      "banned": {
+        "title": "Cuenta Suspendida",
+        "message": "Esta cuenta ha sido suspendida por infringir las reglas de la aplicación."
+      },
+      "bannedLogin": {
+        "title": "Cuenta Suspendida",
+        "message": "Este correo/cuenta ha sido suspendido por infringir las reglas de la aplicación. No puedes crear una nueva cuenta con este correo."
+      },
+      "button": "OK"
+    }
+  },
+  "web": {
+    "menu": {
+      "search": "Buscar",
+      "profile": "Perfil",
+      "chat": "Chat",
+      "notifications": "Notificaciones",
+      "stats": "Estadísticas",
+      "configuration": "Configuración",
+      "login": "Iniciar Sesión",
+      "signup": "Registrarse",
+      "logout": "Cerrar Sesión",
+      "create": "Crear"
+    },
+    "chat": {
+      "title": "Mensajes",
+      "tab_chat": "Chat",
+      "no_messages": "No hay mensajes",
+      "no_new_messages": "No hay mensajes nuevos",
+      "error_oops": "¡Ups! Algo salió mal",
+      "no_results": "No se encontraron resultados",
+      "new_message": "Nuevo chat"
+    }
+  },
+  "landing": {
+    "banner_available": "¡El nombre de usuario @{username} está disponible!",
+    "revolution_title_1": "BIENVENIDO A LA REVOLUCIÓN",
+    "revolution_title_2": "DE TU PRESENCIA DIGITAL!",
+    "revolution_description": "Todas estas personas ya han asegurado su nombre de usuario para\nexperimentar todo el potencial de nuestro ecosistema de IA.",
+    "revolution_cta": "¡No te lo pierdas, reserva el tuyo ahora!",
+    "registered_users": "Usuarios registrados",
+    "welcome_title": "TU PRIMER|ECOSISTEMA IA",
+    "welcome_subtitle": "Migozz es el ecosistema social definitivo impulsado por IA que conecta, centraliza y monetiza toda tu presencia digital.",
+    "more_info_title": "EL PROBLEMA QUE RESOLVEMOS",
+    "migozz_solution_label": "Solución Migozz: ",
+    "problem_0_title": "¿Cómo conecto todas mis redes?",
+    "problem_0_problem": "Los fans luchan por encontrar creadores en nuevas plataformas cuando se pierde una cuenta.",
+    "problem_0_solution": "Los enlaces inteligentes aseguran que tus seguidores siempre sepan dónde encontrarte, sin importar la plataforma.",
+    "problem_1_title": "Los usuarios no son dueños de sus datos",
+    "problem_1_problem": "Las plataformas controlan tu audiencia, así que si te banean, pierdes a tus seguidores.",
+    "problem_1_solution": "Te damos la propiedad total de los datos de tus seguidores, para que siempre tengas acceso a tu comunidad.",
+    "problem_2_title": "¿Cuántos seguidores tienes realmente?",
+    "problem_2_problem": "Los fans no siempre se dan cuenta de que estás activo en múltiples plataformas.",
+    "problem_2_solution": "Migozz unifica tus audiencias en todas las plataformas, mostrando tu alcance total real en un solo lugar.",
+    "problem_3_title": "Perdiendo demasiado tiempo publicando",
+    "problem_3_problem": "Subir contenido manualmente en diferentes cuentas de redes sociales lleva demasiado tiempo.",
+    "problem_3_solution": "La publicación cruzada con un clic te permite compartir contenido en todas partes al instante, ahorrándote tiempo.",
+    "problem_4_title": "Suspensiones de cuenta injustas",
+    "problem_4_problem": "Las cuentas pueden ser suspendidas sin previo aviso, dejando a los creadores sin forma de recuperarse.",
+    "problem_4_solution": "Las opciones de respaldo y recuperación aseguran que nunca pierdas el acceso a tu audiencia o contenido.",
+    "problem_5_title": "Las plataformas cobran demasiado",
+    "problem_5_problem": "Las grandes plataformas toman un gran porcentaje de los ingresos de un creador.",
+    "problem_5_solution": "Cobramos tarifas más bajas para que te quedes con más dinero del que ganas.",
+    "problem_6_title": "Regalos, una forma fácil de apoyar directamente",
+    "problem_6_problem": "Los fans quieren apoyar, pero las plataformas lo hacen complicado o costoso.",
+    "problem_6_solution": "Los regalos integrados permiten a los fans apoyar a los creadores al instante, de forma transparente y global.",
+    "problem_7_title": "Los creadores están infravalorados como marcas",
+    "problem_7_problem": "Las plataformas individuales fragmentan tu influencia y diluyen el poder de tu marca.",
+    "problem_7_solution": "Migozz agrega todas tus comunidades en un perfil de marca verificado, aumentando la credibilidad, el valor percibido y el potencial de monetización.",
+    "problem_8_title": "Es difícil seguir amigos en distintas plataformas",
+    "problem_8_problem": "Mantenerse al día con amigos significa buscar en múltiples apps y perfiles.",
+    "problem_8_solution": "Sigue todas las plataformas de tus amigos desde un solo perfil, sin perderte contenido nunca más.",
+    "problem_9_title": "El crecimiento real requiere inteligencia",
+    "problem_9_problem": "Los datos están dispersos en las plataformas, lo que dificulta saber qué funciona, qué no y cómo crecer de forma más inteligente.",
+    "problem_9_solution": "El análisis de ecosistema impulsado por IA rastrea toda tu huella social, entrega información clara de crecimiento y proporciona consejos prácticos para escalar más rápido en todas las plataformas.",
+    "join_title": "¡ÚNETE A MIGOZZ!",
+    "join_subtitle_one": "¡Crea tu Ecosistema Social con IA!",
+    "join_subtitle_two": "Recibe Regalos y Monetiza.",
+    "username_placeholder": "tunombre",
+    "email_placeholder": "Ingresa tu correo",
+    "claim_btn": "Verificar Disponibilidad",
+    "pre_save_btn": "Pre-Guardar",
+    "security_note_part_1": "Seguro. Gratis. Sin complicaciones.",
+    "security_note_part_2": "",
+    "slide_1_title": "MIRA TU IMPACTO GLOBAL EN UN SOLO LUGAR",
+    "slide_1_text": "Visualiza el número total de tus seguidores en todas tus plataformas. Migozz te muestra el verdadero poder de tu comunidad.",
+    "slide_2_title": "HAZ CRECER TU INFLUENCIA EN TODAS PARTES",
+    "slide_2_text": "Tus seguidores pueden seguirte en otras redes directamente desde Migozz. Tú decides cómo y dónde conectar.",
+    "slide_3_title": "TU IMPACTO ES RECOMPENSADO.",
+    "slide_3_text": "Recibe regalos por tu influencia y participación. Cuanto más creces, más recompensas desbloqueas.",
+    "whatsapp_btn": "Únete a nuestro canal de WhatsApp",
+    "alerts": {
+      "enter_username": "Por favor, ingresa un nombre de usuario.",
+      "username_taken": "El nombre de usuario '{username}' ya está en uso.",
+      "username_available": "¡El nombre de usuario '{username}' está disponible!",
+      "check_user_error": "Ocurrió un error al verificar el nombre de usuario.",
+      "enter_email": "Por favor, ingresa tu correo electrónico.",
+      "invalid_email": "Por favor, ingresa un correo electrónico válido.",
+      "username_taken_late": "El nombre de usuario '{username}' ya ha sido tomado.",
+      "email_registered": "El correo electrónico ya está registrado.",
+      "verification_sent": "Se ha enviado un correo de verificación.",
+      "registration_error": "No se pudo completar el registro. Inténtalo de nuevo.",
+      "process_error": "Ocurrió un error al procesar tu solicitud."
     }
   },
   

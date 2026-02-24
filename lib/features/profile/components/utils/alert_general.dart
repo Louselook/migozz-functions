@@ -3,12 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:migozz_app/core/color.dart';
 
 class AlertGeneral {
-  static Future<void> show(BuildContext context, int type, {String? message}) {
+  static Future<void> show(
+    BuildContext context,
+    int type, {
+    String? message,
+    Duration? autoDismissAfter,
+  }) {
     return showDialog(
       context: context,
       barrierDismissible: true,
       barrierColor: Colors.black.withValues(alpha: 0.7),
-      builder: (ctx) => _AlertCard(type: type, message: message),
+      builder: (ctx) => _AlertCard(
+        type: type,
+        message: message,
+        autoDismissAfter: autoDismissAfter,
+      ),
     );
   }
 
@@ -34,16 +43,34 @@ class AlertGeneral {
   }
 }
 
-class _AlertCard extends StatelessWidget {
+class _AlertCard extends StatefulWidget {
   final int type;
   final String? message;
+  final Duration? autoDismissAfter;
 
-  const _AlertCard({required this.type, this.message});
+  const _AlertCard({required this.type, this.message, this.autoDismissAfter});
+
+  @override
+  State<_AlertCard> createState() => _AlertCardState();
+}
+
+class _AlertCardState extends State<_AlertCard> {
+  @override
+  void initState() {
+    super.initState();
+    if (widget.autoDismissAfter != null) {
+      Future.delayed(widget.autoDismissAfter!, () {
+        if (mounted && Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final iconData = _iconFor(type);
-    final color = _colorFor(type);
+    final iconData = _iconFor(widget.type);
+    final color = _colorFor(widget.type);
 
     final screenWidth = MediaQuery.of(context).size.width;
     final cardWidth = (screenWidth * 0.8).clamp(280.0, 340.0);
@@ -87,10 +114,10 @@ class _AlertCard extends StatelessWidget {
                         ),
                         child: Icon(iconData, size: 48, color: Colors.white),
                       ),
-                      if (message != null) ...[
+                      if (widget.message != null) ...[
                         const SizedBox(height: 14),
                         Text(
-                          message!,
+                          widget.message!,
                           textAlign: TextAlign.center,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,

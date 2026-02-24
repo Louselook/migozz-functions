@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:migozz_app/core/components/atomics/loading_overlay.dart';
+import 'package:migozz_app/features/profile/components/utils/loader.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 
@@ -44,6 +45,8 @@ class RegistrationHandler {
       final missing = <String>[];
       final s = registerCubit.state;
       if (s.email == null || (s.email as String).trim().isEmpty) {
+        // Only required for Email/OTP flow (non-social). Here we don't know the
+        // flow, so we log it, but Email/OTP is already validated earlier.
         missing.add('email');
       }
       if (s.fullName == null || (s.fullName as String).trim().isEmpty) {
@@ -52,13 +55,13 @@ class RegistrationHandler {
       if (s.username == null || (s.username as String).trim().isEmpty) {
         missing.add('username');
       }
-      if (s.voiceNoteUrl == null || (s.voiceNoteUrl as String).trim().isEmpty) {
-        missing.add('voiceNoteUrl');
+      // 📍 Location is now OPTIONAL - user can deny permission and still complete registration
+      if (s.location == null) {
+        missing.add('location');
       }
-      if (s.avatarUrl == null || (s.avatarUrl as String).trim().isEmpty) {
-        missing.add('avatarUrl');
+      if (s.socialEcosystem == null || s.socialEcosystem!.isEmpty) {
+        missing.add('socialEcosystem');
       }
-      if (s.location == null) missing.add('location');
       debugPrint('   -> Campos faltantes: ${missing.join(", ")}');
 
       if (context.mounted) {
@@ -75,7 +78,10 @@ class RegistrationHandler {
     // Proceder con el registro según el flujo
     try {
       if (!context.mounted) return;
-      LoadingOverlay.show(context);
+      LoadingOverlay.show(context, type: LoaderType.createAccount);
+
+      // Track when the loader was shown so we can enforce a minimum display time
+      final loaderStartTime = DateTime.now();
 
       if (isSocialAuthUser) {
         // firebaseUser ya no es null porque isSocialAuthUser es true
@@ -91,6 +97,19 @@ class RegistrationHandler {
           registerCubit: registerCubit,
           authCubit: authCubit,
         );
+      }
+
+      // Ensure the loader is displayed for a minimum of 10 seconds so the user
+      // can read through all 5 registration sequence messages (2 s each).
+      final elapsed = DateTime.now().difference(loaderStartTime);
+      const minLoaderDuration = Duration(seconds: 10);
+      if (elapsed < minLoaderDuration) {
+        await Future.delayed(minLoaderDuration - elapsed);
+      }
+
+      // Hide the loader after the minimum display time
+      if (context.mounted) {
+        LoadingOverlay.hide(context);
       }
     } catch (e, st) {
       if (context.mounted) {
@@ -114,7 +133,9 @@ class RegistrationHandler {
     required AuthCubit authCubit,
     required String uid,
   }) async {
-    debugPrint('🔵 [RegistrationHandler] Flujo Social Auth (Google/Apple) iniciado');
+    debugPrint(
+      '🔵 [RegistrationHandler] Flujo Social Auth (Google/Apple) iniciado',
+    );
 
     final Map<String, dynamic> updateData = {};
 
@@ -217,19 +238,12 @@ class RegistrationHandler {
 
       debugPrint('✅ [RegistrationHandler] Firestore actualizado');
 
-      if (context.mounted) {
-        LoadingOverlay.hide(context);
-      }
-
       // Actualizar estados (esto dispara la redirección del router)
       await authCubit.refreshUserProfile();
       registerCubit.reset();
 
       debugPrint('🎉 [RegistrationHandler] Flujo Social Auth completado');
     } catch (e, st) {
-      if (context.mounted) {
-        LoadingOverlay.hide(context);
-      }
       debugPrint('❌ [RegistrationHandler] Error en flujo Social Auth: $e\n$st');
       rethrow;
     }
@@ -275,23 +289,6 @@ class RegistrationHandler {
     try {
       String uid;
 
-      // ✅ Si es pre-registrado, primero eliminar el documento pre-order
-      // para evitar conflictos de email/UID, luego registrar normalmente
-      if (isPreRegistered && preOrderId != null) {
-        debugPrint(
-          '🗑️ [RegistrationHandler] Eliminando pre-order $preOrderId antes de registrar...',
-        );
-
-        final deleteSuccess = await registerCubit.deletePreOrder();
-        if (!deleteSuccess) {
-          debugPrint('❌ [RegistrationHandler] No se pudo eliminar pre-order');
-          throw Exception('Error eliminando documento pre-order');
-        }
-        debugPrint(
-          '✅ [RegistrationHandler] Pre-order eliminado, procediendo con registro normal...',
-        );
-      }
-
       // 🆕 FLUJO NORMAL para todos los usuarios:
       // Crear usuario Auth + documento Firestore
       debugPrint('🆕 [RegistrationHandler] Registrando usuario...');
@@ -303,6 +300,20 @@ class RegistrationHandler {
       );
       debugPrint('✅ [RegistrationHandler] Usuario creado con UID: $uid');
 
+      // ✅ Si es pre-registrado, eliminar el documento pre-order DESPUÉS del registro.
+      // Deleting before creating the user can fail due to Firestore security rules.
+      if (isPreRegistered && preOrderId != null) {
+        debugPrint(
+          '🗑️ [RegistrationHandler] Eliminando pre-order $preOrderId después de registrar (uid=$uid)...',
+        );
+        final deleteSuccess = await registerCubit.deletePreOrder();
+        if (!deleteSuccess) {
+          debugPrint(
+            '⚠️ [RegistrationHandler] No se pudo eliminar pre-order; continuando igualmente.',
+          );
+        }
+      }
+
       // Resetear el cubit
       registerCubit.reset();
 
@@ -312,16 +323,8 @@ class RegistrationHandler {
       // Refrescar perfil (dispara redirección del router)
       await authCubit.refreshUserProfile();
 
-      // Ocultar loading
-      if (context.mounted) {
-        LoadingOverlay.hide(context);
-      }
-
       debugPrint('🎉 [RegistrationHandler] Flujo Email/OTP completado');
     } catch (e, st) {
-      if (context.mounted) {
-        LoadingOverlay.hide(context);
-      }
       debugPrint('❌ [RegistrationHandler] Error en flujo Email/OTP: $e\n$st');
       rethrow;
     }

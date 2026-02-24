@@ -3,14 +3,6 @@
 
 /// Preguntas en ESPAÑOL
 final Map<String, Map<String, dynamic>> questionsEs = {
-  "welcome": {
-    "text":
-        "¡Bienvenidos Migozz! 🌟\n\nEstás a punto de unirte al nuevo ecosistema social digital. Vamos a configurar tu perfil para que puedas conectar con tu comunidad.",
-    "options": [],
-    "step": "regProgress.welcome",
-    "keepTalk": true,
-    "autoAdvance": true,
-  },
   // "language": {
   //   "text": "👋 ¡Hola! Soy Migozz. ¿En qué idioma prefieres continuar?",
   //   "options": ["Español", "English"],
@@ -19,7 +11,8 @@ final Map<String, Map<String, dynamic>> questionsEs = {
   //   "keyboardType": "text",
   // },
   "fullName": {
-    "text": "Empecemos. Escribe tu nombre completo:",
+    "text":
+        "Bienvenido a Migozz. Estás a punto de crear tu nuevo ecosistema social digital. Por favor, ¿cuál es tu nombre y apellido?",
     "options": [],
     "step": "regProgress.fullName",
     "keepTalk": false,
@@ -27,7 +20,7 @@ final Map<String, Map<String, dynamic>> questionsEs = {
   },
 
   "username": {
-    "text": "Perfecto {fullName}. Ahora necesito tu nombre de usuario:",
+    "text": "Perfecto {fullName}. Elige tu apodo:",
     "options": [],
     "step": "regProgress.username",
     "keepTalk": false,
@@ -35,15 +28,22 @@ final Map<String, Map<String, dynamic>> questionsEs = {
     "generateSuggestions": true,
   },
 
-  // "gender": {
-  //   "text": "¡Excelente apodo! ¿Cuál es tu género?",
-  //   "options": ["Hombre", "Mujer"],
-  //   "step": "regProgress.gender",
-  //   "keepTalk": false,
-  //   "keyboardType": "text",
-  // },
+  "emailReask": {
+    "text": "Tu correo actual es: {email}. ¿Deseas cambiarlo?",
+    "options": ["No, está bien", "Sí, cambiar"],
+    "step": "regProgress.emailReask",
+    "keepTalk": false,
+  },
+
+  "gender": {
+    "text": "¿Cuál es tu género?",
+    "options": ["Hombre", "Mujer", "Prefiero no decir"],
+    "step": "regProgress.gender",
+    "keepTalk": false,
+    "keyboardType": "text",
+  },
   "socialEcosystem": {
-    "text": "Vincula tus redes sociales:",
+    "text": "¡Casi terminamos! Vincula tus redes sociales 📱",
     "options": [],
     "step": "regProgress.socialEcosystem",
     "keepTalk": false,
@@ -51,8 +51,8 @@ final Map<String, Map<String, dynamic>> questionsEs = {
   },
 
   "location": {
-    "text": "Tu ubicación detectada: {location}. ¿Es correcta?",
-    "options": ["Sí", "No"],
+    "text": "¿Te gustaría agregar tu ubicación?",
+    "options": ["Yes", "Rather not say"],
     "step": "regProgress.location",
     "keepTalk": false,
   },
@@ -81,7 +81,7 @@ final Map<String, Map<String, dynamic>> questionsEs = {
   },
 
   "emailVerification": {
-    "text": "📩 Se ha enviado un código de 6 dígitos a tu correo electrónico.",
+    "text": "📩 Se ha enviado un código de 6 dígitos a {email}.",
     "options": [],
     "step": "regProgress.emailVerification",
     "keepTalk": true,
@@ -133,40 +133,46 @@ final Map<String, Map<String, dynamic>> questionsEs = {
     "keepTalk": false,
   },
 
+  "termsAndConditions": {
+    "text":
+        "Antes de crear tu cuenta, necesito que revises y aceptes nuestros Términos y Condiciones 📄",
+    "options": [],
+    "step": "regProgress.termsAndConditions",
+    "keepTalk": false,
+    "action": 3,
+    "showTyping": true,
+  },
+
   "confirmCreateAccount": {
-    "text": "✅ Datos completos. ¿Creamos tu cuenta?",
-    "options": ["Crear cuenta", "Cambiar algo"],
+    "text": "¿Listo para crear tu cuenta?",
+    "options": ["Sí, vamos a Migozz", "Cambiar algo"],
     "step": "regProgress.confirmCreateAccount",
     "keepTalk": false,
+    "isFinalConfirmation": true,
   },
 
   "category": {
-    "text": "Elige tus categorías para personalizar tu contenido.",
+    "text":
+        "Seleccione el tipo de perfil de cuenta que aparecerá en la pantalla. 🎯",
     "options": [],
     "step": "regProgress.category",
     "keepTalk": false,
     "action": 1,
+    "showTyping": true,
   },
 
   "interests": {
-    "text": "Ahora elige tus intereses para mostrarte contenido relevante.",
+    "text": "Prepárate para seleccionar tus intereses 💡",
     "options": [],
     "step": "regProgress.interests",
     "keepTalk": false,
     "action": 2,
+    "showTyping": true,
   },
 };
 
 /// Preguntas en INGLÉS
 final Map<String, Map<String, dynamic>> questionsEn = {
-  "welcome": {
-    "text":
-        "Welcome Migozz! 🌟\n\nYou're about to join the new digital social ecosystem. Let's set up your profile so you can connect with your community.",
-    "options": [],
-    "step": "regProgress.welcome",
-    "keepTalk": true,
-    "autoAdvance": true,
-  },
   // "language": {
   //   "text": "👋 Hello! I'm Migozz. What language do you prefer?",
   //   "options": ["English", "Español"],
@@ -175,7 +181,8 @@ final Map<String, Map<String, dynamic>> questionsEn = {
   //   "keyboardType": "text",
   // },
   "fullName": {
-    "text": "Let's get started. Enter your full name:",
+    "text":
+        "Welcome to Migozz. You're about to create your new digital social ecosystem. Please, what is your first and last name?",
     "options": [],
     "step": "regProgress.fullName",
     "keepTalk": false,
@@ -183,7 +190,7 @@ final Map<String, Map<String, dynamic>> questionsEn = {
   },
 
   "username": {
-    "text": "Got it {fullName}. Now enter your username:",
+    "text": "Got it {fullName}. Choose your Username:",
     "options": [],
     "step": "regProgress.username",
     "keepTalk": false,
@@ -191,15 +198,22 @@ final Map<String, Map<String, dynamic>> questionsEn = {
     "generateSuggestions": true,
   },
 
-  // "gender": {
-  //   "text": "Great nickname! What is your gender?",
-  //   "options": ["Male", "Female"],
-  //   "step": "regProgress.gender",
-  //   "keepTalk": false,
-  //   "keyboardType": "text",
-  // },
+  "emailReask": {
+    "text": "Your current email is: {email}. Would you like to change it?",
+    "options": ["No, it's fine", "Yes, change it"],
+    "step": "regProgress.emailReask",
+    "keepTalk": false,
+  },
+
+  "gender": {
+    "text": "What is your gender?",
+    "options": ["Male", "Female", "Rather not say"],
+    "step": "regProgress.gender",
+    "keepTalk": false,
+    "keyboardType": "text",
+  },
   "socialEcosystem": {
-    "text": "Link your social networks:",
+    "text": "Almost done! Link your social networks 📱",
     "options": [],
     "step": "regProgress.socialEcosystem",
     "keepTalk": false,
@@ -207,8 +221,8 @@ final Map<String, Map<String, dynamic>> questionsEn = {
   },
 
   "location": {
-    "text": "Detected location: {location}. Is this correct?",
-    "options": ["Yes", "No"],
+    "text": "Would you like to add your location?",
+    "options": ["Yes", "Rather not say"],
     "step": "regProgress.location",
     "keepTalk": false,
   },
@@ -237,7 +251,7 @@ final Map<String, Map<String, dynamic>> questionsEn = {
   },
 
   "emailVerification": {
-    "text": "📩 A 6-digit code has been sent to your email.",
+    "text": "📩 A 6-digit code has been sent to {email}.",
     "options": [],
     "step": "regProgress.emailVerification",
     "keepTalk": true,
@@ -289,27 +303,40 @@ final Map<String, Map<String, dynamic>> questionsEn = {
     "keepTalk": false,
   },
 
+  "termsAndConditions": {
+    "text":
+        "Before creating your account, please review and accept our Terms & Conditions 📄",
+    "options": [],
+    "step": "regProgress.termsAndConditions",
+    "keepTalk": false,
+    "action": 3,
+    "showTyping": true,
+  },
+
   "confirmCreateAccount": {
-    "text": "✅ Data complete. Create your account?",
-    "options": ["Create account", "Change something"],
+    "text": "Ready to create your account?",
+    "options": ["Yes, go to Migozz", "Change something"],
     "step": "regProgress.confirmCreateAccount",
     "keepTalk": false,
+    "isFinalConfirmation": true,
   },
 
   "category": {
-    "text": "Choose your categories to personalize your content.",
+    "text": "Select your type of account profile screen coming up 🎯",
     "options": [],
     "step": "regProgress.category",
     "keepTalk": false,
     "action": 1,
+    "showTyping": true,
   },
 
   "interests": {
-    "text": "Now choose your interests to show you relevant content.",
+    "text": "Get ready interest selection coming up 💡",
     "options": [],
     "step": "regProgress.interests",
     "keepTalk": false,
     "action": 2,
+    "showTyping": true,
   },
 };
 
@@ -322,34 +349,35 @@ final Map<String, Map<String, dynamic>> errorMessagesEs = {
   //   "keepTalk": false,
   // },
   "fullName": {
-    "text": "Nombre y apellido requeridos.",
+    "text": "Necesito tu nombre y apellido para continuar.",
     "options": [],
     "step": "regProgress.fullName",
     "keepTalk": false,
   },
 
   "username": {
-    "text": "Mínimo 3 caracteres, sin espacios.",
+    "text": "El usuario debe tener al menos 3 letras y sin espacios.",
     "options": [],
     "step": "regProgress.username",
     "keepTalk": false,
   },
 
-  // "gender": {
-  //   "text": "Por favor elige una opción válida.",
-  //   "options": ["Hombre", "Mujer", "Otro"],
-  //   "step": "regProgress.gender",
-  //   "keepTalk": false,
-  // },
+  "gender": {
+    "text": "Elige una de las opciones que te di 😊",
+    "options": ["Hombre", "Mujer", "Prefiero no decir"],
+    "step": "regProgress.gender",
+    "keepTalk": false,
+  },
   "location": {
-    "text": "Responde Sí o No.",
+    "text": "Solo dime Sí o No 😊",
     "options": ["Sí", "No"],
     "step": "regProgress.location",
     "keepTalk": false,
   },
 
   "email": {
-    "text": "Ingresa un correo electrónico válido (ejemplo: tu@correo.com).",
+    "text":
+        "Hmm, eso no parece un correo válido. Prueba algo como tu@correo.com",
     "options": [],
     "step": "regProgress.email",
     "keepTalk": false,
@@ -357,21 +385,21 @@ final Map<String, Map<String, dynamic>> errorMessagesEs = {
   },
 
   "sendOTP": {
-    "text": "Responde Sí o No.",
+    "text": "Solo dime Sí o No 😊",
     "options": ["Sí", "No"],
     "step": "regProgress.sendOTP",
     "keepTalk": false,
   },
 
   "emailVerification": {
-    "text": "Código incorrecto. Intenta de nuevo.",
+    "text": "Ese código no es correcto. ¿Lo intentas de nuevo?",
     "options": ["Reenviar código", "Cambiar correo"],
     "step": "regProgress.emailVerification",
     "keepTalk": false,
   },
 
   "phone": {
-    "text": "Número de teléfono inválido.",
+    "text": "Ese número no parece válido. Intenta de nuevo.",
     "options": [],
     "step": "regProgress.phone",
     "keepTalk": false,
@@ -394,34 +422,35 @@ final Map<String, Map<String, dynamic>> errorMessagesEn = {
   //   "keepTalk": false,
   // },
   "fullName": {
-    "text": "First and last name required.",
+    "text": "I need your first and last name to continue.",
     "options": [],
     "step": "regProgress.fullName",
     "keepTalk": false,
   },
 
   "username": {
-    "text": "Min 3 characters, no spaces.",
+    "text": "Your username needs at least 3 characters with no spaces.",
     "options": [],
     "step": "regProgress.username",
     "keepTalk": false,
   },
 
-  // "gender": {
-  //   "text": "Please choose a valid option.",
-  //   "options": ["Male", "Female"],
-  //   "step": "regProgress.gender",
-  //   "keepTalk": false,
-  // },
+  "gender": {
+    "text": "Pick one of the options I gave you 😊",
+    "options": ["Male", "Female", "Rather not say"],
+    "step": "regProgress.gender",
+    "keepTalk": false,
+  },
   "location": {
-    "text": "Answer Yes or No.",
+    "text": "Just tell me Yes or No 😊",
     "options": ["Yes", "No"],
     "step": "regProgress.location",
     "keepTalk": false,
   },
 
   "email": {
-    "text": "Please enter a valid email address (e.g. you@email.com).",
+    "text":
+        "Hmm, that doesn't look like a valid email. Try something like you@email.com",
     "options": [],
     "step": "regProgress.email",
     "keepTalk": false,
@@ -429,21 +458,21 @@ final Map<String, Map<String, dynamic>> errorMessagesEn = {
   },
 
   "sendOTP": {
-    "text": "Answer Yes or No.",
+    "text": "Just tell me Yes or No 😊",
     "options": ["Yes", "No"],
     "step": "regProgress.sendOTP",
     "keepTalk": false,
   },
 
   "emailVerification": {
-    "text": "Incorrect code. Try again.",
+    "text": "That code didn't work. Want to try again?",
     "options": ["Resend code", "Change email"],
     "step": "regProgress.emailVerification",
     "keepTalk": false,
   },
 
   "phone": {
-    "text": "Invalid phone number.",
+    "text": "That doesn't look like a valid number. Try again.",
     "options": [],
     "step": "regProgress.phone",
     "keepTalk": false,
@@ -465,7 +494,7 @@ final Map<String, Map<String, dynamic>> contextMessagesEs = {
   },
 
   "changeEmail": {
-    "text": "Ingresa tu nuevo correo:",
+    "text": "\u00bfCu\u00e1l es tu nuevo correo?",
     "options": [],
     "step": "regProgress.emailVerification",
     "keepTalk": false,

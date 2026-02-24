@@ -46,7 +46,7 @@ void initializeBlocProviders() {
 
   // Crear EditCubit después de configurar el callback
   editCubit = EditCubit(locator<UserService>(), authCubit);
-  
+
   // Crear FollowerCubit
   followerCubit = FollowerCubit(locator<FollowerService>());
   //Passing authCubit to Wallet cubit

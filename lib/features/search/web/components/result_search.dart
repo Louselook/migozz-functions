@@ -212,7 +212,11 @@ class _ResultSearchState extends State<ResultSearch> {
             );
 
             // Navegar a la pantalla de perfil con el usuario buscado
-            context.push('/profile-view', extra: user);
+            if (user.username.isNotEmpty) {
+              context.go('/u/${user.username}');
+            } else {
+              context.push('/profile-view', extra: user);
+            }
           },
         );
       },

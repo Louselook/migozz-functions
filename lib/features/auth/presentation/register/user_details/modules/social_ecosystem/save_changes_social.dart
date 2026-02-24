@@ -16,6 +16,7 @@ Future<void> saveSocialChanges(BuildContext context, String userId) async {
     const SnackBar(
       content: Text('Changes saved successfully!'),
       backgroundColor: Colors.green,
+      duration: Duration(seconds: 5),
     ),
   );
 

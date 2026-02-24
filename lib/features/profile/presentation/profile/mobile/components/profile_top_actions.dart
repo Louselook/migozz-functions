@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:migozz_app/features/profile/components/follow_button.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/features/tutorial/profile/profile_tutorial_keys.dart';
@@ -14,6 +15,7 @@ class ProfileTopActions extends StatefulWidget {
   final String? targetUserId;
   final String? currentUserId;
   final ProfileTutorialKeys? profileTutorialKeys;
+  final bool isAuthenticated;
 
   const ProfileTopActions({
     super.key,
@@ -26,6 +28,7 @@ class ProfileTopActions extends StatefulWidget {
     this.targetUserId,
     this.currentUserId,
     this.profileTutorialKeys,
+    this.isAuthenticated = true,
   });
 
   @override
@@ -80,9 +83,10 @@ class _ProfileTopActionsState extends State<ProfileTopActions>
 
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.only(left: 10, right: 10, top: 0),
+        padding: const EdgeInsets.only(left: 10, right: 10, top: 20),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ✅ BOTÓN IZQUIERDO (menú o regresar)
             !widget.isOwnProfile
@@ -98,9 +102,9 @@ class _ProfileTopActionsState extends State<ProfileTopActions>
                           width: 1,
                         ),
                       ),
-                      child: Icon(
+                      child: const Icon(
                         Icons.arrow_back,
-                        color: const Color(0xFFFFFFFF),
+                        color: Color(0xFFFFFFFF),
                         size: 32,
                       ),
                     ),
@@ -130,14 +134,41 @@ class _ProfileTopActionsState extends State<ProfileTopActions>
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Botón de Follow para perfiles de otros usuarios
+                // Botón de Follow para perfiles de otros usuarios (autenticado)
                 if (!widget.isOwnProfile &&
+                    widget.isAuthenticated &&
                     widget.targetUserId != null &&
                     widget.currentUserId != null) ...[
                   FollowButton(
                     targetUserId: widget.targetUserId!,
                     currentUserId: widget.currentUserId!,
                     compact: true,
+                  ),
+                ],
+                // Botón de Follow para no autenticados — abre login prompt
+                if (!widget.isOwnProfile && !widget.isAuthenticated) ...[
+                  GestureDetector(
+                    onTap: () => _showLoginPrompt(context),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFFF0050), Color(0xFFFF6B9D)],
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        'Follow',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
                 // Solo mostrar el contenedor de acciones si es perfil propio
@@ -204,8 +235,9 @@ class _ProfileTopActionsState extends State<ProfileTopActions>
                               ),
                               child: ShaderMask(
                                 blendMode: BlendMode.srcIn,
-                                shaderCallback: (bounds) =>
-                                    AppColors.primaryGradient.createShader(bounds),
+                                shaderCallback: (bounds) => AppColors
+                                    .primaryGradient
+                                    .createShader(bounds),
                                 child: const Icon(
                                   Icons.edit_outlined,
                                   color: Colors.white,
@@ -224,6 +256,100 @@ class _ProfileTopActionsState extends State<ProfileTopActions>
           ],
         ),
       ),
+    );
+  }
+
+  void _showLoginPrompt(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            width: 340,
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1A1A1A),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.08),
+                width: 1,
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.lock_outline, color: Colors.white70, size: 48),
+                const SizedBox(height: 16),
+                const Text(
+                  'Join Migozz',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Log in or sign up to follow, chat and send gifts.',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    fontSize: 15,
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          Navigator.of(ctx).pop();
+                          context.go('/register');
+                        },
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Colors.white24),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          'Sign Up',
+                          style: TextStyle(color: Colors.white, fontSize: 15),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(ctx).pop();
+                          context.go('/login');
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFF0050),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          'Log In',
+                          style: TextStyle(color: Colors.white, fontSize: 15),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

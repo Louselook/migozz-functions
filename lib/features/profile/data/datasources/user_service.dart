@@ -1,6 +1,6 @@
-import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:migozz_app/core/utils/camera_permission_handler.dart';
 import 'package:migozz_app/features/auth/services/media_service.dart';
 
@@ -43,17 +43,16 @@ class UserService {
   Future<String?> changeAvatar(String userId, BuildContext context) async {
     try {
       // Show bottom sheet to select source
-      final imagePath = await _showImageSourceBottomSheet(context);
+      final xfile = await _showImageSourceBottomSheet(context);
 
-      if (imagePath == null) {
+      if (xfile == null) {
         debugPrint('⚠️ [UserService] No se seleccionó imagen.');
         return null;
       }
 
-      final file = File(imagePath);
       final urls = await _mediaService.uploadFiles(
         uid: userId,
-        files: {MediaType.avatar: file},
+        files: {MediaType.avatar: xfile},
       );
 
       final url = urls[MediaType.avatar];
@@ -71,8 +70,8 @@ class UserService {
   }
 
   /// Show bottom sheet to select image source
-  Future<String?> _showImageSourceBottomSheet(BuildContext context) async {
-    return showModalBottomSheet<String>(
+  Future<XFile?> _showImageSourceBottomSheet(BuildContext context) async {
+    return showModalBottomSheet<XFile>(
       context: context,
       backgroundColor: Colors.grey[900],
       shape: const RoundedRectangleBorder(
@@ -92,28 +91,31 @@ class UserService {
                     style: TextStyle(color: Colors.white),
                   ),
                   onTap: () async {
-                    final path = await CameraPermissionHandler.openCamera(
+                    final file = await CameraPermissionHandler.openCameraXFile(
                       imageQuality: 85,
                       context: context,
                     );
                     if (context.mounted) {
-                      Navigator.pop(context, path);
+                      Navigator.pop(context, file);
                     }
                   },
                 ),
                 ListTile(
-                  leading: const Icon(Icons.photo_library, color: Colors.purple),
+                  leading: const Icon(
+                    Icons.photo_library,
+                    color: Colors.purple,
+                  ),
                   title: const Text(
                     'Choose from Gallery',
                     style: TextStyle(color: Colors.white),
                   ),
                   onTap: () async {
-                    final path = await CameraPermissionHandler.openGallery(
+                    final file = await CameraPermissionHandler.openGalleryXFile(
                       imageQuality: 85,
                       context: context,
                     );
                     if (context.mounted) {
-                      Navigator.pop(context, path);
+                      Navigator.pop(context, file);
                     }
                   },
                 ),
@@ -131,5 +133,51 @@ class UserService {
         );
       },
     );
+  }
+
+  /// ---------------------------
+  /// 🔹 VERIFICAR SI USERNAME YA EXISTE
+  /// ---------------------------
+  /// Retorna true si el username ya está en uso por otro usuario
+  /// [username] - El username a verificar
+  /// [excludeUserId] - El ID del usuario actual (para excluirlo de la búsqueda al editar)
+  Future<bool> isUsernameTaken(String username, {String? excludeUserId}) async {
+    try {
+      final normalizedUsername = username.trim().toLowerCase();
+
+      if (normalizedUsername.isEmpty || normalizedUsername.length < 3) {
+        return false; // Username inválido, no buscar
+      }
+
+      final querySnapshot = await _firestore
+          .collection('users')
+          .where('username', isEqualTo: normalizedUsername)
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isEmpty) {
+        debugPrint('✅ [UserService] Username "$normalizedUsername" disponible');
+        return false;
+      }
+
+      // Si hay un resultado, verificar si es el mismo usuario (para edición)
+      if (excludeUserId != null) {
+        final existingUserId = querySnapshot.docs.first.id;
+        if (existingUserId == excludeUserId) {
+          debugPrint(
+            '✅ [UserService] Username "$normalizedUsername" pertenece al mismo usuario',
+          );
+          return false; // El username pertenece al usuario actual, está OK
+        }
+      }
+
+      debugPrint(
+        '⚠️ [UserService] Username "$normalizedUsername" ya está en uso',
+      );
+      return true;
+    } catch (e) {
+      debugPrint('❌ [UserService] Error verificando username: $e');
+      return false; // En caso de error, permitir (la validación final será en el servidor)
+    }
   }
 }

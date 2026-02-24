@@ -15,8 +15,8 @@ import 'package:universal_io/io.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:universal_html/html.dart' as html;
 import 'dart:convert';
-import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
-import 'package:migozz_app/features/profile/components/utils/Loader.dart';
+import 'package:migozz_app/features/profile/components/utils/alert_general.dart';
+import 'package:migozz_app/features/profile/components/utils/loader.dart';
 
 /// Pantalla que muestra un QR y permite compartir el enlace del perfil
 /// de un usuario. Si no se pasa [userId], se usa el usuario logueado.
@@ -53,7 +53,7 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
   final GlobalKey _screenshotKey = GlobalKey(); // Key for screenshot
 
   static const String _baseProfileUrl =
-      'https://migozz-e2a21.web.app/u'; // Cambia a tu dominio real
+      'https://migozz.com'; // Cambia a tu dominio real
 
   static const List<String> _emojiImages = [
     'assets/emojis/emoji_1.png',
@@ -145,10 +145,6 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
   }
 
   // Save current mode
-  Future<void> _saveMode(BackgroundMode mode) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('background_mode', mode.toString());
-  }
 
   // Extract dominant color from emoji image
   Future<void> _extractColorFromEmoji(String emojiPath) async {
@@ -263,86 +259,133 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
   }
 
   String _buildUrl(String username) =>
-      '$_baseProfileUrl/${username.toLowerCase()}';
+      '$_baseProfileUrl/u/${username.toLowerCase()}';
 
   Future<void> _shareProfile(_ProfileData data) async {
     try {
-      // Capture the screenshot
-      RenderRepaintBoundary boundary =
+      final boundary =
           _screenshotKey.currentContext!.findRenderObject()
               as RenderRepaintBoundary;
-      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
-      ByteData? byteData = await image.toByteData(
-        format: ui.ImageByteFormat.png,
-      );
-      Uint8List pngBytes = byteData!.buffer.asUint8List();
+
+      final image = await boundary.toImage(pixelRatio: 3.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+
+      if (byteData == null) {
+        throw Exception("Failed to convert image to bytes");
+      }
+
+      final pngBytes = byteData.buffer.asUint8List();
 
       final shareMessage = 'share.title'.tr(
         namedArgs: {'displayName': data.displayName, 'link': data.link},
       );
+
       final shareSubject = 'share.subject'.tr(
         namedArgs: {'displayName': data.displayName},
       );
 
+      // 🔥 Create XFile differently for web vs mobile
       if (kIsWeb) {
-        // For web, just share the text with link
-        Share.share(shareMessage, subject: shareSubject);
-      } else {
-        // Mobile: Save to temp directory and share with image
-        final directory = await getApplicationDocumentsDirectory();
-        final timestamp = DateTime.now().millisecondsSinceEpoch;
-        final imagePath = '${directory.path}/migozz_qr_share_$timestamp.png';
-        final imageFile = File(imagePath);
-        await imageFile.writeAsBytes(pngBytes);
+        // Web: share using in-memory file
+        final xFile = XFile.fromData(
+          pngBytes,
+          mimeType: 'image/png',
+          name: 'migozz_profile.png',
+        );
 
-        // Share the image with message
         await Share.shareXFiles(
-          [XFile(imagePath)],
+          [xFile],
           text: shareMessage,
           subject: shareSubject,
         );
-      }
-    } catch (e) {
-      debugPrint('Error sharing profile: $e');
-      // Fallback to text-only share
-      Share.share(
-        'share.title'.tr(
-          namedArgs: {'displayName': data.displayName, 'link': data.link},
-        ),
-        subject: 'share.subject'.tr(
-          namedArgs: {'displayName': data.displayName},
-        ),
-      );
-    }
-  }
+      } else {
+        // Mobile (Android + iOS): save temp file with proper handling
+        final directory = await getTemporaryDirectory();
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        final filePath = '${directory.path}/migozz_share_$timestamp.png';
 
-  // Toggle between modes
-  void _toggleMode() {
-    setState(() {
-      switch (_currentMode) {
-        case BackgroundMode.emoji:
-          _currentMode = BackgroundMode.colors;
-          break;
-        case BackgroundMode.colors:
-          _currentMode = BackgroundMode.image;
-          break;
-        case BackgroundMode.image:
-          _currentMode = BackgroundMode.emoji;
-          break;
-      }
-    });
-    _saveMode(_currentMode);
-  }
+        final file = File(filePath);
+        await file.writeAsBytes(pngBytes, flush: true);
 
-  // Get button label based on current mode
-  String _getButtonLabel() {
-    switch (_currentMode) {
-      case BackgroundMode.emoji:
-        return 'share.customization.emoji'.tr();
-      case BackgroundMode.colors:
-        return 'share.customization.colors'.tr();
-      case BackgroundMode.image:
-        return 'share.customization.image'.tr();
+        // Verify file was written successfully
+        if (!await file.exists()) {
+          throw Exception("Failed to save file");
+        }
+
+        debugPrint('📱 Sharing file from: $filePath');
+        debugPrint('📱 File size: ${await file.length()} bytes');
+
+        // Get the render box for sharePositionOrigin (required for iPad)
+        // ignore: use_build_context_synchronously
+        final box = context.findRenderObject() as RenderBox?;
+        final sharePositionOrigin = box != null
+            ? box.localToGlobal(Offset.zero) & box.size
+            : null;
+
+        // Share with proper configuration for iOS
+        final result = await Share.shareXFiles(
+          [XFile(filePath)],
+          text: shareMessage,
+          subject: shareSubject,
+          sharePositionOrigin: sharePositionOrigin,
+        );
+
+        debugPrint('📱 Share result: ${result.status}');
+
+        // Clean up the temp file after a delay (iOS needs time to read it)
+        Future.delayed(const Duration(seconds: 5), () {
+          try {
+            if (file.existsSync()) {
+              file.deleteSync();
+              debugPrint('🗑️ Cleaned up temp file');
+            }
+          } catch (e) {
+            debugPrint('⚠️ Could not delete temp file: $e');
+          }
+        });
+      }
+    } catch (e, stackTrace) {
+      debugPrint('❌ Error sharing profile: $e');
+      debugPrint('Stack trace: $stackTrace');
+
+      // ✅ Safe fallback (all platforms)
+      try {
+        // ignore: use_build_context_synchronously
+        final box = context.findRenderObject() as RenderBox?;
+        final sharePositionOrigin = box != null
+            ? box.localToGlobal(Offset.zero) & box.size
+            : null;
+
+        await Share.share(
+          data.link,
+          subject: data.displayName,
+          sharePositionOrigin: sharePositionOrigin,
+        );
+      } catch (fallbackError) {
+        debugPrint('❌ Fallback share also failed: $fallbackError');
+        if (kIsWeb) {
+          await Clipboard.setData(ClipboardData(text: data.link));
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Link copied to clipboard'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        } else {
+          // Show error on mobile
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('share.error'.tr()),
+                duration: const Duration(seconds: 2),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      }
     }
   }
 
@@ -468,6 +511,7 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
                       _saveSelectedGradient(null);
                       _saveSelectedImage(null);
                       await _extractColorFromEmoji(emojiPath);
+                      // ignore: use_build_context_synchronously
                       Navigator.pop(context);
                     },
                     child: Container(
@@ -813,7 +857,15 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
         final timestamp = DateTime.now().millisecondsSinceEpoch;
         final imagePath = '${directory.path}/migozz_qr_$timestamp.png';
         final imageFile = File(imagePath);
-        await imageFile.writeAsBytes(pngBytes);
+        await imageFile.writeAsBytes(pngBytes, flush: true);
+
+        // Verify file was written successfully
+        if (!await imageFile.exists()) {
+          throw Exception("Failed to save QR code file");
+        }
+
+        debugPrint('📱 QR Code saved to: $imagePath');
+        debugPrint('📱 File size: ${await imageFile.length()} bytes');
 
         // Try to save to Downloads folder (Android/iOS)
         try {
@@ -831,22 +883,45 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
             final downloadPath =
                 '${downloadsDir.path}/migozz_qr_$timestamp.png';
             final downloadFile = File(downloadPath);
-            await downloadFile.writeAsBytes(pngBytes);
+            await downloadFile.writeAsBytes(pngBytes, flush: true);
             debugPrint('Saved to: $downloadPath');
           }
         } catch (e) {
           debugPrint('Could not save to downloads: $e');
         }
 
-        // Share the image
-        await Share.shareXFiles([
-          XFile(imagePath),
-        ], text: 'Check out my Migozz profile!');
+        // Get the render box for sharePositionOrigin (required for iPad)
+        // ignore: use_build_context_synchronously
+        final box = context.findRenderObject() as RenderBox?;
+        final sharePositionOrigin = box != null
+            ? box.localToGlobal(Offset.zero) & box.size
+            : null;
+
+        // Share the image with proper iOS support
+        final result = await Share.shareXFiles(
+          [XFile(imagePath)],
+          text: 'Check out my Migozz profile!',
+          sharePositionOrigin: sharePositionOrigin,
+        );
+
+        debugPrint('📱 Share result: ${result.status}');
 
         // Show success message
         if (mounted) {
           AlertGeneral.show(context, 1, message: 'QR Code saved and shared!');
         }
+
+        // Clean up the temp file after a delay (iOS needs time to read it)
+        Future.delayed(const Duration(seconds: 5), () {
+          try {
+            if (imageFile.existsSync()) {
+              imageFile.deleteSync();
+              debugPrint('🗑️ Cleaned up QR temp file');
+            }
+          } catch (e) {
+            debugPrint('⚠️ Could not delete QR temp file: $e');
+          }
+        });
       }
     } catch (e) {
       debugPrint('Error capturing screenshot: $e');
@@ -973,49 +1048,57 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
                                         size: 256,
                                       ),
                                       // Center logo
-                                     Positioned(top: 17,right: 17,
-                                       child: Container(
-                                         width: 45,
-                                         height: 45,
-
-                                         decoration: BoxDecoration(
-                                           color: Colors.white,border: Border.all(color: _qrColor,width: 2),
-
-                                         ),
-                                         child: Image.asset(
-                                           'assets/icons/Migozz_Icon.png',
-                                           width: 35,
-                                           height: 35,color:  _qrColor,
-                                         ),
-                                       ),
-                                     ),Positioned(top: 17,left: 17,
+                                      Positioned(
+                                        top: 28,
+                                        left: 28,
                                         child: Container(
-                                          width: 45,
-                                          height: 45,
+                                          width: 30,
+                                          height: 30,
 
                                           decoration: BoxDecoration(
-                                            color: Colors.white,border: Border.all(color: _qrColor,width: 2),
-
+                                            color: _qrColor,
                                           ),
                                           child: Image.asset(
                                             'assets/icons/Migozz_Icon.png',
                                             width: 35,
-                                            height: 35,color:  _qrColor,
+                                            height: 35,
+                                            color: Colors.white,
                                           ),
-                                        )
-                                      ),Positioned(bottom: 17,left: 17,
-                                        child: Container(
-                                          width: 45,
-                                          height: 45,
-
-                                          decoration: BoxDecoration(
-                                          color: Colors.white,border: Border.all(color: _qrColor,width: 2),
-
                                         ),
+                                      ),
+                                      Positioned(
+                                        bottom: 28,
+                                        left: 28,
+                                        child: Container(
+                                          width: 30,
+                                          height: 30,
+
+                                          decoration: BoxDecoration(
+                                            color: _qrColor,
+                                          ),
                                           child: Image.asset(
                                             'assets/icons/Migozz_Icon.png',
                                             width: 35,
-                                            height: 35,color:  _qrColor,
+                                            height: 35,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                      Positioned(
+                                        top: 28,
+                                        right: 28,
+                                        child: Container(
+                                          width: 30,
+                                          height: 30,
+
+                                          decoration: BoxDecoration(
+                                            color: _qrColor,
+                                          ),
+                                          child: Image.asset(
+                                            'assets/icons/Migozz_Icon.png',
+                                            width: 35,
+                                            height: 35,
+                                            color: Colors.white,
                                           ),
                                         ),
                                       ),
@@ -1095,25 +1178,40 @@ class _ProfileQrScreenState extends State<ProfileQrScreen> {
                   icon: Icon(Icons.save_alt, color: Colors.white),
                   onPressed: _captureAndSaveScreenshot,
                 ),
-                GestureDetector(
-                  onTap: _toggleMode,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 5,
+                // Options buttons
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _CustomOptionButton(
+                      icon: Icons.palette_outlined,
+                      label: 'Colors',
+                      isSelected: _currentMode == BackgroundMode.colors,
+                      onTap: () {
+                        setState(() => _currentMode = BackgroundMode.colors);
+                        _showColorPicker();
+                      },
                     ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
+                    const SizedBox(width: 8),
+                    _CustomOptionButton(
+                      icon: Icons.emoji_emotions_outlined,
+                      label: 'Emojis',
+                      isSelected: _currentMode == BackgroundMode.emoji,
+                      onTap: () {
+                        setState(() => _currentMode = BackgroundMode.emoji);
+                        _showEmojiPicker();
+                      },
                     ),
-                    child: Text(
-                      _getButtonLabel(),
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    const SizedBox(width: 8),
+                    _CustomOptionButton(
+                      icon: Icons.image_outlined,
+                      label: 'Image',
+                      isSelected: _currentMode == BackgroundMode.image,
+                      onTap: () {
+                        setState(() => _currentMode = BackgroundMode.image);
+                        _showImagePicker();
+                      },
                     ),
-                  ),
+                  ],
                 ),
                 IconButton(
                   icon: const Icon(Icons.close, color: Colors.white),
@@ -1137,4 +1235,39 @@ class _ProfileData {
     required this.displayName,
     required this.link,
   });
+}
+
+class _CustomOptionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _CustomOptionButton({
+    required this.icon,
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? Colors.white
+              : Colors.white.withValues(alpha: 0.3),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(
+          icon,
+          color: isSelected ? Colors.black : Colors.white,
+          size: 20,
+        ),
+      ),
+    );
+  }
 }

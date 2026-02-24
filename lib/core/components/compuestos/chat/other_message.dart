@@ -10,7 +10,8 @@ class OtherMessage extends StatelessWidget {
   final List<Map<String, String>>? profilePictures;
   final RegisterChatController? chatController;
   final String? otherUserName; 
-  final String? otherUserAvatar; 
+  final String? otherUserAvatar;
+  final bool showHeader;
 
   const OtherMessage({
     super.key,
@@ -20,7 +21,8 @@ class OtherMessage extends StatelessWidget {
     this.profilePictures,
     this.chatController,
     this.otherUserName, 
-    this.otherUserAvatar, 
+    this.otherUserAvatar,
+    this.showHeader = true,
   });
 
   @override
@@ -44,46 +46,48 @@ class OtherMessage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Encabezado con avatar y nombre
-          Row(
-            children: [
-              // Avatar personalizado o logo de Migozz
-              if (hasCustomAvatar)
-                CircleAvatar(
-                  radius: 9,
-                  backgroundImage: NetworkImage(otherUserAvatar!),
-                  backgroundColor: Colors.grey[800],
-                )
-              else if (otherUserName != null && otherUserName!.isNotEmpty)
-                CircleAvatar(
-                  radius: 9,
-                  backgroundColor: Colors.grey[800],
-                  child: Text(
-                    otherUserName![0].toUpperCase(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
+          // Encabezado con avatar y nombre (solo si showHeader es true)
+          if (showHeader) ...[
+            Row(
+              children: [
+                // Avatar personalizado o logo de Migozz
+                if (hasCustomAvatar)
+                  CircleAvatar(
+                    radius: 9,
+                    backgroundImage: NetworkImage(otherUserAvatar!),
+                    backgroundColor: Colors.grey[800],
+                  )
+                else if (otherUserName != null && otherUserName!.isNotEmpty)
+                  CircleAvatar(
+                    radius: 9,
+                    backgroundColor: Colors.grey[800],
+                    child: Text(
+                      otherUserName![0].toUpperCase(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
+                  )
+                else
+                  // Fallback: logo de Migozz (para chat de IA)
+                  Image.asset("assets/images/Migozz.webp", width: 18, height: 18),
+
+                const SizedBox(width: 6),
+
+                Text(
+                  displayName,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
                   ),
-                )
-              else
-                // Fallback: logo de Migozz (para chat de IA)
-                Image.asset("assets/images/Migozz.webp", width: 18, height: 18),
-
-              const SizedBox(width: 6),
-
-              Text(
-                displayName,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
+              ],
+            ),
+            const SizedBox(height: 8),
+          ],
 
           // Texto del mensaje
           Text(text, style: const TextStyle(color: Colors.white, fontSize: 14)),
@@ -113,16 +117,7 @@ class OtherMessage extends StatelessWidget {
             ),
           ],
 
-          const SizedBox(height: 6),
 
-          // Hora
-          Align(
-            alignment: Alignment.bottomLeft,
-            child: Text(
-              time,
-              style: const TextStyle(color: Colors.grey, fontSize: 10),
-            ),
-          ),
         ],
       ),
     );

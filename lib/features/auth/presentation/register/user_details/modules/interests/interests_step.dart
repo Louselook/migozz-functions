@@ -1,17 +1,36 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:migozz_app/core/color.dart';
-import 'package:migozz_app/core/components/atomics/text.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
-import 'package:migozz_app/features/auth/presentation/register/user_details/components/interest_section_model.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
+
+class Interest {
+  final String id;
+  final Map<String, String> name;
+  final String emoji;
+  final int order;
+  final String status;
+
+  Interest({
+    required this.id,
+    required this.name,
+    required this.emoji,
+    required this.order,
+    required this.status,
+  });
+
+  String getLocalizedName(String languageCode) =>
+      name[languageCode] ?? name['en'] ?? id;
+}
 
 class InterestsStep extends StatefulWidget {
   final PageController controller;
   final MoreUserDetailsMode mode;
-
   const InterestsStep({
     super.key,
     required this.controller,
@@ -22,10 +41,9 @@ class InterestsStep extends StatefulWidget {
   State<InterestsStep> createState() => _InterestsStepState();
 }
 
-class _InterestsStepState extends State<InterestsStep>
-    with TickerProviderStateMixin {
+class _InterestsStepState extends State<InterestsStep> {
   Set<String> selectedInterests = {};
-  List<InterestSectionModel> dynamicSections = [];
+  List<Interest> allInterests = [];
   bool isLoading = true;
 
   @override
@@ -35,20 +53,14 @@ class _InterestsStepState extends State<InterestsStep>
     _initializeSelectedInterests();
   }
 
-  // Inicializar intereses seleccionados según el modo
   void _initializeSelectedInterests() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Map<String, List<String>> existingInterests = {};
-
       if (widget.mode == MoreUserDetailsMode.register) {
-        final registerState = context.read<RegisterCubit>().state;
-        existingInterests = registerState.interests ?? {};
+        existingInterests = context.read<RegisterCubit>().state.interests ?? {};
       } else {
-        final editState = context.read<EditCubit>().state;
-        existingInterests = editState.interests ?? {};
+        existingInterests = context.read<EditCubit>().state.interests ?? {};
       }
-
-      // Convertir el mapa a un Set de intereses individuales
       setState(() {
         selectedInterests = existingInterests.values
             .expand((list) => list)
@@ -59,102 +71,124 @@ class _InterestsStepState extends State<InterestsStep>
 
   Future<void> fetchCollection() async {
     try {
-      setState(() {
-        isLoading = true;
-      });
-
-      CollectionReference collection = FirebaseFirestore.instance.collection(
-        'interests_catalog',
-      );
-      QuerySnapshot snapshot = await collection.get();
-
-      List<InterestSectionModel> fetchedSections = [];
-
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        data.forEach((categoryTitle, categoryOptions) {
-          if (categoryOptions is List) {
-            fetchedSections.add(
-              InterestSectionModel(
-                title: categoryTitle,
-                options: List<String>.from(categoryOptions),
-                expanded: false,
-              ),
-            );
-          }
-        });
+      setState(() => isLoading = true);
+      final snapshot = await FirebaseFirestore.instance
+          .collection('interests_catalog_new')
+          .get();
+      final List<Interest> fetchedInterests = [];
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        if (data['status'] != 'active') continue;
+        fetchedInterests.add(
+          Interest(
+            id: doc.id,
+            name: data['name'] is Map
+                ? Map<String, String>.from(data['name'])
+                : {'en': data['name'], 'es': data['name']},
+            emoji: data['emoji']?.toString() ?? '',
+            order: data['order'] ?? 0,
+            status: data['status'] ?? 'active',
+          ),
+        );
       }
-
+      fetchedInterests.sort((a, b) => a.order.compareTo(b.order));
       setState(() {
-        dynamicSections = fetchedSections;
+        allInterests = fetchedInterests;
         isLoading = false;
       });
-
-      debugPrint(
-        '✅ Secciones cargadas desde Firebase: ${dynamicSections.length}',
-      );
     } catch (e) {
-      debugPrint('Error al traer datos: $e');
-      setState(() {
-        isLoading = false;
-      });
-    }
-  }
-
-  // Actualizar el cubit correspondiente
-  void _updateCubit(Map<String, List<String>> selectedBySection) {
-    if (widget.mode == MoreUserDetailsMode.register) {
-      context.read<RegisterCubit>().setInterests(selectedBySection);
-    } else {
-      context.read<EditCubit>().updateInterests(selectedBySection);
+      setState(() => isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final double screenHeight = MediaQuery.of(context).size.height;
+    // En iPhone 16 (height > 800) daremos más aire, en otros apretaremos.
+    final bool isSmallDevice = screenHeight < 750;
+
     return SafeArea(
       child: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : ScrollbarTheme(
-              data: ScrollbarThemeData(
-                thumbColor: WidgetStateProperty.all(Colors.grey[400]),
-                thickness: WidgetStateProperty.all(8.0),
-                radius: const Radius.circular(10),
-                thumbVisibility: WidgetStateProperty.all(true),
-              ),
-              child: Scrollbar(
-                child: SingleChildScrollView(
-                  child: Center(
-                    child: Container(
-                      constraints: const BoxConstraints(maxWidth: 680),
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 20,
-                        horizontal: 24,
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const SizedBox(height: 10),
-                          const PrimaryText('Choose Your Interest'),
-                          const SizedBox(height: 20),
+          : Center(
+              child: Container(
+                constraints: BoxConstraints(
+                  maxWidth: kIsWeb ? 900 : double.infinity,
+                ),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20.w),
+                  child: Column(
+                    children: [
+                      // Margen superior dinámico
+                      SizedBox(height: isSmallDevice ? 10.h : 25.h),
 
-                          // secciones
-                          ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: dynamicSections.length,
-                            itemBuilder: (context, index) {
-                              final section = dynamicSections[index];
-                              return _buildSection(section, index);
-                            },
+                      PrimaryText(
+                        'interestSelect.choose'.tr(),
+                        fontSize: 22,
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 4.h),
+                      SecondaryText(
+                        'interestSelect.desc'.tr(),
+                        fontSize: 14,
+                        color: Colors.grey,
+                        textAlign: TextAlign.center,
+                      ),
+
+                      // ESPACIO FLEXIBLE CENTRAL
+                      Expanded(
+                        child: Container(
+                          padding: EdgeInsets.symmetric(vertical: 10.h),
+                          alignment: Alignment.center,
+                          // FittedBox es la magia: si el Wrap es muy grande, lo escala hacia abajo
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth: kIsWeb
+                                    ? 900
+                                    : MediaQuery.of(context).size.width,
+                              ),
+                              child: Wrap(
+                                alignment: WrapAlignment.center,
+                                runAlignment: WrapAlignment.center,
+                                spacing: kIsWeb ? 12 : 8.w,
+                                runSpacing: kIsWeb ? 16 : 10.h,
+                                children: allInterests.map((interest) {
+                                  return _interestChip(
+                                    name: interest.getLocalizedName(
+                                      context.locale.languageCode,
+                                    ),
+                                    emoji: interest.emoji,
+                                    selected: selectedInterests.contains(
+                                      interest.id,
+                                    ),
+                                    onTap: () {
+                                      setState(() {
+                                        selectedInterests.contains(interest.id)
+                                            ? selectedInterests.remove(
+                                                interest.id,
+                                              )
+                                            : selectedInterests.add(
+                                                interest.id,
+                                              );
+                                      });
+                                      _updateCubit();
+                                    },
+                                  );
+                                }).toList(),
+                              ),
+                            ),
                           ),
-
-                          const SizedBox(height: 40),
-                          // Botones
-                          _buildActionButton(),
-                        ],
+                        ),
                       ),
-                    ),
+
+                      // BOTÓN SIEMPRE VISIBLE
+                      Padding(
+                        padding: EdgeInsets.only(bottom: 15.h, top: 10.h),
+                        child: _buildActionButton(),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -162,266 +196,85 @@ class _InterestsStepState extends State<InterestsStep>
     );
   }
 
-  // Construir botón de acción según el modo (ahora con gradient Save para edición)
+  void _updateCubit() {
+    final res = {'interests': selectedInterests.toList()};
+    widget.mode == MoreUserDetailsMode.register
+        ? context.read<RegisterCubit>().setInterests(res)
+        : context.read<EditCubit>().updateInterests(res);
+  }
+
   Widget _buildActionButton() {
-    if (widget.mode == MoreUserDetailsMode.register) {
-      // En modo registro (desde chat), guardar intereses y cerrar pantalla
-      return GestureDetector(
-        onTap: () {
-          final selectedBySection = <String, List<String>>{};
-          for (final section in dynamicSections) {
-            final picked = section.options
-                .where((o) => selectedInterests.contains(o))
-                .toList();
-            if (picked.isNotEmpty) {
-              selectedBySection[section.title] = picked;
-            }
-          }
-
-          _updateCubit(selectedBySection);
-          Navigator.of(context).pop('done');
-        },
-        child: Container(
-          width: double.infinity,
-          height: 56,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFFF59A3C), Color(0xFFB646F6)],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
-            borderRadius: BorderRadius.circular(28),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.35),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
+    return GestureDetector(
+      onTap: () {
+        _updateCubit();
+        Navigator.of(context).pop('done');
+      },
+      child: Container(
+        width: double.infinity,
+        height: kIsWeb ? 60 : 54.h,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFF59A3C), Color(0xFFB646F6)],
           ),
-          child: const Center(
-            child: SecondaryText('Continue', fontSize: 20, color: Colors.white),
-          ),
+          borderRadius: BorderRadius.circular(28.r),
         ),
-      );
-    } else {
-      // En modo edición, mostrar "Save" con gradiente como en el mock
-      return GestureDetector(
-        onTap: () {
-          final selectedBySection = <String, List<String>>{};
-          for (final section in dynamicSections) {
-            final picked = section.options
-                .where((o) => selectedInterests.contains(o))
-                .toList();
-            if (picked.isNotEmpty) {
-              selectedBySection[section.title] = picked;
-            }
-          }
-
-          _updateCubit(selectedBySection);
-
-          Navigator.of(context).pop();
-        },
-        child: Container(
-          width: double.infinity,
-          height: 56,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFFF59A3C), Color(0xFFB646F6)],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
-            borderRadius: BorderRadius.circular(28),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.35),
-                offset: const Offset(0, 6),
-                blurRadius: 18,
-              ),
-            ],
-          ),
-          alignment: Alignment.center,
-          child: const Text(
-            'Save',
+        child: Center(
+          child: Text(
+            widget.mode == MoreUserDetailsMode.register ? 'Continue' : 'Save',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
+              fontSize: kIsWeb ? 20 : 18.sp,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ),
-      );
-    }
-  }
-
-  Widget _buildSection(InterestSectionModel section, int index) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () {
-            setState(() {
-              section.expanded = !section.expanded;
-            });
-          },
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Icon(
-                  section.expanded ? Icons.arrow_drop_down : Icons.add,
-                  color: AppColors.secondaryText,
-                ),
-              ),
-              const SizedBox(width: 10),
-              SecondaryText(section.title, fontSize: 18),
-              const Spacer(),
-              // small count of selected in this section
-              if (section.options.any((o) => selectedInterests.contains(o)))
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white10,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: SecondaryText(
-                    '${section.options.where((o) => selectedInterests.contains(o)).length}',
-                    fontSize: 14,
-                  ),
-                ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 8),
-
-        // Animated size + fade for the content
-        AnimatedSize(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 250),
-            switchInCurve: Curves.easeIn,
-            switchOutCurve: Curves.easeOut,
-            child: section.expanded
-                ? Padding(
-                    key: ValueKey('expanded_$index'),
-                    padding: const EdgeInsets.only(top: 8, bottom: 16),
-                    child: Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: section.options.map((opt) {
-                        final selected = selectedInterests.contains(opt);
-                        return _optionChip(
-                          label: opt,
-                          selected: selected,
-                          onTap: () {
-                            setState(() {
-                              if (selected) {
-                                selectedInterests.remove(opt);
-                              } else {
-                                selectedInterests.add(opt);
-                              }
-                            });
-
-                            // Actualizar el cubit en tiempo real
-                            final selectedBySection = <String, List<String>>{};
-                            for (final sec in dynamicSections) {
-                              final picked = sec.options
-                                  .where((o) => selectedInterests.contains(o))
-                                  .toList();
-                              if (picked.isNotEmpty) {
-                                selectedBySection[sec.title] = picked;
-                              }
-                            }
-                            _updateCubit(selectedBySection);
-                          },
-                        );
-                      }).toList(),
-                    ),
-                  )
-                : const SizedBox.shrink(key: ValueKey('collapsed')),
-          ),
-        ),
-
-        const SizedBox(height: 12),
-      ],
+      ),
     );
   }
 
-  Widget _optionChip({
-    required String label,
-    bool selected = false,
+  Widget _interestChip({
+    required String name,
+    required String emoji,
+    required bool selected,
     required VoidCallback onTap,
   }) {
-    final borderColor = selected ? const Color(0xFFB646F6) : Colors.transparent;
-    final innerBg = AppColors.secondaryText;
-
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 220),
-      curve: Curves.easeInOut,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(width: 2, color: borderColor),
-        boxShadow: selected
-            ? [
-                BoxShadow(
-                  color: const Color(0xFFB646F6).withValues(alpha: 0.12),
-                  blurRadius: 10,
-                  offset: const Offset(0, 6),
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(1.5),
+        decoration: BoxDecoration(
+          gradient: selected
+              ? const LinearGradient(
+                  colors: [Color(0xFFF59A3C), Color(0xFFB646F6)],
+                )
+              : null,
+          borderRadius: BorderRadius.circular(20.r),
+        ),
+        child: Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: kIsWeb ? 24 : 14.w,
+            vertical: kIsWeb ? 14 : 8.h,
+          ),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1E1E1E),
+            borderRadius: BorderRadius.circular(20.r),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (emoji.isNotEmpty)
+                Text(emoji, style: TextStyle(fontSize: kIsWeb ? 24 : 15.sp)),
+              SizedBox(width: 4.w),
+              Text(
+                name,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: kIsWeb ? 16 : 13.sp,
+                  fontWeight: selected ? FontWeight.bold : FontWeight.w500,
                 ),
-              ]
-            : null,
-      ),
-      child: Material(
-        color: innerBg,
-        borderRadius: BorderRadius.circular(18),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(18),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // check marker
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 180),
-                  transitionBuilder: (child, anim) =>
-                      FadeTransition(opacity: anim, child: child),
-                  child: selected
-                      ? Container(
-                          key: const ValueKey('check'),
-                          width: 18,
-                          height: 18,
-                          margin: const EdgeInsets.only(right: 6),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF4CAF50),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: const Icon(
-                            Icons.check,
-                            color: Colors.white,
-                            size: 12,
-                          ),
-                        )
-                      : const SizedBox.shrink(key: ValueKey('empty')),
-                ),
-                SecondaryText(
-                  label,
-                  color: AppColors.backgroundDark,
-                  fontWeight: FontWeight.w500,
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

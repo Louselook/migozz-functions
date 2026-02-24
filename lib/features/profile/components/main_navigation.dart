@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
+import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
 import 'package:migozz_app/features/chat/presentation/user/list/chats_list_screen.dart';
 import 'package:migozz_app/features/profile/components/bottom_nav.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/follower_cubit/follower_cubit.dart';
@@ -13,9 +14,10 @@ import 'package:migozz_app/features/search/mobile/presentation/search_screen.dar
 // import 'package:migozz_app/features/tutorial/profile_tutorial_helper.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/tutorial/profile/profile_tutorial.dart';
-import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
+import 'package:migozz_app/features/profile/components/utils/alert_general.dart';
 import 'package:migozz_app/features/wallet/screens/wallet_screen.dart';
 import 'package:migozz_app/core/utils/platform_utils.dart';
+import 'package:migozz_app/features/chat/presentation/web/floating_chat_widget.dart';
 
 class MainNavigation extends StatefulWidget {
   final TutorialKeys? tutorialKeys;
@@ -239,6 +241,23 @@ class _MainNavigationState extends State<MainNavigation> {
   Widget build(BuildContext context) {
     final isViewingOtherProfile = widget.targetUser != null;
 
+    // Check if user is authenticated
+    final authState = context.watch<AuthCubit>().state;
+    final isAuthenticated =
+        authState.status == AuthStatus.authenticated &&
+        authState.userProfile != null;
+
+    // When not authenticated and viewing another profile, only show that profile
+    if (isViewingOtherProfile && !isAuthenticated) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: ProfileSearchScreen(
+          user: widget.targetUser!,
+          tutorialKeys: _tutorialKeys,
+        ),
+      );
+    }
+
     final screens = [
       isViewingOtherProfile
           ? ProfileSearchScreen(
@@ -264,17 +283,33 @@ class _MainNavigationState extends State<MainNavigation> {
 
     return Scaffold(
       extendBody: true,
-      body: IndexedStack(index: _currentIndex, children: screens),
-      bottomNavigationBar: PlatformUtils.isWeb
-          ? null
-          : GradientBottomNav(
-              currentIndex: _currentIndex,
-              onItemSelected: _onItemSelected,
-              onCenterTap: _onCenterTap,
-              onProfileUpdated: _onProfileUpdated,
-              tutorialKeys: _tutorialKeys,
-              profileTutorialKeys: _profileTutorialKeys,
-            ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isMobileWidth = constraints.maxWidth < 600;
+          return Stack(
+            children: [
+              IndexedStack(index: _currentIndex, children: screens),
+              if (PlatformUtils.isWeb && !isMobileWidth)
+                const FloatingChatWidget(),
+            ],
+          );
+        },
+      ),
+      bottomNavigationBar: LayoutBuilder(
+        builder: (context, constraints) {
+          final showBottomNav = !PlatformUtils.isWeb ||
+              MediaQuery.of(context).size.width < 600;
+          if (!showBottomNav) return const SizedBox.shrink();
+          return GradientBottomNav(
+            currentIndex: _currentIndex,
+            onItemSelected: _onItemSelected,
+            onCenterTap: _onCenterTap,
+            onProfileUpdated: _onProfileUpdated,
+            tutorialKeys: _tutorialKeys,
+            profileTutorialKeys: _profileTutorialKeys,
+          );
+        },
+      ),
     );
   }
 }

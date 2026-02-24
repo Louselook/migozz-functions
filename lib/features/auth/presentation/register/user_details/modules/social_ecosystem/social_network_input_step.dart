@@ -6,7 +6,7 @@ import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/custom_snackbar.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/services/add_networks/network_config.dart';
-import 'package:migozz_app/features/profile/components/utils/Loader.dart';
+import 'package:migozz_app/features/profile/components/utils/loader.dart';
 
 /// Step 2: Input usernames for all selected networks
 class SocialNetworkInputStep extends StatefulWidget {
@@ -164,9 +164,6 @@ class _SocialNetworkInputStepState extends State<SocialNetworkInputStep> {
       return;
     }
 
-    // Show custom loader dialog
-    showProfileLoader(context, message: 'common.loader_sequence.syncing'.tr());
-
     try {
       final cubit = context.read<RegisterCubit>();
       final current = List<Map<String, dynamic>>.from(
@@ -175,58 +172,89 @@ class _SocialNetworkInputStepState extends State<SocialNetworkInputStep> {
 
       int successCount = 0;
 
-      // Process each MANUAL network with input (OAuth already handled)
-      for (final network in _manualNetworks) {
+      // Count how many networks will be processed
+      final networksToProcess = _manualNetworks.where((network) {
         final key = network.name.toLowerCase();
         final username = _controllers[key]?.text.trim() ?? '';
+        return username.isNotEmpty;
+      }).length;
 
-        if (username.isEmpty) continue;
+      // Calculate delay per message based on number of networks
+      // If 1 network: 2000ms (2s) per message (default)
+      // If 2 networks: 1000ms (1s) per message
+      // If 3+ networks: 700ms per message
+      final delayPerMessage = networksToProcess <= 1
+          ? 2000
+          : networksToProcess == 2
+          ? 1000
+          : 700;
 
-        // Normalize platform name
-        final platformName = key;
-
-        // Build the profile URL or username for validation
-        final baseUrl = _getBaseUrl(network);
-        final cleanUsername = username
-            .replaceAll('@', '')
-            .replaceAll(baseUrl, '')
-            .trim();
-        final profileUrl = '$baseUrl$cleanUsername';
-
-        // Validate and get profile using cubit's new method
-        final profileData = await cubit.addNetworkByUsername(
-          network: platformName,
-          usernameOrLink: profileUrl,
-          iconPath: network.iconPath,
+      // Show loader ONCE before processing all networks
+      if (mounted && networksToProcess > 0) {
+        showProfileLoader(
+          context,
+          type: LoaderType.registration,
+          delayPerMessageMs: delayPerMessage,
         );
-
-        if (profileData == null) {
-          // Validation failed - show error and continue with others
-          if (mounted) {
-            CustomSnackbar.show(
-              context: context,
-              message: 'addSocials.validation.invalidProfile'.tr(
-                namedArgs: {'platform': network.displayName},
-              ),
-              type: SnackbarType.error,
-            );
-          }
-          continue;
-        }
-
-        // Remove existing entry for this platform if any
-        current.removeWhere((e) {
-          final existingKey = e.keys.first.toLowerCase();
-          return existingKey == platformName;
-        });
-
-        // Add the new entry
-        current.add({platformName: profileData});
-        successCount++;
       }
 
-      // Close loader dialog
-      if (mounted) Navigator.of(context).pop();
+      try {
+        // Process each MANUAL network with input (OAuth already handled)
+        for (final network in _manualNetworks) {
+          final key = network.name.toLowerCase();
+          final username = _controllers[key]?.text.trim() ?? '';
+
+          if (username.isEmpty) continue;
+
+          // Normalize platform name
+          final platformName = key;
+
+          // Build the profile URL or username for validation
+          final baseUrl = _getBaseUrl(network);
+          final cleanUsername = username
+              .replaceAll('@', '')
+              .replaceAll(baseUrl, '')
+              .trim();
+          final profileUrl = '$baseUrl$cleanUsername';
+
+          // Validate and get profile using cubit's new method
+          Map<String, dynamic>? profileData;
+          profileData = await cubit.addNetworkByUsername(
+            network: platformName,
+            usernameOrLink: profileUrl,
+            iconPath: network.iconPath,
+          );
+
+          if (profileData == null) {
+            // Validation failed - show error and continue with others
+            if (mounted) {
+              CustomSnackbar.show(
+                context: context,
+                message: 'addSocials.validation.invalidProfile'.tr(
+                  namedArgs: {'platform': network.displayName},
+                ),
+                type: SnackbarType.error,
+              );
+            }
+            continue;
+          }
+
+          // Remove existing entry for this platform if any
+          current.removeWhere((e) {
+            final existingKey = e.keys.first.toLowerCase();
+            return existingKey == platformName;
+          });
+
+          // Add the new entry
+          current.add({platformName: profileData});
+          successCount++;
+        }
+      } finally {
+        // Close loader ONCE after all networks are processed
+        if (mounted && Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+      }
 
       // Save all networks if at least one succeeded
       if (successCount > 0) {
@@ -249,8 +277,6 @@ class _SocialNetworkInputStepState extends State<SocialNetworkInputStep> {
       }
     } catch (e) {
       debugPrint('Error saving networks: $e');
-      // Close loader dialog on error
-      if (mounted) Navigator.of(context).pop();
       if (mounted) {
         CustomSnackbar.show(
           context: context,

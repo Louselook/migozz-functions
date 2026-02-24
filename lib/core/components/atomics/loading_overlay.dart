@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:migozz_app/features/profile/components/utils/Loader.dart';
+import 'package:migozz_app/features/profile/components/utils/loader.dart';
 
 class LoadingOverlay {
   static void show(
     BuildContext context, {
     String? message,
     LoaderType type = LoaderType.generic,
+    int? delayPerMessageMs, // Custom delay per message in milliseconds
   }) {
     showProfileLoader(
       context,
       message: message,
       type: type,
       barrierDismissible: false,
+      delayPerMessageMs: delayPerMessageMs,
     );
   }
 

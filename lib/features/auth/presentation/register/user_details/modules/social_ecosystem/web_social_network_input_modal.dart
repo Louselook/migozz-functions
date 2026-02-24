@@ -6,7 +6,7 @@ import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/custom_snackbar.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/services/add_networks/network_config.dart';
-import 'package:migozz_app/features/profile/components/utils/Loader.dart';
+import 'package:migozz_app/features/profile/components/utils/loader.dart';
 
 /// Web version: Modal dialog to input usernames for selected networks
 class WebSocialNetworkInputModal extends StatefulWidget {
@@ -159,8 +159,6 @@ class _WebSocialNetworkInputModalState
       return;
     }
 
-    showProfileLoader(context, message: 'common.loader_sequence.syncing'.tr());
-
     try {
       final cubit = context.read<RegisterCubit>();
       final current = List<Map<String, dynamic>>.from(
@@ -169,49 +167,81 @@ class _WebSocialNetworkInputModalState
 
       int successCount = 0;
 
-      for (final network in _manualNetworks) {
+      // Count how many networks will be processed
+      final networksToProcess = _manualNetworks.where((network) {
         final key = network.name.toLowerCase();
         final username = _controllers[key]?.text.trim() ?? '';
+        return username.isNotEmpty;
+      }).length;
 
-        if (username.isEmpty) continue;
+      // Calculate delay per message based on number of networks
+      // If 1 network: 2000ms (2s) per message (default)
+      // If 2 networks: 1000ms (1s) per message
+      // If 3+ networks: 700ms per message
+      final delayPerMessage = networksToProcess <= 1
+          ? 2000
+          : networksToProcess == 2
+          ? 1000
+          : 700;
 
-        final platformName = key;
-        final baseUrl = _getBaseUrl(network);
-        final cleanUsername = username
-            .replaceAll('@', '')
-            .replaceAll(baseUrl, '')
-            .trim();
-        final profileUrl = '$baseUrl$cleanUsername';
-
-        final profileData = await cubit.addNetworkByUsername(
-          network: platformName,
-          usernameOrLink: profileUrl,
-          iconPath: network.iconPath,
+      // Show loader ONCE before processing all networks
+      if (mounted && networksToProcess > 0) {
+        showProfileLoader(
+          context,
+          type: LoaderType.registration,
+          delayPerMessageMs: delayPerMessage,
         );
-
-        if (profileData == null) {
-          if (mounted) {
-            CustomSnackbar.show(
-              context: context,
-              message: 'addSocials.validation.invalidProfile'.tr(
-                namedArgs: {'platform': network.displayName},
-              ),
-              type: SnackbarType.error,
-            );
-          }
-          continue;
-        }
-
-        current.removeWhere((e) {
-          final existingKey = e.keys.first.toLowerCase();
-          return existingKey == platformName;
-        });
-
-        current.add({platformName: profileData});
-        successCount++;
       }
 
-      if (mounted) Navigator.of(context).pop(); // Close loader
+      try {
+        for (final network in _manualNetworks) {
+          final key = network.name.toLowerCase();
+          final username = _controllers[key]?.text.trim() ?? '';
+
+          if (username.isEmpty) continue;
+
+          final platformName = key;
+          final baseUrl = _getBaseUrl(network);
+          final cleanUsername = username
+              .replaceAll('@', '')
+              .replaceAll(baseUrl, '')
+              .trim();
+          final profileUrl = '$baseUrl$cleanUsername';
+
+          Map<String, dynamic>? profileData;
+          profileData = await cubit.addNetworkByUsername(
+            network: platformName,
+            usernameOrLink: profileUrl,
+            iconPath: network.iconPath,
+          );
+
+          if (profileData == null) {
+            if (mounted) {
+              CustomSnackbar.show(
+                context: context,
+                message: 'addSocials.validation.invalidProfile'.tr(
+                  namedArgs: {'platform': network.displayName},
+                ),
+                type: SnackbarType.error,
+              );
+            }
+            continue;
+          }
+
+          current.removeWhere((e) {
+            final existingKey = e.keys.first.toLowerCase();
+            return existingKey == platformName;
+          });
+
+          current.add({platformName: profileData});
+          successCount++;
+        }
+      } finally {
+        // Close loader ONCE after all networks are processed
+        if (mounted && Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+      }
 
       if (successCount > 0) {
         cubit.setSocialEcosystem(current);
@@ -232,8 +262,11 @@ class _WebSocialNetworkInputModalState
       }
     } catch (e) {
       debugPrint('Error saving networks: $e');
-      if (mounted) Navigator.of(context).pop(); // Close loader
       if (mounted) {
+        // Close loader in case of error
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
         CustomSnackbar.show(
           context: context,
           message: 'errors.generic'.tr(),
@@ -517,13 +550,13 @@ class _WebSocialNetworkInputModalState
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
             color: isConnected
-                ? Colors.green.withOpacity(0.15)
-                : Colors.white.withOpacity(0.05),
+                ? Colors.green.withValues(alpha: 0.15)
+                : Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isConnected
-                  ? Colors.green.withOpacity(0.5)
-                  : Colors.white.withOpacity(0.15),
+                  ? Colors.green.withValues(alpha: 0.5)
+                  : Colors.white.withValues(alpha: 0.15),
               width: 1,
             ),
           ),

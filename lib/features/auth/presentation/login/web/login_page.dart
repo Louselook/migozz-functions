@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/components/atomics/logo.dart';
@@ -12,8 +13,8 @@ class LoginPage extends StatelessWidget {
       padding: const EdgeInsets.only(top: 20),
       child: GestureDetector(
         onTap: () => context.go("/support"),
-        child: const Text(
-          "If you have any errors, please report it here",
+        child: Text(
+          tr("login.presentation.supportHint"),
           style: TextStyle(
             color: Colors.pinkAccent,
             fontSize: 12,
@@ -24,7 +25,6 @@ class LoginPage extends StatelessWidget {
       ),
     );
   }
-  
 
   // Sección del logo + textos, reutilizada en mobile/desktop
   Widget _buildLogoSection(double logoSize) {
@@ -34,19 +34,21 @@ class LoginPage extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Logo(width: logoSize, height: logoSize),
-        const SizedBox(height: 20),
-        const Text(
-          'Welcome to Migozz!',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
+        Padding(
+          padding: const EdgeInsets.only(top: 20),
+          child: Text(
+            tr('login.presentation.title'),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
           ),
-          textAlign: TextAlign.center,
         ),
         const SizedBox(height: 8),
-        const Text(
-          'Connect your Community',
+        Text(
+          tr('login.presentation.subtitle1'),
           style: TextStyle(color: Colors.white70, fontSize: 14),
           textAlign: TextAlign.center,
         ),
@@ -67,7 +69,7 @@ class LoginPage extends StatelessWidget {
           _buildLogoSection(logoSize.clamp(120, 180)),
           const SizedBox(height: 40),
           const LoginForm(),
-          _buildSupportHint(context)
+          _buildSupportHint(context),
         ],
       ),
     );
@@ -97,7 +99,7 @@ class LoginPage extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(width: formWidth, child: const LoginForm()),
-              _buildSupportHint(context), 
+              _buildSupportHint(context),
             ],
           ),
           const SizedBox(width: 32),

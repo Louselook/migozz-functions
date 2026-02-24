@@ -32,7 +32,7 @@ class _ChatsListScreenState extends State<ChatsListScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 7, vsync: this);
     _searchController.addListener(() {
       setState(() {
         _searchQuery = _searchController.text.toLowerCase();
@@ -67,7 +67,7 @@ class _ChatsListScreenState extends State<ChatsListScreen>
         displayName: userData['displayName'] ?? 'Usuario',
         username: userData['userName'] ?? userData['username'] ?? 'user',
         avatarUrl: userData['avatarUrl'],
-        lastMessage: chatRoom.lastMessage ?? 'Nuevo chat',
+        lastMessage: chatRoom.lastMessage ?? 'web.chat.new_message'.tr(),
         timeAgo: _formatTime(chatRoom.lastMessageTime),
         isVerified: userData['isVerified'] ?? false,
         isOnline: false,
@@ -122,8 +122,30 @@ class _ChatsListScreenState extends State<ChatsListScreen>
               children: [
                 _buildChatStream(isActive: true),
                 _buildChatStream(isActive: false),
+                _buildComingSoon(),
+                _buildComingSoon(),
+                _buildComingSoon(),
+                _buildComingSoon(),
+                _buildComingSoon(),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildComingSoon() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.construction, size: 64, color: Colors.grey[700]),
+          const SizedBox(height: 16),
+          Text(
+            'profile.sendGifts.comingSoon'.tr(),
+            style: TextStyle(color: Colors.grey[600], fontSize: 16),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
@@ -148,7 +170,7 @@ class _ChatsListScreenState extends State<ChatsListScreen>
         if (snapshot.hasError) {
           // Mostrar error de forma amigable
           return _buildEmptyState(
-            'Oops! Algo salió mal',
+            'web.chat.error_oops'.tr(),
             icon: Icons.error_outline,
           );
         }
@@ -157,7 +179,9 @@ class _ChatsListScreenState extends State<ChatsListScreen>
 
         if (chatRooms.isEmpty) {
           return _buildEmptyState(
-            isActive ? 'No messages yet' : 'No new messages',
+            isActive
+                ? 'web.chat.no_messages'.tr()
+                : 'web.chat.no_new_messages'.tr(),
           );
         }
 
@@ -189,7 +213,7 @@ class _ChatsListScreenState extends State<ChatsListScreen>
             final filteredChats = _filterChats(allPreviews);
 
             if (filteredChats.isEmpty) {
-              return _buildEmptyState('No results found');
+              return _buildEmptyState('web.chat.no_results'.tr());
             }
 
             return _buildChatList(filteredChats);
@@ -230,7 +254,7 @@ class _ChatsListScreenState extends State<ChatsListScreen>
         controller: _searchController,
         style: const TextStyle(color: Colors.white),
         decoration: InputDecoration(
-          hintText: "profile.chat.search".tr(),
+          hintText: 'profile.chat.search'.tr(),
           hintStyle: TextStyle(color: Colors.grey[600]),
           prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
           border: InputBorder.none,
@@ -254,9 +278,10 @@ class _ChatsListScreenState extends State<ChatsListScreen>
               height: 38,
               child: TabBar(
                 controller: _tabController,
+                isScrollable: true,
                 indicatorSize: TabBarIndicatorSize.tab,
                 indicatorPadding: EdgeInsets.zero,
-                labelPadding: EdgeInsets.zero,
+                labelPadding: const EdgeInsets.symmetric(horizontal: 16),
                 indicator: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [Color(0xFFE91E63), Color(0xFF9C27B0)],
@@ -271,8 +296,13 @@ class _ChatsListScreenState extends State<ChatsListScreen>
                   fontWeight: FontWeight.w600,
                 ),
                 tabs: [
-                  Tab(child: Center(child: Text('Chat'))),
-                  Tab(child: Center(child: Text("profile.chat.filter".tr()))),
+                  Tab(child: Center(child: Text('web.chat.tab_chat'.tr()))),
+                  Tab(child: Center(child: Text('profile.chat.filter'.tr()))),
+                  Tab(child: Center(child: Text('Prime'))),
+                  Tab(child: Center(child: Text('VIP'))),
+                  Tab(child: Center(child: Text('Biz'))),
+                  Tab(child: Center(child: Text('AI'))),
+                  Tab(child: Center(child: Text('Spam'))),
                 ],
               ),
             ),

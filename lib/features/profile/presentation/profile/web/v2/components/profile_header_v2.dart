@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:migozz_app/core/utils/image_proxy_helper.dart';
 import 'package:migozz_app/features/profile/components/info_user_profile.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 
@@ -106,7 +107,7 @@ class _ProfileImageV2 extends StatelessWidget {
       child: ClipOval(
         child: isNetworkImage
             ? Image.network(
-                avatarUrl!,
+                ImageProxyHelper.getProxiedUrl(avatarUrl!),
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Image.asset(fallbackAsset, fit: BoxFit.cover);

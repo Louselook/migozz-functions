@@ -41,6 +41,10 @@ class AssetsConstants {
   static const String wrnsitePerIcon =
       '$socialBlackWhiteIcons/WrnsitePerNegro.svg';
 
+  static const String googleIcon = '$icons/login_google.svg';
+  static const String appleIcon = '$icons/login_apple.svg';
+
+
   //Wallet and transfer
  
   static const String depositIcon = '$icons/deposit.svg';

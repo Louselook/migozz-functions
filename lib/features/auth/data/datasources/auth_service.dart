@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/auth_result.dart';
@@ -16,8 +15,26 @@ class AuthService {
   final UserMediaService _mediaService = UserMediaService();
   final PreRegisterService _preRegisterService = PreRegisterService();
 
+  /// En web con google_sign_in v7, authenticate() no está soportado.
+  /// El sign-in se maneja via renderButton() + authenticationEvents.
+  /// Este campo almacena el GoogleSignInAccount del evento para usarlo
+  /// en loginWithGoogle() sin llamar authenticate() de nuevo.
+  static GoogleSignInAccount? _pendingGoogleAccount;
+
+  /// Llamar desde el listener de authenticationEvents en web
+  /// antes de invocar loginWithGoogle().
+  static void setPendingGoogleAccount(GoogleSignInAccount account) {
+    _pendingGoogleAccount = account;
+  }
+
   // Stream de auth
-  Stream<User?> authStateChanges() => _auth.authStateChanges();
+  Stream<User?> authStateChanges() {
+    // Asegurar persistencia LOCAL habilitada en Web
+    if (kIsWeb) {
+      _auth.setPersistence(Persistence.LOCAL);
+    }
+    return _auth.authStateChanges();
+  }
 
   // Helper para obtener UserDTO
   Future<UserDTO?> _getUserFromFirestore(String uid) async {
@@ -43,47 +60,115 @@ class AuthService {
     return querySnapshot.docs.isNotEmpty;
   }
 
+  /// ✅ Verifica si un email está asociado a una cuenta baneada
+  /// Retorna: null si no existe o está activa, 'banned' si está baneada
+  Future<String?> checkEmailBanned(String email) async {
+    final querySnapshot = await _firestore
+        .collection('users')
+        .where('email', isEqualTo: email)
+        .limit(1)
+        .get();
+
+    if (querySnapshot.docs.isEmpty) return null;
+
+    final data = querySnapshot.docs.first.data();
+    final isActive = data['active'];
+
+    // Si active es false o 0, la cuenta está baneada
+    if (isActive == false || isActive == 0) {
+      return 'banned';
+    }
+
+    return null;
+  }
+
+  /// ✅ Verifica si un username está asociado a una cuenta baneada
+  /// Retorna: null si no existe o está activa, 'banned' si está baneada
+  Future<String?> checkUsernameBanned(String username) async {
+    final querySnapshot = await _firestore
+        .collection('users')
+        .where('username', isEqualTo: username.toLowerCase())
+        .limit(1)
+        .get();
+
+    if (querySnapshot.docs.isEmpty) return null;
+
+    final data = querySnapshot.docs.first.data();
+    final isActive = data['active'];
+
+    // Si active es false o 0, la cuenta está baneada
+    if (isActive == false || isActive == 0) {
+      return 'banned';
+    }
+
+    return null;
+  }
+
   // LOGIN con Google
   Future<AuthResult> loginWithGoogle() async {
     try {
-      final googleSignIn = GoogleSignIn.instance;
+      debugPrint('🔐 [AuthService] Iniciando Google Sign-In...');
 
-      // Inicializa: solo pasa clientId en web
-      if (kIsWeb && dotenv.env['GOOGLE_CLIENT_ID'] != null) {
-        await googleSignIn.initialize(clientId: dotenv.env['GOOGLE_CLIENT_ID']);
-      } else {
-        await googleSignIn.initialize();
+      // En v7, se debe inicializar con serverClientId en Android
+      if (!kIsWeb) {
+        await GoogleSignIn.instance.initialize(
+          serverClientId:
+              '895592952324-4iu9ob4bo0ppn2hta6oi4qvfat3892p5.apps.googleusercontent.com',
+        );
       }
 
-      // 1) UI de login
-      final googleUser = await googleSignIn.authenticate();
-
-      // 2) pedir autorización para scopes (devuelve accessToken si existe)
-      final authorization = await googleUser.authorizationClient
-          .authorizationForScopes([
-            'email',
-            'profile',
-            // 'openid' no garantiza idToken en todas las plataformas v7, pero no hace daño pedirlo.
-            'openid',
-          ]);
-
-      if (authorization == null) throw Exception('authorization_failed');
-
-      final String accessToken = authorization.accessToken;
-
-      debugPrint('🔐 accessToken length: ${accessToken.length}');
-
-      if (accessToken.isEmpty) {
-        throw Exception('no_access_token_obtained');
+      // En v7, authenticate() inicia el flujo interactivo en mobile.
+      // En web, authenticate() NO está soportado — el sign-in viene de
+      // renderButton() y llega via authenticationEvents. Usamos el account
+      // almacenado en _pendingGoogleAccount.
+      final GoogleSignInAccount googleUser;
+      try {
+        if (kIsWeb) {
+          final pending = _pendingGoogleAccount;
+          _pendingGoogleAccount = null; // Limpiar después de usar
+          if (pending != null) {
+            debugPrint('🔐 [AuthService] Web: usando cuenta de renderButton/GSI');
+            googleUser = pending;
+          } else if (GoogleSignIn.instance.supportsAuthenticate()) {
+            debugPrint('🔐 [AuthService] Web: intentando authenticate()...');
+            googleUser = await GoogleSignIn.instance.authenticate();
+          } else {
+            debugPrint('⚠️ [AuthService] Web: authenticate() no soportado y no hay cuenta pendiente');
+            throw Exception('google_signin_cancelled');
+          }
+        } else {
+          // Mobile: authenticate() inicia el flujo interactivo
+          googleUser = await GoogleSignIn.instance.authenticate();
+        }
+      } catch (e) {
+        debugPrint(
+          '⚠️ [AuthService] Error o cancelación en Google Sign-In: $e',
+        );
+        // Si el usuario cancela, suele lanzar una excepción
+        throw Exception('google_signin_cancelled');
       }
 
-      // 3) crear credential SOLO con accessToken (idToken no está disponible en v7)
+      debugPrint('✅ [AuthService] Usuario autenticado: ${googleUser.email}');
+
+      // Obtener los tokens de autenticación (idToken)
+      final GoogleSignInAuthentication googleAuth =
+          googleUser.authentication;
+
+      debugPrint('🔐 [AuthService] Tokens obtenidos');
+
+      // Crear credencial para Firebase
+      // Nota: en v7, GoogleSignInAuthentication ya no tiene accessToken.
+      // Firebase acepta idToken sin accessToken.
       final credential = GoogleAuthProvider.credential(
-        accessToken: accessToken,
-        // idToken: null,
+        idToken: googleAuth.idToken,
+        accessToken: null,
       );
 
-      // 4) sign in en Firebase
+      debugPrint(
+        '🔐 [AuthService] Credential creado, iniciando sesión en Firebase...',
+      );
+
+      // Sign in en Firebase
       final userCredential = await _auth.signInWithCredential(credential);
       final user = userCredential.user;
       if (user == null) throw Exception('firebase_sign_in_failed');
@@ -145,6 +230,7 @@ class AuthService {
           'complete': false,
           'isPreRegistered':
               reservedUsername != null, // Marcar si viene de pre-order
+          'active': true, // ✅ Usuario activo por defecto
         };
         await docRef.set(baseData);
         profileExists = true;
@@ -256,6 +342,7 @@ class AuthService {
           'complete': false,
           'isPreRegistered':
               reservedUsername != null, // Marcar si viene de pre-order
+          'active': true, // ✅ Usuario activo por defecto
         };
         await docRef.set(baseData);
         profileExists = true;

@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:migozz_app/core/assets_constants.dart';
 import 'package:migozz_app/core/color.dart';
@@ -8,7 +11,7 @@ import 'package:migozz_app/core/components/formart/text_formart.dart';
 import 'package:migozz_app/features/profile/presentation/profile/modules/share_profile.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/tutorial/profile/profile_tutorial_keys.dart';
-import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
+import 'package:migozz_app/features/profile/components/utils/alert_general.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Modelo para representar una red social con sus seguidores
@@ -38,6 +41,10 @@ class InfoUserProfile extends StatefulWidget {
   final VoidCallback? onMessageTap;
   final String? contactEmail;
   final String? contactWebsite;
+  final bool isAuthenticated;
+
+  /// URL para donación (PayPal, etc.)
+  final String? donationUrl;
 
   /// Lista de redes sociales para mostrar en la animación
   final List<SocialNetworkData> socialNetworks;
@@ -57,6 +64,8 @@ class InfoUserProfile extends StatefulWidget {
     this.onMessageTap,
     this.contactEmail,
     this.contactWebsite,
+    this.isAuthenticated = true,
+    this.donationUrl,
     this.socialNetworks = const [],
   });
 
@@ -207,7 +216,9 @@ class _InfoUserProfileState extends State<InfoUserProfile>
     }
 
     try {
-      setState(() => _isLoading = true);
+      if (mounted) {
+        setState(() => _isLoading = true);
+      }
 
       if (_isPlaying) {
         await _player.pause();
@@ -220,16 +231,20 @@ class _InfoUserProfileState extends State<InfoUserProfile>
         await _player.play();
       }
 
-      setState(() => _isPlaying = !_isPlaying);
+      if (mounted) {
+        setState(() => _isPlaying = !_isPlaying);
+      }
     } catch (e) {
-      // ignore: use_build_context_synchronously
+      if (!mounted) return;
       AlertGeneral.show(
         context,
         4,
         message: "profile.validations.errorAudio".tr(),
       );
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -255,7 +270,7 @@ class _InfoUserProfileState extends State<InfoUserProfile>
 
     if (!hasEmail && !hasWebsite) {
       return const SizedBox(
-        width: 22,
+        width: 20,
       ); // Espacio vacío para mantener alineación
     }
 
@@ -337,8 +352,8 @@ class _InfoUserProfileState extends State<InfoUserProfile>
         }
       },
       child: Container(
-        width: 24,
-        height: 24,
+        width: 20,
+        height: 20,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: AppColors.primaryGradient,
@@ -359,74 +374,91 @@ class _InfoUserProfileState extends State<InfoUserProfile>
     );
   }
 
+  Widget _buildNameHeader() {
+    const nameStyle = TextStyle(
+      color: Colors.white,
+      fontSize: 27,
+      fontWeight: FontWeight.w700,
+      height: 1.1,
+    );
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (!widget.isOwnProfile)
+            Padding(
+              padding: const EdgeInsets.only(right: 10.0),
+              child: _buildContactMenu(),
+            ),
+          Flexible(
+            child: Text(
+              widget.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: nameStyle,
+            ),
+          ),
+          GestureDetector(
+            key: widget.tutorialKeys?.playButtonKey,
+            onTap: _isLoading ? null : _togglePlay,
+            child: Container(
+              margin: EdgeInsets.only(left: 10),
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: .5),
+                gradient: LinearGradient(
+                  colors: AppColors.primaryGradient.colors,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Icon(
+                      _isPlaying ? Icons.pause : Icons.play_arrow_rounded,
+                      size: 16,
+                      color: Colors.white.withValues(alpha: 0.9),
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // Nombre + menú de contacto (si no es propio) + botón de play
+        // Nombre + menú de contacto (si no es propio) + botón de play + @username
         Container(
           key: widget.profileTutorialKeys?.nameSectionKey,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: Column(
             children: [
-              // Menú de contacto al lado izquierdo del nombre (solo para perfiles de otros)
-              if (!widget.isOwnProfile) _buildContactMenu(),
-              if (!widget.isOwnProfile) const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  widget.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 27,
-                    fontWeight: FontWeight.w700,
-                    height: 1.1,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              GestureDetector(
-                key: widget.tutorialKeys?.playButtonKey,
-                onTap: _isLoading ? null : _togglePlay,
-                child: Container(
-                  width: 20,
-                  height: 20,
-
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: .5),
-                    gradient: LinearGradient(
-                      colors: AppColors.primaryGradient.colors,
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Icon(
-                          _isPlaying ? Icons.pause : Icons.play_arrow_rounded,
-                          size: 16,
-                          color: Colors.white.withValues(alpha: 0.9),
-                        ),
+              _buildNameHeader(),
+              const SizedBox(height: 3),
+              Text(
+                widget.displayName,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  height: 1.2,
                 ),
               ),
             ],
           ),
-        ),
-
-        // DisplayName (@username)
-        const SizedBox(height: 3),
-        Text(
-          widget.displayName,
-          textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.white, fontSize: 14, height: 1.2),
         ),
 
         // Contador de comunidad
@@ -434,36 +466,40 @@ class _InfoUserProfileState extends State<InfoUserProfile>
 
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Icono izquierdo: compartir (siempre muestra el QR del perfil)
-            GestureDetector(
-              key: widget.profileTutorialKeys?.shareQrKey ?? widget.tutorialKeys?.shareButtonKey,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (context) => widget.isOwnProfile
-                        ? const ProfileQrScreen()
-                        : ProfileQrScreen(
-                            userId: widget.userId,
-                            overrideUsername: widget.displayName.replaceFirst(
-                              '@',
-                              '',
+            // Lado izquierdo: share icon (ocupa mismo espacio que derecha)
+            Padding(
+              padding: const EdgeInsets.only(right: 15, left: 25),
+              child: GestureDetector(
+                key:
+                    widget.profileTutorialKeys?.shareQrKey ??
+                    widget.tutorialKeys?.shareButtonKey,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (context) => widget.isOwnProfile
+                          ? const ProfileQrScreen()
+                          : ProfileQrScreen(
+                              userId: widget.userId,
+                              overrideUsername: widget.displayName.replaceFirst(
+                                '@',
+                                '',
+                              ),
+                              overrideDisplayName: widget.name,
                             ),
-                            overrideDisplayName: widget.name,
-                          ),
-                  ),
-                );
-              },
-              child: SvgPicture.asset(
-                AssetsConstants.shareIcon,
-                width: 20,
-                height: 20,
+                    ),
+                  );
+                },
+                child: SvgPicture.asset(
+                  AssetsConstants.shareIcon,
+                  width: 20,
+                  height: 20,
+                ),
               ),
             ),
 
-            const SizedBox(width: 15),
+            // Centro: community counter
             GestureDetector(
               key: widget.profileTutorialKeys?.communityKey,
               onTap: _onCommunityTap,
@@ -472,25 +508,52 @@ class _InfoUserProfileState extends State<InfoUserProfile>
                 child: _buildCommunityContent(),
               ),
             ),
-            const SizedBox(width: 15),
 
-            // Ícono de mensaje
-            GestureDetector(
-              key: widget.profileTutorialKeys?.messagesHeaderKey,
-              onTap: widget.onMessageTap,
-              child: Image.asset(
-                AssetsConstants.inboxIcon,
-                width: 20,
-                height: 20,
-                color: Colors.white,
-              ),
+            // Lado derecho: inbox + gift (ocupa mismo espacio que izquierda)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                const SizedBox(width: 15),
+                // Ícono de mensaje
+                GestureDetector(
+                  key: widget.profileTutorialKeys?.messagesHeaderKey,
+                  onTap: widget.isAuthenticated
+                      ? widget.onMessageTap
+                      : () => _showLoginPrompt(context),
+                  child: Image.asset(
+                    AssetsConstants.inboxIcon,
+                    width: 20,
+                    height: 20,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Ícono de donación (regalo)
+                GestureDetector(
+                  onTap: () => widget.isAuthenticated
+                      ? _showDonationComingSoonDialog(context)
+                      : _showLoginPrompt(context),
+                  child: SvgPicture.asset(
+                    'assets/icons/Gift_Icon.svg',
+                    width: 22,
+                    height: 22,
+                    colorFilter: const ColorFilter.mode(
+                      Color(0xFF22C55E),
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
+        // Bio centrada
         if (widget.bio != null && widget.bio!.isNotEmpty) ...[
           const SizedBox(height: 10),
           Container(
-            width: MediaQuery.of(context).size.width * 0.7,
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.7,
+            ),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(4),
@@ -508,6 +571,163 @@ class _InfoUserProfileState extends State<InfoUserProfile>
           ),
         ],
       ],
+    );
+  }
+
+  void _showDonationComingSoonDialog(BuildContext context) {
+    // Debug para diferenciar si es mi cuenta o de otro usuario
+    if (widget.isOwnProfile) {
+      debugPrint('💰 [DONATION] Click desde MI CUENTA');
+    } else {
+      debugPrint('💰 [DONATION] Click desde OTRO USUARIO: ${widget.userId}');
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.85),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Botón X para cerrar
+              Align(
+                alignment: Alignment.topRight,
+                child: GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: const Icon(
+                    Icons.close,
+                    color: Colors.white70,
+                    size: 24,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              // Título
+              Text(
+                'profile.donation.title'.tr(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              // Mensaje
+              Text(
+                'profile.donation.message'.tr(),
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 14,
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showLoginPrompt(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            width: 340,
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1A1A1A),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.08),
+                width: 1,
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.lock_outline, color: Colors.white70, size: 48),
+                const SizedBox(height: 16),
+                const Text(
+                  'Join Migozz',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Log in or sign up to follow, chat and send gifts.',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    fontSize: 15,
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          Navigator.of(ctx).pop();
+                          context.go('/register');
+                        },
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Colors.white24),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          'Sign Up',
+                          style: TextStyle(color: Colors.white, fontSize: 15),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(ctx).pop();
+                          context.go('/login');
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFF0050),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          'Log In',
+                          style: TextStyle(color: Colors.white, fontSize: 15),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

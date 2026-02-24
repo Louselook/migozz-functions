@@ -32,6 +32,9 @@ class UserDTO {
   // Pre-registro: usuarios que reservaron username antes de registrarse
   final bool isPreRegistered;
 
+  // Estado de la cuenta: true = activo, false = baneado
+  final bool active;
+
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -63,6 +66,7 @@ class UserDTO {
     Map<String, List<String>>? interests,
     this.complete = true,
     this.isPreRegistered = false,
+    this.active = true,
     DateTime? createdAt,
     DateTime? updatedAt,
     this.lastSocialEcosystemSync,
@@ -94,6 +98,7 @@ class UserDTO {
     Map<String, List<String>>? interests,
     bool? complete,
     bool? isPreRegistered,
+    bool? active,
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? lastSocialEcosystemSync,
@@ -121,6 +126,7 @@ class UserDTO {
       interests: interests ?? this.interests,
       complete: complete ?? this.complete,
       isPreRegistered: isPreRegistered ?? this.isPreRegistered,
+      active: active ?? this.active,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       lastSocialEcosystemSync:
@@ -153,6 +159,7 @@ class UserDTO {
       'interests': interests,
       'complete': complete,
       'isPreRegistered': isPreRegistered,
+      'active': active,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
       'lastSocialEcosystemSync': lastSocialEcosystemSync != null
@@ -189,6 +196,7 @@ class UserDTO {
       'interests': interests,
       'complete': complete,
       'isPreRegistered': isPreRegistered,
+      'active': active,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
       'lastSocialEcosystemSync': lastSocialEcosystemSync?.toIso8601String(),
@@ -368,6 +376,17 @@ class UserDTO {
       isPreRegistered = ipr != 0;
     }
 
+    // active defensivo (por defecto true para usuarios existentes)
+    bool active = true;
+    final act = map['active'];
+    if (act is bool) {
+      active = act;
+    } else if (act is String) {
+      active = act.toLowerCase() == 'true';
+    } else if (act is num) {
+      active = act != 0;
+    }
+
     // profileVersion defensivo
     int profileVersion = 1; // Por defecto versión 1
     final pv = map['profileVersion'];
@@ -444,6 +463,7 @@ class UserDTO {
       interests: interests,
       complete: complete,
       isPreRegistered: isPreRegistered,
+      active: active,
       createdAt: createdAt,
       updatedAt: updatedAt,
       lastSocialEcosystemSync: lastSocialEcosystemSync,

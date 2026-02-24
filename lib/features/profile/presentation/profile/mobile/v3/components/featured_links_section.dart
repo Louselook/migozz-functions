@@ -6,7 +6,7 @@ import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubi
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'add_link_bottom_sheet.dart';
-import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
+import 'package:migozz_app/features/profile/components/utils/alert_general.dart';
 import 'section_percentage_header.dart';
 
 class FeaturedLinksSection extends StatelessWidget {
@@ -27,7 +27,11 @@ class FeaturedLinksSection extends StatelessWidget {
     // Check if already has 2 links
     final currentLinks = user.featuredLinks ?? [];
     if (currentLinks.length >= 2) {
-      AlertGeneral.show(context, 3, message: 'profile.customization.links.maximumLinks'.tr());
+      AlertGeneral.show(
+        context,
+        3,
+        message: 'profile.customization.links.maximumLinks'.tr(),
+      );
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('profile.customization.links.maximumLinks'.tr()),
@@ -48,7 +52,11 @@ class FeaturedLinksSection extends StatelessWidget {
           final userId = authCubit.state.firebaseUser?.uid;
 
           if (userId == null) {
-            AlertGeneral.show(context, 4, message: 'edit.validations.errorUserLogin'.tr());
+            AlertGeneral.show(
+              context,
+              4,
+              message: 'edit.validations.errorUserLogin'.tr(),
+            );
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('edit.validations.errorUserLogin'.tr()),
@@ -73,11 +81,19 @@ class FeaturedLinksSection extends StatelessWidget {
             );
 
             if (context.mounted) {
-              AlertGeneral.show(context, 1, message: 'profile.customization.links.successAdd'.tr());
+              AlertGeneral.show(
+                context,
+                1,
+                message: 'profile.customization.links.successAdd'.tr(),
+              );
             }
           } catch (e) {
             if (context.mounted) {
-              AlertGeneral.show(context, 4, message: '${'profile.customization.links.errorAdd'.tr()}$e');
+              AlertGeneral.show(
+                context,
+                4,
+                message: '${'profile.customization.links.errorAdd'.tr()}$e',
+              );
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text('profile.customization.links.successAdd'.tr()),
@@ -110,11 +126,19 @@ class FeaturedLinksSection extends StatelessWidget {
       );
 
       if (context.mounted) {
-        AlertGeneral.show(context, 1, message: 'profile.customization.links.successAdd'.tr());
+        AlertGeneral.show(
+          context,
+          1,
+          message: 'profile.customization.links.successAdd'.tr(),
+        );
       }
     } catch (e) {
       if (context.mounted) {
-        AlertGeneral.show(context, 4, message: '${'profile.customization.links.errorAdd'.tr()}$e');
+        AlertGeneral.show(
+          context,
+          4,
+          message: '${'profile.customization.links.errorAdd'.tr()}$e',
+        );
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('profile.customization.links.successAdd'.tr()),
@@ -122,7 +146,7 @@ class FeaturedLinksSection extends StatelessWidget {
           ),
         );
       }
-    } 
+    }
   }
 
   @override
@@ -194,7 +218,10 @@ class FeaturedLinksSection extends StatelessWidget {
 
           // Add link button (only show if less than 2 links)
           if (isOwnProfile && (user.featuredLinks ?? []).length < 2)
-            _AddLinkButton(text: 'profile.customization.links.add'.tr(), onTap: () => _addLink(context)),
+            _AddLinkButton(
+              text: 'profile.customization.links.add'.tr(),
+              onTap: () => _addLink(context),
+            ),
         ],
       ),
     );
@@ -230,12 +257,14 @@ class _AnimatedLinkItemState extends State<_AnimatedLinkItem>
       duration: const Duration(milliseconds: 400),
       vsync: this,
     );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    _scaleAnimation = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
     _controller.forward();
   }
 
@@ -294,7 +323,10 @@ class _AnimatedLinkItemState extends State<_AnimatedLinkItem>
                       const SizedBox(height: 2),
                       Text(
                         url,
-                        style: const TextStyle(color: Colors.white54, fontSize: 11),
+                        style: const TextStyle(
+                          color: Colors.white54,
+                          fontSize: 11,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),

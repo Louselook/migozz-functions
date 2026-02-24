@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
 import 'edit_bio_bottom_sheet.dart';
-import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
+import 'package:migozz_app/features/profile/components/utils/alert_general.dart';
 import 'section_percentage_header.dart';
 
 class BioSection extends StatefulWidget {
@@ -28,7 +28,6 @@ class BioSection extends StatefulWidget {
 }
 
 class _BioSectionState extends State<BioSection> {
-
   Future<void> _editBio(BuildContext context) async {
     await showModalBottomSheet(
       context: context,
@@ -68,8 +67,7 @@ class _BioSectionState extends State<BioSection> {
               AlertGeneral.show(
                 context,
                 4,
-                message:
-                    '${'profile.customization.bio.errorUpdate'.tr()}$e',
+                message: '${'profile.customization.bio.errorUpdate'.tr()}$e',
               );
             }
           }
@@ -130,26 +128,27 @@ class _BioSectionState extends State<BioSection> {
             ),
             const SizedBox(height: 7),
             Text(
-              widget.bio.isEmpty ? 'profile.customization.bio.add'.tr() : widget.bio,
+              widget.bio.isEmpty
+                  ? 'profile.customization.bio.add'.tr()
+                  : widget.bio,
               style: TextStyle(
                 color: widget.bio.isEmpty ? Colors.white38 : Colors.white70,
                 fontSize: 12,
                 height: 1.5,
               ),
             ),
-              const SizedBox(height: 10),
-              GestureDetector(
-                onTap: () => _editBio(context),
-                child: Text(
-                  'profile.customization.bio.editCta'.tr(),
-                  style: TextStyle(
-                    color: Colors.purple.shade300,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
+            const SizedBox(height: 10),
+            GestureDetector(
+              onTap: () => _editBio(context),
+              child: Text(
+                'profile.customization.bio.editCta'.tr(),
+                style: TextStyle(
+                  color: Colors.purple.shade300,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-
+            ),
           ],
         ),
       ),

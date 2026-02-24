@@ -355,6 +355,7 @@ class _ProfileStatsScreenState extends State<ProfileStatsScreen> {
                                 selectedMode: _overviewSelection,
                                 onModeChanged: (val) {
                                   if (val != null) {
+                                    debugPrint('🔄 Dropdown changed from $_overviewSelection to $val');
                                     setState(() => _overviewSelection = val);
                                   }
                                 },
@@ -697,17 +698,21 @@ class _OverviewCard extends StatelessWidget {
                       return Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _SmallSocialRow(
-                            name: 'stats.fieldLabels.followers'.tr(),
-                            count: followerState.followersCount,
-                            iconPath: 'assets/icons/Migozz_Icon.svg',
+                          Expanded(
+                            child: _SmallSocialRow(
+                              name: 'stats.fieldLabels.followers'.tr(),
+                              count: followerState.followersCount,
+                              iconPath: 'assets/icons/Migozz_Icon.svg',
+                            ),
                           ),
                           const SizedBox(width: 24),
-                          _SmallSocialRow(
-                            name: 'stats.fieldLabels.following'.tr(),
-                            count: followerState.followingCount,
-                            iconPath: 'assets/icons/Migozz_Icon.svg',
-                            isFollowing: true,
+                          Expanded(
+                            child: _SmallSocialRow(
+                              name: 'stats.fieldLabels.following'.tr(),
+                              count: followerState.followingCount,
+                              iconPath: 'assets/icons/Migozz_Icon.svg',
+                              isFollowing: true,
+                            ),
                           ),
                         ],
                       );

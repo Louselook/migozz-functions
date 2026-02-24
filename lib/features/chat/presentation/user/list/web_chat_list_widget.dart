@@ -17,7 +17,10 @@ class WebChatListWidget extends StatefulWidget {
     required this.username,
     required this.currentUserId,
     this.onClose,
+    this.onChatSelected,
   });
+
+  final Function(ChatPreview)? onChatSelected;
 
   @override
   State<WebChatListWidget> createState() => _WebChatListWidgetState();
@@ -33,7 +36,7 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 7, vsync: this);
     _searchController.addListener(() {
       setState(() {
         _searchQuery = _searchController.text.toLowerCase();
@@ -64,7 +67,7 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
         displayName: userData['displayName'] ?? 'Usuario',
         username: userData['userName'] ?? userData['username'] ?? 'user',
         avatarUrl: userData['avatarUrl'],
-        lastMessage: chatRoom.lastMessage ?? 'Nuevo chat',
+        lastMessage: chatRoom.lastMessage ?? 'web.chat.new_message'.tr(),
         timeAgo: _formatTime(chatRoom.lastMessageTime),
         isVerified: userData['isVerified'] ?? false,
         isOnline: false,
@@ -113,8 +116,8 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Messages',
+                Text(
+                  'web.chat.title'.tr(),
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 20,
@@ -122,9 +125,12 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
                   ),
                 ),
                 if (widget.onClose != null)
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
-                    onPressed: widget.onClose,
+                  MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white),
+                      onPressed: widget.onClose,
+                    ),
                   ),
               ],
             ),
@@ -137,8 +143,30 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
               children: [
                 _buildChatStream(isActive: true),
                 _buildChatStream(isActive: false),
+                _buildComingSoon(),
+                _buildComingSoon(),
+                _buildComingSoon(),
+                _buildComingSoon(),
+                _buildComingSoon(),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildComingSoon() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.construction, size: 64, color: Colors.grey[700]),
+          const SizedBox(height: 16),
+          Text(
+            'profile.sendGifts.comingSoon'.tr(),
+            style: TextStyle(color: Colors.grey[600], fontSize: 16),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
@@ -152,20 +180,25 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
     return StreamBuilder<List<ChatRoom>>(
       stream: stream,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting)
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
             child: CircularProgressIndicator(color: Color(0xFFE91E63)),
           );
-        if (snapshot.hasError)
+        }
+        if (snapshot.hasError) {
           return _buildEmptyState(
-            'Oops! Algo salió mal',
+            'web.chat.error_oops'.tr(),
             icon: Icons.error_outline,
           );
+        }
         final chatRooms = snapshot.data ?? [];
-        if (chatRooms.isEmpty)
+        if (chatRooms.isEmpty) {
           return _buildEmptyState(
-            isActive ? 'No messages yet' : 'No new messages',
+            isActive
+                ? 'web.chat.no_messages'.tr()
+                : 'web.chat.no_new_messages'.tr(),
           );
+        }
 
         final unreadKey = chatRooms
             .map(
@@ -180,18 +213,20 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
             chatRooms.map((room) => _chatRoomToPreview(room)),
           ),
           builder: (context, previewSnapshot) {
-            if (!previewSnapshot.hasData)
+            if (!previewSnapshot.hasData) {
               return const Center(
                 child: CircularProgressIndicator(color: Color(0xFFE91E63)),
               );
+            }
             final filteredChats = _filterChats(
               previewSnapshot.data!
                   .where((p) => p != null)
                   .cast<ChatPreview>()
                   .toList(),
             );
-            if (filteredChats.isEmpty)
-              return _buildEmptyState('No results found');
+            if (filteredChats.isEmpty) {
+              return _buildEmptyState('web.chat.no_results'.tr());
+            }
             return _buildChatList(filteredChats);
           },
         );
@@ -210,7 +245,7 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
         controller: _searchController,
         style: const TextStyle(color: Colors.white),
         decoration: InputDecoration(
-          hintText: "profile.chat.search".tr(),
+          hintText: 'profile.chat.search'.tr(),
           hintStyle: TextStyle(color: Colors.grey[600]),
           prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
           border: InputBorder.none,
@@ -233,9 +268,10 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
               height: 38,
               child: TabBar(
                 controller: _tabController,
+                isScrollable: true,
                 indicatorSize: TabBarIndicatorSize.tab,
                 indicatorPadding: EdgeInsets.zero,
-                labelPadding: EdgeInsets.zero,
+                labelPadding: const EdgeInsets.symmetric(horizontal: 16),
                 indicator: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [Color(0xFFE91E63), Color(0xFF9C27B0)],
@@ -250,8 +286,13 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
                   fontWeight: FontWeight.w600,
                 ),
                 tabs: [
-                  Tab(child: Center(child: Text('Chat'))),
-                  Tab(child: Center(child: Text("profile.chat.filter".tr()))),
+                  Tab(child: Center(child: Text('web.chat.tab_chat'.tr()))),
+                  Tab(child: Center(child: Text('profile.chat.filter'.tr()))),
+                  Tab(child: Center(child: Text('Prime'))),
+                  Tab(child: Center(child: Text('VIP'))),
+                  Tab(child: Center(child: Text('Biz'))),
+                  Tab(child: Center(child: Text('AI'))),
+                  Tab(child: Center(child: Text('Spam'))),
                 ],
               ),
             ),
@@ -269,19 +310,23 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
         return ChatListItem(
           chat: chat,
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => UserChatScreen(
-                  otherUserId: chat.userId,
-                  otherUserName: chat.displayName,
-                  otherUserAvatar: chat.avatarUrl,
-                  currentUserId: widget.currentUserId,
+            if (widget.onChatSelected != null) {
+              widget.onChatSelected!(chat);
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => UserChatScreen(
+                    otherUserId: chat.userId,
+                    otherUserName: chat.displayName,
+                    otherUserAvatar: chat.avatarUrl,
+                    currentUserId: widget.currentUserId,
+                  ),
                 ),
-              ),
-            ).then((_) {
-              if (mounted) setState(() {});
-            });
+              ).then((_) {
+                if (mounted) setState(() {});
+              });
+            }
           },
         );
       },

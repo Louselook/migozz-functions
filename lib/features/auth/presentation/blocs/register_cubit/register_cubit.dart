@@ -12,7 +12,7 @@ import 'package:migozz_app/features/auth/services/add_networks/network_config.da
 import 'package:migozz_app/features/auth/services/location_service.dart';
 import 'package:migozz_app/features/auth/services/media_service.dart';
 import 'package:migozz_app/features/auth/services/pre_register_service.dart';
-import 'package:migozz_app/features/profile/components/utils/Loader.dart';
+import 'package:migozz_app/features/profile/components/utils/loader.dart';
 import 'register_state.dart';
 
 class RegisterCubit extends Cubit<RegisterState> {
@@ -242,6 +242,9 @@ class RegisterCubit extends Cubit<RegisterState> {
   void setInterests(Map<String, List<String>> interests) =>
       emit(state.copyWith(interests: interests));
 
+  void setTermsAccepted(bool accepted) =>
+      emit(state.copyWith(termsAccepted: accepted));
+
   void setCurrentOTP(String currentOTP) => emit(
     state.copyWith(
       currentOTP: currentOTP,
@@ -320,7 +323,9 @@ class RegisterCubit extends Cubit<RegisterState> {
             showProfileLoader(
               context,
               platform: config.displayName,
-              type: LoaderType.socialAuth,
+              type: inEditMode
+                  ? LoaderType.socialAuth
+                  : LoaderType.registration,
               onCancel: () {
                 debugPrint('❌ User cancelled connection');
                 userCancelled = true;
@@ -381,6 +386,7 @@ class RegisterCubit extends Cubit<RegisterState> {
       // El deeplink manejará la sincronización automáticamente
     } catch (e) {
       debugPrint('❌ Error en OAuth: $e');
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -614,32 +620,39 @@ class RegisterCubit extends Cubit<RegisterState> {
   Future<void> checkCompletion({bool forGoogle = false, String? uid}) async {
     emit(state.copyWith(status: RegisterIsLogin.loading));
     try {
+      final missing = <String>[];
+
+      final hasFullName = (state.fullName ?? '').trim().isNotEmpty;
+      if (!hasFullName) missing.add('fullName');
+
+      final hasUsername = (state.username ?? '').trim().isNotEmpty;
+      if (!hasUsername) missing.add('username');
+
+      // 📍 Location is now OPTIONAL - user can deny permission and still complete registration
+      // Only add to missing if location is explicitly null (not set at all)
+      // Empty location (from denied permission) is acceptable
       final hasLocationData = state.location != null;
+      if (!hasLocationData) missing.add('location');
 
-      final completeFull =
-          state.email != null &&
-          state.language != null &&
-          state.fullName != null &&
-          state.username != null &&
-          // state.gender != null &&
-          hasLocationData &&
-          state.phone != null; // &&
-      // state.category != null &&
-      // state.interests != null;
+      // Requirement: at least 1 social network
+      // We treat any non-empty entry in socialEcosystem as "at least one".
+      final hasAtLeastOneSocial = (state.socialEcosystem?.isNotEmpty ?? false);
+      if (!hasAtLeastOneSocial) missing.add('socialEcosystem');
 
-      final completeForGoogle =
-          state.language != null &&
-          // state.gender != null &&
-          hasLocationData &&
-          state.phone != null; // &&
-      // state.category != null &&
-      // state.interests != null;
+      // Email/OTP flow only (non-social).
+      final hasEmail = (state.email ?? '').trim().isNotEmpty;
+      final hasOtp = (state.currentOTP ?? '').trim().isNotEmpty;
+      if (!forGoogle) {
+        if (!hasEmail) missing.add('email');
+        if (!hasOtp) missing.add('otp');
+      }
 
-      final complete = forGoogle ? completeForGoogle : completeFull;
+      final complete = missing.isEmpty;
 
       debugPrint(
         '✅ [Cubit] Registro completo (forGoogle=$forGoogle): $complete',
       );
+      debugPrint('✅ [Cubit] Missing required: ${missing.join(', ')}');
       debugPrint('📍 [Cubit] Location exists: $hasLocationData');
       debugPrint('📍 [Cubit] Location isEmpty: ${state.location?.isEmpty}');
       if (state.location != null) {

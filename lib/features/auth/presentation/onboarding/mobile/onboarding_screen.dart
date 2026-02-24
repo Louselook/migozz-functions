@@ -39,83 +39,116 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     // Usa ScreenUtil valores escalados para paddings/medidas
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
-      body: Column(
-        children: [
-          // Indicadores de progreso
-          Padding(
-            padding: EdgeInsets.only(top: 40.h, left: 20.w, right: 20.w),
-            child: Row(
-              children: List.generate(
-                AppConstants.onboardingImages.length,
-                (index) => CustomProgressIndicator(
-                  index,
-                  currentIndex: _currentPage,
-                  borderRadius: BorderRadius.circular(4.r),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Indicadores de progreso
+            Padding(
+              padding: EdgeInsets.only(top: 10, left: 20.w, right: 20.w),
+              child: Row(
+                spacing: 5,
+                children: List.generate(
+                  AppConstants.onboardingImages.length,
+                  (index) => CustomProgressIndicator(
+                    index,
+                    currentIndex: _currentPage,
+                    borderRadius: BorderRadius.circular(4.r),
+                  ),
                 ),
               ),
             ),
-          ),
 
-          // Contenido de páginas
-          Expanded(
-            child: PageView.builder(
-              controller: _pageController,
-              onPageChanged: (int page) {
-                setState(() {
-                  _currentPage = page;
-                });
-              },
-              itemCount: AppConstants.onboardingImages.length,
-              itemBuilder: (context, index) {
-                return _buildOnboardingPage(
-                  context,
-                  AppConstants.onboardingPages[index],
-                );
-              },
+            // Contenido de páginas
+            Expanded(
+              child: PageView.builder(
+                controller: _pageController,
+                onPageChanged: (int page) {
+                  setState(() {
+                    _currentPage = page;
+                  });
+                },
+                itemCount: AppConstants.onboardingImages.length,
+                itemBuilder: (context, index) {
+                  return _buildOnboardingPage(
+                    context,
+                    AppConstants.onboardingPages[index],
+                    index,
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildOnboardingPage(BuildContext context, OnboardingData data) {
+  Widget _buildOnboardingPage(
+    BuildContext context,
+    OnboardingData data,
+    int index,
+  ) {
     final double screenHeight = MediaQuery.of(context).size.height;
+    final bool isMediumScreen = screenHeight <= 850;
+    final bool isSmallScreen = screenHeight <= 750;
+
+    double descriptionSize = 15.sp;
+
+    isMediumScreen ? descriptionSize = 14.sp : null;
+    isSmallScreen ? descriptionSize = 12.sp : null;
+
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Parte superior → 50%
         Expanded(
-          flex: screenHeight < 800 ? 5 : 3, // para no chocar componetes
+          flex: isMediumScreen ? 3 : 4,
           child: Padding(
             padding: EdgeInsets.all(20.w),
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: isSmallScreen ? 10 : 15,
               children: [
-                SizedBox(height: 5.h),
-                PrimaryText(
+                Text(
                   data.titleKey.tr(),
-                  fontSize: 28.sp,
-                  fontfamily: 'Inter',
+                  style: (TextStyle(
+                    fontSize: isMediumScreen ? 20 : 24,
+                    fontFamily: 'Inter',
+                    color: Color(0xFFFFFFFF),
+                    fontWeight: FontWeight.bold,
+                  )),
                 ),
-                SizedBox(height: 8.h),
-                SecondaryText(
-                  data.subTitleKey != null ? data.subTitleKey!.tr() : "",
-                  textAlign: TextAlign.start,
-                  fontfamily: 'Inter',
-                  fontSize: 14.sp,
-                  color: AppColors.secondaryText,
-                ),
-                SecondaryText(
-                  data.descriptionKey.tr(),
-                  textAlign: TextAlign.start,
-                  fontfamily: 'Inter',
-                  fontSize: 14.sp,
-                  color: AppColors.secondaryText.withValues(alpha: 0.53),
-                ),
-                const Spacer(),
 
-                // Botones
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    data.subTitleKey != null
+                        ? SecondaryText(
+                            data.subTitleKey != null
+                                ? data.subTitleKey!.tr()
+                                : "",
+                            textAlign: TextAlign.start,
+                            fontfamily: 'Inter',
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white,
+                          )
+                        : SizedBox.shrink(),
+
+                    Container(
+                      constraints: BoxConstraints(
+                        minHeight: isSmallScreen ? 0 : 60,
+                      ),
+                      child: SecondaryText(
+                        data.descriptionKey.tr(),
+                        textAlign: TextAlign.start,
+                        fontfamily: 'Inter',
+                        fontSize: descriptionSize,
+                        color: AppColors.secondaryText,
+                      ),
+                    ),
+                  ],
+                ),
+
                 _currentPage == AppConstants.onboardingImages.length - 1
                     ? SizedBox(
                         width: double.infinity,
@@ -159,7 +192,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
         // Parte inferior → 50%
         Expanded(
-          flex: 5,
+          flex: 4,
           child: Padding(
             padding: EdgeInsets.all(8.w),
             child: Container(
@@ -184,12 +217,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         duration: const Duration(milliseconds: 400),
                         switchInCurve: Curves.easeInOut,
                         switchOutCurve: Curves.easeInOut,
-                        transitionBuilder: (Widget child, Animation<double> animation) {
-                          return FadeTransition(
-                            opacity: animation,
-                            child: child,
-                          );
-                        },
+                        transitionBuilder:
+                            (Widget child, Animation<double> animation) {
+                              return FadeTransition(
+                                opacity: animation,
+                                child: child,
+                              );
+                            },
                         child: Image.asset(
                           data.imagePath,
                           key: ValueKey<String>(data.imagePath),
@@ -198,19 +232,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           height: double.infinity,
                           alignment: Alignment.center,
                           gaplessPlayback: true,
-                          frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-                            if (wasSynchronouslyLoaded) {
-                              return child;
-                            }
-                            return AnimatedOpacity(
-                              opacity: frame == null ? 0 : 1,
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeOut,
-                              child: child,
-                            );
-                          },
+                          frameBuilder:
+                              (context, child, frame, wasSynchronouslyLoaded) {
+                                if (wasSynchronouslyLoaded) {
+                                  return child;
+                                }
+                                return AnimatedOpacity(
+                                  opacity: frame == null ? 0 : 1,
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeOut,
+                                  child: child,
+                                );
+                              },
                           errorBuilder: (context, error, stackTrace) {
-                            debugPrint('Error loading image ${data.imagePath}: $error');
+                            debugPrint(
+                              'Error loading image ${data.imagePath}: $error',
+                            );
                             return Container(
                               color: Colors.grey.withValues(alpha: 0.3),
                               child: Center(

@@ -8,6 +8,7 @@ class ProfileField extends StatelessWidget {
   final VoidCallback? onTap;
   final String? displayValue;
   final IconData? trailingIcon;
+  final int maxLines;
 
   const ProfileField({
     super.key,
@@ -18,6 +19,7 @@ class ProfileField extends StatelessWidget {
     this.onTap,
     this.displayValue,
     this.trailingIcon,
+    this.maxLines = 1,
   });
 
   @override
@@ -61,6 +63,7 @@ class ProfileField extends StatelessWidget {
               controller: controller,
               readOnly: readOnly || onTap != null,
               onTap: onTap,
+              maxLines: maxLines,
               cursorColor: Colors.white,
               style: const TextStyle(
                 color: Colors.white,

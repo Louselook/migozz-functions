@@ -10,8 +10,11 @@ import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_state.dart';
-import 'package:migozz_app/features/auth/services/location_service.dart';
+import 'package:migozz_app/features/auth/data/domain/models/user/location_dto.dart';
+import 'package:migozz_app/features/auth/services/media_service.dart';
+import 'package:migozz_app/features/profile/data/datasources/user_service.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
+import 'package:migozz_app/features/profile/presentation/edit/components/edit_location_bottom_sheet.dart';
 import 'package:migozz_app/features/profile/presentation/edit/components/profile_field.dart';
 import 'package:migozz_app/features/profile/presentation/edit/components/profile_option_button.dart';
 // import 'package:migozz_app/features/profile/presentation/edit/modules/edit_audio.dart';
@@ -19,15 +22,15 @@ import 'package:migozz_app/features/profile/presentation/edit/components/profile
 // import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
 import 'package:migozz_app/features/tutorial/profile/profile_tutorial.dart';
-import 'package:migozz_app/features/profile/components/utils/alertGeneral.dart';
-import 'package:migozz_app/features/profile/components/utils/Loader.dart';
+import 'package:migozz_app/features/profile/components/utils/alert_general.dart';
+import 'package:migozz_app/features/profile/components/utils/loader.dart';
 
 class EditProfileScreen extends StatefulWidget {
   final TutorialKeys tutorialKeys;
   final ProfileTutorialKeys? profileTutorialKeys;
-  
+
   const EditProfileScreen({
-    super.key, 
+    super.key,
     required this.tutorialKeys,
     this.profileTutorialKeys,
   });
@@ -42,6 +45,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
   final emailCtrl = TextEditingController();
   final phoneCtrl = TextEditingController();
   final genderCtrl = TextEditingController();
+  final bioCtrl = TextEditingController();
   final birthCtrl = TextEditingController();
   DateTime? _dob;
   String? _selectedGender;
@@ -57,6 +61,9 @@ class EditProfileScreenState extends State<EditProfileScreen> {
 
     // Check Username
     if (usernameCtrl.text.trim() != _initialUser!.username) return true;
+
+    // Check Bio
+    if (bioCtrl.text.trim() != (_initialUser!.bio ?? '')) return true;
 
     // Check Phone
     if (phoneCtrl.text.trim() != (_initialUser!.phone ?? '')) return true;
@@ -87,7 +94,10 @@ class EditProfileScreenState extends State<EditProfileScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           'tutorial.help.confirmTitle'.tr(),
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         content: Text(
           'tutorial.help.confirmMessage'.tr(),
@@ -104,10 +114,14 @@ class EditProfileScreenState extends State<EditProfileScreen> {
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             child: ShaderMask(
-              shaderCallback: (bounds) => AppColors.primaryGradient.createShader(bounds),
+              shaderCallback: (bounds) =>
+                  AppColors.primaryGradient.createShader(bounds),
               child: Text(
                 'tutorial.help.confirmButton'.tr(),
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
@@ -130,6 +144,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
     emailCtrl.dispose();
     phoneCtrl.dispose();
     genderCtrl.dispose();
+    bioCtrl.dispose();
     birthCtrl.dispose();
     super.dispose();
   }
@@ -155,6 +170,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
     final user = _initialUser!;
     nameCtrl.text = user.displayName;
     usernameCtrl.text = user.username;
+    bioCtrl.text = user.bio ?? '';
     // emailCtrl doesn't change
     phoneCtrl.text = user.phone ?? '';
     _selectedGender = _normalizeGender(user.gender);
@@ -208,6 +224,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
       _resetFields();
       return true;
     } else if (action == 'save') {
+      // ignore: use_build_context_synchronously
       final userId = context.read<AuthCubit>().state.firebaseUser?.uid;
       if (userId != null) {
         return await _saveProfile(userId);
@@ -219,11 +236,36 @@ class EditProfileScreenState extends State<EditProfileScreen> {
   Future<bool> _saveProfile(String userId) async {
     final editCubit = context.read<EditCubit>();
     try {
+      final newUsername = usernameCtrl.text.trim().toLowerCase();
+      final currentUsername = _initialUser?.username.toLowerCase() ?? '';
+
+      // Verificar si el username cambió y si ya está en uso
+      if (newUsername != currentUsername && newUsername.isNotEmpty) {
+        final userService = UserService(UserMediaService());
+        final isTaken = await userService.isUsernameTaken(
+          newUsername,
+          excludeUserId: userId,
+        );
+
+        if (isTaken) {
+          if (mounted) {
+            await AlertGeneral.show(
+              context,
+              4,
+              message: 'edit.validations.usernameTaken'.tr(),
+              autoDismissAfter: const Duration(seconds: 3),
+            );
+          }
+          return false;
+        }
+      }
+
       final data = {
         'displayName': nameCtrl.text.trim(),
-        'username': usernameCtrl.text.trim(),
+        'username': newUsername,
         'phone': phoneCtrl.text.trim(),
         'gender': genderCtrl.text.trim(),
+        'bio': bioCtrl.text.trim(),
         'birthDate': _dob != null ? Timestamp.fromDate(_dob!) : null,
       };
 
@@ -233,9 +275,10 @@ class EditProfileScreenState extends State<EditProfileScreen> {
       if (_initialUser != null) {
         _initialUser = _initialUser!.copyWith(
           displayName: nameCtrl.text.trim(),
-          username: usernameCtrl.text.trim(),
+          username: newUsername,
           phone: phoneCtrl.text.trim(),
           gender: genderCtrl.text.trim(),
+          bio: bioCtrl.text.trim(),
           birthDate: _dob,
         );
       }
@@ -245,6 +288,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
           context,
           1,
           message: "edit.validations.updateProfile".tr(),
+          autoDismissAfter: const Duration(seconds: 1),
         );
       }
       return true;
@@ -261,111 +305,92 @@ class EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Future<void> _confirmAndChangeLocation(String email) async {
-    final svc = LocationService();
-
-    if (mounted) {
-      AlertGeneral.show(
-        context,
-        2,
-        message: "edit.validations.detectLocation".tr(),
-      );
-    }
-
-    final newLocation = await svc.initAndFetchAddress(
-      lang: context.locale.languageCode == 'es' ? 'es' : 'en',
-    );
-
-    if (newLocation == null) {
-      if (!mounted) return;
+    final userId = context.read<AuthCubit>().state.firebaseUser?.uid;
+    if (userId == null) {
       AlertGeneral.show(
         context,
         4,
-        message: "edit.validations.errorDetecLocation".tr(),
+        message: 'edit.validations.errorUserLogin'.tr(),
       );
       return;
     }
 
-    if (!mounted) return;
-    final confirm = await showDialog<bool>(
+    final currentUser = context.read<AuthCubit>().state.userProfile;
+    final currentLocation = currentUser?.location ?? LocationDTO.empty();
+    final editCubit = context.read<EditCubit>();
+
+    await showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('buttons.confirm'.tr()),
-        content: Text(
-          "${"edit.editLocation.text1".tr()}"
-          "${"edit.editLocation.text2".tr(namedArgs: {'city': newLocation.city, 'state': newLocation.state})}"
-          "${"edit.editLocation.text3".tr(namedArgs: {'country': newLocation.country})}"
-          "${"edit.editLocation.text4".tr()}",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text('buttons.cancel'.tr()),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text('buttons.confirm'.tr()),
-          ),
-        ],
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => EditLocationBottomSheet(
+        currentLocation: currentLocation,
+        onSave: (LocationDTO newLocation) async {
+          try {
+            debugPrint('💾 [EditProfile] Guardando ubicación en Firestore...');
+            debugPrint('   • UserId: $userId');
+            debugPrint('   • Data: ${newLocation.toMap()}');
+
+            await editCubit.saveUserProfileField(
+              userId: userId,
+              updatedFields: {'location': newLocation.toMap()},
+            );
+
+            debugPrint('✅ [EditProfile] Ubicación guardada exitosamente');
+
+            if (mounted) {
+              AlertGeneral.show(
+                context,
+                1,
+                message: 'edit.validations.updateLocation'.tr(
+                  namedArgs: {
+                    'city': newLocation.city,
+                    'country': newLocation.country,
+                  },
+                ),
+              );
+            }
+          } catch (e) {
+            debugPrint('❌ [EditProfile] Error guardando ubicación: $e');
+            if (mounted) {
+              AlertGeneral.show(
+                context,
+                4,
+                message: 'edit.validations.errorUpdateLocation'.tr(
+                  namedArgs: {'error': e.toString()},
+                ),
+              );
+            }
+          }
+        },
+        onRemove: () async {
+          try {
+            await editCubit.saveUserProfileField(
+              userId: userId,
+              updatedFields: {'location': LocationDTO.empty().toMap()},
+            );
+
+            if (mounted) {
+              AlertGeneral.show(
+                context,
+                1,
+                message: 'edit.editLocation.locationRemoved'.tr(),
+              );
+            }
+          } catch (e) {
+            if (mounted) {
+              AlertGeneral.show(
+                context,
+                4,
+                message: 'edit.validations.errorUpdateLocation'.tr(
+                  namedArgs: {'error': e.toString()},
+                ),
+              );
+            }
+          }
+        },
       ),
     );
-
-    if (confirm == true) {
-      if (!mounted) return;
-
-      try {
-        final editCubit = context.read<EditCubit>();
-        final userId = context.read<AuthCubit>().state.firebaseUser?.uid;
-
-        if (userId == null) {
-          AlertGeneral.show(
-            context,
-            4,
-            message: 'edit.validations.errorUserLogin'.tr(),
-          );
-          return;
-        }
-
-        final locationData = {'location': newLocation.toMap()};
-
-        debugPrint('💾 [EditProfile] Guardando ubicación en Firestore...');
-        debugPrint('   • UserId: $userId');
-        debugPrint('   • Data: $locationData');
-
-        await editCubit.saveUserProfileField(
-          userId: userId,
-          updatedFields: locationData,
-        );
-
-        if (!mounted) return;
-
-        debugPrint('✅ [EditProfile] Ubicación guardada exitosamente');
-
-        AlertGeneral.show(
-          context,
-          1,
-          message: 'edit.validations.updateLocation'.tr(
-            namedArgs: {
-              'city': newLocation.city,
-              'country': newLocation.country,
-            },
-          ),
-        );
-      } catch (e) {
-        if (!mounted) return;
-
-        debugPrint('❌ [EditProfile] Error guardando ubicación: $e');
-
-        AlertGeneral.show(
-          context,
-          4,
-          message: "edit.validations.errorUpdateLocation".tr(
-            namedArgs: {'error': e.toString()},
-          ),
-        );
-      }
-    } else {
-      debugPrint('🚫 [EditProfile] Usuario canceló el cambio de ubicación');
-    }
   }
 
   String? _normalizeGender(String? raw) {
@@ -443,15 +468,13 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                 child: Padding(
                   padding: const EdgeInsets.only(right: 16),
                   child: ShaderMask(
-                    shaderCallback: (bounds) => AppColors.primaryGradient.createShader(bounds),
+                    shaderCallback: (bounds) =>
+                        AppColors.primaryGradient.createShader(bounds),
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white,
-                          width: 1.5,
-                        ),
+                        border: Border.all(color: Colors.white, width: 1.5),
                       ),
                       child: const Icon(
                         Icons.help_outline,
@@ -502,6 +525,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                       _initialUser = user;
                       nameCtrl.text = user.displayName;
                       usernameCtrl.text = user.username;
+                      bioCtrl.text = user.bio ?? '';
                       emailCtrl.text = user.email;
                       phoneCtrl.text = user.phone ?? '';
                       _selectedGender = _normalizeGender(user.gender);
@@ -596,6 +620,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                                   controller: usernameCtrl,
                                   icon: Icons.alternate_email,
                                 ),
+
                                 ProfileField(
                                   hint: 'edit.presentation.fields.email'.tr(),
                                   controller: emailCtrl,

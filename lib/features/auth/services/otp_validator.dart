@@ -22,6 +22,20 @@ Future<PasswordChangeResult> changePassword({
       }),
     );
 
+    if (response.statusCode == 429) {
+      return PasswordChangeResult(
+        success: false,
+        message: "Demasiadas solicitudes. Por favor espera unos minutos.",
+      );
+    }
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      return PasswordChangeResult(
+        success: false,
+        message: "Error del servidor: ${response.statusCode}",
+      );
+    }
+
     // Decodificar siempre la respuesta si no está vacía
     final data = response.body.isNotEmpty
         ? jsonDecode(response.body)

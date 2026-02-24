@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:migozz_app/core/color.dart';
 
 // Texto principal
@@ -9,11 +10,13 @@ class PrimaryText extends StatelessWidget {
   final TextAlign? textAlign;
   final double? fontSize;
   final String? fontfamily;
+  final double? width;
 
   const PrimaryText(
     this.text, {
     this.color,
     this.textAlign,
+    this.width,
     super.key,
     maxLines,
     TextOverflow? overflow,
@@ -27,7 +30,7 @@ class PrimaryText extends StatelessWidget {
       text,
       textAlign: textAlign ?? TextAlign.start,
       style: TextStyle(
-        fontSize: 24, // tamaño fijo H2
+        fontSize: fontSize ?? 24.sp, // tamaño fijo H2
         fontWeight: FontWeight.bold,
         color: color ?? AppColors.backgroundLight, // color por defecto blanco
       ),

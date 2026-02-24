@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:migozz_app/core/assets_constants.dart';
+import 'package:migozz_app/core/utils/image_proxy_helper.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
@@ -40,7 +41,7 @@ class UserCard extends StatelessWidget {
             // 2️⃣ Imagen real SOLO si existe
             if (hasAvatar)
               CachedNetworkImage(
-                imageUrl: user.avatarUrl!,
+                imageUrl: ImageProxyHelper.getProxiedUrl(user.avatarUrl!),
                 fit: BoxFit.cover,
                 placeholder: (context, url) =>
                     Container(color: Colors.grey.shade900),

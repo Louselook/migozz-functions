@@ -82,7 +82,7 @@ class ProfileDeeplinkService {
 
     try {
       final cleanUsername = username.toLowerCase().replaceFirst('@', '');
-      final route = '/u/$cleanUsername';
+      final route = '/$cleanUsername';
 
       debugPrint('✅ [ProfileDeeplinkService] Navegando a: $route');
 
@@ -96,7 +96,7 @@ class ProfileDeeplinkService {
   /// Método público para abrir perfil
   static void openProfileByUsername(String username, BuildContext context) {
     final cleanUsername = username.toLowerCase().replaceFirst('@', '');
-    context.go('/u/$cleanUsername');
+    context.go('/$cleanUsername');
   }
 
   /// Limpiar recursos

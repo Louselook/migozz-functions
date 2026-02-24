@@ -105,6 +105,8 @@ class ChatMessageBuilder {
         //  Pasar nombre y avatar del otro usuario
         otherUserName: otherUserName,
         otherUserAvatar: otherUserAvatar,
+        // Ocultar header (avatar+nombre) en chat usuario-a-usuario
+        showHeader: otherUserName == null,
       );
     } else {
       return UserMessage(text: message["text"] ?? "");

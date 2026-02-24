@@ -26,7 +26,7 @@
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     
     <application
-        android:label="migozz_app"
+        android:label="Migozz"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="false"
@@ -61,6 +61,15 @@
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="https" android:host="migozz-e2a21.firebaseapp.com" android:pathPrefix="/u/"/>
             </intent-filter>
+
+            <!-- migozz.com -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="migozz.com" android:pathPrefix="/u/"/>
+            </intent-filter>
+
 
            <!-- Deeplinks para redes sociales -->
            <!-- Spotify -->

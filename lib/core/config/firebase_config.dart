@@ -1,5 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:migozz_app/firebase_options.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 
 class FirebaseConfig {
   static Future<void> initialize() async {
@@ -8,6 +10,18 @@ class FirebaseConfig {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
+
+      // ✅ Asegurar persistencia de sesión en Web antes de cualquier uso
+      if (kIsWeb) {
+        try {
+          await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
+          debugPrint(
+            '✅ [FirebaseConfig] Persistencia LOCAL configurada para Web',
+          );
+        } catch (e) {
+          debugPrint('❌ [FirebaseConfig] Error configurando persistencia: $e');
+        }
+      }
     } catch (e) {
       // Si Firebase ya está inicializado, solo ignorar el error
       if (e.toString().contains('duplicate-app')) {

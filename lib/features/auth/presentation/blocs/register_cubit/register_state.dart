@@ -13,6 +13,7 @@ enum RegisterStatusProgress {
   socialEcosystem,
   location,
   email, // Nuevo paso para capturar email antes de sendOTP
+  emailReask, // Re-preguntar email sin OTP
   sendOTP,
   emailChange,
   emailVerification,
@@ -58,6 +59,9 @@ class RegisterState extends Equatable {
   final EmailVerification emailVerification;
   final String? currentOTP;
 
+  // Términos y condiciones
+  final bool termsAccepted;
+
   const RegisterState({
     this.loadigAiResponse = false,
     this.regProgress = RegisterStatusProgress.emty,
@@ -79,6 +83,7 @@ class RegisterState extends Equatable {
     this.interests,
     this.emailVerification = EmailVerification.pending,
     this.currentOTP,
+    this.termsAccepted = false,
   });
 
   RegisterState copyWith({
@@ -102,6 +107,7 @@ class RegisterState extends Equatable {
     Map<String, List<String>>? interests,
     EmailVerification? emailVerification,
     String? currentOTP,
+    bool? termsAccepted,
   }) {
     return RegisterState(
       loadigAiResponse: loadigAiResponse ?? this.loadigAiResponse,
@@ -124,6 +130,7 @@ class RegisterState extends Equatable {
       interests: interests ?? this.interests,
       emailVerification: emailVerification ?? this.emailVerification,
       currentOTP: currentOTP ?? this.currentOTP,
+      termsAccepted: termsAccepted ?? this.termsAccepted,
     );
   }
 
@@ -179,6 +186,7 @@ class RegisterState extends Equatable {
       interests: {},
       emailVerification: EmailVerification.pending,
       currentOTP: null,
+      termsAccepted: false,
     );
   }
 
@@ -204,6 +212,7 @@ class RegisterState extends Equatable {
     interests,
     currentOTP,
     emailVerification,
+    termsAccepted,
   ];
 
   get uid => null;

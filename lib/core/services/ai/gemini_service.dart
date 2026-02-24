@@ -1,8 +1,8 @@
 ﻿import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:migozz_app/core/config/api/api_config.dart';
 import 'package:migozz_app/core/services/ai/assistant_functions.dart';
 import 'package:migozz_app/core/services/ai/chat_validation_min.dart';
 import 'package:migozz_app/core/services/ai/migozz_context.dart';
@@ -219,7 +219,7 @@ class GeminiService {
   }
 
   void ensureConfigured() {
-    final apiKey = dotenv.env['GEMINI_API_KEY'];
+    final apiKey = getEnvVar('GEMINI_API_KEY');
     if (apiKey == null || apiKey.isEmpty) {
       if (kDebugMode) {
         debugPrint('GeminiService: GEMINI_API_KEY missing; AI text disabled.');
@@ -228,12 +228,12 @@ class GeminiService {
     }
     try {
       // Always re-read env, and rebuild model/session if config changed.
-      final envModel = dotenv.env['GEMINI_MODEL'];
+      final envModel = getEnvVar('GEMINI_MODEL');
       if (envModel != null && envModel.trim().isNotEmpty) {
         _modelName = envModel.trim();
       }
 
-      final envEnrich = dotenv.env['GEMINI_ENRICH'];
+      final envEnrich = getEnvVar('GEMINI_ENRICH');
       if (envEnrich != null) {
         final v = envEnrich.toLowerCase();
         _enrichEnabled = v == '1' || v == 'true' || v == 'yes';
@@ -241,17 +241,17 @@ class GeminiService {
         _enrichEnabled = false;
       }
 
-      final envAllowSwitch = dotenv.env['GEMINI_ALLOW_RUNTIME_SWITCH'];
+      final envAllowSwitch = getEnvVar('GEMINI_ALLOW_RUNTIME_SWITCH');
       if (envAllowSwitch != null) {
         final v = envAllowSwitch.toLowerCase();
         _allowRuntimeSwitch = v == '1' || v == 'true' || v == 'yes';
       }
-      final envTemp = dotenv.env['GEMINI_TEMPERATURE'];
+      final envTemp = getEnvVar('GEMINI_TEMPERATURE');
       if (envTemp != null) {
         final t = double.tryParse(envTemp);
         if (t != null) _temperature = t;
       }
-      final envMax = dotenv.env['GEMINI_MAX_TOKENS'];
+      final envMax = getEnvVar('GEMINI_MAX_TOKENS');
       if (envMax != null) {
         final m = int.tryParse(envMax);
         if (m != null) {
@@ -321,35 +321,41 @@ class GeminiService {
   bool _requestedMicPermissionForVoiceStep = false;
 
   // Flujo completo para usuarios NO autenticados
+  // Orden: nombre, username, email re-ask, categoría, intereses, género, ubicación, confirmar, email OTP
   final List<String> _questionFlowNotAuth = [
-    'welcome', // 0 - Mensaje de bienvenida
-    'fullName', // 1
-    'username', // 2
-    'location', // 3
-    'sendOTP', // 4 - Confirmar email (ya disponible) y enviar código
-    'emailVerification', // 5
-    'otpInput', // 6
-    'emailSuccess', // 7
-    'socialEcosystem', // 8
-    'avatarUrl', // 9
-    'phone', // 10
-    'voiceNoteUrl', // 11
-    'category', // 12 - Seleccionar categorías
-    'interests', // 13 - Seleccionar intereses
-    'confirmCreateAccount', // 14
-  ];
+    'fullName', // 0 - Nombre completo
+    'username', // 1 - Username/Apodo
+    // 'emailReask', // 3 - Re-preguntar email (sin OTP)
+    'category', // 4 - Categoría/tipo de perfil
+    'interests', // 5 - Intereses
+    'gender', // 6 - Género
+    'location', // 7 - Ubicación
 
-  //  Flujo reducido para usuarios autenticados
-  final List<String> _questionFlowAuth = [
-    'welcome', // 0 - Mensaje de bienvenida
-    'location',
-    'phone',
+    'voiceNoteUrl',
     'socialEcosystem',
     'avatarUrl',
+
+    // start email
+    'sendOTP', // 9 - Confirmar email y enviar código
+    'emailVerification', // 10
+    'otpInput', // 11
+    'emailSuccess', // 12'
+    // end email
+    'termsAndConditions', // Aceptar términos y condiciones
+    'confirmCreateAccount', // 8 - ¿Listo para crear tu cuenta? (Sí / Actualizar)
+  ];
+
+  //  Flujo reducido para usuarios autenticados (Google/Apple)
+  // Orden: categoría, intereses, género, ubicación, confirmar
+  final List<String> _questionFlowAuth = [
+    'category', // 0 - Categoría/tipo de perfil
+    'interests', // 1 - Intereses
+    'gender', // 2 - Género
+    'location', // 4 - Ubicación
     'voiceNoteUrl',
-    'category',
-    'interests',
-    'confirmCreateAccount',
+    'socialEcosystem',
+    'avatarUrl',
+    'confirmCreateAccount', // 4 - Confirmación final
   ];
 
   // Getter dinámico que devuelve el flujo correcto según auth
@@ -360,20 +366,12 @@ class GeminiService {
     if (user != null) {
       debugPrint('🔑 Usuario autenticado - usando flujo reducido');
       final flow = List<String>.from(_questionFlowAuth);
-      if (kIsWeb) {
-        flow.removeWhere(
-          (step) => step == 'voiceNoteUrl' || step == 'avatarUrl',
-        );
-      }
       return flow;
     }
 
     // flujo completo si NO autenticado
     debugPrint('🆕 Usuario no autenticado - usando flujo completo');
     final flow = List<String>.from(_questionFlowNotAuth);
-    if (kIsWeb) {
-      flow.removeWhere((step) => step == 'voiceNoteUrl' || step == 'avatarUrl');
-    }
     return flow;
   }
 
@@ -412,6 +410,181 @@ class GeminiService {
     _awaitingConfirmation = false;
     _awaitingFieldSelection = false;
     _awaitingReservedUsernameConfirmation = false;
+  }
+
+  /// Detects universal "go back" and "skip" navigation intents.
+  /// Returns a response map if detected, null otherwise.
+  Future<Map<String, dynamic>?> _detectNavigationIntent(
+    String normalized,
+    RegisterCubit registerCubit,
+  ) async {
+    final isSpanish = registerCubit.state.language == 'Español';
+
+    // ── GO-BACK DETECTION ──
+    final isGoBack =
+        normalized == 'back' ||
+        normalized == 'atrás' ||
+        normalized == 'atras' ||
+        normalized == 'volver' ||
+        normalized == 'regresar' ||
+        normalized == 'anterior' ||
+        normalized == 'previous' ||
+        normalized.contains('go back') ||
+        normalized.contains('volver atrás') ||
+        normalized.contains('volver atras') ||
+        normalized.contains('ir atrás') ||
+        normalized.contains('ir atras') ||
+        normalized.contains('paso anterior') ||
+        normalized.contains('previous step') ||
+        normalized.contains('regresar') ||
+        normalized.contains('volver al paso');
+
+    if (isGoBack) {
+      if (_currentQuestionIndex <= 0) {
+        return {
+          "text": isSpanish
+              ? "Ya estás en el primer paso 😊"
+              : "You're already on the first step 😊",
+          "options": const <String>[],
+          "step": "regProgress.${questionFlow[0]}",
+          "keepTalk": false,
+        };
+      }
+
+      // Clear any special state flags
+      _awaitingManualLocation = false;
+      _awaitingEmailChange = false;
+      _awaitingConfirmation = false;
+      _awaitingFieldSelection = false;
+      _awaitingReservedUsernameConfirmation = false;
+      _comingFromOTPEmailChange = false;
+
+      // Save current position
+      _previousQuestionIndex = _currentQuestionIndex;
+      _isInRepeatMode = true;
+
+      // Calculate target index, skipping internal/auto-advance steps
+      final autoSkipSteps = {'emailSuccess', 'emailVerification', 'otpInput'};
+      int targetIndex = _currentQuestionIndex - 1;
+      while (targetIndex > 0 &&
+          autoSkipSteps.contains(questionFlow[targetIndex])) {
+        targetIndex--;
+      }
+
+      _currentQuestionIndex = targetIndex;
+      final stepName = questionFlow[_currentQuestionIndex];
+      debugPrint(
+        '🔙 Go-back: navigating to step $stepName (index $_currentQuestionIndex)',
+      );
+
+      final question = AssistantFunctions.getCurrentQuestion(
+        questionFlow,
+        _currentQuestionIndex,
+        registerCubit,
+      );
+
+      if (question != null) {
+        final prepared = await _prepareQuestion(question, registerCubit);
+        return {
+          ...prepared,
+          "feedbackMessage": isSpanish
+              ? "Sin problema, volvamos."
+              : "No problem, let's go back.",
+        };
+      }
+    }
+
+    // ── SKIP DETECTION ──
+    final isSkip =
+        normalized == 'saltar' ||
+        normalized == 'omitir' ||
+        normalized == 'pasar' ||
+        normalized.contains('saltar este') ||
+        normalized.contains('saltar esto') ||
+        normalized.contains('skip this') ||
+        normalized.contains('skip step') ||
+        normalized.contains('omitir esto') ||
+        normalized.contains('omitir este') ||
+        normalized.contains('pasar este') ||
+        normalized.contains('después lo hago') ||
+        normalized.contains('despues lo hago') ||
+        normalized.contains('lo hago después') ||
+        normalized.contains('lo hago despues') ||
+        normalized.contains('más tarde') ||
+        normalized.contains('mas tarde') ||
+        normalized.contains('luego lo hago') ||
+        normalized.contains('prefiero no') ||
+        normalized.contains('i\'ll do it later') ||
+        normalized.contains('do it later') ||
+        normalized.contains('not now') ||
+        normalized.contains('ahora no') ||
+        normalized.contains('no por ahora') ||
+        normalized.contains('por ahora no') ||
+        normalized.contains('prefiero subir') ||
+        normalized.contains('prefer to upload later') ||
+        normalized.contains('lo subo después') ||
+        normalized.contains('lo subo despues');
+
+    if (isSkip) {
+      final currentStep = questionFlow[_currentQuestionIndex];
+      final optionalSteps = {
+        'avatarUrl',
+        'voiceNoteUrl',
+        'gender',
+        'interests',
+        'phone',
+      };
+
+      if (optionalSteps.contains(currentStep)) {
+        debugPrint('⏭️ Skip: skipping optional step $currentStep');
+
+        if (_isInRepeatMode) {
+          _currentQuestionIndex = _previousQuestionIndex;
+          _isInRepeatMode = false;
+        } else {
+          _currentQuestionIndex++;
+        }
+
+        if (_currentQuestionIndex >= questionFlow.length) {
+          return {
+            "text": isSpanish
+                ? "✅ Registro completado."
+                : "✅ Registration complete.",
+            "options": [],
+            "step": "finished",
+            "keepTalk": false,
+          };
+        }
+
+        final nextQuestion = AssistantFunctions.getCurrentQuestion(
+          questionFlow,
+          _currentQuestionIndex,
+          registerCubit,
+        );
+
+        if (nextQuestion != null) {
+          final prepared = await _prepareQuestion(nextQuestion, registerCubit);
+          return {
+            ...prepared,
+            "feedbackMessage": isSpanish
+                ? "Listo, lo saltamos."
+                : "Sure, skipping that.",
+          };
+        }
+      } else {
+        // Mandatory step - can't skip
+        return {
+          "text": isSpanish
+              ? "Este paso es necesario para tu cuenta. ¿Me das la info? 😊"
+              : "This step is needed for your account. Can you provide the info? 😊",
+          "options": const <String>[],
+          "step": "regProgress.$currentStep",
+          "keepTalk": false,
+        };
+      }
+    }
+
+    return null;
   }
 
   /// Obtiene el valor guardado para mostrar en confirmación
@@ -469,10 +642,88 @@ class GeminiService {
   }
 
   /// Lista de campos que requieren confirmación (no pasos intermedios como OTP)
+  /// DESHABILITADO: Ahora el flujo es dinámico sin confirmaciones intermedias
   bool _shouldConfirmField(String fieldKey) {
-    // Campos que sí requieren confirmación explícita
-    const confirmableFields = ['fullName', 'username', 'phone'];
-    return confirmableFields.contains(fieldKey);
+    // Flujo dinámico: NO pedir confirmación después de cada campo
+    // La confirmación se hace al final con todos los datos
+    return false;
+  }
+
+  /// Genera el mensaje final con resumen de datos y opciones
+  Map<String, dynamic> _buildFinalConfirmationMessage(RegisterCubit cubit) {
+    final isSpanish = cubit.state.language == 'Español';
+    final s = cubit.state;
+
+    // Construir resumen de datos
+    final lines = <String>[];
+
+    debugPrint("Aquí ya se supone que encontró la ubicación");
+
+    if (s.fullName != null && s.fullName!.isNotEmpty) {
+      lines.add('${isSpanish ? '👤 Nombre' : '👤 Name'}: ${s.fullName}');
+    }
+    if (s.username != null && s.username!.isNotEmpty) {
+      lines.add(
+        '${isSpanish ? '🏷️ Usuario' : '🏷️ Username'}: @${s.username}',
+      );
+    }
+    if (s.email != null && s.email!.isNotEmpty) {
+      lines.add('${isSpanish ? '📧 Email' : '📧 Email'}: ${s.email}');
+    }
+    if (s.gender != null && s.gender!.isNotEmpty) {
+      lines.add('${isSpanish ? '⚧ Género' : '⚧ Gender'}: ${s.gender}');
+    }
+    // Solo mostrar ubicación si NO está vacía (el usuario NO eligió "Rather not say")
+    if (s.location != null &&
+        s.location!.hasData &&
+        s.location!.hasCityAndCountry &&
+        !s.location!.isEmpty) {
+      final loc = s.location!;
+      final locationStr = [
+        loc.city,
+        loc.state,
+        loc.country,
+      ].where((e) => e.isNotEmpty).join(', ');
+      lines.add('${isSpanish ? '📍 Ubicación' : '📍 Location'}: $locationStr');
+    }
+    if (s.phone != null && s.phone!.isNotEmpty) {
+      lines.add('${isSpanish ? '📱 Teléfono' : '📱 Phone'}: ${s.phone}');
+    }
+    if (s.category != null && s.category!.isNotEmpty) {
+      lines.add(
+        '${isSpanish ? '🎯 Tipo de cuenta' : '🎯 Type of Account'}: ${s.category!.join(', ')}',
+      );
+    }
+    if (s.socialEcosystem != null && s.socialEcosystem!.isNotEmpty) {
+      final count = s.socialEcosystem!.length;
+      lines.add(
+        '${isSpanish ? '🔗 Redes sociales' : '🔗 Social networks'}: $count ${isSpanish ? 'conectadas' : 'connected'}',
+      );
+    }
+    if (s.voiceNoteUrl != null && s.voiceNoteUrl!.isNotEmpty) {
+      lines.add(isSpanish ? '🎤 Nota de voz: ✅' : '🎤 Voice note: ✅');
+    }
+    if (s.avatarUrl != null && s.avatarUrl!.isNotEmpty) {
+      lines.add(isSpanish ? '📸 Foto de perfil: ✅' : '📸 Profile photo: ✅');
+    }
+
+    final summary = lines.join('\n');
+    final header = isSpanish
+        ? '📋 Resumen de tu cuenta:\n\n'
+        : '📋 Your account summary:\n\n';
+    final footer = isSpanish
+        ? '\n\n¿Todo se ve bien?'
+        : '\n\nDoes everything look good?';
+
+    return {
+      "text": '$header$summary$footer',
+      "options": isSpanish
+          ? ["Sí", "Cambiar algo"]
+          : ["Yes", "Change something"],
+      "step": "regProgress.confirmCreateAccount",
+      "keepTalk": false,
+      "isFinalConfirmation": true,
+    };
   }
 
   void setModel(String modelName, {double? temperature, int? maxTokens}) {
@@ -520,6 +771,95 @@ class GeminiService {
     final rcLang = registerCubit.state.language;
     if (rcLang != null && rcLang.isNotEmpty) {
       setLanguage(rcLang);
+    }
+
+    // ✅ MANEJO DE SALTOS AUTOMÁTICOS EN WEB (Voice/Avatar)
+    if (userInput == 'skipped_voice_web' || userInput == 'skipped_avatar_web') {
+      debugPrint('⏩ Web skip detected ($userInput) - avanzando paso...');
+      _currentQuestionIndex++;
+
+      if (_currentQuestionIndex >= questionFlow.length) {
+        return {
+          "text": registerCubit.state.language == 'Español'
+              ? "¡Registro completado! 🎉"
+              : "Registration complete! 🎉",
+          "options": [],
+          "step": "finished",
+          "keepTalk": false,
+        };
+      }
+
+      var nextQuestion = AssistantFunctions.getCurrentQuestion(
+        questionFlow,
+        _currentQuestionIndex,
+        registerCubit,
+      );
+
+      // Manejo de keepTalk y posibles nulls devueltos por getCurrentQuestion
+      while (nextQuestion == null || nextQuestion['keepTalk'] == true) {
+        if (nextQuestion == null) {
+          debugPrint(
+            '⚠️ getCurrentQuestion devolvió null en índice $_currentQuestionIndex (skip), finalizando.',
+          );
+          return {
+            "text": registerCubit.state.language == 'Español'
+                ? "¡Registro completado! 🎉"
+                : "Registration complete! 🎉",
+            "options": [],
+            "step": "finished",
+            "keepTalk": false,
+          };
+        }
+        debugPrint(
+          '⏩ Saltando mensaje keepTalk (web skip): ${questionFlow[_currentQuestionIndex]}',
+        );
+        _currentQuestionIndex++;
+        if (_currentQuestionIndex >= questionFlow.length) {
+          return {
+            "text": registerCubit.state.language == 'Español'
+                ? "¡Registro completado! 🎉"
+                : "Registration complete! 🎉",
+            "options": [],
+            "step": "finished",
+            "keepTalk": false,
+          };
+        }
+        nextQuestion = AssistantFunctions.getCurrentQuestion(
+          questionFlow,
+          _currentQuestionIndex,
+          registerCubit,
+        );
+      }
+      return await _prepareQuestion(nextQuestion, registerCubit);
+    }
+
+    // ✅ MANEJO DE SALTOS AUTOMÁTICOS EN WEB (Voice/Avatar)
+    if (userInput.isEmpty) {
+      // Si el input está vacío (por ejemplo, después de un auto-advance con clearInput),
+      // simplemente devolvemos la pregunta actual (o la siguiente si se incrementó índice).
+      // Esto previene que evaluateUserResponse falle con un error de validación.
+      debugPrint(
+        'ℹ️ [sendMessage] Input vacío detectado - retornando pregunta actual',
+      );
+
+      final currentQ = AssistantFunctions.getCurrentQuestion(
+        questionFlow,
+        _currentQuestionIndex,
+        registerCubit,
+      );
+
+      if (currentQ != null) {
+        return await _prepareQuestion(currentQ, registerCubit);
+      }
+    }
+
+    // ✅ UNIVERSAL NAVIGATION: Go-back and Skip intents
+    final navResult = await _detectNavigationIntent(
+      userInput.trim().toLowerCase(),
+      registerCubit,
+    );
+    if (navResult != null) {
+      return navResult;
     }
 
     // ✅ MANEJO DE CONFIRMACIÓN DE USERNAME RESERVADO (pre-registro)
@@ -958,6 +1298,117 @@ class GeminiService {
               ? 'emailChange'
               : questionFlow[_currentQuestionIndex]);
 
+    // ✅ Manejo especial para emailReask: si el usuario quiere cambiar email
+    if (currentStepKey == 'emailReask') {
+      final normalized = userInput.trim().toLowerCase();
+      final isSpanish = registerCubit.state.language == 'Español';
+
+      // Check if user wrote a new email directly
+      final emailRegex = RegExp(
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+      );
+      if (emailRegex.hasMatch(userInput.trim())) {
+        registerCubit.setEmail(userInput.trim());
+        debugPrint(
+          '✅ Email actualizado directamente desde emailReask: ${userInput.trim()}',
+        );
+        _currentQuestionIndex++;
+        final nextQuestion = AssistantFunctions.getCurrentQuestion(
+          questionFlow,
+          _currentQuestionIndex,
+          registerCubit,
+        );
+        if (nextQuestion != null) {
+          return await _prepareQuestion(nextQuestion, registerCubit);
+        }
+      }
+
+      // Si quiere cambiar
+      if (normalized.contains('si') ||
+          normalized.contains('sí') ||
+          normalized.contains('yes') ||
+          normalized.contains('cambiar') ||
+          normalized.contains('change')) {
+        _awaitingEmailChange = true;
+        return {
+          "text": isSpanish
+              ? "Por favor, ingresa tu nuevo correo electrónico:"
+              : "Please enter your new email address:",
+          "options": const <String>[],
+          "step": "regProgress.emailChange",
+          "keepTalk": false,
+          "keyboardType": "email",
+        };
+      }
+
+      // Si dice que está bien, continuar
+      if (normalized.contains('no') ||
+          normalized.contains('está bien') ||
+          normalized.contains('esta bien') ||
+          normalized.contains('fine') ||
+          normalized.contains('correcto') ||
+          normalized.contains('correct')) {
+        _currentQuestionIndex++;
+        final nextQuestion = AssistantFunctions.getCurrentQuestion(
+          questionFlow,
+          _currentQuestionIndex,
+          registerCubit,
+        );
+        if (nextQuestion != null) {
+          return await _prepareQuestion(nextQuestion, registerCubit);
+        }
+      }
+    }
+
+    // ✅ Manejo especial para gender: guardar y avanzar
+    if (currentStepKey == 'gender') {
+      final normalized = userInput.trim().toLowerCase();
+      final isSpanish = registerCubit.state.language == 'Español';
+
+      final validGenders = [
+        'hombre',
+        'mujer',
+        'prefiero no decir',
+        'male',
+        'female',
+        'rather not say',
+        'otro',
+        'other',
+      ];
+
+      if (validGenders.any((g) => normalized.contains(g))) {
+        registerCubit.setGender(userInput.trim());
+        debugPrint('✅ Género guardado: ${userInput.trim()}');
+
+        if (_isInRepeatMode) {
+          _currentQuestionIndex = _previousQuestionIndex;
+          _isInRepeatMode = false;
+        } else {
+          _currentQuestionIndex++;
+        }
+
+        if (_currentQuestionIndex >= questionFlow.length) {
+          return {
+            "text": isSpanish
+                ? "¡ Registro completado.🎉"
+                : " Registration complete.🎉",
+            "options": [],
+            "step": "finished",
+            "keepTalk": false,
+          };
+        }
+
+        final nextQuestion = AssistantFunctions.getCurrentQuestion(
+          questionFlow,
+          _currentQuestionIndex,
+          registerCubit,
+        );
+        if (nextQuestion != null) {
+          return await _prepareQuestion(nextQuestion, registerCubit);
+        }
+      }
+    }
+
     // ✅ Manejo especial para socialEcosystem: detectar retorno con redes vinculadas
     // Cuando el usuario regresa de vincular redes, el mensaje interno es 'socials_updated'
     if (currentStepKey == 'socialEcosystem') {
@@ -1182,8 +1633,10 @@ class GeminiService {
         final isSpanish = registerCubit.state.language == 'Español';
 
         debugPrint(
-          '✅ [category] Categorías seleccionadas, avanzando al siguiente paso',
+          '✅ [category] Avanzando sin mensaje de confirmación redundante',
         );
+
+        // 1. Eliminamos toda la lógica de feedbackMessage que ensuciaba el flujo
 
         // Salir del modo repetición si estábamos en él
         if (_isInRepeatMode) {
@@ -1194,12 +1647,12 @@ class GeminiService {
           _currentQuestionIndex++;
         }
 
-        // Obtener siguiente pregunta
+        // Verificar fin del flujo
         if (_currentQuestionIndex >= questionFlow.length) {
           return {
             "text": isSpanish
-                ? "¡ Registro completado.🎉"
-                : " Registration complete.🎉",
+                ? "¡Registro completado! 🎉"
+                : "Registration complete! 🎉",
             "options": [],
             "step": "finished",
             "keepTalk": false,
@@ -1215,19 +1668,30 @@ class GeminiService {
         if (nextQuestion == null) {
           return {
             "text": isSpanish
-                ? "¡ Registro completado.🎉"
-                : " Registration complete.🎉",
+                ? "¡Registro completado! 🎉"
+                : "Registration complete! 🎉",
             "options": [],
             "step": "finished",
             "keepTalk": false,
           };
         }
 
-        return await _prepareQuestion(nextQuestion, registerCubit);
+        final nextQuestionData = await _prepareQuestion(
+          nextQuestion,
+          registerCubit,
+        );
+
+        // 2. Retornamos limpio, saltando directamente a la siguiente pregunta
+        return {
+          ...nextQuestionData,
+          // "feedbackMessage": feedbackMessage, // <-- ELIMINADO
+          "showTyping": true,
+        };
       }
     }
 
     // ✅ Manejo especial para interests: detectar retorno después de seleccionar intereses
+
     if (currentStepKey == 'interests') {
       final normalized = userInput.trim().toLowerCase();
 
@@ -1237,10 +1701,13 @@ class GeminiService {
         final isSpanish = registerCubit.state.language == 'Español';
 
         debugPrint(
-          '✅ [interests] Intereses seleccionados, avanzando al siguiente paso',
+          '✅ [interests] Avanzando al siguiente paso sin feedback redundante',
         );
 
-        // Salir del modo repetición si estábamos en él
+        // 1. Eliminamos toda la lógica de 'selectedInterests' y 'feedbackMessage'
+        // que estaba aquí, ya no la necesitamos para nada.
+
+        // Salir del modo repetición
         if (_isInRepeatMode) {
           _currentQuestionIndex = _previousQuestionIndex;
           _isInRepeatMode = false;
@@ -1249,12 +1716,12 @@ class GeminiService {
           _currentQuestionIndex++;
         }
 
-        // Obtener siguiente pregunta
+        // Verificar si terminamos el flujo
         if (_currentQuestionIndex >= questionFlow.length) {
           return {
             "text": isSpanish
-                ? "¡ Registro completado.🎉"
-                : " Registration complete.🎉",
+                ? "¡Registro completado! 🎉"
+                : "Registration complete! 🎉",
             "options": [],
             "step": "finished",
             "keepTalk": false,
@@ -1270,15 +1737,104 @@ class GeminiService {
         if (nextQuestion == null) {
           return {
             "text": isSpanish
-                ? "¡ Registro completado.🎉"
-                : " Registration complete.🎉",
+                ? "¡Registro completado! 🎉"
+                : "Registration complete! 🎉",
             "options": [],
             "step": "finished",
             "keepTalk": false,
           };
         }
 
-        return await _prepareQuestion(nextQuestion, registerCubit);
+        final nextQuestionData = await _prepareQuestion(
+          nextQuestion,
+          registerCubit,
+        );
+
+        // 2. Retornamos SIN el "feedbackMessage"
+        return {
+          ...nextQuestionData,
+          // "feedbackMessage": feedbackMessage, // <-- ESTO ES LO QUE DEBES ELIMINAR
+          "showTyping": true,
+        };
+      }
+    }
+
+    // ✅ Manejo especial para termsAndConditions: detectar retorno después de aceptar/rechazar
+    if (currentStepKey == 'termsAndConditions') {
+      final normalized = userInput.trim().toLowerCase();
+
+      if (normalized == 'terms_accepted') {
+        final isSpanish = registerCubit.state.language == 'Español';
+        debugPrint('✅ [termsAndConditions] Usuario aceptó T&C');
+
+        registerCubit.setTermsAccepted(true);
+
+        // Avanzar al siguiente paso
+        if (_isInRepeatMode) {
+          _currentQuestionIndex = _previousQuestionIndex;
+          _isInRepeatMode = false;
+        } else {
+          _currentQuestionIndex++;
+        }
+
+        if (_currentQuestionIndex >= questionFlow.length) {
+          return {
+            "text": isSpanish
+                ? "¡Registro completado! 🎉"
+                : "Registration complete! 🎉",
+            "options": [],
+            "step": "finished",
+            "keepTalk": false,
+          };
+        }
+
+        final nextQuestion = AssistantFunctions.getCurrentQuestion(
+          questionFlow,
+          _currentQuestionIndex,
+          registerCubit,
+        );
+
+        if (nextQuestion == null) {
+          return {
+            "text": isSpanish
+                ? "¡Registro completado! 🎉"
+                : "Registration complete! 🎉",
+            "options": [],
+            "step": "finished",
+            "keepTalk": false,
+          };
+        }
+
+        final nextQuestionData = await _prepareQuestion(
+          nextQuestion,
+          registerCubit,
+        );
+
+        return {
+          ...nextQuestionData,
+          "feedbackMessage": isSpanish
+              ? "¡Perfecto! Términos aceptados ✅"
+              : "Great! Terms accepted ✅",
+          "showTyping": true,
+        };
+      }
+
+      if (normalized == 'terms_declined') {
+        final isSpanish = registerCubit.state.language == 'Español';
+        debugPrint('❌ [termsAndConditions] Usuario rechazó T&C');
+
+        registerCubit.setTermsAccepted(false);
+
+        return {
+          "text": isSpanish
+              ? "Para crear tu cuenta es necesario aceptar los Términos y Condiciones. ¿Quieres revisarlos de nuevo? 📄"
+              : "To create your account you need to accept the Terms & Conditions. Want to review them again? 📄",
+          "options": [],
+          "step": "regProgress.termsAndConditions",
+          "keepTalk": false,
+          "action": 3,
+          "showTyping": true,
+        };
       }
     }
 
@@ -1589,7 +2145,8 @@ class GeminiService {
           "options": const <String>[],
           "step": 'regProgress.$currentStepKey',
           "keepTalk": true,
-          "explainAndRepeat": false,
+          "explainAndRepeat": true,
+          "clearInput": true,
         };
       }
       final processResult = await processBotResponse(
@@ -1610,6 +2167,17 @@ class GeminiService {
             "step": "regProgress.emailVerification",
             "keepTalk": false,
             "keyboardType": "number",
+            "isError": true,
+          };
+        }
+
+        // Manejar username duplicado
+        if (processResult['usernameTaken'] == true) {
+          return {
+            "text": processResult['message'],
+            "options": const <String>[],
+            "step": "regProgress.username",
+            "keepTalk": false,
             "isError": true,
           };
         }
@@ -1679,8 +2247,8 @@ class GeminiService {
         final userEmail = registerCubit.state.email ?? '';
         return {
           "text": isSpanish
-              ? "📩 Se ha enviado un código de 6 dígitos a tu correo: $userEmail"
-              : "📩 A 6-digit code has been sent to your email: $userEmail",
+              ? "📩 Se ha enviado un código de 6 dígitos a $userEmail"
+              : "📩 A 6-digit code has been sent to $userEmail",
           "options": isSpanish
               ? ["Reenviar código", "Cambiar correo"]
               : ["Resend code", "Change email"],
@@ -1727,19 +2295,33 @@ class GeminiService {
       if (processResult != null && processResult['verified'] == true) {
         debugPrint('✅ Email verificado - avanzando al siguiente paso');
 
-        // Saltar los pasos de otpInput y emailSuccess, ir directamente a socialEcosystem
-        final socialIndex = questionFlow.indexOf('socialEcosystem');
-        if (socialIndex != -1) {
-          _currentQuestionIndex = socialIndex;
+        // Saltar los pasos de otpInput y emailSuccess, ir al siguiente paso del flujo
+        final emailSuccessIndex = questionFlow.indexOf('emailSuccess');
+        if (emailSuccessIndex != -1) {
+          _currentQuestionIndex = emailSuccessIndex + 1;
         } else {
-          // Fallback: saltar los pasos de transición
+          // Fallback: saltar los pasos de transición después de emailVerification
           _currentQuestionIndex = questionFlow.indexOf('emailVerification') + 3;
         }
         debugPrint(
-          '📧 Email verificado - saltando a socialEcosystem, nuevo índice: $_currentQuestionIndex',
+          '📧 Email verificado - avanzando al siguiente paso, nuevo índice: $_currentQuestionIndex',
         );
 
-        // Mostrar la siguiente pregunta (socialEcosystem)
+        if (_currentQuestionIndex >= questionFlow.length) {
+          debugPrint(
+            '🎉 Registro completado después de verificación de email.',
+          );
+          return {
+            "text": registerCubit.state.language == 'Español'
+                ? "¡ Registro completado.🎉"
+                : " Registration complete.🎉",
+            "options": [],
+            "step": "finished",
+            "keepTalk": false,
+          };
+        }
+
+        // Mostrar la siguiente pregunta
         final nextQuestion = AssistantFunctions.getCurrentQuestion(
           questionFlow,
           _currentQuestionIndex,
@@ -2088,7 +2670,26 @@ class GeminiService {
   ) async {
     final currentStepKey = questionFlow[_currentQuestionIndex];
 
-    // � Si el paso actual es un paso de autoAdvance (como emailSuccess), avanzar automáticamente
+    // 🎉 Si estamos en confirmCreateAccount, mostrar el resumen completo de datos
+    if (currentStepKey == 'confirmCreateAccount') {
+      debugPrint('📋 [_prepareQuestion] Mostrando resumen final de datos');
+      // NO volver a obtener ubicación si el usuario la rechazó (LocationDTO.empty)
+      // Solo obtener si aún no tiene datos válidos y no fue rechazada explícitamente
+      final currentLoc = registerCubit.state.location;
+      final locationWasSkipped = currentLoc != null && currentLoc.isEmpty;
+      if (!locationWasSkipped) {
+        final lang = registerCubit.state.language ?? "en";
+        await registerCubit.fetchLocation(lang);
+      } else {
+        debugPrint(
+          '📍 [_prepareQuestion] Ubicación omitida por el usuario - no se vuelve a obtener',
+        );
+      }
+
+      return _buildFinalConfirmationMessage(registerCubit);
+    }
+
+    // 🔄 Si el paso actual es un paso de autoAdvance (como emailSuccess), avanzar automáticamente
     // Estos pasos solo muestran un mensaje y avanzan sin esperar input del usuario
     if (currentStepKey == 'emailSuccess' ||
         currentStepKey == 'emailVerification') {
@@ -2158,6 +2759,7 @@ class GeminiService {
     // SI estamos en el paso de ubicación, obtener la ubicación PRIMERO
     if (currentStepKey == 'location') {
       // Si ya estamos en modo ubicación manual, NO intentamos permisos ni geolocalización.
+      /*
       if (_awaitingManualLocation) {
         final isSpanish = registerCubit.state.language == 'Español';
         return {
@@ -2171,7 +2773,9 @@ class GeminiService {
           "manualLocationPrompt": true,
         };
       }
+      */
 
+      /*
       final currentLocation = registerCubit.state.location;
       // Obtener ubicación si está vacía o null
       if (currentLocation == null ||
@@ -2222,6 +2826,7 @@ class GeminiService {
           question = refreshed;
         }
       }
+      */
     }
 
     // Paso de nota de voz: pedir permiso de micrófono aquí (mobile) para que el prompt

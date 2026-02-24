@@ -34,14 +34,13 @@ Future<DateTimeRange?> showWebDateRangePicker(
                   onSurface: Colors.white,
                   secondary: Color(0xFF9747FF),
                 ),
-                dialogBackgroundColor: const Color(0xFF1E1E1E),
                 textButtonTheme: TextButtonThemeData(
                   style: TextButton.styleFrom(
                     foregroundColor: Colors.white,
                     textStyle: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
-                dividerColor: Colors.transparent,
+                dividerColor: Colors.transparent, dialogTheme: DialogThemeData(backgroundColor: const Color(0xFF1E1E1E)),
               ),
               child: DateRangePickerDialog(
                 firstDate: DateTime(2020),

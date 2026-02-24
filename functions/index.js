@@ -94,8 +94,13 @@ exports.onFollowNotificationCreated = onDocumentCreated(
       // This prevents duplicate notifications because the Firestore listener in the app
       // will handle displaying the notification. If we include the notification payload,
       // the system will auto-display it AND the app will also display it = duplicates!
+      // ⚠️ IMPORTANT: For follow notifications, we send ONLY data payload (no notification payload)
+      // This prevents duplicate notifications because the Firestore listener in the app
+      // will handle displaying the notification. If we include the notification payload,
+      // the system will auto-display it AND the app will also display it = duplicates!
       const message = {
         token: fcmToken,
+        // ❌ NO notification payload - prevents system from auto-displaying
         // ❌ NO notification payload - prevents system from auto-displaying
         data: {
           type: "follow",
@@ -106,15 +111,21 @@ exports.onFollowNotificationCreated = onDocumentCreated(
           click_action: "FLUTTER_NOTIFICATION_CLICK",
         },
         // Set high priority to ensure delivery even when app is in background
+        // Set high priority to ensure delivery even when app is in background
         android: {
+          priority: "high",
           priority: "high",
         },
         apns: {
           headers: {
             "apns-priority": "10",
           },
+          headers: {
+            "apns-priority": "10",
+          },
           payload: {
             aps: {
+              "content-available": 1, // Silent notification for iOS
               "content-available": 1, // Silent notification for iOS
               badge: 1,
             },
@@ -123,6 +134,7 @@ exports.onFollowNotificationCreated = onDocumentCreated(
       };
 
       // Send the notification
+      console.log(`📤 Sending data-only push notification to ${targetUserId}`);
       console.log(`📤 Sending data-only push notification to ${targetUserId}`);
       const response = await messaging.send(message);
       console.log(`✅ Successfully sent notification: ${response}`);
@@ -230,6 +242,8 @@ exports.onChatMessageCreated = onDocumentCreated(
       // Build the notification message
       // ✅ Include notification payload for reliable delivery on iOS
       // The app's background handler will prevent duplicates by checking message type
+      // ✅ Include notification payload for reliable delivery on iOS
+      // The app's background handler will prevent duplicates by checking message type
       const message = {
         token: fcmToken,
         notification: {
@@ -246,10 +260,15 @@ exports.onChatMessageCreated = onDocumentCreated(
           click_action: "FLUTTER_NOTIFICATION_CLICK",
         },
         // Set high priority to ensure delivery even when app is in background
+        // Set high priority to ensure delivery even when app is in background
         android: {
+          priority: "high",
           priority: "high",
         },
         apns: {
+          headers: {
+            "apns-priority": "10",
+          },
           headers: {
             "apns-priority": "10",
           },

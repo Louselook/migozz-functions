@@ -3,7 +3,7 @@ description: "A new Flutter project."
 
 publish_to: "none"
 
-version: 1.2.8+2
+version: 1.3.0+3
 
 environment:
   sdk: ^3.8.1
@@ -49,7 +49,7 @@ dependencies:
 
   firebase_core: ^3.4.0 # necesaria para firebase
   cloud_firestore: ^5.6.0 # necesaria para firestore
-  google_sign_in: ^7.0.0 # necesario para el inicio con google
+  google_sign_in: ^7.2.0 # necesario para el inicio con google (v6.2.0 tiene soporte completo para web)
   url_strategy: ^0.3.0 # Elimina los numerales en las rutas
   firebase_auth: ^5.1.4 # para auth
 
@@ -89,7 +89,16 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/icons/Migozz300x.png"
+  remove_alpha_ios: true
+  image_path: "assets/migozz_icon/Migozz1024.png"
+  adaptive_icon_background: "#0D0D0D"
+  adaptive_icon_foreground: "assets/migozz_icon/Migozz1024.png"
+  web:
+    generate: true
+    image_path: "assets/migozz_icon/Migozz512.png"
+  windows:
+    generate: true
+    image_path: "assets/migozz_icon/Migozz1024.png"
 flutter:
   uses-material-design: true
 
@@ -98,10 +107,13 @@ flutter:
     - assets/
     - assets/images/
     - assets/translations/
+    - assets/icons/account_type/
     - assets/icons/
+    - assets/migozz_icon/
     - assets/emojis/
     - assets/icons/social_networks/
     - assets/icons/social_networks/social_black_white_icons/
+    - assets/images/landing/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
@@ -128,3 +140,9 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+  # Updated to force rebuild
+
+  fonts:
+    - family: Bebas Neue
+      fonts:
+        - asset: fonts/BebasNeue-Regular.ttf

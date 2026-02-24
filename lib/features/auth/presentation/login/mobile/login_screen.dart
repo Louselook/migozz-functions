@@ -76,6 +76,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final authService = AuthService();
+
+      // ✅ NUEVO: Verificar si el email está baneado
+      final bannedStatus = await authService.checkEmailBanned(email);
+      if (bannedStatus == 'banned' && mounted) {
+        _showBannedDialog();
+        return;
+      }
+
       final exists = await authService.emailExists(email);
 
       if (!mounted) return;
@@ -97,7 +105,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
         // En vez de loguear directamente, inyectamos el OTP al LoginCubit
         // para que el flujo normal de OTP se dispare (y LoginWrapper navegue).
-        context.read<LoginCubit>().sendOTPLoginCubit(email, forcedOTP: testOtp);
+        context.read<LoginCubit>().sendOTPLoginCubit(
+          email,
+          forcedOTP: testOtp,
+          language: context.locale.languageCode,
+        );
 
         // Salimos: LoginWrapper escuchará currentOTP y hará la navegación.
         return;
@@ -105,7 +117,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // Si existe -> continuar con el flujo de login: enviamos OTP por el LoginCubit
       // Resetear flags por si acaso
-      context.read<LoginCubit>().sendOTPLoginCubit(email);
+      context.read<LoginCubit>().sendOTPLoginCubit(
+        email,
+        language: context.locale.languageCode,
+      );
     } catch (e) {
       // Manejo de errores de red / firestore
       CustomSnackbar.show(
@@ -120,6 +135,47 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() => _isCheckingEmail = false);
       }
     }
+  }
+
+  /// ✅ NUEVO: Mostrar popup de cuenta baneada
+  void _showBannedDialog() {
+    LoadingOverlay.hide(context);
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E1E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.block_rounded, color: Colors.red, size: 28),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'tutorial.accountStatus.bannedLogin.title'.tr(),
+                style: const TextStyle(color: Colors.white, fontSize: 18),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'tutorial.accountStatus.bannedLogin.message'.tr(),
+          style: const TextStyle(color: Colors.grey, fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              'tutorial.accountStatus.button'.tr(),
+              style: const TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _handleGoogleSignIn() async {
@@ -259,13 +315,23 @@ class _LoginScreenState extends State<LoginScreen> {
                       ? Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Expanded(child: googleButton(onPressed: _handleGoogleSignIn,width: MediaQuery.of(context).size.width)),
+                            Expanded(
+                              child: googleButton(
+                                onPressed: _handleGoogleSignIn,
+                                width: MediaQuery.of(context).size.width,
+                              ),
+                            ),
                             const SizedBox(width: 10),
-                            Expanded(child: appleButton(onPressed: _handleAppleSignIn)),
+                            Expanded(
+                              child: appleButton(onPressed: _handleAppleSignIn),
+                            ),
                           ],
                         )
                       : Center(
-                          child: googleButton(onPressed: _handleGoogleSignIn,width: MediaQuery.of(context).size.width),
+                          child: googleButton(
+                            onPressed: _handleGoogleSignIn,
+                            width: MediaQuery.of(context).size.width,
+                          ),
                         ),
 
                   const SizedBox(height: 30),

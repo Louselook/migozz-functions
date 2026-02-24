@@ -118,6 +118,7 @@ class ProfileTutorialHelper {
       if (autoRetries > 0 && context.mounted) {
         Future.delayed(const Duration(milliseconds: 900), () {
           if (!context.mounted) return;
+          
           triggerProfileTutorial(
             context,
             keys,
@@ -153,7 +154,7 @@ class ProfileTutorialHelper {
     showGeneralDialog(
       context: context,
       barrierDismissible: false,
-      barrierColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.6),
       transitionDuration: const Duration(milliseconds: 300),
       pageBuilder: (dialogContext, animation, secondaryAnimation) {
         return FadeTransition(

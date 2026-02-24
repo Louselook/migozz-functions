@@ -354,8 +354,8 @@ class _OtpFieldsState extends State<_OtpFields> {
         final hasValue = widget.controllers[index].text.isNotEmpty;
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 4),
-          width: 48,
-          height: 56,
+          width: 40,
+          height: 50,
           child: KeyboardListener(
             focusNode: FocusNode(), // Dummy focus node para KeyboardListener
             onKeyEvent: (event) {
@@ -431,7 +431,10 @@ class _ResendButton extends StatelessWidget {
     return TextButton(
       onPressed: () {
         // Reenvío de OTP
-        context.read<LoginCubit>().sendOTPLoginCubit(email);
+        context.read<LoginCubit>().sendOTPLoginCubit(
+          email,
+          language: context.locale.languageCode,
+        );
       },
       child: SecondaryText(
         "login.otp.resend".tr(),

@@ -355,6 +355,23 @@ class RegisterChatController extends GenericChatController {
 
       removeTypingIndicator(); // Usar método heredado
 
+      // Si hay un mensaje de feedback (por ejemplo, después de categorías/intereses),
+      // mostrarlo primero
+      final feedbackMessage = botResponse["feedbackMessage"]?.toString();
+      if (feedbackMessage != null && feedbackMessage.isNotEmpty) {
+        addMessage({
+          "other": true,
+          "type": MessageType.text,
+          "text": feedbackMessage,
+          "options": const [],
+          "name": "Migozz",
+          "time": getTimeNow(),
+        });
+        // Pequeña pausa para que el usuario vea el feedback
+        await Future.delayed(const Duration(milliseconds: 600));
+        if (!isActive) return;
+      }
+
       // Protege campos que podrían ser null
       final botText = (botResponse["text"]?.toString() ?? '');
       // final botOptions = botResponse["options"] ?? [];
@@ -479,6 +496,10 @@ class RegisterChatController extends GenericChatController {
 
       // Auto-avanzar si el bot lo indica (explainAndRepeat)
       if (botResponse["explainAndRepeat"] == true) {
+        if (botResponse["clearInput"] == true) {
+          _lastUserMessage = '';
+          debugPrint('🗑️ [RegisterChat] Input limpiado para explainAndRepeat');
+        }
         await Future.delayed(const Duration(milliseconds: 900));
         if (!isActive) return;
         await showNextBotMessage();
@@ -618,6 +639,7 @@ class RegisterChatController extends GenericChatController {
           registerCubit,
           onResetAudioUI: onResetAudioUI,
           addMessage: addMessage,
+          removeTyping: _removeTypingMessage,
           firebaseUid: firebaseUid,
         );
 

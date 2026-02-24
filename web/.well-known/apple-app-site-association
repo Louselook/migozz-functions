@@ -1,0 +1,11 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "FDV4V9U5LF.com.migozz.app",
+        "paths": [ "/u/*", "/login", "/register", "/" ]
+      }
+    ]
+  }
+}

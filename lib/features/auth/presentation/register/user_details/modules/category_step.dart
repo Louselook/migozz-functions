@@ -1,13 +1,53 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/foundation.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/atomics/text.dart';
 import 'package:migozz_app/core/components/compuestos/gradient_button.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/components/user_details_button.dart';
 import 'package:migozz_app/features/auth/presentation/register/user_details/more_user_details.dart';
+import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/edit_cubit/edit_cubit_cubit.dart';
+
+/// Modelo para representar un grupo de identidades
+class IdentityGroup {
+  final String id;
+  final String name;
+  final int order;
+  final List<Identity> identities;
+
+  IdentityGroup({
+    required this.id,
+    required this.name,
+    required this.order,
+    required this.identities,
+  });
+}
+
+/// Modelo para representar una identidad/categoría
+class Identity {
+  final String id;
+  final Map<String, String> name; // { en: "...", es: "..." }
+  final int order;
+  final String status;
+  final int iconNumber;
+
+  Identity({
+    required this.id,
+    required this.name,
+    required this.order,
+    required this.status,
+    required this.iconNumber,
+  });
+
+  /// Obtiene el nombre según el idioma actual
+  String getLocalizedName(String languageCode) {
+    return name[languageCode] ?? name['en'] ?? id;
+  }
+}
 
 class CategoryStep extends StatefulWidget {
   final PageController controller;
@@ -24,20 +64,21 @@ class CategoryStep extends StatefulWidget {
 }
 
 class _CategoryStepState extends State<CategoryStep> {
+  static const int maxCategories = 1;
   List<String> selectedCategories = [];
-  List<String> dynamicCategories = [];
+  List<IdentityGroup> groups = [];
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    // Cargar datos de Firebase al inicializar la vista
-    fetchCollection();
-    // Inicializar categorías seleccionadas según el modo
     _initializeSelectedCategories();
+    // Llamar fetchIdentitiesCatalog después de que el widget esté montado
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      fetchIdentitiesCatalog();
+    });
   }
 
-  // Inicializar categorías seleccionadas según el modo
   void _initializeSelectedCategories() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.mode == MoreUserDetailsMode.register) {
@@ -58,146 +99,282 @@ class _CategoryStepState extends State<CategoryStep> {
     });
   }
 
-  Future<void> fetchCollection() async {
+  Future<void> fetchIdentitiesCatalog() async {
     try {
+      if (!mounted) return;
       setState(() {
         isLoading = true;
       });
 
-      CollectionReference collection = FirebaseFirestore.instance.collection(
-        'categories_catalog',
-      );
+      final firestore = FirebaseFirestore.instance;
+      final List<Identity> identities = [];
 
-      QuerySnapshot snapshot = await collection.get();
-      List<String> fetchedCategories = [];
+      // Leer todas las categorías desde la colección plana categories_catalog
+      final snapshot = await firestore.collection('categories_catalog').get();
 
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        debugPrint('ID: ${doc.id}, Datos: $data');
+      debugPrint('📂 categories_catalog documentos: ${snapshot.docs.length}');
 
-        // Solo agregar categorías que tengan status "active"
-        if (data.containsKey('name') &&
-            data.containsKey('status') &&
-            data['status'] == 'active') {
-          fetchedCategories.add(data['name'] as String);
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        debugPrint('   📝 Doc: ${doc.id} -> $data');
+
+        // Solo agregar categorías activas
+        if (data['status'] == 'active') {
+          // Parsear el campo name que puede ser Map o String
+          Map<String, String> nameMap;
+          if (data['name'] is Map) {
+            nameMap = Map<String, String>.from(
+              (data['name'] as Map).map(
+                (key, value) => MapEntry(key.toString(), value.toString()),
+              ),
+            );
+          } else {
+            // Fallback si es string simple
+            nameMap = {
+              'en': data['name']?.toString() ?? '',
+              'es': data['name']?.toString() ?? '',
+            };
+          }
+
+          identities.add(
+            Identity(
+              id: doc.id,
+              name: nameMap,
+              order: data['order'] ?? 0,
+              status: data['status'] ?? 'active',
+              iconNumber: data['icon_number'] ?? 0,
+            ),
+          );
         }
       }
 
+      // Ordenar localmente por order (si existe) y luego por nombre en inglés
+      identities.sort((a, b) {
+        final orderCompare = a.order.compareTo(b.order);
+        if (orderCompare != 0) return orderCompare;
+        return a
+            .getLocalizedName('en')
+            .toLowerCase()
+            .compareTo(b.getLocalizedName('en').toLowerCase());
+      });
+
+      final List<IdentityGroup> fetchedGroups = [];
+      if (identities.isNotEmpty) {
+        fetchedGroups.add(
+          IdentityGroup(
+            id: 'all',
+            name: 'all',
+            order: 0,
+            identities: identities,
+          ),
+        );
+      }
+
+      if (!mounted) return;
       setState(() {
-        dynamicCategories = fetchedCategories;
+        groups = fetchedGroups;
         isLoading = false;
       });
 
-      debugPrint('✅ Categorías activas cargadas: ${dynamicCategories.length}');
+      debugPrint('✅ Categorías cargadas: ${identities.length}');
     } catch (e) {
-      debugPrint('Error al traer datos: $e');
+      debugPrint('❌ Error al traer identidades: $e');
+      if (!mounted) return;
       setState(() {
         isLoading = false;
       });
     }
   }
 
-  // Actualizar el cubit correspondiente según el modo
   void _updateCubit() {
     if (widget.mode == MoreUserDetailsMode.register) {
-      context
-          .read<RegisterCubit>()
-          .setCategories(List<String>.from(selectedCategories));
+      context.read<RegisterCubit>().setCategories(
+        List<String>.from(selectedCategories),
+      );
     } else {
-      context
-          .read<EditCubit>()
-          .updateCategory(List<String>.from(selectedCategories));
+      context.read<EditCubit>().updateCategory(
+        List<String>.from(selectedCategories),
+      );
     }
+  }
+
+  void _selectIdentity(String identityId) {
+    setState(() {
+      if (selectedCategories.contains(identityId)) {
+        selectedCategories.remove(identityId);
+      } else {
+        if (selectedCategories.length >= maxCategories) {
+          ScaffoldMessenger.of(context)
+            ..clearSnackBars()
+            ..showSnackBar(
+              SnackBar(
+                content: Text('category.maxSelection'.tr()),
+                backgroundColor: Colors.orange,
+                duration: const Duration(seconds: 5),
+              ),
+            );
+          return;
+        }
+        selectedCategories.add(identityId);
+      }
+    });
+    _updateCubit();
+    debugPrint('🏷️ Identidades seleccionadas: $selectedCategories');
   }
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40),
-        child: Column(
+    return PopScope(
+      // Solo permite cerrar si hay al menos una categoría seleccionada
+      canPop: selectedCategories.isNotEmpty,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && selectedCategories.isEmpty) {
+          // Mostrar mensaje si intenta salir sin seleccionar
+          ScaffoldMessenger.of(context)
+            ..clearSnackBars()
+            ..showSnackBar(
+              SnackBar(
+                content: Text('category.required'.tr()),
+                backgroundColor: Colors.orange,
+                duration: const Duration(seconds: 3),
+              ),
+            );
+        }
+      },
+      child: SafeArea(
+        child: Stack(
           children: [
-            const SizedBox(height: 10),
-            const PrimaryText('Choose Your Category'),
-            const SizedBox(height: 20),
-            Expanded(
-              child: Center(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    return SingleChildScrollView(
-                      child: Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: 12.0,
-                        runSpacing: 12.0,
-                        children: isLoading
-                            ? [const Center(child: CircularProgressIndicator())]
-                            : dynamicCategories.isEmpty
-                            ? [
-                                const Center(
-                                  child: SecondaryText(
-                                    'No hay categorías disponibles',
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ]
-                            : dynamicCategories.map((category) {
-                                final isSelected = selectedCategories.contains(
-                                  category,
-                                );
-                                return ConstrainedBox(
-                                  constraints: BoxConstraints(
-                                    minWidth: constraints.maxWidth * 0.4,
-                                    maxWidth: constraints.maxWidth * 0.9,
-                                  ),
-                                  child: _categoryButton(
-                                    category,
-                                    selected: isSelected,
-                                    onTap: () {
-                                      setState(() {
-                                        if (selectedCategories.contains(
-                                          category,
-                                        )) {
-                                          selectedCategories.remove(category);
-                                        } else {
-                                          selectedCategories.add(category);
-                                        }
-                                      });
+            Positioned.fill(child: Container(color: AppColors.backgroundDark)),
+            const Positioned.fill(
+              child: TintesGradients(child: SizedBox.expand()),
+            ),
+            Center(
+              child: Container(
+                constraints: BoxConstraints(
+                  maxWidth: kIsWeb ? 600 : double.infinity,
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 34),
+                child: Column(
+                  children: [
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.06),
+                    PrimaryText(
+                      'category.title'.tr(),
+                      fontSize: 22,
+                      textAlign: TextAlign.center,
+                    ),
 
-                                      //  Actualizar el cubit correspondiente
-                                      _updateCubit();
-                                      debugPrint(
-                                        "🏷️ Categorías seleccionadas: $selectedCategories",
-                                      );
-                                    },
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : groups.isEmpty
+                          ? const Center(
+                              child: SecondaryText(
+                                'No hay categorías disponibles',
+                                fontSize: 16,
+                              ),
+                            )
+                          : LayoutBuilder(
+                              builder: (context, constraints) {
+                                final langCode = context.locale.languageCode;
+                                final availableHeight = constraints.maxHeight;
+                                final availableWidth = constraints.maxWidth;
+
+                                final totalItems = groups.fold<int>(
+                                  0,
+                                  // ignore: avoid_types_as_parameter_names
+                                  (sum, g) => sum + g.identities.length,
+                                );
+
+                                // Base: item ~110px ancho, ~42px alto
+                                const baseItemWidth = 110.0;
+                                const baseItemHeight = 42.0;
+                                const baseGap = 8.0;
+
+                                // Cuántos items caben por fila
+                                final itemsPerRow =
+                                    (availableWidth / (baseItemWidth + baseGap))
+                                        .floor()
+                                        .clamp(2, 5);
+                                final totalRows = (totalItems / itemsPerRow)
+                                    .ceil();
+
+                                // Altura necesaria vs disponible
+                                final neededHeight =
+                                    totalRows * (baseItemHeight + baseGap);
+                                final scaleFactor =
+                                    (availableHeight / neededHeight).clamp(
+                                      0.5,
+                                      1.0,
+                                    );
+
+                                final horizontalSpacing = 8.0 * scaleFactor;
+                                final verticalSpacing = 8.0 * scaleFactor;
+
+                                return Center(
+                                  child: Wrap(
+                                    alignment: WrapAlignment.center,
+                                    runAlignment: WrapAlignment.spaceEvenly,
+                                    spacing: horizontalSpacing,
+                                    runSpacing: verticalSpacing,
+                                    children: [
+                                      for (final group in groups)
+                                        for (final identity in group.identities)
+                                          _identityButton(
+                                            identity.getLocalizedName(langCode),
+                                            iconNumber: identity.iconNumber,
+                                            selected: selectedCategories
+                                                .contains(identity.id),
+                                            onTap: () =>
+                                                _selectIdentity(identity.id),
+                                            scaleFactor: scaleFactor,
+                                          ),
+                                    ],
                                   ),
                                 );
-                              }).toList(),
+                              },
+                            ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(
+                        top: MediaQuery.of(context).size.height * 0.01,
+                        bottom: MediaQuery.of(context).size.height * 0.02,
                       ),
-                    );
-                  },
+                      child: widget.mode == MoreUserDetailsMode.register
+                          ? GradientButton(
+                              width: double.infinity,
+                              radius: 19,
+                              onPressed: () {
+                                if (selectedCategories.isEmpty) {
+                                  ScaffoldMessenger.of(context)
+                                    ..clearSnackBars()
+                                    ..showSnackBar(
+                                      SnackBar(
+                                        content: Text('category.required'.tr()),
+                                        backgroundColor: Colors.orange,
+                                        duration: const Duration(seconds: 3),
+                                      ),
+                                    );
+                                  return;
+                                }
+                                _updateCubit();
+                                Navigator.of(context).pop('done');
+                              },
+                              child: const SecondaryText(
+                                'Continue',
+                                fontSize: 20,
+                              ),
+                            )
+                          : userDetailsButton(
+                              controller: widget.controller,
+                              context: context,
+                              action: UserDetailsAction.next,
+                              mode: widget.mode,
+                            ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 20, bottom: 10),
-              child: widget.mode == MoreUserDetailsMode.register
-                  // En modo registro (desde chat), cerrar pantalla y volver al chat
-                  ? GradientButton(
-                      width: double.infinity,
-                      radius: 19,
-                      onPressed: () {
-                        _updateCubit();
-                        Navigator.of(context).pop('done');
-                      },
-                      child: const SecondaryText('Continue', fontSize: 20),
-                    )
-                  // En modo edición, ir a la siguiente página
-                  : userDetailsButton(
-                      controller: widget.controller,
-                      context: context,
-                      action: UserDetailsAction.next,
-                      mode: widget.mode,
-                    ),
             ),
           ],
         ),
@@ -205,50 +382,77 @@ class _CategoryStepState extends State<CategoryStep> {
     );
   }
 
-  Widget _categoryButton(
+  // Ya no usamos secciones desplegables: las categorías se muestran
+  // todas juntas en un solo Wrap, similar a intereses.
+
+  Widget _identityButton(
     String label, {
+    int iconNumber = 0,
     bool selected = false,
     VoidCallback? onTap,
+    double scaleFactor = 1.0,
   }) {
-    return InkWell(
+    final borderRadius = BorderRadius.all(Radius.circular(20 * scaleFactor));
+    final tileColor = Color.lerp(
+      AppColors.greyBackground,
+      AppColors.backgroundDark,
+      0.55,
+    )!;
+
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        // ajustar el width a un tamaño más ajustado pero responsive
-        width: 350,
-        constraints: const BoxConstraints(minHeight: 50),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-        decoration: BoxDecoration(
-          gradient: selected
-              ? LinearGradient(colors: AppColors.primaryGradient.colors)
-              : LinearGradient(colors: AppColors.primaryGradient.colors),
-          border: Border.all(
-            color: selected
-                ? const Color.fromARGB(255, 96, 27, 255)
-                : AppColors.greyBackground,
-            width: 3,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeOut,
+        decoration: selected
+            ? BoxDecoration(
+                gradient: AppColors.primaryGradient,
+                borderRadius: borderRadius,
+              )
+            : BoxDecoration(
+                color: tileColor,
+                borderRadius: borderRadius,
+                border: Border.all(
+                  color: tileColor.withValues(alpha: 0.9),
+                  width: 1,
+                ),
+              ),
+        padding: selected ? const EdgeInsets.all(1.5) : EdgeInsets.zero,
+        child: Container(
+          decoration: BoxDecoration(
+            color: tileColor,
+            borderRadius: borderRadius,
           ),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Center(
+          padding: EdgeInsets.symmetric(
+            horizontal: 14 * scaleFactor,
+            vertical: 10 * scaleFactor,
+          ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Flexible(
-                child: SecondaryText(label, fontSize: 18, color: Colors.white),
-              ),
-              if (selected) ...[
-                const SizedBox(width: 8),
-                Container(
-                  width: 20,
-                  height: 20,
-                  decoration: const BoxDecoration(
-                    color: Colors.green,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.check, color: Colors.white, size: 14),
+              // Icono de la categoría
+              if (iconNumber > 0) ...[
+                Image.asset(
+                  'assets/icons/account_type/$iconNumber.png',
+                  width: 22 * scaleFactor,
+                  height: 22 * scaleFactor,
+                  color: selected ? Colors.white : Colors.white70,
                 ),
+                SizedBox(width: 6 * scaleFactor),
               ],
+              Flexible(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 15 * scaleFactor,
+                    color: selected ? Colors.white : Colors.white70,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (selected) ...[SizedBox(width: 5 * scaleFactor)],
             ],
           ),
         ),

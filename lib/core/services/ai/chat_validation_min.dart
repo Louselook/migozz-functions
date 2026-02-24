@@ -3,6 +3,8 @@ import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/regis
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_state.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/location_dto.dart';
 import 'package:migozz_app/features/auth/services/send_otp.dart';
+import 'package:migozz_app/features/auth/services/media_service.dart';
+import 'package:migozz_app/features/profile/data/datasources/user_service.dart';
 
 Future<Map<String, dynamic>?> processBotResponse(
   Map<String, dynamic> resp, {
@@ -40,8 +42,26 @@ Future<Map<String, dynamic>?> processBotResponse(
 
     case RegisterStatusProgress.username:
       if (isValid == true && userResponse != null) {
-        registerCubit.setUsername(userResponse);
-        debugPrint('✅ Username guardado: $userResponse');
+        // Verificar si el username ya está en uso
+        final userService = UserService(UserMediaService());
+        final normalizedUsername = userResponse.trim().toLowerCase();
+        final isTaken = await userService.isUsernameTaken(normalizedUsername);
+
+        if (isTaken) {
+          debugPrint('⚠️ Username "$normalizedUsername" ya está en uso');
+          final isSpanish = registerCubit.state.language == 'Español';
+          return {
+            'error': true,
+            'message': isSpanish
+                ? 'El nombre de usuario "@$normalizedUsername" ya está en uso. Por favor elige otro.'
+                : 'The username "@$normalizedUsername" is already taken. Please choose another.',
+            'usernameTaken': true,
+            'step': 'regProgress.username',
+          };
+        }
+
+        registerCubit.setUsername(normalizedUsername);
+        debugPrint('✅ Username guardado: $normalizedUsername');
       }
       break;
 
@@ -51,6 +71,13 @@ Future<Map<String, dynamic>?> processBotResponse(
     //     debugPrint('✅ Género guardado: $userResponse');
     //   }
     //   break;
+
+    case RegisterStatusProgress.gender:
+      if (isValid == true && userResponse != null) {
+        registerCubit.setGender(userResponse);
+        debugPrint('✅ Género guardado: $userResponse');
+      }
+      break;
 
     // case RegisterStatusProgress.socialEcosystem:
     //   debugPrint('📱 Paso de redes sociales - se maneja en navigation handler');
@@ -106,26 +133,40 @@ Future<Map<String, dynamic>?> processBotResponse(
         }
       }
 
-      // Opción 1: Usuario confirmó ubicación (Sí)
+      // Opción 1: Usuario aceptó agregar ubicación (Yes)
       if (resp['confirmLocation'] == true && isValid == true) {
-        if (registerCubit.state.location != null) {
+        debugPrint(
+          '📍 Usuario aceptó agregar ubicación - procesando automáticamente',
+        );
+        // Procesar ubicación automáticamente
+        final language = registerCubit.state.language ?? 'English';
+        final langCode = language == 'Español' ? 'es' : 'en';
+        await registerCubit.fetchLocation(langCode);
+
+        // Verificar si la ubicación se obtuvo correctamente
+        if (registerCubit.state.location != null &&
+            registerCubit.state.location!.hasCityAndCountry) {
           registerCubit.confirmLocation();
           debugPrint(
-            '✅ Ubicación confirmada: ${registerCubit.state.location!.city}, ${registerCubit.state.location!.country}',
+            '✅ Ubicación obtenida y confirmada: ${registerCubit.state.location!.city}, ${registerCubit.state.location!.country}',
           );
           return null; // Sin errores, avanza al siguiente paso
         } else {
-          debugPrint('⚠️ No hay ubicación para confirmar');
-          final isSpanish = registerCubit.state.language == 'Español';
-          return {
-            "error": true,
-            "message": isSpanish
-                ? "No pudimos detectar tu ubicación. Intenta nuevamente."
-                : "We couldn't detect your location. Please try again.",
-          };
+          debugPrint('⚠️ No se pudo obtener la ubicación automáticamente');
+          // Aún así continuar sin ubicación
+          registerCubit.rejectLocation();
+          return null;
         }
       }
-      // Opción 2: Usuario rechazó usar ubicación (No)
+      // Opción 2: Usuario rechazó agregar ubicación (Rather not say)
+      else if (resp['skipLocation'] == true && isValid == true) {
+        registerCubit.rejectLocation();
+        debugPrint(
+          '✅ Usuario eligió "Rather not say" - continuando sin ubicación',
+        );
+        return null; // Sin errores, avanza al siguiente paso
+      }
+      // Opción 3: Ubicación manual (heredado)
       else if (resp['emptyLocation'] == true && isValid == true) {
         registerCubit.rejectLocation();
         debugPrint(
@@ -160,6 +201,30 @@ Future<Map<String, dynamic>?> processBotResponse(
         };
       }
 
+    case RegisterStatusProgress.emailReask:
+      if (isValid == true && userResponse != null) {
+        // Si el usuario escribió un nuevo email directamente
+        if (resp['newEmail'] == true) {
+          registerCubit.setEmail(userResponse.trim());
+          debugPrint('✅ Email actualizado desde emailReask: $userResponse');
+          return null;
+        }
+        // Si el usuario quiere cambiar (respuesta = "change")
+        if (resp['changeEmail'] == true || userResponse == 'change') {
+          debugPrint('📝 Usuario quiere cambiar email desde emailReask');
+          return {
+            "changeEmail": true,
+            "message": registerCubit.state.language == 'Español'
+                ? "De acuerdo, ingresa tu nuevo correo electrónico"
+                : "Okay, please enter your new email address",
+          };
+        }
+        // Si el usuario dice que está bien (respuesta = "keep")
+        debugPrint('✅ Email confirmado sin cambios desde emailReask');
+        return null;
+      }
+      break;
+
     case RegisterStatusProgress.sendOTP:
       // Caso 1: Usuario quiere cambiar email (dijo "No")
       if (resp['changeEmail'] == true) {
@@ -177,8 +242,17 @@ Future<Map<String, dynamic>?> processBotResponse(
         // Usuario confirmó el email
         if (registerCubit.state.email != null) {
           try {
-            debugPrint('📧 Enviando OTP a: ${registerCubit.state.email}');
-            final result = await sendOTP(email: registerCubit.state.email!);
+            // Convert language label to code: 'Español' -> 'es', otherwise 'en'
+            final langCode = registerCubit.state.language == 'Español'
+                ? 'es'
+                : 'en';
+            debugPrint(
+              '📧 Enviando OTP a: ${registerCubit.state.email} (lang: $langCode)',
+            );
+            final result = await sendOTP(
+              email: registerCubit.state.email!,
+              language: langCode,
+            );
 
             if (result['sent'] == true) {
               registerCubit.setCurrentOTP(result['myOTP']);
@@ -251,8 +325,17 @@ Future<Map<String, dynamic>?> processBotResponse(
           debugPrint('📧 Usuario solicitó reenviar código OTP');
           if (registerCubit.state.email != null) {
             try {
-              debugPrint('📧 Reenviando OTP a: ${registerCubit.state.email}');
-              final result = await sendOTP(email: registerCubit.state.email!);
+              // Convert language label to code: 'Español' -> 'es', otherwise 'en'
+              final langCode = registerCubit.state.language == 'Español'
+                  ? 'es'
+                  : 'en';
+              debugPrint(
+                '📧 Reenviando OTP a: ${registerCubit.state.email} (lang: $langCode)',
+              );
+              final result = await sendOTP(
+                email: registerCubit.state.email!,
+                language: langCode,
+              );
 
               if (result['sent'] == true) {
                 registerCubit.setCurrentOTP(result['myOTP']);
@@ -403,6 +486,7 @@ RegisterStatusProgress _parseStep(String raw) {
   }
   if (raw.contains('username')) return RegisterStatusProgress.username;
   // if (raw.contains('gender')) return RegisterStatusProgress.gender;
+  if (raw.contains('gender')) return RegisterStatusProgress.gender;
 
   // Habilitar socialEcosystem y avatarUrl para que el flujo los maneje correctamente
   if (raw.contains('socialecosystem') || raw.contains('social')) {
@@ -410,6 +494,7 @@ RegisterStatusProgress _parseStep(String raw) {
   }
   if (raw.contains('location')) return RegisterStatusProgress.location;
   if (raw.contains('sendotp')) return RegisterStatusProgress.sendOTP;
+  if (raw.contains('emailreask')) return RegisterStatusProgress.emailReask;
   if (raw.contains('emailchange')) return RegisterStatusProgress.emailChange;
 
   // IMPORTANTE: emailSuccess también mapea a emailVerification

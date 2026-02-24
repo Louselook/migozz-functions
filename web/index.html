@@ -3,18 +3,30 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="Migozz — Your First AI Social Ecosystem. Connect, centralize, and monetize your entire digital presence.">
 
-  <meta
-    name="google-signin-client_id"
-    content="895592952324-4iu9ob4bo0ppn2hta6oi4qvfat3892p5.apps.googleusercontent.com"
-  />
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://migozz.com/">
+  <meta property="og:title" content="Migozz — Your First AI Social Ecosystem">
+  <meta property="og:description" content="Connect, centralize, and monetize your entire digital presence with the ultimate AI-powered social ecosystem.">
+  <meta property="og:image" content="https://migozz.com/icons/Icon-512.png">
+  <meta property="og:site_name" content="Migozz">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://migozz.com/">
+  <meta name="twitter:title" content="Migozz — Your First AI Social Ecosystem">
+  <meta name="twitter:description" content="Connect, centralize, and monetize your entire digital presence with the ultimate AI-powered social ecosystem.">
+  <meta name="twitter:image" content="https://migozz.com/icons/Icon-512.png">
+
+  <meta name="google-signin-client_id" content="895592952324-4iu9ob4bo0ppn2hta6oi4qvfat3892p5.apps.googleusercontent.com">
 
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="migozz_app">
+  <meta name="apple-mobile-web-app-title" content="Migozz">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
@@ -22,6 +34,17 @@
 
   <title>Migozz</title>
   <link rel="manifest" href="manifest.json">
+  
+  <!-- Google Identity Services SDK (required for google_sign_in v7.0.0 on web) -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  
+
+
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+  
+  
+  
+  
   <style id="splash-screen-style">
     html {
       height: 100%
@@ -41,6 +64,24 @@
       left: 50%;
       -ms-transform: translate(-50%, -50%);
       transform: translate(-50%, -50%);
+      max-width: 180px;
+      max-height: 180px;
+    }
+
+    /* Pantallas móviles pequeñas */
+    @media (max-width: 480px) {
+      .center {
+        max-width: 200px;
+        max-height: 200px;
+      }
+    }
+
+    /* Pantallas móviles altas (como S25 Ultra) */
+    @media (max-width: 500px) and (min-height: 700px) {
+      .center {
+        max-width: 200px;
+        max-height: 200px;
+      }
     }
 
     .contain {
@@ -87,12 +128,33 @@
       document.body.style.background = "transparent";
     }
   </script>
-  
 
-
-  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+  <!-- Meta Pixel Code -->
+  <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '2079892629471077');
+    fbq('track', 'PageView');
+  </script>
+  <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=2079892629471077&ev=PageView&noscript=1"
+  /></noscript>
+  <!-- End Meta Pixel Code -->
 </head>
 <body>
+  <picture id="splash">
+      <source srcset="splash/img/light-1x.png 1x, splash/img/light-2x.png 2x, splash/img/light-3x.png 3x, splash/img/light-4x.png 4x" media="(prefers-color-scheme: light)">
+      <source srcset="splash/img/dark-1x.png 1x, splash/img/dark-2x.png 2x, splash/img/dark-3x.png 3x, splash/img/dark-4x.png 4x" media="(prefers-color-scheme: dark)">
+      <img class="center" aria-hidden="true" src="splash/img/light-1x.png" alt="">
+  </picture>
+  
+  
   <script src="flutter_bootstrap.js" async=""></script>
 
 
