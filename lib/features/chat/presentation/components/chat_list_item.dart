@@ -32,6 +32,9 @@ class ChatListItem extends StatelessWidget {
                   backgroundImage: chat.avatarUrl != null
                       ? NetworkImage(chat.avatarUrl!)
                       : null,
+                  onBackgroundImageError: chat.avatarUrl != null
+                      ? (_, __) {}
+                      : null,
                   child: chat.avatarUrl == null
                       ? Text(
                           chat.displayName.isNotEmpty

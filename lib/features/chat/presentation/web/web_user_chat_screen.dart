@@ -314,6 +314,9 @@ class _WebUserChatScreenState extends State<WebUserChatScreen>
             backgroundImage: widget.otherUserAvatar?.isNotEmpty == true
                 ? NetworkImage(widget.otherUserAvatar!)
                 : null,
+            onBackgroundImageError: widget.otherUserAvatar?.isNotEmpty == true
+                ? (_, __) {}
+                : null,
             backgroundColor: Colors.grey[800],
             child: widget.otherUserAvatar?.isEmpty ?? true
                 ? Text(

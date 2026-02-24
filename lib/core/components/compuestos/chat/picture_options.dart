@@ -51,6 +51,7 @@ class PictureOptions extends StatelessWidget {
                       CircleAvatar(
                         radius: 9,
                         backgroundImage: NetworkImage(senderAvatar!),
+                        onBackgroundImageError: (_, __) {},
                       )
                     else if (senderName != null && senderName!.isNotEmpty)
                       CircleAvatar(

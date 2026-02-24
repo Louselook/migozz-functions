@@ -51,6 +51,9 @@ class _UserProfileScreenExampleState extends State<UserProfileScreenExample> {
                     backgroundImage: currentUser.avatarUrl != null
                         ? NetworkImage(currentUser.avatarUrl!)
                         : null,
+                    onBackgroundImageError: currentUser.avatarUrl != null
+                        ? (_, __) {}
+                        : null,
                     child: currentUser.avatarUrl == null
                         ? const Icon(Icons.person, size: 50)
                         : null,
@@ -385,7 +388,9 @@ class SyncStatusCheckExample extends StatelessWidget {
                           child: Row(
                             children: [
                               CircleAvatar(
-                                backgroundColor: Colors.grey.withValues(alpha: 0.2),
+                                backgroundColor: Colors.grey.withValues(
+                                  alpha: 0.2,
+                                ),
                                 child: Text(
                                   platform.substring(0, 1).toUpperCase(),
                                 ),
@@ -444,6 +449,7 @@ class UserListTileWithSyncBadge extends StatelessWidget {
         backgroundImage: user.avatarUrl != null
             ? NetworkImage(user.avatarUrl!)
             : null,
+        onBackgroundImageError: user.avatarUrl != null ? (_, __) {} : null,
         child: user.avatarUrl == null ? const Icon(Icons.person) : null,
       ),
       title: Text(user.displayName),

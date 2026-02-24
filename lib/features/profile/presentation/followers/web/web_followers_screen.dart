@@ -482,6 +482,10 @@ class _WebFollowerListItemState extends State<_WebFollowerListItem> {
                         backgroundImage: widget.follower.avatarUrl != null
                             ? NetworkImage(widget.follower.avatarUrl!)
                             : null,
+                        onBackgroundImageError:
+                            widget.follower.avatarUrl != null
+                            ? (_, __) {}
+                            : null,
                         child: widget.follower.avatarUrl == null
                             ? Icon(
                                 Icons.person,

@@ -429,6 +429,11 @@ class _WebNotificationTileState extends State<_WebNotificationTile> {
                             widget.notification.senderAvatar!.isNotEmpty
                         ? NetworkImage(widget.notification.senderAvatar!)
                         : null,
+                    onBackgroundImageError:
+                        widget.notification.senderAvatar != null &&
+                            widget.notification.senderAvatar!.isNotEmpty
+                        ? (_, __) {}
+                        : null,
                     child:
                         widget.notification.senderAvatar == null ||
                             widget.notification.senderAvatar!.isEmpty

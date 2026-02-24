@@ -1037,6 +1037,9 @@ class EditProfileScreenState extends State<EditProfileScreen> {
               backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
                   ? NetworkImage(avatarUrl)
                   : null,
+              onBackgroundImageError: avatarUrl != null && avatarUrl.isNotEmpty
+                  ? (_, __) {}
+                  : null,
               child: avatarUrl == null || avatarUrl.isEmpty
                   ? Icon(
                       Icons.person,

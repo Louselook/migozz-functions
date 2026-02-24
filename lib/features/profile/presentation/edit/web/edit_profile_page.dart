@@ -567,6 +567,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   radius: 60,
                   backgroundColor: Colors.black,
                   backgroundImage: hasAvatar ? NetworkImage(avatarUrl) : null,
+                  onBackgroundImageError: hasAvatar ? (_, __) {} : null,
                   child: !hasAvatar
                       ? Icon(
                           Icons.person,

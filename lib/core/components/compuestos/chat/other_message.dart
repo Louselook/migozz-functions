@@ -9,7 +9,7 @@ class OtherMessage extends StatelessWidget {
   final List<Map<String, dynamic>>? platforms;
   final List<Map<String, String>>? profilePictures;
   final RegisterChatController? chatController;
-  final String? otherUserName; 
+  final String? otherUserName;
   final String? otherUserAvatar;
   final bool showHeader;
 
@@ -20,7 +20,7 @@ class OtherMessage extends StatelessWidget {
     this.platforms,
     this.profilePictures,
     this.chatController,
-    this.otherUserName, 
+    this.otherUserName,
     this.otherUserAvatar,
     this.showHeader = true,
   });
@@ -55,6 +55,7 @@ class OtherMessage extends StatelessWidget {
                   CircleAvatar(
                     radius: 9,
                     backgroundImage: NetworkImage(otherUserAvatar!),
+                    onBackgroundImageError: (_, __) {},
                     backgroundColor: Colors.grey[800],
                   )
                 else if (otherUserName != null && otherUserName!.isNotEmpty)
@@ -72,7 +73,11 @@ class OtherMessage extends StatelessWidget {
                   )
                 else
                   // Fallback: logo de Migozz (para chat de IA)
-                  Image.asset("assets/images/Migozz.webp", width: 18, height: 18),
+                  Image.asset(
+                    "assets/images/Migozz.webp",
+                    width: 18,
+                    height: 18,
+                  ),
 
                 const SizedBox(width: 6),
 
@@ -116,8 +121,6 @@ class OtherMessage extends StatelessWidget {
               ),
             ),
           ],
-
-
         ],
       ),
     );

@@ -140,10 +140,7 @@ class _AudioPlaybackWidgetState extends State<AudioPlaybackWidget> {
       final p = _player;
       if (p == null) return;
 
-      await p.preparePlayer(
-        path: _localPath!,
-        shouldExtractWaveform: true,
-      );
+      await p.preparePlayer(path: _localPath!, shouldExtractWaveform: true);
 
       if (_isDisposed || !mounted) return;
       if (newSeq != _playerSeq) return;
@@ -195,10 +192,7 @@ class _AudioPlaybackWidgetState extends State<AudioPlaybackWidget> {
       // prepare player with local path
       final p = _player;
       if (p == null) return;
-      await p.preparePlayer(
-        path: pathToPlay,
-        shouldExtractWaveform: true,
-      );
+      await p.preparePlayer(path: pathToPlay, shouldExtractWaveform: true);
 
       if (_isDisposed || !mounted) return;
       if (seqAtStart != _playerSeq) return;
@@ -351,6 +345,7 @@ class _AudioPlaybackWidgetState extends State<AudioPlaybackWidget> {
                   CircleAvatar(
                     radius: 10,
                     backgroundImage: NetworkImage(widget.otherUserAvatar!),
+                    onBackgroundImageError: (_, __) {},
                     backgroundColor: Colors.grey[800],
                   )
                 else if (widget.otherUserName != null &&

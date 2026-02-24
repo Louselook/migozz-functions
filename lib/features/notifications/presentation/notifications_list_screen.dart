@@ -13,7 +13,8 @@ class NotificationsListScreen extends StatefulWidget {
   const NotificationsListScreen({super.key});
 
   @override
-  State<NotificationsListScreen> createState() => _NotificationsListScreenState();
+  State<NotificationsListScreen> createState() =>
+      _NotificationsListScreenState();
 }
 
 class _NotificationsListScreenState extends State<NotificationsListScreen> {
@@ -28,9 +29,10 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
 
   Future<void> _loadNotifications() async {
     setState(() => _isLoading = true);
-    
+
     try {
-      final notifications = await NotificationService.instance.getNotificationHistory();
+      final notifications = await NotificationService.instance
+          .getNotificationHistory();
       if (mounted) {
         setState(() {
           _notifications = notifications;
@@ -191,10 +193,7 @@ class _NotificationsListScreenState extends State<NotificationsListScreen> {
             const SizedBox(height: 8),
             Text(
               'notifications.empty.subtitle'.tr(),
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 14,
-              ),
+              style: TextStyle(color: Colors.grey[600], fontSize: 14),
               textAlign: TextAlign.center,
             ),
           ],
@@ -224,10 +223,7 @@ class _NotificationTile extends StatelessWidget {
   final ChatNotificationModel notification;
   final VoidCallback onTap;
 
-  const _NotificationTile({
-    required this.notification,
-    required this.onTap,
-  });
+  const _NotificationTile({required this.notification, required this.onTap});
 
   bool get isFollowNotification =>
       notification.notificationType == NotificationType.follow;
@@ -236,9 +232,8 @@ class _NotificationTile extends StatelessWidget {
       ? const Color(0xFF9C27B0) // Purple for follow
       : const Color(0xFFE91E63); // Pink for chat
 
-  IconData get _badgeIcon => isFollowNotification
-      ? Icons.person_add
-      : Icons.chat_bubble;
+  IconData get _badgeIcon =>
+      isFollowNotification ? Icons.person_add : Icons.chat_bubble;
 
   @override
   Widget build(BuildContext context) {
@@ -262,17 +257,23 @@ class _NotificationTile extends StatelessWidget {
             CircleAvatar(
               radius: 24,
               backgroundColor: Colors.grey[800],
-              backgroundImage: notification.senderAvatar != null &&
-                  notification.senderAvatar!.isNotEmpty
+              backgroundImage:
+                  notification.senderAvatar != null &&
+                      notification.senderAvatar!.isNotEmpty
                   ? NetworkImage(notification.senderAvatar!)
                   : null,
-              child: notification.senderAvatar == null ||
-                  notification.senderAvatar!.isEmpty
+              onBackgroundImageError:
+                  notification.senderAvatar != null &&
+                      notification.senderAvatar!.isNotEmpty
+                  ? (_, __) {}
+                  : null,
+              child:
+                  notification.senderAvatar == null ||
+                      notification.senderAvatar!.isEmpty
                   ? Text(
-                      (notification.senderName ?? notification.title)
-                          .isNotEmpty
+                      (notification.senderName ?? notification.title).isNotEmpty
                           ? (notification.senderName ?? notification.title)[0]
-                              .toUpperCase()
+                                .toUpperCase()
                           : '?',
                       style: const TextStyle(
                         color: Colors.white,
@@ -293,11 +294,7 @@ class _NotificationTile extends StatelessWidget {
                   shape: BoxShape.circle,
                   border: Border.all(color: const Color(0xFF1C1C1E), width: 2),
                 ),
-                child: Icon(
-                  _badgeIcon,
-                  size: 10,
-                  color: Colors.white,
-                ),
+                child: Icon(_badgeIcon, size: 10, color: Colors.white),
               ),
             ),
             // Unread indicator
@@ -311,7 +308,10 @@ class _NotificationTile extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Colors.red,
                     shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFF1C1C1E), width: 2),
+                    border: Border.all(
+                      color: const Color(0xFF1C1C1E),
+                      width: 2,
+                    ),
                   ),
                 ),
               ),
@@ -321,7 +321,9 @@ class _NotificationTile extends StatelessWidget {
           notification.title,
           style: TextStyle(
             color: Colors.white,
-            fontWeight: notification.isRead ? FontWeight.normal : FontWeight.bold,
+            fontWeight: notification.isRead
+                ? FontWeight.normal
+                : FontWeight.bold,
             fontSize: 15,
           ),
           maxLines: 1,
@@ -333,29 +335,19 @@ class _NotificationTile extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               notification.body,
-              style: TextStyle(
-                color: Colors.grey[400],
-                fontSize: 13,
-              ),
+              style: TextStyle(color: Colors.grey[400], fontSize: 13),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 4),
             Text(
               notification.timeAgo,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 11,
-              ),
+              style: TextStyle(color: Colors.grey[600], fontSize: 11),
             ),
           ],
         ),
-        trailing: Icon(
-          Icons.chevron_right,
-          color: Colors.grey[600],
-        ),
+        trailing: Icon(Icons.chevron_right, color: Colors.grey[600]),
       ),
     );
   }
 }
-
