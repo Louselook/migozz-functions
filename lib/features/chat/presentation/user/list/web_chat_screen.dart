@@ -5,6 +5,7 @@ import 'package:migozz_app/features/chat/presentation/user/user_chat_screen.dart
 import 'package:migozz_app/features/profile/components/utils/side_menu.dart';
 import 'package:migozz_app/features/chat/data/datasources/chat_service.dart';
 import 'package:migozz_app/features/chat/data/domain/models/chat_rooms.dart';
+import 'package:migozz_app/features/chat/data/domain/models/chat_tab.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 /// Web split-pane chat: SideMenu | Chat List | Conversation
@@ -35,10 +36,12 @@ class _WebChatScreenState extends State<WebChatScreen>
 
   late TabController _tabController;
 
+  static const List<ChatTab> _tabs = ChatTab.values;
+
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 7, vsync: this);
+    _tabController = TabController(length: _tabs.length, vsync: this);
   }
 
   @override
@@ -175,30 +178,18 @@ class _WebChatScreenState extends State<WebChatScreen>
               labelColor: Colors.white,
               unselectedLabelColor: Colors.white54,
               dividerColor: Colors.transparent,
-              tabs: [
-                Tab(text: 'web.chat.tab_chat'.tr()),
-                Tab(text: 'profile.chat.filter'.tr()),
-                Tab(text: 'Prime'),
-                Tab(text: 'VIP'),
-                Tab(text: 'Biz'),
-                Tab(text: 'AI'),
-                Tab(text: 'Spam'),
-              ],
+              tabs: _tabs
+                  .map((tab) => Tab(text: tab.translationKey.tr()))
+                  .toList(),
             ),
           ),
-          // Chat list
           Expanded(
             child: TabBarView(
               controller: _tabController,
-              children: [
-                _buildActiveChatsList(),
-                _buildNewChatsList(),
-                _buildComingSoon(),
-                _buildComingSoon(),
-                _buildComingSoon(),
-                _buildComingSoon(),
-                _buildComingSoon(),
-              ],
+              children: _tabs.map((tab) {
+                if (!tab.isFunctional) return _buildComingSoon();
+                return _buildChatsListByTab(tab);
+              }).toList(),
             ),
           ),
         ],
@@ -206,9 +197,9 @@ class _WebChatScreenState extends State<WebChatScreen>
     );
   }
 
-  Widget _buildActiveChatsList() {
+  Widget _buildChatsListByTab(ChatTab tab) {
     return StreamBuilder<List<ChatRoom>>(
-      stream: _chatService.getActiveChatsStream(widget.currentUserId),
+      stream: _chatService.getChatsStreamByTab(widget.currentUserId, tab),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
@@ -219,7 +210,7 @@ class _WebChatScreenState extends State<WebChatScreen>
         final rooms = snapshot.data ?? [];
 
         if (rooms.isEmpty) {
-          return _buildEmptyChatList();
+          return _buildEmptyChatList(tab);
         }
 
         return ListView.builder(
@@ -230,6 +221,7 @@ class _WebChatScreenState extends State<WebChatScreen>
             return _ChatRoomTile(
               room: room,
               currentUserId: widget.currentUserId,
+              currentTab: tab,
               isSelected:
                   _selectedChatUserId != null &&
                   room.participants
@@ -237,11 +229,23 @@ class _WebChatScreenState extends State<WebChatScreen>
                       .contains(_selectedChatUserId),
               searchQuery: _searchQuery,
               onTap: (userId, userName, avatar) {
+                // Mark chat as opened for auto-archive
+                _chatService.markChatOpened(
+                  chatRoomId: room.chatRoomId,
+                  userId: widget.currentUserId,
+                );
                 setState(() {
                   _selectedChatUserId = userId;
                   _selectedChatUserName = userName;
                   _selectedChatUserAvatar = avatar;
                 });
+              },
+              onMoveToTab: (newTab) {
+                _chatService.moveChatToTab(
+                  chatRoomId: room.chatRoomId,
+                  userId: widget.currentUserId,
+                  tab: newTab,
+                );
               },
             );
           },
@@ -250,51 +254,20 @@ class _WebChatScreenState extends State<WebChatScreen>
     );
   }
 
-  Widget _buildNewChatsList() {
-    return StreamBuilder<List<ChatRoom>>(
-      stream: _chatService.getNewChatsStream(widget.currentUserId),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(color: Colors.white),
-          );
-        }
-
-        final rooms = snapshot.data ?? [];
-
-        if (rooms.isEmpty) {
-          return _buildEmptyChatList();
-        }
-
-        return ListView.builder(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          itemCount: rooms.length,
-          itemBuilder: (context, index) {
-            final room = rooms[index];
-            return _ChatRoomTile(
-              room: room,
-              currentUserId: widget.currentUserId,
-              isSelected:
-                  _selectedChatUserId != null &&
-                  room.participants
-                      .where((p) => p != widget.currentUserId)
-                      .contains(_selectedChatUserId),
-              searchQuery: _searchQuery,
-              onTap: (userId, userName, avatar) {
-                setState(() {
-                  _selectedChatUserId = userId;
-                  _selectedChatUserName = userName;
-                  _selectedChatUserAvatar = avatar;
-                });
-              },
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildEmptyChatList() {
+  Widget _buildEmptyChatList(ChatTab tab) {
+    String message;
+    switch (tab) {
+      case ChatTab.prime:
+        message = 'web.chat.no_new_messages'.tr();
+      case ChatTab.chat:
+        message = 'chat.noChats'.tr();
+      case ChatTab.vip:
+        message = 'web.chat.no_vip'.tr();
+      case ChatTab.biz:
+        message = 'web.chat.no_biz'.tr();
+      case ChatTab.ai:
+        message = 'profile.sendGifts.comingSoon'.tr();
+    }
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -306,7 +279,7 @@ class _WebChatScreenState extends State<WebChatScreen>
           ),
           const SizedBox(height: 12),
           Text(
-            'chat.noChats'.tr(),
+            message,
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.5),
               fontSize: 14,
@@ -368,7 +341,7 @@ class _WebChatScreenState extends State<WebChatScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.construction,
+            Icons.smart_toy_outlined,
             size: 48,
             color: Colors.white.withValues(alpha: 0.2),
           ),
@@ -378,6 +351,15 @@ class _WebChatScreenState extends State<WebChatScreen>
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.5),
               fontSize: 14,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'web.chat.tab_ai_desc'.tr(),
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.3),
+              fontSize: 12,
             ),
             textAlign: TextAlign.center,
           ),
@@ -391,16 +373,20 @@ class _WebChatScreenState extends State<WebChatScreen>
 class _ChatRoomTile extends StatefulWidget {
   final ChatRoom room;
   final String currentUserId;
+  final ChatTab currentTab;
   final bool isSelected;
   final String searchQuery;
   final void Function(String userId, String userName, String? avatar) onTap;
+  final void Function(ChatTab newTab)? onMoveToTab;
 
   const _ChatRoomTile({
     required this.room,
     required this.currentUserId,
+    required this.currentTab,
     required this.isSelected,
     required this.searchQuery,
     required this.onTap,
+    this.onMoveToTab,
   });
 
   @override
@@ -496,6 +482,9 @@ class _ChatRoomTileState extends State<_ChatRoomTile> {
       onExit: (_) => setState(() => _isHovered = false),
       child: GestureDetector(
         onTap: () => widget.onTap(otherUserId, displayName, avatarUrl),
+        onSecondaryTapUp: widget.onMoveToTab != null
+            ? (details) => _showContextMenu(context, details.globalPosition)
+            : null,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -574,5 +563,83 @@ class _ChatRoomTileState extends State<_ChatRoomTile> {
         ),
       ),
     );
+  }
+
+  void _showContextMenu(BuildContext context, Offset position) {
+    final availableTabs = ChatTab.values
+        .where((t) =>
+            t.isFunctional && t != widget.currentTab && t != ChatTab.ai)
+        .toList();
+
+    showMenu<ChatTab>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        position.dx,
+        position.dy,
+        position.dx + 1,
+        position.dy + 1,
+      ),
+      color: const Color(0xFF2C2C2E),
+      items: [
+        PopupMenuItem<ChatTab>(
+          enabled: false,
+          child: Text(
+            'web.chat.move_to'.tr(),
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        ...availableTabs.map((tab) => PopupMenuItem<ChatTab>(
+              value: tab,
+              child: Row(
+                children: [
+                  Icon(_getTabIcon(tab), color: _getTabColor(tab), size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    tab.translationKey.tr(),
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ],
+              ),
+            )),
+      ],
+    ).then((selectedTab) {
+      if (selectedTab != null && widget.onMoveToTab != null) {
+        widget.onMoveToTab!(selectedTab);
+      }
+    });
+  }
+
+  IconData _getTabIcon(ChatTab tab) {
+    switch (tab) {
+      case ChatTab.prime:
+        return Icons.inbox_rounded;
+      case ChatTab.chat:
+        return Icons.chat_bubble_outline;
+      case ChatTab.vip:
+        return Icons.star_rounded;
+      case ChatTab.biz:
+        return Icons.business_center_rounded;
+      case ChatTab.ai:
+        return Icons.smart_toy_outlined;
+    }
+  }
+
+  Color _getTabColor(ChatTab tab) {
+    switch (tab) {
+      case ChatTab.prime:
+        return const Color(0xFFE91E63);
+      case ChatTab.chat:
+        return Colors.white70;
+      case ChatTab.vip:
+        return const Color(0xFFFFD700);
+      case ChatTab.biz:
+        return const Color(0xFF4CAF50);
+      case ChatTab.ai:
+        return const Color(0xFF9C27B0);
+    }
   }
 }

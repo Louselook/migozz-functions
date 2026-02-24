@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:migozz_app/features/chat/data/datasources/chat_service.dart';
 import 'package:migozz_app/features/chat/data/domain/models/chat_preview.dart';
 import 'package:migozz_app/features/chat/data/domain/models/chat_rooms.dart';
+import 'package:migozz_app/features/chat/data/domain/models/chat_tab.dart';
 import 'package:migozz_app/features/chat/presentation/components/chat_list_item.dart';
 import 'package:migozz_app/features/chat/presentation/user/user_chat_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -29,10 +30,17 @@ class _ChatsListScreenState extends State<ChatsListScreen>
   final ChatService _chatService = ChatService();
   String _searchQuery = '';
 
+  /// Tab order matching the specification: Chat, Prime, VIP, Biz, AI
+  static const List<ChatTab> _tabs = ChatTab.values;
+
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 7, vsync: this);
+    _tabController = TabController(
+      length: _tabs.length,
+      vsync: this,
+      initialIndex: 0, // Prime is first (index 0)
+    );
     _searchController.addListener(() {
       setState(() {
         _searchQuery = _searchController.text.toLowerCase();
@@ -119,15 +127,10 @@ class _ChatsListScreenState extends State<ChatsListScreen>
           Expanded(
             child: TabBarView(
               controller: _tabController,
-              children: [
-                _buildChatStream(isActive: true),
-                _buildChatStream(isActive: false),
-                _buildComingSoon(),
-                _buildComingSoon(),
-                _buildComingSoon(),
-                _buildComingSoon(),
-                _buildComingSoon(),
-              ],
+              children: _tabs.map((tab) {
+                if (!tab.isFunctional) return _buildComingSoon();
+                return _buildChatStreamByTab(tab);
+              }).toList(),
             ),
           ),
         ],
@@ -140,11 +143,17 @@ class _ChatsListScreenState extends State<ChatsListScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.construction, size: 64, color: Colors.grey[700]),
+          Icon(Icons.smart_toy_outlined, size: 64, color: Colors.grey[700]),
           const SizedBox(height: 16),
           Text(
             'profile.sendGifts.comingSoon'.tr(),
             style: TextStyle(color: Colors.grey[600], fontSize: 16),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'web.chat.tab_ai_desc'.tr(),
+            style: TextStyle(color: Colors.grey[700], fontSize: 13),
             textAlign: TextAlign.center,
           ),
         ],
@@ -152,11 +161,12 @@ class _ChatsListScreenState extends State<ChatsListScreen>
     );
   }
 
-  /// Stream de chats
-  Widget _buildChatStream({required bool isActive}) {
-    final stream = isActive
-        ? _chatService.getActiveChatsStream(widget.currentUserId)
-        : _chatService.getNewChatsStream(widget.currentUserId);
+  /// Stream de chats filtrado por tab
+  Widget _buildChatStreamByTab(ChatTab tab) {
+    final stream = _chatService.getChatsStreamByTab(
+      widget.currentUserId,
+      tab,
+    );
 
     return StreamBuilder<List<ChatRoom>>(
       stream: stream,
@@ -168,7 +178,6 @@ class _ChatsListScreenState extends State<ChatsListScreen>
         }
 
         if (snapshot.hasError) {
-          // Mostrar error de forma amigable
           return _buildEmptyState(
             'web.chat.error_oops'.tr(),
             icon: Icons.error_outline,
@@ -179,13 +188,10 @@ class _ChatsListScreenState extends State<ChatsListScreen>
 
         if (chatRooms.isEmpty) {
           return _buildEmptyState(
-            isActive
-                ? 'web.chat.no_messages'.tr()
-                : 'web.chat.no_new_messages'.tr(),
+            _getEmptyMessageForTab(tab),
           );
         }
 
-        // 🆕 Crear una key única basada en los unreadCount para forzar rebuild
         final unreadKey = chatRooms
             .map(
               (r) =>
@@ -216,11 +222,26 @@ class _ChatsListScreenState extends State<ChatsListScreen>
               return _buildEmptyState('web.chat.no_results'.tr());
             }
 
-            return _buildChatList(filteredChats);
+            return _buildChatList(filteredChats, tab);
           },
         );
       },
     );
+  }
+
+  String _getEmptyMessageForTab(ChatTab tab) {
+    switch (tab) {
+      case ChatTab.prime:
+        return 'web.chat.no_new_messages'.tr();
+      case ChatTab.chat:
+        return 'web.chat.no_messages'.tr();
+      case ChatTab.vip:
+        return 'web.chat.no_vip'.tr();
+      case ChatTab.biz:
+        return 'web.chat.no_biz'.tr();
+      case ChatTab.ai:
+        return 'profile.sendGifts.comingSoon'.tr();
+    }
   }
 
   PreferredSizeWidget _buildAppBar() {
@@ -295,15 +316,10 @@ class _ChatsListScreenState extends State<ChatsListScreen>
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
-                tabs: [
-                  Tab(child: Center(child: Text('web.chat.tab_chat'.tr()))),
-                  Tab(child: Center(child: Text('profile.chat.filter'.tr()))),
-                  Tab(child: Center(child: Text('Prime'))),
-                  Tab(child: Center(child: Text('VIP'))),
-                  Tab(child: Center(child: Text('Biz'))),
-                  Tab(child: Center(child: Text('AI'))),
-                  Tab(child: Center(child: Text('Spam'))),
-                ],
+                tabs: _tabs
+                    .map((tab) =>
+                        Tab(child: Center(child: Text(tab.translationKey.tr()))))
+                    .toList(),
               ),
             ),
           ),
@@ -312,7 +328,7 @@ class _ChatsListScreenState extends State<ChatsListScreen>
     );
   }
 
-  Widget _buildChatList(List<ChatPreview> chats) {
+  Widget _buildChatList(List<ChatPreview> chats, ChatTab currentTab) {
     return ListView.builder(
       itemCount: chats.length,
       itemBuilder: (context, index) {
@@ -320,7 +336,16 @@ class _ChatsListScreenState extends State<ChatsListScreen>
         return ChatListItem(
           chat: chat,
           onTap: () {
-            // Navegar al chat pasando solo datos básicos
+            // Mark chat as opened for auto-archive logic
+            final chatRoomId = ChatRoom.generateChatRoomId(
+              widget.currentUserId,
+              chat.userId,
+            );
+            _chatService.markChatOpened(
+              chatRoomId: chatRoomId,
+              userId: widget.currentUserId,
+            );
+
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -332,13 +357,112 @@ class _ChatsListScreenState extends State<ChatsListScreen>
                 ),
               ),
             ).then((_) {
-              // 🆕 Forzar rebuild al regresar para actualizar unreadCount
               if (mounted) setState(() {});
             });
           },
+          // Long-press to move chat to VIP/Biz
+          onLongPress: currentTab.isFunctional && currentTab != ChatTab.ai
+              ? () => _showMoveToTabDialog(chat, currentTab)
+              : null,
         );
       },
     );
+  }
+
+  /// Show dialog to move a chat to a different tab
+  void _showMoveToTabDialog(ChatPreview chat, ChatTab currentTab) {
+    final availableTabs = ChatTab.values
+        .where((t) => t.isFunctional && t != currentTab && t != ChatTab.ai)
+        .toList();
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF2C2C2E),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[600],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'web.chat.move_to'.tr(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              ...availableTabs.map((tab) => ListTile(
+                    leading: Icon(
+                      _getTabIcon(tab),
+                      color: _getTabColor(tab),
+                    ),
+                    title: Text(
+                      tab.translationKey.tr(),
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    onTap: () {
+                      final chatRoomId = ChatRoom.generateChatRoomId(
+                        widget.currentUserId,
+                        chat.userId,
+                      );
+                      _chatService.moveChatToTab(
+                        chatRoomId: chatRoomId,
+                        userId: widget.currentUserId,
+                        tab: tab,
+                      );
+                      Navigator.pop(context);
+                    },
+                  )),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  IconData _getTabIcon(ChatTab tab) {
+    switch (tab) {
+      case ChatTab.prime:
+        return Icons.inbox_rounded;
+      case ChatTab.chat:
+        return Icons.chat_bubble_outline;
+      case ChatTab.vip:
+        return Icons.star_rounded;
+      case ChatTab.biz:
+        return Icons.business_center_rounded;
+      case ChatTab.ai:
+        return Icons.smart_toy_outlined;
+    }
+  }
+
+  Color _getTabColor(ChatTab tab) {
+    switch (tab) {
+      case ChatTab.prime:
+        return const Color(0xFFE91E63);
+      case ChatTab.chat:
+        return Colors.white70;
+      case ChatTab.vip:
+        return const Color(0xFFFFD700);
+      case ChatTab.biz:
+        return const Color(0xFF4CAF50);
+      case ChatTab.ai:
+        return const Color(0xFF9C27B0);
+    }
   }
 
   Widget _buildEmptyState(String message, {IconData? icon}) {

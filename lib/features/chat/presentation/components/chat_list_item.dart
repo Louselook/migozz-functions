@@ -5,13 +5,20 @@ import 'package:migozz_app/features/chat/data/domain/models/chat_preview.dart';
 class ChatListItem extends StatelessWidget {
   final ChatPreview chat;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
 
-  const ChatListItem({super.key, required this.chat, required this.onTap});
+  const ChatListItem({
+    super.key,
+    required this.chat,
+    required this.onTap,
+    this.onLongPress,
+  });
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
+      onLongPress: onLongPress,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(

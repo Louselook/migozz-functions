@@ -1080,11 +1080,19 @@
     "chat": {
       "title": "Mensajes",
       "tab_chat": "Chat",
+      "tab_prime": "Prime",
+      "tab_vip": "VIP",
+      "tab_biz": "Biz",
+      "tab_ai": "AI",
+      "tab_ai_desc": "El asistente de IA estará disponible próximamente",
       "no_messages": "No hay mensajes",
       "no_new_messages": "No hay mensajes nuevos",
+      "no_vip": "No hay chats VIP",
+      "no_biz": "No hay chats de negocios",
       "error_oops": "¡Ups! Algo salió mal",
       "no_results": "No se encontraron resultados",
-      "new_message": "Nuevo chat"
+      "new_message": "Nuevo chat",
+      "move_to": "Mover a..."
     }
   },
   "landing": {
