@@ -1,4 +1,11 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/material.dart';
+
+extension ContextUtils on BuildContext {
+  double get screenWidth => MediaQuery.of(this).size.width;
+  double get screenHeight => MediaQuery.of(this).size.height;
+}
+
 
 class WalletModel {
   final String id;
@@ -32,5 +39,9 @@ class WalletModel {
       return formatter.format(amount);
     }
     return "";
+  }
+
+  static getPercentage({double total = 0, double percentage = 0}){
+    return percentage * total / 100;
   }
 }

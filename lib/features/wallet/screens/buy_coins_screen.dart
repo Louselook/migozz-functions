@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
+import 'package:migozz_app/features/wallet/model/wallet_model.dart';
 import 'package:migozz_app/features/wallet/widgets/buy_coins/buy_coins_wrapper.dart';
 
 class BuyCoinsScreen extends StatelessWidget {
@@ -23,10 +24,8 @@ class BuyCoinsScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 10),
+                  SizedBox(height: context.screenHeight * 0.01),
                   IconButton(
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
                     alignment: Alignment.topLeft,
                     icon: const Icon(
                       Icons.arrow_back_outlined,
@@ -34,7 +33,7 @@ class BuyCoinsScreen extends StatelessWidget {
                     ),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: context.screenHeight * 0.01),
                   const BuyCoinsWrapper(),
                   const SizedBox(height: 40),
                 ],
