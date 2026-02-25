@@ -302,6 +302,13 @@ class _WebChatScreenState extends State<WebChatScreen>
       otherUserName: _selectedChatUserName ?? 'User',
       otherUserAvatar: _selectedChatUserAvatar,
       currentUserId: widget.currentUserId,
+      onBack: () {
+        setState(() {
+          _selectedChatUserId = null;
+          _selectedChatUserName = null;
+          _selectedChatUserAvatar = null;
+        });
+      },
     );
   }
 

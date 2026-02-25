@@ -474,21 +474,21 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
           key: const ValueKey('phone_input'),
           height: 48,
           decoration: BoxDecoration(
-            color: const Color(0xFF2C2C2E),
-            borderRadius: BorderRadius.circular(8),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
           ),
           child: IntlPhoneField(
             decoration: InputDecoration(
               hintText: "chat.input.phoneHint".tr(),
-              hintStyle: const TextStyle(color: Colors.white54, fontSize: 15),
+              hintStyle: const TextStyle(color: Colors.black54, fontSize: 15),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(vertical: 12),
               counterText: '',
             ),
             showDropdownIcon: false,
-            style: const TextStyle(color: Colors.white, fontSize: 15),
+            style: const TextStyle(color: Colors.black87, fontSize: 15),
             dropdownTextStyle: const TextStyle(
-              color: Colors.white,
+              color: Colors.black87,
               fontSize: 15,
             ),
             // Solo números
@@ -567,36 +567,51 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
           key: const ValueKey('text_input'),
           controller: widget.controller,
           hintText: "chat.input.typeMessage".tr(),
-          radius: 8,
+          radius: 24,
+          backgroundColor: Colors.white,
+          textColor: Colors.black87,
+          hintColor: Colors.black54,
           keyboardType: TextInputType.multiline,
           textInputAction: TextInputAction.send,
           maxLines: null,
           minLines: 1,
           onSubmitted: (_) => _handleMainButton(),
-          prefixIcon: const Icon(
-            Icons.sentiment_satisfied_alt,
-            color: Color(0xFFC026D3),
+          prefixIcon: ShaderMask(
+            shaderCallback: (bounds) =>
+                AppColors.verticalPinkPurple.createShader(bounds),
+            child: const Icon(
+              Icons.sentiment_satisfied_alt,
+              color: Colors.white,
+            ),
           ),
           suffixIcon: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
                 key: _attachButtonKey,
-                icon: Icon(
-                  _showAttachments ? Icons.close : Icons.attach_file,
-                  color: _showAttachments
-                      ? Colors.red
-                      : const Color(0xFFC026D3),
+                icon: ShaderMask(
+                  shaderCallback: (bounds) => _showAttachments
+                      ? const LinearGradient(
+                          colors: [Colors.red, Colors.red],
+                        ).createShader(bounds)
+                      : AppColors.verticalPinkPurple.createShader(bounds),
+                  child: Icon(
+                    _showAttachments ? Icons.close : Icons.attach_file,
+                    color: Colors.white,
+                  ),
                 ),
                 onPressed: _toggleAttachments,
               ),
               IconButton(
-                icon: const Icon(
-                  Icons.camera_alt_outlined,
-                  color: Color(0xFFC026D3),
+                icon: ShaderMask(
+                  shaderCallback: (bounds) =>
+                      AppColors.verticalPinkPurple.createShader(bounds),
+                  child: const Icon(
+                    Icons.camera_alt_outlined,
+                    color: Colors.white,
+                  ),
                 ),
-                onPressed:
-                    openCameraFromSuggestions, // Or any camera handling method
+                onPressed: openCameraFromSuggestions,
               ),
               const SizedBox(width: 4),
             ],
