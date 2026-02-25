@@ -3,8 +3,8 @@ import 'package:migozz_app/core/color.dart';
 
 class CustomTextField extends StatelessWidget {
   final TextEditingController? controller;
-  final Icon? prefixIcon;
-  final IconButton? suffixIcon;
+  final Widget? prefixIcon;
+  final Widget? suffixIcon;
   final String hintText;
   final bool obscureText;
   final double radius;

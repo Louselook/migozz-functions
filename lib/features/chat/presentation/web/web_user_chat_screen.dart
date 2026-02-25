@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/services/notifications/active_chat_manager.dart';
 import 'package:migozz_app/features/chat/controllers/user_chat_controller.dart';
 import 'package:migozz_app/features/chat/data/datasources/chat_service.dart';
@@ -227,26 +226,54 @@ class _WebUserChatScreenState extends State<WebUserChatScreen>
   @override
   Widget build(BuildContext context) {
     if (!_isInitialized) {
-      return Scaffold(
-        backgroundColor: AppColors.backgroundDark,
-        appBar: _buildAppBar(),
-        body: const Center(
-          child: CircularProgressIndicator(color: Color(0xFFE91E63)),
+      return Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF3F1944), // Purple dark
+              Color(0xFF0D0D11), // Almost black
+              Color(0xFF2E200D), // Gold dark
+            ],
+            stops: [0.0, 0.5, 1.0],
+          ),
+        ),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: _buildAppBar(),
+          body: const Center(
+            child: CircularProgressIndicator(color: Color(0xFFE91E63)),
+          ),
         ),
       );
     }
 
-    return GenericChatScreen(
-      key: _genericChatKey,
-      chatController: _chatController,
-      backgroundColor: AppColors.backgroundDark,
-      reverseMessages: true,
-      showSuggestions: false,
-      showLoading: false,
-      customAppBar: _buildAppBar(),
-      otherUserName: widget.otherUserName,
-      otherUserAvatar: widget.otherUserAvatar,
-      customInput: _buildCustomInput(),
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF3F1944), // Purple dark
+            Color(0xFF0D0D11), // Almost black
+            Color(0xFF2E200D), // Gold dark
+          ],
+          stops: [0.0, 0.5, 1.0],
+        ),
+      ),
+      child: GenericChatScreen(
+        key: _genericChatKey,
+        chatController: _chatController,
+        backgroundColor: Colors.transparent, // Transparent to show gradient
+        reverseMessages: true,
+        showSuggestions: false,
+        showLoading: false,
+        customAppBar: _buildAppBar(),
+        otherUserName: widget.otherUserName,
+        otherUserAvatar: widget.otherUserAvatar,
+        customInput: _buildCustomInput(),
+      ),
     );
   }
 
@@ -301,8 +328,16 @@ class _WebUserChatScreenState extends State<WebUserChatScreen>
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: const Color(0xFF1C1C1E),
+      backgroundColor: const Color.fromARGB(
+        255,
+        0,
+        0,
+        0,
+      ), // Dark purplish/black for header
       elevation: 0,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
       leading: IconButton(
         icon: const Icon(Icons.arrow_back, color: Colors.white),
         onPressed: widget.onBack,
@@ -345,8 +380,8 @@ class _WebUserChatScreenState extends State<WebUserChatScreen>
         MouseRegion(
           cursor: SystemMouseCursors.click,
           child: IconButton(
-            icon: const Icon(Icons.close, color: Colors.white70),
-            onPressed: widget.onClose,
+            icon: const Icon(Icons.more_vert, color: Colors.white70),
+            onPressed: widget.onClose, // Keep function, change icon
             iconSize: 20,
           ),
         ),

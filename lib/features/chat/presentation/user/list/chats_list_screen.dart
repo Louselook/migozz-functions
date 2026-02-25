@@ -29,6 +29,7 @@ class _ChatsListScreenState extends State<ChatsListScreen>
   final TextEditingController _searchController = TextEditingController();
   final ChatService _chatService = ChatService();
   String _searchQuery = '';
+  late final Map<ChatTab, Stream<List<ChatRoom>>> _tabStreams;
 
   /// Tab order matching the specification: Chat, Prime, VIP, Biz, AI
   static const List<ChatTab> _tabs = ChatTab.values;
@@ -41,6 +42,10 @@ class _ChatsListScreenState extends State<ChatsListScreen>
       vsync: this,
       initialIndex: 0, // Prime is first (index 0)
     );
+    _tabStreams = {
+      for (var tab in _tabs)
+        tab: _chatService.getChatsStreamByTab(widget.currentUserId, tab),
+    };
     _searchController.addListener(() {
       setState(() {
         _searchQuery = _searchController.text.toLowerCase();
@@ -163,13 +168,10 @@ class _ChatsListScreenState extends State<ChatsListScreen>
 
   /// Stream de chats filtrado por tab
   Widget _buildChatStreamByTab(ChatTab tab) {
-    final stream = _chatService.getChatsStreamByTab(
-      widget.currentUserId,
-      tab,
-    );
+    final stream = _chatService.getChatsStreamByTab(widget.currentUserId, tab);
 
     return StreamBuilder<List<ChatRoom>>(
-      stream: stream,
+      stream: _tabStreams[tab],
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
@@ -187,9 +189,7 @@ class _ChatsListScreenState extends State<ChatsListScreen>
         final chatRooms = snapshot.data ?? [];
 
         if (chatRooms.isEmpty) {
-          return _buildEmptyState(
-            _getEmptyMessageForTab(tab),
-          );
+          return _buildEmptyState(_getEmptyMessageForTab(tab));
         }
 
         final unreadKey = chatRooms
@@ -317,8 +317,11 @@ class _ChatsListScreenState extends State<ChatsListScreen>
                   fontWeight: FontWeight.w600,
                 ),
                 tabs: _tabs
-                    .map((tab) =>
-                        Tab(child: Center(child: Text(tab.translationKey.tr()))))
+                    .map(
+                      (tab) => Tab(
+                        child: Center(child: Text(tab.translationKey.tr())),
+                      ),
+                    )
                     .toList(),
               ),
             ),
@@ -405,28 +408,27 @@ class _ChatsListScreenState extends State<ChatsListScreen>
                 ),
               ),
               const SizedBox(height: 8),
-              ...availableTabs.map((tab) => ListTile(
-                    leading: Icon(
-                      _getTabIcon(tab),
-                      color: _getTabColor(tab),
-                    ),
-                    title: Text(
-                      tab.translationKey.tr(),
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    onTap: () {
-                      final chatRoomId = ChatRoom.generateChatRoomId(
-                        widget.currentUserId,
-                        chat.userId,
-                      );
-                      _chatService.moveChatToTab(
-                        chatRoomId: chatRoomId,
-                        userId: widget.currentUserId,
-                        tab: tab,
-                      );
-                      Navigator.pop(context);
-                    },
-                  )),
+              ...availableTabs.map(
+                (tab) => ListTile(
+                  leading: Icon(_getTabIcon(tab), color: _getTabColor(tab)),
+                  title: Text(
+                    tab.translationKey.tr(),
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  onTap: () {
+                    final chatRoomId = ChatRoom.generateChatRoomId(
+                      widget.currentUserId,
+                      chat.userId,
+                    );
+                    _chatService.moveChatToTab(
+                      chatRoomId: chatRoomId,
+                      userId: widget.currentUserId,
+                      tab: tab,
+                    );
+                    Navigator.pop(context);
+                  },
+                ),
+              ),
               const SizedBox(height: 16),
             ],
           ),
