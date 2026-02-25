@@ -3,6 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:migozz_app/core/config/api/api_config.dart';
 
+/// Exception thrown when a social network profile is not found (404).
+class ProfileNotFoundException implements Exception {
+  final String message;
+  const ProfileNotFoundException(this.message);
+  @override
+  String toString() => 'ProfileNotFoundException: $message';
+}
+
 class AddNetworkServiceUser {
   /// Método genérico para obtener perfil por username o link
   Future<Map<String, dynamic>> getProfileByUsernameOrLink({
@@ -35,6 +43,12 @@ class AddNetworkServiceUser {
         final data = json.decode(response.body);
         debugPrint('✅ [$network] Profile fetched successfully');
         return Map<String, dynamic>.from(data);
+      } else if (response.statusCode == 404) {
+        // El backend detectó que el perfil no existe
+        debugPrint('⚠️ [$network] Profile not found (404)');
+        throw ProfileNotFoundException(
+          'Profile not found on $network. Please check the username or link and try again.',
+        );
       } else {
         debugPrint('❌ [$network] Error: ${response.body}');
         throw Exception('Error fetching $network profile');

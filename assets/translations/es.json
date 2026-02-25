@@ -504,6 +504,7 @@
       "selectAtLeastOne": "Selecciona al menos una red",
       "enterAtLeastOne": "Ingresa usuario para al menos una red",
       "invalidProfile": "No se pudo verificar el perfil de {platform}",
+      "profileNotFound": "No se encontró el perfil de {platform}. Verifica el usuario o enlace e intenta de nuevo.",
       "noValidProfiles": "No se pudo validar ningún perfil"
     },
     "selection": {

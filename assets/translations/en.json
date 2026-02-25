@@ -499,6 +499,7 @@
           "selectAtLeastOne": "Select at least one network",
           "enterAtLeastOne": "Enter username for at least one network",
           "invalidProfile": "Could not verify {platform} profile",
+          "profileNotFound": "{platform} profile not found. Please check the username or link and try again.",
           "noValidProfiles": "No profiles could be validated"
         },
         "selection": {

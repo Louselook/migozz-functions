@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/custom_snackbar.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/register_cubit/register_cubit.dart';
+import 'package:migozz_app/features/auth/services/add_networks/add_network_service_user.dart';
 import 'package:migozz_app/features/auth/services/add_networks/network_config.dart';
 import 'package:migozz_app/features/profile/components/utils/loader.dart';
 
@@ -209,11 +210,24 @@ class _WebSocialNetworkInputModalState
           final profileUrl = '$baseUrl$cleanUsername';
 
           Map<String, dynamic>? profileData;
-          profileData = await cubit.addNetworkByUsername(
-            network: platformName,
-            usernameOrLink: profileUrl,
-            iconPath: network.iconPath,
-          );
+          try {
+            profileData = await cubit.addNetworkByUsername(
+              network: platformName,
+              usernameOrLink: profileUrl,
+              iconPath: network.iconPath,
+            );
+          } on ProfileNotFoundException {
+            if (mounted) {
+              CustomSnackbar.show(
+                context: context,
+                message: 'addSocials.validation.profileNotFound'.tr(
+                  namedArgs: {'platform': network.displayName},
+                ),
+                type: SnackbarType.error,
+              );
+            }
+            continue;
+          }
 
           if (profileData == null) {
             if (mounted) {
