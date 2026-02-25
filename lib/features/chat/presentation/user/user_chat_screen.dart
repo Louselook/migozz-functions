@@ -23,6 +23,7 @@ class UserChatScreen extends StatefulWidget {
   final String otherUserName;
   final String? otherUserAvatar;
   final String currentUserId;
+  final VoidCallback? onBack;
 
   const UserChatScreen({
     super.key,
@@ -30,6 +31,7 @@ class UserChatScreen extends StatefulWidget {
     required this.otherUserName,
     this.otherUserAvatar,
     required this.currentUserId,
+    this.onBack,
   });
 
   @override
@@ -710,7 +712,13 @@ class _UserChatScreenState extends State<UserChatScreen>
       elevation: 0,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back, color: Colors.white),
-        onPressed: () => Navigator.of(context).pop(),
+        onPressed: () {
+          if (widget.onBack != null) {
+            widget.onBack!();
+          } else {
+            Navigator.of(context).pop();
+          }
+        },
       ),
       title: GestureDetector(
         onTap: _goToProfile,
