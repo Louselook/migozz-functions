@@ -11,7 +11,8 @@ enum NetworkAuthMode { click, manual }
 
 class AddNetworkBottomSheet extends StatefulWidget {
   final NetworkConfig networkConfig;
-  final Function(NetworkAuthMode mode, String? value) onOptionSelected;
+  final Future<void> Function(NetworkAuthMode mode, String? value)
+  onOptionSelected;
 
   const AddNetworkBottomSheet({
     super.key,
@@ -31,6 +32,10 @@ class _AddNetworkBottomSheetState extends State<AddNetworkBottomSheet> {
   String _completePhoneNumber = '';
   bool _isPhoneValid = false;
 
+  // Estado de carga y error inline
+  bool _isLoading = false;
+  String? _errorMessage;
+
   @override
   void dispose() {
     _controller.dispose();
@@ -46,13 +51,13 @@ class _AddNetworkBottomSheetState extends State<AddNetworkBottomSheet> {
     setState(() => _selectedMode = NetworkAuthMode.manual);
   }
 
-  void _handleSaveManual() {
+  Future<void> _handleSaveManual() async {
     final networkName = widget.networkConfig.name.toLowerCase();
 
     // Para WhatsApp y Telegram con phone input
     if (_isPhoneInputNetwork(networkName)) {
       if (_isPhoneValid && _completePhoneNumber.isNotEmpty) {
-        widget.onOptionSelected(NetworkAuthMode.manual, _completePhoneNumber);
+        await _executeManualSave(_completePhoneNumber);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -68,7 +73,32 @@ class _AddNetworkBottomSheetState extends State<AddNetworkBottomSheet> {
     // Para otros campos de texto normales
     final value = _controller.text.trim();
     if (value.isNotEmpty) {
-      widget.onOptionSelected(NetworkAuthMode.manual, value);
+      await _executeManualSave(value);
+    }
+  }
+
+  Future<void> _executeManualSave(String value) async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      await widget.onOptionSelected(NetworkAuthMode.manual, value);
+    } catch (e) {
+      if (mounted) {
+        final errorStr = e.toString();
+        setState(() {
+          if (errorStr.contains('ProfileNotFoundException')) {
+            _errorMessage = 'addSocials.validation.profileNotFound'.tr(
+              namedArgs: {'platform': widget.networkConfig.displayName},
+            );
+          } else {
+            _errorMessage = errorStr;
+          }
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -360,6 +390,11 @@ class _AddNetworkBottomSheetState extends State<AddNetworkBottomSheet> {
           TextField(
             controller: _controller,
             style: const TextStyle(color: Colors.white),
+            onChanged: (_) {
+              if (_errorMessage != null) {
+                setState(() => _errorMessage = null);
+              }
+            },
             decoration: InputDecoration(
               hintText: networkTexts['hint'],
               hintStyle: const TextStyle(color: Colors.grey),
@@ -375,6 +410,16 @@ class _AddNetworkBottomSheetState extends State<AddNetworkBottomSheet> {
               ),
             ),
           ),
+
+        // Mensaje de error inline
+        if (_errorMessage != null) ...[
+          const SizedBox(height: 8),
+          Text(
+            _errorMessage!,
+            style: const TextStyle(color: Colors.red, fontSize: 13),
+            textAlign: TextAlign.center,
+          ),
+        ],
 
         const SizedBox(height: 20),
 
@@ -395,14 +440,23 @@ class _AddNetworkBottomSheetState extends State<AddNetworkBottomSheet> {
         SizedBox(
           width: double.infinity,
           child: GradientButton(
-            onPressed: _handleSaveManual,
+            onPressed: _isLoading ? null : _handleSaveManual,
             gradient: AppColors.primaryGradient,
             radius: 20,
             height: 48,
-            child: Text(
-              "buttons.save".tr(),
-              style: const TextStyle(fontSize: 16, color: Colors.white),
-            ),
+            child: _isLoading
+                ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2.5,
+                    ),
+                  )
+                : Text(
+                    "buttons.save".tr(),
+                    style: const TextStyle(fontSize: 16, color: Colors.white),
+                  ),
           ),
         ),
       ],

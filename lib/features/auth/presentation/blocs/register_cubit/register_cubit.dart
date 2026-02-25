@@ -356,15 +356,9 @@ class RegisterCubit extends Cubit<RegisterState> {
 
               if (context.mounted) {
                 Navigator.of(context).pop(); // Close loader
-
-                if (!userCancelled) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Error: ${e.toString()}'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
+              }
+              if (!userCancelled) {
+                rethrow; // Re-lanzar para que el bottom sheet muestre el error inline
               }
             }
           }
