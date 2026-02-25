@@ -34,6 +34,59 @@ const PORT = process.env.PORT || 8080;
 app.use(cors());
 app.use(express.json());
 
+// ==================== VALIDACIÓN DE PERFILES ====================
+
+/**
+ * Valida que el resultado del scraping corresponda a un perfil real.
+ * Retorna { valid: true } o { valid: false, reason: '...' }
+ *
+ * Señales de perfil inexistente:
+ *  - full_name vacío Y profile_image_url vacío → el scraper no encontró nada real
+ *  - Facebook redirige a /login cuando el usuario no existe
+ *  - YouTube devuelve URL sin channel ID
+ *  - username igual a valores genéricos de redirección (login, explore, etc.)
+ */
+function validateScrapedProfile(result, platform) {
+  if (!result) return { valid: false, reason: 'No data returned from scraper' };
+
+  const fullName  = (result.full_name  || '').trim();
+  const imageUrl  = (result.profile_image_url || '').trim();
+  const username  = (result.username   || '').trim();
+  const url       = (result.url        || '').trim();
+  const id        = (result.id         || '').trim();
+
+  // 1. Valores genéricos que indican redirección (no un perfil real)
+  const invalidUsernames = [
+    'login', 'explore', 'signup', 'register', 'watch',
+    'search', 'home', 'settings', 'help', 'about',
+    'privacy', 'terms', 'accounts', 'directory',
+  ];
+  if (invalidUsernames.includes(username.toLowerCase())) {
+    return { valid: false, reason: `Invalid username detected: "${username}" (redirect page)` };
+  }
+
+  // 2. Facebook específico: id === 'login' o redirección
+  if (platform === 'facebook') {
+    if (id.toLowerCase() === 'login' || username.toLowerCase() === 'login') {
+      return { valid: false, reason: 'Facebook redirected to login page — profile not found' };
+    }
+  }
+
+  // 3. YouTube específico: URL termina en /channel/ sin ID
+  if (platform === 'youtube') {
+    if (url.endsWith('/channel/') || url.endsWith('/channel')) {
+      return { valid: false, reason: 'YouTube channel ID not found — profile does not exist' };
+    }
+  }
+
+  // 4. Regla general: sin nombre Y sin imagen → no se encontró nada real
+  if (!fullName && !imageUrl) {
+    return { valid: false, reason: 'Profile not found: no name and no profile image returned' };
+  }
+
+  return { valid: true };
+}
+
 // Lista de plataformas soportadas
 const PLATFORMS = [
   'tiktok', 'facebook', 'twitch', 'kick', 'trovo',
@@ -64,6 +117,11 @@ app.get('/tiktok/profile', async (req, res) => {
     const username = extractUsername(username_or_link, 'tiktok');
     console.log(`📥 [TikTok] Scraping: ${username}`);
     const result = await scrapeTikTok(username);
+    const validation = validateScrapedProfile(result, 'tiktok');
+    if (!validation.valid) {
+      console.warn(`⚠️ [TikTok] Profile not found: ${validation.reason}`);
+      return res.status(404).json({ error: 'profile_not_found', message: validation.reason, platform: 'tiktok' });
+    }
     res.json(result);
   } catch (error) {
     console.error(`❌ [TikTok] Error:`, error.message);
@@ -81,6 +139,11 @@ app.get('/facebook/profile', async (req, res) => {
     const username = extractUsername(username_or_link, 'facebook');
     console.log(`📥 [Facebook] Scraping: ${username}`);
     const result = await scrapeFacebook(username);
+    const validation = validateScrapedProfile(result, 'facebook');
+    if (!validation.valid) {
+      console.warn(`⚠️ [Facebook] Profile not found: ${validation.reason}`);
+      return res.status(404).json({ error: 'profile_not_found', message: validation.reason, platform: 'facebook' });
+    }
     res.json(result);
   } catch (error) {
     console.error(`❌ [Facebook] Error:`, error.message);
@@ -99,6 +162,11 @@ app.get('/twitch/profile', async (req, res) => {
     const username = extractUsername(username_or_link, 'twitch');
     console.log(`📥 [Twitch] Scraping: ${username}`);
     const result = await scrapeTwitch(username);
+    const validation = validateScrapedProfile(result, 'twitch');
+    if (!validation.valid) {
+      console.warn(`⚠️ [Twitch] Profile not found: ${validation.reason}`);
+      return res.status(404).json({ error: 'profile_not_found', message: validation.reason, platform: 'twitch' });
+    }
     res.json(result);
   } catch (error) {
     console.error(`❌ [Twitch] Error:`, error.message);
@@ -116,6 +184,11 @@ app.get('/kick/profile', async (req, res) => {
     const username = extractUsername(username_or_link, 'kick');
     console.log(`📥 [Kick] Scraping: ${username}`);
     const result = await scrapeKick(username);
+    const validation = validateScrapedProfile(result, 'kick');
+    if (!validation.valid) {
+      console.warn(`⚠️ [Kick] Profile not found: ${validation.reason}`);
+      return res.status(404).json({ error: 'profile_not_found', message: validation.reason, platform: 'kick' });
+    }
     res.json(result);
   } catch (error) {
     console.error(`❌ [Kick] Error:`, error.message);
@@ -133,6 +206,11 @@ app.get('/trovo/profile', async (req, res) => {
     const username = extractUsername(username_or_link, 'trovo');
     console.log(`📥 [Trovo] Scraping: ${username}`);
     const result = await scrapeTrovo(username);
+    const validation = validateScrapedProfile(result, 'trovo');
+    if (!validation.valid) {
+      console.warn(`⚠️ [Trovo] Profile not found: ${validation.reason}`);
+      return res.status(404).json({ error: 'profile_not_found', message: validation.reason, platform: 'trovo' });
+    }
     res.json(result);
   } catch (error) {
     console.error(`❌ [Trovo] Error:`, error.message);
@@ -152,6 +230,11 @@ app.get('/youtube/profile', async (req, res) => {
     const username = extractUsername(username_or_link, 'youtube');
     console.log(`📥 [YouTube] Scraping: ${username}`);
     const result = await scrapeYouTube(username);
+    const validation = validateScrapedProfile(result, 'youtube');
+    if (!validation.valid) {
+      console.warn(`⚠️ [YouTube] Profile not found: ${validation.reason}`);
+      return res.status(404).json({ error: 'profile_not_found', message: validation.reason, platform: 'youtube' });
+    }
     res.json(result);
   } catch (error) {
     console.error(`❌ [YouTube] Error:`, error.message);
@@ -169,6 +252,11 @@ app.get('/instagram/profile', async (req, res) => {
     const username = extractUsername(username_or_link, 'instagram');
     console.log(`📥 [Instagram] Scraping: ${username}`);
     const result = await scrapeInstagram(username);
+    const validation = validateScrapedProfile(result, 'instagram');
+    if (!validation.valid) {
+      console.warn(`⚠️ [Instagram] Profile not found: ${validation.reason}`);
+      return res.status(404).json({ error: 'profile_not_found', message: validation.reason, platform: 'instagram' });
+    }
     res.json(result);
   } catch (error) {
     console.error(`❌ [Instagram] Error:`, error.message);
@@ -186,6 +274,11 @@ app.get('/twitter/profile', async (req, res) => {
     const username = extractUsername(username_or_link, 'twitter');
     console.log(`📥 [Twitter/X] Scraping: ${username}`);
     const result = await scrapeTwitter(username);
+    const validation = validateScrapedProfile(result, 'twitter');
+    if (!validation.valid) {
+      console.warn(`⚠️ [Twitter/X] Profile not found: ${validation.reason}`);
+      return res.status(404).json({ error: 'profile_not_found', message: validation.reason, platform: 'twitter' });
+    }
     res.json(result);
   } catch (error) {
     console.error(`❌ [Twitter/X] Error:`, error.message);
@@ -202,6 +295,11 @@ app.get('/spotify/profile', async (req, res) => {
   try {
     console.log(`📥 [Spotify] Scraping: ${username_or_link}`);
     const result = await scrapeSpotify(username_or_link);
+    const validation = validateScrapedProfile(result, 'spotify');
+    if (!validation.valid) {
+      console.warn(`⚠️ [Spotify] Profile not found: ${validation.reason}`);
+      return res.status(404).json({ error: 'profile_not_found', message: validation.reason, platform: 'spotify' });
+    }
     res.json(result);
   } catch (error) {
     console.error(`❌ [Spotify] Error:`, error.message);
@@ -218,6 +316,11 @@ app.get('/reddit/profile', async (req, res) => {
   try {
     console.log(`📥 [Reddit] Scraping: ${username_or_link}`);
     const result = await scrapeReddit(username_or_link);
+    const validation = validateScrapedProfile(result, 'reddit');
+    if (!validation.valid) {
+      console.warn(`⚠️ [Reddit] Profile not found: ${validation.reason}`);
+      return res.status(404).json({ error: 'profile_not_found', message: validation.reason, platform: 'reddit' });
+    }
     res.json(result);
   } catch (error) {
     console.error(`❌ [Reddit] Error:`, error.message);
@@ -235,6 +338,11 @@ app.get('/threads/profile', async (req, res) => {
     const username = extractUsername(username_or_link, 'threads');
     console.log(`📥 [Threads] Scraping: ${username}`);
     const result = await scrapeThreads(username);
+    const validation = validateScrapedProfile(result, 'threads');
+    if (!validation.valid) {
+      console.warn(`⚠️ [Threads] Profile not found: ${validation.reason}`);
+      return res.status(404).json({ error: 'profile_not_found', message: validation.reason, platform: 'threads' });
+    }
     res.json(result);
   } catch (error) {
     console.error(`❌ [Threads] Error:`, error.message);
@@ -252,6 +360,11 @@ app.get('/linkedin/profile', async (req, res) => {
     const username = extractUsername(username_or_link, 'linkedin');
     console.log(`📥 [LinkedIn] Scraping: ${username}`);
     const result = await scrapeLinkedIn(username);
+    const validation = validateScrapedProfile(result, 'linkedin');
+    if (!validation.valid) {
+      console.warn(`⚠️ [LinkedIn] Profile not found: ${validation.reason}`);
+      return res.status(404).json({ error: 'profile_not_found', message: validation.reason, platform: 'linkedin' });
+    }
     res.json(result);
   } catch (error) {
     console.error(`❌ [LinkedIn] Error:`, error.message);
@@ -269,6 +382,11 @@ app.get('/pinterest/profile', async (req, res) => {
     const username = extractUsername(username_or_link, 'pinterest');
     console.log(`📥 [Pinterest] Scraping: ${username}`);
     const result = await scrapePinterest(username);
+    const validation = validateScrapedProfile(result, 'pinterest');
+    if (!validation.valid) {
+      console.warn(`⚠️ [Pinterest] Profile not found: ${validation.reason}`);
+      return res.status(404).json({ error: 'profile_not_found', message: validation.reason, platform: 'pinterest' });
+    }
     res.json(result);
   } catch (error) {
     console.error(`❌ [Pinterest] Error:`, error.message);
@@ -286,6 +404,11 @@ app.get('/soundcloud/profile', async (req, res) => {
     const username = extractUsername(username_or_link, 'soundcloud');
     console.log(`📥 [SoundCloud] Scraping: ${username}`);
     const result = await scrapeSoundCloud(username);
+    const validation = validateScrapedProfile(result, 'soundcloud');
+    if (!validation.valid) {
+      console.warn(`⚠️ [SoundCloud] Profile not found: ${validation.reason}`);
+      return res.status(404).json({ error: 'profile_not_found', message: validation.reason, platform: 'soundcloud' });
+    }
     res.json(result);
   } catch (error) {
     console.error(`❌ [SoundCloud] Error:`, error.message);
@@ -304,6 +427,11 @@ app.get('/applemusic/profile', async (req, res) => {
   try {
     console.log(`📥 [Apple Music] Scraping: ${username_or_link}`);
     const result = await scrapeAppleMusic(username_or_link);
+    const validation = validateScrapedProfile(result, 'applemusic');
+    if (!validation.valid) {
+      console.warn(`⚠️ [Apple Music] Profile not found: ${validation.reason}`);
+      return res.status(404).json({ error: 'profile_not_found', message: validation.reason, platform: 'applemusic' });
+    }
     res.json(result);
   } catch (error) {
     console.error(`❌ [Apple Music] Error:`, error.message);
@@ -320,6 +448,11 @@ app.get('/deezer/profile', async (req, res) => {
   try {
     console.log(`📥 [Deezer] Scraping: ${username_or_link}`);
     const result = await scrapeDeezer(username_or_link);
+    const validation = validateScrapedProfile(result, 'deezer');
+    if (!validation.valid) {
+      console.warn(`⚠️ [Deezer] Profile not found: ${validation.reason}`);
+      return res.status(404).json({ error: 'profile_not_found', message: validation.reason, platform: 'deezer' });
+    }
     res.json(result);
   } catch (error) {
     console.error(`❌ [Deezer] Error:`, error.message);
@@ -336,6 +469,11 @@ app.get('/discord/profile', async (req, res) => {
   try {
     console.log(`📥 [Discord] Scraping: ${username_or_link}`);
     const result = await scrapeDiscord(username_or_link);
+    const validation = validateScrapedProfile(result, 'discord');
+    if (!validation.valid) {
+      console.warn(`⚠️ [Discord] Profile not found: ${validation.reason}`);
+      return res.status(404).json({ error: 'profile_not_found', message: validation.reason, platform: 'discord' });
+    }
     res.json(result);
   } catch (error) {
     console.error(`❌ [Discord] Error:`, error.message);
@@ -353,6 +491,11 @@ app.get('/snapchat/profile', async (req, res) => {
     const username = extractUsername(username_or_link, 'snapchat');
     console.log(`📥 [Snapchat] Scraping: ${username}`);
     const result = await scrapeSnapchat(username);
+    const validation = validateScrapedProfile(result, 'snapchat');
+    if (!validation.valid) {
+      console.warn(`⚠️ [Snapchat] Profile not found: ${validation.reason}`);
+      return res.status(404).json({ error: 'profile_not_found', message: validation.reason, platform: 'snapchat' });
+    }
     res.json(result);
   } catch (error) {
     console.error(`❌ [Snapchat] Error:`, error.message);

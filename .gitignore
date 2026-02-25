@@ -54,3 +54,8 @@ temp/
 serviceAccountKey.json
 .env
 *.env
+
+
+# Project folders you don't want in git
+docs/
+scripts/
