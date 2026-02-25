@@ -35,6 +35,7 @@ class _WebChatScreenState extends State<WebChatScreen>
   String? _selectedChatUserAvatar;
 
   late TabController _tabController;
+  late final Map<ChatTab, Stream<List<ChatRoom>>> _tabStreams;
 
   static const List<ChatTab> _tabs = ChatTab.values;
 
@@ -42,6 +43,10 @@ class _WebChatScreenState extends State<WebChatScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: _tabs.length, vsync: this);
+    _tabStreams = {
+      for (var tab in _tabs)
+        tab: _chatService.getChatsStreamByTab(widget.currentUserId, tab),
+    };
   }
 
   @override
@@ -199,7 +204,7 @@ class _WebChatScreenState extends State<WebChatScreen>
 
   Widget _buildChatsListByTab(ChatTab tab) {
     return StreamBuilder<List<ChatRoom>>(
-      stream: _chatService.getChatsStreamByTab(widget.currentUserId, tab),
+      stream: _tabStreams[tab],
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(

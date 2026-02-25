@@ -33,13 +33,19 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
   final TextEditingController _searchController = TextEditingController();
   final ChatService _chatService = ChatService();
   String _searchQuery = '';
+  late final Map<ChatTab, Stream<List<ChatRoom>>> _tabStreams;
 
   static const List<ChatTab> _tabs = ChatTab.values;
 
   @override
   void initState() {
     super.initState();
+
     _tabController = TabController(length: _tabs.length, vsync: this);
+    _tabStreams = {
+      for (var tab in _tabs)
+        tab: _chatService.getChatsStreamByTab(widget.currentUserId, tab),
+    };
     _searchController.addListener(() {
       setState(() {
         _searchQuery = _searchController.text.toLowerCase();
@@ -108,7 +114,18 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: const Color(0xFF1C1C1E),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF3F1944), // Purple dark
+            Color(0xFF0D0D11), // Almost black
+            Color(0xFF2E200D), // Gold dark
+          ],
+          stops: [0.0, 0.5, 1.0],
+        ),
+      ),
       child: Column(
         children: [
           Padding(
@@ -140,6 +157,22 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
           ),
           _buildSearchBar(),
           _buildTabs(),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 8.0,
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.archive_outlined, color: Colors.white70, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'Archived', // Will use static text as requested, or translation key normally
+                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+              ],
+            ),
+          ),
           Expanded(
             child: TabBarView(
               controller: _tabController,
@@ -178,12 +211,9 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
   }
 
   Widget _buildChatStreamByTab(ChatTab tab) {
-    final stream = _chatService.getChatsStreamByTab(
-      widget.currentUserId,
-      tab,
-    );
+    final stream = _chatService.getChatsStreamByTab(widget.currentUserId, tab);
     return StreamBuilder<List<ChatRoom>>(
-      stream: stream,
+      stream: _tabStreams[tab],
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
@@ -275,41 +305,66 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
   }
 
   Widget _buildTabs() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Row(
-        children: [
-          Expanded(
-            child: SizedBox(
-              height: 38,
-              child: TabBar(
-                controller: _tabController,
-                isScrollable: true,
-                indicatorSize: TabBarIndicatorSize.tab,
-                indicatorPadding: EdgeInsets.zero,
-                labelPadding: const EdgeInsets.symmetric(horizontal: 16),
-                indicator: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFE91E63), Color(0xFF9C27B0)],
+    return AnimatedBuilder(
+      animation: _tabController,
+      builder: (context, _) {
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                ..._tabs.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final tab = entry.value;
+                  final isSelected = _tabController.index == index;
+                  return GestureDetector(
+                    onTap: () => _tabController.animateTo(index),
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: isSelected
+                            ? const LinearGradient(
+                                colors: [Color(0xFFE91E63), Color(0xFF9C27B0)],
+                              )
+                            : null,
+                        color: isSelected ? null : const Color(0xFF3A3A3C),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        tab.translationKey.tr(),
+                        style: TextStyle(
+                          color: isSelected ? Colors.white : Colors.grey[400],
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+                GestureDetector(
+                  onTap: () {},
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF3A3A3C),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Icon(Icons.add, color: Colors.white, size: 16),
                   ),
-                  borderRadius: BorderRadius.circular(6),
                 ),
-                dividerColor: Colors.transparent,
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.grey[400],
-                labelStyle: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-                tabs: _tabs
-                    .map((tab) =>
-                        Tab(child: Center(child: Text(tab.translationKey.tr()))))
-                    .toList(),
-              ),
+              ],
             ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -393,28 +448,27 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
                 ),
               ),
               const SizedBox(height: 8),
-              ...availableTabs.map((tab) => ListTile(
-                    leading: Icon(
-                      _getTabIcon(tab),
-                      color: _getTabColor(tab),
-                    ),
-                    title: Text(
-                      tab.translationKey.tr(),
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    onTap: () {
-                      final chatRoomId = ChatRoom.generateChatRoomId(
-                        widget.currentUserId,
-                        chat.userId,
-                      );
-                      _chatService.moveChatToTab(
-                        chatRoomId: chatRoomId,
-                        userId: widget.currentUserId,
-                        tab: tab,
-                      );
-                      Navigator.pop(context);
-                    },
-                  )),
+              ...availableTabs.map(
+                (tab) => ListTile(
+                  leading: Icon(_getTabIcon(tab), color: _getTabColor(tab)),
+                  title: Text(
+                    tab.translationKey.tr(),
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  onTap: () {
+                    final chatRoomId = ChatRoom.generateChatRoomId(
+                      widget.currentUserId,
+                      chat.userId,
+                    );
+                    _chatService.moveChatToTab(
+                      chatRoomId: chatRoomId,
+                      userId: widget.currentUserId,
+                      tab: tab,
+                    );
+                    Navigator.pop(context);
+                  },
+                ),
+              ),
               const SizedBox(height: 16),
             ],
           ),
