@@ -672,8 +672,13 @@ class _UserChatScreenState extends State<UserChatScreen>
             TextButton(
               onPressed: _toggleBlockUser,
               style: TextButton.styleFrom(
-                backgroundColor: const Color(0x33008000), // Green with 20% opacity
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                backgroundColor: const Color(
+                  0x33008000,
+                ), // Green with 20% opacity
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
               ),
               child: Text(
                 "chat.userChat.dialogs.unblock".tr(),
@@ -715,6 +720,9 @@ class _UserChatScreenState extends State<UserChatScreen>
               radius: 18,
               backgroundImage: widget.otherUserAvatar?.isNotEmpty == true
                   ? NetworkImage(widget.otherUserAvatar!)
+                  : null,
+              onBackgroundImageError: widget.otherUserAvatar?.isNotEmpty == true
+                  ? (_, __) {}
                   : null,
               backgroundColor: Colors.grey[800],
               child: widget.otherUserAvatar?.isEmpty ?? true
@@ -767,7 +775,6 @@ class _UserChatScreenState extends State<UserChatScreen>
           color: const Color(0xFF2C2C2E),
           onSelected: (value) {
             switch (value) {
-
               case 'delete':
                 _deleteChat();
                 break;
@@ -780,7 +787,6 @@ class _UserChatScreenState extends State<UserChatScreen>
             }
           },
           itemBuilder: (context) => [
-
             PopupMenuItem(
               value: 'delete',
               child: Row(

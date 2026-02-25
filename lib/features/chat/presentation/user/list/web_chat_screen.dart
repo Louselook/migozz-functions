@@ -513,6 +513,7 @@ class _ChatRoomTileState extends State<_ChatRoomTile> {
                 backgroundImage: avatarUrl != null
                     ? NetworkImage(avatarUrl)
                     : null,
+                onBackgroundImageError: avatarUrl != null ? (_, __) {} : null,
                 child: avatarUrl == null
                     ? Icon(Icons.person, color: Colors.grey[500], size: 22)
                     : null,
@@ -572,8 +573,9 @@ class _ChatRoomTileState extends State<_ChatRoomTile> {
 
   void _showContextMenu(BuildContext context, Offset position) {
     final availableTabs = ChatTab.values
-        .where((t) =>
-            t.isFunctional && t != widget.currentTab && t != ChatTab.ai)
+        .where(
+          (t) => t.isFunctional && t != widget.currentTab && t != ChatTab.ai,
+        )
         .toList();
 
     showMenu<ChatTab>(
@@ -597,19 +599,21 @@ class _ChatRoomTileState extends State<_ChatRoomTile> {
             ),
           ),
         ),
-        ...availableTabs.map((tab) => PopupMenuItem<ChatTab>(
-              value: tab,
-              child: Row(
-                children: [
-                  Icon(_getTabIcon(tab), color: _getTabColor(tab), size: 18),
-                  const SizedBox(width: 8),
-                  Text(
-                    tab.translationKey.tr(),
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ],
-              ),
-            )),
+        ...availableTabs.map(
+          (tab) => PopupMenuItem<ChatTab>(
+            value: tab,
+            child: Row(
+              children: [
+                Icon(_getTabIcon(tab), color: _getTabColor(tab), size: 18),
+                const SizedBox(width: 8),
+                Text(
+                  tab.translationKey.tr(),
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
     ).then((selectedTab) {
       if (selectedTab != null && widget.onMoveToTab != null) {

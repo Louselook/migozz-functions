@@ -379,6 +379,7 @@ class _WebAddCustomLinkModalState extends State<WebAddCustomLinkModal> {
                                 ? DecorationImage(
                                     image: NetworkImage(_pickedImageUrl!),
                                     fit: BoxFit.cover,
+                                    onError: (_, __) {},
                                   )
                                 : null,
                           ),
