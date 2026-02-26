@@ -16,6 +16,7 @@ import 'package:migozz_app/features/profile/presentation/profile/mobile/componen
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/profile_image_mobile_v3.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/social_circles_mobile_v3.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/social_profile_photos_grid.dart';
+import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/profile_action_buttons.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/profile_screen_v3_edit.dart';
 import 'package:migozz_app/features/profile/presentation/profile/modules/qr_scanner_screen.dart';
 import 'package:migozz_app/features/tutorial/tutorial_keys.dart';
@@ -339,6 +340,7 @@ class _MobileProfileContentState extends State<MobileProfileContent> {
                               padding: const EdgeInsets.only(top: 8, bottom: 0),
                               child: SocialCirclesMobileV3(links: socialLinks),
                             ),
+                            ProfileActionButtons(user: user),
                             SocialProfilePhotosGrid(
                               socialEcosystem: user.socialEcosystem,
                             ),

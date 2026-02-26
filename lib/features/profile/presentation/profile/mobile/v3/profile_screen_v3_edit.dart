@@ -21,6 +21,7 @@ import 'components/audio_section.dart';
 import 'components/interests_section.dart';
 import 'components/profile_image_mobile_v3.dart';
 import 'components/social_circles_mobile_v3.dart';
+import 'components/profile_action_buttons.dart';
 
 class MobileProfileContentV3Edit extends StatefulWidget {
   final UserDTO user;
@@ -210,6 +211,9 @@ class _MobileProfileContentV3EditState
                             links: socialLinks,
                             onAddPressed: () => _navigateToAddSocial(context),
                           ),
+
+                          const SizedBox(height: 8),
+                          ProfileActionButtons(user: user),
 
                           const SizedBox(height: 24),
                           ProfileStrengthIndicator(

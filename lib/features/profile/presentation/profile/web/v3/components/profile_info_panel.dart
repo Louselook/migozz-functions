@@ -14,6 +14,7 @@ import 'package:migozz_app/features/profile/components/utils/alert_general.dart'
 import 'package:migozz_app/features/profile/presentation/bloc/follower_cubit/follower_cubit.dart';
 import 'package:migozz_app/features/profile/presentation/profile/modules/share_profile.dart';
 import 'package:migozz_app/core/components/atomics/web_network_image.dart';
+import 'package:migozz_app/features/profile/presentation/profile/web/v3/components/profile_action_buttons_web.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Modelo para representar una red social con sus seguidores (web)
@@ -663,6 +664,11 @@ class _ProfileInfoPanelState extends State<ProfileInfoPanel>
                     );
                   }).toList(),
                 ),
+
+                const SizedBox(height: 16),
+
+                // ─── ACTION BUTTONS (New Music / Events) ───
+                ProfileActionButtonsWeb(user: widget.user),
               ],
             ),
           ),

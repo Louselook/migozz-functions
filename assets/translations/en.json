@@ -242,6 +242,8 @@
         }
     },
     "profile":{
+        "newMusic": "New music",
+        "events": "Events",
         "donation": {
             "title": "Send Gifts! 🎁",
             "message": "Coming soon!"
