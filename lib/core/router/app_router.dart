@@ -41,6 +41,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:migozz_app/features/profile/presentation/followers/web/web_followers_screen.dart';
 import 'package:migozz_app/features/chat/presentation/user/list/web_chat_screen.dart';
 import 'package:migozz_app/features/landing/landing_page.dart';
+import 'package:migozz_app/features/profile/presentation/profile/web/v3/listen_music_screen_web.dart';
+import 'package:migozz_app/features/profile/presentation/profile/web/v3/events_screen_web.dart';
 
 Widget localizedBuilder(BuildContext context, Widget Function() screenBuilder) {
   final easy = EasyLocalization.of(context);
@@ -224,6 +226,23 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
             return web_profile.ProfileSearchScreen(user: user);
           }
           return MainNavigation(initialIndex: 0, targetUser: user);
+        },
+      ),
+
+      GoRoute(
+        path: '/listen-music',
+        builder: (context, state) => const ListenMusicScreenWeb(),
+      ),
+      GoRoute(
+        path: '/events',
+        builder: (context, state) {
+          final user = state.extra as UserDTO?;
+          if (user == null) {
+            return const Scaffold(
+              body: Center(child: Text('User data required')),
+            );
+          }
+          return EventsScreenWeb(user: user);
         },
       ),
 
@@ -660,7 +679,9 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
         }
 
         // ✅ Redirect to profile if authenticated user tries to access onboarding, login, or landing
-        if (goingTo == '/onboarding' || goingTo == '/login' || goingTo == '/landing') {
+        if (goingTo == '/onboarding' ||
+            goingTo == '/login' ||
+            goingTo == '/landing') {
           return '/profile';
         }
 

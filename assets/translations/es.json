@@ -250,6 +250,8 @@
     }
   },
   "profile": {
+    "newMusic": "Nueva música",
+    "events": "Eventos",
     "donation": {
       "title": "¡Enviar Regalos! 🎁",
       "message": "¡Estará disponible muy pronto!"

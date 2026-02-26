@@ -13,6 +13,7 @@ import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/compo
 
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/profile_strength_indicator.dart';
 import 'package:migozz_app/features/profile/presentation/profile/mobile/v3/components/social_circles_mobile_v3.dart';
+import 'package:migozz_app/features/profile/presentation/profile/web/v3/components/profile_action_buttons_web.dart';
 
 import 'package:migozz_app/features/profile/components/utils/alert_general.dart';
 import 'package:migozz_app/features/profile/components/utils/side_menu.dart';
@@ -409,6 +410,8 @@ class _WebProfileContentV3EditState extends State<WebProfileContentV3Edit> {
                             onAddPressed: () => _navigateToAddSocial(context),
                           ),
                           const SizedBox(height: 16),
+                          ProfileActionButtonsWeb(user: widget.user),
+                          const SizedBox(height: 16),
                           ProfileStrengthIndicator(
                             percentage: _calculateProfileStrength(user),
                           ),
@@ -607,6 +610,8 @@ class _WebProfileContentV3EditState extends State<WebProfileContentV3Edit> {
                                       onAddPressed: () =>
                                           _navigateToAddSocial(context),
                                     ),
+                                    const SizedBox(height: 24),
+                                    ProfileActionButtonsWeb(user: widget.user),
                                     const SizedBox(height: 24),
 
                                     // Progress Bar
