@@ -23,6 +23,7 @@ class UserChatScreen extends StatefulWidget {
   final String otherUserName;
   final String? otherUserAvatar;
   final String currentUserId;
+  final VoidCallback? onBack;
 
   const UserChatScreen({
     super.key,
@@ -30,6 +31,7 @@ class UserChatScreen extends StatefulWidget {
     required this.otherUserName,
     this.otherUserAvatar,
     required this.currentUserId,
+    this.onBack,
   });
 
   @override
@@ -672,8 +674,13 @@ class _UserChatScreenState extends State<UserChatScreen>
             TextButton(
               onPressed: _toggleBlockUser,
               style: TextButton.styleFrom(
-                backgroundColor: const Color(0x33008000), // Green with 20% opacity
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                backgroundColor: const Color(
+                  0x33008000,
+                ), // Green with 20% opacity
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
               ),
               child: Text(
                 "chat.userChat.dialogs.unblock".tr(),
@@ -705,7 +712,13 @@ class _UserChatScreenState extends State<UserChatScreen>
       elevation: 0,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back, color: Colors.white),
-        onPressed: () => Navigator.of(context).pop(),
+        onPressed: () {
+          if (widget.onBack != null) {
+            widget.onBack!();
+          } else {
+            Navigator.of(context).pop();
+          }
+        },
       ),
       title: GestureDetector(
         onTap: _goToProfile,
@@ -715,6 +728,9 @@ class _UserChatScreenState extends State<UserChatScreen>
               radius: 18,
               backgroundImage: widget.otherUserAvatar?.isNotEmpty == true
                   ? NetworkImage(widget.otherUserAvatar!)
+                  : null,
+              onBackgroundImageError: widget.otherUserAvatar?.isNotEmpty == true
+                  ? (_, __) {}
                   : null,
               backgroundColor: Colors.grey[800],
               child: widget.otherUserAvatar?.isEmpty ?? true
@@ -767,7 +783,6 @@ class _UserChatScreenState extends State<UserChatScreen>
           color: const Color(0xFF2C2C2E),
           onSelected: (value) {
             switch (value) {
-
               case 'delete':
                 _deleteChat();
                 break;
@@ -780,7 +795,6 @@ class _UserChatScreenState extends State<UserChatScreen>
             }
           },
           itemBuilder: (context) => [
-
             PopupMenuItem(
               value: 'delete',
               child: Row(

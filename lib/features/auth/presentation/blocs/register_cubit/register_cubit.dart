@@ -356,15 +356,9 @@ class RegisterCubit extends Cubit<RegisterState> {
 
               if (context.mounted) {
                 Navigator.of(context).pop(); // Close loader
-
-                if (!userCancelled) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Error: ${e.toString()}'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
+              }
+              if (!userCancelled) {
+                rethrow; // Re-lanzar para que el bottom sheet muestre el error inline
               }
             }
           }
@@ -518,6 +512,7 @@ class RegisterCubit extends Cubit<RegisterState> {
 
   /// Public method to add a network profile by username/link.
   /// Returns the normalized profile data, or null if validation fails.
+  /// Throws [ProfileNotFoundException] if the profile does not exist.
   Future<Map<String, dynamic>?> addNetworkByUsername({
     required String network,
     required String usernameOrLink,
@@ -547,6 +542,9 @@ class RegisterCubit extends Cubit<RegisterState> {
 
       debugPrint('📊 [$network] Profile validated and normalized');
       return profileData;
+    } on ProfileNotFoundException {
+      // Re-throw so the UI can show a specific "profile not found" message
+      rethrow;
     } catch (e) {
       debugPrint('❌ Error validating $network profile: $e');
       return null;

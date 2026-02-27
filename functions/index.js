@@ -11,6 +11,7 @@ const { getFirestore } = require("firebase-admin/firestore");
 const { getMessaging } = require("firebase-admin/messaging");
 const { transactionsController } = require("./src/transactions");
 const { asociateWalletToNewUser } = require("./src/wallet");
+const { createSearchQueryOnUserUpdated, createSearchQueryForNewUser } = require("./src/users");
 const { createStripePayment, stripeWebhook } = require("./src/payments/stripe");
 
 // Initialize Firebase Admin
@@ -300,6 +301,9 @@ exports.onChatMessageCreated = onDocumentCreated(
 exports.transactionsController = transactionsController
 //WALLET
 exports.asociateWalletToNewUser = asociateWalletToNewUser
+//USERS
+exports.createSearchQueryOnUserUpdated = createSearchQueryOnUserUpdated
+exports.createSearchQueryForNewUser = createSearchQueryForNewUser
 //PAYMENTS
 exports.createStripePayment = createStripePayment
 exports.stripeWebhook = stripeWebhook

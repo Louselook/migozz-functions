@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
@@ -9,6 +8,7 @@ import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/components/compuestos/chat/chat_attachment_sheet.dart';
 import 'package:migozz_app/core/components/compuestos/custom_textfield.dart';
 import 'package:migozz_app/core/components/compuestos/custom_tooltip.dart';
+import 'package:migozz_app/core/components/compuestos/camera_view.dart';
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:migozz_app/core/utils/camera_permission_handler.dart';
 import 'package:migozz_app/features/chat/services/step_input_validator.dart';
@@ -74,23 +74,13 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
       }
     }
 
-    if (kIsWeb) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("chat.input.webRestriction".tr()),
-          backgroundColor: Colors.blue,
-        ),
-      );
-      return;
-    }
-
     try {
       // Option A: Toggle attachments UI first (si quieres mostrar el sheet)
       // setState(() => _showAttachments = true);
 
-      final photoPath = await CameraPermissionHandler.openCamera(
-        imageQuality: imageQuality,
+      final photoPath = await showDialog<String?>(
         context: context,
+        builder: (context) => const CameraView(),
       );
 
       if (photoPath != null) {
@@ -121,16 +111,6 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
         );
         return;
       }
-    }
-
-    if (kIsWeb) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("chat.input.webRestriction".tr()),
-          backgroundColor: Colors.blue,
-        ),
-      );
-      return;
     }
 
     try {
@@ -166,16 +146,6 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
         );
         return;
       }
-    }
-
-    if (kIsWeb) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("chat.input.webRestriction".tr()),
-          backgroundColor: Colors.blue,
-        ),
-      );
-      return;
     }
 
     try {
@@ -248,32 +218,12 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
   }
 
   void _toggleAttachments() {
-    // Solo permitir abrir attachments en MOBILE
-    if (kIsWeb) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("chat.input.webRestriction".tr()),
-          backgroundColor: Colors.blue,
-        ),
-      );
-      return;
-    }
+    // Abrir attachments en todas las plataformas
     setState(() => _showAttachments = !_showAttachments);
   }
 
   void _handleSendAudio() async {
-    // Si estamos en web, avisar y no enviar audio
-    if (kIsWeb) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("chat.input.webRestriction".tr()),
-          backgroundColor: Colors.blue,
-        ),
-      );
-      await _audioManager.reset(); // En web sí borrar
-      if (mounted) setState(() {});
-      return;
-    }
+    // Enviar audio en todas las plataformas
 
     if (_audioManager.audioPath != null) {
       final audioPath = _audioManager.audioPath!;
@@ -392,16 +342,7 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
       }
     }
 
-    // En web, no permitimos grabar (mostramos mensaje)
-    if (kIsWeb) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("chat.input.webRestriction".tr()),
-          backgroundColor: Colors.blue,
-        ),
-      );
-      return;
-    }
+    // Permitimos grabar en la web también
 
     try {
       await _audioManager.startRecording();
@@ -425,7 +366,6 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
   }
 
   void _stopRecordingRelease() async {
-    if (kIsWeb) return;
     await _audioManager.stopRecording();
 
     // En modo registro: al finalizar la grabación, enviar inmediatamente.
@@ -452,7 +392,7 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
         // attachments only on mobile
         AnimatedContainer(
           duration: const Duration(milliseconds: 300),
-          child: (!_showAttachments || kIsWeb)
+          child: (!_showAttachments)
               ? null
               : ChatAttachmentGrid(
                   onSendImage: (path) {
@@ -465,16 +405,14 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
 
         Center(
           child: Container(
-            constraints: const BoxConstraints(maxWidth: 500),
+            constraints: const BoxConstraints(maxWidth: 1000),
             padding: const EdgeInsets.fromLTRB(20, 5, 20, 30),
             child: Row(
               children: [
                 Expanded(child: _buildInputArea()),
-                // Solo mostrar botón de acción en móvil o si hay texto
-                if (!kIsWeb || hasText) ...[
-                  const SizedBox(width: 6),
-                  _buildMainButton(hasText),
-                ],
+                // Mostrar botón de acción siempre
+                const SizedBox(width: 6),
+                _buildMainButton(hasText),
               ],
             ),
           ),
@@ -536,21 +474,21 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
           key: const ValueKey('phone_input'),
           height: 48,
           decoration: BoxDecoration(
-            color: const Color(0xFF2C2C2E),
-            borderRadius: BorderRadius.circular(8),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
           ),
           child: IntlPhoneField(
             decoration: InputDecoration(
               hintText: "chat.input.phoneHint".tr(),
-              hintStyle: const TextStyle(color: Colors.white54, fontSize: 15),
+              hintStyle: const TextStyle(color: Colors.black54, fontSize: 15),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(vertical: 12),
               counterText: '',
             ),
             showDropdownIcon: false,
-            style: const TextStyle(color: Colors.white, fontSize: 15),
+            style: const TextStyle(color: Colors.black87, fontSize: 15),
             dropdownTextStyle: const TextStyle(
-              color: Colors.white,
+              color: Colors.black87,
               fontSize: 15,
             ),
             // Solo números
@@ -629,42 +567,58 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
           key: const ValueKey('text_input'),
           controller: widget.controller,
           hintText: "chat.input.typeMessage".tr(),
-          radius: 8,
+          radius: 24,
+          backgroundColor: Colors.white,
+          textColor: Colors.black87,
+          hintColor: Colors.black54,
           keyboardType: TextInputType.multiline,
           textInputAction: TextInputAction.send,
           maxLines: null,
           minLines: 1,
           onSubmitted: (_) => _handleMainButton(),
-          // IA-08: Solo mostrar botón de adjuntar en móvil y si es válido para el step
-          suffixIcon: !kIsWeb && _shouldShowAttachButton()
-              ? IconButton(
-                  key: _attachButtonKey,
-                  icon: Icon(
+          prefixIcon: ShaderMask(
+            shaderCallback: (bounds) =>
+                AppColors.verticalPinkPurple.createShader(bounds),
+            child: const Icon(
+              Icons.sentiment_satisfied_alt,
+              color: Colors.white,
+            ),
+          ),
+          suffixIcon: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                key: _attachButtonKey,
+                icon: ShaderMask(
+                  shaderCallback: (bounds) => _showAttachments
+                      ? const LinearGradient(
+                          colors: [Colors.red, Colors.red],
+                        ).createShader(bounds)
+                      : AppColors.verticalPinkPurple.createShader(bounds),
+                  child: Icon(
                     _showAttachments ? Icons.close : Icons.attach_file,
-                    color: _showAttachments ? Colors.red : Colors.grey,
+                    color: Colors.white,
                   ),
-                  onPressed: _toggleAttachments,
-                )
-              : null,
+                ),
+                onPressed: _toggleAttachments,
+              ),
+              IconButton(
+                icon: ShaderMask(
+                  shaderCallback: (bounds) =>
+                      AppColors.verticalPinkPurple.createShader(bounds),
+                  child: const Icon(
+                    Icons.camera_alt_outlined,
+                    color: Colors.white,
+                  ),
+                ),
+                onPressed: openCameraFromSuggestions,
+              ),
+              const SizedBox(width: 4),
+            ],
+          ),
         ),
       ),
     );
-  }
-
-  /// IA-08: Determinar si el botón de adjuntar debe ser visible
-  bool _shouldShowAttachButton() {
-    // Si no estamos en modo registro, mostrar siempre (comportamiento normal)
-    if (!widget.isRegistrationMode) {
-      return true;
-    }
-
-    // En modo registro, solo mostrar si el step actual es de imagen
-    if (widget.stepInputValidator != null) {
-      return widget.stepInputValidator!.shouldShowAttachButton();
-    }
-
-    // Por defecto, no mostrar en modo registro si no hay validador
-    return false;
   }
 
   void _showTooltip(BuildContext context, String message) {
@@ -757,7 +711,7 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
               : LinearGradient(
                   colors: [Colors.grey.shade700, Colors.grey.shade600],
                 ),
-          borderRadius: BorderRadius.circular(8),
+          shape: BoxShape.circle,
         ),
         child: IconButton(
           icon: const Icon(Icons.send_outlined, color: Colors.white),
@@ -775,7 +729,7 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
         width: 50,
         decoration: BoxDecoration(
           gradient: AppColors.verticalPinkPurple,
-          borderRadius: BorderRadius.circular(8),
+          shape: BoxShape.circle,
         ),
         child: IconButton(
           icon: Icon(icon, color: Colors.white),
@@ -796,7 +750,7 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
               gradient: LinearGradient(
                 colors: [Colors.grey.shade700, Colors.grey.shade600],
               ),
-              borderRadius: BorderRadius.circular(8),
+              shape: BoxShape.circle,
             ),
             child: Center(
               child: Icon(Icons.mic_off, color: Colors.grey.shade500, size: 24),
@@ -840,7 +794,7 @@ class ChatInputWidgetState extends State<ChatInputWidget> {
         width: 50,
         decoration: BoxDecoration(
           gradient: AppColors.verticalPinkPurple,
-          borderRadius: BorderRadius.circular(8),
+          shape: BoxShape.circle,
         ),
         child: Center(child: Icon(icon, color: Colors.white, size: 24)),
       ),

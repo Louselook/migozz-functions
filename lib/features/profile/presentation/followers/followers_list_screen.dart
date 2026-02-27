@@ -476,6 +476,9 @@ class _FollowerListItem extends StatelessWidget {
                     backgroundImage: follower.avatarUrl != null
                         ? NetworkImage(follower.avatarUrl!)
                         : null,
+                    onBackgroundImageError: follower.avatarUrl != null
+                        ? (_, __) {}
+                        : null,
                     child: follower.avatarUrl == null
                         ? Icon(Icons.person, color: Colors.grey[400], size: 28)
                         : null,

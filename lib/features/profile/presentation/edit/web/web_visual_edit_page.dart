@@ -530,6 +530,7 @@ class _WebVisualEditPageState extends State<WebVisualEditPage> {
                   radius: 60,
                   backgroundColor: Colors.black,
                   backgroundImage: hasAvatar ? NetworkImage(avatarUrl) : null,
+                  onBackgroundImageError: hasAvatar ? (_, __) {} : null,
                   child: !hasAvatar
                       ? Icon(
                           Icons.person,

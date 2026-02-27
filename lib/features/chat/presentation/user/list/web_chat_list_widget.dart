@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:migozz_app/features/chat/data/datasources/chat_service.dart';
 import 'package:migozz_app/features/chat/data/domain/models/chat_preview.dart';
 import 'package:migozz_app/features/chat/data/domain/models/chat_rooms.dart';
+import 'package:migozz_app/features/chat/data/domain/models/chat_tab.dart';
 import 'package:migozz_app/features/chat/presentation/components/chat_list_item.dart';
 import 'package:migozz_app/features/chat/presentation/user/user_chat_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -32,11 +33,19 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
   final TextEditingController _searchController = TextEditingController();
   final ChatService _chatService = ChatService();
   String _searchQuery = '';
+  late final Map<ChatTab, Stream<List<ChatRoom>>> _tabStreams;
+
+  static const List<ChatTab> _tabs = ChatTab.values;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 7, vsync: this);
+
+    _tabController = TabController(length: _tabs.length, vsync: this);
+    _tabStreams = {
+      for (var tab in _tabs)
+        tab: _chatService.getChatsStreamByTab(widget.currentUserId, tab),
+    };
     _searchController.addListener(() {
       setState(() {
         _searchQuery = _searchController.text.toLowerCase();
@@ -105,7 +114,18 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: const Color(0xFF1C1C1E),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF3F1944), // Purple dark
+            Color(0xFF0D0D11), // Almost black
+            Color(0xFF2E200D), // Gold dark
+          ],
+          stops: [0.0, 0.5, 1.0],
+        ),
+      ),
       child: Column(
         children: [
           Padding(
@@ -137,18 +157,29 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
           ),
           _buildSearchBar(),
           _buildTabs(),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 8.0,
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.archive_outlined, color: Colors.white70, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'Archived', // Will use static text as requested, or translation key normally
+                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+              ],
+            ),
+          ),
           Expanded(
             child: TabBarView(
               controller: _tabController,
-              children: [
-                _buildChatStream(isActive: true),
-                _buildChatStream(isActive: false),
-                _buildComingSoon(),
-                _buildComingSoon(),
-                _buildComingSoon(),
-                _buildComingSoon(),
-                _buildComingSoon(),
-              ],
+              children: _tabs.map((tab) {
+                if (!tab.isFunctional) return _buildComingSoon();
+                return _buildChatStreamByTab(tab);
+              }).toList(),
             ),
           ),
         ],
@@ -161,11 +192,17 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.construction, size: 64, color: Colors.grey[700]),
+          Icon(Icons.smart_toy_outlined, size: 64, color: Colors.grey[700]),
           const SizedBox(height: 16),
           Text(
             'profile.sendGifts.comingSoon'.tr(),
             style: TextStyle(color: Colors.grey[600], fontSize: 16),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'web.chat.tab_ai_desc'.tr(),
+            style: TextStyle(color: Colors.grey[700], fontSize: 13),
             textAlign: TextAlign.center,
           ),
         ],
@@ -173,12 +210,10 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
     );
   }
 
-  Widget _buildChatStream({required bool isActive}) {
-    final stream = isActive
-        ? _chatService.getActiveChatsStream(widget.currentUserId)
-        : _chatService.getNewChatsStream(widget.currentUserId);
+  Widget _buildChatStreamByTab(ChatTab tab) {
+    final stream = _chatService.getChatsStreamByTab(widget.currentUserId, tab);
     return StreamBuilder<List<ChatRoom>>(
-      stream: stream,
+      stream: _tabStreams[tab],
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
@@ -193,11 +228,7 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
         }
         final chatRooms = snapshot.data ?? [];
         if (chatRooms.isEmpty) {
-          return _buildEmptyState(
-            isActive
-                ? 'web.chat.no_messages'.tr()
-                : 'web.chat.no_new_messages'.tr(),
-          );
+          return _buildEmptyState(_getEmptyMessageForTab(tab));
         }
 
         final unreadKey = chatRooms
@@ -227,11 +258,26 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
             if (filteredChats.isEmpty) {
               return _buildEmptyState('web.chat.no_results'.tr());
             }
-            return _buildChatList(filteredChats);
+            return _buildChatList(filteredChats, tab);
           },
         );
       },
     );
+  }
+
+  String _getEmptyMessageForTab(ChatTab tab) {
+    switch (tab) {
+      case ChatTab.prime:
+        return 'web.chat.no_new_messages'.tr();
+      case ChatTab.chat:
+        return 'web.chat.no_messages'.tr();
+      case ChatTab.vip:
+        return 'web.chat.no_vip'.tr();
+      case ChatTab.biz:
+        return 'web.chat.no_biz'.tr();
+      case ChatTab.ai:
+        return 'profile.sendGifts.comingSoon'.tr();
+    }
   }
 
   Widget _buildSearchBar() {
@@ -259,50 +305,70 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
   }
 
   Widget _buildTabs() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Row(
-        children: [
-          Expanded(
-            child: SizedBox(
-              height: 38,
-              child: TabBar(
-                controller: _tabController,
-                isScrollable: true,
-                indicatorSize: TabBarIndicatorSize.tab,
-                indicatorPadding: EdgeInsets.zero,
-                labelPadding: const EdgeInsets.symmetric(horizontal: 16),
-                indicator: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFE91E63), Color(0xFF9C27B0)],
+    return AnimatedBuilder(
+      animation: _tabController,
+      builder: (context, _) {
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                ..._tabs.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final tab = entry.value;
+                  final isSelected = _tabController.index == index;
+                  return GestureDetector(
+                    onTap: () => _tabController.animateTo(index),
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: isSelected
+                            ? const LinearGradient(
+                                colors: [Color(0xFFE91E63), Color(0xFF9C27B0)],
+                              )
+                            : null,
+                        color: isSelected ? null : const Color(0xFF3A3A3C),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        tab.translationKey.tr(),
+                        style: TextStyle(
+                          color: isSelected ? Colors.white : Colors.grey[400],
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+                GestureDetector(
+                  onTap: () {},
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF3A3A3C),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Icon(Icons.add, color: Colors.white, size: 16),
                   ),
-                  borderRadius: BorderRadius.circular(6),
                 ),
-                dividerColor: Colors.transparent,
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.grey[400],
-                labelStyle: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-                tabs: [
-                  Tab(child: Center(child: Text('web.chat.tab_chat'.tr()))),
-                  Tab(child: Center(child: Text('profile.chat.filter'.tr()))),
-                  Tab(child: Center(child: Text('Prime'))),
-                  Tab(child: Center(child: Text('VIP'))),
-                  Tab(child: Center(child: Text('Biz'))),
-                  Tab(child: Center(child: Text('AI'))),
-                  Tab(child: Center(child: Text('Spam'))),
-                ],
-              ),
+              ],
             ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildChatList(List<ChatPreview> chats) {
+  Widget _buildChatList(List<ChatPreview> chats, ChatTab currentTab) {
     return ListView.builder(
       itemCount: chats.length,
       itemBuilder: (context, index) {
@@ -310,6 +376,16 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
         return ChatListItem(
           chat: chat,
           onTap: () {
+            // Mark chat as opened for auto-archive logic
+            final chatRoomId = ChatRoom.generateChatRoomId(
+              widget.currentUserId,
+              chat.userId,
+            );
+            _chatService.markChatOpened(
+              chatRoomId: chatRoomId,
+              userId: widget.currentUserId,
+            );
+
             if (widget.onChatSelected != null) {
               widget.onChatSelected!(chat);
             } else {
@@ -328,9 +404,107 @@ class _WebChatListWidgetState extends State<WebChatListWidget>
               });
             }
           },
+          onLongPress: currentTab.isFunctional && currentTab != ChatTab.ai
+              ? () => _showMoveToTabDialog(chat, currentTab)
+              : null,
         );
       },
     );
+  }
+
+  /// Show dialog to move a chat to a different tab
+  void _showMoveToTabDialog(ChatPreview chat, ChatTab currentTab) {
+    final availableTabs = ChatTab.values
+        .where((t) => t.isFunctional && t != currentTab && t != ChatTab.ai)
+        .toList();
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF2C2C2E),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[600],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'web.chat.move_to'.tr(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              ...availableTabs.map(
+                (tab) => ListTile(
+                  leading: Icon(_getTabIcon(tab), color: _getTabColor(tab)),
+                  title: Text(
+                    tab.translationKey.tr(),
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  onTap: () {
+                    final chatRoomId = ChatRoom.generateChatRoomId(
+                      widget.currentUserId,
+                      chat.userId,
+                    );
+                    _chatService.moveChatToTab(
+                      chatRoomId: chatRoomId,
+                      userId: widget.currentUserId,
+                      tab: tab,
+                    );
+                    Navigator.pop(context);
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  IconData _getTabIcon(ChatTab tab) {
+    switch (tab) {
+      case ChatTab.prime:
+        return Icons.inbox_rounded;
+      case ChatTab.chat:
+        return Icons.chat_bubble_outline;
+      case ChatTab.vip:
+        return Icons.star_rounded;
+      case ChatTab.biz:
+        return Icons.business_center_rounded;
+      case ChatTab.ai:
+        return Icons.smart_toy_outlined;
+    }
+  }
+
+  Color _getTabColor(ChatTab tab) {
+    switch (tab) {
+      case ChatTab.prime:
+        return const Color(0xFFE91E63);
+      case ChatTab.chat:
+        return Colors.white70;
+      case ChatTab.vip:
+        return const Color(0xFFFFD700);
+      case ChatTab.biz:
+        return const Color(0xFF4CAF50);
+      case ChatTab.ai:
+        return const Color(0xFF9C27B0);
+    }
   }
 
   Widget _buildEmptyState(String message, {IconData? icon}) {

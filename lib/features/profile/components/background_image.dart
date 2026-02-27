@@ -200,7 +200,6 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
                       constraints: BoxConstraints(
                         maxWidth: MediaQuery.of(context).size.width * 0.8,
                         minHeight: 80,
-
                       ),
                       child: InfoUserProfile(
                         name: name,
@@ -270,12 +269,12 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
       ]),
       child: avatarUrl != null && avatarUrl!.isNotEmpty
           ? CachedNetworkImage(
-                imageUrl: ImageProxyHelper.getProxiedUrl(avatarUrl!),
+              imageUrl: ImageProxyHelper.getProxiedUrl(avatarUrl!),
               fit: BoxFit.cover,
-             errorWidget: (context, url, error) => Image.asset(
-                  "assets/images/profileBackground.webp",
-                  fit: BoxFit.cover,
-                ),
+              errorWidget: (context, url, error) => Image.asset(
+                "assets/images/profileBackground.webp",
+                fit: BoxFit.cover,
+              ),
             )
           : Image.asset(
               "assets/images/profileBackground.webp",
@@ -297,6 +296,7 @@ class _ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
                 ? NetworkImage(avatarUrl!)
                 : const AssetImage("assets/images/profileBackground.webp")
                       as ImageProvider,
+            onBackgroundImageError: (_, __) {},
           ),
         ),
       ],

@@ -1,7 +1,6 @@
 import 'dart:async';
-
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:migozz_app/core/color.dart';
 import 'package:migozz_app/core/services/notifications/active_chat_manager.dart';
 import 'package:migozz_app/features/chat/controllers/user_chat_controller.dart';
 import 'package:migozz_app/features/chat/data/datasources/chat_service.dart';
@@ -201,52 +200,279 @@ class _WebUserChatScreenState extends State<WebUserChatScreen>
   }
 
   Future<void> _toggleBlockUser() async {
-    // Simplified block logic for Web
-    try {
-      if (_isBlocked) {
-        await _chatService.unblockUser(
-          chatRoomId: _chatRoomId,
-          userId: widget.currentUserId,
-          blockedUserId: widget.otherUserId,
-        );
-      } else {
-        await _chatService.blockUser(
-          chatRoomId: _chatRoomId,
-          userId: widget.currentUserId,
-          blockedUserId: widget.otherUserId,
-        );
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF2C2C2E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          _isBlocked
+              ? "chat.userChat.dialogs.unblockTitle".tr(
+                  namedArgs: {'name': widget.otherUserName},
+                )
+              : "chat.userChat.dialogs.blockTitle".tr(
+                  namedArgs: {'name': widget.otherUserName},
+                ),
+          style: const TextStyle(color: Colors.white),
+        ),
+        content: Text(
+          _isBlocked
+              ? "chat.userChat.dialogs.unblockMessage".tr()
+              : "chat.userChat.dialogs.blockMessage".tr(),
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              "chat.userChat.dialogs.cancel".tr(),
+              style: const TextStyle(color: Colors.grey),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(
+              _isBlocked
+                  ? "chat.userChat.dialogs.unblock".tr()
+                  : "chat.userChat.dialogs.block".tr(),
+              style: TextStyle(color: _isBlocked ? Colors.green : Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        if (_isBlocked) {
+          await _chatService.unblockUser(
+            chatRoomId: _chatRoomId,
+            userId: widget.currentUserId,
+            blockedUserId: widget.otherUserId,
+          );
+        } else {
+          await _chatService.blockUser(
+            chatRoomId: _chatRoomId,
+            userId: widget.currentUserId,
+            blockedUserId: widget.otherUserId,
+          );
+        }
+
+        setState(() {
+          _isBlocked = !_isBlocked;
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                _isBlocked
+                    ? "chat.userChat.messages.userBlocked".tr(
+                        namedArgs: {'name': widget.otherUserName},
+                      )
+                    : "chat.userChat.messages.userUnblocked".tr(
+                        namedArgs: {'name': widget.otherUserName},
+                      ),
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        debugPrint('❌ [WebUserChat] Error blocking/unblocking user: $e');
       }
-      setState(() {
-        _isBlocked = !_isBlocked;
-      });
-    } catch (e) {
-      debugPrint('Error blocking user: $e');
     }
+  }
+
+  Future<void> _deleteChat() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF2C2C2E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          "chat.userChat.dialogs.deleteTitle".tr(),
+          style: const TextStyle(color: Colors.white),
+        ),
+        content: Text(
+          "chat.userChat.dialogs.deleteMessage".tr(),
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              "chat.userChat.dialogs.cancel".tr(),
+              style: const TextStyle(color: Colors.grey),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(
+              "chat.userChat.dialogs.delete".tr(),
+              style: const TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await _chatService.deleteChatForUser(
+          chatRoomId: _chatRoomId,
+          userId: widget.currentUserId,
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("chat.userChat.messages.chatDeleted".tr()),
+              backgroundColor: Colors.green,
+            ),
+          );
+          // Return to the list after deleting
+          widget.onBack();
+        }
+      } catch (e) {
+        debugPrint('❌ [WebUserChat] Error deleting chat: $e');
+      }
+    }
+  }
+
+  Future<void> _showReportDialog() async {
+    final reportController = TextEditingController();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF2C2C2E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          "chat.userChat.dialogs.reportTitle".tr(
+            namedArgs: {'name': widget.otherUserName},
+          ),
+          style: const TextStyle(color: Colors.white),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: reportController,
+              maxLines: 4,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: "chat.userChat.dialogs.reportHint".tr(),
+                hintStyle: const TextStyle(color: Colors.white54),
+                filled: true,
+                fillColor: Colors.black26,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              "chat.userChat.dialogs.cancel".tr(),
+              style: const TextStyle(color: Colors.grey),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              if (reportController.text.trim().isNotEmpty) {
+                Navigator.pop(context, true);
+              }
+            },
+            child: Text(
+              "chat.userChat.dialogs.reportSubmit".tr(),
+              style: const TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && reportController.text.trim().isNotEmpty) {
+      try {
+        await _chatService.reportUser(
+          reporterId: widget.currentUserId,
+          reportedUserId: widget.otherUserId,
+          chatRoomId: _chatRoomId,
+          reason: reportController.text.trim(),
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("chat.userChat.dialogs.reportSuccess".tr()),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        debugPrint('❌ [WebUserChat] Error reporting user: $e');
+      }
+    }
+
+    reportController.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     if (!_isInitialized) {
-      return Scaffold(
-        backgroundColor: AppColors.backgroundDark,
-        appBar: _buildAppBar(),
-        body: const Center(
-          child: CircularProgressIndicator(color: Color(0xFFE91E63)),
+      return Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF3F1944), // Purple dark
+              Color(0xFF0D0D11), // Almost black
+              Color(0xFF2E200D), // Gold dark
+            ],
+            stops: [0.0, 0.5, 1.0],
+          ),
+        ),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: _buildAppBar(),
+          body: const Center(
+            child: CircularProgressIndicator(color: Color(0xFFE91E63)),
+          ),
         ),
       );
     }
 
-    return GenericChatScreen(
-      key: _genericChatKey,
-      chatController: _chatController,
-      backgroundColor: AppColors.backgroundDark,
-      reverseMessages: true,
-      showSuggestions: false,
-      showLoading: false,
-      customAppBar: _buildAppBar(),
-      otherUserName: widget.otherUserName,
-      otherUserAvatar: widget.otherUserAvatar,
-      customInput: _buildCustomInput(),
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF3F1944), // Purple dark
+            Color(0xFF0D0D11), // Almost black
+            Color(0xFF2E200D), // Gold dark
+          ],
+          stops: [0.0, 0.5, 1.0],
+        ),
+      ),
+      child: GenericChatScreen(
+        key: _genericChatKey,
+        chatController: _chatController,
+        backgroundColor: Colors.transparent, // Transparent to show gradient
+        reverseMessages: true,
+        showSuggestions: false,
+        showLoading: false,
+        customAppBar: _buildAppBar(),
+        otherUserName: widget.otherUserName,
+        otherUserAvatar: widget.otherUserAvatar,
+        customInput: _buildCustomInput(),
+      ),
     );
   }
 
@@ -301,8 +527,16 @@ class _WebUserChatScreenState extends State<WebUserChatScreen>
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: const Color(0xFF1C1C1E),
+      backgroundColor: const Color.fromARGB(
+        255,
+        0,
+        0,
+        0,
+      ), // Dark purplish/black for header
       elevation: 0,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
       leading: IconButton(
         icon: const Icon(Icons.arrow_back, color: Colors.white),
         onPressed: widget.onBack,
@@ -313,6 +547,9 @@ class _WebUserChatScreenState extends State<WebUserChatScreen>
             radius: 16,
             backgroundImage: widget.otherUserAvatar?.isNotEmpty == true
                 ? NetworkImage(widget.otherUserAvatar!)
+                : null,
+            onBackgroundImageError: widget.otherUserAvatar?.isNotEmpty == true
+                ? (_, __) {}
                 : null,
             backgroundColor: Colors.grey[800],
             child: widget.otherUserAvatar?.isEmpty ?? true
@@ -339,13 +576,71 @@ class _WebUserChatScreenState extends State<WebUserChatScreen>
         ],
       ),
       actions: [
-        MouseRegion(
-          cursor: SystemMouseCursors.click,
-          child: IconButton(
-            icon: const Icon(Icons.close, color: Colors.white70),
-            onPressed: widget.onClose,
-            iconSize: 20,
-          ),
+        PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert, color: Colors.white70),
+          color: const Color(0xFF2C2C2E),
+          onSelected: (value) {
+            switch (value) {
+              case 'delete':
+                _deleteChat();
+                break;
+              case 'block':
+                _toggleBlockUser();
+                break;
+              case 'report':
+                _showReportDialog();
+                break;
+            }
+          },
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              value: 'delete',
+              child: Row(
+                children: [
+                  const Icon(Icons.delete, size: 20, color: Colors.red),
+                  const SizedBox(width: 12),
+                  Text(
+                    "chat.userChat.menu.deleteChat".tr(),
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                ],
+              ),
+            ),
+            PopupMenuItem(
+              value: 'block',
+              child: Row(
+                children: [
+                  Icon(
+                    _isBlocked ? Icons.check_circle : Icons.block,
+                    size: 20,
+                    color: _isBlocked ? Colors.green : Colors.orange,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    _isBlocked
+                        ? "chat.userChat.menu.unblock".tr()
+                        : "chat.userChat.menu.block".tr(),
+                    style: TextStyle(
+                      color: _isBlocked ? Colors.green : Colors.orange,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            PopupMenuItem(
+              value: 'report',
+              child: Row(
+                children: [
+                  const Icon(Icons.flag, size: 20, color: Colors.grey),
+                  const SizedBox(width: 12),
+                  Text(
+                    "chat.userChat.menu.report".tr(),
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ],
     );

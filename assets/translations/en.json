@@ -242,6 +242,8 @@
         }
     },
     "profile":{
+        "newMusic": "New music",
+        "events": "Events",
         "donation": {
             "title": "Send Gifts! 🎁",
             "message": "Coming soon!"
@@ -499,6 +501,7 @@
           "selectAtLeastOne": "Select at least one network",
           "enterAtLeastOne": "Enter username for at least one network",
           "invalidProfile": "Could not verify {platform} profile",
+          "profileNotFound": "{platform} profile not found. Please check the username or link and try again.",
           "noValidProfiles": "No profiles could be validated"
         },
         "selection": {
@@ -1216,11 +1219,19 @@
     "chat": {
       "title": "Messages",
       "tab_chat": "Chat",
+      "tab_prime": "Prime",
+      "tab_vip": "VIP",
+      "tab_biz": "Biz",
+      "tab_ai": "AI",
+      "tab_ai_desc": "AI assistant will be available soon",
       "no_messages": "No messages yet",
       "no_new_messages": "No new messages",
+      "no_vip": "No VIP chats",
+      "no_biz": "No business chats",
       "error_oops": "Oops! Something went wrong",
       "no_results": "No results found",
-      "new_message": "New chat"
+      "new_message": "New chat",
+      "move_to": "Move to..."
     }
   },
   "landing": {

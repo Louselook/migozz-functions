@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:migozz_app/features/chat/data/datasources/firestore_message.dart';
 import 'package:migozz_app/features/chat/data/domain/models/chat_rooms.dart';
+import 'package:migozz_app/features/chat/data/domain/models/chat_tab.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 
@@ -40,10 +41,15 @@ class ChatService {
           'hasResponded': {currentUserId: false, otherUserId: false},
           'createdAt': Timestamp.fromDate(now),
           'lastMessageData': null,
-          'deletedFor': [], // 🆕 Lista de usuarios que eliminaron el chat
+          'deletedFor': [],
           'deletedAt':
-              {}, // 🆕 {userId: timestamp} - Cuándo eliminó cada usuario
-          'blockedBy': {}, // 🆕 {userId: [listaDeUsuariosBloqueados]}
+              {},
+          'blockedBy': {},
+          'chatTabs': {
+            currentUserId: ChatTab.prime.value,
+            otherUserId: ChatTab.prime.value,
+          },
+          'lastOpenedBy': {},
         });
         debugPrint('✅ [ChatService] Nueva sala creada: $chatRoomId');
       }
@@ -99,6 +105,94 @@ class ChatService {
       getUserChatsStream(
         userId,
       ).map((chats) => chats.where((c) => c.userHasResponded(userId)).toList());
+
+  // ==================== TABS ====================
+
+  /// Stream de chats filtrados por tab para un usuario.
+  /// También ejecuta auto-archivo de Prime → Chat cuando corresponde.
+  Stream<List<ChatRoom>> getChatsStreamByTab(String userId, ChatTab tab) {
+    return getUserChatsStream(userId).map((chats) {
+      final result = <ChatRoom>[];
+      for (final chat in chats) {
+        final chatTab = chat.getChatTab(userId);
+
+        if (tab == ChatTab.prime) {
+          // Prime: show chats assigned to prime that shouldn't be auto-archived
+          if (chatTab == ChatTab.prime && !chat.shouldAutoArchive(userId)) {
+            result.add(chat);
+          }
+        } else if (tab == ChatTab.chat) {
+          // Chat: show chats assigned to chat + auto-archived from prime
+          if (chatTab == ChatTab.chat) {
+            result.add(chat);
+          } else if (chatTab == ChatTab.prime && chat.shouldAutoArchive(userId)) {
+            // Auto-archive: move to chat in Firestore (fire-and-forget)
+            _autoArchiveChat(chat.chatRoomId, userId);
+            result.add(chat);
+          }
+        } else {
+          // VIP, Biz: show only chats assigned to that tab
+          if (chatTab == tab) {
+            result.add(chat);
+          }
+        }
+      }
+      return result;
+    });
+  }
+
+  /// Move a chat to a specific tab for a user.
+  Future<void> moveChatToTab({
+    required String chatRoomId,
+    required String userId,
+    required ChatTab tab,
+  }) async {
+    try {
+      final ref = _firestore.collection('chat_rooms').doc(chatRoomId);
+      final doc = await ref.get();
+      final data = doc.data() ?? {};
+      final chatTabs = Map<String, dynamic>.from(data['chatTabs'] ?? {});
+      chatTabs[userId] = tab.value;
+      await ref.update({'chatTabs': chatTabs});
+      debugPrint('✅ [ChatService] Chat $chatRoomId movido a ${tab.value} para $userId');
+    } catch (e) {
+      debugPrint('❌ [ChatService] Error al mover chat a tab: $e');
+    }
+  }
+
+  /// Record when the user opens a chat (for auto-archive logic).
+  Future<void> markChatOpened({
+    required String chatRoomId,
+    required String userId,
+  }) async {
+    try {
+      final ref = _firestore.collection('chat_rooms').doc(chatRoomId);
+      final doc = await ref.get();
+      final data = doc.data() ?? {};
+      final lastOpenedBy = Map<String, dynamic>.from(
+        data['lastOpenedBy'] ?? {},
+      );
+      lastOpenedBy[userId] = Timestamp.fromDate(DateTime.now());
+      await ref.update({'lastOpenedBy': lastOpenedBy});
+    } catch (e) {
+      debugPrint('❌ [ChatService] Error al marcar chat como abierto: $e');
+    }
+  }
+
+  /// Auto-archive a chat from Prime to Chat (fire-and-forget).
+  Future<void> _autoArchiveChat(String chatRoomId, String userId) async {
+    try {
+      final ref = _firestore.collection('chat_rooms').doc(chatRoomId);
+      final doc = await ref.get();
+      final data = doc.data() ?? {};
+      final chatTabs = Map<String, dynamic>.from(data['chatTabs'] ?? {});
+      chatTabs[userId] = ChatTab.chat.value;
+      await ref.update({'chatTabs': chatTabs});
+      debugPrint('📦 [ChatService] Chat $chatRoomId auto-archivado a Chat para $userId');
+    } catch (e) {
+      debugPrint('❌ [ChatService] Error auto-archivando chat: $e');
+    }
+  }
 
   // ==================== MENSAJES ====================
 
@@ -803,6 +897,28 @@ class ChatService {
         '🔍 [ChatService] _updateChatRoom - deletedFor DESPUÉS: $deletedFor',
       );
 
+      // Tab management: if receiver's tab is 'chat', promote to 'prime'
+      // so the new message appears in their priority inbox.
+      // VIP and Biz tabs are not affected (they keep their categorization).
+      final chatTabs = Map<String, String>.from(
+        (data['chatTabs'] as Map?)?.cast<String, dynamic>() ?? {},
+      );
+      final receiverTab = ChatTab.fromString(chatTabs[receiverId]);
+      if (receiverTab == ChatTab.chat) {
+        chatTabs[receiverId] = ChatTab.prime.value;
+        debugPrint(
+          '📥 [ChatService] Chat promovido a Prime para RECEIVER: $receiverId',
+        );
+      }
+      // Ensure sender has a tab assigned
+      if (!chatTabs.containsKey(senderId)) {
+        chatTabs[senderId] = ChatTab.prime.value;
+      }
+      // Ensure receiver has a tab assigned
+      if (!chatTabs.containsKey(receiverId)) {
+        chatTabs[receiverId] = ChatTab.prime.value;
+      }
+
       await ref.update({
         'lastMessage': lastMessage,
         'lastMessageType': lastMessageType,
@@ -810,7 +926,8 @@ class ChatService {
         'lastMessageData': lastMessageData,
         'unreadCount': unread,
         'hasResponded': responded,
-        'deletedFor': deletedFor, // 🆕 Actualizar lista de eliminados
+        'deletedFor': deletedFor,
+        'chatTabs': chatTabs,
       });
 
       debugPrint('✅ [ChatService] Chat room actualizado');

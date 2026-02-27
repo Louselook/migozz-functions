@@ -50,7 +50,7 @@ class RevolutionSection extends StatelessWidget {
                     SizedBox(height: isMobile ? 8 : 12),
                     // Title 2 — Bebas Neue white with rocket emoji
                     Text(
-                      'landing.revolution_title_2'.tr() + ' 🚀',
+                      '${'landing.revolution_title_2'.tr()} 🚀',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: isMobile ? 32 : 56,

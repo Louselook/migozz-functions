@@ -349,9 +349,7 @@ class GenericChatScreenState extends State<GenericChatScreen> {
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth: kIsWeb ? 800 : double.infinity,
-            ),
+            constraints: const BoxConstraints(maxWidth: double.infinity),
             child: Column(
               children: [
                 // Lista de mensajes

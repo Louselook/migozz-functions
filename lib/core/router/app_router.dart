@@ -41,6 +41,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:migozz_app/features/profile/presentation/followers/web/web_followers_screen.dart';
 import 'package:migozz_app/features/chat/presentation/user/list/web_chat_screen.dart';
 import 'package:migozz_app/features/landing/landing_page.dart';
+import 'package:migozz_app/features/profile/presentation/profile/web/v3/listen_music_screen_web.dart';
+import 'package:migozz_app/features/profile/presentation/profile/web/v3/events_screen_web.dart';
 import 'package:migozz_app/features/wallet/cubit/buy_coins_cubit/buy_coins_cubit.dart';
 import 'package:migozz_app/features/wallet/cubit/conversion_cubit/conversion_cubit.dart';
 import 'package:migozz_app/features/wallet/cubit/wallet_cubit/wallet_cubit.dart';
@@ -194,8 +196,13 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
 
       GoRoute(
         path: '/onboarding',
-        builder: (context, state) =>
-            localizedBuilder(context, () => const OnboardingEntry()),
+        builder: (context, state) {
+          // On web, show landing page instead of onboarding
+          if (kIsWeb) {
+            return localizedBuilder(context, () => const LandingPage());
+          }
+          return localizedBuilder(context, () => const OnboardingEntry());
+        },
       ),
       GoRoute(
         path: '/login',
@@ -224,6 +231,23 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
             return web_profile.ProfileSearchScreen(user: user);
           }
           return MainNavigation(initialIndex: 0, targetUser: user);
+        },
+      ),
+
+      GoRoute(
+        path: '/listen-music',
+        builder: (context, state) => const ListenMusicScreenWeb(),
+      ),
+      GoRoute(
+        path: '/events',
+        builder: (context, state) {
+          final user = state.extra as UserDTO?;
+          if (user == null) {
+            return const Scaffold(
+              body: Center(child: Text('User data required')),
+            );
+          }
+          return EventsScreenWeb(user: user);
         },
       ),
 
@@ -608,7 +632,6 @@ GoRouter createRouter(GoRouterNotifier goRouterNotifier) {
           'chats',
           'chat',
           'splash', // por si acaso
-          'link', // reserved from mobile startup/deeplink placeholder
         };
 
         if (!reservedRoots.contains(rootSegment)) {
