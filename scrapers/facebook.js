@@ -93,25 +93,59 @@ async function scrapeFacebook(username) {
         const bodyText = document.body.innerText;
         
         function parseNumber(numStr, suffix) {
-          let cleanNum = numStr.replace(/[,\s]/g, '').replace(/\./g, '');
+          let cleanNum = numStr.replace(/\s/g, '');
+
+          // Smart handling of dots and commas as decimal vs thousands separators
+          const dots = (cleanNum.match(/\./g) || []).length;
+          const commas = (cleanNum.match(/,/g) || []).length;
+
+          if (dots > 0 && commas > 0) {
+            // Mixed: last separator is decimal, earlier ones are thousands
+            const lastDot = cleanNum.lastIndexOf('.');
+            const lastComma = cleanNum.lastIndexOf(',');
+            if (lastDot > lastComma) {
+              cleanNum = cleanNum.replace(/,/g, '');
+            } else {
+              cleanNum = cleanNum.replace(/\./g, '').replace(',', '.');
+            }
+          } else if (commas === 1) {
+            const afterComma = cleanNum.split(',')[1] || '';
+            if (afterComma.length <= 2) {
+              cleanNum = cleanNum.replace(',', '.'); // decimal comma: "4,1" → 4.1
+            } else {
+              cleanNum = cleanNum.replace(',', ''); // thousands comma: "4,149"
+            }
+          } else if (commas > 1) {
+            cleanNum = cleanNum.replace(/,/g, ''); // "4,149,855" → thousands
+          } else if (dots === 1) {
+            const afterDot = cleanNum.split('.')[1] || '';
+            if (afterDot.length === 3 && !suffix) {
+              cleanNum = cleanNum.replace('.', ''); // "4.149" without suffix → thousands (EU)
+            }
+            // else keep dot as decimal: "4.1", "4.15", or any with suffix
+          } else if (dots > 1) {
+            cleanNum = cleanNum.replace(/\./g, ''); // "4.149.855" → thousands (EU)
+          }
+
           let num = parseFloat(cleanNum);
-          
+          if (isNaN(num)) return 0;
+
           if (!suffix) return Math.round(num);
-          
-          const s = suffix.toUpperCase();
+
+          const s = suffix.toUpperCase().replace(/\./g, '');
           if (s === 'K' || s === 'MIL') return Math.round(num * 1000);
-          if (s === 'M' || s === 'MILLONES' || s === 'MILLION') return Math.round(num * 1000000);
+          if (s === 'M' || s === 'MILL' || s === 'MILLON' || s === 'MILLONES' || s === 'MILLION') return Math.round(num * 1000000);
           if (s === 'B' || s === 'BILLION') return Math.round(num * 1000000000);
-          
+
           return Math.round(num);
         }
         
         // Patrones para buscar followers en múltiples idiomas
         const patterns = [
-          /(\d+(?:[.,]\d+)?)\s*([KMB]|mil|millones?|million|billion)?\s*(?:followers|seguidores|people follow this)/gi,
-          /(?:followers|seguidores|people follow)[:\s]+(\d+(?:[.,]\d+)?)\s*([KMB]|mil|millones?)?/gi,
-          /(\d+(?:[.,]\d+)?)\s*([KMB]|mil)?\s*(?:likes?|me gusta)/gi,
-          /(\d+(?:[.,]\d+)?)\s*([KMB])?\s*people like this/gi,
+          /(\d+(?:[.,]\d+)?)\s*([KMB]|mill\.?|mil|millones?|million|billion)?\s*(?:followers|seguidores|people follow this)/gi,
+          /(?:followers|seguidores|people follow)[:\s]+(\d+(?:[.,]\d+)?)\s*([KMB]|mill\.?|mil|millones?)?/gi,
+          /(\d+(?:[.,]\d+)?)\s*([KMB]|mill\.?|mil)?\s*(?:likes?|me gusta)/gi,
+          /(\d+(?:[.,]\d+)?)\s*([KMB]|mill\.?)?\s*people like this/gi,
         ];
         
         for (const pattern of patterns) {
@@ -137,7 +171,7 @@ async function scrapeFacebook(username) {
           for (const el of elements) {
             const text = el.textContent || '';
             if (text.match(/followers|seguidores|follow this/i)) {
-              const match = text.match(/(\d+(?:[.,]\d+)?)\s*([KMB]|mil|millones?)?/i);
+              const match = text.match(/(\d+(?:[.,]\d+)?)\s*([KMB]|mill\.?|mil|millones?)?/i);
               if (match) {
                 const count = parseNumber(match[1], match[2]);
                 if (count > followers) {
