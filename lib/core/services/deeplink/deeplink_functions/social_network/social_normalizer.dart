@@ -1,12 +1,39 @@
 // lib/core/services/deeplink/deeplink_functions/social_network/social_normalizer.dart
 
-/// Helper para convertir cualquier valor a int de forma segura
+/// Helper para convertir cualquier valor a int de forma segura, incluyendo sufijos K, M, B
 int _toInt(dynamic v) {
   if (v == null) return 0;
   if (v is int) return v;
-  if (v is String) return int.tryParse(v) ?? 0;
-  if (v is double) return v.toInt();
-  return 0;
+  if (v is double) return v.round();
+  if (v is String) {
+    String str = v.toUpperCase().trim();
+    double multiplier = 1.0;
+
+    if (str.contains('M')) {
+      multiplier = 1000000.0;
+    } else if (str.contains('K')) {
+      multiplier = 1000.0;
+    } else if (str.contains('B')) {
+      multiplier = 1000000000.0;
+    }
+
+    // Remove all letters and spaces
+    str = str.replaceAll(RegExp(r'[A-Z\s]'), '');
+
+    if (multiplier > 1.0) {
+      // Replace comma with dot for parsing decimals (e.g. 4,1 -> 4.1)
+      str = str.replaceAll(',', '.');
+      double? val = double.tryParse(str);
+      if (val != null) {
+        return (val * multiplier).round();
+      }
+    } else {
+      // No multiplier, safe to strip non-numeric
+      str = str.replaceAll(RegExp(r'[^0-9]'), '');
+      return int.tryParse(str) ?? 0;
+    }
+  }
+  return int.tryParse(v.toString().replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
 }
 
 /// Helper para convertir cualquier valor a String de forma segura

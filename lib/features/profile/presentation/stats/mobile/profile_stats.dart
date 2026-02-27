@@ -1076,6 +1076,31 @@ class SocialStats {
       if (v == null) return null;
       if (v is int) return v;
       if (v is double) return v.round();
+      if (v is String) {
+        String str = v.toUpperCase().trim();
+        double multiplier = 1.0;
+
+        if (str.contains('M')) {
+          multiplier = 1000000.0;
+        } else if (str.contains('K')) {
+          multiplier = 1000.0;
+        } else if (str.contains('B')) {
+          multiplier = 1000000000.0;
+        }
+
+        str = str.replaceAll(RegExp(r'[A-Z\s]'), '');
+
+        if (multiplier > 1.0) {
+          str = str.replaceAll(',', '.');
+          double? val = double.tryParse(str);
+          if (val != null) {
+            return (val * multiplier).round();
+          }
+        } else {
+          str = str.replaceAll(RegExp(r'[^0-9]'), '');
+          return str.isEmpty ? null : int.tryParse(str);
+        }
+      }
       final str = v.toString().replaceAll(RegExp(r'[^0-9]'), '');
       if (str.isEmpty) return null;
       return int.tryParse(str);
