@@ -11,6 +11,7 @@ const { getFirestore } = require("firebase-admin/firestore");
 const { getMessaging } = require("firebase-admin/messaging");
 const { transactionsController } = require("./src/transactions");
 const { asociateWalletToNewUser } = require("./src/wallet");
+const { createSearchQueryOnUserUpdated, createSearchQueryForNewUser } = require("./src/users");
 
 // Initialize Firebase Admin
 initializeApp();
@@ -279,3 +280,6 @@ exports.onChatMessageCreated = onDocumentCreated(
 exports.transactionsController = transactionsController
 //WALLET
 exports.asociateWalletToNewUser = asociateWalletToNewUser
+//USERS
+exports.createSearchQueryOnUserUpdated = createSearchQueryOnUserUpdated
+exports.createSearchQueryForNewUser = createSearchQueryForNewUser
