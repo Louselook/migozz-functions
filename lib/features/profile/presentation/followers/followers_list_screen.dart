@@ -11,6 +11,7 @@ import 'package:migozz_app/features/profile/components/follow_button.dart';
 import 'package:migozz_app/features/profile/components/tintes_gradients.dart';
 import 'package:migozz_app/features/profile/data/domain/models/follower_dto.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/follower_cubit/follower_cubit.dart';
+import 'package:migozz_app/core/components/formart/text_formart.dart';
 
 /// Pantalla de lista de seguidores y siguiendo
 class FollowersListScreen extends StatefulWidget {
@@ -427,12 +428,7 @@ class _FollowersListScreenState extends State<FollowersListScreen>
   }
 
   String _formatNumber(int number) {
-    if (number >= 1000000) {
-      return '${(number / 1000000).toStringAsFixed(1)}M';
-    } else if (number >= 1000) {
-      return '${(number / 1000).toStringAsFixed(number >= 10000 ? 0 : 1)}K';
-    }
-    return number.toString();
+    return formatNumber(number);
   }
 }
 

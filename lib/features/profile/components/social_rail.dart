@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:migozz_app/core/components/formart/text_formart.dart';
 
 class SocialLink {
   final String asset;
@@ -217,11 +218,5 @@ class _StatBadge extends StatelessWidget {
 }
 
 String _abbrNumber(int n) {
-  if (n >= 1000000) {
-    return '${(n / 1000000).toStringAsFixed(1).replaceAll(RegExp(r'\.0'), '')}M';
-  }
-  if (n >= 1000) {
-    return '${(n / 1000).toStringAsFixed(1).replaceAll(RegExp(r'\.0'), '')}K';
-  }
-  return n.toString();
+  return formatNumber(n).replaceAll(' ', '');
 }

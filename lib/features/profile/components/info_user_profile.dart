@@ -165,7 +165,7 @@ class _InfoUserProfileState extends State<InfoUserProfile>
   Widget _buildCommunityContent() {
     final count = _getCurrentCount();
     final name = _getCurrentName();
-    final parsedCount = int.tryParse(count) ?? 0;
+    final parsedCount = parseFormattedNumber(count);
 
     return Column(
       mainAxisSize: MainAxisSize.min,

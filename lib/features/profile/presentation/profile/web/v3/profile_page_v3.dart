@@ -11,6 +11,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:migozz_app/features/auth/presentation/blocs/auth_cubit/auth_cubit.dart';
 import 'package:migozz_app/features/profile/presentation/profile/web/v3/components/profile_info_panel.dart';
 import 'package:migozz_app/features/auth/data/domain/models/user/user_dto.dart';
+import 'package:migozz_app/core/components/formart/text_formart.dart';
 
 class WebProfileContentV3 extends StatelessWidget {
   final UserDTO user;
@@ -256,9 +257,7 @@ class WebProfileContentV3 extends StatelessWidget {
 
   int? _parseIntFromDynamic(dynamic value) {
     if (value == null) return null;
-    if (value is int) return value;
-    if (value is String) return int.tryParse(value);
-    return null;
+    return parseFormattedNumber(value);
   }
 
   String _faviconFromDomain(String domain) {

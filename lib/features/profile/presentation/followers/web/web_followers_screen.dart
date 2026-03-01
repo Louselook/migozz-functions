@@ -10,6 +10,7 @@ import 'package:migozz_app/features/profile/components/follow_button.dart';
 import 'package:migozz_app/features/profile/components/utils/side_menu.dart';
 import 'package:migozz_app/features/profile/data/domain/models/follower_dto.dart';
 import 'package:migozz_app/features/profile/presentation/bloc/follower_cubit/follower_cubit.dart';
+import 'package:migozz_app/core/components/formart/text_formart.dart';
 
 /// Web-optimized followers/following list with SideMenu
 class WebFollowersScreen extends StatefulWidget {
@@ -415,11 +416,7 @@ class _WebFollowersScreenState extends State<WebFollowersScreen>
   }
 
   String _formatNumber(int number) {
-    if (number >= 1000000) return '${(number / 1000000).toStringAsFixed(1)}M';
-    if (number >= 1000) {
-      return '${(number / 1000).toStringAsFixed(number >= 10000 ? 0 : 1)}K';
-    }
-    return number.toString();
+    return formatNumber(number);
   }
 }
 

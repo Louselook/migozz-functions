@@ -226,7 +226,7 @@ class _ProfileInfoPanelState extends State<ProfileInfoPanel>
   String _getCurrentCount() {
     if (_currentSocialIndex == -1) {
       // Total: social followers + app followers
-      final socialFollowers = int.tryParse(widget.communityCount) ?? 0;
+      final socialFollowers = parseFormattedNumber(widget.communityCount);
       final total = socialFollowers + _appFollowers;
       return total.toString();
     }
