@@ -133,18 +133,32 @@ Map<String, dynamic> normalizeTwitter(Map<String, dynamic> data) {
 Map<String, dynamic> normalizeSpotify(Map<String, dynamic> data) {
   return {
     'username': _toString(data['username'] ?? data['display_name']),
+    'display_name': _toString(data['display_name']),
     'email': _toString(data['email']),
     'followers': _toInt(data['followers']),
-    'pais': _toString(data['pais'] ?? data['country']),
-    'plan': _toString(data['plan'] ?? data['product']),
     'profile_image_url': _toString(data['profile_image_url']),
     'url': _toString(data['url'] ?? data['external_urls']?['spotify']),
+    'pais': _toString(data['pais'] ?? data['country']),
+    'plan': _toString(data['plan'] ?? data['product']),
 
     // Campos OAuth
     if (data.containsKey('access_token'))
       'access_token': _toString(data['access_token']),
     if (data.containsKey('refresh_token'))
       'refresh_token': _toString(data['refresh_token']),
+  };
+}
+
+// ==================== APPLE MUSIC ====================
+Map<String, dynamic> normalizeAppleMusic(Map<String, dynamic> data) {
+  return {
+    'platform': 'applemusic',
+    'username': _toString(data['username']),
+    'display_name': _toString(data['display_name']),
+    'profile_image_url': _toString(data['profile_image_url']),
+    'followers': _toInt(data['followers']),
+    'url': _toString(data['url']),
+    'source': _toString(data['source'], defaultValue: 'scrape'),
   };
 }
 

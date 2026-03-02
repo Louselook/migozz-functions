@@ -67,6 +67,8 @@ class AddNetworkServiceUser {
       // Para estas redes queremos usar el backend principal (apiBase)
       case 'instagram':
       case 'linkedin':
+      case 'spotify':
+      case 'applemusic':
         return ApiConfig.apiBase;
 
       // Resto: scrapers / funciones serverless
@@ -79,14 +81,12 @@ class AddNetworkServiceUser {
       case 'threads':
       case 'pinterest':
       case 'soundcloud':
-      case 'applemusic':
       case 'deezer':
       case 'discord':
       case 'snapchat':
       case 'youtube':
       case 'x':
       case 'twitter':
-      case 'spotify':
         return ApiConfig.apiFuctions;
 
       default:

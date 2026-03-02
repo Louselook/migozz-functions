@@ -478,6 +478,8 @@ class RegisterCubit extends Cubit<RegisterState> {
         return normalizeFacebook(rawData);
       case 'linkedin':
         return normalizeLinkedIn(rawData);
+      case 'applemusic':
+        return normalizeAppleMusic(rawData);
       case 'twitch':
         return normalizeTwitch(rawData);
       case 'kick':
