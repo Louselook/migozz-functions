@@ -140,6 +140,7 @@ Map<String, dynamic> normalizeSpotify(Map<String, dynamic> data) {
     'url': _toString(data['url'] ?? data['external_urls']?['spotify']),
     'pais': _toString(data['pais'] ?? data['country']),
     'plan': _toString(data['plan'] ?? data['product']),
+    'monthly_listeners': _toInt(data['monthly_listeners']),
 
     // Campos OAuth
     if (data.containsKey('access_token'))

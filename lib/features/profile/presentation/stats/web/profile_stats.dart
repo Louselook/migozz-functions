@@ -1033,6 +1033,14 @@ class _NetworkStatsCard extends StatelessWidget {
       case 'subscribers':
         icon = Icons.subscriptions_outlined;
         break;
+      case 'viewcount':
+      case 'views':
+        icon = Icons.visibility_outlined;
+        break;
+      case 'monthly_listeners':
+      case 'monthlylisteners':
+        icon = Icons.headphones;
+        break;
       default:
         icon = Icons.analytics_outlined;
     }
@@ -1139,6 +1147,7 @@ class _SocialStats {
   final int? viewCount;
   final int? mediaCount;
   final int? followingCount;
+  final int? monthlyListeners;
 
   _SocialStats({
     required this.name,
@@ -1149,6 +1158,7 @@ class _SocialStats {
     this.viewCount,
     this.mediaCount,
     this.followingCount,
+    this.monthlyListeners,
   });
 
   factory _SocialStats.fromMap(String name, Map<String, dynamic> data) {
@@ -1192,6 +1202,11 @@ class _SocialStats {
         'followingCount',
         'following_count',
       ]),
+      monthlyListeners: extract([
+        'monthly_listeners',
+        'monthlyListeners',
+        'listeners',
+      ]),
     );
   }
 
@@ -1205,6 +1220,7 @@ class _SocialStats {
       if (viewCount != null) 'views': viewCount,
       if (mediaCount != null) 'media': mediaCount,
       if (followingCount != null) 'following': followingCount,
+      if (monthlyListeners != null) 'monthly_listeners': monthlyListeners,
     };
   }
 }
