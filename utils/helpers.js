@@ -1,4 +1,5 @@
 const puppeteerExtraBase = require('puppeteer-extra');
+const axios = require('axios');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 
 // Prefer puppeteer-core (system Chrome) when provided; fall back to full puppeteer.
@@ -44,8 +45,24 @@ function extractUsername(input, platform) {
       switch (platform) {
         case 'tiktok':
           return pathname.replace('/@', '').split('/')[0];
-        case 'facebook':
-          return pathname.replace('/', '').split('/')[0];
+        case 'facebook': {
+          // Share links: /share/<hash>/  →  cannot extract username without resolving
+          // We return null as a sentinel; the caller must use resolveFacebookShareUrl instead.
+          if (pathname.startsWith('/share/') || pathname.startsWith('/sharer/')) {
+            return null;
+          }
+          // Numeric ID pages: /profile.php?id=123  →  pass the query as identifier
+          if (pathname === '/profile.php' || pathname.startsWith('/profile.php')) {
+            const qid = url.searchParams.get('id');
+            return qid ? `profile.php?id=${qid}` : null;
+          }
+          // /p/PageName-123/ style pages — keep full slug
+          if (pathname.startsWith('/p/')) {
+            return pathname.replace('/p/', '').split('/')[0];
+          }
+          // Standard /username path
+          return pathname.replace(/^\//, '').split('/')[0] || null;
+        }
         case 'twitch':
           return pathname.replace('/', '').split('/')[0];
         case 'kick':
@@ -232,8 +249,60 @@ function sanitizeProfile(data, platform) {
   return sanitized;
 }
 
+/**
+ * Resolves a Facebook share URL (e.g. facebook.com/share/<hash>/) by following
+ * HTTP redirects and returns the final profile URL.
+ *
+ * Facebook share links are permanent short-links that redirect to the actual profile.
+ * We follow up to 10 redirects with axios (no cookies/login needed for the redirect chain).
+ *
+ * @param {string} shareUrl - Full share URL, e.g. https://www.facebook.com/share/1CNr26dt8N/
+ * @returns {Promise<string|null>} Final resolved URL, or null on failure
+ */
+async function resolveFacebookShareUrl(shareUrl) {
+  try {
+    console.log(`🔗 [Facebook] Resolving share URL: ${shareUrl}`);
+
+    // Facebook share links resolve via a raw HTTP redirect chain.
+    // Using HEAD + a minimal curl-like User-Agent avoids the JS interstitial
+    // that a browser UA triggers (which keeps you on the same URL).
+    const response = await axios.head(shareUrl, {
+      maxRedirects: 10,
+      timeout: 15000,
+      headers: {
+        // Minimal UA that looks like a bot/crawler — Facebook still follows the
+        // redirect and returns the canonical profile URL in the response chain.
+        'User-Agent': 'curl/7.88.1',
+        'Accept': '*/*',
+      },
+      validateStatus: (status) => status < 500,
+    });
+
+    // After following redirects, axios stores the final URL in the underlying
+    // Node.js http request object.
+    const finalUrl =
+      response.request?._redirectable?._currentUrl   // follow-redirects library
+      || response.request?.res?.responseUrl           // older axios internals
+      || response.config?.url
+      || shareUrl;
+
+    if (finalUrl === shareUrl) {
+      console.warn(`⚠️ [Facebook] Share URL did not redirect (returned same URL). The share link may be private or expired.`);
+      return null;
+    }
+
+    console.log(`✅ [Facebook] Resolved to: ${finalUrl}`);
+    return finalUrl;
+  } catch (err) {
+    console.warn(`⚠️ [Facebook] Could not resolve share URL: ${err.message}`);
+    return null;
+  }
+}
+
+
 module.exports = {
   extractUsername,
+  resolveFacebookShareUrl,
   createBrowser,
   wait,
   sanitizeProfile

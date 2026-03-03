@@ -2,7 +2,7 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
-const { extractUsername } = require('./utils/helpers');
+const { extractUsername, resolveFacebookShareUrl } = require('./utils/helpers');
 const { syncUserNetworks, syncAllUsersThatNeedUpdate, getSyncStatus } = require('./services/socialEcosystemSyncService');
 
 // Inicializar Firebase Admin (obligatorio antes de cualquier operación)
@@ -49,11 +49,11 @@ app.use(express.json());
 function validateScrapedProfile(result, platform) {
   if (!result) return { valid: false, reason: 'No data returned from scraper' };
 
-  const fullName  = (result.full_name  || '').trim();
-  const imageUrl  = (result.profile_image_url || '').trim();
-  const username  = (result.username   || '').trim();
-  const url       = (result.url        || '').trim();
-  const id        = (result.id         || '').trim();
+  const fullName = (result.full_name || '').trim();
+  const imageUrl = (result.profile_image_url || '').trim();
+  const username = (result.username || '').trim();
+  const url = (result.url || '').trim();
+  const id = (result.id || '').trim();
 
   // 1. Valores genéricos que indican redirección (no un perfil real)
   const invalidUsernames = [
@@ -96,8 +96,8 @@ const PLATFORMS = [
 ];
 
 app.get('/', (req, res) => {
-  res.json({ 
-    status: 'ok', 
+  res.json({
+    status: 'ok',
     service: 'Migozz Scraper Service',
     version: '3.0.0',
     platforms: PLATFORMS,
@@ -136,7 +136,37 @@ app.get('/facebook/profile', async (req, res) => {
   }
 
   try {
-    const username = extractUsername(username_or_link, 'facebook');
+    let inputToProcess = username_or_link.trim();
+
+    // ── Detect and resolve Facebook share links ──────────────────────────────
+    // Share URLs look like: https://www.facebook.com/share/1CNr26dt8N/
+    // They don't contain a username in the path; we must follow the redirect.
+    const isShareUrl = /facebook\.com\/(share|sharer)\//i.test(inputToProcess);
+    if (isShareUrl) {
+      console.log(`🔗 [Facebook] Share URL detected, resolving redirect...`);
+      const resolvedUrl = await resolveFacebookShareUrl(inputToProcess);
+      if (!resolvedUrl) {
+        return res.status(400).json({
+          error: 'unresolvable_share_url',
+          message: 'Could not resolve the Facebook share link to a real profile URL. Try using the direct profile URL instead.',
+          platform: 'facebook'
+        });
+      }
+      inputToProcess = resolvedUrl;
+      console.log(`➡️ [Facebook] Using resolved URL: ${inputToProcess}`);
+    }
+    // ────────────────────────────────────────────────────────────────────────
+
+    const username = extractUsername(inputToProcess, 'facebook');
+
+    if (!username) {
+      return res.status(400).json({
+        error: 'username_not_found',
+        message: 'Could not extract a username from the provided link. Please use a direct profile URL (e.g. facebook.com/username) or just the username.',
+        platform: 'facebook'
+      });
+    }
+
     console.log(`📥 [Facebook] Scraping: ${username}`);
     const result = await scrapeFacebook(username);
     const validation = validateScrapedProfile(result, 'facebook');
@@ -150,6 +180,7 @@ app.get('/facebook/profile', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 
 
 app.get('/twitch/profile', async (req, res) => {
@@ -548,7 +579,7 @@ app.post('/sync/user/:userId', async (req, res) => {
     }
 
     const result = await syncUserNetworks(userId, platforms ? { platforms } : undefined);
-    
+
     return res.json({
       status: 'success',
       message: 'Usuario sincronizado correctamente',
@@ -579,7 +610,7 @@ app.post('/sync/all-users', async (req, res) => {
   try {
     console.log(`\n📥 [API] POST /sync/all-users - Cloud Scheduler triggered`);
     const result = await syncAllUsersThatNeedUpdate();
-    
+
     return res.json({
       status: 'success',
       message: 'Sincronización global completada',
@@ -605,7 +636,7 @@ app.get('/sync/status', async (req, res) => {
   try {
     console.log(`\n📥 [API] GET /sync/status`);
     const status = await getSyncStatus();
-    
+
     return res.json({
       status: 'success',
       data: status,
