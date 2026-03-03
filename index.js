@@ -325,7 +325,9 @@ app.get('/spotify/profile', async (req, res) => {
 
   try {
     console.log(`📥 [Spotify] Scraping: ${username_or_link}`);
-    const result = await scrapeSpotify(username_or_link);
+    const artistInput = extractUsername(username_or_link, 'spotify');
+    console.log(`📥 [Spotify] Scraping: ${artistInput}`);
+    const result = await scrapeSpotify(artistInput);
     const validation = validateScrapedProfile(result, 'spotify');
     if (!validation.valid) {
       console.warn(`⚠️ [Spotify] Profile not found: ${validation.reason}`);
@@ -346,7 +348,9 @@ app.get('/reddit/profile', async (req, res) => {
 
   try {
     console.log(`📥 [Reddit] Scraping: ${username_or_link}`);
-    const result = await scrapeReddit(username_or_link);
+    const redditInput = extractUsername(username_or_link, 'reddit');
+    console.log(`📥 [Reddit] Scraping: ${redditInput}`);
+    const result = await scrapeReddit(redditInput);
     const validation = validateScrapedProfile(result, 'reddit');
     if (!validation.valid) {
       console.warn(`⚠️ [Reddit] Profile not found: ${validation.reason}`);
@@ -457,7 +461,9 @@ app.get('/applemusic/profile', async (req, res) => {
 
   try {
     console.log(`📥 [Apple Music] Scraping: ${username_or_link}`);
-    const result = await scrapeAppleMusic(username_or_link);
+    const artistInput = extractUsername(username_or_link, 'applemusic');
+    console.log(`📥 [Apple Music] Scraping: ${artistInput}`);
+    const result = await scrapeAppleMusic(artistInput);
     const validation = validateScrapedProfile(result, 'applemusic');
     if (!validation.valid) {
       console.warn(`⚠️ [Apple Music] Profile not found: ${validation.reason}`);
@@ -478,7 +484,9 @@ app.get('/deezer/profile', async (req, res) => {
 
   try {
     console.log(`📥 [Deezer] Scraping: ${username_or_link}`);
-    const result = await scrapeDeezer(username_or_link);
+    const artistInput = extractUsername(username_or_link, 'deezer');
+    console.log(`📥 [Deezer] Scraping: ${artistInput}`);
+    const result = await scrapeDeezer(artistInput);
     const validation = validateScrapedProfile(result, 'deezer');
     if (!validation.valid) {
       console.warn(`⚠️ [Deezer] Profile not found: ${validation.reason}`);
@@ -499,7 +507,9 @@ app.get('/discord/profile', async (req, res) => {
 
   try {
     console.log(`📥 [Discord] Scraping: ${username_or_link}`);
-    const result = await scrapeDiscord(username_or_link);
+    const serverInput = extractUsername(username_or_link, 'discord');
+    console.log(`📥 [Discord] Scraping: ${serverInput}`);
+    const result = await scrapeDiscord(serverInput);
     const validation = validateScrapedProfile(result, 'discord');
     if (!validation.valid) {
       console.warn(`⚠️ [Discord] Profile not found: ${validation.reason}`);

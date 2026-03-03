@@ -129,10 +129,13 @@ function extractUsername(input, platform) {
           // bottom `return input.replace('@', '')` which keeps them intact.
           return input;
         case 'deezer':
+          // Deezer scraper routes by numeric ID check (/^\d+$/) or artist name search.
+          // We must extract the numeric ID from /artist/ID URLs — passing the full URL breaks it.
           if (pathname.includes('/artist/')) {
             return pathname.split('/artist/')[1]?.split('/')[0] || input;
           }
-          return pathname.replace('/', '').split('/')[0];
+          // Plain artist name or numeric ID — pass as-is (strip @ just in case)
+          return input.startsWith('http') ? pathname.replace(/^\//, '').split('/')[0] : input.replace('@', '');
         case 'discord':
           if (pathname.includes('/invite/')) {
             return pathname.split('/invite/')[1]?.split('/')[0] || input;
