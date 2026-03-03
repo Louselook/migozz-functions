@@ -90,9 +90,9 @@ function extractUsername(input, platform) {
         case 'threads':
           return pathname.replace('/@', '').replace('/', '').split('/')[0];
         case 'spotify':
-          if (pathname.includes('/artist/')) {
-            return pathname.split('/artist/')[1]?.split('/')[0] || input;
-          }
+          // The Spotify scraper handles full URLs internally (it reads window.location
+          // and extracts the artist ID itself). Return input as-is so it gets the full URL.
+          // Plain artist names and IDs are also passed through correctly.
           return input;
         case 'reddit':
           if (pathname.startsWith('/r/')) {
@@ -120,14 +120,14 @@ function extractUsername(input, platform) {
         case 'soundcloud':
           return pathname.replace('/', '').split('/')[0];
         case 'applemusic':
-          if (pathname.includes('/artist/')) {
-            const parts = pathname.split('/artist/');
-            if (parts[1]) {
-              const artistPart = parts[1].split('/');
-              return artistPart[artistPart.length - 1] || artistPart[0];
-            }
-          }
-          return pathname.replace('/', '').split('/')[0];
+          // The Apple Music scraper handles full URLs internally via its own routing:
+          //   if (input.includes('music.apple.com')) → use full URL
+          //   else if (/^\d+$/.test(input))          → numeric ID
+          //   else                                   → search by name
+          // So we must NOT strip the URL here — return it as-is.
+          // Plain artist names and numeric IDs (no http) fall through to the
+          // bottom `return input.replace('@', '')` which keeps them intact.
+          return input;
         case 'deezer':
           if (pathname.includes('/artist/')) {
             return pathname.split('/artist/')[1]?.split('/')[0] || input;
