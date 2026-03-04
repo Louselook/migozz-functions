@@ -1,168 +1,167 @@
+const axios = require('axios');
 const { createBrowser } = require('../utils/helpers');
 const { saveProfileImageForProfile } = require('../utils/imageSaver');
 
 /**
  * Apple Music artist scraper.
- * @param {string} artistIdOrUrl - Artist ID or Apple Music URL
+ *
+ * Strategy (permanent, robust):
+ *  1. If input is a full music.apple.com URL → navigate directly (most reliable)
+ *  2. If input is a numeric artist ID → navigate to music.apple.com/artist/{id}
+ *  3. If input is a plain artist name → use iTunes Search API to resolve the
+ *     artist ID (instant, no browser, no scraping, public endpoint), then
+ *     navigate to the canonical artist URL
+ *
+ * WHY: Apple Music's /search page changes its DOM frequently and cannot be
+ * reliably queried by a headless browser. The iTunes Search API
+ * (itunes.apple.com/search) is a stable, documented public endpoint that
+ * returns structured JSON — it will not break when Apple changes their UI.
+ *
+ * @param {string} artistIdOrUrl - Artist name, numeric ID, or full Apple Music URL
  * @returns {Promise<Object>} Profile data
  */
+
+const ITUNES_SEARCH = 'https://itunes.apple.com/search';
+
+async function resolveArtistUrl(artistIdOrUrl) {
+  const input = (artistIdOrUrl || '').trim();
+
+  // Case 1: Full Apple Music URL — use as-is
+  if (input.includes('music.apple.com')) {
+    return input;
+  }
+
+  // Case 2: Numeric ID — build canonical URL
+  if (/^\d+$/.test(input)) {
+    return `https://music.apple.com/us/artist/${input}`;
+  }
+
+  // Case 3: Artist name — resolve via iTunes Search API
+  console.log(`[Apple Music] 🔍 Resolving artist name via iTunes API: "${input}"`);
+  const res = await axios.get(ITUNES_SEARCH, {
+    params: { term: input, entity: 'musicArtist', limit: 1 },
+    timeout: 10000,
+  });
+
+  const results = res.data?.results;
+  if (!results || results.length === 0) {
+    throw new Error(`Artist not found on iTunes: "${input}"`);
+  }
+
+  const artist = results[0];
+  const artistId = artist.artistId;
+  const canonicalUrl = `https://music.apple.com/us/artist/${artistId}`;
+  console.log(`[Apple Music] ✅ iTunes resolved: ${artist.artistName} (ID: ${artistId})`);
+  return canonicalUrl;
+}
+
 async function scrapeAppleMusic(artistIdOrUrl) {
   console.log(`[Apple Music] Starting scrape for: ${artistIdOrUrl}`);
-  
+
   let browser;
-  
+  let artistUrl;
+
+  try {
+    // Step 1: Resolve the canonical artist URL
+    artistUrl = await resolveArtistUrl(artistIdOrUrl);
+    console.log(`[Apple Music] Navigating to: ${artistUrl}`);
+  } catch (resolveErr) {
+    throw new Error(`Error scraping Apple Music: ${resolveErr.message}`);
+  }
+
   try {
     browser = await createBrowser();
     const page = await browser.newPage();
-    
+
     await page.setViewport({ width: 1920, height: 1080 });
     await page.setUserAgent(
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     );
 
-    // Build URL
-    let url;
-    if (artistIdOrUrl.includes('music.apple.com')) {
-      url = artistIdOrUrl;
-    } else if (/^\d+$/.test(artistIdOrUrl)) {
-      // Numeric ID
-      url = `https://music.apple.com/artist/${artistIdOrUrl}`;
-    } else {
-      // Search artist
-      url = `https://music.apple.com/us/search?term=${encodeURIComponent(artistIdOrUrl)}`;
-    }
-
-    console.log(`[Apple Music] Navigating to: ${url}`);
-    
-    await page.goto(url, { 
-      waitUntil: 'networkidle2', 
-      timeout: 60000 
+    await page.goto(artistUrl, {
+      waitUntil: 'networkidle2',
+      timeout: 60000,
     });
-    
-    // If this is a search page, click the first artist result
-    if (url.includes('/search')) {
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      // Buscar y hacer clic en el primer resultado de artista
-      const artistLink = await page.$('a[href*="/artist/"]');
-      if (artistLink) {
-        await artistLink.click();
-        await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 30000 }).catch(() => {});
-      }
-    }
-    
-    await new Promise(resolve => setTimeout(resolve, 4000));
+
+    await new Promise((r) => setTimeout(r, 4000));
 
     const profileData = await page.evaluate(() => {
       let artistName = '';
       let artistId = '';
       let profileImageUrl = '';
       let genres = [];
-      let latestRelease = '';
       let bio = '';
-      
-      // Extraer ID de la URL
+
+      // Extract artist ID from current URL
       const urlMatch = window.location.href.match(/\/artist\/(\d+)/);
       if (urlMatch) artistId = urlMatch[1];
-      
-      // Meta tags
+
+      // Meta tags (most reliable on the direct artist page)
       const ogTitle = document.querySelector('meta[property="og:title"]');
       const ogImage = document.querySelector('meta[property="og:image"]');
       const ogDescription = document.querySelector('meta[property="og:description"]');
-      
-      if (ogTitle) artistName = ogTitle.content.replace(' on Apple Music', '').replace(' en Apple Music', '').trim();
+
+      if (ogTitle) artistName = ogTitle.content.replace(/ on Apple Music$/, '').replace(/ en Apple Music$/, '').trim();
       if (ogImage) profileImageUrl = ogImage.content;
       if (ogDescription) bio = ogDescription.content;
-      
-      // Título de la página
-      const titleEl = document.querySelector('h1');
-      if (titleEl && !artistName) artistName = titleEl.textContent.trim();
-      
-      // Buscar nombre en selectores específicos
-      const nameSelectors = [
-        '[class*="artist-header"] h1',
-        '[class*="ArtistHeader"] h1',
-        '.headings__title',
-        '[data-testid="artist-name"]'
-      ];
-      
-      for (const sel of nameSelectors) {
-        const el = document.querySelector(sel);
-        if (el) {
-          artistName = el.textContent.trim();
-          break;
-        }
-      }
-      
-      // Buscar imagen del artista
-      const imgSelectors = [
-        '[class*="artist-artwork"] img',
-        '[class*="ArtistHeader"] img',
-        'picture img[srcset]',
-        '.headings__artwork img'
-      ];
-      
-      for (const sel of imgSelectors) {
-        const img = document.querySelector(sel);
-        if (img && (img.src || img.srcset)) {
-          profileImageUrl = img.src || img.srcset.split(' ')[0];
-          break;
-        }
-      }
-      
-      // Buscar géneros
-      const genreEls = document.querySelectorAll('[class*="genre"], [class*="Genre"]');
-      genreEls.forEach(el => {
-        const text = el.textContent.trim();
-        if (text && !genres.includes(text)) genres.push(text);
-      });
-      
-      // Buscar en JSON-LD
+
+      // JSON-LD (structured data — very stable)
       const ldScripts = document.querySelectorAll('script[type="application/ld+json"]');
       for (const script of ldScripts) {
         try {
           const data = JSON.parse(script.textContent);
           if (data['@type'] === 'MusicGroup' || data['@type'] === 'Person') {
-            if (data.name) artistName = data.name;
-            if (data.image) profileImageUrl = data.image;
-            if (data.description) bio = data.description;
-            if (data.genre) {
-              genres = Array.isArray(data.genre) ? data.genre : [data.genre];
-            }
+            if (data.name && !artistName) artistName = data.name;
+            if (data.image && !profileImageUrl) profileImageUrl = data.image;
+            if (data.description && !bio) bio = data.description;
+            if (data.genre) genres = Array.isArray(data.genre) ? data.genre : [data.genre];
           }
-        } catch (e) {}
+        } catch (_) { }
       }
-      
-      // Buscar en scripts de datos
-      const scripts = Array.from(document.querySelectorAll('script'));
-      for (const script of scripts) {
-        const text = script.textContent;
-        if (text.includes('"artistName"') || text.includes('"name"')) {
-          try {
-            // Buscar nombre del artista
-            const nameMatch = text.match(/"artistName"\s*:\s*"([^"]+)"/);
-            if (nameMatch && !artistName) artistName = nameMatch[1];
-            
-            // Buscar artwork
-            const artMatch = text.match(/"artwork"\s*:\s*\{[^}]*"url"\s*:\s*"([^"]+)"/);
-            if (artMatch && !profileImageUrl) profileImageUrl = artMatch[1].replace('{w}', '400').replace('{h}', '400');
-          } catch (e) {}
+
+      // H1 fallback
+      if (!artistName) {
+        const h1 = document.querySelector('h1');
+        if (h1) artistName = h1.textContent.trim();
+      }
+
+      // Artist image fallback
+      if (!profileImageUrl) {
+        const imgSelectors = [
+          '[class*="artist-artwork"] img',
+          '[class*="ArtistHeader"] img',
+          'picture img[srcset]',
+          '.headings__artwork img',
+        ];
+        for (const sel of imgSelectors) {
+          const img = document.querySelector(sel);
+          if (img?.src) { profileImageUrl = img.src; break; }
         }
       }
-      
-      return {
-        artistId,
-        artistName,
-        profileImageUrl,
-        bio,
-        genres,
-        currentUrl: window.location.href
-      };
+
+      // Inline scripts for artwork URL template
+      if (!profileImageUrl) {
+        const scripts = Array.from(document.querySelectorAll('script'));
+        for (const script of scripts) {
+          const text = script.textContent;
+          if (text.includes('"artwork"') && text.includes('"url"')) {
+            try {
+              const artMatch = text.match(/"artwork"\s*:\s*\{[^}]*"url"\s*:\s*"([^"]+)"/);
+              if (artMatch) {
+                profileImageUrl = artMatch[1].replace('{w}', '400').replace('{h}', '400').replace('{f}', 'jpg');
+                break;
+              }
+            } catch (_) { }
+          }
+        }
+      }
+
+      return { artistId, artistName, profileImageUrl, bio, genres, currentUrl: window.location.href };
     });
 
     await browser.close();
 
-    if (!profileData || !profileData.artistName) {
+    if (!profileData?.artistName || profileData.artistName === 'An Error Occurred') {
       throw new Error('No se pudieron extraer los datos del artista de Apple Music');
     }
 
@@ -172,17 +171,17 @@ async function scrapeAppleMusic(artistIdOrUrl) {
       full_name: profileData.artistName,
       bio: profileData.bio || '',
       genres: profileData.genres || [],
-      followers: 0, // Apple Music no muestra seguidores públicamente
+      followers: 0, // Apple Music does not expose follower counts publicly
       profile_image_url: profileData.profileImageUrl || '',
-      url: profileData.currentUrl || `https://music.apple.com/artist/${profileData.artistId}`,
-      platform: 'applemusic'
+      url: profileData.currentUrl || artistUrl,
+      platform: 'applemusic',
     };
 
     try {
       const saved = await saveProfileImageForProfile({
         platform: 'applemusic',
         username: result.id,
-        imageUrl: result.profile_image_url
+        imageUrl: result.profile_image_url,
       });
       if (saved) {
         result.profile_image_saved = true;
@@ -195,14 +194,13 @@ async function scrapeAppleMusic(artistIdOrUrl) {
       console.warn('[Apple Music] Failed to save profile image:', e.message);
       result.profile_image_saved = false;
     }
-    
+
     console.log(`✅ [Apple Music] Scraped: ${result.full_name}`);
-    
     return result;
 
   } catch (error) {
     if (browser) {
-      try { await browser.close(); } catch (e) {}
+      try { await browser.close(); } catch (_) { }
     }
     throw new Error(`Error scraping Apple Music: ${error.message}`);
   }
