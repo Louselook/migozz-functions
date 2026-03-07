@@ -592,28 +592,28 @@ async function generatePreRegisteredExcel({ startDate, endDate, adminName }) {
   }
 
   ws.getRow(1).height = 115;
-  ws.mergeCells('B1:E1');
-  const titleCell = ws.getCell('B1');
+  ws.mergeCells('C1:E1');
+  const titleCell = ws.getCell('C1');
   titleCell.value = 'Pre-Registered Users Export';
   titleCell.font = { name: 'Calibri', size: 20, bold: true, color: { argb: BRAND_COLOR } };
   titleCell.alignment = { vertical: 'middle' };
 
   currentRow = 2;
-  ws.mergeCells('B2:E2');
+  ws.mergeCells('C2:E2');
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-US', {
     year: 'numeric', month: 'long', day: 'numeric',
     hour: '2-digit', minute: '2-digit',
   });
-  const subtitleCell = ws.getCell('B2');
+  const subtitleCell = ws.getCell('C2');
   subtitleCell.value = `Generated: ${dateStr}  |  By: ${adminName || 'System'}`;
   subtitleCell.font = { name: 'Calibri', size: 10, color: { argb: '666666' } };
   subtitleCell.alignment = { vertical: 'middle' };
   ws.getRow(2).height = 22;
 
   currentRow = 3;
-  ws.mergeCells('B3:E3');
-  const filterCell = ws.getCell('B3');
+  ws.mergeCells('C3:E3');
+  const filterCell = ws.getCell('C3');
   filterCell.value = `Filters — From: ${startDate || 'All'}  To: ${endDate || 'All'}`;
   filterCell.font = { name: 'Calibri', size: 10, italic: true, color: { argb: '999999' } };
   ws.getRow(3).height = 20;
