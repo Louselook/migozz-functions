@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const { extractUsername, resolveFacebookShareUrl } = require('./utils/helpers');
 const { syncUserNetworks, syncAllUsersThatNeedUpdate, getSyncStatus } = require('./services/socialEcosystemSyncService');
+const { generateMemberExcel, generatePreRegisteredExcel } = require('./services/excelExportService');
 
 // Inicializar Firebase Admin (obligatorio antes de cualquier operación)
 require('./config/firebaseAdmin');
@@ -540,6 +541,74 @@ app.get('/snapchat/profile', async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error(`❌ [Snapchat] Error:`, error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==================== EXPORTACIÓN EXCEL ====================
+
+/**
+ * Endpoint: GET /export/members
+ * Genera y descarga un archivo Excel con los datos de los miembros.
+ *
+ * Query params:
+ *   - startDate (YYYY-MM-DD) — fecha inicio filtro por joinedAt
+ *   - endDate   (YYYY-MM-DD) — fecha fin filtro por joinedAt
+ *   - adminName (string)     — nombre del administrador que exporta
+ */
+app.get('/export/members', async (req, res) => {
+  const { startDate, endDate, adminName } = req.query;
+
+  try {
+    console.log(`\n📥 [API] GET /export/members`);
+    console.log(`   Filters: startDate=${startDate || 'all'}, endDate=${endDate || 'all'}, admin=${adminName || 'System'}`);
+
+    const workbook = await generateMemberExcel({ startDate, endDate, adminName });
+
+    const filename = `Migozz_Members_${new Date().toISOString().slice(0, 10)}.xlsx`;
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    await workbook.xlsx.write(res);
+    res.end();
+
+    console.log(`[Export] Excel sent: ${filename}`);
+  } catch (error) {
+    console.error(`[Export] Error:`, error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Endpoint: GET /export/pre-registered
+ * Genera y descarga un archivo Excel con los usuarios pre-registrados.
+ *
+ * Query params:
+ *   - startDate (YYYY-MM-DD) — fecha inicio filtro por preRegisteredAt
+ *   - endDate   (YYYY-MM-DD) — fecha fin filtro por preRegisteredAt
+ *   - adminName (string)     — nombre del administrador que exporta
+ */
+app.get('/export/pre-registered', async (req, res) => {
+  const { startDate, endDate, adminName } = req.query;
+
+  try {
+    console.log(`\n[API] GET /export/pre-registered`);
+    console.log(`   Filters: startDate=${startDate || 'all'}, endDate=${endDate || 'all'}, admin=${adminName || 'System'}`);
+
+    const workbook = await generatePreRegisteredExcel({ startDate, endDate, adminName });
+
+    const filename = `Migozz_PreRegistered_${new Date().toISOString().slice(0, 10)}.xlsx`;
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    await workbook.xlsx.write(res);
+    res.end();
+
+    console.log(`[Export] Excel sent: ${filename}`);
+  } catch (error) {
+    console.error(`[Export] Error:`, error.message);
     res.status(500).json({ error: error.message });
   }
 });
