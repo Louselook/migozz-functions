@@ -35,7 +35,9 @@ async function queryMembers({ startDate, endDate }) {
   }
 
   const snapshot = await query.get();
-  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  return snapshot.docs
+    .map((doc) => ({ id: doc.id, ...doc.data() }))
+    .filter((u) => u.isPreRegister !== true);
 }
 
 // ─── Social Ecosystem Helpers ──────────────────────────────────────────────
@@ -207,6 +209,10 @@ async function generateMemberExcel({ startDate, endDate, adminName }) {
   const users = await queryMembers({ startDate, endDate });
   const rows = users.map(buildMemberRow);
   const summary = buildSummary(rows);
+
+  // Count pre-registered users separately (excluded from members query)
+  const preRegSnap = await db.collection('users').where('isPreRegister', '==', true).get();
+  summary.totalPreRegistered = preRegSnap.size;
 
   // 2. Create workbook
   const workbook = new ExcelJS.Workbook();
