@@ -79,7 +79,7 @@ async function scrapeAppleMusic(artistIdOrUrl) {
     );
 
     await page.goto(artistUrl, {
-      waitUntil: 'networkidle2',
+      waitUntil: 'domcontentloaded',
       timeout: 60000,
     });
 
@@ -93,7 +93,7 @@ async function scrapeAppleMusic(artistIdOrUrl) {
       let bio = '';
 
       // Extract artist ID from current URL
-      const urlMatch = window.location.href.match(/\/artist\/(\d+)/);
+      const urlMatch = window.location.href.match(/\/artist\/(?:[^\/]+\/)?(\d+)/);
       if (urlMatch) artistId = urlMatch[1];
 
       // Meta tags (most reliable on the direct artist page)
@@ -102,7 +102,13 @@ async function scrapeAppleMusic(artistIdOrUrl) {
       const ogDescription = document.querySelector('meta[property="og:description"]');
 
       if (ogTitle) artistName = ogTitle.content.replace(/ on Apple Music$/, '').replace(/ en Apple Music$/, '').trim();
-      if (ogImage) profileImageUrl = ogImage.content;
+      if (ogImage) {
+        profileImageUrl = ogImage.content
+          .replace(/\{w\}x\{h\}[a-z]{0,2}/g, '500x500bb')
+          .replace(/\{w\}/g, '500')
+          .replace(/\{h\}/g, '500')
+          .replace(/\{f\}/g, 'jpg');
+      }
       if (ogDescription) bio = ogDescription.content;
 
       // JSON-LD (structured data — very stable)
