@@ -82,8 +82,8 @@ const MEMBER_FILTERS = {
   },
 
   hasAvatar: (val) => val === 'true'
-    ? (u) => !!(u.photoUrl || u.photoURL || u.profileImageUrl)
-    : (u) => !(u.photoUrl || u.photoURL || u.profileImageUrl),
+    ? (u) => !!(u.avatarUrl || u.photoUrl || u.photoURL || u.profileImageUrl)
+    : (u) => !(u.avatarUrl || u.photoUrl || u.photoURL || u.profileImageUrl),
 
   hasFeaturedLinks: (val) => val === 'true'
     ? (u) => Array.isArray(u.featuredLinks) && u.featuredLinks.length > 0

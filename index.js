@@ -594,24 +594,29 @@ app.get('/export/members', async (req, res) => {
 
     const workbook = await generateMemberExcel(filters);
 
-    // Build filename with applied filter tags
+    // Build filename with short filter suffixes (max 150 chars to stay under OS limits)
     const filterTags = [];
-    if (status) filterTags.push(status);
-    if (role) filterTags.push(role);
-    if (categories) filterTags.push(...String(categories).split(',').map(c => c.trim()));
-    if (platforms) filterTags.push(...String(platforms).split(',').map(p => p.trim()));
-    if (countries) filterTags.push(...String(countries).split(',').map(c => c.trim()));
-    if (minFollowers || maxFollowers) filterTags.push(`followers-${minFollowers || 0}-${maxFollowers || 'max'}`);
-    if (hasAvatar) filterTags.push(`avatar-${hasAvatar}`);
-    if (hasFeaturedLinks) filterTags.push(`links-${hasFeaturedLinks}`);
-    if (hasContactWebsite) filterTags.push(`website-${hasContactWebsite}`);
-    if (startDate || joinedFrom) filterTags.push(`from-${startDate || joinedFrom}`);
+    if (status) filterTags.push(`st-${status}`);
+    if (role) filterTags.push(`r-${role}`);
+    if (categories) filterTags.push(`cat-${String(categories).split(',').length}`);
+    if (platforms) filterTags.push(`plt-${String(platforms).split(',').length}`);
+    if (countries) filterTags.push(`co-${String(countries).split(',').length}`);
+    if (minFollowers || maxFollowers) filterTags.push(`fl-${minFollowers || 0}-${maxFollowers || 'max'}`);
+    if (hasAvatar) filterTags.push('av');
+    if (hasFeaturedLinks) filterTags.push('lnk');
+    if (hasContactWebsite) filterTags.push('web');
+    if (startDate || joinedFrom) filterTags.push(`fr-${startDate || joinedFrom}`);
     if (endDate || joinedTo) filterTags.push(`to-${endDate || joinedTo}`);
 
-    const filterSuffix = filterTags.length > 0
+    let filterSuffix = filterTags.length > 0
       ? '-' + filterTags.map(t => t.replace(/[^a-zA-Z0-9_-]/g, '')).join('-')
       : '';
-    const filename = `Migozz_Members_${new Date().toISOString().slice(0, 10)}${filterSuffix}.xlsx`;
+    const baseName = `Migozz_Members_${new Date().toISOString().slice(0, 10)}`;
+    // Ensure total filename stays under 150 chars
+    if ((baseName + filterSuffix + '.xlsx').length > 150) {
+      filterSuffix = filterSuffix.slice(0, 150 - baseName.length - 5) + '~';
+    }
+    const filename = `${baseName}${filterSuffix}.xlsx`;
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
