@@ -22,22 +22,120 @@ const SUMMARY_BG_ALT = 'EDEDF5';
 
 // ─── Firestore Query ───────────────────────────────────────────────────────
 
-async function queryMembers({ startDate, endDate }) {
+// ─── Filter Pipeline ──────────────────────────────────────────────────────
+// Each filter is a pure function: (value) => (user) => boolean
+// Only active filters are added to the pipeline, avoiding unnecessary checks.
+
+const MEMBER_FILTERS = {
+  status: (val) => val === 'active'
+    ? (u) => u.active !== false && !u.isDeleted
+    : (u) => u.active === false || u.isDeleted === true,
+
+  role: (val) => {
+    // Firestore stores role as int: 1=admin, 2=moderator, 3=user, 4=creator
+    // Most users have no role field — default is 3 (user)
+    const roleMap = { admin: 1, moderator: 2, user: 3, creator: 4 };
+    const targetNum = roleMap[val.toLowerCase()];
+    return (u) => {
+      const r = u.role ?? 3; // default to user
+      if (targetNum != null) return r === targetNum;
+      return String(r).toLowerCase() === val.toLowerCase();
+    };
+  },
+
+  categories: (val) => {
+    const catSet = new Set(
+      (Array.isArray(val) ? val : val.split(',')).map((c) => c.trim().toLowerCase())
+    );
+    return (u) => {
+      const userCats = Array.isArray(u.category)
+        ? u.category.map((c) => c.toLowerCase())
+        : [(u.category || '').toLowerCase()];
+      return userCats.some((c) => catSet.has(c));
+    };
+  },
+
+  platforms: (val) => {
+    const platSet = new Set(
+      (Array.isArray(val) ? val : val.split(',')).map((p) => p.trim().toLowerCase())
+    );
+    return (u) => {
+      const userPlatforms = extractPlatformData(u.socialEcosystem);
+      for (const p of platSet) {
+        const key = p === 'x' ? 'twitter' : p;
+        if (userPlatforms[key] != null) return true;
+      }
+      return false;
+    };
+  },
+
+  countries: (val) => {
+    const countrySet = new Set(
+      (Array.isArray(val) ? val : val.split(',')).map((c) => c.trim().toLowerCase())
+    );
+    return (u) => countrySet.has((u.location?.country || '').toLowerCase());
+  },
+
+  followers: (min, max) => (u) => {
+    const total = getCommunityTotal(extractPlatformData(u.socialEcosystem));
+    return (min == null || total >= min) && (max == null || total <= max);
+  },
+
+  hasAvatar: (val) => val === 'true'
+    ? (u) => !!(u.photoUrl || u.photoURL || u.profileImageUrl)
+    : (u) => !(u.photoUrl || u.photoURL || u.profileImageUrl),
+
+  hasFeaturedLinks: (val) => val === 'true'
+    ? (u) => Array.isArray(u.featuredLinks) && u.featuredLinks.length > 0
+    : (u) => !Array.isArray(u.featuredLinks) || u.featuredLinks.length === 0,
+
+  hasContactWebsite: (val) => val === 'true'
+    ? (u) => !!u.contactWebsite
+    : (u) => !u.contactWebsite,
+};
+
+async function queryMembers(filters = {}) {
+  // ── Firestore query (only date range to avoid composite index issues) ──
   let query = db.collection('users');
 
-  if (startDate) {
-    query = query.where('createdAt', '>=', new Date(startDate));
+  const dateFrom = filters.joinedFrom || filters.startDate;
+  const dateTo = filters.joinedTo || filters.endDate;
+
+  if (dateFrom) {
+    query = query.where('createdAt', '>=', new Date(dateFrom));
   }
-  if (endDate) {
-    const end = new Date(endDate);
+  if (dateTo) {
+    const end = new Date(dateTo);
     end.setHours(23, 59, 59, 999);
     query = query.where('createdAt', '<=', end);
   }
 
   const snapshot = await query.get();
-  return snapshot.docs
+  let users = snapshot.docs
     .map((doc) => ({ id: doc.id, ...doc.data() }))
     .filter((u) => u.isPreRegister !== true);
+
+  const pipeline = [];
+
+  if (filters.status)          pipeline.push(MEMBER_FILTERS.status(filters.status));
+  if (filters.role)            pipeline.push(MEMBER_FILTERS.role(filters.role));
+  if (filters.categories)      pipeline.push(MEMBER_FILTERS.categories(filters.categories));
+  if (filters.platforms)        pipeline.push(MEMBER_FILTERS.platforms(filters.platforms));
+  if (filters.countries)        pipeline.push(MEMBER_FILTERS.countries(filters.countries));
+  if (filters.hasAvatar)       pipeline.push(MEMBER_FILTERS.hasAvatar(filters.hasAvatar));
+  if (filters.hasFeaturedLinks) pipeline.push(MEMBER_FILTERS.hasFeaturedLinks(filters.hasFeaturedLinks));
+  if (filters.hasContactWebsite) pipeline.push(MEMBER_FILTERS.hasContactWebsite(filters.hasContactWebsite));
+
+  if (filters.minFollowers != null || filters.maxFollowers != null) {
+    pipeline.push(MEMBER_FILTERS.followers(filters.minFollowers, filters.maxFollowers));
+  }
+
+  // ── Apply all filters in a single pass ──────────────────────────────────
+  if (pipeline.length > 0) {
+    users = users.filter((u) => pipeline.every((fn) => fn(u)));
+  }
+
+  return users;
 }
 
 // ─── Social Ecosystem Helpers ──────────────────────────────────────────────
@@ -204,9 +302,11 @@ function headerFont(size = 12, bold = true) {
 
 // ─── Excel Workbook Builder ────────────────────────────────────────────────
 
-async function generateMemberExcel({ startDate, endDate, adminName }) {
-  // 1. Query Firestore
-  const users = await queryMembers({ startDate, endDate });
+async function generateMemberExcel(filters = {}) {
+  const { adminName } = filters;
+
+  // 1. Query Firestore with all filters
+  const users = await queryMembers(filters);
   const rows = users.map(buildMemberRow);
   const summary = buildSummary(rows);
 
@@ -267,9 +367,22 @@ async function generateMemberExcel({ startDate, endDate, adminName }) {
   currentRow = 3;
   ws.mergeCells('B3:H3');
   const filterCell = ws.getCell('B3');
-  const filterFrom = startDate || 'All';
-  const filterTo = endDate || 'All';
-  filterCell.value = `Filters — From: ${filterFrom}  To: ${filterTo}`;
+  const filterParts = [];
+  const dateFrom = filters.joinedFrom || filters.startDate;
+  const dateTo = filters.joinedTo || filters.endDate;
+  filterParts.push(`Date: ${dateFrom || 'All'} — ${dateTo || 'All'}`);
+  if (filters.status) filterParts.push(`Status: ${filters.status}`);
+  if (filters.role) filterParts.push(`Role: ${filters.role}`);
+  if (filters.categories) filterParts.push(`Categories: ${filters.categories}`);
+  if (filters.platforms) filterParts.push(`Platforms: ${filters.platforms}`);
+  if (filters.countries) filterParts.push(`Countries: ${filters.countries}`);
+  if (filters.minFollowers != null || filters.maxFollowers != null) {
+    filterParts.push(`Followers: ${filters.minFollowers || 0} — ${filters.maxFollowers || '∞'}`);
+  }
+  if (filters.hasAvatar != null) filterParts.push(`Avatar: ${filters.hasAvatar}`);
+  if (filters.hasFeaturedLinks != null) filterParts.push(`Links: ${filters.hasFeaturedLinks}`);
+  if (filters.hasContactWebsite != null) filterParts.push(`Website: ${filters.hasContactWebsite}`);
+  filterCell.value = `Filters — ${filterParts.join('  |  ')}`;
   filterCell.font = { name: 'Calibri', size: 10, italic: true, color: { argb: '999999' } };
   ws.getRow(3).height = 20;
 
@@ -506,13 +619,15 @@ async function generateMemberExcel({ startDate, endDate, adminName }) {
   });
 
   // Auto-fit column widths based on content (with min/max limits)
+  // Use the column definition width as the minimum so the summary section
+  // (which spans the first 6 columns) always looks correct even with 0 data rows.
   columns.forEach((col, i) => {
     const contentWidth = maxWidths[i] + 3; // padding
-    ws.getColumn(i + 1).width = Math.max(10, Math.min(contentWidth, 50));
+    ws.getColumn(i + 1).width = Math.max(col.width, Math.min(contentWidth, 50));
   });
 
-  // Freeze header row of the table
-  ws.views = [{ state: 'frozen', ySplit: currentRow - rows.length - 1, xSplit: 3 }];
+  // No freeze — allow free scrolling from row 1
+  ws.views = [{ state: 'normal' }];
 
   // Auto-filter on the data table
   const tableHeaderRow = currentRow - rows.length - 1;
@@ -715,13 +830,13 @@ async function generatePreRegisteredExcel({ startDate, endDate, adminName }) {
   });
 
   // Auto-fit
-  columns.forEach((_, i) => {
+  columns.forEach((col, i) => {
     const contentWidth = maxWidths[i] + 3;
-    ws.getColumn(i + 1).width = Math.max(10, Math.min(contentWidth, 50));
+    ws.getColumn(i + 1).width = Math.max(col.width, Math.min(contentWidth, 50));
   });
 
-  // Freeze & auto-filter
-  ws.views = [{ state: 'frozen', ySplit: currentRow - rows.length - 1, xSplit: 2 }];
+  // No freeze — allow free scrolling from row 1
+  ws.views = [{ state: 'normal' }];
   const tableHeaderRow = currentRow - rows.length - 1;
   ws.autoFilter = {
     from: { row: tableHeaderRow, column: 1 },

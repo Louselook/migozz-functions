@@ -552,20 +552,66 @@ app.get('/snapchat/profile', async (req, res) => {
  * Genera y descarga un archivo Excel con los datos de los miembros.
  *
  * Query params:
- *   - startDate (YYYY-MM-DD) — fecha inicio filtro por joinedAt
- *   - endDate   (YYYY-MM-DD) — fecha fin filtro por joinedAt
- *   - adminName (string)     — nombre del administrador que exporta
+ *   - startDate    (YYYY-MM-DD) — fecha inicio rango general
+ *   - endDate      (YYYY-MM-DD) — fecha fin rango general
+ *   - joinedFrom   (YYYY-MM-DD) — fecha inicio filtro por createdAt
+ *   - joinedTo     (YYYY-MM-DD) — fecha fin filtro por createdAt
+ *   - adminName    (string)     — nombre del administrador que exporta
+ *   - status       (string)     — 'active' | 'blocked'
+ *   - role         (string)     — 'admin' | 'moderator' | 'user'
+ *   - categories   (string)     — comma-separated (e.g. "DJ,Influencer")
+ *   - platforms    (string)     — comma-separated (e.g. "instagram,tiktok")
+ *   - countries    (string)     — comma-separated (e.g. "Mexico,Spain")
+ *   - minFollowers (number)     — minimo de seguidores totales
+ *   - maxFollowers (number)     — maximo de seguidores totales
+ *   - hasAvatar    (boolean)    — 'true' = con foto, 'false' = sin foto
+ *   - hasFeaturedLinks (boolean) — 'true' = tiene links personalizados
+ *   - hasContactWebsite (boolean) — 'true' = tiene sitio web de contacto
  */
 app.get('/export/members', async (req, res) => {
-  const { startDate, endDate, adminName } = req.query;
+  const {
+    startDate, endDate, adminName,
+    joinedFrom, joinedTo,
+    status, role, categories, platforms, countries,
+    minFollowers, maxFollowers,
+    hasAvatar, hasFeaturedLinks, hasContactWebsite,
+  } = req.query;
+
+  const filters = {
+    startDate, endDate, adminName,
+    joinedFrom, joinedTo,
+    status, role, categories, platforms, countries,
+    minFollowers: minFollowers ? parseInt(minFollowers, 10) : undefined,
+    maxFollowers: maxFollowers ? parseInt(maxFollowers, 10) : undefined,
+    hasAvatar: hasAvatar || undefined,
+    hasFeaturedLinks: hasFeaturedLinks || undefined,
+    hasContactWebsite: hasContactWebsite || undefined,
+  };
 
   try {
     console.log(`\n📥 [API] GET /export/members`);
-    console.log(`   Filters: startDate=${startDate || 'all'}, endDate=${endDate || 'all'}, admin=${adminName || 'System'}`);
+    console.log(`   Filters:`, JSON.stringify(filters, null, 2));
 
-    const workbook = await generateMemberExcel({ startDate, endDate, adminName });
+    const workbook = await generateMemberExcel(filters);
 
-    const filename = `Migozz_Members_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    // Build filename with applied filter tags
+    const filterTags = [];
+    if (status) filterTags.push(status);
+    if (role) filterTags.push(role);
+    if (categories) filterTags.push(...String(categories).split(',').map(c => c.trim()));
+    if (platforms) filterTags.push(...String(platforms).split(',').map(p => p.trim()));
+    if (countries) filterTags.push(...String(countries).split(',').map(c => c.trim()));
+    if (minFollowers || maxFollowers) filterTags.push(`followers-${minFollowers || 0}-${maxFollowers || 'max'}`);
+    if (hasAvatar) filterTags.push(`avatar-${hasAvatar}`);
+    if (hasFeaturedLinks) filterTags.push(`links-${hasFeaturedLinks}`);
+    if (hasContactWebsite) filterTags.push(`website-${hasContactWebsite}`);
+    if (startDate || joinedFrom) filterTags.push(`from-${startDate || joinedFrom}`);
+    if (endDate || joinedTo) filterTags.push(`to-${endDate || joinedTo}`);
+
+    const filterSuffix = filterTags.length > 0
+      ? '-' + filterTags.map(t => t.replace(/[^a-zA-Z0-9_-]/g, '')).join('-')
+      : '';
+    const filename = `Migozz_Members_${new Date().toISOString().slice(0, 10)}${filterSuffix}.xlsx`;
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
@@ -598,7 +644,15 @@ app.get('/export/pre-registered', async (req, res) => {
 
     const workbook = await generatePreRegisteredExcel({ startDate, endDate, adminName });
 
-    const filename = `Migozz_PreRegistered_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    // Build filename with applied filter tags
+    const filterTags = [];
+    if (startDate) filterTags.push(`from-${startDate}`);
+    if (endDate) filterTags.push(`to-${endDate}`);
+
+    const filterSuffix = filterTags.length > 0
+      ? '-' + filterTags.map(t => t.replace(/[^a-zA-Z0-9_-]/g, '')).join('-')
+      : '';
+    const filename = `Migozz_PreRegistered_${new Date().toISOString().slice(0, 10)}${filterSuffix}.xlsx`;
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
