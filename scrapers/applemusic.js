@@ -101,13 +101,20 @@ async function scrapeAppleMusic(artistIdOrUrl) {
       const ogImage = document.querySelector('meta[property="og:image"]');
       const ogDescription = document.querySelector('meta[property="og:description"]');
 
-      if (ogTitle) artistName = ogTitle.content.replace(/ on Apple Music$/, '').replace(/ en Apple Music$/, '').trim();
+      if (ogTitle) {
+        artistName = ogTitle.content
+          .replace(/\s*(on Apple Music|en Apple Music|— Apple Music|- Apple Music| Music)\s*$/i, '')
+          .replace(/\s+on\s+Apple\s+Music$/i, '')
+          .replace("\u200e", "")
+          .trim();
+      }
       if (ogImage) {
         profileImageUrl = ogImage.content
           .replace(/\{w\}x\{h\}[a-z]{0,2}/g, '500x500bb')
           .replace(/\{w\}/g, '500')
           .replace(/\{h\}/g, '500')
-          .replace(/\{f\}/g, 'jpg');
+          .replace(/\{f\}/g, 'jpg')
+          .replace(/\/1200x630cw.jpg$/, '/500x500bb.jpg');
       }
       if (ogDescription) bio = ogDescription.content;
 
